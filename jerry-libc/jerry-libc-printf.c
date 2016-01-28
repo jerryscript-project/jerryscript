@@ -192,7 +192,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
  */
 static void
 libc_printf_write_d_i (FILE *stream, /**< stream pointer */
-                       va_list* args_list_p, /**< args' list */
+                       va_list *args_list_p, /**< args' list */
                        libc_printf_arg_flags_mask_t flags, /**< field's flags */
                        libc_printf_arg_length_type_t length, /**< field's length type */
                        uint32_t width) /**< minimum field width to output */
@@ -314,7 +314,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
 static void
 libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
                            char specifier, /**< specifier (u, o, x, X) */
-                           va_list* args_list_p, /**< args' list */
+                           va_list *args_list_p, /**< args' list */
                            libc_printf_arg_flags_mask_t flags, /**< field's flags */
                            libc_printf_arg_length_type_t length, /**< field's length type */
                            uint32_t width) /**< minimum field width to output */

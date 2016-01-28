@@ -237,7 +237,7 @@ ecma_make_simple_value (const ecma_simple_value_t value) /**< simple value */
  * Number value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_number_value (const ecma_number_t* num_p) /**< number to reference in value */
+ecma_make_number_value (const ecma_number_t *num_p) /**< number to reference in value */
 {
   JERRY_ASSERT (num_p != NULL);
 
@@ -256,7 +256,7 @@ ecma_make_number_value (const ecma_number_t* num_p) /**< number to reference in 
  * String value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_string_value (const ecma_string_t* ecma_string_p) /**< string to reference in value */
+ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT (ecma_string_p != NULL);
 
@@ -275,7 +275,7 @@ ecma_make_string_value (const ecma_string_t* ecma_string_p) /**< string to refer
  * object value constructor
  */
 ecma_value_t __attr_const___
-ecma_make_object_value (const ecma_object_t* object_p) /**< object to reference in value */
+ecma_make_object_value (const ecma_object_t *object_p) /**< object to reference in value */
 {
   JERRY_ASSERT (object_p != NULL);
 
@@ -295,7 +295,7 @@ ecma_make_object_value (const ecma_object_t* object_p) /**< object to reference 
  *
  * @return the pointer
  */
-ecma_number_t* __attr_pure___
+ecma_number_t *__attr_pure___
 ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
@@ -309,7 +309,7 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma-value */
  *
  * @return the pointer
  */
-ecma_string_t* __attr_pure___
+ecma_string_t *__attr_pure___
 ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
@@ -323,7 +323,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma-value */
  *
  * @return the pointer
  */
-ecma_object_t* __attr_pure___
+ecma_object_t *__attr_pure___
 ecma_get_object_from_value (ecma_value_t value) /**< ecma-value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
@@ -648,7 +648,7 @@ ecma_get_completion_value_value (ecma_completion_value_t completion_value) /**< 
  *
  * @return pointer
  */
-ecma_number_t* __attr_const___
+ecma_number_t *__attr_const___
 ecma_get_number_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
   return ecma_get_number_from_value (ecma_get_completion_value_value (completion_value));
@@ -659,7 +659,7 @@ ecma_get_number_from_completion_value (ecma_completion_value_t completion_value)
  *
  * @return pointer
  */
-ecma_string_t* __attr_const___
+ecma_string_t *__attr_const___
 ecma_get_string_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
   return ecma_get_string_from_value (ecma_get_completion_value_value (completion_value));
@@ -670,7 +670,7 @@ ecma_get_string_from_completion_value (ecma_completion_value_t completion_value)
  *
  * @return pointer
  */
-ecma_object_t* __attr_const___
+ecma_object_t *__attr_const___
 ecma_get_object_from_completion_value (ecma_completion_value_t completion_value) /**< completion value */
 {
   return ecma_get_object_from_value (ecma_get_completion_value_value (completion_value));

@@ -486,7 +486,7 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
  *          ECMA-262 v5, 15.9.1.9
  *
  * Used by:
- *         - All Date.prototype.getUTC* routines. (Generated.)
+ *         - All Date.prototype.getUTC routines. (Generated.)
  *         - The Date.prototype.getTimezoneOffset routine.
  *         - The Date.prototype.setMilliseconds routine.
  *         - The Date.prototype.setSeconds routine.
@@ -873,7 +873,7 @@ ecma_date_timezone_offset (ecma_number_t time) /**< time value */
  * Helper function to set Date internal property.
  *
  * Used by:
- *         - All Date.prototype.set* routine except Date.prototype.setTime.
+ *         - All Date.prototype.set *routine except Date.prototype.setTime.
  *
  * @return completion value containing the new internal time value
  *         Returned value must be freed with ecma_free_completion_value.

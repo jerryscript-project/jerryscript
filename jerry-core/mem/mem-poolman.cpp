@@ -612,7 +612,7 @@ mem_pools_alloc_longpath (void)
  * @return pointer to allocated chunk, if allocation was successful,
  *         or NULL - if not enough memory.
  */
-uint8_t* __attr_always_inline___
+uint8_t *__attr_always_inline___
 mem_pools_alloc (void)
 {
 #ifdef MEM_GC_BEFORE_EACH_ALLOC

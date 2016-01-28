@@ -65,7 +65,9 @@ do \
 /**
  * Provide log message to filestream implementation for the engine.
  */
-int jerry_port_logmsg (FILE* stream, const char* format, ...)
+int jerry_port_logmsg (FILE *stream, /**< stream pointer */
+                       const char *format, /**< format string */
+                       ...) /**< parameters */
 {
   va_list args;
   int count;
@@ -78,7 +80,8 @@ int jerry_port_logmsg (FILE* stream, const char* format, ...)
 /**
  * Provide error message to console implementation for the engine.
  */
-int jerry_port_errormsg (const char* format, ...)
+int jerry_port_errormsg (const char *format, /**< format string */
+                         ...) /**< parameters */
 {
   va_list args;
   int count;
@@ -91,7 +94,7 @@ int jerry_port_errormsg (const char* format, ...)
 /**
  * Provide output character to console implementation for the engine.
  */
-int jerry_port_putchar (int c)
+int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar (c);
 }

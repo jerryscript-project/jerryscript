@@ -306,7 +306,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
                      re_char_class_callback append_char_class, /**< callback function,
                                                                 *   which adds the char-ranges
                                                                 *   to the bytecode */
-                     void* re_ctx_p, /**< regexp compiler context */
+                     void *re_ctx_p, /**< regexp compiler context */
                      re_token_t *out_token_p) /**< out: output token */
 {
   re_token_type_t token_type = ((re_compiler_ctx_t *) re_ctx_p)->current_token.type;

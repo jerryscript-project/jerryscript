@@ -46,7 +46,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   JERRY_ASSERT (arguments_list_len == 0
                 || arguments_list_p != NULL);
 
-  ecma_string_t* prim_prop_str_value_p;
+  ecma_string_t *prim_prop_str_value_p;
 
   ecma_number_t length_value;
 
@@ -166,7 +166,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
   }
 
   // 4.
-  ecma_property_t* prim_value_prop_p = ecma_get_internal_property (obj_p,
+  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
   ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                prim_value_prop_p->u.internal_property.value);
@@ -233,7 +233,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
   (void) for_non_enumerable_p;
 
-  ecma_property_t* prim_value_prop_p = ecma_get_internal_property (obj_p,
+  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
   ecma_string_t *prim_value_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                prim_value_prop_p->u.internal_property.value);

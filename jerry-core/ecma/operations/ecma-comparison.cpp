@@ -105,8 +105,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_string)
     { // d.
-      ecma_string_t* x_str_p = ecma_get_string_from_value (x);
-      ecma_string_t* y_str_p = ecma_get_string_from_value (y);
+      ecma_string_t *x_str_p = ecma_get_string_from_value (x);
+      ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
@@ -302,8 +302,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
   // (same length and same characters in corresponding positions); otherwise, return false.
   if (is_x_string)
   {
-    ecma_string_t* x_str_p = ecma_get_string_from_value (x);
-    ecma_string_t* y_str_p = ecma_get_string_from_value (y);
+    ecma_string_t *x_str_p = ecma_get_string_from_value (x);
+    ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }

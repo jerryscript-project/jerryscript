@@ -86,7 +86,7 @@ ecma_builtin_number_prototype_helper_round (uint64_t digits, /**< actual number 
  */
 static ecma_completion_value_t
 ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this argument */
-                                                const ecma_value_t* arguments_list_p, /**< arguments list */
+                                                const ecma_value_t *arguments_list_p, /**< arguments list */
                                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -307,7 +307,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       }
 
       JERRY_ASSERT (buff_index <= buff_size);
-      ecma_string_t* str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) buff_index);
+      ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) buff_index);
       ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str_p));
       MEM_FINALIZE_LOCAL_ARRAY (buff);
     }
@@ -559,7 +559,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           JERRY_ASSERT (p - buff < buffer_size);
           /* String terminator. */
           *p = 0;
-          ecma_string_t* str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
+          ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
 
           ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str));
           MEM_FINALIZE_LOCAL_ARRAY (buff);

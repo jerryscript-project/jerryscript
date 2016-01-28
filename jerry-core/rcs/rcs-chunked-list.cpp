@@ -304,7 +304,7 @@ rcs_chunked_list_remove (rcs_chunked_list_t *cl_p, /**< the chunked_list */
  */
 rcs_chunked_list_node_t*
 rcs_chunked_list_get_node_from_pointer (rcs_chunked_list_t *cl_p, /**< the chunked_list */
-                                        void* ptr) /**< the pointer value */
+                                        void *ptr) /**< the pointer value */
 {
   rcs_chunked_list_node_t *node_p = (rcs_chunked_list_node_t*) mem_heap_get_chunked_block_start (ptr);
 

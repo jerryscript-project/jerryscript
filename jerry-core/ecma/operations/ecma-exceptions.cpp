@@ -114,7 +114,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
  */
 ecma_object_t*
 ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< native error type */
-                                      ecma_string_t* message_string_p) /**< message string */
+                                      ecma_string_t *message_string_p) /**< message string */
 {
   ecma_object_t *new_error_obj_p = ecma_new_standard_error (error_type);
 

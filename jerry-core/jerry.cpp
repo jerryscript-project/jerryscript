@@ -338,7 +338,7 @@ jerry_api_create_number_value (double value) /**< double value from which a jerr
 
 /**
  * Creates a JERRY_API_DATA_TYPE_OBJECT type jerry_api_value_t from the
- * given jerry_api_object_t* parameter and returns with it.
+ * given jerry_api_object_t *parameter and returns with it.
  */
 jerry_api_value_t
 jerry_api_create_object_value (jerry_api_object_t *value) /**< jerry_api_object_t from which a value will be created */
@@ -351,7 +351,7 @@ jerry_api_create_object_value (jerry_api_object_t *value) /**< jerry_api_object_
 
 /**
  * Creates a JERRY_API_DATA_TYPE_STRING type jerry_api_value_t from the
- * given jerry_api_string_t* parameter and returns with it.
+ * given jerry_api_string_t *parameter and returns with it.
  */
 jerry_api_value_t
 jerry_api_create_string_value (jerry_api_string_t *value) /**< jerry_api_string_t from which a value will be created */
@@ -435,7 +435,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
  */
 static void
 jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: ecma-value */
-                                           const jerry_api_value_t* api_value_p) /**< value in Jerry API format */
+                                           const jerry_api_value_t *api_value_p) /**< value in Jerry API format */
 {
   switch (api_value_p->type)
   {
@@ -876,10 +876,10 @@ jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
   }
   else
   {
-    ecma_string_t* message_string_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) message_p,
+    ecma_string_t *message_string_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) message_p,
                                                                       (lit_utf8_size_t) message_size);
 
-    ecma_object_t* error_object_p = ecma_new_standard_error_with_message (standard_error_type, message_string_p);
+    ecma_object_t *error_object_p = ecma_new_standard_error_with_message (standard_error_type, message_string_p);
 
     ecma_deref_ecma_string (message_string_p);
 
@@ -1002,7 +1002,7 @@ jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< poin
  *         false - otherwise.
  */
 bool
-jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
+jerry_api_is_function (const jerry_api_object_t *object_p) /**< an object */
 {
   jerry_assert_api_available ();
 
@@ -1020,7 +1020,7 @@ jerry_api_is_function (const jerry_api_object_t* object_p) /**< an object */
  *         false - otherwise.
  */
 bool
-jerry_api_is_constructor (const jerry_api_object_t* object_p) /**< an object */
+jerry_api_is_constructor (const jerry_api_object_t *object_p) /**< an object */
 {
   jerry_assert_api_available ();
 
@@ -1052,7 +1052,7 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
 
   if (ecma_get_object_extensible (object_p))
   {
-    ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+    ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                       (lit_utf8_size_t) field_name_size);
 
     ecma_property_t *prop_p = ecma_op_object_get_own_property (object_p, field_name_str_p);
@@ -1096,7 +1096,7 @@ jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to dele
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+  ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                     (lit_utf8_size_t) field_name_size);
 
   ecma_completion_value_t delete_completion = ecma_op_object_delete (object_p,
@@ -1217,7 +1217,7 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+  ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                     (lit_utf8_size_t) field_name_size);
 
   ecma_completion_value_t get_completion = ecma_op_object_get (object_p,
@@ -1278,7 +1278,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
 
   bool is_successful = true;
 
-  ecma_string_t* field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
+  ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                     (lit_utf8_size_t) field_name_size);
 
   ecma_value_t value_to_put;
@@ -1312,7 +1312,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
  */
 bool
 jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to get handle from */
-                                    uintptr_t* out_handle_p) /**< out: handle value */
+                                    uintptr_t *out_handle_p) /**< out: handle value */
 {
   jerry_assert_api_available ();
 
@@ -1721,7 +1721,7 @@ jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callbac
  *         false - otherwise (SyntaxError was raised).
  */
 bool
-jerry_parse (const jerry_api_char_t* source_p, /**< script source */
+jerry_parse (const jerry_api_char_t *source_p, /**< script source */
              size_t source_size) /**< script source size */
 {
   jerry_assert_api_available ();
@@ -1821,7 +1821,7 @@ jerry_new_ctx (void)
  * Cleanup resources associated with specified run context
  */
 void
-jerry_cleanup_ctx (jerry_ctx_t* ctx_p) /**< run context */
+jerry_cleanup_ctx (jerry_ctx_t *ctx_p) /**< run context */
 {
   jerry_assert_api_available ();
 
@@ -1859,10 +1859,10 @@ jerry_pop_ctx (void)
  * Register external magic string array
  */
 void
-jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items, /**< character arrays, representing
+jerry_register_external_magic_strings (const jerry_api_char_ptr_t *ex_str_items, /**< character arrays, representing
                                                                                   * external magic strings' contents */
                                        uint32_t count,                           /**< number of the strings */
-                                       const jerry_api_length_t* str_lengths)    /**< lengths of the strings */
+                                       const jerry_api_length_t *str_lengths)    /**< lengths of the strings */
 {
   lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_external_magic_strings */
@@ -2082,7 +2082,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
  *         0 - otherwise.
  */
 size_t
-jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script source */
+jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script source */
                                size_t source_size, /**< script source size */
                                bool is_for_global, /**< snapshot would be executed as global (true)
                                                     *   or eval (false) */
@@ -2150,7 +2150,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
 
     size_t compiled_code_size = snapshot_buffer_write_offset - compiled_code_start;
 
-    lit_mem_to_snapshot_id_map_entry_t* lit_map_p = NULL;
+    lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
     uint32_t literals_num;
 
     if (!lit_dump_literals_for_snapshot (buffer_p,

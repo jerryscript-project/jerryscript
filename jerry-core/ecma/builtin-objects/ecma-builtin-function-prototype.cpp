@@ -174,7 +174,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
  */
 static ecma_completion_value_t
 ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this argument */
-                                             const ecma_value_t* arguments_list_p, /**< list of arguments */
+                                             const ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
   if (!ecma_op_is_callable (this_arg))
@@ -212,7 +212,7 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this ar
  */
 static ecma_completion_value_t
 ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this argument */
-                                             const ecma_value_t* arguments_list_p, /**< list of arguments */
+                                             const ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
@@ -368,7 +368,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
  * @return completion-value
  */
 ecma_completion_value_t
-ecma_builtin_function_prototype_dispatch_call (const ecma_value_t* arguments_list_p, /**< arguments list */
+ecma_builtin_function_prototype_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

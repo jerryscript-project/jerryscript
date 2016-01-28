@@ -32,10 +32,10 @@
  * Target port functions for console output
  */
 extern EXTERN_C
-int jerry_port_logmsg (FILE* stream, const char* format, ...);
+int jerry_port_logmsg (FILE *stream, const char *format, ...);
 
 extern EXTERN_C
-int jerry_port_errormsg (const char* format, ...);
+int jerry_port_errormsg (const char *format, ...);
 
 extern EXTERN_C
 int jerry_port_putchar (int c);

@@ -180,7 +180,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
             && ecma_lcache_hash_table[hash_key][entry_index].prop_cp == prop_cp)
         {
 #ifndef JERRY_NDEBUG
-          ecma_object_t* obj_in_entry_p;
+          ecma_object_t *obj_in_entry_p;
           obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                                       ecma_lcache_hash_table[hash_key][entry_index].object_cp);
           JERRY_ASSERT (obj_in_entry_p == object_p);

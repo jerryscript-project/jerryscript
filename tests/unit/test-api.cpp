@@ -89,7 +89,7 @@ test_api_init_api_value_float64 (jerry_api_value_t *out_value_p, /**< out: API v
  */
 static void
 test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API value */
-                                const char* v) /**< string value to initialize with */
+                                const char *v) /**< string value to initialize with */
 {
   out_value_p->type = JERRY_API_DATA_TYPE_STRING;
   out_value_p->v_string = jerry_api_create_string ((jerry_api_char_t *) v);
@@ -100,7 +100,7 @@ test_api_init_api_value_string (jerry_api_value_t *out_value_p, /**< out: API va
  */
 static void
 test_api_init_api_value_object (jerry_api_value_t *out_value_p, /**< out: API value */
-                                jerry_api_object_t* v) /**< object value to initialize with */
+                                jerry_api_object_t *v) /**< object value to initialize with */
 {
   jerry_api_acquire_object (v);
 
@@ -146,7 +146,7 @@ handler_throw_test (const jerry_api_object_t *function_obj_p,
 {
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 
-  jerry_api_object_t* error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE,
+  jerry_api_object_t *error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE,
                                                         (jerry_api_char_t *) "error");
 
   test_api_init_api_value_object (ret_val_p, error_p);
@@ -321,13 +321,13 @@ main (void)
   ssize_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_api_value_t val_external, val_external_construct, val_call_external;
-  jerry_api_object_t* global_obj_p, *obj_p;
-  jerry_api_object_t* external_func_p, *external_construct_p;
-  jerry_api_object_t* throw_test_handler_p;
+  jerry_api_object_t *global_obj_p, *obj_p;
+  jerry_api_object_t *external_func_p, *external_construct_p;
+  jerry_api_object_t *throw_test_handler_p;
   jerry_api_value_t res, args[2];
   char buffer[32];
 
-  is_ok = jerry_parse ((jerry_api_char_t *)test_source, strlen (test_source));
+  is_ok = jerry_parse ((jerry_api_char_t *) test_source, strlen (test_source));
   JERRY_ASSERT (is_ok);
 
   is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);

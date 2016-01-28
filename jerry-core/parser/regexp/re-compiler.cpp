@@ -218,7 +218,7 @@ re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
  * Callback function of character class generation
  */
 static void
-re_append_char_class (void* re_ctx_p, /**< RegExp compiler context */
+re_append_char_class (void *re_ctx_p, /**< RegExp compiler context */
                       uint32_t start, /**< character class range from */
                       uint32_t end) /**< character class range to */
 {

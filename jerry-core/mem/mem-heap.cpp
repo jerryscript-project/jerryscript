@@ -381,11 +381,11 @@ mem_heap_finalize (void)
  * @return pointer to allocated memory block - if allocation is successful,
  *         NULL - if there is not enough memory.
  */
-static
-void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region to allocate in bytes */
-                                     mem_block_length_type_t length_type, /**< length type of the block
-                                                                           *   (one-chunked or general) */
-                                     mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
+static void *
+mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region to allocate in bytes */
+                               mem_block_length_type_t length_type, /**< length type of the block
+                                                                     *   (one-chunked or general) */
+                               mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   JERRY_ASSERT (size_in_bytes != 0);
   JERRY_ASSERT (length_type != MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED

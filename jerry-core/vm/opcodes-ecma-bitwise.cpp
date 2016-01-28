@@ -48,7 +48,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-  ecma_number_t* res_p = ecma_alloc_number ();
+  ecma_number_t *res_p = ecma_alloc_number ();
 
   int32_t left_int32 = ecma_number_to_int32 (num_left);
 

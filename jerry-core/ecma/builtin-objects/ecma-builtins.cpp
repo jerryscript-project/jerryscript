@@ -42,7 +42,7 @@ static void ecma_instantiate_builtin (ecma_builtin_id_t id);
 /**
  * Pointer to instances of built-in objects
  */
-static ecma_object_t* ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT];
+static ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT];
 
 /**
  * Check if passed object is the instance of specified built-in.
@@ -96,7 +96,7 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
  */
 static ecma_object_t*
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
-                          ecma_object_t* prototype_obj_p, /**< prototype object */
+                          ecma_object_t *prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
                           bool is_extensible) /**< value of object's [[Extensible]] property */
 {
@@ -294,7 +294,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
-    ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
     bool is_length_property = ecma_compare_ecma_strings (string_p, magic_string_length_p);
 
@@ -508,7 +508,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                             ecma_value_t this_arg_value, /**< 'this' argument value */
-                            ecma_collection_header_t* arg_collection_p) /**< arguments collection */
+                            ecma_collection_header_t *arg_collection_p) /**< arguments collection */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
@@ -612,7 +612,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
-                                 ecma_collection_header_t* arg_collection_p) /**< arguments collection */
+                                 ecma_collection_header_t *arg_collection_p) /**< arguments collection */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));

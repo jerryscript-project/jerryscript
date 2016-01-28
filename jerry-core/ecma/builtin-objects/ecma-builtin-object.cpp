@@ -604,7 +604,7 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
     ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (prop_p);
 
     // 4.
-    ecma_object_t* desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
+    ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
 
     ecma_free_property_descriptor (&prop_desc);
 

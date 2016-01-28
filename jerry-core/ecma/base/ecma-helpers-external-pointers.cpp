@@ -110,7 +110,7 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
                 || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
-  ecma_property_t* prop_p = ecma_find_internal_property (obj_p, id);
+  ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
 
   if (prop_p == NULL)
   {

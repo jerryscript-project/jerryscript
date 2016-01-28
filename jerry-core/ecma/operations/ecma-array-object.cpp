@@ -118,7 +118,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
       continue;
     }
 
-    ecma_string_t* item_name_string_p = ecma_new_ecma_string_from_uint32 (index);
+    ecma_string_t *item_name_string_p = ecma_new_ecma_string_from_uint32 (index);
 
     ecma_builtin_helper_def_prop (obj_p,
                                   item_name_string_p,
@@ -147,14 +147,14 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 ecma_completion_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array object */
                                           ecma_string_t *property_name_p, /**< property name */
-                                          const ecma_property_descriptor_t* property_desc_p, /**< property descriptor */
+                                          const ecma_property_descriptor_t *property_desc_p, /**< property descriptor */
                                           bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
 
   // 1.
-  ecma_string_t* magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
   JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 

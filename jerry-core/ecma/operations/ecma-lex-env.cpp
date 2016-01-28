@@ -42,7 +42,7 @@
  *
  * See also: ECMA-262 v5, 10.2.3
  */
-ecma_object_t* ecma_global_lex_env_p = NULL;
+ecma_object_t *ecma_global_lex_env_p = NULL;
 
 /**
  * Initialize Global environment

@@ -241,7 +241,7 @@ ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< t
  */
 static ecma_completion_value_t
 ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this argument */
-                                             const ecma_value_t* argument_list_p, /**< arguments list */
+                                             const ecma_value_t *argument_list_p, /**< arguments list */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();

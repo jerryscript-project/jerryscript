@@ -278,14 +278,14 @@ jerry_api_create_number_value (double value);
 
 /**
  * Creates a JERRY_API_DATA_TYPE_OBJECT type jerry_api_value_t from the
- * given jerry_api_object_t* parameter and returns with it.
+ * given jerry_api_object_t *parameter and returns with it.
  */
 extern EXTERN_C jerry_api_value_t
 jerry_api_create_object_value (jerry_api_object_t *value);
 
 /**
  * Creates a JERRY_API_DATA_TYPE_STRING type jerry_api_value_t from the
- * given jerry_api_string_t* parameter and returns with it.
+ * given jerry_api_string_t *parameter and returns with it.
  */
 extern EXTERN_C jerry_api_value_t
 jerry_api_create_string_value (jerry_api_string_t *value);

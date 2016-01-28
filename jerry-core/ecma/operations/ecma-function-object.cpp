@@ -104,7 +104,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
  */
 static ecma_collection_header_t *
 ecma_function_bind_merge_arg_lists (ecma_object_t *func_obj_p, /**< Function object */
-                                    ecma_collection_header_t* passed_arg_collection_p) /**< passed arguments list */
+                                    ecma_collection_header_t *passed_arg_collection_p) /**< passed arguments list */
 {
   ecma_length_t passed_args_number = passed_arg_collection_p != NULL ? passed_arg_collection_p->unit_number : 0;
 
@@ -496,7 +496,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
       return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
     }
 
-    ecma_object_t* v_obj_p = ecma_get_object_from_value (value);
+    ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
 
     ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
 
@@ -697,7 +697,7 @@ ecma_op_function_call_array_args (ecma_object_t *func_obj_p, /**< Function objec
 ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        ecma_value_t this_arg_value, /**< 'this' argument's value */
-                       ecma_collection_header_t* arg_collection_p) /**< arguments list */
+                       ecma_collection_header_t *arg_collection_p) /**< arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
@@ -858,7 +858,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
  */
 static ecma_completion_value_t
 ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< Function object */
-                                               ecma_collection_header_t* arg_collection_p) /**< arguments
+                                               ecma_collection_header_t *arg_collection_p) /**< arguments
                                                                                             *   collection */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION

@@ -258,7 +258,7 @@ ecma_set_object_type (ecma_object_t *object_p, /**< object */
 /**
  * Get object's prototype.
  */
-ecma_object_t* __attr_pure___
+ecma_object_t *__attr_pure___
 ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -331,7 +331,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
 /**
  * Get outer reference of lexical environment.
  */
-ecma_object_t* __attr_pure___
+ecma_object_t *__attr_pure___
 ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -351,7 +351,7 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
  * See also:
  *          ecma_op_object_get_property_names
  */
-ecma_property_t* __attr_pure___
+ecma_property_t *__attr_pure___
 ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -410,7 +410,7 @@ ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound 
 /**
  * Get lexical environment's bound object.
  */
-ecma_object_t* __attr_pure___
+ecma_object_t *__attr_pure___
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -1042,7 +1042,7 @@ ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< nam
  * Set getter of named accessor property
  */
 void
-ecma_set_named_accessor_property_getter (ecma_object_t* object_p, /**< the property's container */
+ecma_set_named_accessor_property_getter (ecma_object_t *object_p, /**< the property's container */
                                          ecma_property_t *prop_p, /**< named accessor property */
                                          ecma_object_t *getter_p) /**< getter object */
 {
@@ -1060,7 +1060,7 @@ ecma_set_named_accessor_property_getter (ecma_object_t* object_p, /**< the prope
  * Set setter of named accessor property
  */
 void
-ecma_set_named_accessor_property_setter (ecma_object_t* object_p, /**< the property's container */
+ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the property's container */
                                          ecma_property_t *prop_p, /**< named accessor property */
                                          ecma_object_t *setter_p) /**< setter object */
 {
@@ -1081,7 +1081,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t* object_p, /**< the prope
  *         false - otherwise.
  */
 bool
-ecma_is_property_writable (ecma_property_t* prop_p) /**< property */
+ecma_is_property_writable (ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
 
@@ -1092,7 +1092,7 @@ ecma_is_property_writable (ecma_property_t* prop_p) /**< property */
  * Set property's 'Writable' attribute value
  */
 void
-ecma_set_property_writable_attr (ecma_property_t* prop_p, /**< property */
+ecma_set_property_writable_attr (ecma_property_t *prop_p, /**< property */
                                  bool is_writable) /**< should the property
                                                     *  be writable? */
 {
@@ -1108,7 +1108,7 @@ ecma_set_property_writable_attr (ecma_property_t* prop_p, /**< property */
  *         false - otherwise.
  */
 bool
-ecma_is_property_enumerable (ecma_property_t* prop_p) /**< property */
+ecma_is_property_enumerable (ecma_property_t *prop_p) /**< property */
 {
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
@@ -1126,7 +1126,7 @@ ecma_is_property_enumerable (ecma_property_t* prop_p) /**< property */
  * Set property's 'Enumerable' attribute value
  */
 void
-ecma_set_property_enumerable_attr (ecma_property_t* prop_p, /**< property */
+ecma_set_property_enumerable_attr (ecma_property_t *prop_p, /**< property */
                                    bool is_enumerable) /**< should the property
                                                         *  be enumerable? */
 {
@@ -1151,7 +1151,7 @@ ecma_set_property_enumerable_attr (ecma_property_t* prop_p, /**< property */
  *         false - otherwise.
  */
 bool
-ecma_is_property_configurable (ecma_property_t* prop_p) /**< property */
+ecma_is_property_configurable (ecma_property_t *prop_p) /**< property */
 {
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
@@ -1169,7 +1169,7 @@ ecma_is_property_configurable (ecma_property_t* prop_p) /**< property */
  * Set property's 'Configurable' attribute value
  */
 void
-ecma_set_property_configurable_attr (ecma_property_t* prop_p, /**< property */
+ecma_set_property_configurable_attr (ecma_property_t *prop_p, /**< property */
                                      bool is_configurable) /**< should the property
                                                             *  be configurable? */
 {

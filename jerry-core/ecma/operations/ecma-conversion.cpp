@@ -138,8 +138,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
   }
   else if (is_x_string)
   {
-    ecma_string_t* x_str_p = ecma_get_string_from_value (x);
-    ecma_string_t* y_str_p = ecma_get_string_from_value (y);
+    ecma_string_t *x_str_p = ecma_get_string_from_value (x);
+    ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
@@ -436,7 +436,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
  * @return constructed object
  */
 ecma_object_t*
-ecma_op_from_property_descriptor (const ecma_property_descriptor_t* src_prop_desc_p) /**< property descriptor */
+ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p) /**< property descriptor */
 {
   // 2.
   ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();

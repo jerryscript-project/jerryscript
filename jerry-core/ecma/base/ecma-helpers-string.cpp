@@ -69,11 +69,11 @@ ecma_new_chars_collection (const lit_utf8_byte_t chars_buffer[], /**< utf-8 char
   JERRY_ASSERT (chars_buffer != NULL);
   JERRY_ASSERT (chars_size > 0);
 
-  ecma_collection_header_t* collection_p = ecma_alloc_collection_header ();
+  ecma_collection_header_t *collection_p = ecma_alloc_collection_header ();
 
   collection_p->unit_number = chars_size;
 
-  mem_cpointer_t* next_chunk_cp_p = &collection_p->first_chunk_cp;
+  mem_cpointer_t *next_chunk_cp_p = &collection_p->first_chunk_cp;
   lit_utf8_byte_t *cur_char_buf_iter_p = NULL;
   lit_utf8_byte_t *cur_char_buf_end_p = NULL;
 
@@ -166,8 +166,8 @@ ecma_get_chars_collection_length (const ecma_collection_header_t *header_p) /**<
  *         false - otherwise.
  */
 static bool
-ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< first collection's header */
-                               const ecma_collection_header_t* header2_p) /**< second collection's header */
+ecma_compare_chars_collection (const ecma_collection_header_t *header1_p, /**< first collection's header */
+                               const ecma_collection_header_t *header2_p) /**< second collection's header */
 {
   JERRY_ASSERT (header1_p != NULL && header2_p != NULL);
 
@@ -224,14 +224,14 @@ ecma_compare_chars_collection (const ecma_collection_header_t* header1_p, /**< f
  * @return pointer to collection copy
  */
 static ecma_collection_header_t*
-ecma_copy_chars_collection (const ecma_collection_header_t* collection_p) /**< collection's header */
+ecma_copy_chars_collection (const ecma_collection_header_t *collection_p) /**< collection's header */
 {
   JERRY_ASSERT (collection_p != NULL);
 
   ecma_collection_header_t *new_header_p = ecma_alloc_collection_header ();
   *new_header_p = *collection_p;
 
-  mem_cpointer_t* next_chunk_cp_p = &new_header_p->first_chunk_cp;
+  mem_cpointer_t *next_chunk_cp_p = &new_header_p->first_chunk_cp;
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
                                                        collection_p->first_chunk_cp);
@@ -297,7 +297,7 @@ ecma_copy_chars_collection_to_buffer (const ecma_collection_header_t *collection
  * Free the collection of ecma-chars.
  */
 static void
-ecma_free_chars_collection (ecma_collection_header_t* collection_p) /**< collection's header */
+ecma_free_chars_collection (ecma_collection_header_t *collection_p) /**< collection's header */
 {
   JERRY_ASSERT (collection_p != NULL);
 
@@ -434,7 +434,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
 
   JERRY_ASSERT (string_size > 0);
 
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_CHUNKS;
@@ -516,7 +516,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
     return ecma_get_magic_string_ex (magic_string_ex_id);
   }
 
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
   string_desc_p->refs = 1;
   string_desc_p->is_stack_var = false;
   string_desc_p->container = ECMA_STRING_CONTAINER_HEAP_NUMBER;
@@ -550,7 +550,7 @@ ecma_new_ecma_string_on_stack_from_lit_cp (ecma_string_t *string_p, /**< pointer
 ecma_string_t*
 ecma_new_ecma_string_from_lit_cp (lit_cpointer_t lit_cp) /**< index in the literal table */
 {
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
 
   ecma_init_ecma_string_from_lit_cp (string_desc_p, lit_cp, false);
 
@@ -578,7 +578,7 @@ ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id) /**< identi
 {
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
 
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
   ecma_init_ecma_string_from_magic_string_id (string_desc_p, id, false);
 
   return string_desc_p;
@@ -594,7 +594,7 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 {
   JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
 
-  ecma_string_t* string_desc_p = ecma_alloc_string ();
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
   ecma_init_ecma_string_from_magic_string_ex_id (string_desc_p, id, false);
 
   return string_desc_p;

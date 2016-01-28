@@ -405,7 +405,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
 ecma_completion_value_t
 ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                     ecma_string_t *property_name_p, /**< property name */
-                                    const ecma_property_descriptor_t* property_desc_p, /**< property
+                                    const ecma_property_descriptor_t *property_desc_p, /**< property
                                                                                         *   descriptor */
                                     bool is_throw) /**< flag that controls failure handling */
 {

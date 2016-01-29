@@ -807,7 +807,7 @@ jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
   return jerry_api_create_error_sz (error_type,
                                     (lit_utf8_byte_t *) message_p,
                                     lit_zt_utf8_string_size (message_p));
-}
+} /* jerry_api_create_error */
 
 /**
  * Create an error object
@@ -885,7 +885,7 @@ jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
 
     return error_object_p;
   }
-} /* jerry_api_create_error */
+} /* jerry_api_create_error_sz */
 
 /**
  * Create an external function object
@@ -1136,7 +1136,7 @@ bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object
                                               field_name_p,
                                               lit_zt_utf8_string_size (field_name_p),
                                               field_value_p);
-}
+} /* jerry_api_get_object_field_value */
 
 /**
  * Applies the given function to the every fields in the objects
@@ -1241,7 +1241,7 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
   ecma_deref_ecma_string (field_name_str_p);
 
   return is_successful;
-} /* jerry_api_get_object_field_value */
+} /* jerry_api_get_object_field_value_sz */
 
 /**
  * Set value of field in the specified object
@@ -1259,7 +1259,7 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
                                               field_name_p,
                                               lit_zt_utf8_string_size (field_name_p),
                                               field_value_p);
-}
+} /* jerry_api_set_object_field_value */
 
 /**
  * Set value of field in the specified object
@@ -1302,7 +1302,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
   ecma_deref_ecma_string (field_name_str_p);
 
   return is_successful;
-} /* jerry_api_set_object_field_value */
+} /* jerry_api_set_object_field_value_sz */
 
 /**
  * Get native handle, associated with specified object

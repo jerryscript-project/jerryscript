@@ -847,7 +847,7 @@ lit_code_point_to_cesu8 (lit_code_point_t code_point, /**< code point */
     offset += lit_code_unit_to_utf8 (convert_code_point_to_low_surrogate (code_point), buf + offset);
     return offset;
   }
-} /* lit_code_point_to_utf8 */
+} /* lit_code_point_to_cesu8 */
 
 /**
  * Convert code point to utf-8 representation

@@ -1019,7 +1019,7 @@ ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< nam
                                                prop_p->u.named_accessor_property.getter_setter_pair_cp);
 
   return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->getter_p);
-} /* ecma_named_accessor_property_get_getter */
+} /* ecma_get_named_accessor_property_getter */
 
 /**
  * Get setter of named accessor property
@@ -1036,7 +1036,7 @@ ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< nam
                                                prop_p->u.named_accessor_property.getter_setter_pair_cp);
 
   return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->setter_p);
-} /* ecma_named_accessor_property_get_setter */
+} /* ecma_get_named_accessor_property_setter */
 
 /**
  * Set getter of named accessor property
@@ -1054,7 +1054,7 @@ ecma_set_named_accessor_property_getter (ecma_object_t *object_p, /**< the prope
                                                prop_p->u.named_accessor_property.getter_setter_pair_cp);
 
   ECMA_SET_POINTER (getter_setter_pointers_p->getter_p, getter_p);
-} /* ecma_named_accessor_property_set_getter */
+} /* ecma_set_named_accessor_property_getter */
 
 /**
  * Set setter of named accessor property
@@ -1072,7 +1072,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
                                                prop_p->u.named_accessor_property.getter_setter_pair_cp);
 
   ECMA_SET_POINTER (getter_setter_pointers_p->setter_p, setter_p);
-} /* ecma_named_accessor_property_set_setter */
+} /* ecma_set_named_accessor_property_setter */
 
 /**
  * Get property's 'Writable' attribute value

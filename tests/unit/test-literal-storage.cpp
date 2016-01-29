@@ -37,7 +37,7 @@ generate_string (lit_utf8_byte_t *str, lit_utf8_size_t len)
   {
     str[i] = bytes[(unsigned long) rand () % length];
   }
-}
+} /* generate_string */
 
 static ecma_number_t
 generate_number ()
@@ -53,7 +53,7 @@ generate_number ()
     num *= 10;
   }
   return num;
-}
+} /* generate_number */
 
 int
 main (int __attr_unused___ argc,
@@ -140,4 +140,4 @@ main (int __attr_unused___ argc,
   lit_finalize ();
   mem_finalize (true);
   return 0;
-}
+} /* main */

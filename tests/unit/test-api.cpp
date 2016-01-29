@@ -154,7 +154,7 @@ handler_throw_test (const jerry_api_object_t *function_obj_p,
   jerry_api_release_object (error_p);
 
   return false;
-}
+} /* handler_throw_test */
 
 static void
 handler_construct_freecb (uintptr_t native_p)
@@ -285,7 +285,7 @@ static bool foreach (const jerry_api_string_t *name,
 
   JERRY_ASSERT (!strncmp ((const char*)user_data, "user_data", 9));
   return true;
-}
+} /* foreach */
 
 static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_value_t *, void *)
 {
@@ -298,7 +298,7 @@ static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_v
     JERRY_ASSERT (false);
   }
   return true;
-}
+} /* foreach_exception */
 
 static bool foreach_subset (const jerry_api_string_t *, const jerry_api_value_t *, void *user_data)
 {
@@ -309,7 +309,8 @@ static bool foreach_subset (const jerry_api_string_t *, const jerry_api_value_t 
   }
   (*count_p)++;
   return true;
-}
+} /* foreach_subset */
+
 int
 main (void)
 {
@@ -740,4 +741,4 @@ main (void)
   }
 
   return 0;
-}
+} /* main */

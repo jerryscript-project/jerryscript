@@ -125,7 +125,7 @@ lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
 
   JERRY_UNREACHABLE ();
   return 0;
-} /* rcs_snapshot_dump */
+} /* lit_snapshot_dump */
 
 /**
  * Dump literals to specified snapshot buffer.
@@ -410,6 +410,6 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
 
   mem_heap_free_block (id_map_p);
   return false;
-} /* rcs_load_literals_from_snapshot */
+} /* lit_load_literals_from_snapshot */
 
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */

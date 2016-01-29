@@ -173,7 +173,7 @@ strcmp (const char *str1, const char *str2)
   while (s1 == s2);
 
   return (s1 < s2) ? -1 : (s1 > s2 ? 1 : 0);
-}
+} /* strcmp */
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero
      if the first n character of s1 is found, respectively, to be less than, to match,
@@ -217,7 +217,7 @@ strncmp (const char *s1, const char *s2, size_t n)
   }
 
   return 0;
-}
+} /* strncmp */
 
 /** Copy a string. At most n bytes of src are copied.  Warning: If there is no
      null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
@@ -237,7 +237,7 @@ strncpy (char *dest, const char *src, size_t n)
   }
 
   return dest;
-}
+} /* strncpy */
 
 /** Calculate the length of a string.  */
 size_t
@@ -250,7 +250,7 @@ strlen (const char *s)
   }
 
   return i;
-}
+} /* strlen */
 
 /**
  * Generate pseudo-random integer

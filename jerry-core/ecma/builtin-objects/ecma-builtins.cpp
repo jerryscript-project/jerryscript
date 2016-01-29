@@ -452,7 +452,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
     JERRY_UNREACHABLE ();
   }
-} /* ecma_builtin_list_and_lazy_property_names */
+} /* ecma_builtin_list_lazy_property_names */
 
 /**
  * Construct a Function object for specified built-in routine

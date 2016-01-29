@@ -1167,7 +1167,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
   JERRY_UNREACHABLE ();
   return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
-} /* regexp_match */
+} /* re_match_regexp */
 
 /**
  * Define the necessary properties for the result array (index, input, length).

@@ -935,7 +935,7 @@ ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
   is_array_index = is_array_index && (*out_index_p != ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX);
 
   return is_array_index;
-} /* ecma_string_is_array_index */
+} /* ecma_string_get_array_index */
 
 /**
  * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.
@@ -1283,8 +1283,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   }
 
   return is_first_less_than_second;
-}
-/* ecma_compare_ecma_strings_relational */
+} /* ecma_compare_ecma_strings_relational */
 
 /**
  * Get length of ecma-string
@@ -1629,7 +1628,7 @@ ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate h
 
 {
   return (string_p->hash);
-} /* ecma_string_try_hash */
+} /* ecma_string_hash */
 
 /**
  * Create a substring from an ecma string

@@ -201,7 +201,7 @@ re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
   uint8_t bytecode = **bc_p;
   (*bc_p) += sizeof (uint8_t);
   return (re_opcode_t) bytecode;
-} /* get_opcode */
+} /* re_get_opcode */
 
 /**
  * Get a parameter of a RegExp opcode
@@ -212,7 +212,7 @@ re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
   uint32_t value = *((uint32_t*) *bc_p);
   (*bc_p) += sizeof (uint32_t);
   return value;
-} /* get_value */
+} /* re_get_value */
 
 /**
  * Callback function of character class generation

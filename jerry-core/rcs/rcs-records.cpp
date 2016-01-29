@@ -142,7 +142,7 @@ rcs_record_set_alignment_bytes_count (rcs_record_t *rec_p, /**< record */
   JERRY_ASSERT (RCS_RECORD_IS_CHARSET (rec_p));
 
   rcs_record_set_field (rec_p, RCS_CHARSET_HEADER_ALIGN_POS, RCS_CHARSET_HEADER_ALIGN_WIDTH, count);
-} /* rcs_record_set_align */
+} /* rcs_record_set_alignment_bytes_count */
 
 /**
  * Set the hash value of the record.

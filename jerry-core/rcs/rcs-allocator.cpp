@@ -299,7 +299,7 @@ rcs_alloc_record (rcs_record_set_t *rec_set_p, /**< recordset */
   rcs_assert_state_is_correct (rec_set_p);
 
   return rec_p;
-} /* alloc_record */
+} /* rcs_alloc_record */
 
 /**
  * Free the specified record.

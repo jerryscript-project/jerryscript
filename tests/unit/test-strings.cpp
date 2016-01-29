@@ -71,7 +71,7 @@ generate_cesu8_char (utf8_char_size char_size,
   }
 
   return lit_code_unit_to_utf8 ((ecma_char_t) code_point, buf);
-}
+} /* generate_cesu8_char */
 
 static ecma_length_t
 generate_cesu8_string (lit_utf8_byte_t *buf_p,
@@ -98,7 +98,7 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
   JERRY_ASSERT (size == buf_size);
 
   return length;
-}
+} /* generate_cesu8_string */
 
 int
 main (int __attr_unused___ argc,
@@ -232,4 +232,4 @@ main (int __attr_unused___ argc,
   mem_finalize (true);
 
   return 0;
-}
+} /* main */

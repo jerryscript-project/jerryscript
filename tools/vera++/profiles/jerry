@@ -3,6 +3,7 @@ set rules {
     jerry_braces_on_separate_line
     jerry_braces_same_line_or_column
     jerry_dereference_operator_always_on_right
+    jerry_comment_function_end
     jerry_funcname_space_parentheses
     jerry_identifier_no_space_bracket
     jerry_indentation

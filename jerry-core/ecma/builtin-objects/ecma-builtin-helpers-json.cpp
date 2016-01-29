@@ -143,7 +143,7 @@ ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *
   }
 
   return properties_str_p;
-} /* ecma_builtin_json_helper_create_separated_properties */
+} /* ecma_builtin_helper_json_create_separated_properties */
 
 /**
  * Common function to create a formatted JSON string.
@@ -213,7 +213,7 @@ ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /
   final_str_p = tmp_str_p;
 
   return ecma_make_normal_completion_value (ecma_make_string_value (final_str_p));
-} /* ecma_builtin_json_helper_create_formatted_json */
+} /* ecma_builtin_helper_json_create_formatted_json */
 
 /**
  * Common function to create a non-formatted JSON string.
@@ -252,7 +252,7 @@ ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_
   properties_str_p = tmp_str_p;
 
   return ecma_make_normal_completion_value (ecma_make_string_value (properties_str_p));
-} /* ecma_builtin_json_helper_create_non_formatted_json */
+} /* ecma_builtin_helper_json_create_non_formatted_json */
 
 /**
  * Convert decimal value to 4 digit hexadecimal string value.

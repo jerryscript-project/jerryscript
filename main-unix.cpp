@@ -109,7 +109,7 @@ read_sources (const char *script_file_names[],
 
     return (const jerry_api_char_t *) buffer;
   }
-}
+} /* read_sources */
 
 static bool
 read_snapshot (const char *snapshot_file_name_p,
@@ -481,4 +481,4 @@ main (int argc,
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
-}
+} /* main */

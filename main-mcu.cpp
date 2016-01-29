@@ -43,4 +43,4 @@ main (void)
   {
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
-}
+} /* main */

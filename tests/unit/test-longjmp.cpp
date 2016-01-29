@@ -65,7 +65,7 @@ test_setjmp_longjmp (volatile int depth)
 
     longjmp (buffers[t], t + 1);
   }
-}
+} /* test_setjmp_longjmp */
 
 int
 main (int __attr_unused___ argc,

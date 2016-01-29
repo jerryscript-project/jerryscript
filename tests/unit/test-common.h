@@ -75,7 +75,7 @@ int jerry_port_logmsg (FILE *stream, /**< stream pointer */
   count = vfprintf (stream, format, args);
   va_end (args);
   return count;
-}
+} /* jerry_port_logmsg */
 
 /**
  * Provide error message to console implementation for the engine.
@@ -89,7 +89,7 @@ int jerry_port_errormsg (const char *format, /**< format string */
   count = vfprintf (stderr, format, args);
   va_end (args);
   return count;
-}
+} /* jerry_port_errormsg */
 
 /**
  * Provide output character to console implementation for the engine.
@@ -97,6 +97,6 @@ int jerry_port_errormsg (const char *format, /**< format string */
 int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar (c);
-}
+} /* jerry_port_putchar */
 
 #endif /* TEST_COMMON_H */

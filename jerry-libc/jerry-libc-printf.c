@@ -304,7 +304,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
                                        width,
                                        flags & LIBC_PRINTF_ARG_FLAG_LEFT_JUSTIFY,
                                        flags & LIBC_PRINTF_ARG_FLAG_ZERO_PADDING);
-} /** libc_printf_write_d_i */
+} /* libc_printf_write_d_i */
 
 /**
  * printf helper function that prints d and i arguments
@@ -470,7 +470,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
                                        width,
                                        flags & LIBC_PRINTF_ARG_FLAG_LEFT_JUSTIFY,
                                        flags & LIBC_PRINTF_ARG_FLAG_ZERO_PADDING);
-} /** libc_printf_write_u_o_x_X */
+} /* libc_printf_write_u_o_x_X */
 
 /**
  * vfprintf

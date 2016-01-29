@@ -1,3 +1,4 @@
+![](https://github.com/Samsung/jerryscript/blob/master/LOGO.png)
 # JerryScript: JavaScript engine for Internet of Things
 [![Join the chat at https://gitter.im/Samsung/jerryscript](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Samsung/jerryscript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/licence-Apache%202.0-brightgreen.svg?style=flat)](LICENSE)

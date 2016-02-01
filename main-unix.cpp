@@ -19,7 +19,6 @@
 
 #include "jerry.h"
 #include "jrt/jrt.h"
-#include "main.h"
 
 /**
  * Maximum command line arguments number

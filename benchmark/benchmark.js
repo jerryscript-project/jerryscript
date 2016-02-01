@@ -59,7 +59,7 @@ var isSum = true;
 var benchmarks = ['sunspider-1.0.2', 'ubench'];
 var measureTypes = ['memory', 'performance'];
 var measureUnits = {'memory': 'kb', 'performance': 's'};
-var engines = ['jerryscript', 'jerryscript-snapshot', 'duktape'];
+var engines = ['jerryscript', 'jerryscript-snapshot', 'jerryscript_cbc', 'duktape'];
 var link_main = {
   'jerryscript': 'http://www.jerryscript.net',
   'duktape':     'http://duktape.org'
@@ -191,7 +191,7 @@ $(document).ajaxStop(function () {
         fontSize: 20,
         bold: true
       },
-      legend: { position: 'bottom' },
+      legend: { position: 'bottom', alignment: 'vertical' },
       backgroundColor: '#f8f8f8',
       hAxis: {
         title: 'Date',

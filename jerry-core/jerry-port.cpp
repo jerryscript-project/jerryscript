@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef MAIN_H
-#define MAIN_H
+#include "jerry-port.h"
+#include <stdarg.h>
 
 /**
  * Provide log message to filestream implementation for the engine.
@@ -45,7 +45,6 @@ int jerry_port_errormsg (const char *format, /**< format string */
   return count;
 } /* jerry_port_errormsg */
 
-
 /**
  * Provide output character to console implementation for the engine.
  */
@@ -53,5 +52,3 @@ int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar (c);
 } /* jerry_port_putchar */
-
-#endif /* !MAIN_H */

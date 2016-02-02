@@ -567,7 +567,7 @@ typedef struct
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
-#define DOUBLE_TO_ECMA_NUMBER_T(value) static_cast<ecma_number_t> (value)
+#define DOUBLE_TO_ECMA_NUMBER_T(value) (ecma_number_t) (value)
 
 /**
  * Maximum number of significant digits that ecma-number can store

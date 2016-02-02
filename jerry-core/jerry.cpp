@@ -460,7 +460,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     case JERRY_API_DATA_TYPE_FLOAT32:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = static_cast<ecma_number_t> (api_value_p->v_float32);
+      *num = (ecma_number_t) (api_value_p->v_float32);
 
       *out_value_p = ecma_make_number_value (num);
 
@@ -469,7 +469,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     case JERRY_API_DATA_TYPE_FLOAT64:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = static_cast<ecma_number_t> (api_value_p->v_float64);
+      *num = (ecma_number_t) (api_value_p->v_float64);
 
       *out_value_p = ecma_make_number_value (num);
 
@@ -478,7 +478,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     case JERRY_API_DATA_TYPE_UINT32:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = static_cast<ecma_number_t> (api_value_p->v_uint32);
+      *num = (ecma_number_t) (api_value_p->v_uint32);
 
       *out_value_p = ecma_make_number_value (num);
 

@@ -28,10 +28,10 @@
 
 #define JS_VALUE_TO_NUMBER(val_p) \
     ((val_p)->type == JERRY_API_DATA_TYPE_FLOAT32 ? \
-       static_cast<double>((val_p)->v_float32) : \
+     (double) ((val_p)->v_float32) : \
      (val_p)->type == JERRY_API_DATA_TYPE_FLOAT64 ? \
-       static_cast<double>((val_p)->v_float64) : \
-     static_cast<double>((val_p)->v_uint32))
+       (double) ((val_p)->v_float64) : \
+       (double) ((val_p)->v_uint32))
 
 
 #ifdef __cplusplus

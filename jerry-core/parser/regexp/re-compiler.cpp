@@ -61,7 +61,7 @@ static uint8_t *
 re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   JERRY_ASSERT (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p >= 0);
-  size_t old_size = static_cast<size_t> (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
+  size_t old_size = (size_t) (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
 
   /* If one of the members of RegExp bytecode context is NULL, then all member should be NULL
    * (it means first allocation), otherwise all of the members should be a non NULL pointer. */
@@ -70,13 +70,13 @@ re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytec
 
   size_t new_block_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
   JERRY_ASSERT (bc_ctx_p->current_p - bc_ctx_p->block_start_p >= 0);
-  size_t current_ptr_offset = static_cast<size_t> (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
+  size_t current_ptr_offset = (size_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
   uint8_t *new_block_start_p = (uint8_t *) mem_heap_alloc_block (new_block_size,
                                                                  MEM_HEAP_ALLOC_SHORT_TERM);
   if (bc_ctx_p->current_p)
   {
-    memcpy (new_block_start_p, bc_ctx_p->block_start_p, static_cast<size_t> (current_ptr_offset));
+    memcpy (new_block_start_p, bc_ctx_p->block_start_p, (size_t) (current_ptr_offset));
     mem_heap_free_block (bc_ctx_p->block_start_p);
   }
   bc_ctx_p->block_start_p = new_block_start_p;

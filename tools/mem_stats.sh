@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ if [ "$1" == "-d" ]
 then
   TABLE="no"
   PRINT_TEST_NAME_AWK_SCRIPT='{printf "%s;", $1}'
-  PRINT_TOTAL_AWK_SCRIPT='{printf "%d;%d;%d;%d\n", $1, $2, $4, $5 * 1024}'
+  PRINT_TOTAL_AWK_SCRIPT='{printf "%d;%d;%d\n", $1, $2, $3 * 1024}'
 
   shift
 else
   PRINT_TEST_NAME_AWK_SCRIPT='{printf "%30s", $1}'
-  PRINT_TOTAL_AWK_SCRIPT='{printf "%25d%35d%35d%20d\n", $1, $2, $4, $5 * 1024}'
+  PRINT_TOTAL_AWK_SCRIPT='{printf "%25d%25d%25d\n", $1, $2, $3 * 1024}'
   TABLE="yes"
 fi
 
@@ -42,7 +42,7 @@ function is_mem_stats_build
   [ -x "$1" ] || fail_msg "Engine '$1' is not executable"
 
   tmpfile=`mktemp`
-  "$1" --mem-stats $tmpfile | grep -- "Ignoring memory statistics option because of '!MEM_STATS' build configuration." 2>&1 > /dev/null
+  "$1" --mem-stats $tmpfile 2>&1 | grep -- "Ignoring memory statistics option because of '!MEM_STATS' build configuration." 2>&1 > /dev/null
   code=$?
   rm $tmpfile
 
@@ -69,7 +69,7 @@ done
 # Running
 if [ "$TABLE" == "yes" ]
 then
-  awk 'BEGIN {printf "%30s%25s%35s%35s%20s\n", "Test name", "Heap (byte-code)", "Heap (byte-code + parser)", "Heap (byte-code + execution)", "Maximum RSS"}'
+  awk 'BEGIN {printf "%30s%25s%25s%25s\n", "Test name", "Peak Heap (parser)", "Peak Heap (execution)", "Maximum RSS"}'
   echo
 fi
 
@@ -78,7 +78,7 @@ do
   test=`basename -s '.js' $bench`
 
   echo "$test" | awk "$PRINT_TEST_NAME_AWK_SCRIPT"
-  MEM_STATS=$("$JERRY_MEM_STATS" --mem-stats --mem-stats-separate $bench | grep -e "Peak allocated=" -e "Allocated =" | grep -o "[0-9]*")
-  RSS=$(./tools/rss-measure.sh "$JERRY" $bench | tail -n 1 | grep -e "Rss" | grep -o "[0-9]*")
+  MEM_STATS=$("$JERRY_MEM_STATS" --mem-stats --mem-stats-separate $bench | grep -e "Peak allocated =" | grep -o "[0-9]*")
+  RSS=$(./tools/rss-measure.sh "$JERRY" $bench | tail -n 1 | grep -o "[0-9]*")
   echo $MEM_STATS $RSS | xargs | awk "$PRINT_TOTAL_AWK_SCRIPT"
 done

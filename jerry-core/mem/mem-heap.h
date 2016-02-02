@@ -110,7 +110,7 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
 #define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = static_cast <type *> (mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM));
+  type *var_name = (type *) (mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM));
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,

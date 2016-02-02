@@ -77,7 +77,7 @@ typedef void (*mem_try_give_memory_back_callback_t) (mem_try_give_memory_back_se
  * Get value of pointer from specified non-null compressed pointer value
  */
 #define MEM_CP_GET_NON_NULL_POINTER(type, cp_value) \
-  (static_cast<type *> (mem_decompress_pointer (cp_value)))
+  ((type *) (mem_decompress_pointer (cp_value)))
 
 /**
  * Get value of pointer from specified compressed pointer value

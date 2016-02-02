@@ -61,12 +61,14 @@ var measureTypes = ['memory', 'performance'];
 var measureUnits = {'memory': 'kb', 'performance': 's'};
 var engines = ['jerryscript', 'jerryscript-snapshot', 'jerryscript_cbc', 'duktape'];
 var link_main = {
-  'jerryscript': 'http://www.jerryscript.net',
-  'duktape':     'http://duktape.org'
+  'jerryscript':     'http://www.jerryscript.net',
+  'jerryscript_cbc': 'http://www.jerryscript.net',
+  'duktape':         'http://duktape.org'
 };
 var link_code = {
-  'jerryscript': 'https://github.com/Samsung/jerryscript/commit/',
-  'duktape':     'https://github.com/svaarala/duktape/commit/'
+  'jerryscript':     'https://github.com/Samsung/jerryscript/commit/',
+  'jerryscript_cbc': 'https://github.com/Samsung/jerryscript/commit/',
+  'duktape':         'https://github.com/svaarala/duktape/commit/'
 };
 var beginDate = new Date('2015-07-11');
 

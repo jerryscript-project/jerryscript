@@ -94,13 +94,13 @@ void mem_heap_valgrind_freya_mempool_request (void)
  */
 typedef enum : uint8_t
 {
-  GENERAL     = 0, /**< general (may be multi-chunk) block
-                    *
-                    *   Note:
-                    *         As zero is used for initialization in mem_heap_init,
-                    *         0 value for the GENERAL is necessary
-                    */
-  ONE_CHUNKED = 1  /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
+  MEM_BLOCK_LENGTH_TYPE_GENERAL     = 0, /**< general (may be multi-chunk) block
+                                          *
+                                          *   Note:
+                                          *         As zero is used for initialization in mem_heap_init,
+                                          *         0 value for the MEM_BLOCK_LENGTH_TYPE_GENERAL is necessary
+                                          */
+  MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED = 1  /**< one-chunked block (See also: mem_heap_alloc_chunked_block) */
 } mem_block_length_type_t;
 
 /**
@@ -244,7 +244,7 @@ ssize_t mem_heap_allocated_bytes[MEM_HEAP_CHUNKS_NUM];
  *
  * The array contains one entry per heap chunk with:
  *  - length type of corresponding block, if the chunk is at start of an allocated block;
- *  - GENERAL length type for rest chunks.
+ *  - MEM_BLOCK_LENGTH_TYPE_GENERAL length type for rest chunks.
  */
 mem_block_length_type_t mem_heap_length_types[MEM_HEAP_CHUNKS_NUM];
 #endif /* !JERRY_NDEBUG */
@@ -349,7 +349,7 @@ mem_heap_init (void)
   for (size_t i = 0; i < MEM_HEAP_CHUNKS_NUM; i++)
   {
 #ifndef JERRY_NDEBUG
-    JERRY_ASSERT (mem_heap_length_types[i] == mem_block_length_type_t::GENERAL);
+    JERRY_ASSERT (mem_heap_length_types[i] == MEM_BLOCK_LENGTH_TYPE_GENERAL);
 #endif /* !JERRY_NDEBUG */
 
     JERRY_ASSERT (mem_heap_allocated_bytes[i] == -1);
@@ -388,7 +388,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region t
                                      mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   JERRY_ASSERT (size_in_bytes != 0);
-  JERRY_ASSERT (length_type != mem_block_length_type_t::ONE_CHUNKED
+  JERRY_ASSERT (length_type != MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED
                 || size_in_bytes == mem_heap_get_chunked_block_data_size ());
 
   mem_check_heap ();
@@ -490,7 +490,7 @@ void* mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region t
     mem_heap_mark_chunk_allocated (chunk_index, false);
 
 #ifndef JERRY_NDEBUG
-    JERRY_ASSERT (length_type == mem_block_length_type_t::GENERAL
+    JERRY_ASSERT (length_type == MEM_BLOCK_LENGTH_TYPE_GENERAL
                   && mem_heap_length_types[chunk_index] == length_type);
 #endif /* !JERRY_NDEBUG */
   }
@@ -593,7 +593,7 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
   else
   {
     return mem_heap_alloc_block_try_give_memory_back (size_in_bytes,
-                                                      mem_block_length_type_t::GENERAL,
+                                                      MEM_BLOCK_LENGTH_TYPE_GENERAL,
                                                       alloc_term);
   }
 } /* mem_heap_alloc_block */
@@ -617,7 +617,7 @@ void*
 mem_heap_alloc_chunked_block (mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   return mem_heap_alloc_block_try_give_memory_back (mem_heap_get_chunked_block_data_size (),
-                                                    mem_block_length_type_t::ONE_CHUNKED,
+                                                    MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED,
                                                     alloc_term);
 } /* mem_heap_alloc_chunked_block */
 
@@ -734,7 +734,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 #endif /* MEM_HEAP_ENABLE_ALLOCATED_BYTES_ARRAY */
 
 #ifndef JERRY_NDEBUG
-  mem_heap_length_types[chunk_index] = mem_block_length_type_t::GENERAL;
+  mem_heap_length_types[chunk_index] = MEM_BLOCK_LENGTH_TYPE_GENERAL;
 #endif /* !JERRY_NDEBUG */
 
   mem_check_heap ();
@@ -769,7 +769,7 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 
 #ifndef JERRY_NDEBUG
   size_t chunk_index = mem_heap_get_chunk_from_address ((void*) uintptr_chunk_aligned);
-  JERRY_ASSERT (mem_heap_length_types[chunk_index] == mem_block_length_type_t::ONE_CHUNKED);
+  JERRY_ASSERT (mem_heap_length_types[chunk_index] == MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED);
 #endif /* !JERRY_NDEBUG */
 
   return (void*) uintptr_chunk_aligned;
@@ -993,7 +993,7 @@ mem_check_heap (void)
 
     if ((MEM_HEAP_IS_ALLOCATED_BITMAP[bitmap_item_index] & bit) != 0)
     {
-      if (mem_heap_length_types[chunk_index] == mem_block_length_type_t::ONE_CHUNKED)
+      if (mem_heap_length_types[chunk_index] == MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED)
       {
         JERRY_ASSERT ((MEM_HEAP_IS_FIRST_IN_BLOCK_BITMAP[bitmap_item_index] & bit) != 0);
       }

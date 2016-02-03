@@ -38,7 +38,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values
 {
   JERRY_ASSERT (values_buffer != NULL || values_number == 0);
 
-  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  const size_t values_in_chunk = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_collection_chunk_t, data) / sizeof (ecma_value_t);
 
   ecma_collection_header_t *header_p = ecma_alloc_collection_header ();
 
@@ -86,7 +86,7 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
 {
   JERRY_ASSERT (header_p != NULL);
 
-  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  const size_t values_in_chunk = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_collection_chunk_t, data) / sizeof (ecma_value_t);
 
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
                                                        header_p->first_chunk_cp);
@@ -128,7 +128,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
                                   bool do_ref_if_object) /**< if the value is object value,
                                                               increase reference counter of the object */
 {
-  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  const size_t values_in_chunk = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_collection_chunk_t, data) / sizeof (ecma_value_t);
 
   size_t values_number = header_p->unit_number;
   size_t pos_of_new_value_in_chunk = values_number % values_in_chunk;
@@ -199,7 +199,7 @@ ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_
 {
   JERRY_ASSERT (header_p != NULL && header_p->unit_number > 0);
 
-  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  const size_t values_in_chunk = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_collection_chunk_t, data) / sizeof (ecma_value_t);
   size_t values_number = header_p->unit_number;
   size_t pos_of_value_to_remove_in_chunk = (values_number - 1u) % values_in_chunk;
 
@@ -305,7 +305,7 @@ ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< cont
     return false;
   }
 
-  const size_t values_in_chunk = sizeof (ecma_collection_chunk_t::data) / sizeof (ecma_value_t);
+  const size_t values_in_chunk = JERRY_SIZE_OF_STRUCT_MEMBER (ecma_collection_chunk_t, data) / sizeof (ecma_value_t);
 
   if (iterator_p->current_value_p == NULL)
   {

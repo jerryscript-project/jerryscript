@@ -193,9 +193,10 @@ int
 main (int argc,
       char **argv)
 {
-  if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
+  if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    JERRY_ERROR_MSG ("Too many command line arguments. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n", argc);
+    JERRY_ERROR_MSG ("Too many command line arguments : %d. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n",
+                      argc, JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }

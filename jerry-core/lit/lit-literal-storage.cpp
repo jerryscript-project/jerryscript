@@ -29,9 +29,9 @@ rcs_record_set_t rcs_lit_storage;
  * @return pointer to the created record
  */
 rcs_record_t *
-lit_create_charset_literal (rcs_record_set_t *rec_set_p, /**< recordset */
-                            const lit_utf8_byte_t *str_p, /**< string to be placed into the record */
-                            const lit_utf8_size_t buf_size) /**< size in bytes of the buffer which holds the string */
+lit_storage_create_charset_literal (rcs_record_set_t *rec_set_p, /**< recordset */
+                                    const lit_utf8_byte_t *str_p, /**< string to be placed into the record */
+                                    const lit_utf8_size_t buf_size) /**< size of the string (in bytes) */
 {
   const size_t record_size = RCS_CHARSET_HEADER_SIZE + buf_size;
   const size_t aligned_record_size = JERRY_ALIGNUP (record_size, RCS_DYN_STORAGE_LENGTH_UNIT);
@@ -44,7 +44,7 @@ lit_create_charset_literal (rcs_record_set_t *rec_set_p, /**< recordset */
   rcs_record_set_hash (rec_p, lit_utf8_string_calc_hash (str_p, rcs_record_get_length (rec_p)));
 
   return rec_p;
-} /* lit_create_charset_literal */
+} /* lit_storage_create_charset_literal */
 
 /**
  * Create magic string record in the literal storage.
@@ -52,14 +52,14 @@ lit_create_charset_literal (rcs_record_set_t *rec_set_p, /**< recordset */
  * @return  pointer to the created record
  */
 rcs_record_t *
-lit_create_magic_literal (rcs_record_set_t *rec_set_p, /**< recordset */
-                          lit_magic_string_id_t id) /**< id of magic string */
+lit_storage_create_magic_literal (rcs_record_set_t *rec_set_p, /**< recordset */
+                                  lit_magic_string_id_t id) /**< id of magic string */
 {
   rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_MAGIC_STR, RCS_MAGIC_STR_HEADER_SIZE);
   rcs_record_set_magic_str_id (rec_p, id);
 
   return rec_p;
-} /* lit_create_magic_literal */
+} /* lit_storage_create_magic_literal */
 
 /**
  * Create external magic string record in the literal storage.
@@ -67,14 +67,14 @@ lit_create_magic_literal (rcs_record_set_t *rec_set_p, /**< recordset */
  * @return  pointer to the created record
  */
 rcs_record_t *
-lit_create_magic_literal_ex (rcs_record_set_t *rec_set_p, /**< recordset */
-                             lit_magic_string_ex_id_t id) /**< id of magic string */
+lit_storage_create_magic_literal_ex (rcs_record_set_t *rec_set_p, /**< recordset */
+                                     lit_magic_string_ex_id_t id) /**< id of magic string */
 {
   rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_MAGIC_STR_EX, RCS_MAGIC_STR_HEADER_SIZE);
   rcs_record_set_magic_str_ex_id (rec_p, id);
 
   return rec_p;
-} /* lit_create_magic_record_ex */
+} /* lit_storage_create_magic_literal_ex */
 
 /**
  * Create number record in the literal storage.
@@ -82,8 +82,8 @@ lit_create_magic_literal_ex (rcs_record_set_t *rec_set_p, /**< recordset */
  * @return  pointer to the created record
  */
 rcs_record_t *
-lit_create_number_literal (rcs_record_set_t *rec_set_p, /** recordset */
-                           ecma_number_t num) /**< numeric value */
+lit_storage_create_number_literal (rcs_record_set_t *rec_set_p, /** recordset */
+                                   ecma_number_t num) /**< numeric value */
 {
   const size_t record_size = RCS_NUMBER_HEADER_SIZE + sizeof (ecma_number_t);
   rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_NUMBER, record_size);
@@ -93,7 +93,7 @@ lit_create_number_literal (rcs_record_set_t *rec_set_p, /** recordset */
   rcs_iterator_write (&it_ctx, &num, sizeof (ecma_number_t));
 
   return rec_p;
-} /* lit_create_number_literal */
+} /* lit_storage_create_number_literal */
 
 /**
  * Count literal records in the storage
@@ -101,7 +101,7 @@ lit_create_number_literal (rcs_record_set_t *rec_set_p, /** recordset */
  * @return number of literals
  */
 uint32_t
-lit_count_literals (rcs_record_set_t *rec_set_p) /**< recordset */
+lit_storage_count_literals (rcs_record_set_t *rec_set_p) /**< recordset */
 {
   uint32_t num = 0;
   rcs_record_t *rec_p;
@@ -117,13 +117,13 @@ lit_count_literals (rcs_record_set_t *rec_set_p) /**< recordset */
   }
 
   return num;
-} /* lit_count_literals */
+} /* lit_storage_count_literals */
 
 /**
  * Dump the contents of the literal storage.
  */
 void
-lit_dump_literals (rcs_record_set_t *rec_set_p) /**< recordset */
+lit_storage_dump_literals (rcs_record_set_t *rec_set_p) /**< recordset */
 {
   rcs_record_t *rec_p;
 
@@ -206,4 +206,4 @@ lit_dump_literals (rcs_record_set_t *rec_set_p) /**< recordset */
 
     printf ("\n");
   }
-} /* lit_dump_literals */
+} /* lit_storage_dump_literals */

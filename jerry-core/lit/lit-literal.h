@@ -18,9 +18,9 @@
 
 #include "ecma-globals.h"
 
-extern void lit_init ();
-extern void lit_finalize ();
-extern void lit_dump_literals ();
+extern void lit_init (void);
+extern void lit_finalize (void);
+extern void lit_dump_literals (void);
 
 extern lit_literal_t lit_create_literal_from_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 extern lit_literal_t lit_find_literal_by_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);

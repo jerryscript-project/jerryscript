@@ -51,29 +51,14 @@ mem_finalize (bool is_show_mem_stats) /**< show heap memory stats
 {
   mem_pools_finalize ();
 
+#ifdef MEM_STATS
   if (is_show_mem_stats)
   {
-    mem_heap_print (false, false, true);
-
-#ifdef MEM_STATS
-    mem_pools_stats_t stats;
-    mem_pools_get_stats (&stats);
-
-    printf ("Pools stats:\n");
-    printf (" Chunk size: %zu\n"
-            "  Pools: %zu\n"
-            "  Allocated chunks: %zu\n"
-            "  Free chunks: %zu\n"
-            "  Peak pools: %zu\n"
-            "  Peak allocated chunks: %zu\n\n",
-            MEM_POOL_CHUNK_SIZE,
-            stats.pools_count,
-            stats.allocated_chunks,
-            stats.free_chunks,
-            stats.peak_pools_count,
-            stats.peak_allocated_chunks);
-#endif /* MEM_STATS */
+    mem_stats_print ();
   }
+#else /* MEM_STATS */
+  (void) is_show_mem_stats;
+#endif /* !MEM_STATS */
 
   mem_heap_finalize ();
 } /* mem_finalize */
@@ -158,13 +143,13 @@ mem_stats_reset_peak (void)
 void
 mem_stats_print (void)
 {
-  mem_heap_print (false, false, true);
+  mem_heap_stats_print ();
 
   mem_pools_stats_t stats;
   mem_pools_get_stats (&stats);
 
   printf ("Pools stats:\n");
-  printf (" Chunk size: %zu\n"
+  printf ("  Chunk size: %zu\n"
           "  Pools: %zu\n"
           "  Allocated chunks: %zu\n"
           "  Free chunks: %zu\n"

@@ -81,6 +81,7 @@ typedef struct
 
 extern void mem_heap_get_stats (mem_heap_stats_t *);
 extern void mem_heap_stats_reset_peak (void);
+extern void mem_heap_stats_print (void);
 #endif /* MEM_STATS */
 
 #ifdef JERRY_VALGRIND_FREYA

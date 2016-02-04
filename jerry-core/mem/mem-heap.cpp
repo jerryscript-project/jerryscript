@@ -944,23 +944,7 @@ mem_heap_print (bool dump_block_headers, /**< print block headers */
 #ifdef MEM_STATS
   if (dump_stats)
   {
-    printf ("Heap stats:\n");
-    printf ("  Heap size = %zu bytes\n"
-            "  Chunk size = %zu bytes\n"
-            "  Allocated chunks count = %zu\n"
-            "  Allocated = %zu bytes\n"
-            "  Waste = %zu bytes\n"
-            "  Peak allocated chunks count = %zu\n"
-            "  Peak allocated = %zu bytes\n"
-            "  Peak waste = %zu bytes\n",
-            mem_heap_stats.size,
-            MEM_HEAP_CHUNK_SIZE,
-            mem_heap_stats.allocated_chunks,
-            mem_heap_stats.allocated_bytes,
-            mem_heap_stats.waste_bytes,
-            mem_heap_stats.peak_allocated_chunks,
-            mem_heap_stats.peak_allocated_bytes,
-            mem_heap_stats.peak_waste_bytes);
+    mem_heap_stats_print ();
   }
 #else /* MEM_STATS */
   (void) dump_stats;
@@ -1108,6 +1092,31 @@ mem_heap_stat_free (size_t first_chunk_index, /**< first chunk of the freed area
   mem_heap_stats.allocated_bytes -= bytes;
   mem_heap_stats.waste_bytes -= waste_bytes;
 } /* mem_heap_stat_free */
+
+/**
+ * Print heap statistics
+ */
+void
+mem_heap_stats_print (void)
+{
+  printf ("Heap stats:\n");
+  printf ("  Heap size = %zu bytes\n"
+          "  Chunk size = %zu bytes\n"
+          "  Allocated chunks count = %zu\n"
+          "  Allocated = %zu bytes\n"
+          "  Waste = %zu bytes\n"
+          "  Peak allocated chunks count = %zu\n"
+          "  Peak allocated = %zu bytes\n"
+          "  Peak waste = %zu bytes\n",
+          mem_heap_stats.size,
+          MEM_HEAP_CHUNK_SIZE,
+          mem_heap_stats.allocated_chunks,
+          mem_heap_stats.allocated_bytes,
+          mem_heap_stats.waste_bytes,
+          mem_heap_stats.peak_allocated_chunks,
+          mem_heap_stats.peak_allocated_bytes,
+          mem_heap_stats.peak_waste_bytes);
+} /* mem_heap_stats_print */
 #endif /* MEM_STATS */
 
 /**

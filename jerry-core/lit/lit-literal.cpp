@@ -25,7 +25,7 @@
  * Initialize literal storage
  */
 void
-lit_init ()
+lit_init (void)
 {
   JERRY_ASSERT (rcs_get_node_data_space_size () % RCS_DYN_STORAGE_LENGTH_UNIT == 0);
 
@@ -39,7 +39,7 @@ lit_init ()
  * Finalize literal storage
  */
 void
-lit_finalize ()
+lit_finalize (void)
 {
   rcs_lit_storage.cleanup ();
   rcs_lit_storage.free ();
@@ -49,9 +49,9 @@ lit_finalize ()
  * Dump records from the literal storage
  */
 void
-lit_dump_literals ()
+lit_dump_literals (void)
 {
-  lit_dump_literals (&rcs_lit_storage);
+  lit_storage_dump_literals (&rcs_lit_storage);
 } /* lit_dump_literals */
 
 /**
@@ -79,7 +79,7 @@ lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string t
 
     if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_utf8 (m_str_id), str_size))
     {
-      return lit_create_magic_literal (&rcs_lit_storage, m_str_id);
+      return lit_storage_create_magic_literal (&rcs_lit_storage, m_str_id);
     }
   }
 
@@ -95,11 +95,11 @@ lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string t
 
     if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_ex_utf8 (m_str_ex_id), str_size))
     {
-      return lit_create_magic_literal_ex (&rcs_lit_storage, m_str_ex_id);
+      return lit_storage_create_magic_literal_ex (&rcs_lit_storage, m_str_ex_id);
     }
   }
 
-  return lit_create_charset_literal (&rcs_lit_storage, str_p, str_size);
+  return lit_storage_create_charset_literal (&rcs_lit_storage, str_p, str_size);
 } /* lit_create_literal_from_utf8_string */
 
 /**
@@ -205,7 +205,7 @@ lit_find_or_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< 
 lit_literal_t
 lit_create_literal_from_num (ecma_number_t num) /**< number to initialize a new number literal */
 {
-  return lit_create_number_literal (&rcs_lit_storage, num);
+  return lit_storage_create_number_literal (&rcs_lit_storage, num);
 } /* lit_create_literal_from_num */
 
 /**

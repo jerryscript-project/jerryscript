@@ -21,12 +21,12 @@
 
 extern rcs_record_set_t rcs_lit_storage;
 
-extern rcs_record_t *lit_create_charset_literal (rcs_record_set_t *, const lit_utf8_byte_t *, lit_utf8_size_t);
-extern rcs_record_t *lit_create_magic_literal (rcs_record_set_t *, lit_magic_string_id_t);
-extern rcs_record_t *lit_create_magic_literal_ex (rcs_record_set_t *, lit_magic_string_ex_id_t);
-extern rcs_record_t *lit_create_number_literal (rcs_record_set_t *, ecma_number_t);
+extern rcs_record_t *lit_storage_create_charset_literal (rcs_record_set_t *, const lit_utf8_byte_t *, lit_utf8_size_t);
+extern rcs_record_t *lit_storage_create_magic_literal (rcs_record_set_t *, lit_magic_string_id_t);
+extern rcs_record_t *lit_storage_create_magic_literal_ex (rcs_record_set_t *, lit_magic_string_ex_id_t);
+extern rcs_record_t *lit_storage_create_number_literal (rcs_record_set_t *, ecma_number_t);
 
-extern uint32_t lit_count_literals (rcs_record_set_t *);
-extern void lit_dump_literals (rcs_record_set_t *);
+extern uint32_t lit_storage_count_literals (rcs_record_set_t *);
+extern void lit_storage_dump_literals (rcs_record_set_t *);
 
 #endif /* !LIT_LITERAL_STORAGE_H */

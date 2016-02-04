@@ -143,7 +143,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
                                 uint32_t *out_map_num_p, /**< out: number of literals */
                                 uint32_t *out_lit_table_size_p) /**< out: number of bytes, dumped to snapshot buffer */
 {
-  uint32_t literals_num = lit_count_literals (&rcs_lit_storage);
+  uint32_t literals_num = lit_storage_count_literals (&rcs_lit_storage);
   uint32_t lit_table_size = 0;
 
   *out_map_p = NULL;

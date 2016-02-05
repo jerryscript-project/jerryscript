@@ -1,4 +1,4 @@
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ project (JerryCore CXX C ASM)
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   set(DEFINES_JERRY
-      JERRY_ENABLE_SNAPSHOT
+      JERRY_ENABLE_SNAPSHOT_SAVE
+      JERRY_ENABLE_SNAPSHOT_EXEC
       JERRY_BUILD_DATE="${JERRY_BUILD_DATE}"
       JERRY_COMMIT_HASH="${JERRY_GIT_COMMIT}"
       JERRY_BRANCH_NAME="${JERRY_GIT_BRANCH}")

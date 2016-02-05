@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -271,7 +271,6 @@ ecma_finalize_builtins (void)
     if (ecma_builtin_objects[id] != NULL)
     {
       ecma_deref_object (ecma_builtin_objects[id]);
-
       ecma_builtin_objects[id] = NULL;
     }
   }

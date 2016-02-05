@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,8 @@
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
 #include "jrt-bit-fields.h"
+#include "byte-code.h"
+#include "re-compiler.h"
 
 /**
  * Create an object with specified prototype object
@@ -763,17 +766,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a strings' collection */
-    {
-      if (property_value != ECMA_NULL_POINTER)
-      {
-        ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                                property_value),
-                                     false);
-      }
-      break;
-    }
-
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
     {
       ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
@@ -807,8 +799,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-    case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
-    case ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
     case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
@@ -840,15 +830,24 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
                                          * but number of the real internal property types */
     {
       JERRY_UNREACHABLE ();
+      break;
     }
-    case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
-    {
-      void *bytecode_p = ECMA_GET_POINTER (void, property_value);
 
-      if (bytecode_p)
+    case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
+    {
+      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t, property_value));
+      break;
+    }
+
+    case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* compressed pointer to a regexp bytecode array */
+    {
+      ecma_compiled_code_t *bytecode_p = ECMA_GET_POINTER (ecma_compiled_code_t, property_value);
+
+      if (bytecode_p != NULL)
       {
-        mem_heap_free_block (bytecode_p);
+        ecma_bytecode_deref (bytecode_p);
       }
+      break;
     }
   }
 
@@ -1327,6 +1326,90 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
 
   return prop_desc;
 } /* ecma_get_property_descriptor_from_property */
+
+/**
+ * Increase reference counter of Compact
+ * Byte Code or regexp byte code.
+ */
+void
+ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
+{
+  /* Abort program if maximum reference number is reached.
+   * Note: This is not tested for objects. */
+  if ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) >= 0x3ff)
+  {
+    jerry_fatal (ERR_UNIMPLEMENTED_CASE);
+  }
+
+  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags + (1 << ECMA_BYTECODE_REF_SHIFT));
+} /* ecma_bytecode_ref */
+
+/**
+ * Decrease reference counter of Compact
+ * Byte Code or regexp byte code.
+ */
+void
+ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
+{
+  JERRY_ASSERT ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) > 0);
+
+  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags - (1 << ECMA_BYTECODE_REF_SHIFT));
+
+  if (bytecode_p->status_flags >= (1 << ECMA_BYTECODE_REF_SHIFT))
+  {
+    /* Non-zero reference counter. */
+    return;
+  }
+
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+  {
+    lit_cpointer_t *literal_start_p = NULL;
+    uint32_t literal_end;
+    uint32_t const_literal_end;
+
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+    {
+      uint8_t *byte_p = (uint8_t *) bytecode_p;
+      literal_start_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+
+      cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_p;
+      literal_end = args_p->literal_end;
+      const_literal_end = args_p->const_literal_end;
+    }
+    else
+    {
+      uint8_t *byte_p = (uint8_t *) bytecode_p;
+      literal_start_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+
+      cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_p;
+      literal_end = args_p->literal_end;
+      const_literal_end = args_p->const_literal_end;
+    }
+
+    for (uint32_t i = const_literal_end; i < literal_end; i++)
+    {
+      mem_cpointer_t bytecode_cpointer = literal_start_p[i].value.base_cp;
+      ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
+                                                                            bytecode_cpointer);
+
+      /* Self references are ignored. */
+      if (bytecode_literal_p != bytecode_p)
+      {
+        ecma_bytecode_deref (bytecode_literal_p);
+      }
+    }
+  }
+  else
+  {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+    re_compiled_code_t *re_bytecode_p = (re_compiled_code_t *) bytecode_p;
+
+    ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t, re_bytecode_p->pattern_cp));
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+  }
+
+  mem_heap_free_block (bytecode_p);
+} /* ecma_bytecode_deref */
 
 /**
  * @}

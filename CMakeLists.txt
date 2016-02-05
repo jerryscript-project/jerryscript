@@ -1,4 +1,4 @@
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -276,7 +276,7 @@ project (Jerry CXX C ASM)
   endmacro()
 
   add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
-  add_jerry_compile_flags(-pedantic -Wno-stack-protector -Wno-attributes -Wfatal-errors)
+  add_jerry_compile_flags(-pedantic -Wno-stack-protector -Wno-attributes)
   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
     add_jerry_compile_warnings(logical-op)
   else()

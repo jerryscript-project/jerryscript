@@ -268,7 +268,7 @@ jrt_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
                                size_t buffer_size, /**< size of buffer */
                                size_t *in_out_buffer_offset_p, /**< in: offset to read from,
                                                                 *   out: offset, incremented on sizeof (T) */
-                               void *data_p, /**< data */
+                               const void *data_p, /**< data */
                                size_t data_size) /**< size of the writable data */
 {
   if (*in_out_buffer_offset_p + data_size > buffer_size)

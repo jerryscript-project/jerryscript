@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,32 +36,23 @@
 #include "jrt.h"
 
 /**
- * Arguments object creation operation.
+ * Arguments object creation common part.
  *
  * See also: ECMA-262 v5, 10.6
- *
- * @return pointer to newly created Arguments object
  */
-ecma_object_t*
-ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
-                                 ecma_object_t *lex_env_p, /**< lexical environment the Arguments
-                                                                object is created for */
-                                 ecma_collection_header_t *formal_params_p, /**< formal parameters collection */
-                                 ecma_collection_header_t *arg_collection_p, /**< arguments collection */
-                                 bool is_strict) /**< flag indicating whether strict mode is enabled */
+static void
+ecma_op_create_arguments_object_common (ecma_object_t *obj_p, /**< arguments object */
+                                        ecma_object_t *func_obj_p, /**< callee function */
+                                        ecma_object_t *lex_env_p, /**< lexical environment the Arguments
+                                                                       object is created for */
+                                        ecma_length_t arguments_number, /**< length of arguments list */
+                                        const ecma_compiled_code_t *bytecode_data_p) /**< bytecode data */
 {
-  const ecma_length_t arguments_number = arg_collection_p != NULL ? arg_collection_p->unit_number : 0;
+  bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
 
   // 1.
   ecma_number_t *len_p = ecma_alloc_number ();
   *len_p = ecma_uint32_to_number (arguments_number);
-
-  // 2., 3., 6.
-  ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-
-  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
-
-  ecma_deref_object (prototype_p);
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
@@ -81,39 +73,29 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_dealloc_number (len_p);
 
-  // 11.a, 11.b
-  ecma_collection_iterator_t args_iterator;
-  ecma_collection_iterator_init (&args_iterator, arg_collection_p);
-
-  for (ecma_length_t indx = 0;
-       indx < arguments_number;
-       indx++)
-  {
-    bool is_moved = ecma_collection_iterator_next (&args_iterator);
-    JERRY_ASSERT (is_moved);
-
-    ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 (indx);
-    completion = ecma_builtin_helper_def_prop (obj_p,
-                                               indx_string_p,
-                                               *args_iterator.current_value_p,
-                                               true, /* Writable */
-                                               true, /* Enumerable */
-                                               true, /* Configurable */
-                                               false); /* Failure handling */
-
-    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
-
-    ecma_deref_ecma_string (indx_string_p);
-  }
-
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-  if (formal_params_p != NULL)
+  if (bytecode_data_p != NULL)
   {
-    const ecma_length_t formal_params_number = formal_params_p->unit_number;
+    ecma_length_t formal_params_number;
+    lit_cpointer_t *literal_p;
 
-    ecma_collection_iterator_t formal_params_iterator;
-    ecma_collection_iterator_init (&formal_params_iterator, formal_params_p);
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+    {
+      cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
+      uint8_t *byte_p = (uint8_t *) bytecode_data_p;
+
+      formal_params_number = args_p->argument_end;
+      literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+    }
+    else
+    {
+      cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
+      uint8_t *byte_p = (uint8_t *) bytecode_data_p;
+
+      formal_params_number = args_p->argument_end;
+      literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+    }
 
     if (!is_strict
         && arguments_number > 0
@@ -123,67 +105,34 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       ecma_object_t *map_p = ecma_op_create_object_object_noarg ();
 
       // 11.c
-      MEM_DEFINE_LOCAL_ARRAY (formal_params, formal_params_number, ecma_string_t *);
-
-      JERRY_ASSERT (formal_params_iterator.current_value_p == NULL);
-
-      uint32_t param_index;
-      for (param_index = 0;
-           ecma_collection_iterator_next (&formal_params_iterator);
-           param_index++)
-      {
-        JERRY_ASSERT (formal_params_iterator.current_value_p != NULL);
-        JERRY_ASSERT (param_index < formal_params_number);
-
-        JERRY_ASSERT (ecma_is_value_string (*formal_params_iterator.current_value_p));
-        ecma_string_t *param_name_p = ecma_get_string_from_value (*formal_params_iterator.current_value_p);
-
-        formal_params[param_index] = param_name_p;
-      }
-      JERRY_ASSERT (param_index == formal_params_number);
-
-      for (int32_t indx = (int32_t) formal_params_number - 1;
-           indx >= 0;
-           indx--)
+      for (uint32_t indx = 0;
+           indx < formal_params_number;
+           indx++)
       {
         // i.
-        ecma_string_t *name_p = formal_params[indx];
-        bool is_first_occurence = true;
-
-        // ii.
-        for (int32_t indx2 = indx + 1;
-             indx2 < (int32_t) formal_params_number;
-             indx2++)
+        if (literal_p[indx].packed_value == MEM_CP_NULL)
         {
-          if (ecma_compare_ecma_strings (name_p, formal_params[indx2]))
-          {
-            is_first_occurence = false;
-
-            break;
-          }
+          continue;
         }
 
-        if (is_first_occurence)
-        {
-          ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 ((uint32_t) indx);
+        ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_p[indx]);
+        ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 ((uint32_t) indx);
 
-          prop_desc.is_value_defined = true;
-          prop_desc.value = ecma_make_string_value (name_p);
+        prop_desc.is_value_defined = true;
+        prop_desc.value = ecma_make_string_value (name_p);
 
-          prop_desc.is_configurable_defined = true;
-          prop_desc.is_configurable = true;
+        prop_desc.is_configurable_defined = true;
+        prop_desc.is_configurable = true;
 
-          completion = ecma_op_object_define_own_property (map_p,
-                                                           indx_string_p,
-                                                           &prop_desc,
-                                                           false);
-          JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+        completion = ecma_op_object_define_own_property (map_p,
+                                                         indx_string_p,
+                                                         &prop_desc,
+                                                         false);
+        JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
 
-          ecma_deref_ecma_string (indx_string_p);
-        }
+        ecma_deref_ecma_string (indx_string_p);
+        ecma_deref_ecma_string (name_p);
       }
-
-      MEM_FINALIZE_LOCAL_ARRAY (formal_params);
 
       // 12.
       ecma_set_object_type (obj_p, ECMA_OBJECT_TYPE_ARGUMENTS);
@@ -264,8 +213,137 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ecma_deref_object (thrower_p);
   }
 
-  return obj_p;
+  ecma_string_t *arguments_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
+
+  if (is_strict)
+  {
+    ecma_op_create_immutable_binding (lex_env_p, arguments_string_p);
+    ecma_op_initialize_immutable_binding (lex_env_p,
+                                          arguments_string_p,
+                                          ecma_make_object_value (obj_p));
+  }
+  else
+  {
+    ecma_completion_value_t completion = ecma_op_create_mutable_binding (lex_env_p,
+                                                                         arguments_string_p,
+                                                                         false);
+    JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+
+    completion = ecma_op_set_mutable_binding (lex_env_p,
+                                              arguments_string_p,
+                                              ecma_make_object_value (obj_p),
+                                              false);
+
+    JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+  }
+
+  ecma_deref_ecma_string (arguments_string_p);
+  ecma_deref_object (obj_p);
+} /* ecma_op_create_arguments_object_common */
+
+/**
+ * Arguments object creation operation.
+ *
+ * See also: ECMA-262 v5, 10.6
+ *
+ * @return pointer to newly created Arguments object
+ */
+void
+ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
+                                 ecma_object_t *lex_env_p, /**< lexical environment the Arguments
+                                                                object is created for */
+                                 ecma_collection_header_t *arg_collection_p, /**< arguments collection */
+                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte code */
+{
+  const ecma_length_t arguments_number = arg_collection_p != NULL ? arg_collection_p->unit_number : 0;
+
+  // 2., 3., 6.
+  ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+
+  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  ecma_deref_object (prototype_p);
+
+  // 11.a, 11.b
+  ecma_collection_iterator_t args_iterator;
+  ecma_collection_iterator_init (&args_iterator, arg_collection_p);
+
+  for (ecma_length_t indx = 0;
+       indx < arguments_number;
+       indx++)
+  {
+    ecma_completion_value_t completion;
+    bool is_moved = ecma_collection_iterator_next (&args_iterator);
+    JERRY_ASSERT (is_moved);
+
+    ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 (indx);
+    completion = ecma_builtin_helper_def_prop (obj_p,
+                                               indx_string_p,
+                                               *args_iterator.current_value_p,
+                                               true, /* Writable */
+                                               true, /* Enumerable */
+                                               true, /* Configurable */
+                                               false); /* Failure handling */
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+
+    ecma_deref_ecma_string (indx_string_p);
+  }
+
+  ecma_op_create_arguments_object_common (obj_p,
+                                          func_obj_p,
+                                          lex_env_p,
+                                          arguments_number,
+                                          bytecode_data_p);
 } /* ecma_op_create_arguments_object */
+
+/**
+ * Arguments object creation operation.
+ *
+ * See also: ECMA-262 v5, 10.6
+ */
+void
+ecma_op_create_arguments_object_array_args (ecma_object_t *func_obj_p, /**< callee function */
+                                            ecma_object_t *lex_env_p, /**< lexical environment the Arguments
+                                                                           object is created for */
+                                            const ecma_value_t *arguments_list_p, /**< arguments list */
+                                            ecma_length_t arguments_number, /**< length of arguments list */
+                                            const ecma_compiled_code_t *bytecode_data_p) /**< byte code */
+{
+  // 2., 3., 6.
+  ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+
+  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+
+  ecma_deref_object (prototype_p);
+
+  // 11.a, 11.b
+  for (ecma_length_t indx = 0;
+       indx < arguments_number;
+       indx++)
+  {
+    ecma_completion_value_t completion;
+    ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 (indx);
+
+    completion = ecma_builtin_helper_def_prop (obj_p,
+                                               indx_string_p,
+                                               arguments_list_p[indx],
+                                               true, /* Writable */
+                                               true, /* Enumerable */
+                                               true, /* Configurable */
+                                               false); /* Failure handling */
+
+    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+
+    ecma_deref_ecma_string (indx_string_p);
+  }
+
+  ecma_op_create_arguments_object_common (obj_p,
+                                          func_obj_p,
+                                          lex_env_p,
+                                          arguments_number,
+                                          bytecode_data_p);
+} /* ecma_op_create_arguments_object_array_args */
 
 /**
  * Get value of function's argument mapped to index of Arguments object.

@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   else
   {
     ecma_string_t *pattern_string_p = NULL;
-    uint8_t flags = 0;
+    uint16_t flags = 0;
 
     if (ecma_is_value_object (pattern_arg)
         && ecma_object_get_class_name (ecma_get_object_from_value (pattern_arg)) == LIT_MAGIC_STRING_REGEXP_UL)
@@ -125,17 +125,20 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
-        FIXME ("We currently have to re-compile the bytecode, because we can't copy it without knowing its length.")
-        re_bytecode_t *new_bc_p = NULL;
+        /* FIXME: "We currently have to re-compile the bytecode, because
+         * we can't copy it without knowing its length."
+         */
+        re_compiled_code_t *new_bc_p = NULL;
         ecma_completion_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */
         JERRY_ASSERT (ecma_is_completion_value_empty (bc_comp));
 
-        re_bytecode_t *old_bc_p = ECMA_GET_POINTER (re_bytecode_t,
-                                                    bc_prop_p->u.internal_property.value);
+        re_compiled_code_t *old_bc_p = ECMA_GET_POINTER (re_compiled_code_t,
+                                                         bc_prop_p->u.internal_property.value);
         if (old_bc_p != NULL)
         {
-          mem_heap_free_block (old_bc_p);
+          /* Free the old bytecode */
+          ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
         }
 
         ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
@@ -189,17 +192,18 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
         /* Try to compile bytecode from new source. */
-        re_bytecode_t *new_bc_p = NULL;
-        ECMA_TRY_CATCH (bc_dummy, re_compile_bytecode (&new_bc_p, pattern_string_p, flags), ret_value);
+        re_compiled_code_t *new_bc_p = NULL;
+        ECMA_TRY_CATCH (bc_dummy,
+                        re_compile_bytecode (&new_bc_p, pattern_string_p, flags),
+                        ret_value);
 
-
-        re_bytecode_t *old_bc_p = ECMA_GET_POINTER (re_bytecode_t,
-                                                    bc_prop_p->u.internal_property.value);
+        re_compiled_code_t *old_bc_p = ECMA_GET_POINTER (re_compiled_code_t,
+                                                         bc_prop_p->u.internal_property.value);
 
         if (old_bc_p != NULL)
         {
-          /* Replace old bytecode with new one. */
-          mem_heap_free_block (old_bc_p);
+          /* Free the old bytecode */
+          ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
         }
 
         ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);

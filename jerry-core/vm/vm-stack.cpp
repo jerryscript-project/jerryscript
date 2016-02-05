@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +14,10 @@
  * limitations under the License.
  */
 
-#include "ecma-globals.h"
+#include "ecma-alloc.h"
+#include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "vm-defines.h"
 #include "vm-stack.h"
 
 /** \addtogroup vm Virtual machine
@@ -25,287 +28,226 @@
  */
 
 /**
- * Size of a stack frame's dynamic chunk
- */
-#define VM_STACK_DYNAMIC_CHUNK_SIZE (mem_heap_recommend_allocation_size (sizeof (vm_stack_chunk_header_t) + \
-                                                                         sizeof (ecma_value_t)))
-
-/**
- * Number of value slots in a stack frame's dynamic chunk
- */
-#define VM_STACK_SLOTS_IN_DYNAMIC_CHUNK ((VM_STACK_DYNAMIC_CHUNK_SIZE - sizeof (vm_stack_chunk_header_t)) / \
-                                         sizeof (ecma_value_t))
-
-/**
- * The top-most stack frame
- */
-vm_stack_frame_t* vm_stack_top_frame_p;
-
-/**
- * Initialize stack
- */
-void
-vm_stack_init (void)
-{
-  vm_stack_top_frame_p = NULL;
-} /* vm_stack_init */
-
-/**
- * Finalize stack
- */
-void
-vm_stack_finalize ()
-{
-  JERRY_ASSERT (vm_stack_top_frame_p == NULL);
-} /* vm_stack_finalize */
-
-/**
- * Get stack's top frame
+ * Abort (finalize) the current stack context, and remove it.
  *
- * @return pointer to the top frame descriptor
+ * @return new stack top
  */
-vm_stack_frame_t*
-vm_stack_get_top_frame (void)
+ecma_value_t *
+vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                        ecma_value_t *vm_stack_top_p) /**< current stack top */
 {
-  return vm_stack_top_frame_p;
-} /* vm_stack_get_top_frame */
-
-/**
- * Add the frame to stack
- */
-void
-vm_stack_add_frame (vm_stack_frame_t *frame_p, /**< frame to initialize */
-                    ecma_value_t *regs_p, /**< array of register variables' values */
-                    uint32_t regs_num, /**< total number of register variables */
-                    uint32_t local_vars_regs_num, /**< number of register variables,
-                                                   *   used for local variables */
-                    uint32_t arg_regs_num, /**< number of register variables,
-                                            *   used for arguments */
-                    ecma_collection_header_t *arguments_p) /**< collection of arguments
-                                                            *   (for case, their values
-                                                            *    are moved to registers) */
-{
-  frame_p->prev_frame_p = vm_stack_top_frame_p;
-  vm_stack_top_frame_p = frame_p;
-
-  frame_p->top_chunk_p = NULL;
-  frame_p->dynamically_allocated_value_slots_p = frame_p->inlined_values;
-  frame_p->current_slot_index = 0;
-  frame_p->regs_p = regs_p;
-  frame_p->regs_number = regs_num;
-
-  JERRY_ASSERT (regs_num >= VM_SPECIAL_REGS_NUMBER);
-
-  for (uint32_t i = 0; i < regs_num - local_vars_regs_num - arg_regs_num; i++)
+  switch (VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]))
   {
-    regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  }
-
-  for (uint32_t i = regs_num - local_vars_regs_num - arg_regs_num;
-       i < regs_num;
-       i++)
-  {
-    regs_p[i] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-
-  if (arg_regs_num != 0)
-  {
-    ecma_collection_iterator_t args_iterator;
-    ecma_collection_iterator_init (&args_iterator, arguments_p);
-
-    for (uint32_t i = regs_num - arg_regs_num;
-         i < regs_num && ecma_collection_iterator_next (&args_iterator);
-         i++)
+    case VM_CONTEXT_FINALLY_THROW:
+    case VM_CONTEXT_FINALLY_RETURN:
     {
-      regs_p[i] = ecma_copy_value (*args_iterator.current_value_p, false);
+      ecma_free_value (vm_stack_top_p[-2], true);
+
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      break;
+    }
+    case VM_CONTEXT_FINALLY_JUMP:
+    case VM_CONTEXT_TRY:
+    {
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      break;
+    }
+    case VM_CONTEXT_CATCH:
+    case VM_CONTEXT_WITH:
+    {
+      ecma_deref_object (frame_ctx_p->lex_env_p);
+      frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+
+      JERRY_ASSERT (PARSER_TRY_CONTEXT_STACK_ALLOCATION == PARSER_WITH_CONTEXT_STACK_ALLOCATION);
+
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      break;
+    }
+    case VM_CONTEXT_FOR_IN:
+    {
+      mem_cpointer_t current = (uint16_t) vm_stack_top_p[-2];
+
+      while (current != MEM_CP_NULL)
+      {
+        ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                        current);
+
+        ecma_free_value (*(ecma_value_t *) chunk_p->data, true);
+
+        current = chunk_p->next_chunk_cp;
+        ecma_dealloc_collection_chunk (chunk_p);
+      }
+
+      ecma_free_value (vm_stack_top_p[-3], true);
+
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
     }
   }
-} /* vm_stack_add_frame */
+
+  return vm_stack_top_p;
+} /* vm_stack_context_abort */
 
 /**
- * Free the stack frame
+ * Decode branch offset.
  *
- * Note:
- *      the frame should be the top-most frame
+ * @return branch offset
  */
-void
-vm_stack_free_frame (vm_stack_frame_t *frame_p) /**< frame to initialize */
+static uint32_t
+vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte code */
+                         uint32_t length) /**< length of the branch */
 {
-  /* the frame should be the top-most frame */
-  JERRY_ASSERT (vm_stack_top_frame_p == frame_p);
+  uint32_t branch_offset = *branch_offset_p;
 
-  vm_stack_top_frame_p = frame_p->prev_frame_p;
+  JERRY_ASSERT (length >= 1 && length <= 3);
 
-  while (frame_p->top_chunk_p != NULL)
+  switch (length)
   {
-    vm_stack_pop (frame_p);
+    case 3:
+    {
+      branch_offset <<= 8;
+      branch_offset |= *(branch_offset_p++);
+      /* FALLTHRU */
+    }
+    case 2:
+    {
+      branch_offset <<= 8;
+      branch_offset |= *(branch_offset_p++);
+      break;
+    }
   }
 
-  for (uint32_t reg_index = 0;
-       reg_index < frame_p->regs_number;
-       reg_index++)
-  {
-    ecma_free_value (frame_p->regs_p[reg_index], false);
-  }
-} /* vm_stack_free_frame */
+  return branch_offset;
+} /* vm_decode_branch_offset */
 
 /**
- * Get value of specified register variable
+ * Find a finally up to the end position.
  *
- * @return ecma-value
+ * @return true if 'finally' found,
+ *         false otherwise
  */
-ecma_value_t
-vm_stack_frame_get_reg_value (vm_stack_frame_t *frame_p, /**< frame */
-                              uint32_t reg_index) /**< index of register variable */
+bool
+vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                       ecma_value_t **vm_stack_top_ref_p, /**< current stack top */
+                       vm_stack_context_type_t finally_type, /**< searching this finally */
+                       uint32_t search_limit) /**< search up-to this byte code */
 {
-  JERRY_ASSERT (reg_index >= VM_REG_FIRST && reg_index < VM_REG_FIRST + frame_p->regs_number);
+  ecma_value_t *vm_stack_top_p = *vm_stack_top_ref_p;
 
-  return frame_p->regs_p[reg_index - VM_REG_FIRST];
-} /* vm_stack_frame_get_reg_value */
+  JERRY_ASSERT (finally_type <= VM_CONTEXT_FINALLY_RETURN);
 
-/**
- * Set value of specified register variable
- */
-void
-vm_stack_frame_set_reg_value (vm_stack_frame_t *frame_p, /**< frame */
-                              uint32_t reg_index, /**< index of register variable */
-                              ecma_value_t value) /**< ecma-value */
-{
-  JERRY_ASSERT (reg_index >= VM_REG_FIRST && reg_index < VM_REG_FIRST + frame_p->regs_number);
-
-  frame_p->regs_p[reg_index - VM_REG_FIRST] = value;
-} /* vm_stack_frame_set_reg_value */
-
-/**
- * Calculate number of value slots in the top-most chunk of the frame
- *
- * @return number of value slots
- */
-static size_t
-vm_stack_slots_in_top_chunk (vm_stack_frame_t *frame_p) /**< stack frame */
-{
-  return ((frame_p->top_chunk_p == NULL) ? VM_STACK_FRAME_INLINED_VALUES_NUMBER : VM_STACK_SLOTS_IN_DYNAMIC_CHUNK);
-} /* vm_stack_slots_in_top_chunk */
-
-/**
- * Longpath for vm_stack_push_value (for case current chunk may be doesn't have free slots)
- */
-static void __attr_noinline___
-vm_stack_push_value_longpath (vm_stack_frame_t *frame_p) /**< stack frame */
-{
-  JERRY_ASSERT (frame_p->current_slot_index >= JERRY_MIN (VM_STACK_FRAME_INLINED_VALUES_NUMBER,
-                                                          VM_STACK_SLOTS_IN_DYNAMIC_CHUNK));
-
-  const size_t slots_in_top_chunk = vm_stack_slots_in_top_chunk (frame_p);
-
-  if (frame_p->current_slot_index == slots_in_top_chunk)
+  if (finally_type != VM_CONTEXT_FINALLY_JUMP)
   {
-    vm_stack_chunk_header_t *chunk_p;
-    chunk_p = (vm_stack_chunk_header_t *) mem_heap_alloc_block (VM_STACK_DYNAMIC_CHUNK_SIZE,
-                                                                MEM_HEAP_ALLOC_SHORT_TERM);
-
-    ECMA_SET_POINTER (chunk_p->prev_chunk_p, frame_p->top_chunk_p);
-
-    frame_p->top_chunk_p = chunk_p;
-    frame_p->dynamically_allocated_value_slots_p = (ecma_value_t*) (frame_p->top_chunk_p + 1);
-    frame_p->current_slot_index = 0;
-  }
-} /* vm_stack_push_value_longpath */
-
-/**
- * Push ecma-value to stack
- */
-void
-vm_stack_push_value (vm_stack_frame_t *frame_p, /**< stack frame */
-                     ecma_value_t value) /**< ecma-value */
-{
-  frame_p->current_slot_index++;
-
-  if (frame_p->current_slot_index >= JERRY_MIN (VM_STACK_FRAME_INLINED_VALUES_NUMBER,
-                                                VM_STACK_SLOTS_IN_DYNAMIC_CHUNK))
-  {
-    vm_stack_push_value_longpath (frame_p);
+    search_limit = 0xffffffffu;
   }
 
-  JERRY_ASSERT (frame_p->current_slot_index < vm_stack_slots_in_top_chunk (frame_p));
-
-  frame_p->dynamically_allocated_value_slots_p[frame_p->current_slot_index] = value;
-} /* vm_stack_push_value */
-
-/**
- * Get top value from stack
- */
-ecma_value_t __attr_always_inline___
-vm_stack_top_value (vm_stack_frame_t *frame_p) /**< stack frame */
-{
-  const size_t slots_in_top_chunk = vm_stack_slots_in_top_chunk (frame_p);
-
-  JERRY_ASSERT (frame_p->current_slot_index < slots_in_top_chunk);
-
-  return frame_p->dynamically_allocated_value_slots_p[frame_p->current_slot_index];
-} /* vm_stack_top_value */
-
-/**
- * Longpath for vm_stack_pop (for case a dynamically allocated chunk needs to be deallocated)
- */
-static void __attr_noinline___
-vm_stack_pop_longpath (vm_stack_frame_t *frame_p) /**< stack frame */
-{
-  JERRY_ASSERT (frame_p->current_slot_index == 0 && frame_p->top_chunk_p != NULL);
-
-  vm_stack_chunk_header_t *chunk_to_free_p = frame_p->top_chunk_p;
-  frame_p->top_chunk_p = ECMA_GET_POINTER (vm_stack_chunk_header_t,
-                                           frame_p->top_chunk_p->prev_chunk_p);
-
-  if (frame_p->top_chunk_p != NULL)
+  while (frame_ctx_p->context_depth > 0)
   {
-    frame_p->dynamically_allocated_value_slots_p = (ecma_value_t*) (frame_p->top_chunk_p + 1);
-    frame_p->current_slot_index = (uint32_t) (VM_STACK_SLOTS_IN_DYNAMIC_CHUNK - 1u);
+    vm_stack_context_type_t context_type;
+    uint32_t context_end = VM_GET_CONTEXT_END (vm_stack_top_p[-1]);
+
+    if (search_limit < context_end)
+    {
+      *vm_stack_top_ref_p = vm_stack_top_p;
+      return false;
+    }
+
+    context_type = VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]);
+    if (context_type == VM_CONTEXT_TRY || context_type == VM_CONTEXT_CATCH)
+    {
+      uint8_t *byte_code_p;
+      uint32_t branch_offset_length;
+      uint32_t branch_offset;
+
+      if (search_limit == context_end)
+      {
+        *vm_stack_top_ref_p = vm_stack_top_p;
+        return false;
+      }
+
+      byte_code_p = frame_ctx_p->byte_code_start_p + VM_GET_CONTEXT_END (vm_stack_top_p[-1]);
+
+      if (context_type == VM_CONTEXT_TRY)
+      {
+        JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE);
+
+        if (byte_code_p[1] >= CBC_EXT_CATCH
+            && byte_code_p[1] <= CBC_EXT_CATCH_3)
+        {
+          branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (byte_code_p[1]);
+          branch_offset = vm_decode_branch_offset (byte_code_p + 2,
+                                                   branch_offset_length);
+
+          if (finally_type == VM_CONTEXT_FINALLY_THROW)
+          {
+            branch_offset += (uint32_t) (byte_code_p - frame_ctx_p->byte_code_start_p);
+
+            vm_stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_CATCH, branch_offset);
+
+            byte_code_p += 2 + branch_offset_length;
+            frame_ctx_p->byte_code_p = byte_code_p;
+
+            *vm_stack_top_ref_p = vm_stack_top_p;
+            return true;
+          }
+
+          byte_code_p += branch_offset;
+
+          if (*byte_code_p == CBC_CONTEXT_END)
+          {
+            VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+            vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+            continue;
+          }
+        }
+      }
+      else
+      {
+        ecma_deref_object (frame_ctx_p->lex_env_p);
+        frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+
+        if (byte_code_p[0] == CBC_CONTEXT_END)
+        {
+          VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+          vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+          continue;
+        }
+      }
+
+      JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE);
+      JERRY_ASSERT (byte_code_p[1] >= CBC_EXT_FINALLY
+                    && byte_code_p[1] <= CBC_EXT_FINALLY_3);
+
+      branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (byte_code_p[1]);
+      branch_offset = vm_decode_branch_offset (byte_code_p + 2,
+                                               branch_offset_length);
+
+      branch_offset += (uint32_t) (byte_code_p - frame_ctx_p->byte_code_start_p);
+
+      vm_stack_top_p[-1] = VM_CREATE_CONTEXT ((uint32_t) finally_type, branch_offset);
+
+      byte_code_p += 2 + branch_offset_length;
+      frame_ctx_p->byte_code_p = byte_code_p;
+
+      *vm_stack_top_ref_p = vm_stack_top_p;
+      return true;
+    }
+
+    vm_stack_top_p = vm_stack_context_abort (frame_ctx_p, vm_stack_top_p);
   }
-  else
-  {
-    frame_p->dynamically_allocated_value_slots_p = frame_p->inlined_values;
-    frame_p->current_slot_index = (uint32_t) (VM_STACK_FRAME_INLINED_VALUES_NUMBER - 1u);
-  }
 
-  mem_heap_free_block (chunk_to_free_p);
-} /* vm_stack_pop_longpath */
-
-/**
- * Pop top value from stack and free it
- */
-void
-vm_stack_pop (vm_stack_frame_t *frame_p) /**< stack frame */
-{
-  JERRY_ASSERT (frame_p->current_slot_index < vm_stack_slots_in_top_chunk (frame_p));
-
-  ecma_value_t value = vm_stack_top_value (frame_p);
-
-  if (unlikely (frame_p->current_slot_index == 0
-                && frame_p->top_chunk_p != NULL))
-  {
-    vm_stack_pop_longpath (frame_p);
-  }
-  else
-  {
-    frame_p->current_slot_index--;
-  }
-
-  ecma_free_value (value, true);
-} /* vm_stack_pop */
-
-/**
- * Pop multiple top values from stack and free them
- */
-void
-vm_stack_pop_multiple (vm_stack_frame_t *frame_p, /**< stack frame */
-                       uint32_t number) /**< number of elements to pop */
-{
-  for (uint32_t i = 0; i < number; i++)
-  {
-    vm_stack_pop (frame_p);
-  }
-} /* vm_stack_pop_multiple */
+  *vm_stack_top_ref_p = vm_stack_top_p;
+  return false;
+} /* vm_stack_find_finally */
 
 /**
  * @}

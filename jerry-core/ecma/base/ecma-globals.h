@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +82,7 @@ typedef enum
                                          but are stored directly in the array's property list
                                          (used for array elements with non-default attribute values) */
   ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
+  ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
   ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
 } ecma_simple_value_t;
 
@@ -171,20 +172,11 @@ typedef uint32_t ecma_completion_value_t;
 #define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
 
 /**
- * Break / continue jump target
- */
-#define ECMA_COMPLETION_VALUE_TARGET_POS (0)
-#define ECMA_COMPLETION_VALUE_TARGET_WIDTH ((uint32_t) sizeof (vm_instr_counter_t) * JERRY_BITSINBYTE)
-
-/**
  * Type (ecma_completion_type_t)
  */
-#define ECMA_COMPLETION_VALUE_TYPE_POS (JERRY_MAX (JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_VALUE_POS + \
+#define ECMA_COMPLETION_VALUE_TYPE_POS (JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_VALUE_POS + \
                                                                   ECMA_COMPLETION_VALUE_VALUE_WIDTH, \
-                                                                  JERRY_BITSINBYTE), \
-                                                   JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_TARGET_POS + \
-                                                                  ECMA_COMPLETION_VALUE_TARGET_WIDTH, \
-                                                                  JERRY_BITSINBYTE)))
+                                                                  JERRY_BITSINBYTE))
 #define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
 
 /**
@@ -218,12 +210,9 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
   ECMA_INTERNAL_PROPERTY_CODE_BYTECODE, /**< first part of [[Code]] - compressed pointer to bytecode array */
-  ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET, /**< second part of [[Code]] - offset in bytecode array and code flags
-                                                 *   (see also: ecma_pack_code_internal_property_value) */
   ECMA_INTERNAL_PROPERTY_NATIVE_CODE, /**< native handler location descriptor */
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-  ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS, /**< [[FormalParameters]] */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE, /**< [[Primitive value]] for String objects */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE, /**< [[Primitive value]] for Number objects */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE, /**< [[Primitive value]] for Boolean objects */
@@ -836,6 +825,22 @@ typedef struct ecma_string_t
  * Representation for native external pointer
  */
 typedef uintptr_t ecma_external_pointer_t;
+
+/**
+ * Compiled byte code data.
+  */
+typedef struct
+{
+  uint16_t status_flags;            /**< various status flags */
+} ecma_compiled_code_t;
+
+/**
+ * Shift value for byte code reference counting.
+ * The last 10 bit of the first uint16_t value
+ * of compact byte code or regexp byte code
+ * is reserved for reference counting.
+ */
+#define ECMA_BYTECODE_REF_SHIFT 6
 
 /**
  * @}

@@ -22,7 +22,7 @@
 #include "rcs-iterator.h"
 #include "rcs-records.h"
 
-#ifdef JERRY_ENABLE_SNAPSHOT
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 
 /**
  * Dump a record to specified snapshot buffer.
@@ -250,6 +250,10 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
   return true;
 } /* lit_dump_literals_for_snapshot */
 
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+
 /**
  * Load literals from snapshot.
  *
@@ -408,4 +412,4 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
   return false;
 } /* rcs_load_literals_from_snapshot */
 
-#endif /* JERRY_ENABLE_SNAPSHOT */
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */

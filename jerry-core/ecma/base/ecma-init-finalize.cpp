@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ ecma_finalize (void)
   mem_unregister_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
 
   ecma_finalize_environment ();
-  ecma_finalize_builtins ();
   ecma_lcache_invalidate_all ();
+  ecma_finalize_builtins ();
   ecma_gc_run ();
 } /* ecma_finalize */
 

@@ -1,5 +1,5 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright 2015-2016 Samsung Electronics Co., Ltd.
+// Copyright 2015-2016 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 
 try
 {
-  v_0 = /N(?![^6](?:.)|(?!C[^k-o]*|p){0,}|H)|\\xDF\\db{0,}|i\\0?)/;
+  v_0 = new RegExp("N(?![^6](?:.)|(?!C[^k-o]*|p){0,}|H)|\\\\xDF\\db{0,}|i\\\\0?)");
   assert (false);
 }
 catch (e)

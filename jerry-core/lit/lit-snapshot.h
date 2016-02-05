@@ -25,7 +25,7 @@ typedef struct
   uint32_t literal_offset;
 } lit_mem_to_snapshot_id_map_entry_t;
 
-#ifdef JERRY_ENABLE_SNAPSHOT
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 extern bool
 lit_dump_literals_for_snapshot (uint8_t *,
                                 size_t,
@@ -33,12 +33,14 @@ lit_dump_literals_for_snapshot (uint8_t *,
                                 lit_mem_to_snapshot_id_map_entry_t **,
                                 uint32_t *,
                                 uint32_t *);
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
 extern bool
 lit_load_literals_from_snapshot (const uint8_t *,
                                  uint32_t,
                                  lit_mem_to_snapshot_id_map_entry_t **,
                                  uint32_t *);
-#endif /* JERRY_ENABLE_SNAPSHOT */
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
 #endif /* !RCS_SNAPSHOT_H */

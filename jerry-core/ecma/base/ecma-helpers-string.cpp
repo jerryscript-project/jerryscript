@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
  * @{
  */
 
-#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -29,9 +28,10 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
+#include "lit-literal.h"
 #include "lit-magic-strings.h"
-#include "vm.h"
 #include "rcs-records.h"
+#include "vm.h"
 
 /**
  * Maximum length of strings' concatenation

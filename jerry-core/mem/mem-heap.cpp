@@ -92,7 +92,7 @@ void mem_heap_valgrind_freya_mempool_request (void)
 /**
  * Length type of the block
  */
-typedef enum : uint8_t
+typedef enum __attr_packed___
 {
   MEM_BLOCK_LENGTH_TYPE_GENERAL     = 0, /**< general (may be multi-chunk) block
                                           *

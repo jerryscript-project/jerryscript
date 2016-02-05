@@ -93,20 +93,4 @@ extern void \
 ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
 #include "ecma-builtins.inc.h"
 
-
-#ifndef CONFIG_ECMA_COMPACT_PROFILE
-# define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Built-in is not implemented.", __VA_ARGS__)
-#else /* !CONFIG_ECMA_COMPACT_PROFILE */
-# define ECMA_BUILTIN_CP_UNIMPLEMENTED(...) \
-{ \
-  if (false) \
-  { \
-    jerry_ref_unused_variables (0, __VA_ARGS__); \
-  } \
-  ecma_object_t *cp_error_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
-  return ecma_make_throw_obj_completion_value (cp_error_p); \
-}
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
-
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

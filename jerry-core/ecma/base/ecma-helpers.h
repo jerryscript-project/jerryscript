@@ -107,9 +107,7 @@ extern ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *, l
 extern ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t);
 extern ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t);
 extern ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t);
-extern void ecma_new_ecma_string_on_stack_from_lit_cp (ecma_string_t *, lit_cpointer_t);
 extern ecma_string_t *ecma_new_ecma_string_from_lit_cp (lit_cpointer_t);
-extern void ecma_new_ecma_string_on_stack_from_magic_string_id (ecma_string_t *, lit_magic_string_id_t);
 extern ecma_string_t *ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t);
 extern ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t);
 extern ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *, ecma_string_t *);

@@ -780,10 +780,6 @@ typedef struct ecma_string_t
   /** Reference counter for the string */
   unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
 
-  /** Flag indicating whether the string descriptor is placed
-    * in a stack variable (not in the heap) */
-  unsigned int is_stack_var : 1;
-
   /** Where the string's data is placed (ecma_string_container_t) */
   uint8_t container;
 

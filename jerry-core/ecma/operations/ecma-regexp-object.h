@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@
 /**
  * RegExp flags
  */
-#define RE_FLAG_GLOBAL              (1 << 0) /* ECMA-262 v5, 15.10.7.2 */
-#define RE_FLAG_IGNORE_CASE         (1 << 1) /* ECMA-262 v5, 15.10.7.3 */
-#define RE_FLAG_MULTILINE           (1 << 2) /* ECMA-262 v5, 15.10.7.4 */
+#define RE_FLAG_GLOBAL              (1 << 1) /* ECMA-262 v5, 15.10.7.2 */
+#define RE_FLAG_IGNORE_CASE         (1 << 2) /* ECMA-262 v5, 15.10.7.3 */
+#define RE_FLAG_MULTILINE           (1 << 3) /* ECMA-262 v5, 15.10.7.4 */
 
 /**
  * RegExp executor context
@@ -47,8 +47,11 @@ typedef struct
   uint32_t num_of_captures; /**< number of capture groups */
   uint32_t num_of_non_captures; /**< number of non-capture groups */
   uint32_t *num_of_iterations_p; /**< number of iterations */
-  uint8_t flags; /**< RegExp flags */
+  uint16_t flags; /**< RegExp flags */
 } re_matcher_ctx_t;
+
+extern ecma_value_t
+ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *);
 
 extern ecma_completion_value_t
 ecma_op_create_regexp_object (ecma_string_t *, ecma_string_t *);
@@ -62,10 +65,10 @@ extern void
 re_set_result_array_properties (ecma_object_t *, ecma_string_t *, uint32_t, int32_t);
 
 extern ecma_completion_value_t
-re_parse_regexp_flags (ecma_string_t *, uint8_t *);
+re_parse_regexp_flags (ecma_string_t *, uint16_t *);
 
 extern void
-re_initialize_props (ecma_object_t *, ecma_string_t *, uint8_t);
+re_initialize_props (ecma_object_t *, ecma_string_t *, uint16_t);
 
 /**
  * @}

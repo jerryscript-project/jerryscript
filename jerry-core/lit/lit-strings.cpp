@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -277,12 +277,12 @@ lit_utf8_iterator_seek_bos (lit_utf8_iterator_t *iter_p) /**< iterator to reset 
 } /* lit_utf8_iterator_seek_bos */
 
 /**
- * Save iterator's position to restore it later
+ * Get iterator's position
  *
  * @return current position of the iterator
  */
 lit_utf8_iterator_pos_t
-lit_utf8_iterator_get_pos (const lit_utf8_iterator_t *iter_p)
+lit_utf8_iterator_get_pos (const lit_utf8_iterator_t *iter_p) /**< iterator */
 {
   return iter_p->buf_pos;
 } /* lit_utf8_iterator_get_pos */
@@ -586,7 +586,7 @@ lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with cha
  */
 lit_utf8_size_t
 lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
-                                    ecma_char_t *code_point) /**< @out: code point */
+                                   ecma_char_t *code_point) /**< @out: code point */
 {
   JERRY_ASSERT (buf_p);
 
@@ -635,7 +635,7 @@ lit_utf8_read_prev (lit_utf8_byte_t **buf_p) /**< in-out:buffer with characters 
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_peek_next (lit_utf8_byte_t *buf_p) /**< in-out:buffer with characters */
+lit_utf8_peek_next (const lit_utf8_byte_t *buf_p) /**< in-out:buffer with characters */
 {
   JERRY_ASSERT (buf_p);
   ecma_char_t ch;
@@ -651,7 +651,7 @@ lit_utf8_peek_next (lit_utf8_byte_t *buf_p) /**< in-out:buffer with characters *
  * @return previous code unit
  */
 ecma_char_t
-lit_utf8_peek_prev (lit_utf8_byte_t *buf_p) /**< in-out:buffer with characters */
+lit_utf8_peek_prev (const lit_utf8_byte_t *buf_p) /**< in-out:buffer with characters */
 {
   JERRY_ASSERT (buf_p);
   ecma_char_t ch;

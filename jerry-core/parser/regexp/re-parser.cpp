@@ -24,6 +24,16 @@
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 
+/** \addtogroup parser Parser
+ * @{
+ *
+ * \addtogroup regexparser Regular expression
+ * @{
+ *
+ * \addtogroup regexparser_parser Parser
+ * @{
+ */
+
 /**
  * Lookup a character in the input string.
  *
@@ -894,4 +904,10 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
   return ret_value;
 } /* re_parse_next_token */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+/**
+ * @}
+ * @}
+ * @}
+ */
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

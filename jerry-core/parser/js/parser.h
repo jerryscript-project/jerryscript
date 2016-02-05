@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,40 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "jrt.h"
+#include "jerry-api.h"
+#include "byte-code.h"
+
+/** \addtogroup parser Parser
+ * @{
+ *
+ * \addtogroup jsparser ECMAScript
+ * @{
+ *
+ * \addtogroup jsparser_parser Parser
+ * @{
+ */
 
 /**
  * Parser completion status
  */
 typedef enum
 {
-  JSP_STATUS_OK, /**< parse finished successfully, no early errors occured */
-  JSP_STATUS_SYNTAX_ERROR, /**< SyntaxError early error occured */
+  JSP_STATUS_OK,             /**< parse finished successfully, no early errors occured */
+  JSP_STATUS_SYNTAX_ERROR,   /**< SyntaxError early error occured */
   JSP_STATUS_REFERENCE_ERROR /**< ReferenceError early error occured */
 } jsp_status_t;
 
-void parser_set_show_instrs (bool);
-jsp_status_t parser_parse_script (const jerry_api_char_t *, size_t, const bytecode_data_header_t **);
-jsp_status_t parser_parse_eval (const jerry_api_char_t *, size_t, bool, const bytecode_data_header_t **, bool *);
+extern void parser_set_show_instrs (int);
 
-#endif /* PARSER_H */
+extern jsp_status_t parser_parse_script (const jerry_api_char_t *, size_t,
+                                         ecma_compiled_code_t **);
+extern jsp_status_t parser_parse_eval (const jerry_api_char_t *, size_t, bool,
+                                       ecma_compiled_code_t **);
+
+/**
+ * @}
+ * @}
+ * @}
+ */
+
+#endif /* !PARSER_H */

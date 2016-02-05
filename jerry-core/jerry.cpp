@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 
-#include "bytecode-data.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
@@ -28,8 +27,12 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
+#include "jerry-snapshot.h"
+#include "lit-literal.h"
 #include "lit-magic-strings.h"
+#include "lit-snapshot.h"
 #include "parser.h"
+#include "re-compiler.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
@@ -685,7 +688,7 @@ jerry_api_create_string (const jerry_api_char_t *v) /**< string value */
  */
 jerry_api_string_t *
 jerry_api_create_string_sz (const jerry_api_char_t *v, /**< string value */
-                            jerry_api_size_t v_size)
+                            jerry_api_size_t v_size) /**< string size */
 {
   jerry_assert_api_available ();
 
@@ -1125,9 +1128,9 @@ jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to dele
  *                - there is field with specified name in the object;
  *         false - otherwise.
  */
-bool jerry_api_get_object_field_value (jerry_api_object_t *object_p,
-                                       const jerry_api_char_t *field_name_p,
-                                       jerry_api_value_t *field_value_p)
+bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
+                                       const jerry_api_char_t *field_name_p, /**< field name */
+                                       jerry_api_value_t *field_value_p) /**< out: field value */
 {
   return jerry_api_get_object_field_value_sz (object_p,
                                               field_name_p,
@@ -1672,9 +1675,8 @@ jerry_cleanup (void)
 
   ecma_finalize ();
   lit_finalize ();
-  bc_finalize ();
-  mem_finalize (is_show_mem_stats);
   vm_finalize ();
+  mem_finalize (is_show_mem_stats);
 } /* jerry_cleanup */
 
 /**
@@ -1724,11 +1726,11 @@ jerry_parse (const jerry_api_char_t* source_p, /**< script source */
 {
   jerry_assert_api_available ();
 
-  bool is_show_instructions = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
+  int is_show_instructions = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
   parser_set_show_instrs (is_show_instructions);
 
-  const bytecode_data_header_t *bytecode_data_p;
+  ecma_compiled_code_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   parse_status = parser_parse_script (source_p,
@@ -1865,6 +1867,212 @@ jerry_register_external_magic_strings (const jerry_api_char_ptr_t* ex_str_items,
   lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_external_magic_strings */
 
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+
+/*
+ * Tells whether snapshot taking is in progress.
+ */
+bool snapshot_report_byte_code_compilation = false;
+
+/*
+ * Mapping snapshot to offset.
+ */
+typedef struct
+{
+  mem_cpointer_t next_cp;
+  mem_cpointer_t compiled_code_cp;
+  uint16_t offset;
+} compiled_code_map_entry_t;
+
+/*
+ * Variables required to take a snapshot.
+ */
+static size_t snapshot_buffer_write_offset;
+static size_t snapshot_last_compiled_code_offset;
+static bool snapshot_error_occured;
+static uint8_t *snapshot_buffer_p;
+static size_t snapshot_buffer_size;
+static compiled_code_map_entry_t *snapshot_map_entries_p;
+
+/**
+ * Snapshot callback for byte codes.
+ */
+void
+snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled code */
+                            const uint8_t *regexp_pattern, /**< regular expression pattern */
+                            uint32_t size) /**< compiled code or regular expression size */
+{
+  if (snapshot_error_occured)
+  {
+    return;
+  }
+
+  JERRY_ASSERT ((snapshot_buffer_write_offset & (MEM_ALIGNMENT - 1)) == 0);
+
+  if ((snapshot_buffer_write_offset >> MEM_ALIGNMENT_LOG) > 0xffffu)
+  {
+    snapshot_error_occured = true;
+    return;
+  }
+
+  snapshot_last_compiled_code_offset = snapshot_buffer_write_offset;
+
+  compiled_code_map_entry_t *new_entry = (compiled_code_map_entry_t *) mem_pools_alloc ();
+
+  if (new_entry == NULL)
+  {
+    snapshot_error_occured = true;
+    return;
+  }
+
+  ECMA_SET_POINTER (new_entry->next_cp, snapshot_map_entries_p);
+  ECMA_SET_POINTER (new_entry->compiled_code_cp, compiled_code_p);
+
+  new_entry->offset = (uint16_t) (snapshot_buffer_write_offset >> MEM_ALIGNMENT_LOG);
+  snapshot_map_entries_p = new_entry;
+
+  const void *data_p = (const void *) compiled_code_p;
+
+  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  {
+    size += (uint32_t) sizeof (uint16_t);
+  }
+  else
+  {
+    JERRY_ASSERT (regexp_pattern == NULL);
+  }
+
+  if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
+                                      snapshot_buffer_size,
+                                      &snapshot_buffer_write_offset,
+                                      &size,
+                                      sizeof (uint32_t)))
+  {
+    snapshot_error_occured = true;
+    return;
+  }
+
+  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  {
+    size -= (uint32_t) sizeof (uint16_t);
+
+    if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
+                                        snapshot_buffer_size,
+                                        &snapshot_buffer_write_offset,
+                                        &compiled_code_p->status_flags,
+                                        sizeof (uint16_t)))
+    {
+      snapshot_error_occured = true;
+      return;
+    }
+
+    data_p = regexp_pattern;
+  }
+
+  if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
+                                      snapshot_buffer_size,
+                                      &snapshot_buffer_write_offset,
+                                      data_p,
+                                      size))
+  {
+    snapshot_error_occured = true;
+    return;
+  }
+
+  snapshot_buffer_write_offset = JERRY_ALIGNUP (snapshot_buffer_write_offset, MEM_ALIGNMENT);
+
+  if (snapshot_buffer_write_offset > snapshot_buffer_size)
+  {
+    snapshot_error_occured = true;
+    return;
+  }
+} /* snapshot_add_compiled_code */
+
+/**
+ * Set the uint16_t offsets in the code area.
+ */
+static void
+jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
+                            uint32_t size, /**< buffer size */
+                            lit_mem_to_snapshot_id_map_entry_t *lit_map_p) /**< literal map */
+{
+  JERRY_ASSERT (size > 0);
+
+  do
+  {
+    uint32_t code_size = *(uint32_t *) buffer_p;
+
+    buffer_p += sizeof (uint32_t);
+
+    ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
+
+    /* Set reference counter to 1. */
+    bytecode_p->status_flags &= (1 << ECMA_BYTECODE_REF_SHIFT) - 1;
+    bytecode_p->status_flags |= 1 << ECMA_BYTECODE_REF_SHIFT;
+
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    {
+      lit_cpointer_t *literal_start_p;
+      uint32_t literal_end;
+      uint32_t const_literal_end;
+
+      if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+      {
+        literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
+
+        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
+        literal_end = args_p->literal_end;
+        const_literal_end = args_p->const_literal_end;
+      }
+      else
+      {
+        literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
+
+        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
+        literal_end = args_p->literal_end;
+        const_literal_end = args_p->const_literal_end;
+      }
+
+      for (uint32_t i = 0; i < const_literal_end; i++)
+      {
+        lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
+
+        if (literal_start_p[i].packed_value != MEM_CP_NULL)
+        {
+          while (current_p->literal_id.packed_value != literal_start_p[i].packed_value)
+          {
+            current_p++;
+          }
+
+          literal_start_p[i].packed_value = (uint16_t) current_p->literal_offset;
+        }
+      }
+
+      for (uint32_t i = const_literal_end; i < literal_end; i++)
+      {
+        compiled_code_map_entry_t *current_p = snapshot_map_entries_p;
+
+        while (current_p->compiled_code_cp != literal_start_p[i].value.base_cp)
+        {
+          current_p = ECMA_GET_NON_NULL_POINTER (compiled_code_map_entry_t,
+                                                 current_p->next_cp);
+        }
+
+        literal_start_p[i].packed_value = (uint16_t) current_p->offset;
+      }
+    }
+
+    code_size += (uint32_t) sizeof (uint32_t);
+    code_size = JERRY_ALIGNUP (code_size, MEM_ALIGNMENT);
+
+    buffer_p += code_size - sizeof (uint32_t);
+    size -= code_size;
+  }
+  while (size > 0);
+} /* jerry_snapshot_set_offsets */
+
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+
 /**
  * Generate snapshot from specified source
  *
@@ -1881,9 +2089,41 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
                                uint8_t *buffer_p, /**< buffer to dump snapshot to */
                                size_t buffer_size) /**< the buffer's size */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
   jsp_status_t parse_status;
-  const bytecode_data_header_t *bytecode_data_p;
+  ecma_compiled_code_t *bytecode_data_p;
+
+  snapshot_buffer_write_offset = 0;
+  snapshot_last_compiled_code_offset = 0;
+  snapshot_error_occured = false;
+  snapshot_buffer_p = buffer_p;
+  snapshot_buffer_size = buffer_size;
+  snapshot_map_entries_p = NULL;
+
+  uint64_t version = JERRY_SNAPSHOT_VERSION;
+  if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      &snapshot_buffer_write_offset,
+                                      &version,
+                                      sizeof (version)))
+  {
+    return 0;
+  }
+
+  snapshot_buffer_write_offset = JERRY_ALIGNUP (snapshot_buffer_write_offset, MEM_ALIGNMENT);
+
+  size_t header_offset = snapshot_buffer_write_offset;
+
+  snapshot_buffer_write_offset += JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT);
+
+  if (snapshot_buffer_write_offset > buffer_size)
+  {
+    return 0;
+  }
+
+  size_t compiled_code_start = snapshot_buffer_write_offset;
+
+  snapshot_report_byte_code_compilation = true;
 
   if (is_for_global)
   {
@@ -1891,88 +2131,81 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
   }
   else
   {
-    bool code_contains_functions;
-
     parse_status = parser_parse_eval (source_p,
                                       source_size,
                                       false,
-                                      &bytecode_data_p,
-                                      &code_contains_functions);
+                                      &bytecode_data_p);
   }
 
-  if (parse_status != JSP_STATUS_OK)
+  snapshot_report_byte_code_compilation = false;
+
+  if (parse_status == JSP_STATUS_OK
+      && !snapshot_error_occured)
   {
-    return 0;
-  }
+    JERRY_ASSERT (snapshot_last_compiled_code_offset != 0);
 
-  size_t buffer_write_offset = 0;
+    jerry_snapshot_header_t header;
+    header.last_compiled_code_offset = (uint32_t) snapshot_last_compiled_code_offset;
+    header.is_run_global = is_for_global;
 
-  jerry_snapshot_header_t header;
-  header.is_run_global = is_for_global;
+    size_t compiled_code_size = snapshot_buffer_write_offset - compiled_code_start;
 
-  uint64_t version = JERRY_SNAPSHOT_VERSION;
-  if (!jrt_write_to_buffer_by_offset (buffer_p,
-                                      buffer_size,
-                                      &buffer_write_offset,
-                                      &version,
-                                      sizeof (version)))
-  {
-    return 0;
-  }
+    lit_mem_to_snapshot_id_map_entry_t* lit_map_p = NULL;
+    uint32_t literals_num;
 
-  size_t header_offset = buffer_write_offset;
+    if (!lit_dump_literals_for_snapshot (buffer_p,
+                                         buffer_size,
+                                         &snapshot_buffer_write_offset,
+                                         &lit_map_p,
+                                         &literals_num,
+                                         &header.lit_table_size))
+    {
+      JERRY_ASSERT (lit_map_p == NULL);
+      snapshot_buffer_write_offset = 0;
+    }
+    else
+    {
+      if (header.lit_table_size > 0xffff)
+      {
+        /* Aligning literals could increase this range, but
+         * it is not a requirement for low-memory environments. */
+        snapshot_buffer_write_offset = 0;
+      }
+      else
+      {
+        jerry_snapshot_set_offsets (buffer_p + compiled_code_start,
+                                    (uint32_t) compiled_code_size,
+                                    lit_map_p);
 
-  if (buffer_write_offset + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT) > buffer_size)
-  {
-    return 0;
-  }
-  buffer_write_offset += JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT);
-
-  lit_mem_to_snapshot_id_map_entry_t* lit_map_p = NULL;
-  uint32_t literals_num;
-
-  if (!lit_dump_literals_for_snapshot (buffer_p,
+        jrt_write_to_buffer_by_offset (buffer_p,
                                        buffer_size,
-                                       &buffer_write_offset,
-                                       &lit_map_p,
-                                       &literals_num,
-                                       &header.lit_table_size))
+                                       &header_offset,
+                                       &header,
+                                       sizeof (header));
+      }
+
+      mem_heap_free_block (lit_map_p);
+    }
+
+    ecma_bytecode_deref (bytecode_data_p);
+  }
+  else
   {
-    JERRY_ASSERT (lit_map_p == NULL);
-    return 0;
+    snapshot_buffer_write_offset = 0;
   }
 
-  size_t bytecode_offset = (sizeof (version)
-                            + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT)
-                            + header.lit_table_size);
+  compiled_code_map_entry_t *current_p = snapshot_map_entries_p;
 
-  JERRY_ASSERT (JERRY_ALIGNUP (bytecode_offset, MEM_ALIGNMENT) == bytecode_offset);
-
-  bool is_ok = bc_save_bytecode_data (buffer_p,
-                                      buffer_size,
-                                      &buffer_write_offset,
-                                      bytecode_data_p,
-                                      lit_map_p,
-                                      literals_num,
-                                      &header.scopes_num);
-
-  JERRY_ASSERT (header.scopes_num != 0);
-
-  if (lit_map_p != NULL)
+  while (current_p != NULL)
   {
-    mem_heap_free_block (lit_map_p);
+    compiled_code_map_entry_t *next_p = ECMA_GET_POINTER (compiled_code_map_entry_t,
+                                                          current_p->next_cp);
+    mem_pools_free ((uint8_t *) current_p);
+    current_p = next_p;
   }
 
-  if (!is_ok)
-  {
-    return 0;
-  }
-
-  is_ok = jrt_write_to_buffer_by_offset (buffer_p, buffer_size, &header_offset, &header, sizeof (header));
-  JERRY_ASSERT (is_ok && header_offset < buffer_write_offset);
-
-  return buffer_write_offset;
-#else /* JERRY_ENABLE_SNAPSHOT */
+  return snapshot_buffer_write_offset;
+#else /* JERRY_ENABLE_SNAPSHOT_SAVE */
   (void) source_p;
   (void) source_size;
   (void) is_for_global;
@@ -1980,8 +2213,143 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
   (void) buffer_size;
 
   return 0;
-#endif /* !JERRY_ENABLE_SNAPSHOT */
+#endif /* !JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_snapshot */
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+
+/**
+ * Load byte code from snapshot.
+ *
+ * @return byte code
+ */
+static ecma_compiled_code_t *
+snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data */
+                             size_t offset, /**< byte code offset */
+                             lit_mem_to_snapshot_id_map_entry_t *lit_map_p, /**< literal map */
+                             bool copy_bytecode) /**< byte code should be copied to memory */
+{
+  uint32_t code_size = *(uint32_t *) (snapshot_data_p + offset);
+
+  ecma_compiled_code_t *bytecode_p;
+
+  bytecode_p = (ecma_compiled_code_t *) (snapshot_data_p + offset + sizeof (uint32_t));
+
+  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+    re_compiled_code_t *re_bytecode_p = NULL;
+
+    const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (uint16_t);
+
+    code_size -= (uint32_t) sizeof (uint16_t);
+
+    ecma_string_t *pattern_str_p = ecma_new_ecma_string_from_utf8 (regex_start_p,
+                                                                   code_size);
+
+    re_compile_bytecode (&re_bytecode_p,
+                         pattern_str_p,
+                         bytecode_p->status_flags);
+
+    ecma_deref_ecma_string (pattern_str_p);
+
+    return (ecma_compiled_code_t *) re_bytecode_p;
+#else
+    JERRY_UNIMPLEMENTED ("RegExp is not supported in compact profile.");
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+  }
+
+  size_t header_size;
+  uint32_t literal_end;
+  uint32_t const_literal_end;
+
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    uint8_t *byte_p = (uint8_t *) bytecode_p;
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) byte_p;
+    literal_end = args_p->literal_end;
+    const_literal_end = args_p->const_literal_end;
+    header_size = sizeof (cbc_uint16_arguments_t);
+  }
+  else
+  {
+    uint8_t *byte_p = (uint8_t *) bytecode_p;
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) byte_p;
+    literal_end = args_p->literal_end;
+    const_literal_end = args_p->const_literal_end;
+    header_size = sizeof (cbc_uint8_arguments_t);
+  }
+
+  if (copy_bytecode)
+  {
+    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (code_size,
+                                                                MEM_HEAP_ALLOC_LONG_TERM);
+
+    memcpy (bytecode_p, snapshot_data_p + offset + sizeof (uint32_t), code_size);
+  }
+  else
+  {
+    code_size = (uint32_t) (header_size + literal_end * sizeof (lit_cpointer_t));
+
+    uint8_t *real_bytecode_p = ((uint8_t *) bytecode_p) + code_size;
+
+    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (code_size + 1 + sizeof (uint8_t *),
+                                                                MEM_HEAP_ALLOC_LONG_TERM);
+
+    memcpy (bytecode_p, snapshot_data_p + offset + sizeof (uint32_t), code_size);
+
+    uint8_t *instructions_p = ((uint8_t *) bytecode_p);
+
+    instructions_p[code_size] = CBC_SET_BYTECODE_PTR;
+    memcpy (instructions_p + code_size + 1, &real_bytecode_p, sizeof (uint8_t *));
+  }
+
+  JERRY_ASSERT ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) == 1);
+
+  lit_cpointer_t *literal_start_p = (lit_cpointer_t *) (((uint8_t *) bytecode_p) + header_size);
+
+  for (uint32_t i = 0; i < const_literal_end; i++)
+  {
+    lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
+
+    if (literal_start_p[i].packed_value != 0)
+    {
+      while (current_p->literal_offset != literal_start_p[i].packed_value)
+      {
+        current_p++;
+      }
+
+      literal_start_p[i] = current_p->literal_id;
+    }
+  }
+
+  for (uint32_t i = const_literal_end; i < literal_end; i++)
+  {
+    size_t literal_offset = ((size_t) literal_start_p[i].packed_value) << MEM_ALIGNMENT_LOG;
+
+    if (literal_offset == offset)
+    {
+      /* Self reference */
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].value.base_cp,
+                                 bytecode_p);
+    }
+    else
+    {
+      ecma_compiled_code_t *literal_bytecode_p;
+      literal_bytecode_p = snapshot_load_compiled_code (snapshot_data_p,
+                                                        literal_offset,
+                                                        lit_map_p,
+                                                        copy_bytecode);
+
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].value.base_cp,
+                                 literal_bytecode_p);
+    }
+  }
+
+  return bytecode_p;
+} /* snapshot_load_compiled_code */
+
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
 /**
  * Execute snapshot from specified buffer
@@ -1991,19 +2359,19 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t* source_p, /**< script sou
 jerry_completion_code_t
 jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
                      size_t snapshot_size, /**< size of snapshot */
-                     bool is_copy, /**< flag, indicating whether the passed snapshot
-                                    *   buffer should be copied to engine's memory,
-                                    *   so engine should not reference the buffer
-                                    *   after the function returns (in the case, the passed
-                                    *   buffer could be freed after the call);
-                                    *   otherwise (if flag not set) - the buffer could be freed
-                                    *   only after engine stops (i.e. after call to jerry_cleanup). */
-                     jerry_api_value_t *retval_p) /**< out: returned value (ECMA-262 'undefined' if code is executed
-                                                   *        as global scope code) */
+                     bool copy_bytecode, /**< flag, indicating whether the passed snapshot
+                                          *   buffer should be copied to the engine's memory.
+                                          *   If set the engine should not reference the buffer
+                                          *   after the function returns (in this case, the passed
+                                          *   buffer could be freed after the call).
+                                          *   Otherwise (if the flag is not set) - the buffer could only be
+                                          *   freed after the engine stops (i.e. after call to jerry_cleanup). */
+                     jerry_api_value_t *retval_p) /**< out: returned value (ECMA-262 'undefined' if
+                                                   * code is executed as global scope code) */
 {
   jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
-#ifdef JERRY_ENABLE_SNAPSHOT
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   JERRY_ASSERT (snapshot_p != NULL);
 
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
@@ -2025,20 +2393,19 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   }
 
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) (snapshot_data_p + snapshot_read);
-  if (snapshot_read + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT) > snapshot_size)
-  {
-    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
-  }
 
-  snapshot_read += JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT);
+  snapshot_read = header_p->last_compiled_code_offset;
 
-  if (snapshot_read + header_p->lit_table_size > snapshot_size)
-  {
-    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
-  }
+  JERRY_ASSERT (snapshot_read == JERRY_ALIGNUP (snapshot_read, MEM_ALIGNMENT));
+
+  uint32_t last_code_size = *(uint32_t *) (snapshot_data_p + snapshot_read);
+
+  snapshot_read += JERRY_ALIGNUP (last_code_size + sizeof (uint32_t), MEM_ALIGNMENT);
 
   lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
   uint32_t literals_num;
+
+  JERRY_ASSERT (snapshot_read + header_p->lit_table_size <= snapshot_size);
 
   if (!lit_load_literals_from_snapshot (snapshot_data_p + snapshot_read,
                                         header_p->lit_table_size,
@@ -2049,28 +2416,21 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
   }
 
-  snapshot_read += header_p->lit_table_size;
+  ecma_compiled_code_t *bytecode_p;
 
-  if (snapshot_read > snapshot_size)
-  {
-    mem_heap_free_block (lit_map_p);
-    return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
-  }
+  snapshot_read = header_p->last_compiled_code_offset;
 
-  const bytecode_data_header_t *bytecode_data_p;
-  bytecode_data_p = bc_load_bytecode_data (snapshot_data_p + snapshot_read,
-                                           snapshot_size - snapshot_read,
-                                           lit_map_p,
-                                           literals_num,
-                                           is_copy,
-                                           header_p->scopes_num);
+  bytecode_p = snapshot_load_compiled_code (snapshot_data_p,
+                                            snapshot_read,
+                                            lit_map_p,
+                                            copy_bytecode);
 
   if (lit_map_p != NULL)
   {
     mem_heap_free_block (lit_map_p);
   }
 
-  if (bytecode_data_p == NULL)
+  if (bytecode_p == NULL)
   {
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
   }
@@ -2079,7 +2439,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   if (header_p->is_run_global)
   {
-    vm_init (bytecode_data_p, false);
+    vm_init (bytecode_p, false);
 
     ret_code = vm_run_global ();
 
@@ -2088,7 +2448,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   else
   {
     /* vm should be already initialized */
-    ecma_completion_value_t completion = vm_run_eval (bytecode_data_p, false);
+    ecma_completion_value_t completion = vm_run_eval (bytecode_p, false);
 
     ret_code = jerry_api_convert_eval_completion_to_retval (retval_p, completion);
 
@@ -2096,12 +2456,12 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   }
 
   return ret_code;
-#else /* JERRY_ENABLE_SNAPSHOT */
+#else /* JERRY_ENABLE_SNAPSHOT_EXEC */
   (void) snapshot_p;
   (void) snapshot_size;
-  (void) is_copy;
+  (void) copy_bytecode;
   (void) retval_p;
 
   return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
-#endif /* !JERRY_ENABLE_SNAPSHOT */
+#endif /* !JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */

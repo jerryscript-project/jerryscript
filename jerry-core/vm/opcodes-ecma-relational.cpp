@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +14,20 @@
  * limitations under the License.
  */
 
+#include "ecma-comparison.h"
+#include "ecma-conversion.h"
+#include "ecma-exceptions.h"
+#include "ecma-helpers.h"
+#include "ecma-objects.h"
+#include "ecma-try-catch-macro.h"
 #include "opcodes.h"
-#include "opcodes-ecma-support.h"
+
+/** \addtogroup vm Virtual machine
+ * @{
+ *
+ * \addtogroup vm_opcodes Opcodes
+ * @{
+ */
 
 /**
  * 'Less-than' opcode handler.
@@ -25,17 +38,11 @@
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_less_than (vm_instr_t instr, /**< instruction */
-                  vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
+opfunc_less_than (ecma_value_t left_value, /**< left value */
+                  ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_var_idx = instr.data.less_than.dst;
-  const vm_idx_t left_var_idx = instr.data.less_than.var_left;
-  const vm_idx_t right_var_idx = instr.data.less_than.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (left_value, right_value, true),
                   ret_value);
@@ -53,13 +60,9 @@ opfunc_less_than (vm_instr_t instr, /**< instruction */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = ecma_make_simple_completion_value (res);
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_less_than */
@@ -73,17 +76,11 @@ opfunc_less_than (vm_instr_t instr, /**< instruction */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_greater_than (vm_instr_t instr, /**< instruction */
-                     vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
+opfunc_greater_than (ecma_value_t left_value, /**< left value */
+                     ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_var_idx = instr.data.greater_than.dst;
-  const vm_idx_t left_var_idx = instr.data.greater_than.var_left;
-  const vm_idx_t right_var_idx = instr.data.greater_than.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (right_value, left_value, false),
                   ret_value);
@@ -101,13 +98,9 @@ opfunc_greater_than (vm_instr_t instr, /**< instruction */
     res = (ecma_is_value_true (compare_result) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = ecma_make_simple_completion_value (res);
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_greater_than */
@@ -121,17 +114,11 @@ opfunc_greater_than (vm_instr_t instr, /**< instruction */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_less_or_equal_than (vm_instr_t instr, /**< instruction */
-                           vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
+opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
+                           ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_var_idx = instr.data.less_or_equal_than.dst;
-  const vm_idx_t left_var_idx = instr.data.less_or_equal_than.var_left;
-  const vm_idx_t right_var_idx = instr.data.less_or_equal_than.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (right_value, left_value, false),
                   ret_value);
@@ -156,13 +143,9 @@ opfunc_less_or_equal_than (vm_instr_t instr, /**< instruction */
     }
   }
 
-  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = ecma_make_simple_completion_value (res);
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_less_or_equal_than */
@@ -176,17 +159,11 @@ opfunc_less_or_equal_than (vm_instr_t instr, /**< instruction */
  *         Returned value must be freed with ecma_free_completion_value
  */
 ecma_completion_value_t
-opfunc_greater_or_equal_than (vm_instr_t instr, /**< instruction */
-                              vm_frame_ctx_t *frame_ctx_p) /**< interpreter context */
+opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
+                              ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_var_idx = instr.data.greater_or_equal_than.dst;
-  const vm_idx_t left_var_idx = instr.data.greater_or_equal_than.var_left;
-  const vm_idx_t right_var_idx = instr.data.greater_or_equal_than.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_relational_compare (left_value, right_value, true),
                   ret_value);
@@ -211,13 +188,9 @@ opfunc_greater_or_equal_than (vm_instr_t instr, /**< instruction */
     }
   }
 
-  ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_var_idx, ecma_make_simple_value (res));
+  ret_value = ecma_make_simple_completion_value (res);
 
   ECMA_FINALIZE (compare_result);
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_greater_or_equal_than */
@@ -231,17 +204,10 @@ opfunc_greater_or_equal_than (vm_instr_t instr, /**< instruction */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_instanceof (vm_instr_t instr __attr_unused___, /**< instruction */
-                   vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
+opfunc_instanceof (ecma_value_t left_value, /**< left value */
+                   ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_idx = instr.data.instanceof.dst;
-  const vm_idx_t left_var_idx = instr.data.instanceof.var_left;
-  const vm_idx_t right_var_idx = instr.data.instanceof.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   if (!ecma_is_value_object (right_value))
   {
@@ -255,15 +221,10 @@ opfunc_instanceof (vm_instr_t instr __attr_unused___, /**< instruction */
                     ecma_op_object_has_instance (right_value_obj_p, left_value),
                     ret_value);
 
-    ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos, dst_idx, is_instance_of);
+    ret_value = ecma_make_normal_completion_value (is_instance_of);
 
     ECMA_FINALIZE (is_instance_of);
   }
-
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
 
   return ret_value;
 } /* opfunc_instanceof */
@@ -277,17 +238,10 @@ opfunc_instanceof (vm_instr_t instr __attr_unused___, /**< instruction */
  *         returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-opfunc_in (vm_instr_t instr __attr_unused___, /**< instruction */
-           vm_frame_ctx_t *frame_ctx_p __attr_unused___) /**< interpreter context */
+opfunc_in (ecma_value_t left_value, /**< left value */
+           ecma_value_t right_value) /**< right value */
 {
-  const vm_idx_t dst_idx = instr.data.in.dst;
-  const vm_idx_t left_var_idx = instr.data.in.var_left;
-  const vm_idx_t right_var_idx = instr.data.in.var_right;
-
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  ECMA_TRY_CATCH (left_value, get_variable_value (frame_ctx_p, left_var_idx, false), ret_value);
-  ECMA_TRY_CATCH (right_value, get_variable_value (frame_ctx_p, right_var_idx, false), ret_value);
 
   if (!ecma_is_value_object (right_value))
   {
@@ -310,17 +264,15 @@ opfunc_in (vm_instr_t instr __attr_unused___, /**< instruction */
       is_in = ECMA_SIMPLE_VALUE_FALSE;
     }
 
-    ret_value = set_variable_value (frame_ctx_p, frame_ctx_p->pos,
-                                    dst_idx,
-                                    ecma_make_simple_value (is_in));
+    ret_value = ecma_make_simple_completion_value (is_in);
 
     ECMA_FINALIZE (str_left_value);
   }
 
-  ECMA_FINALIZE (right_value);
-  ECMA_FINALIZE (left_value);
-
-  frame_ctx_p->pos++;
-
   return ret_value;
 } /* opfunc_in */
+
+/**
+ * @}
+ * @}
+ */

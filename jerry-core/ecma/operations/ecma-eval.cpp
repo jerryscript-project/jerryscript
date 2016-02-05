@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "bytecode-data.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
@@ -93,17 +92,15 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 
   ecma_completion_value_t completion;
 
-  const bytecode_data_header_t *bytecode_data_p;
+  ecma_compiled_code_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
 
-  bool code_contains_functions;
   parse_status = parser_parse_eval (code_p,
                                     code_buffer_size,
                                     is_strict_call,
-                                    &bytecode_data_p,
-                                    &code_contains_functions);
+                                    &bytecode_data_p);
 
   if (parse_status == JSP_STATUS_SYNTAX_ERROR)
   {
@@ -118,11 +115,6 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
     JERRY_ASSERT (parse_status == JSP_STATUS_OK);
 
     completion = vm_run_eval (bytecode_data_p, is_direct);
-
-    if (!code_contains_functions)
-    {
-      bc_remove_bytecode_data (bytecode_data_p);
-    }
   }
 
   return completion;

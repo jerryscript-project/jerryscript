@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright 2014-2016 Samsung Electronics Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,6 @@ assert(big == 2147483648); // overflow on 32bit numbers
 big++;
 assert(big == 2147483649); // overflow on 32bit numbers
 
-assert ((1152921504606846900).toString() === "1152921504606847000")
+assert ((1152921504606846976).toString() === "1152921504606847000")
 
 assert (1.797693134862315808e+308 === Infinity);

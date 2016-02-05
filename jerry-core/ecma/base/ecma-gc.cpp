@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
+#include "vm-defines.h"
 #include "vm-stack.h"
 
 #define JERRY_INTERNAL
@@ -335,13 +336,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
               JERRY_UNREACHABLE ();
             }
 
-            case ECMA_INTERNAL_PROPERTY_FORMAL_PARAMETERS: /* a collection of strings */
             case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
             case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
             case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
             case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
             case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
-            case ECMA_INTERNAL_PROPERTY_CODE_FLAGS_AND_OFFSET: /* an integer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
             case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
@@ -481,25 +480,6 @@ ecma_gc_run (void)
     if (ecma_gc_get_object_refs (obj_iter_p) > 0)
     {
       ecma_gc_set_object_visited (obj_iter_p, true);
-    }
-  }
-
-  /* if some object is referenced from a register variable (i.e. it is root),
-   * start recursive marking traverse from the object */
-  for (vm_stack_frame_t *frame_iter_p = vm_stack_get_top_frame ();
-       frame_iter_p != NULL;
-       frame_iter_p = frame_iter_p->prev_frame_p)
-  {
-    for (uint32_t reg_index = 0; reg_index < frame_iter_p->regs_number; reg_index++)
-    {
-      ecma_value_t reg_value = vm_stack_frame_get_reg_value (frame_iter_p, VM_REG_FIRST + reg_index);
-
-      if (ecma_is_value_object (reg_value))
-      {
-        ecma_object_t *obj_p = ecma_get_object_from_value (reg_value);
-
-        ecma_gc_set_object_visited (obj_p, true);
-      }
     }
   }
 

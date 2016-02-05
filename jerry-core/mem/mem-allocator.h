@@ -99,18 +99,17 @@ typedef void (*mem_try_give_memory_back_callback_t) (mem_try_give_memory_back_se
 #define MEM_CP_SET_POINTER(cp_value, non_compressed_pointer) \
   do \
   { \
-    auto __temp_pointer = non_compressed_pointer; \
-    non_compressed_pointer = __temp_pointer; \
-  } while (0); \
-  \
-  if (unlikely ((non_compressed_pointer) == NULL)) \
-  { \
-    (cp_value) = MEM_CP_NULL; \
-  } \
-  else \
-  { \
-    MEM_CP_SET_NON_NULL_POINTER (cp_value, non_compressed_pointer); \
-  }
+    void *ptr_value = (void *) non_compressed_pointer; \
+    \
+    if (unlikely ((ptr_value) == NULL)) \
+    { \
+      (cp_value) = MEM_CP_NULL; \
+    } \
+    else \
+    { \
+      MEM_CP_SET_NON_NULL_POINTER (cp_value, ptr_value); \
+    } \
+  } while (false);
 
 extern void mem_init (void);
 extern void mem_finalize (bool);

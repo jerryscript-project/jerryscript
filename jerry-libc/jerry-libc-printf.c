@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -210,20 +211,10 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
   switch (length)
   {
     case LIBC_PRINTF_ARG_LENGTH_TYPE_NONE:
+    case LIBC_PRINTF_ARG_LENGTH_TYPE_HH: /* char is promoted to int */
+    case LIBC_PRINTF_ARG_LENGTH_TYPE_H: /* short int is promoted to int */
     {
       value = (uintmax_t) va_arg (*args_list_p, int);
-      break;
-    }
-
-    case LIBC_PRINTF_ARG_LENGTH_TYPE_HH:
-    {
-      value = (uintmax_t) va_arg (*args_list_p, int); /* char is promoted to int */
-      break;
-    }
-
-    case LIBC_PRINTF_ARG_LENGTH_TYPE_H:
-    {
-      value = (uintmax_t) va_arg (*args_list_p, int); /* short int is promoted to int */
       break;
     }
 
@@ -324,20 +315,10 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
   switch (length)
   {
     case LIBC_PRINTF_ARG_LENGTH_TYPE_NONE:
+    case LIBC_PRINTF_ARG_LENGTH_TYPE_HH: /* char is promoted to int */
+    case LIBC_PRINTF_ARG_LENGTH_TYPE_H: /* short int is promoted to int */
     {
       value = (uintmax_t) va_arg (*args_list_p, unsigned int);
-      break;
-    }
-
-    case LIBC_PRINTF_ARG_LENGTH_TYPE_HH:
-    {
-      value = (uintmax_t) va_arg (*args_list_p, unsigned int); /* char is promoted to int */
-      break;
-    }
-
-    case LIBC_PRINTF_ARG_LENGTH_TYPE_H:
-    {
-      value = (uintmax_t) va_arg (*args_list_p, unsigned int); /* short int is promoted to int */
       break;
     }
 
@@ -398,7 +379,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
     }
   }
 
-  uint32_t radix = 10;
+  uint32_t radix;
   const char *alphabet;
 
   switch (specifier)

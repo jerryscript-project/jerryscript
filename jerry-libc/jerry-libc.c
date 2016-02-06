@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +28,7 @@
 /**
  * State of pseudo-random number generator
  */
-static unsigned int libc_random_gen_state[4] = { 1455997910, 1999515274, 1234451287, 1949149569 };
+static uint32_t libc_random_gen_state[4] = { 1455997910, 1999515274, 1234451287, 1949149569 };
 
 /**
  * Standard file descriptors
@@ -62,9 +63,9 @@ memset (void *s,  /**< area to set values in */
         size_t n) /**< area size */
 {
   uint8_t *area_p = (uint8_t *) s;
-  for (size_t index = 0; index < n; index++)
+  while (n--)
   {
-    area_p[ index ] = (uint8_t) c;
+    *area_p++ = (uint8_t) c;
   }
 
   return s;
@@ -74,8 +75,8 @@ memset (void *s,  /**< area to set values in */
  * memcmp
  *
  * @return 0, if areas are equal;
- *         -1, if first area's content is lexicographically less, than second area's content;
- *         1, otherwise
+ *         <0, if first area's content is lexicographically less, than second area's content;
+ *         >0, otherwise
  */
 int
 memcmp (const void *s1, /**< first area */
@@ -83,15 +84,12 @@ memcmp (const void *s1, /**< first area */
         size_t n) /**< area size */
 {
   const uint8_t *area1_p = (uint8_t *) s1, *area2_p = (uint8_t *) s2;
-  for (size_t index = 0; index < n; index++)
+  while (n--)
   {
-    if (area1_p[ index ] < area2_p[ index ])
+    int diff = ((int) *area1_p++) - ((int) *area2_p++);
+    if (diff)
     {
-      return -1;
-    }
-    else if (area1_p[ index ] > area2_p[ index ])
-    {
-      return 1;
+      return diff;
     }
   }
 
@@ -109,9 +107,9 @@ memcpy (void *s1, /**< destination */
   uint8_t *area1_p = (uint8_t *) s1;
   const uint8_t *area2_p = (const uint8_t *) s2;
 
-  for (size_t index = 0; index < n; index++)
+  while (n--)
   {
-    area1_p[ index ] = area2_p[ index ];
+    *area1_p++ = *area2_p++;
   }
 
   return s1;
@@ -127,21 +125,27 @@ memmove (void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
 {
-  uint8_t *dest_p = (uint8_t *) s1;
-  const uint8_t *src_p = (const uint8_t *) s2;
+  uint8_t *dest_p;
+  const uint8_t *src_p;
 
-  if (dest_p < src_p)
+  if (s1 < s2)
   { /* from begin to end */
-    for (size_t index = 0; index < n; index++)
+    dest_p = (uint8_t *) s1;
+    src_p = (const uint8_t *) s2;
+
+    while (n--)
     {
-      dest_p[ index ] = src_p[ index ];
+      *dest_p++ = *src_p++;
     }
   }
-  else if (dest_p > src_p)
+  else if (s1 > s2)
   { /* from end to begin */
-    for (size_t index = 1; index <= n; index++)
+    dest_p = ((uint8_t *) s1) + n - 1;
+    src_p = ((const uint8_t *) s2) + n - 1;
+
+    while (n--)
     {
-      dest_p[ n - index ] = src_p[ n - index ];
+      *dest_p-- = *src_p--;
     }
   }
 
@@ -156,23 +160,19 @@ CALL_PRAGMA (GCC diagnostic pop)
 /** Compare two strings. return an integer less than, equal to, or greater than zero
      if s1 is found, respectively, to be less than, to match, or be greater than s2.  */
 int
-strcmp (const char *str1, const char *str2)
+strcmp (const char *s1, const char *s2)
 {
-  int s1;
-  int s2;
-  do
+  while (1)
   {
-    s1 = *str1++;
-    s2 = *str2++;
+    int c1 = (unsigned char) *s1++;
+    int c2 = (unsigned char) *s2++;
+    int diff = c1 - c2;
 
-    if (s1 == 0)
+    if (!c1 || diff)
     {
-      break;
+      return diff;
     }
   }
-  while (s1 == s2);
-
-  return (s1 < s2) ? -1 : (s1 > s2 ? 1 : 0);
 } /* strcmp */
 
 /** Compare two strings. return an integer less than, equal to, or greater than zero
@@ -181,38 +181,15 @@ strcmp (const char *str1, const char *str2)
 int
 strncmp (const char *s1, const char *s2, size_t n)
 {
-  size_t i;
+  while (n--)
+  {
+    int c1 = (unsigned char) *s1++;
+    int c2 = (unsigned char) *s2++;
+    int diff = c1 - c2;
 
-  if (n == 0)
-  {
-    return 0;
-  }
-
-  if (s1 == NULL)
-  {
-    if (s2 != NULL)
+    if (!c1 || diff)
     {
-      return -1;
-    }
-    else
-    {
-      return 0;
-    }
-  }
-  if (s2 == NULL)
-  {
-    return 1;
-  }
-
-  for (i = 0; i < n; i++)
-  {
-    if (s1[i] > s2[i])
-    {
-      return 1;
-    }
-    else if (s1[i] < s2[i])
-    {
-      return -1;
+      return diff;
     }
   }
 
@@ -225,12 +202,12 @@ strncmp (const char *s1, const char *s2, size_t n)
 char * __attr_used___ // FIXME
 strncpy (char *dest, const char *src, size_t n)
 {
-  size_t i;
-
-  for (i = 0; i < n; i++)
+  while (n--)
   {
-    dest[i] = src[i];
-    if (src[i] == '\0')
+    char c = *src++;
+    *dest++ = c;
+
+    if (!c)
     {
       break;
     }
@@ -243,10 +220,10 @@ strncpy (char *dest, const char *src, size_t n)
 size_t
 strlen (const char *s)
 {
-  size_t i;
-  for (i = 0; s[i]; i++)
+  size_t i = 0;
+  while (s[i])
   {
-    ;
+    i++;
   }
 
   return i;
@@ -273,9 +250,7 @@ rand (void)
   libc_random_gen_state[3] ^= libc_random_gen_state[3] >> 19;
   libc_random_gen_state[3] ^= intermediate;
 
-  uint32_t ret = libc_random_gen_state[3] % (RAND_MAX + 1u);
-
-  return (int32_t) ret;
+  return libc_random_gen_state[3] % (RAND_MAX + 1u);
 } /* rand */
 
 /**
@@ -284,5 +259,8 @@ rand (void)
 void
 srand (unsigned int seed) /**< new seed */
 {
+  libc_random_gen_state[0] =
+  libc_random_gen_state[1] =
+  libc_random_gen_state[2] =
   libc_random_gen_state[3] = seed;
 } /* srand */

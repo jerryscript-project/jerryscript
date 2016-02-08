@@ -1520,19 +1520,22 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
                                int push_number_allowed, /**< push number support is allowed */
                                int is_negative_number) /**< sign is negative */
 {
+  parser_list_iterator_t literal_iterator;
   lexer_literal_t *literal_p;
+  lit_cpointer_t lit_cp;
   ecma_number_t num;
-  uint16_t literal_count = context_p->literal_count;
+  uint32_t literal_index = 0;
+  uint16_t length = context_p->token.lit_location.length;
 
   if (context_p->token.extra_value != LEXER_NUMBER_OCTAL)
   {
     num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
-                                      context_p->token.lit_location.length);
+                                      length);
   }
   else
   {
     const uint8_t *src_p = context_p->token.lit_location.char_p;
-    const uint8_t *src_end_p = src_p + context_p->token.lit_location.length - 1;
+    const uint8_t *src_end_p = src_p + length - 1;
 
     num = 0;
     do
@@ -1563,7 +1566,25 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     num = -num;
   }
 
-  if (literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
+  lit_cp = rcs_cpointer_compress (lit_find_or_create_literal_from_num (num));
+  parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
+
+  while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
+  {
+    if (literal_p->type == LEXER_NUMBER_LITERAL
+        && literal_p->u.value.value.base_cp == lit_cp.value.base_cp)
+    {
+      context_p->lit_object.literal_p = literal_p;
+      context_p->lit_object.index = (uint16_t) literal_index;
+      return PARSER_FALSE;
+    }
+
+    literal_index++;
+  }
+
+  JERRY_ASSERT (literal_index == context_p->literal_count);
+
+  if (literal_index >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
   {
     parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
   }
@@ -1575,11 +1596,11 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 
   context_p->literal_count++;
 
-  literal_p->u.value = rcs_cpointer_compress (lit_find_or_create_literal_from_num (num));
+  literal_p->u.value = lit_cp;
   literal_p->type = LEXER_NUMBER_LITERAL;
 
   context_p->lit_object.literal_p = literal_p;
-  context_p->lit_object.index = literal_count;
+  context_p->lit_object.index = (uint16_t) literal_index;
   context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
 
   return PARSER_FALSE;

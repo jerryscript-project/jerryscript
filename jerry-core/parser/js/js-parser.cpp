@@ -520,7 +520,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
       {
 #ifdef PARSER_DUMP_BYTE_CODE
         lit_literal_t lit = lit_find_or_create_literal_from_utf8_string (literal_p->u.char_p,
-                                                                     literal_p->prop.length);
+                                                                         literal_p->prop.length);
         literal_pool_p[literal_p->prop.index] = rcs_cpointer_compress (lit);
 
         if (!context_p->is_show_opcodes

@@ -1217,6 +1217,63 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 } /* ecma_compare_ecma_strings_relational */
 
 /**
+ * Lengths for numeric string values
+ */
+static const uint32_t nums_with_ascending_length[] =
+{
+  1u,
+  10u,
+  100u,
+  1000u,
+  10000u,
+  100000u,
+  1000000u,
+  10000000u,
+  100000000u,
+  1000000000u
+};
+
+/**
+ * Maximum length of numeric strings
+ */
+static const uint32_t max_uint32_len = (uint32_t) (sizeof (nums_with_ascending_length) / sizeof (uint32_t));
+
+/**
+ * Get size of the number stored locally in the string's descriptor
+ *
+ * Note: the represented number size and length are equal
+ *
+ * @return size in bytes
+ */
+static ecma_length_t __attr_always_inline___
+ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number in the string-descriptor */
+{
+  ecma_length_t size = 1;
+
+  while (size < max_uint32_len && uint32_number >= nums_with_ascending_length[size])
+  {
+    size++;
+  }
+  return size;
+} /* ecma_string_get_number_in_desc_size */
+
+/**
+ * Get size of container heap number of ecma-string
+ *
+ * Note: the number size and length are equal
+ *
+ * @return number of bytes in the buffer
+ */
+static lit_utf8_size_t __attr_always_inline___
+ecma_string_get_heap_number_size (mem_cpointer_t number_cp) /**< Compressed pointer to an ecma_number_t */
+{
+  const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, number_cp);
+  lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+
+  return ecma_number_to_utf8_string (*num_p, buffer, sizeof (buffer));
+} /* ecma_string_get_heap_number_size */
+
+/**
  * Get length of ecma-string
  *
  * @return number of characters in the string
@@ -1224,74 +1281,45 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 ecma_length_t
 ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
-  ecma_string_container_t container = (ecma_string_container_t) string_p->container;
-
-  if (container == ECMA_STRING_CONTAINER_LIT_TABLE)
+  switch ((ecma_string_container_t) string_p->container)
   {
-    lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-    JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
-    return lit_charset_literal_get_length (lit);
-  }
-  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
-  {
-    TODO ("Cache magic string lengths")
-    return lit_utf8_string_length (lit_get_magic_string_utf8 (string_p->u.magic_string_id),
-                                   lit_get_magic_string_size (string_p->u.magic_string_id));
-  }
-  else if (container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
-  {
-    TODO ("Cache magic string lengths")
-    return lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
-                                   lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
-  }
-  else if (container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-  {
-    const uint32_t uint32_number = string_p->u.uint32_number;
-    const uint32_t max_uint32_len = 10;
-    const uint32_t nums_with_ascending_length[10] =
+    case ECMA_STRING_CONTAINER_LIT_TABLE:
     {
-      1u,
-      10u,
-      100u,
-      1000u,
-      10000u,
-      100000u,
-      1000000u,
-      10000000u,
-      100000000u,
-      1000000000u
-    };
-
-    ecma_length_t length = 1;
-
-    while (length < max_uint32_len
-           && uint32_number >= nums_with_ascending_length[length])
-    {
-      length++;
+      lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
+      JERRY_ASSERT (RCS_RECORD_IS_CHARSET (lit));
+      return lit_charset_literal_get_length (lit);
     }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      TODO ("Cache magic string lengths")
+      return lit_utf8_string_length (lit_get_magic_string_utf8 (string_p->u.magic_string_id),
+                                     lit_get_magic_string_size (string_p->u.magic_string_id));
+    }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
+    {
+      TODO ("Cache magic string lengths")
+      return lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
+                                     lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+    }
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      return ecma_string_get_number_in_desc_size (string_p->u.uint32_number);
+    }
+    case ECMA_STRING_CONTAINER_HEAP_NUMBER:
+    {
+      return (ecma_length_t) ecma_string_get_heap_number_size (string_p->u.number_cp);
+    }
+    default:
+    {
+      JERRY_ASSERT ((ecma_string_container_t) string_p->container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
 
-    return length;
-  }
-  else if (container == ECMA_STRING_CONTAINER_HEAP_NUMBER)
-  {
-    const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                            string_p->u.number_cp);
+      const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                       string_p->u.collection_cp);
 
-    lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-
-    return (ecma_length_t) ecma_number_to_utf8_string (*num_p, buffer, sizeof (buffer));
-  }
-  else
-  {
-    JERRY_ASSERT (container == ECMA_STRING_CONTAINER_HEAP_CHUNKS);
-
-    const ecma_collection_header_t *collection_header_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                                                     string_p->u.collection_cp);
-
-    return ecma_get_chars_collection_length (collection_header_p);
+      return ecma_get_chars_collection_length (collection_header_p);
+    }
   }
 } /* ecma_string_get_length */
-
 
 /**
  * Get size of ecma-string
@@ -1320,39 +1348,11 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     {
-      const uint32_t uint32_number = string_p->u.uint32_number;
-      const int32_t max_uint32_len = 10;
-      const uint32_t nums_with_ascending_length[max_uint32_len] =
-      {
-        1u,
-        10u,
-        100u,
-        1000u,
-        10000u,
-        100000u,
-        1000000u,
-        10000000u,
-        100000000u,
-        1000000000u
-      };
-
-      int32_t size = 1;
-      while (size < max_uint32_len
-              && uint32_number >= nums_with_ascending_length[size])
-      {
-        size++;
-      }
-      return (lit_utf8_size_t) size;
+      return (lit_utf8_size_t) ecma_string_get_number_in_desc_size (string_p->u.uint32_number);
     }
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
     {
-      const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                            string_p->u.number_cp);
-      lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-
-      return ecma_number_to_utf8_string (*num_p,
-                buffer,
-                sizeof (buffer));
+      return ecma_string_get_heap_number_size (string_p->u.number_cp);
     }
     default:
     {

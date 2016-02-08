@@ -1,4 +1,5 @@
-# Copyright 2014-2015 Samsung Electronics Co., Ltd.
+# Copyright 2014-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +16,7 @@
 #
 # Target naming scheme
 #
-#   Main targets: {debug,release}.{linux,darwin,stm32f{4}}[.flash]
+#   Main targets: {debug,release}.{linux,darwin,mcu_stm32f{3,4}}
 #
 #    Target mode part (before dot):
 #       debug:         - JERRY_NDEBUG; - optimizations; + debug symbols; + -Werror  | debug build
@@ -27,12 +28,9 @@
 #       mcu_stm32f{3,4} - target is STM32F{3,4} board
 #
 #       Modifiers can be added after '-' sign.
-#        For list of modifiers for NATIVE target - see TARGET_NATIVE_MODS, for MCU target - TARGET_MCU_MODS.
+#        For list of modifiers for NATIVE target - see NATIVE_MODS, for MCU target - MCU_MODS.
 #
-#    Target action part (optional, after second dot):
-#       flash - flash specified mcu target binary
-#
-#   Unit test target: unittests_run
+#   Unit test target: test-unit
 #
 # Parallel run
 #   To build all targets in parallel, please, use make build -j
@@ -41,7 +39,14 @@
 #   Parallel build of several selected targets started manually is not supported.
 #
 
-export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+export NATIVE_SYSTEM := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+export MCU_SYSTEMS := stm32f3 stm32f4
+
+export DEBUG_MODES := debug
+export RELEASE_MODES := release
+
+export MCU_MODS := cp cp_minimal
+export NATIVE_MODS := $(MCU_MODS) mem_stats mem_stress_test
 
 # Options
  # Valgrind
@@ -58,15 +63,8 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
    VALGRIND_FREYA := OFF
   endif
 
- # Static checkers
-  STATIC_CHECK ?= OFF
-
-  ifneq ($(STATIC_CHECK),ON)
-   STATIC_CHECK := OFF
-  endif
-
  # LTO
-  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
+  ifeq ($(NATIVE_SYSTEM),darwin)
    LTO ?= OFF
   else
    LTO ?= ON
@@ -83,7 +81,7 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
   endif
 
  # All-in-one build
-  ifeq ($(TARGET_NATIVE_SYSTEMS),darwin)
+  ifeq ($(NATIVE_SYSTEM),darwin)
    ALL_IN_ONE ?= ON
   else
    ALL_IN_ONE ?= OFF
@@ -91,15 +89,6 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
   ifneq ($(ALL_IN_ONE),ON)
    ALL_IN_ONE := OFF
-  endif
-
- # Verbosity
-  ifdef VERBOSE
-   Q :=
-   QLOG :=
-  else
-   Q := @
-   QLOG := >/dev/null
   endif
 
 # External build configuration
@@ -116,74 +105,99 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
  # Compiler to use for external build
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
 
-export TARGET_DEBUG_MODES = debug
-export TARGET_RELEASE_MODES = release
+# Build targets
+export JERRY_NATIVE_TARGETS := \
+  $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
+    $(__MODE).$(NATIVE_SYSTEM) \
+    $(foreach __MOD,$(NATIVE_MODS), \
+      $(__MODE).$(NATIVE_SYSTEM)-$(__MOD)))
 
-export TARGET_NATIVE_MODS = cp cp_minimal mem_stats mem_stress_test
+export JERRY_STM32F3_TARGETS := \
+  $(foreach __MODE,$(RELEASE_MODES), \
+    $(foreach __MOD,$(MCU_MODS), \
+      $(__MODE).mcu_stm32f3-$(__MOD)))
 
-export TARGET_MCU_MODS = cp cp_minimal
+export JERRY_STM32F4_TARGETS := \
+  $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
+    $(foreach __MOD,$(MCU_MODS), \
+      $(__MODE).mcu_stm32f4-$(__MOD)))
 
-export TARGET_NATIVE_SYSTEMS_MODS = $(TARGET_NATIVE_SYSTEMS) \
-                                $(foreach __MOD,$(TARGET_NATIVE_MODS),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS),$(__SYSTEM)-$(__MOD)))
+# JS test targets (has to be a subset of JERRY_NATIVE_TARGETS)
+export JERRY_TEST_TARGETS := \
+  $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
+    $(__MODE).$(NATIVE_SYSTEM))
 
-export TARGET_STM32F3_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f3-$(__MOD))
-export TARGET_STM32F4_MODS = $(foreach __MOD,$(TARGET_MCU_MODS),mcu_stm32f4-$(__MOD))
+export JERRY_TEST_TARGETS_CP := \
+  $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
+    $(__MODE).$(NATIVE_SYSTEM)-cp)
 
-# Target list
-export JERRY_NATIVE_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS_MODS),$(__MODE).$(__SYSTEM))) \
-                             $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_NATIVE_SYSTEMS_MODS),$(__MODE).$(__SYSTEM)))
+# JS test suites (in the format of id:path)
+export JERRY_TEST_SUITE_J := j:./tests/jerry
+export JERRY_TEST_SUITE_JTS := jts:./tests/jerry-test-suite
+export JERRY_TEST_SUITE_JTS_PREC := jts-prec:./tests/jerry-test-suite/precommit-test-list
+export JERRY_TEST_SUITE_JTS_CP := jts-cp:./tests/jerry-test-suite/compact-profile-list
 
-export JERRY_STM32F3_TARGETS = $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F3_MODS),$(__MODE).$(__SYSTEM)))
+# Directories
+export BUILD_DIR_PREFIX := ./build/obj
+export BUILD_DIR := $(BUILD_DIR_PREFIX)-VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
+export OUT_DIR := ./build/bin
+export PREREQUISITES_STATE_DIR := ./build/prerequisites
 
-export JERRY_STM32F4_TARGETS = $(foreach __MODE,$(TARGET_DEBUG_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM))) \
-                               $(foreach __MODE,$(TARGET_RELEASE_MODES),$(foreach __SYSTEM,$(TARGET_STM32F4_MODS),$(__MODE).$(__SYSTEM)))
+SHELL := /bin/bash
 
-export JERRY_TARGETS = $(JERRY_NATIVE_TARGETS) $(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS) unittests
-
-export CHECK_TARGETS = $(foreach __TARGET,$(JERRY_NATIVE_TARGETS),$(__TARGET).check)
-export FLASH_TARGETS = $(foreach __TARGET,$(JERRY_STM32F3_TARGETS) $(JERRY_STM32F4_TARGETS),$(__TARGET).flash)
-
-export OUT_DIR = ./build/bin
-export PREREQUISITES_STATE_DIR = ./build/prerequisites
-
-export SHELL=/bin/bash
-
-# Precommit check targets
- PRECOMMIT_CHECK_TARGETS_LIST := debug.$(TARGET_NATIVE_SYSTEMS) release.$(TARGET_NATIVE_SYSTEMS)
-
-# Building all options combinations
- OPTIONS_COMBINATIONS := $(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND-$(__OPTION))
- OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-VALGRIND_FREYA-$(__OPTION)))
- OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-LTO-$(__OPTION)))
- OPTIONS_COMBINATIONS := $(foreach __COMBINATION,$(OPTIONS_COMBINATIONS),$(foreach __OPTION,ON OFF,$(__COMBINATION)-ALL_IN_ONE-$(__OPTION)))
-
-# Building current options string
- OPTIONS_STRING := -VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
-
-# Build directories
- BUILD_DIR_PREFIX := ./build/obj
-
- # Native
-  BUILD_DIRS_NATIVE := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/native)
- # stm32f3
-  BUILD_DIRS_STM32F3 := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/stm32f3)
- # stm32f4
-  BUILD_DIRS_STM32F4 := $(foreach _OPTIONS_COMBINATION,$(OPTIONS_COMBINATIONS),$(BUILD_DIR_PREFIX)$(_OPTIONS_COMBINATION)/stm32f4)
-
- # All together
-  BUILD_DIRS_ALL := $(BUILD_DIRS_NATIVE) $(BUILD_DIRS_STM32F3) $(BUILD_DIRS_STM32F4)
-
- # Current
-  BUILD_DIR := ./build/obj$(OPTIONS_STRING)
-
-# "Build all" targets prefix
- BUILD_ALL := build_all
-
+# Default make target
 .PHONY: all
 all: precommit
 
-.PHONY: $(BUILD_DIRS_NATIVE)
-$(BUILD_DIRS_NATIVE):
+# Verbosity control
+
+ifdef VERBOSE
+  Q :=
+else
+  Q := @
+endif
+
+# Shell command macro to invoke a command and redirect its output to a log file.
+#
+# $(1) - command to execute
+# $(2) - log file to write (only in non-verbose mode)
+# $(3) - command description (printed if command fails)
+ifdef VERBOSE
+define SHLOG
+  $(1) || (echo "$(3) failed. No log file generated. (Run make without VERBOSE if log is needed.)"; exit 1;)
+endef
+else
+define SHLOG
+  ( mkdir -p $$(dirname $(2)) ; $(1) 2>&1 | tee $(2) >/dev/null ; ( exit $${PIPESTATUS[0]} ) ) || (echo "$(3) failed. See $(2) for details."; exit 1;)
+endef
+endif
+
+# Build system control
+ifdef NINJA
+  BUILD_GENERATOR := Ninja
+  BUILD_COMMAND := ninja -v
+else
+  BUILD_GENERATOR := "Unix Makefiles"
+  BUILD_COMMAND := $(MAKE) -w VERBOSE=1
+endif
+
+# Targets to prepare the build directories
+
+# Shell command macro to write $TOOLCHAIN shell variable to toolchain.config
+# file in the build directory, and clean it if found dirty.
+#
+# $(1) - build directory to write toolchain.config into
+define WRITE_TOOLCHAIN_CONFIG
+  if [ -d $(1) ]; \
+  then \
+    grep -s -q "$$TOOLCHAIN" $(1)/toolchain.config || rm -rf $(1) ; \
+  fi; \
+  mkdir -p $(1); \
+  echo "$$TOOLCHAIN" > $(1)/toolchain.config
+endef
+
+.PHONY: $(BUILD_DIR)/$(NATIVE_SYSTEM)/toolchain.config
+$(BUILD_DIR)/$(NATIVE_SYSTEM)/toolchain.config:
 	$(Q) if [ "$$TOOLCHAIN" == "" ]; \
           then \
             arch=`uname -m`; \
@@ -191,120 +205,203 @@ $(BUILD_DIRS_NATIVE):
             then \
               readelf -A /proc/self/exe | grep Tag_ABI_VFP_args && arch=$$arch"-hf" || arch=$$arch"-el"; \
             fi; \
-            TOOLCHAIN="build/configs/toolchain_$(TARGET_NATIVE_SYSTEMS)_$$arch.cmake"; \
+            TOOLCHAIN="build/configs/toolchain_$(NATIVE_SYSTEM)_$$arch.cmake"; \
           fi; \
-          if [ -d "$@" ]; \
-          then \
-            grep -s -q "$$TOOLCHAIN" $@/toolchain.config || rm -rf $@ ; \
-          fi; \
-          mkdir -p $@; \
-          echo "$$TOOLCHAIN" > $@/toolchain.config
-	$(Q) cd $@ && \
-          (cmake \
-             -DENABLE_VALGRIND=$(VALGRIND) \
-             -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) \
-             -DENABLE_LOG=$(LOG) \
-             -DENABLE_LTO=$(LTO) \
-             -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) \
-             -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC) \
-             -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;); \
+          $(call WRITE_TOOLCHAIN_CONFIG,$(dir $@))
 
-.PHONY: $(BUILD_DIRS_STM32F3)
-$(BUILD_DIRS_STM32F3): prerequisites
-	$(Q) mkdir -p $@
-	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
-
-.PHONY: $(BUILD_DIRS_STM32F4)
-$(BUILD_DIRS_STM32F4): prerequisites
-	$(Q) mkdir -p $@
-	$(Q) cd $@ && \
-          (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "CMake run failed. See "`pwd`"/cmake.log for details."; exit 1;)
-
-.PHONY: $(JERRY_NATIVE_TARGETS)
-$(JERRY_NATIVE_TARGETS): $(BUILD_DIR)/native
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) cp $(BUILD_DIR)/native/$@ $(OUT_DIR)/$@/jerry
-
-.PHONY: unittests
-unittests: $(BUILD_DIR)/native
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native VERBOSE=1 $@ 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) cp $(BUILD_DIR)/native/unit-test-* $(OUT_DIR)/$@
-
-.PHONY: $(BUILD_ALL)_native
-$(BUILD_ALL)_native: $(BUILD_DIRS_NATIVE)
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(USE_COMPILER_DEFAULT_LIBC)" = "YES" ] || ($(MAKE) -C $(BUILD_DIR)/native jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native jerry-fdlibm-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/native $(JERRY_NATIVE_TARGETS) unittests VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-
-.PHONY: $(JERRY_STM32F3_TARGETS)
-$(JERRY_STM32F3_TARGETS): $(BUILD_DIR)/stm32f3
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 VERBOSE=1 $@.bin 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) cp $(BUILD_DIR)/stm32f3/$@ $(OUT_DIR)/$@/jerry
-	$(Q) cp $(BUILD_DIR)/stm32f3/$@.bin $(OUT_DIR)/$@/jerry.bin
-
-.PHONY: $(BUILD_ALL)_stm32f3
-$(BUILD_ALL)_stm32f3: $(BUILD_DIRS_STM32F3)
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f3 $(JERRY_STM32F3_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-
-.PHONY: $(JERRY_STM32F4_TARGETS)
-$(JERRY_STM32F4_TARGETS): $(BUILD_DIR)/stm32f4
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) [ "$(STATIC_CHECK)" = "OFF" ] || ($(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 cppcheck.$@ 2>&1 | tee $(OUT_DIR)/$@/cppcheck.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "cppcheck run failed. See $(OUT_DIR)/$@/cppcheck.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 VERBOSE=1 $@.bin 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) cp $(BUILD_DIR)/stm32f4/$@ $(OUT_DIR)/$@/jerry
-	$(Q) cp $(BUILD_DIR)/stm32f4/$@.bin $(OUT_DIR)/$@/jerry.bin
-
-.PHONY: $(BUILD_ALL)_stm32f4
-$(BUILD_ALL)_stm32f4: $(BUILD_DIRS_STM32F4)
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 jerry-libc-all VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) ($(MAKE) -C $(BUILD_DIR)/stm32f4 $(JERRY_STM32F4_TARGETS) VERBOSE=1 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-
-.PHONY: $(BUILD_ALL)
-$(BUILD_ALL): $(BUILD_ALL)_native $(BUILD_ALL)_stm32f3 $(BUILD_ALL)_stm32f4
-
+# Make rule macro to generate toolchain.config for MCUs.
 #
-# build - build_all, then run cppcheck and copy output to OUT_DIR
-# Prebuild is needed to avoid race conditions between make instances running in parallel
+# $(1) - mcu system name
+define GEN_MCU_TOOLCHAIN_CONFIG_RULE
+.PHONY: $$(BUILD_DIR)/$(1)/toolchain.config
+$$(BUILD_DIR)/$(1)/toolchain.config:
+	$$(Q) TOOLCHAIN="build/configs/toolchain_mcu_$(1).cmake"; \
+          $$(call WRITE_TOOLCHAIN_CONFIG,$$(BUILD_DIR)/$(1))
+endef
+
+$(foreach __SYSTEM,$(MCU_SYSTEMS), \
+  $(eval $(call GEN_MCU_TOOLCHAIN_CONFIG_RULE,$(__SYSTEM))))
+
+# Make rule macro to generate Makefile in build directory with cmake.
 #
+# $(1) - build directory to generate Makefile into
+define GEN_MAKEFILE_RULE
+.PHONY: $(1)/Makefile
+$(1)/Makefile: $(1)/toolchain.config
+	$$(Q) $$(call SHLOG,(cd $(1) && cmake -G $$(BUILD_GENERATOR) \
+          -DENABLE_VALGRIND=$$(VALGRIND) \
+          -DENABLE_VALGRIND_FREYA=$$(VALGRIND_FREYA) \
+          -DENABLE_LOG=$$(LOG) \
+          -DENABLE_LTO=$$(LTO) \
+          -DENABLE_ALL_IN_ONE=$$(ALL_IN_ONE) \
+          -DUSE_COMPILER_DEFAULT_LIBC=$$(USE_COMPILER_DEFAULT_LIBC) \
+          -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1),$(1)/cmake.log,CMake run)
+endef
+
+$(foreach __SYSTEM,$(NATIVE_SYSTEM) $(MCU_SYSTEMS), \
+  $(eval $(call GEN_MAKEFILE_RULE,$(BUILD_DIR)/$(__SYSTEM))))
+
+# Targets to perform build, check, and test steps in the build directories
+
+# Make rule macro to preform cppcheck on a build target.
+#
+# $(1) - rule to define in the current Makefile
+# $(2) - system name
+# $(3) - target(s) to check
+define CPPCHECK_RULE
+.PHONY: $(1)
+$(1): $$(BUILD_DIR)/$(2)/Makefile prerequisites
+	$$(Q) $$(call SHLOG,$$(BUILD_COMMAND) -C $$(BUILD_DIR)/$(2) $(3),$$(BUILD_DIR)/$(2)/$(1).log,cppcheck run)
+endef
+
+$(foreach __TARGET,$(JERRY_NATIVE_TARGETS), \
+  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),$(NATIVE_SYSTEM),cppcheck.$(__TARGET))))
+
+$(eval $(call CPPCHECK_RULE,check-cpp.$(NATIVE_SYSTEM),$(NATIVE_SYSTEM),$(foreach __TARGET,$(JERRY_NATIVE_TARGETS),cppcheck.$(__TARGET))))
+
+$(foreach __TARGET,$(JERRY_STM32F3_TARGETS), \
+  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),stm32f3,cppcheck.$(__TARGET))))
+
+$(eval $(call CPPCHECK_RULE,check-cpp.mcu_stm32f3,stm32f3,$(foreach __TARGET,$(JERRY_STM32F3_TARGETS),cppcheck.$(__TARGET))))
+
+$(foreach __TARGET,$(JERRY_STM32F4_TARGETS), \
+  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),stm32f4,cppcheck.$(__TARGET))))
+
+$(eval $(call CPPCHECK_RULE,check-cpp.mcu_stm32f4,stm32f4,$(foreach __TARGET,$(JERRY_STM32F4_TARGETS),cppcheck.$(__TARGET))))
+
+$(eval $(call CPPCHECK_RULE,check-cpp.unittests,$(NATIVE_SYSTEM),cppcheck.unittests))
+
+# Make rule macro to build a/some target(s) and copy out the result(s).
+#
+# $(1) - rule to define in the current Makefile
+# $(2) - name of the system which has a cmake-generated Makefile
+# $(3) - target(s) to build with the cmake-generated Makefile
+define BUILD_RULE
+.PHONY: $(1)
+$(1): $$(BUILD_DIR)/$(2)/Makefile prerequisites
+	$$(Q) $$(call SHLOG,$$(BUILD_COMMAND) -C $$(BUILD_DIR)/$(2) $(3),$$(BUILD_DIR)/$(2)/$(1).log,Build)
+	$$(Q) $$(foreach __TARGET,$(3), \
+            mkdir -p $$(OUT_DIR)/$$(__TARGET); \
+            $$(if $$(findstring unittests,$$(__TARGET)), \
+              cp $$(BUILD_DIR)/$(2)/unit-test-* $$(OUT_DIR)/$$(__TARGET); \
+              , \
+              $$(if $$(findstring .bin,$$(__TARGET)), \
+                cp $$(BUILD_DIR)/$(2)/$$(__TARGET) $$(OUT_DIR)/$$(__TARGET)/jerry.bin; \
+                cp $$(BUILD_DIR)/$(2)/$$(patsubst %.bin,%,$$(__TARGET)) $$(OUT_DIR)/$$(__TARGET)/jerry; \
+                , \
+                cp $$(BUILD_DIR)/$(2)/$$(__TARGET) $$(OUT_DIR)/$$(__TARGET)/jerry;)) \
+          )
+endef
+
+$(foreach __TARGET,$(JERRY_NATIVE_TARGETS), \
+  $(eval $(call BUILD_RULE,$(__TARGET),$(NATIVE_SYSTEM),$(__TARGET))))
+
+$(eval $(call BUILD_RULE,build.$(NATIVE_SYSTEM),$(NATIVE_SYSTEM),$(JERRY_NATIVE_TARGETS)))
+
+$(foreach __TARGET,$(JERRY_STM32F3_TARGETS), \
+  $(eval $(call BUILD_RULE,$(__TARGET),stm32f3,$(__TARGET).bin)))
+
+$(eval $(call BUILD_RULE,build.mcu_stm32f3,stm32f3,$(patsubst %,%.bin,$(JERRY_STM32F3_TARGETS))))
+
+$(foreach __TARGET,$(JERRY_STM32F4_TARGETS), \
+  $(eval $(call BUILD_RULE,$(__TARGET),stm32f4,$(__TARGET).bin)))
+
+$(eval $(call BUILD_RULE,build.mcu_stm32f4,stm32f4,$(patsubst %,%.bin,$(JERRY_STM32F4_TARGETS))))
+
+$(eval $(call BUILD_RULE,unittests,$(NATIVE_SYSTEM),unittests))
+
+# Make rule macro to test a build target with a test suite.
+#
+# $(1) - name of target to test
+# $(2) - id of the test suite
+# $(3) - path to the test suite
+#
+# FIXME: the dependency of the defined rule is sub-optimal, but if every rule
+# would have its own proper dependency ($(1)), then potentially multiple builds
+# would work in the same directory in parallel, and they would overwrite each
+# others output. This manifests mostly in the repeated builds of jerry-libc and
+# its non-deterministically vanishing .a files.
+define JSTEST_RULE
+test-js.$(1).$(2): build.$$(NATIVE_SYSTEM)
+	$$(Q) $$(call SHLOG,./tools/runners/run-test-suite.sh \
+          $$(OUT_DIR)/$(1)/jerry \
+          $$(OUT_DIR)/$(1)/check/$(2) \
+          $(3),$$(OUT_DIR)/$(1)/check/$(2)/test.log,Testing)
+endef
+
+$(foreach __TARGET,$(JERRY_TEST_TARGETS), \
+  $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS_PREC) $(JERRY_TEST_SUITE_JTS), \
+    $(eval $(call JSTEST_RULE,$(__TARGET),$(firstword $(subst :, ,$(__SUITE))),$(lastword $(subst :, ,$(__SUITE)))))))
+
+$(foreach __TARGET,$(JERRY_TEST_TARGETS_CP), \
+  $(foreach __SUITE,$(JERRY_TEST_SUITE_JTS_CP), \
+    $(eval $(call JSTEST_RULE,$(__TARGET),$(firstword $(subst :, ,$(__SUITE))),$(lastword $(subst :, ,$(__SUITE)))))))
+
+# Targets to perform batch builds, checks, and tests
+
+.PHONY: clean
+clean:
+	$(Q) rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
+
+.PHONY: check-signed-off
+check-signed-off:
+	$(Q) ./tools/check-signed-off.sh
+
+.PHONY: check-vera
+check-vera: prerequisites
+	$(Q) ./tools/check-vera.sh
+
+.PHONY: check-cpp
+check-cpp: check-cpp.$(NATIVE_SYSTEM) $(foreach __SYSTEM,$(MCU_SYSTEMS),check-cpp.mcu_$(__SYSTEM)) check-cpp.unittests
+
 .PHONY: build
-build: $(BUILD_ALL)
-	$(Q) mkdir -p $(OUT_DIR)/$@
-	$(Q) ($(MAKE) VERBOSE=1 $(JERRY_TARGETS) 2>&1 | tee $(OUT_DIR)/$@/make.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Build failed. See $(OUT_DIR)/$@/make.log for details."; exit 1;)
-	$(Q) rm -rf $(OUT_DIR)/$(BUILD_ALL)* $(OUT_DIR)/$@
+build: build.$(NATIVE_SYSTEM) $(foreach __SYSTEM,$(MCU_SYSTEMS),build.mcu_$(__SYSTEM))
 
-.PHONY: $(FLASH_TARGETS)
-$(FLASH_TARGETS): $(BUILD_DIR)/mcu
-	$(Q) $(MAKE) -C $(BUILD_DIR)/mcu VERBOSE=1 $@ $(QLOG)
+.PHONY: test-unit
+test-unit: unittests
+	$(Q) $(call SHLOG,./tools/runners/run-unittests.sh $(OUT_DIR)/unittests,$(OUT_DIR)/unittests/check/unittests.log,Unit tests)
+
+.PHONY: test-js
+test-js: \
+        $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
+          $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS), \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))))) \
+        $(foreach __TARGET,$(JERRY_TEST_TARGETS_CP), \
+          $(foreach __SUITE,$(JERRY_TEST_SUITE_JTS_CP), \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
+
+.PHONY: test-js-precommit
+test-js-precommit: \
+        $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
+          $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS_PREC), \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
+
+.PHONY: precommit
+precommit: prerequisites
+	$(Q)+$(MAKE) --no-print-directory clean
+	$(Q) echo "Running checks..."
+	$(Q)+$(MAKE) --no-print-directory check-signed-off check-vera check-cpp
+	$(Q) echo "...building engine..."
+	$(Q)+$(MAKE) --no-print-directory build
+	$(Q) echo "...building and running unit tests..."
+	$(Q)+$(MAKE) --no-print-directory test-unit
+	$(Q) echo "...running precommit JS tests..."
+	$(Q)+$(MAKE) --no-print-directory test-js-precommit
+	$(Q) echo "...SUCCESS"
+
+# Targets to install and clean prerequisites
+
+.PHONY: prerequisites
+prerequisites:
+	$(Q) mkdir -p $(PREREQUISITES_STATE_DIR)
+	$(Q) $(call SHLOG,./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites,$(PREREQUISITES_STATE_DIR)/prerequisites.log,Prerequisites setup)
+
+.PHONY: prerequisites_clean
+prerequisites_clean:
+	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
+	$(Q) rm -rf $(PREREQUISITES_STATE_DIR)
+
+# Git helper targets
 
 .PHONY: push
 push: ./tools/git-scripts/push.sh
@@ -317,29 +414,3 @@ pull: ./tools/git-scripts/pull.sh
 .PHONY: log
 log: ./tools/git-scripts/log.sh
 	$(Q) ./tools/git-scripts/log.sh
-
-.PHONY: precommit
-precommit: clean prerequisites
-	$(Q) ./tools/precommit.sh "$(MAKE)" "$(OUT_DIR)" "$(PRECOMMIT_CHECK_TARGETS_LIST)"
-
-.PHONY: unittests_run
-unittests_run: unittests
-	$(Q) rm -rf $(OUT_DIR)/unittests/check
-	$(Q) mkdir -p $(OUT_DIR)/unittests/check
-	$(Q) ./tools/runners/run-unittests.sh $(OUT_DIR)/unittests || \
-         (echo "Unit tests run failed. See $(OUT_DIR)/unittests/unit_tests_run.log for details."; exit 1;)
-
-.PHONY: clean
-clean:
-	$(Q) rm -rf $(BUILD_DIR_PREFIX)* $(OUT_DIR)
-
-.PHONY: prerequisites
-prerequisites:
-	$(Q) mkdir -p $(PREREQUISITES_STATE_DIR)
-	$(Q) (./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites 2>&1 | tee $(PREREQUISITES_STATE_DIR)/prerequisites.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
-          (echo "Prerequisites setup failed. See $(PREREQUISITES_STATE_DIR)/prerequisites.log for details."; exit 1;)
-
-.PHONY: prerequisites_clean
-prerequisites_clean:
-	$(Q) ./tools/prerequisites.sh $(PREREQUISITES_STATE_DIR)/.prerequisites clean
-	$(Q) rm -rf $(PREREQUISITES_STATE_DIR)

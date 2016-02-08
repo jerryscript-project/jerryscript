@@ -44,9 +44,6 @@ project (Jerry C ASM)
 # Static checkers
  include(build/static-checkers/add_cppcheck_for_target.cmake)
 
- add_custom_target(static_check)
- add_dependencies(static_check cppcheck)
-
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
@@ -161,12 +158,6 @@ project (Jerry C ASM)
   set(BUILD_MODE_PREFIX_UNITTESTS unittests)
 
 # Modifiers
- set(MODIFIERS
-     COMPACT_PROFILE
-     COMPACT_PROFILE_MINIMAL
-     FULL_PROFILE
-     MEMORY_STATISTICS)
-
  # Profiles
   # Full profile (default, so - no suffix)
    set(MODIFIER_SUFFIX_FULL_PROFILE "")
@@ -386,7 +377,7 @@ endif()
     set(LIBC_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}}.jerry-libc.${PLATFORM_L}.lib)
   endif()
 
-  function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
+  function(declare_target_with_modifiers) # modifiers are passed in ARGN implicit argument
    set(CORE_TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
    foreach(MODIFIER ${ARGN})
     set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
@@ -452,7 +443,6 @@ endif()
    else()
     add_custom_target(${TARGET_NAME} ALL)
 
-    add_dependencies(${TARGET_NAME} ${FDLIBM_TARGET_NAME} ${CORE_TARGET_NAME})
     add_custom_command(TARGET ${TARGET_NAME}
                        POST_BUILD
                        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
@@ -472,7 +462,6 @@ endif()
     endif()
 
     if(${USE_JERRY_LIBC})
-     add_dependencies(${TARGET_NAME} ${LIBC_TARGET_NAME})
      add_custom_command(TARGET ${TARGET_NAME}
                         POST_BUILD
                         COMMAND echo $<TARGET_FILE:${LIBC_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)

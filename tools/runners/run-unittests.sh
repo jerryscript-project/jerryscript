@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Copyright 2014-2015 Samsung Electronics Co., Ltd.
+# Copyright 2014-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,35 +18,69 @@
 DIR="$1"
 shift
 
-OPTION_SILENT=disable
-while (( "$#" ))
-do
-  if [ "$1" = "--silent" ]
-  then
-    OPTION_SILENT=enable
-  fi
+mkdir -p $DIR/check
 
-  shift
-done
+UNITTEST_ERROR=$DIR/check/unittests.failed
+UNITTEST_OK=$DIR/check/unittests.passed
 
-rm -f $DIR/unit_tests_run.log
+rm -f $UNITTEST_ERROR $UNITTEST_OK
 
 UNITTESTS=$(ls $DIR/unit-*)
+total=$(ls $DIR/unit-* | wc -l)
 
-for unit_test in $UNITTESTS;
+if [ "$total" -eq 0 ]
+then
+    echo "$0: $DIR: no unit-* test to execute"
+    exit 1
+fi
+
+tested=1
+failed=0
+passed=0
+
+UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
+
+for unit_test in $UNITTESTS
 do
-  [ $OPTION_SILENT = "enable" ] || echo -n "Running $unit_test... ";
+  echo -n "[$tested/$total] $unit_test: "
 
-  $unit_test >&$DIR/unit_tests_run.log.tmp;
+  $unit_test &>$UNITTEST_TEMP
   status_code=$?
-  cat $DIR/unit_tests_run.log.tmp >> $DIR/unit_tests_run.log
-  rm $DIR/unit_tests_run.log.tmp
 
-  if [ $status_code -eq 0 ];
-  then
-    [ $OPTION_SILENT = "enable" ] || echo OK;
-  else
-    [ $OPTION_SILENT = "enable" ] || echo FAILED;
-    exit 1;
-  fi;
+    if [ $status_code -ne 0 ]
+    then
+        echo "FAIL ($status_code)"
+        cat $UNITTEST_TEMP
+
+        echo "$status_code: $unit_test" >> $UNITTEST_ERROR
+        echo "============================================" >> $UNITTEST_ERROR
+        cat $UNITTEST_TEMP >> $UNITTEST_ERROR
+        echo "============================================" >> $UNITTEST_ERROR
+        echo >> $UNITTEST_ERROR
+        echo >> $UNITTEST_ERROR
+
+        failed=$((failed+1))
+    else
+        echo "PASS"
+
+        echo "$unit_test" >> $UNITTEST_OK
+
+        passed=$((passed+1))
+    fi
+
+    tested=$((tested+1))
 done
+
+rm -f $UNITTEST_TEMP
+
+ratio=$(echo $passed*100/$total | bc)
+
+echo "[summary] $DIR/unit-*: $passed PASS, $failed FAIL, $total total, $ratio% success"
+
+if [ $failed -ne 0 ]
+then
+    echo "$0: see $UNITTEST_ERROR for details about failures"
+    exit 1
+fi
+
+exit 0

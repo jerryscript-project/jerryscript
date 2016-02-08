@@ -440,7 +440,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         if (str_curr_p <= re_ctx_p->input_start_p)
         {
           JERRY_DDLOG ("match\n");
-          break;
+          break; /* tail merge */
         }
 
         if (!(re_ctx_p->flags & RE_FLAG_MULTILINE))
@@ -452,7 +452,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         if (lit_char_is_line_terminator (lit_utf8_peek_prev (str_curr_p)))
         {
           JERRY_DDLOG ("match\n");
-          break;
+          break; /* tail merge */
         }
 
         JERRY_DDLOG ("fail\n");
@@ -1266,20 +1266,23 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   MEM_DEFINE_LOCAL_ARRAY (input_buffer_p, input_string_size, lit_utf8_byte_t);
 
+  re_matcher_ctx_t re_ctx;
+  lit_utf8_byte_t *input_curr_p = NULL;
   ssize_t sz = ecma_string_to_utf8_string (input_string_p, input_buffer_p, (ssize_t) input_string_size);
   JERRY_ASSERT (sz >= 0);
 
-  lit_utf8_byte_t *input_curr_p = input_buffer_p;
-
-  if (!input_string_size)
+  if (input_string_size == 0u)
   {
     input_curr_p = (lit_utf8_byte_t *) lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
   }
-  lit_utf8_byte_t *input_end_p = input_buffer_p + input_string_size;
+  else
+  {
+    input_curr_p = input_buffer_p;
+  }
 
-  re_matcher_ctx_t re_ctx;
-  re_ctx.input_start_p = input_buffer_p;
-  re_ctx.input_end_p = input_buffer_p + input_string_size;
+  re_ctx.input_start_p = input_curr_p;
+  const lit_utf8_byte_t *input_end_p = re_ctx.input_start_p + input_string_size;
+  re_ctx.input_end_p = input_end_p;
 
   /* 1. Read bytecode header and init regexp matcher context. */
   re_ctx.flags = bc_p->flags;
@@ -1390,7 +1393,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
     ecma_number_t *lastindex_num_p = ecma_alloc_number ();
 
-    if (sub_str_p)
+    if (sub_str_p != NULL
+        && input_buffer_p != NULL)
     {
       *lastindex_num_p = lit_utf8_string_length (input_buffer_p,
                                                  (lit_utf8_size_t) (sub_str_p - input_buffer_p));

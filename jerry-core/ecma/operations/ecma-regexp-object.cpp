@@ -1412,9 +1412,10 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       re_set_result_array_properties (result_array_obj_p, input_str_p, re_ctx.num_of_captures / 2, index);
       ecma_deref_ecma_string (input_str_p);
 
-      for (uint32_t i = 0; i < re_ctx.num_of_captures; i += 2)
+      for (uint32_t i = 0; ecma_is_completion_value_empty (ret_value) && i < re_ctx.num_of_captures; i += 2)
       {
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i / 2);
+        ecma_value_t capture_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         if (((re_ctx.saved_p[i] && re_ctx.saved_p[i + 1])
              && re_ctx.saved_p[i + 1] >= re_ctx.saved_p[i]))
@@ -1431,19 +1432,30 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
           {
             capture_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
           }
-          ecma_op_object_put (result_array_obj_p, index_str_p, ecma_make_string_value (capture_str_p), true);
-          ecma_deref_ecma_string (capture_str_p);
+
+          capture_value = ecma_make_string_value (capture_str_p);
         }
-        else
-        {
-          ecma_op_object_put (result_array_obj_p,
-                              index_str_p,
-                              ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                              true);
-        }
+
+        ECMA_TRY_CATCH (put_value,
+                        ecma_op_object_put (result_array_obj_p,
+                                            index_str_p,
+                                            capture_value,
+                                            true),
+                        ret_value);
+        ECMA_FINALIZE (put_value);
+
+        ecma_free_value (capture_value, true);
         ecma_deref_ecma_string (index_str_p);
       }
-      ret_value = result_array;
+
+      if (ecma_is_completion_value_empty (ret_value))
+      {
+        ret_value = result_array;
+      }
+      else
+      {
+        ecma_deref_object (result_array_obj_p);
+      }
     }
     else
     {

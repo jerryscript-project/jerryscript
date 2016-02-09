@@ -346,8 +346,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                   ecma_op_to_primitive (second_converted_value, ECMA_PREFERRED_TYPE_NUMBER),
                   ret_value);
 
-  const ecma_value_t &px = left_first ? prim_first_converted_value : prim_second_converted_value;
-  const ecma_value_t &py = left_first ? prim_second_converted_value : prim_first_converted_value;
+  const ecma_value_t px = left_first ? prim_first_converted_value : prim_second_converted_value;
+  const ecma_value_t py = left_first ? prim_second_converted_value : prim_first_converted_value;
 
   const bool is_px_string = ecma_is_value_string (px);
   const bool is_py_string = ecma_is_value_string (py);

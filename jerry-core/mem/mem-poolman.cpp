@@ -53,9 +53,14 @@ size_t mem_free_chunks_number;
 typedef uint8_t mem_pool_chunk_index_t;
 
 /**
+ * Type for mem_pool_chunk
+ */
+typedef struct mem_pool_chunk mem_pool_chunk_t;
+
+/**
  * Pool chunk
  */
-typedef struct mem_pool_chunk_t
+struct mem_pool_chunk
 {
   /**
    * Union of possible free chunk layouts
@@ -102,7 +107,7 @@ typedef struct mem_pool_chunk_t
      */
     uint8_t allocated_area[MEM_POOL_CHUNK_SIZE];
   } u;
-} mem_pool_chunk_t;
+} mem_pool_chunk;
 
 /**
  * The condition is assumed when using pointer arithmetics on (mem_pool_chunk_t *) pointer type

@@ -1256,6 +1256,11 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   re_compiled_code_t *bc_p = ECMA_GET_POINTER (re_compiled_code_t,
                                                bytecode_prop_p->u.internal_property.value);
 
+  if (bc_p == NULL)
+  {
+    return ecma_raise_type_error ("Incompatible type");
+  }
+
   ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
   lit_utf8_size_t input_string_size = ecma_string_get_size (input_string_p);
 

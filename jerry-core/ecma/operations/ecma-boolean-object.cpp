@@ -71,3 +71,8 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
 
   return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
 } /* ecma_op_create_boolean_object */
+
+/**
+ * @}
+ * @}
+ */

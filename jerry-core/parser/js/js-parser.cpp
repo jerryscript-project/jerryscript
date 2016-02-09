@@ -408,7 +408,7 @@ parser_encode_literal (uint8_t *dst_p, /**< destination buffer */
     }
     else
     {
-      *dst_p++ = (uint8_t) (literal_index >> 8) | CBC_HIGHEST_BIT_MASK;
+      *dst_p++ = (uint8_t) ((literal_index >> 8) | CBC_HIGHEST_BIT_MASK);
       *dst_p++ = (uint8_t) (literal_index & CBC_MAXIMUM_BYTE_VALUE);
     }
   }
@@ -1358,7 +1358,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         else
         {
           JERRY_ASSERT (literal_index <= CBC_MAXIMUM_FULL_VALUE);
-          *first_byte = (uint8_t) (literal_p->prop.index >> 8) | CBC_HIGHEST_BIT_MASK;
+          *first_byte = (uint8_t) ((literal_p->prop.index >> 8) | CBC_HIGHEST_BIT_MASK);
           page_p->bytes[offset] = (uint8_t) (literal_p->prop.index & 0xff);
           length++;
         }

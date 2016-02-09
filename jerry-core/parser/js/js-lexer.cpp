@@ -1767,7 +1767,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_DUPLICATED_REGEXP_FLAG);
     }
 
-    current_flags |= (uint16_t) flag;
+    current_flags = (uint16_t) (current_flags | flag);
     source_p++;
     column++;
   }

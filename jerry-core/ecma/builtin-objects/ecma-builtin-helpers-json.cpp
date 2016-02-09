@@ -303,3 +303,8 @@ ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t value) /**< value
 
   return hex_str_p;
 } /* ecma_builtin_helper_json_create_hex_digit_ecma_string */
+
+/**
+ * @}
+ * @}
+ */

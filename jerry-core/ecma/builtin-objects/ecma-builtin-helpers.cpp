@@ -718,5 +718,4 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
 /**
  * @}
  * @}
- * @}
  */

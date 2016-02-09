@@ -214,60 +214,9 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 #define JERRY_MIN(v1, v2) ((v1 < v2) ? v1 : v2)
 #define JERRY_MAX(v1, v2) ((v1 < v2) ? v2 : v1)
 
-/**
- * Read data from a specified buffer.
- *
- * Note:
- *      Offset is in-out and is incremented if the read operation completes successfully.
- *
- * @return true, if read was successful, i.e. offset + data_size doesn't exceed buffer size,
- *         false - otherwise.
- */
-inline bool
-jrt_read_from_buffer_by_offset (const uint8_t *buffer_p, /**< buffer */
-                                size_t buffer_size, /**< size of buffer */
-                                size_t *in_out_buffer_offset_p, /**< in: offset to read from,
-                                                                 *   out: offset, incremented on sizeof (T) */
-                                void *out_data_p, /**< out: data */
-                                size_t out_data_size) /**< size of the readable data */
-{
-  if (*in_out_buffer_offset_p + out_data_size > buffer_size)
-  {
-    return false;
-  }
 
-  memcpy (out_data_p, buffer_p + *in_out_buffer_offset_p, out_data_size);
-  *in_out_buffer_offset_p += out_data_size;
+extern bool jrt_read_from_buffer_by_offset (const uint8_t *, size_t, size_t *, void *, size_t);
 
-  return true;
-} /* jrt_read_from_buffer_by_offset */
-
-/**
- * Write data to a specified buffer.
- *
- * Note:
- *      Offset is in-out and is incremented if the write operation completes successfully.
- *
- * @return true, if write was successful, i.e. offset + data_size doesn't exceed buffer size,
- *         false - otherwise.
- */
-inline bool
-jrt_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
-                               size_t buffer_size, /**< size of buffer */
-                               size_t *in_out_buffer_offset_p, /**< in: offset to read from,
-                                                                *   out: offset, incremented on sizeof (T) */
-                               const void *data_p, /**< data */
-                               size_t data_size) /**< size of the writable data */
-{
-  if (*in_out_buffer_offset_p + data_size > buffer_size)
-  {
-    return false;
-  }
-
-  memcpy (buffer_p + *in_out_buffer_offset_p, data_p, data_size);
-  *in_out_buffer_offset_p += data_size;
-
-  return true;
-} /* jrt_write_to_buffer_by_offset */
+extern bool jrt_write_to_buffer_by_offset (uint8_t *, size_t, size_t *, const void *, size_t);
 
 #endif /* !JERRY_GLOBALS_H */

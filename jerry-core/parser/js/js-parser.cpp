@@ -1815,10 +1815,12 @@ parser_free_literals (parser_list_t *literal_pool_p) /**< literals */
 /**
  * Parse and compile EcmaScript source code
  *
+ * Note: source must be a valid UTF-8 string
+ *
  * @return compiled code
  */
-ecma_compiled_code_t *
-parser_parse_script (const uint8_t *source_p, /**< valid UTF-8 source code */
+static ecma_compiled_code_t *
+parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t size, /**< size of the source code */
                      int strict_mode, /**< strict mode */
                      parser_error_location *error_location) /**< error location */
@@ -1947,7 +1949,7 @@ parser_parse_script (const uint8_t *source_p, /**< valid UTF-8 source code */
   parser_stack_free (&context);
 
   return compiled_code;
-} /* parser_parse_script */
+} /* parser_parse_source */
 
 /**
  * Parse function code
@@ -2219,7 +2221,7 @@ parser_raise_error (parser_context_t *context_p, /**< context */
     /* First the current literal pool is freed, and then it is replaced
      * by the literal pool coming from the saved context. Since literals
      * are not used anymore, this is a valid replacement. The last pool
-     * is freed by parser_parse_script. */
+     * is freed by parser_parse_source. */
 
     parser_free_literals (&context_p->literal_pool);
     context_p->literal_pool.data = saved_context_p->literal_pool_data;
@@ -2250,6 +2252,45 @@ parser_set_show_instrs (int show_instrs) /**< flag indicating whether to dump by
   (void) show_instrs;
 #endif /* PARSER_DUMP_BYTE_CODE */
 } /* parser_set_show_instrs */
+
+
+/**
+ * Parse EcamScript source code
+ */
+jsp_status_t
+parser_parse_script (const jerry_api_char_t *source_p, /**< source code */
+                     size_t size, /**< size of the source code */
+                     ecma_compiled_code_t **bytecode_data_p) /**< result */
+{
+  *bytecode_data_p = parser_parse_source (source_p, size, false, NULL);
+
+  if (!*bytecode_data_p)
+  {
+    return JSP_STATUS_SYNTAX_ERROR;
+  }
+
+  return JSP_STATUS_OK;
+} /* parser_parse_script */
+
+/**
+ * Parse EcamScript eval source code
+ */
+jsp_status_t
+parser_parse_eval (const jerry_api_char_t *source_p, /**< source code */
+                   size_t size, /**< size of the source code */
+                   bool is_strict, /**< strict mode */
+                   ecma_compiled_code_t **bytecode_data_p) /**< result */
+{
+  *bytecode_data_p = parser_parse_source (source_p, size, is_strict, NULL);
+
+  if (!*bytecode_data_p)
+  {
+    return JSP_STATUS_SYNTAX_ERROR;
+  }
+
+  return JSP_STATUS_OK;
+} /* parser_parse_eval */
+
 
 /**
  * @}

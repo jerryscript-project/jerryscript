@@ -31,7 +31,7 @@
 #include "lit-literal.h"
 #include "lit-magic-strings.h"
 #include "lit-snapshot.h"
-#include "parser.h"
+#include "js-parser.h"
 #include "re-compiler.h"
 
 #define JERRY_INTERNAL

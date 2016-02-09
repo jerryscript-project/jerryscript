@@ -88,13 +88,13 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         /* Get source. */
         ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
-        ecma_property_t *prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+        ecma_property_t *prop_p = ecma_op_object_get_property (target_p, magic_string_p);
         pattern_string_p = ecma_get_string_from_value (ecma_get_named_data_property_value (prop_p));
         ecma_deref_ecma_string (magic_string_p);
 
         /* Get flags. */
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
-        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
 
         if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
         {
@@ -103,7 +103,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         ecma_deref_ecma_string (magic_string_p);
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
-        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
 
         if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
         {
@@ -112,7 +112,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         ecma_deref_ecma_string (magic_string_p);
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
-        prop_p = ecma_get_named_data_property (target_p, magic_string_p);
+        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
 
         if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
         {

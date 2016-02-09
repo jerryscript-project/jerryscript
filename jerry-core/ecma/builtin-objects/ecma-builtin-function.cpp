@@ -22,7 +22,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-magic-strings.h"
-#include "parser.h"
+#include "js-parser.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"

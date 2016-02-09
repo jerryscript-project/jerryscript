@@ -20,7 +20,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "parser.h"
+#include "js-parser.h"
 #include "vm.h"
 
 /** \addtogroup ecma ECMA

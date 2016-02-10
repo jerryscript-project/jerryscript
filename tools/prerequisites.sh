@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,114 +99,6 @@ function setup_from_zip() {
   chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
 }
 
-function setup_cppcheck() {
-  NAME="$1"
-  shift
-
-  DEST=$(pwd)/"$1"
-  shift
-
-  URL="$1"
-  shift
-
-  CHECKSUM="$1"
-  shift
-
-  FAIL_MSG="Failed to setup '$NAME' prerequisite"
-
-  if [ "$CLEAN_MODE" == "no" ]
-  then
-    echo "$CHECKSUM $NAME" >> $TMP_DIR/.prerequisites
-    grep -q "^$CHECKSUM $NAME\$" $TMP_DIR/.prerequisites.prev && return 0
-
-    echo "Setting up $NAME prerequisite"
-  fi
-
-  if [ -e "$DEST" ]
-  then
-    chmod -R u+w "$DEST" || fail_msg "$FAIL_MSG. Failed to add write permission to '$DEST' directory contents."
-    rm -rf "$DEST" || fail_msg "$FAIL_MSG. Cannot remove '$DEST' directory."
-  fi
-
-  if [ "$CLEAN_MODE" == "yes" ]
-  then
-    return 0
-  fi
-
-  wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.bz2" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
-
-  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.bz2" | $SHA256SUM --check || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
-
-  tar xjvf "$TMP_DIR/$NAME.tar.bz2" -C "$TMP_DIR" || fail_msg "$FAIL_MSG. Failed to unpack archive."
-
-  (
-    cd "$TMP_DIR/$NAME" || exit 1
-    make -j HAVE_RULES=yes CFGDIR="$DEST/cfg" || exit 1
-  ) || fail_msg "$FAIL_MSG. Failed to build cppcheck."
-
-  mkdir "$DEST" || fail_msg "$FAIL_MSG. Failed to create '$DEST' directory."
-  mkdir "$DEST/cfg" || fail_msg "$FAIL_MSG. Failed to create '$DEST/cfg' directory."
-
-  cp "$TMP_DIR/$NAME/cppcheck" "$DEST" || fail_msg "$FAIL_MSG. Failed to copy cppcheck to '$DEST' directory."
-  cp "$TMP_DIR/$NAME/cfg/std.cfg" "$DEST/cfg" || fail_msg "$FAIL_MSG. Failed to copy cfg/std.cfg to '$DEST/cfg' directory."
-
-  remove_gitignore_files_at "$DEST"
-  chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
-}
-
-function setup_vera() {
-  NAME="$1"
-  shift
-
-  DEST=$(pwd)/"$1"
-  shift
-
-  URL="$1"
-  shift
-
-  CHECKSUM="$1"
-  shift
-
-  FAIL_MSG="Failed to setup '$NAME' prerequisite"
-
-  if [ "$CLEAN_MODE" == "no" ]
-  then
-    echo "$CHECKSUM $NAME" >> $TMP_DIR/.prerequisites
-    grep -q "^$CHECKSUM $NAME\$" $TMP_DIR/.prerequisites.prev && return 0
-
-    echo "Setting up $NAME prerequisite"
-  fi
-
-  if [ -e "$DEST" ]
-  then
-    chmod -R u+w "$DEST" || fail_msg "$FAIL_MSG. Failed to add write permission to '$DEST' directory contents."
-    rm -rf "$DEST" || fail_msg "$FAIL_MSG. Cannot remove '$DEST' directory."
-  fi
-
-  if [ "$CLEAN_MODE" == "yes" ]
-  then
-    return 0
-  fi
-
-  wget --no-check-certificate -O "$TMP_DIR/$NAME.tar.gz" "$URL" || fail_msg "$FAIL_MSG. Cannot download '$URL' archive."
-
-  echo "$CHECKSUM  $TMP_DIR/$NAME.tar.gz" | $SHA256SUM --check || fail_msg "$FAIL_MSG. Archive's checksum doesn't match."
-
-  tar xzvf "$TMP_DIR/$NAME.tar.gz" -C "$TMP_DIR" || fail_msg "$FAIL_MSG. Failed to unpack archive."
-
-  (
-    cd "$TMP_DIR/$NAME" || exit 1
-    mkdir build || exit 1
-    cd build || exit 1
-    cmake .. -DCMAKE_INSTALL_PREFIX="$DEST" || exit 1
-    make -j || exit 1
-    make install || exit 1
-  ) || fail_msg "$FAIL_MSG. Failed to build vera++ 1.2.1."
-
-  remove_gitignore_files_at "$DEST"
-  chmod -R u-w "$DEST" || fail_msg "$FAIL_MSG. Failed to remove write permission from '$DEST' directory contents."
-}
-
 HOST_OS=`uname -s`
 
 if [ "$HOST_OS" == "Darwin" ]
@@ -237,16 +129,6 @@ setup_from_zip "stm32f4" \
                "http://www.st.com/st-web-ui/static/active/en/st_prod_software_internet/resource/technical/software/firmware/stsw-stm32068.zip" \
                "8e67f7b930c6c02bd7f89a266c8d1cae3b530510b7979fbfc0ee0d57e7f88b81" \
                "STM32F4-Discovery_FW_V1.1.0/*"
-
-setup_cppcheck "cppcheck-1.69" \
-               "./third-party/cppcheck" \
-               "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.69/cppcheck-1.69.tar.bz2" \
-               "4bd5c8031258ef29764a4c92666384238a625beecbb2aceeb7065ec388c7532e"
-
-setup_vera "vera++-1.2.1" \
-           "./third-party/vera++" \
-           "https://bitbucket.org/verateam/vera/downloads/vera++-1.2.1.tar.gz" \
-           "99b123c8f6d0f4fe9ee90397c461179066a36ed0d598d95e015baf2d3b56956b"
 
 if [ "$CLEAN_MODE" == "no" ]
 then

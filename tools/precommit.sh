@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests -o -path ./tar
 VERA_CONFIGURATION_PATH="./tools/vera++"
 
 SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.cpp" -or -name "*.h"`
-./tools/vera++/vera.sh -r $VERA_CONFIGURATION_PATH -p jerry $SOURCES_AND_HEADERS_LIST -e --no-duplicate
+vera++ -r $VERA_CONFIGURATION_PATH -p jerry $SOURCES_AND_HEADERS_LIST -e --no-duplicate
 STATUS_CODE=$?
 
 if [ $STATUS_CODE -ne 0 ]

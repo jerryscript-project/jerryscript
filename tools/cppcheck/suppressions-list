@@ -1,3 +1,6 @@
 operatorEqVarError
 noConstructor
 duplicateExpression
+
+// FIXME: false positive in cppcheck 1.61 (will disappear once distro ships with 1.69)
+variableScope:*/jerry-core/ecma/builtin-objects/ecma-builtin-helpers.cpp

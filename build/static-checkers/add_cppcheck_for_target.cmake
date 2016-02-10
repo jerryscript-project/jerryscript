@@ -1,4 +1,4 @@
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Cppcheck launcher
- set(CMAKE_CPPCHECK ${CMAKE_SOURCE_DIR}/tools/cppcheck/cppcheck.sh)
+ set(CMAKE_CPPCHECK cppcheck)
 
 # Definition of cppcheck targets
  add_custom_target(cppcheck)
@@ -54,6 +54,7 @@
    add_custom_target(cppcheck.${TARGET_NAME}
                      COMMAND ${CMAKE_CPPCHECK} -j8 --error-exitcode=1 --language=c++ --std=c++11
                                                --enable=warning,style,performance,portability,information
+                                               --exitcode-suppressions=${CMAKE_SOURCE_DIR}/tools/cppcheck/suppressions-list
                                                ${CPPCHECK_DEFINES_LIST} ${CPPCHECK_SOURCES_LIST} ${CPPCHECK_INCLUDES_LIST}
                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   else()

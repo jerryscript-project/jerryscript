@@ -77,6 +77,10 @@ project (Jerry CXX C ASM)
 
   option(STRIP_RELEASE_BINARY "Strip symbols from release binaries" ON)
  elseif("${PLATFORM}" STREQUAL "MCU")
+  if (("${ENABLE_VALGRIND}" STREQUAL "ON") OR ("${ENABLE_VALGRIND_FREYA}" STREQUAL "ON"))
+   message(FATAL_ERROR "This target isn't supported with Valgrind.")
+  endif()
+
   set(PLATFORM_EXT "MCU_${CMAKE_SYSTEM_VERSION}")
   set(EXTERNAL_BUILD FALSE)
 

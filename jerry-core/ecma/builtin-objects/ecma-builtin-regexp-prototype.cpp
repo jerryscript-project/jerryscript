@@ -62,12 +62,11 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t flags_arg) /**< flags */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
 
-  if (ecma_object_get_class_name (this_obj_p) != LIT_MAGIC_STRING_REGEXP_UL)
+  if (!ecma_is_value_object (this_arg)
+      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    /* Compile can only be called on RegExp objects. */
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
   }
   else
   {
@@ -121,6 +120,9 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         ecma_deref_ecma_string (magic_string_p);
 
+        ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
+        ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
+
         /* Get bytecode property. */
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
@@ -146,6 +148,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         re_initialize_props (this_obj_p, pattern_string_p, flags);
 
         ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+        ECMA_FINALIZE (obj_this);
       }
     }
     else
@@ -189,6 +193,9 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
       if (ecma_is_completion_value_empty (ret_value))
       {
+        ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
+        ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
+
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
         /* Try to compile bytecode from new source. */
@@ -211,6 +218,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
         ECMA_FINALIZE (bc_dummy);
+
+        ECMA_FINALIZE (obj_this);
       }
 
       if (pattern_string_p != NULL)
@@ -254,7 +263,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
                     ret_value);
 
     ecma_property_t *bytecode_prop_p;
-    ecma_object_t *obj_p = ecma_get_object_from_completion_value (obj_this);
+    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
     bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
     void *bytecode_p = ECMA_GET_POINTER (void, bytecode_prop_p->u.internal_property.value);

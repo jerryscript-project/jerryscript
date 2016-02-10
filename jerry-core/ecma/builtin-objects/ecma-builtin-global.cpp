@@ -1064,6 +1064,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
   lit_code_point_t cp;
   ecma_char_t ch;
   lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
+  memset (octets, LIT_BYTE_NULL, LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
 
   while (input_char_p < input_end_p)
   {

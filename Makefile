@@ -58,6 +58,15 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
    VALGRIND_FREYA := OFF
   endif
 
+ # Indicate when Valgrind or Valgrind_Freya option is enabled.
+  VALGRIND_IS_ENABLED ?= OFF
+
+  ifneq ($(VALGRIND)$(VALGRIND_FREYA), OFFOFF)
+   VALGRIND_IS_ENABLED := ON
+  else
+   VALGRIND_IS_ENABLED := OFF
+  endif
+
  # Static checkers
   STATIC_CHECK ?= OFF
 
@@ -213,6 +222,7 @@ $(BUILD_DIRS_NATIVE):
 
 .PHONY: $(BUILD_DIRS_STM32F3)
 $(BUILD_DIRS_STM32F3): prerequisites
+	$(Q) [ "$(VALGRIND_IS_ENABLED)" = "OFF" ] || (echo "Build failed. This target doesn't support build with Valgrind."; exit 1;)
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f3.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \
@@ -220,6 +230,7 @@ $(BUILD_DIRS_STM32F3): prerequisites
 
 .PHONY: $(BUILD_DIRS_STM32F4)
 $(BUILD_DIRS_STM32F4): prerequisites
+	$(Q) [ "$(VALGRIND_IS_ENABLED)" = "OFF" ] || (echo "Build failed. This target doesn't support build with Valgrind."; exit 1;)
 	$(Q) mkdir -p $@
 	$(Q) cd $@ && \
           (cmake -DENABLE_VALGRIND=$(VALGRIND) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA) -DENABLE_LTO=$(LTO) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE) -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_mcu_stm32f4.cmake ../../.. 2>&1 | tee cmake.log $(QLOG) ; ( exit $${PIPESTATUS[0]} ) ) || \

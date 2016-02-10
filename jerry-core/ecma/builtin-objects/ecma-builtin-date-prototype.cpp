@@ -1213,7 +1213,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
     else
     {
       ecma_object_t *to_iso_obj_p = ecma_get_object_from_value (to_iso);
-      ret_value = ecma_op_function_call (to_iso_obj_p, this_arg, NULL);
+      ret_value = ecma_op_function_call (to_iso_obj_p, this_arg, NULL, 0);
     }
 
     ECMA_FINALIZE (to_iso);

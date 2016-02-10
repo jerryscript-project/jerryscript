@@ -144,9 +144,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
       else
       {
         // 7.
-        ret_value = ecma_op_function_call (obj_p,
-                                           base,
-                                           NULL);
+        ret_value = ecma_op_function_call (obj_p, base, NULL, 0);
       }
     }
 
@@ -323,7 +321,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
         JERRY_ASSERT (setter_p != NULL);
 
         ECMA_TRY_CATCH (call_ret,
-                        ecma_op_function_call_array_args (setter_p, base, &value, 1),
+                        ecma_op_function_call (setter_p, base, &value, 1),
                         ret_value);
 
         ret_value = ecma_make_empty_completion_value ();

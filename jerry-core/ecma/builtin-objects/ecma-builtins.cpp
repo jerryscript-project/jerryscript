@@ -508,25 +508,12 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 ecma_completion_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                             ecma_value_t this_arg_value, /**< 'this' argument value */
-                            ecma_collection_header_t *arg_collection_p) /**< arguments collection */
+                            const ecma_value_t *arguments_list_p, /**< arguments list */
+                            ecma_length_t arguments_list_len) /**< arguments list length */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  const ecma_length_t arguments_list_len = arg_collection_p != NULL ? arg_collection_p->unit_number : 0;
-  MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, arguments_list_len, ecma_value_t);
-
-  ecma_collection_iterator_t arg_collection_iter;
-  ecma_collection_iterator_init (&arg_collection_iter,
-                                 arg_collection_p);
-
-  for (ecma_length_t arg_index = 0;
-       ecma_collection_iterator_next (&arg_collection_iter);
-       arg_index++)
-  {
-    arguments_list_p[arg_index] = *arg_collection_iter.current_value_p;
-  }
 
   if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
@@ -598,8 +585,6 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
-
   JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
 
   return ret_value;
@@ -612,26 +597,13 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
  */
 ecma_completion_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
-                                 ecma_collection_header_t *arg_collection_p) /**< arguments collection */
+                                 const ecma_value_t *arguments_list_p, /**< arguments list */
+                                 ecma_length_t arguments_list_len) /**< arguments list length */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-  const ecma_length_t arguments_list_len = arg_collection_p != NULL ? arg_collection_p->unit_number : 0;
-  MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, arguments_list_len, ecma_value_t);
-
-  ecma_collection_iterator_t arg_collection_iter;
-  ecma_collection_iterator_init (&arg_collection_iter,
-                                 arg_collection_p);
-
-  for (ecma_length_t arg_index = 0;
-       ecma_collection_iterator_next (&arg_collection_iter);
-       arg_index++)
-  {
-    arguments_list_p[arg_index] = *arg_collection_iter.current_value_p;
-  }
 
   ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
                                                                     ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
@@ -673,8 +645,6 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
-
-  MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
   JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
 

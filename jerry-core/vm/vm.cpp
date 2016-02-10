@@ -191,7 +191,8 @@ vm_run_global (void)
                                                ecma_make_object_value (glob_obj_p),
                                                lex_env_p,
                                                false,
-                                               NULL);
+                                               NULL,
+                                               0);
 
   if (ecma_is_completion_value_return (completion))
   {
@@ -251,7 +252,8 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
                                                this_binding,
                                                lex_env_p,
                                                true,
-                                               NULL);
+                                               NULL,
+                                               0);
 
   if (ecma_is_completion_value_return (completion))
   {
@@ -1302,8 +1304,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p -= right_value;
 
           last_completion_value = opfunc_construct_n (stack_top_p[-1],
-                                                      (uint8_t) right_value,
-                                                      stack_top_p);
+                                                      stack_top_p,
+                                                      right_value);
 
           /* Free registers. */
           for (uint32_t i = 0; i < right_value; i++)
@@ -2407,75 +2409,8 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
         ecma_object_t *lex_env_p, /**< lexical environment to use */
         bool is_eval_code, /**< is the code is eval code (ECMA-262 v5, 10.1) */
-        ecma_collection_header_t *arg_collection_p) /**< arguments list */
-{
-  lit_cpointer_t *literal_p;
-  vm_frame_ctx_t frame_ctx;
-  uint32_t call_stack_size;
-
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-  {
-    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-    uint8_t *byte_p = ((uint8_t *) bytecode_header_p + sizeof (cbc_uint16_arguments_t));
-
-    literal_p = (lit_cpointer_t *) byte_p;
-    frame_ctx.literal_start_p = literal_p;
-    literal_p += args_p->literal_end;
-    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
-  }
-  else
-  {
-    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-    uint8_t *byte_p = ((uint8_t *) bytecode_header_p + sizeof (cbc_uint8_arguments_t));
-
-    literal_p = (lit_cpointer_t *) byte_p;
-    frame_ctx.literal_start_p = literal_p;
-    literal_p += args_p->literal_end;
-    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
-  }
-
-  frame_ctx.bytecode_header_p = bytecode_header_p;
-  frame_ctx.byte_code_p = (uint8_t *) literal_p;
-  frame_ctx.byte_code_start_p = (uint8_t *) literal_p;
-  frame_ctx.lex_env_p = lex_env_p;
-  frame_ctx.this_binding = this_binding_value;
-  frame_ctx.context_depth = 0;
-  frame_ctx.is_eval_code = is_eval_code;
-
-  ecma_length_t arg_list_len = 0;
-
-  if (arg_collection_p == NULL)
-  {
-    arg_list_len = 1;
-  }
-
-  if (call_stack_size <= INLINE_STACK_SIZE)
-  {
-    return vm_run_with_inline_stack (&frame_ctx,
-                                     arg_collection_p,
-                                     arg_list_len);
-  }
-  else
-  {
-    return vm_run_with_alloca (&frame_ctx,
-                               arg_collection_p,
-                               arg_list_len,
-                               call_stack_size);
-  }
-} /* vm_run */
-
-/**
- * Run the code.
- *
- * @return completion value
- */
-ecma_completion_value_t
-vm_run_array_args (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data header */
-                   ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
-                   ecma_object_t *lex_env_p, /**< lexical environment to use */
-                   bool is_eval_code, /**< is the code is eval code (ECMA-262 v5, 10.1) */
-                   const ecma_value_t *arg_list_p, /**< arguments list */
-                   ecma_length_t arg_list_len) /**< length of arguments list */
+        const ecma_value_t *arg_list_p, /**< arguments list */
+        ecma_length_t arg_list_len) /**< length of arguments list */
 {
   lit_cpointer_t *literal_p;
   vm_frame_ctx_t frame_ctx;
@@ -2525,7 +2460,7 @@ vm_run_array_args (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code
                                arg_list_len,
                                call_stack_size);
   }
-} /* vm_run_array_args */
+} /* vm_run */
 
 /**
  * Check whether currently executed code is strict mode code

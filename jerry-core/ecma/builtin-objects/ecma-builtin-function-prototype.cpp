@@ -98,7 +98,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
     /* 2. */
     if (ecma_is_value_null (arg2) || ecma_is_value_undefined (arg2))
     {
-      ret_value = ecma_op_function_call (func_obj_p, arg1, NULL);
+      ret_value = ecma_op_function_call (func_obj_p, arg1, NULL, 0);
     }
     else
     {
@@ -125,10 +125,13 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
         const uint32_t length = ecma_number_to_uint32 (length_number);
 
         /* 6. */
-        ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
+        MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
+        uint32_t last_index = 0;
 
         /* 7. */
-        for (uint32_t index = 0; index < length && ecma_is_completion_value_empty (ret_value); index++)
+        for (uint32_t index = 0;
+             index < length && ecma_is_completion_value_empty (ret_value);
+             index++)
         {
           ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
 
@@ -136,22 +139,28 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
                           ecma_op_object_get (obj_p, curr_idx_str_p),
                           ret_value);
 
-          ecma_append_to_values_collection (arg_collection_p, get_value, true);
+          arguments_list_p[index] = ecma_copy_value (get_value, true);
+          last_index = index + 1;
 
           ECMA_FINALIZE (get_value);
           ecma_deref_ecma_string (curr_idx_str_p);
         }
 
-        JERRY_ASSERT (arg_collection_p->unit_number == length || !ecma_is_completion_value_empty (ret_value));
-
         if (ecma_is_completion_value_empty (ret_value))
         {
+          JERRY_ASSERT (last_index == length);
           ret_value = ecma_op_function_call (func_obj_p,
                                              arg1,
-                                             arg_collection_p);
+                                             arguments_list_p,
+                                             length);
         }
 
-        ecma_free_values_collection (arg_collection_p, true);
+        for (uint32_t index = 0; index < last_index; index++)
+        {
+          ecma_free_value (arguments_list_p[index], true);
+        }
+
+        MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
         ECMA_OP_TO_NUMBER_FINALIZE (length_number);
         ECMA_FINALIZE (length_value);
@@ -187,16 +196,18 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this ar
 
     if (arguments_number == 0)
     {
+      /* Even a 'this' argument is missing. */
       return ecma_op_function_call (func_obj_p,
                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                    NULL);
+                                    NULL,
+                                    0);
     }
     else
     {
-      return ecma_op_function_call_array_args (func_obj_p,
-                                               arguments_list_p[0],
-                                               (arguments_number == 1u) ? NULL : (arguments_list_p + 1),
-                                               (ecma_length_t) (arguments_number - 1u));
+      return ecma_op_function_call (func_obj_p,
+                                    arguments_list_p[0],
+                                    arguments_list_p + 1,
+                                    (ecma_length_t) (arguments_number - 1u));
     }
   }
 } /* ecma_builtin_function_prototype_object_call */

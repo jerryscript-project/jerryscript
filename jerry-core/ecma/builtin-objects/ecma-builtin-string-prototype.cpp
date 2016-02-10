@@ -844,10 +844,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string, true);
 
       ECMA_TRY_CATCH (result_value,
-                      ecma_op_function_call_array_args (context_p->replace_function_p,
-                                                        ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                                        arguments_list,
-                                                        match_length + 2),
+                      ecma_op_function_call (context_p->replace_function_p,
+                                             ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                             arguments_list,
+                                             match_length + 2),
                       ret_value);
 
       ECMA_TRY_CATCH (to_string_value,

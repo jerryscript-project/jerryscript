@@ -1406,16 +1406,11 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   bool is_successful = true;
 
-  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
+  MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, args_count, ecma_value_t);
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    ecma_value_t arg_value;
-    jerry_api_convert_api_value_to_ecma_value (&arg_value, &args_p[i]);
-
-    ecma_append_to_values_collection (arg_collection_p, arg_value, true);
-
-    ecma_free_value (arg_value, true);
+    jerry_api_convert_api_value_to_ecma_value (arguments_list_p + i, args_p + i);
   }
 
   ecma_completion_value_t call_completion;
@@ -1425,7 +1420,9 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
     JERRY_ASSERT (this_arg_p == NULL);
     JERRY_ASSERT (jerry_api_is_constructor (function_object_p));
 
-    call_completion = ecma_op_function_construct (function_object_p, arg_collection_p);
+    call_completion = ecma_op_function_construct (function_object_p,
+                                                  arguments_list_p,
+                                                  args_count);
   }
   else
   {
@@ -1444,10 +1441,9 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
     call_completion = ecma_op_function_call (function_object_p,
                                              this_arg_val,
-                                             arg_collection_p);
+                                             arguments_list_p,
+                                             args_count);
   }
-
-  ecma_free_values_collection (arg_collection_p, true);
 
   if (!ecma_is_completion_value_normal (call_completion))
   {
@@ -1464,6 +1460,13 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
   }
 
   ecma_free_completion_value (call_completion);
+
+  for (uint32_t i = 0; i < args_count; ++i)
+  {
+    ecma_free_value (arguments_list_p[i], true);
+  }
+
+  MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
   return is_successful;
 } /* jerry_api_invoke_function */

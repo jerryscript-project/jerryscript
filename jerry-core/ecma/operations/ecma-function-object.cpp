@@ -98,49 +98,32 @@ ecma_is_constructor (ecma_value_t value) /**< ecma-value */
  * Used by:
  *         - [[Call]] implementation for Function objects.
  *         - [[Construct]] implementation for Function objects.
- *
- * @return collection of arguments that should be freed
- *         using ecma_free_values_collection with do_ref_if_object flag set
  */
-static ecma_collection_header_t *
-ecma_function_bind_merge_arg_lists (ecma_object_t *func_obj_p, /**< Function object */
-                                    ecma_collection_header_t *passed_arg_collection_p) /**< passed arguments list */
+static void
+ecma_function_bind_merge_arg_lists (ecma_value_t *merged_args_list_p, /**< destination argument list */
+                                    ecma_collection_header_t *bound_arg_list_p, /**< bound argument list */
+                                    const ecma_value_t *arguments_list_p, /**< source arguments list */
+                                    ecma_length_t arguments_list_len) /**< length of source arguments list */
 {
-  ecma_length_t passed_args_number = passed_arg_collection_p != NULL ? passed_arg_collection_p->unit_number : 0;
+  /* Performance optimization: only the values are copied. This is
+   * enough, since the original references keep these objects alive. */
 
-  ecma_collection_header_t *merged_arg_collection_p = ecma_new_values_collection (NULL, 0, true);
+  ecma_collection_iterator_t bound_args_iterator;
+  ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
 
-  ecma_property_t *bound_args_prop_p;
-  bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-
-  if (bound_args_prop_p != NULL)
+  for (ecma_length_t i = bound_arg_list_p->unit_number; i > 0; i--)
   {
-    ecma_collection_header_t *bound_arg_list_p = ECMA_GET_POINTER (ecma_collection_header_t,
-                                                                   bound_args_prop_p->u.internal_property.value);
-
-    ecma_collection_iterator_t bound_args_iterator;
-    ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
-
-    for (ecma_length_t i = 0; i < bound_arg_list_p->unit_number; i++)
-    {
-      bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
-      JERRY_ASSERT (is_moved);
-
-      ecma_append_to_values_collection (merged_arg_collection_p, *bound_args_iterator.current_value_p, true);
-    }
-  }
-
-  ecma_collection_iterator_t passed_args_iterator;
-  ecma_collection_iterator_init (&passed_args_iterator, passed_arg_collection_p);
-  for (ecma_length_t i = 0; i < passed_args_number; i++)
-  {
-    bool is_moved = ecma_collection_iterator_next (&passed_args_iterator);
+    bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
     JERRY_ASSERT (is_moved);
 
-    ecma_append_to_values_collection (merged_arg_collection_p, *passed_args_iterator.current_value_p, true);
+    *merged_args_list_p++ = *bound_args_iterator.current_value_p;
   }
 
-  return merged_arg_collection_p;
+  while (arguments_list_len > 0)
+  {
+    *merged_args_list_p++ = *arguments_list_p++;
+    arguments_list_len--;
+  }
 } /* ecma_function_bind_merge_arg_lists */
 
 /**
@@ -187,18 +170,12 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
   ECMA_SET_POINTER (scope_prop_p->u.internal_property.value, scope_p);
 
-  // 10.
-  // 11.
-  // 12.
+  // 10., 11., 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
   MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->u.internal_property.value, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
 
-  // 14.
-  // 15.
-  // 16.
-  // 17.
-  // 18.
+  // 14., 15., 16., 17., 18.
   /*
    * 'length' and 'prototype' properties are instantiated lazily
    *
@@ -561,130 +538,6 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 } /* ecma_op_function_has_instance */
 
 /**
- * Function call helper with arguments list specified in array instead of collection
- *
- * See also:
- *          ecma_op_function_call
- *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
- */
-ecma_completion_value_t
-ecma_op_function_call_array_args (ecma_object_t *func_obj_p, /**< Function object */
-                                  ecma_value_t this_arg_value, /**< 'this' argument's value */
-                                  const ecma_value_t *arguments_list_p, /**< arguments list */
-                                  ecma_length_t arguments_list_len) /**< length of arguments list */
-{
-  if (arguments_list_len == 0)
-  {
-    return ecma_op_function_call (func_obj_p, this_arg_value, NULL);
-  }
-
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-      && !ecma_get_object_is_builtin (func_obj_p))
-  {
-    /* Fast call. */
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-
-    /* Entering Function Code (ECMA-262 v5, 10.4.3) */
-    ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-    ecma_property_t *bytecode_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-
-    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                        scope_prop_p->u.internal_property.value);
-
-    // 8.
-    ecma_value_t this_binding;
-    bool is_strict;
-    bool is_no_lex_env;
-
-    const ecma_compiled_code_t *bytecode_data_p;
-    bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t,
-                                          bytecode_prop_p->u.internal_property.value);
-
-    is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
-    is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
-
-    // 1.
-    if (is_strict)
-    {
-      this_binding = ecma_copy_value (this_arg_value, true);
-    }
-    else if (ecma_is_value_undefined (this_arg_value)
-             || ecma_is_value_null (this_arg_value))
-    {
-      // 2.
-      this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
-    }
-    else
-    {
-      // 3., 4.
-      ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
-      JERRY_ASSERT (ecma_is_completion_value_normal (completion));
-
-      this_binding = ecma_get_completion_value_value (completion);
-    }
-
-    // 5.
-    ecma_object_t *local_env_p;
-    if (is_no_lex_env)
-    {
-      local_env_p = scope_p;
-    }
-    else
-    {
-      local_env_p = ecma_create_decl_lex_env (scope_p);
-
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
-      {
-        ecma_op_create_arguments_object_array_args (func_obj_p,
-                                                    local_env_p,
-                                                    arguments_list_p,
-                                                    arguments_list_len,
-                                                    bytecode_data_p);
-      }
-    }
-
-    ecma_completion_value_t completion = vm_run_array_args (bytecode_data_p,
-                                                            this_binding,
-                                                            local_env_p,
-                                                            false,
-                                                            arguments_list_p,
-                                                            arguments_list_len);
-
-    if (ecma_is_completion_value_return (completion))
-    {
-      ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
-    }
-    else
-    {
-      ret_value = completion;
-    }
-
-    if (!is_no_lex_env)
-    {
-      ecma_deref_object (local_env_p);
-    }
-
-    ecma_free_value (this_binding, true);
-    return ret_value;
-  }
-
-  /* Slow call. */
-
-  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (arguments_list_p,
-                                                                           arguments_list_len,
-                                                                           true);
-
-  ecma_completion_value_t ret_value = ecma_op_function_call (func_obj_p,
-                                                             this_arg_value,
-                                                             arg_collection_p);
-
-  ecma_free_values_collection (arg_collection_p, true);
-  return ret_value;
-} /* ecma_op_function_call_array_args */
-
-/**
  * [[Call]] implementation for Function objects,
  * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
  * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
@@ -697,7 +550,8 @@ ecma_op_function_call_array_args (ecma_object_t *func_obj_p, /**< Function objec
 ecma_completion_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        ecma_value_t this_arg_value, /**< 'this' argument's value */
-                       ecma_collection_header_t *arg_collection_p) /**< arguments list */
+                       const ecma_value_t *arguments_list_p, /**< arguments list */
+                       ecma_length_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
@@ -711,7 +565,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     {
       ret_value = ecma_builtin_dispatch_call (func_obj_p,
                                               this_arg_value,
-                                              arg_collection_p);
+                                              arguments_list_p,
+                                              arguments_list_len);
     }
     else
     {
@@ -767,7 +622,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         {
           ecma_op_create_arguments_object (func_obj_p,
                                            local_env_p,
-                                           arg_collection_p,
+                                           arguments_list_p,
+                                           arguments_list_len,
                                            bytecode_data_p);
         }
       }
@@ -776,7 +632,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                    this_binding,
                                                    local_env_p,
                                                    false,
-                                                   arg_collection_p);
+                                                   arguments_list_p,
+                                                   arguments_list_len);
 
       if (ecma_is_completion_value_return (completion))
       {
@@ -799,7 +656,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   {
     ret_value = ecma_builtin_dispatch_call (func_obj_p,
                                             this_arg_value,
-                                            arg_collection_p);
+                                            arguments_list_p,
+                                            arguments_list_len);
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
@@ -809,10 +667,16 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                          &handler_p);
     JERRY_ASSERT (is_retrieved);
 
+    ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (arguments_list_p,
+                                                                             arguments_list_len,
+                                                                             true);
+
     ret_value = jerry_dispatch_external_function (func_obj_p,
                                                   handler_p,
                                                   this_arg_value,
                                                   arg_collection_p);
+
+    ecma_free_values_collection (arg_collection_p, true);
   }
   else
   {
@@ -830,17 +694,43 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                   target_function_prop_p->u.internal_property.value);
 
     /* 4. */
-    ecma_collection_header_t *merged_arg_collection_p = ecma_function_bind_merge_arg_lists (func_obj_p,
-                                                                                            arg_collection_p);
-
+    ecma_property_t *bound_args_prop_p;
     ecma_value_t bound_this_value = bound_this_prop_p->u.internal_property.value;
+    bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
 
-    /* 5. */
-    ret_value = ecma_op_function_call (target_func_obj_p,
-                                       bound_this_value,
-                                       merged_arg_collection_p);
+    if (bound_args_prop_p != NULL)
+    {
+      ecma_collection_header_t *bound_arg_list_p;
+      bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                    bound_args_prop_p->u.internal_property.value);
 
-    ecma_free_values_collection (merged_arg_collection_p, true);
+      JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
+
+      ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
+
+      MEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+
+      ecma_function_bind_merge_arg_lists (merged_args_list_p,
+                                          bound_arg_list_p,
+                                          arguments_list_p,
+                                          arguments_list_len);
+
+      /* 5. */
+      ret_value = ecma_op_function_call (target_func_obj_p,
+                                         bound_this_value,
+                                         merged_args_list_p,
+                                         merged_args_list_len);
+
+      MEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
+    }
+    else
+    {
+      /* 5. */
+      ret_value = ecma_op_function_call (target_func_obj_p,
+                                         bound_this_value,
+                                         arguments_list_p,
+                                         arguments_list_len);
+    }
   }
 
   JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
@@ -858,8 +748,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
  */
 static ecma_completion_value_t
 ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< Function object */
-                                               ecma_collection_header_t *arg_collection_p) /**< arguments
-                                                                                            *   collection */
+                                               const ecma_value_t *arguments_list_p, /**< arguments list */
+                                               ecma_length_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
@@ -906,7 +796,8 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   ECMA_TRY_CATCH (call_completion,
                   ecma_op_function_call (func_obj_p,
                                          ecma_make_object_value (obj_p),
-                                         arg_collection_p),
+                                         arguments_list_p,
+                                         arguments_list_len),
                   ret_value);
 
   ecma_value_t obj_value;
@@ -947,7 +838,8 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
  */
 ecma_completion_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
-                            ecma_collection_header_t *arg_collection_p) /**< arguments collection */
+                            const ecma_value_t *arguments_list_p, /**< arguments list */
+                            ecma_length_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
@@ -960,16 +852,22 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     if (unlikely (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                   && ecma_get_object_is_builtin (func_obj_p)))
     {
-      ret_value = ecma_builtin_dispatch_construct (func_obj_p, arg_collection_p);
+      ret_value = ecma_builtin_dispatch_construct (func_obj_p,
+                                                   arguments_list_p,
+                                                   arguments_list_len);
     }
     else
     {
-      ret_value = ecma_op_function_construct_simple_or_external (func_obj_p, arg_collection_p);
+      ret_value = ecma_op_function_construct_simple_or_external (func_obj_p,
+                                                                 arguments_list_p,
+                                                                 arguments_list_len);
     }
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ret_value = ecma_op_function_construct_simple_or_external (func_obj_p, arg_collection_p);
+    ret_value = ecma_op_function_construct_simple_or_external (func_obj_p,
+                                                               arguments_list_p,
+                                                               arguments_list_len);
   }
   else
   {
@@ -991,14 +889,41 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       /* 4. */
-      ecma_collection_header_t *merged_arg_collection_p = ecma_function_bind_merge_arg_lists (func_obj_p,
-                                                                                              arg_collection_p);
+      ecma_property_t *bound_args_prop_p;
+      bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
 
-      /* 5. */
-      ret_value = ecma_op_function_construct (target_func_obj_p,
-                                              merged_arg_collection_p);
+      if (bound_args_prop_p != NULL)
+      {
+        ecma_collection_header_t *bound_arg_list_p;
+        bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                      bound_args_prop_p->u.internal_property.value);
 
-      ecma_free_values_collection (merged_arg_collection_p, true);
+
+        JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
+
+        ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
+
+        MEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+
+        ecma_function_bind_merge_arg_lists (merged_args_list_p,
+                                            bound_arg_list_p,
+                                            arguments_list_p,
+                                            arguments_list_len);
+
+        /* 5. */
+        ret_value = ecma_op_function_construct (target_func_obj_p,
+                                                merged_args_list_p,
+                                                merged_args_list_len);
+
+        MEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
+      }
+      else
+      {
+        /* 5. */
+        ret_value = ecma_op_function_construct (target_func_obj_p,
+                                                arguments_list_p,
+                                                arguments_list_len);
+      }
     }
   }
 

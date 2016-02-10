@@ -20,12 +20,8 @@
 #include "ecma-helpers.h"
 
 extern void
-ecma_op_create_arguments_object (ecma_object_t *, ecma_object_t *,
-                                 ecma_collection_header_t *, const ecma_compiled_code_t *);
-
-extern void
-ecma_op_create_arguments_object_array_args (ecma_object_t *, ecma_object_t *, const ecma_value_t *,
-                                            ecma_length_t, const ecma_compiled_code_t *);
+ecma_op_create_arguments_object (ecma_object_t *, ecma_object_t *, const ecma_value_t *,
+                                 ecma_length_t, const ecma_compiled_code_t *);
 
 extern ecma_completion_value_t
 ecma_op_arguments_object_get (ecma_object_t *, ecma_string_t *);

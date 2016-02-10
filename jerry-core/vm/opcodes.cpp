@@ -58,10 +58,10 @@ opfunc_call_n (ecma_value_t this_value, /**< this object value */
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
 
-  ret_value = ecma_op_function_call_array_args (func_obj_p,
-                                                this_value,
-                                                arguments_list_p,
-                                                arguments_list_len);
+  ret_value = ecma_op_function_call (func_obj_p,
+                                     this_value,
+                                     arguments_list_p,
+                                     arguments_list_len);
 
   return ret_value;
 } /* opfunc_call_n */
@@ -76,16 +76,10 @@ opfunc_call_n (ecma_value_t this_value, /**< this object value */
  */
 ecma_completion_value_t
 opfunc_construct_n (ecma_value_t constructor_value, /**< constructor object value */
-                    uint8_t args_num, /**< number of arguments */
-                    ecma_value_t *stack_p) /**< stack pointer */
+                    const ecma_value_t *arguments_list_p, /**< stack pointer */
+                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
-  ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (NULL, 0, true);
-
-  for (int i = 0; i < args_num; i++)
-  {
-    ecma_append_to_values_collection (arg_collection_p, stack_p[i], true);
-  }
 
   if (!ecma_is_constructor (constructor_value))
   {
@@ -97,15 +91,14 @@ opfunc_construct_n (ecma_value_t constructor_value, /**< constructor object valu
 
     ECMA_TRY_CATCH (construction_ret_value,
                     ecma_op_function_construct (constructor_obj_p,
-                                                arg_collection_p),
+                                                arguments_list_p,
+                                                arguments_list_len),
                     ret_value);
 
     ret_value = ecma_make_normal_completion_value (ecma_copy_value (construction_ret_value, true));
 
     ECMA_FINALIZE (construction_ret_value);
   }
-
-  ecma_free_values_collection (arg_collection_p, true);
 
   return ret_value;
 } /* opfunc_construct_n */

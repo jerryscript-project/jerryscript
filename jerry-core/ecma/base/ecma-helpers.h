@@ -161,10 +161,6 @@ extern ecma_number_t ecma_number_add (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_number_substract (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_number_multiply (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_number_divide (ecma_number_t, ecma_number_t);
-extern ecma_number_t ecma_number_sqrt (ecma_number_t);
-extern ecma_number_t ecma_number_abs (ecma_number_t);
-extern ecma_number_t ecma_number_ln (ecma_number_t);
-extern ecma_number_t ecma_number_exp (ecma_number_t);
 extern void ecma_number_to_decimal (ecma_number_t, uint64_t *, int32_t *, int32_t *);
 
 /* ecma-helpers-values-collection.cpp */

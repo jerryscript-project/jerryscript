@@ -28,10 +28,10 @@
 const uint32_t test_iters = 1024;
 
 // Subiterations count
-const uint32_t test_max_sub_iters = 1024;
+#define TEST_MAX_SUB_ITERS  1024
 
-uint8_t *ptrs[test_max_sub_iters];
-uint8_t data[test_max_sub_iters][MEM_POOL_CHUNK_SIZE];
+uint8_t *ptrs[TEST_MAX_SUB_ITERS];
+uint8_t data[TEST_MAX_SUB_ITERS][MEM_POOL_CHUNK_SIZE];
 
 int
 main (int __attr_unused___ argc,
@@ -43,7 +43,7 @@ main (int __attr_unused___ argc,
 
   for (uint32_t i = 0; i < test_iters; i++)
   {
-    const size_t subiters = ((size_t) rand () % test_max_sub_iters) + 1;
+    const size_t subiters = ((size_t) rand () % TEST_MAX_SUB_ITERS) + 1;
 
     for (size_t j = 0; j < subiters; j++)
     {

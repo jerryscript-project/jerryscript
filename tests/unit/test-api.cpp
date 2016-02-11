@@ -287,8 +287,12 @@ static bool foreach (const jerry_api_string_t *name,
   return true;
 } /* foreach */
 
-static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_value_t *, void *)
+#define UNUSED(x) (void)(x)
+
+static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_value_t *value, void * user_data)
 {
+  UNUSED (value);
+  UNUSED (user_data);
   char str_buf_p[128];
   ssize_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
   str_buf_p[sz] = '\0';
@@ -300,9 +304,12 @@ static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_v
   return true;
 } /* foreach_exception */
 
-static bool foreach_subset (const jerry_api_string_t *, const jerry_api_value_t *, void *user_data)
+static bool foreach_subset (const jerry_api_string_t *name, const jerry_api_value_t *value, void *user_data)
 {
-  int *count_p = reinterpret_cast<int *>(user_data);
+  UNUSED (name);
+  UNUSED (value);
+  int *count_p = (int *) (user_data);
+
   if (*count_p == 3)
   {
     return false;

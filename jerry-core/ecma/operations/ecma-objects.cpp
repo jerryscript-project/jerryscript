@@ -616,7 +616,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       lit_string_hash_t hash = name_p->hash;
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-      uint32_t bitmap_column = hash % bitmap_row_size;
+      uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
       if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
       {
@@ -648,7 +648,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         {
           lit_string_hash_t hash = name_p->hash;
           uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-          uint32_t bitmap_column = hash % bitmap_row_size;
+          uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
           bool is_add = true;
 
@@ -687,7 +687,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           lit_string_hash_t hash = name_p->hash;
           uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-          uint32_t bitmap_column = hash % bitmap_row_size;
+          uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
           if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
           {
@@ -805,7 +805,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       lit_string_hash_t hash = name_p->hash;
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-      uint32_t bitmap_column = hash % bitmap_row_size;
+      uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
       if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
       {

@@ -211,7 +211,16 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 void
 ecma_ref_object (ecma_object_t *object_p) /**< object */
 {
-  ecma_gc_set_object_refs (object_p, ecma_gc_get_object_refs (object_p) + 1);
+  uint32_t ref_cnt = ecma_gc_get_object_refs (object_p);
+
+  if (ref_cnt < (uint32_t) CONFIG_ECMA_REFERENCE_COUNTER_LIMIT)
+  {
+    ecma_gc_set_object_refs (object_p, ref_cnt + 1);
+  }
+  else
+  {
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
 } /* ecma_ref_object */
 
 /**

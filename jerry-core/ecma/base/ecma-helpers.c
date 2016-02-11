@@ -1334,11 +1334,10 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
 void
 ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 {
-  /* Abort program if maximum reference number is reached.
-   * Note: This is not tested for objects. */
+  /* Abort program if maximum reference number is reached. */
   if ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) >= 0x3ff)
   {
-    jerry_fatal (ERR_UNIMPLEMENTED_CASE);
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
 
   bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags + (1 << ECMA_BYTECODE_REF_SHIFT));

@@ -82,6 +82,8 @@
  */
 #define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH (10)
 
+#define CONFIG_ECMA_REFERENCE_COUNTER_LIMIT ((1u << CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1u)
+
 /**
  * Maximum length of strings' concatenation
  */

@@ -115,7 +115,6 @@ export TARGET_NATIVE_SYSTEMS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
   endif
  # Compiler to use for external build
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
- EXTERNAL_CXX_COMPILER ?= arm-none-eabi-g++
 
 export TARGET_DEBUG_MODES = debug
 export TARGET_RELEASE_MODES = release

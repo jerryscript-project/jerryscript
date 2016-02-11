@@ -83,7 +83,7 @@ typedef enum
   ECMA_DATE_LOCAL /**< date vaule is in local time */
 } ecma_date_timezone_t;
 
-/* ecma-builtin-helpers-date.cpp */
+/* ecma-builtin-helpers-date.c */
 extern ecma_number_t ecma_date_day (ecma_number_t);
 extern ecma_number_t ecma_date_time_within_day (ecma_number_t);
 extern ecma_number_t ecma_date_days_in_year (ecma_number_t);
@@ -121,7 +121,7 @@ extern ecma_completion_value_t ecma_date_get_primitive_value (ecma_value_t);
 
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
-/* ecma-builtin-helper-json.cpp */
+/* ecma-builtin-helper-json.c */
 
 /**
  * Context for JSON.stringify()

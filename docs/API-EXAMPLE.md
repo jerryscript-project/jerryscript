@@ -4,7 +4,7 @@ This guide is intended to introduce you to JerryScript embedding API through cre
 
 ## Step 1. Execute JavaScript from your application
 
-```cpp
+```c
 #include <string.h>
 #include "jerry.h"
 
@@ -34,7 +34,7 @@ Here we perform the same actions, as `jerry_run_simple`, while splitting into se
 - engine cleanup
 
 
-```cpp
+```c
 #include <string.h>
 #include "jerry.h"
 
@@ -60,7 +60,7 @@ Our code is more complex now, but it introduces possibilities to interact with J
 
 ## Step 3. Execution in 'eval'-mode
 
-```cpp
+```c
 #include <string.h>
 #include "jerry.h"
 
@@ -95,7 +95,7 @@ This way, we execute two independent script parts in one execution environment. 
 
 ## Step 4. Interaction with JavaScript environment
 
-```cpp
+```c
 #include <string.h>
 #include "jerry.h"
 
@@ -164,7 +164,7 @@ Pointers to strings or objects and values should be released just when become un
 
 The following example function will output a JavaScript value:
 
-```cpp
+```c
 static void
 print_value (const jerry_api_value_t * value_p)
 {
@@ -234,7 +234,7 @@ Shell operation can be described with the following loop:
   - print result of eval;
   - loop.
 
-```cpp
+```c
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

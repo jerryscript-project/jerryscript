@@ -3,7 +3,7 @@
 Currently, only Ubuntu 14.04+ is officially supported as primary development environment.
 
 There are several dependencies, that should be installed manually. The following list is required for building:
-- `gcc` or `g++` higher than `4.8.2`
+- `gcc` higher than `4.8.2`
   - native
   - arm-none-eabi
 - `cmake` higher than `2.8.12.2`

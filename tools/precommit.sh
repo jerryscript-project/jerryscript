@@ -39,8 +39,9 @@ fi
 VERA_DIRECTORIES_EXCLUDE_LIST="-path ./third-party -o -path tests -o -path ./targets"
 VERA_CONFIGURATION_PATH="./tools/vera++"
 
-SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.cpp" -or -name "*.h"`
+SOURCES_AND_HEADERS_LIST=`find . -type d \( $VERA_DIRECTORIES_EXCLUDE_LIST \) -prune -or -name "*.c" -or -name "*.h"`
 vera++ -r $VERA_CONFIGURATION_PATH -p jerry $SOURCES_AND_HEADERS_LIST -e --no-duplicate
+
 STATUS_CODE=$?
 
 if [ $STATUS_CODE -ne 0 ]

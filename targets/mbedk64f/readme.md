@@ -73,8 +73,8 @@ JerryScript led flashing sample program in js folder.
 
 All `.js` files in `js` folder are executed, with `main.js` in first order.
 `sysloop()` function in main.js is called periodically in every 100msec by
-below code in `main.cpp` `jerry_loop()`, which calls `js_loop()` in
-`jerry_mbedk64f.cpp`
+below code in `main.c` `jerry_loop()`, which calls `js_loop()` in
+`jerry_mbedk64f.c`
 
 ```
   minar::Scheduler::postCallback(jerry_loop)

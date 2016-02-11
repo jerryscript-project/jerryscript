@@ -16,7 +16,6 @@ set(CMAKE_SYSTEM_NAME Darwin)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
 find_program(CMAKE_C_COMPILER NAMES gcc cc) 
-find_program(CMAKE_CXX_COMPILER NAMES g++ c++)
 # FIXME: This could break cross compilation, when the strip is not for the target architecture
 find_program(CMAKE_STRIP NAMES strip)
 

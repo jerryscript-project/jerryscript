@@ -16,7 +16,6 @@ set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
 find_program(CMAKE_C_COMPILER NAMES x86_64-linux-gnu-gcc x86_64-unknown-linux-gnu-gcc)
-find_program(CMAKE_CXX_COMPILER NAMES x86_64-linux-gnu-g++ x86_64-unknown-linux-gnu-g++)
 # FIXME: This could break cross compilation, when the strip is not for the target architecture
 find_program(CMAKE_STRIP NAMES x86_64-linux-gnu-strip x86_64-unknown-linux-gnu-strip strip)
 

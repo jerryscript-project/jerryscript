@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (Jerry CXX C ASM)
+project (Jerry C ASM)
 
 # Determining platform
  set(PLATFORM "${CMAKE_SYSTEM_NAME}")
@@ -21,20 +21,21 @@ project (Jerry CXX C ASM)
 
 # Compiler configuration
  if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
-  if(NOT CMAKE_COMPILER_IS_GNUCXX)
-   message(FATAL_ERROR "g++ compiler is required")
+  if(NOT CMAKE_COMPILER_IS_GNUCC)
+   message(FATAL_ERROR "gcc compiler is required")
   endif()
  endif()
 
- if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  # Require g++ of version >= 4.7.0
-   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
-                   OUTPUT_VARIABLE GNU_CXX_VERSION
+ if(CMAKE_COMPILER_IS_GNUCC)
+  # Require gcc of version >= 4.7.0
+   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                   OUTPUT_VARIABLE GNU_CC_VERSION
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-   if(${GNU_CXX_VERSION} VERSION_LESS 4.7.0)
-    message(FATAL_ERROR "g++ compiler version 4.7.0 or higher required")
+   if(${GNU_CC_VERSION} VERSION_LESS 4.7.0)
+    message(FATAL_ERROR "gcc compiler version 4.7.0 or higher required")
    endif()
  endif()
+
 
 # Imported and third-party targets prefix
  set(PREFIX_IMPORTED_LIB imported_)
@@ -49,13 +50,11 @@ project (Jerry CXX C ASM)
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${FLAG}")
  endforeach()
 
 # Remove rdynamic option
  set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
- set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 
 # Defining options
  option(ENABLE_VALGRIND       "Enable valgrind helpers in memory allocators" OFF)
@@ -102,7 +101,7 @@ project (Jerry CXX C ASM)
   message(FATAL_ERROR "Platform '${PLATFORM}' is not supported")
  endif()
 
- if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+ if(CMAKE_COMPILER_IS_GNUCC)
   if("${ENABLE_LTO}" STREQUAL "ON")
    # Use gcc-ar and gcc-ranlib to support LTO
    get_filename_component(PATH_TO_GCC ${CMAKE_C_COMPILER} REALPATH)
@@ -273,7 +272,7 @@ project (Jerry CXX C ASM)
   macro(add_jerry_compile_warnings)
     foreach(_warning ${ARGV})
       add_jerry_compile_flags(-W${_warning})
-      if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+      if(CMAKE_COMPILER_IS_GNUCC)
         add_jerry_compile_flags(-Werror=${_warning})
       endif()
     endforeach()
@@ -281,7 +280,7 @@ project (Jerry CXX C ASM)
 
   add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
   add_jerry_compile_flags(-pedantic -Wno-stack-protector -Wno-attributes)
-  if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  if(CMAKE_COMPILER_IS_GNUCC)
     add_jerry_compile_warnings(logical-op)
   else()
     add_jerry_compile_flags(-Wno-nested-anon-types)
@@ -297,13 +296,6 @@ project (Jerry CXX C ASM)
   if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
    set(LINKER_FLAGS_STATIC "-static")
   endif()
-
- # C++
-  set(CXX_FLAGS_JERRY "-std=c++11 -fno-exceptions -fno-rtti")
-  # Turn off implicit template instantiation
-   if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-    set(CXX_FLAGS_JERRY "${CXX_FLAGS_JERRY} -fno-implicit-templates -fno-implicit-inline-templates")
-   endif()
 
  # C
   set(C_FLAGS_JERRY "-std=c99")
@@ -333,23 +325,23 @@ project (Jerry CXX C ASM)
  # Platform-specific
   # Jerry standalone
    # Linux
-    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-unix.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_LINUX main-unix.c)
 
    # Darwin
-    set(SOURCE_JERRY_STANDALONE_MAIN_DARWIN main-unix.cpp)
+    set(SOURCE_JERRY_STANDALONE_MAIN_DARWIN main-unix.c)
 
    # MCU
     # stm32f3
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main-mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F3 main-mcu.c)
 
     # stm32f4
-     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main-mcu.cpp)
+     set(SOURCE_JERRY_STANDALONE_MAIN_MCU_STM32F4 main-mcu.c)
 
  # Unit tests main modules
-  file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.cpp)
+  file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES tests/unit/*.c)
 
 # Imported libraries
-if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
+if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCC))
  # libclang_rt.osx
   add_library(${PREFIX_IMPORTED_LIB}libclang_rt.osx STATIC IMPORTED)
   execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=
@@ -366,19 +358,6 @@ else()
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc
                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
- # libgcc_eh
-  add_library(${PREFIX_IMPORTED_LIB}libgcc_eh STATIC IMPORTED)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc_eh.a
-                  OUTPUT_VARIABLE IMPORTED_LIBGCC_EH_LOCATION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(EXISTS "${IMPORTED_LIBGCC_EH_LOCATION}")
-   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc_eh
-                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_EH_LOCATION})
-  else()
-   # If libgcc_eh not found, reference libgcc instead
-   set_property(TARGET ${PREFIX_IMPORTED_LIB}libgcc_eh
-                PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
-  endif()
 endif()
 
 # Platform-specific configuration
@@ -436,19 +415,19 @@ endif()
     endif()
 
     set_property(TARGET ${TARGET_NAME}
-                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${C_FLAGS_JERRY}")
     set_property(TARGET ${TARGET_NAME}
-                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
+                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
-    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC)))
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
                            ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
     else()
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 
     add_cppcheck_target(${TARGET_NAME})
@@ -483,7 +462,7 @@ endif()
     if(DEFINED EXTERNAL_BUILD_ENTRY_FILE)
      add_library(${TARGET_NAME}-entry STATIC ${EXTERNAL_BUILD_ENTRY_FILE})
      set_property(TARGET ${TARGET_NAME}-entry
-                  PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+                  PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
      target_compile_definitions(${TARGET_NAME}-entry PRIVATE ${DEFINES_JERRY})
      target_include_directories(${TARGET_NAME}-entry PRIVATE ${INCLUDE_CORE_INTERFACE})
      target_include_directories(${TARGET_NAME}-entry SYSTEM PRIVATE ${CMAKE_SOURCE_DIR})
@@ -530,18 +509,18 @@ endif()
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
     set_property(TARGET ${TARGET_NAME}
-                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS}")
+                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS}")
     set_property(TARGET ${TARGET_NAME}
-                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
+                 PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${FLAGS_COMMON_UNITTESTS} ${LINKER_FLAGS_COMMON}")
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
 
-    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)))
+    if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC)))
       target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
     else()
       target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
-                            ${PREFIX_IMPORTED_LIB}libgcc ${PREFIX_IMPORTED_LIB}libgcc_eh)
+                            ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 
     add_cppcheck_target(${TARGET_NAME})

@@ -44,8 +44,8 @@ ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/lwip
 ESP_LIBS_INC :=$(ESP_LIBS_INC);$(ESP_INC2)/ssl
 
 # jerry related source files
-JERRY_BUILD_FILES := $(SRCPATH)/jerry_extapi.cpp
-JERRY_BUILD_FILES := $(JERRY_BUILD_FILES);$(SRCPATH)/jerry_run.cpp
+JERRY_BUILD_FILES := $(SRCPATH)/jerry_extapi.c
+JERRY_BUILD_FILES := $(JERRY_BUILD_FILES);$(SRCPATH)/jerry_run.c
 
 
 .PHONY: jerry js2c mbed check-env flash clean
@@ -64,7 +64,6 @@ jerry:
 	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
 	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=xtensia-lx106 \
 	 -DEXTERNAL_CMAKE_C_COMPILER=xtensa-lx106-elf-gcc \
-	 -DEXTERNAL_CMAKE_CXX_COMPILER=xtensa-lx106-elf-g++ \
 	 -DEXTERNAL_BUILD_ENTRY_FILE="$(JERRY_BUILD_FILES)" \
 	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
 	 -DEXTERNAL_LIBC_INTERFACE="$(ESP_INC)" \

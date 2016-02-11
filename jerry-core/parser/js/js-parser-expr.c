@@ -61,7 +61,7 @@ parser_push_result (parser_context_t *context_p) /**< context */
       if (context_p->stack_depth >= context_p->stack_limit)
       {
         /* Stack limit is increased for CBC_POST_INCR_PUSH_RESULT
-         * and CBC_POST_DECR_PUSH_RESULT opcodes. Needed by vm.cpp. */
+         * and CBC_POST_DECR_PUSH_RESULT opcodes. Needed by vm.c. */
         JERRY_ASSERT (context_p->stack_depth == context_p->stack_limit);
 
         context_p->stack_limit++;
@@ -1254,7 +1254,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         if (opcode == CBC_ASSIGN_PROP_THIS_LITERAL
             && (context_p->stack_depth >= context_p->stack_limit))
         {
-          /* Stack limit is increased for VM_OC_ASSIGN_PROP_THIS. Needed by vm.cpp. */
+          /* Stack limit is increased for VM_OC_ASSIGN_PROP_THIS. Needed by vm.c. */
           JERRY_ASSERT (context_p->stack_depth == context_p->stack_limit);
 
           context_p->stack_limit++;

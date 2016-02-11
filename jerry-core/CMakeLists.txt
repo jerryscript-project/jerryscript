@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (JerryCore CXX C ASM)
+project (JerryCore C ASM)
 
 # Definitions
  # Get version information from git
@@ -122,17 +122,17 @@ project (JerryCore CXX C ASM)
 
 # Sources
  # Jerry core
-  file(GLOB SOURCE_CORE_API                   *.cpp)
-  file(GLOB SOURCE_CORE_LIT                   lit/*.cpp)
-  file(GLOB SOURCE_CORE_RCS                   rcs/*.cpp)
-  file(GLOB SOURCE_CORE_MEM                   mem/*.cpp)
-  file(GLOB SOURCE_CORE_VM                    vm/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.cpp)
-  file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.cpp)
-  file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.cpp)
-  file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.cpp)
-  file(GLOB SOURCE_CORE_JRT                   jrt/*.cpp)
+  file(GLOB SOURCE_CORE_API                   *.c)
+  file(GLOB SOURCE_CORE_LIT                   lit/*.c)
+  file(GLOB SOURCE_CORE_RCS                   rcs/*.c)
+  file(GLOB SOURCE_CORE_MEM                   mem/*.c)
+  file(GLOB SOURCE_CORE_VM                    vm/*.c)
+  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
+  file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)
+  file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.c)
+  file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.c)
+  file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.c)
+  file(GLOB SOURCE_CORE_JRT                   jrt/*.c)
 
   set(SOURCE_CORE_FILES
       ${SOURCE_CORE_API}
@@ -149,7 +149,7 @@ project (JerryCore CXX C ASM)
 
  # All-in-one build
  if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")
-  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.cpp")
+  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.c")
   list(SORT SOURCE_CORE_FILES)
   file(REMOVE ${ALL_IN_FILE})
 
@@ -201,7 +201,7 @@ project (JerryCore CXX C ASM)
 
    add_library(${TARGET_NAME}.jerry-core STATIC ${SOURCE_CORE})
    set_property(TARGET ${TARGET_NAME}.jerry-core
-                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${CXX_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
+                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
    target_compile_definitions(${TARGET_NAME}.jerry-core PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_CORE})
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_FDLIBM})

@@ -1155,7 +1155,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               else
               {
                 /* The parser ensures there is enough space for the
-                 * extra value on the stack. See js-parser-expr.cpp. */
+                 * extra value on the stack. See js-parser-expr.c. */
 
                 JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT
                                || opcode == CBC_POST_DECR_PUSH_RESULT);

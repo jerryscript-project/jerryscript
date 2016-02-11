@@ -51,7 +51,7 @@
  */
 #define ECMA_SET_POINTER(field, non_compressed_pointer) MEM_CP_SET_POINTER (field, non_compressed_pointer)
 
-/* ecma-helpers-value.cpp */
+/* ecma-helpers-value.c */
 extern ecma_type_t ecma_get_value_type_field (ecma_value_t) __attr_pure___;
 
 extern bool ecma_is_value_empty (ecma_value_t);
@@ -137,7 +137,7 @@ extern lit_string_hash_t ecma_string_hash (const ecma_string_t *);
 extern ecma_string_t *ecma_string_substr (const ecma_string_t *, ecma_length_t, ecma_length_t);
 extern ecma_string_t *ecma_string_trim (const ecma_string_t *);
 
-/* ecma-helpers-number.cpp */
+/* ecma-helpers-number.c */
 extern const ecma_number_t ecma_number_relative_eps;
 
 extern ecma_number_t ecma_number_make_nan (void);
@@ -163,7 +163,7 @@ extern ecma_number_t ecma_number_multiply (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_number_divide (ecma_number_t, ecma_number_t);
 extern void ecma_number_to_decimal (ecma_number_t, uint64_t *, int32_t *, int32_t *);
 
-/* ecma-helpers-values-collection.cpp */
+/* ecma-helpers-values-collection.c */
 extern ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t[], ecma_length_t, bool);
 extern void ecma_free_values_collection (ecma_collection_header_t *, bool);
 extern void ecma_append_to_values_collection (ecma_collection_header_t *, ecma_value_t, bool);
@@ -188,7 +188,7 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *, ecma_collection_hea
 extern bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *);
 
-/* ecma-helpers.cpp */
+/* ecma-helpers.c */
 extern ecma_object_t *ecma_create_object (ecma_object_t *, bool, ecma_object_type_t);
 extern ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *);
 extern ecma_object_t *ecma_create_object_lex_env (ecma_object_t *, ecma_object_t *, bool);
@@ -250,7 +250,7 @@ extern ecma_property_descriptor_t ecma_get_property_descriptor_from_property (ec
 extern void ecma_bytecode_ref (ecma_compiled_code_t *);
 extern void ecma_bytecode_deref (ecma_compiled_code_t *);
 
-/* ecma-helpers-external-pointers.cpp */
+/* ecma-helpers-external-pointers.c */
 extern bool
 ecma_create_external_pointer_property (ecma_object_t *, ecma_internal_property_id_t, ecma_external_pointer_t);
 extern bool
@@ -258,7 +258,7 @@ ecma_get_external_pointer_value (ecma_object_t *, ecma_internal_property_id_t, e
 extern void
 ecma_free_external_pointer_in_property (ecma_property_t *);
 
-/* ecma-helpers-conversion.cpp */
+/* ecma-helpers-conversion.c */
 extern ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *, lit_utf8_size_t);
 extern ssize_t ecma_uint32_to_utf8_string (uint32_t, lit_utf8_byte_t *, ssize_t);
 extern uint32_t ecma_number_to_uint32 (ecma_number_t);

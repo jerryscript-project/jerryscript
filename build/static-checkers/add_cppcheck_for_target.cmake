@@ -43,7 +43,7 @@
    foreach(SOURCE ${TARGET_SOURCES})
     # Add to list if it is C or C++ source
     get_filename_component(SOURCE_EXTENSION ${SOURCE} EXT)
-    if("${SOURCE_EXTENSION}" STREQUAL ".c" OR "${SOURCE_EXTENSION}" STREQUAL ".cpp")
+    if("${SOURCE_EXTENSION}" STREQUAL ".c")
      set(CPPCHECK_SOURCES_LIST ${CPPCHECK_SOURCES_LIST} ${SOURCE})
 
      set(ADD_CPPCHECK_COMMAND true)

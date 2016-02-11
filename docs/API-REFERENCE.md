@@ -5,7 +5,7 @@ The simplest way to run JavaScript.
 
 **Prototype**
 
-```cpp
+```c
 jerry_completion_code_t
 jerry_run_simple (const char * script_source,
                   size_t script_source_size,
@@ -18,7 +18,7 @@ jerry_run_simple (const char * script_source,
 
 **Example**
 
-```cpp
+```c
 {
   const char * script = "print ('Hello, World!');";
 
@@ -41,7 +41,7 @@ Initializes JerryScript engine, making possible to run JavaScript code and perfo
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_init (jerry_flag_t flags);
 ```
@@ -55,7 +55,7 @@ jerry_init (jerry_flag_t flags);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_init (JERRY_FLAG_ENABLE_LOG);
 
@@ -79,7 +79,7 @@ JavaScript values, received from engine, are inaccessible after the cleanup.
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_cleanup (void);
 ```
@@ -98,7 +98,7 @@ so `jerry_parse` could be invoked only once between `jerry_init` and `jerry_clea
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_parse (const char* source_p, size_t source_size);
 ```
@@ -107,7 +107,7 @@ jerry_parse (const char* source_p, size_t source_size);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_init (JERRY_FLAG_ENABLE_LOG);
 
@@ -133,7 +133,7 @@ The code should be previously registered through `jerry_parse`.
 
 **Prototype**
 
-```cpp
+```c
 jerry_completion_code_t
 jerry_run (void);
 ```
@@ -142,7 +142,7 @@ jerry_run (void);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_init (JERRY_FLAG_ENABLE_LOG);
 
@@ -175,7 +175,7 @@ Type of value is identified by `jerry_api_value_t::type`, and can be one of the 
 
 **Structure**
 
-```cpp
+```c
 typedef struct jerry_api_value_t
 {
   jerry_api_data_type_t type;
@@ -212,7 +212,7 @@ Perform JavaScript `eval`.
 
 **Prototype**
 
-```cpp
+```c
 jerry_completion_code_t
 jerry_api_eval (const char * source_p,
                 size_t source_size,
@@ -230,7 +230,7 @@ jerry_api_eval (const char * source_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_value_t ret_val;
 
@@ -256,7 +256,7 @@ Upon the JavaScript string becomes unused, all pointers to it should be released
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_string_t*
 jerry_api_create_string (const char * v);
 ```
@@ -266,7 +266,7 @@ jerry_api_create_string (const char * v);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_string_t * string_p = jerry_api_create_string ("abc");
 
@@ -289,7 +289,7 @@ Copy string characters to specified buffer, append zero character at end of the 
 
 **Prototype**
 
-```cpp
+```c
 ssize_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
                                  char * buffer_p,
@@ -305,7 +305,7 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * obj_p = jerry_api_get_global ();
   jerry_api_value_t val;
@@ -355,7 +355,7 @@ The acquired pointer should be released with [jerry_api_release_string](#jerryap
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_string_t*
 jerry_api_acquire_string (jerry_api_string_t * string_p);
 ```
@@ -365,7 +365,7 @@ jerry_api_acquire_string (jerry_api_string_t * string_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_string_t * str_ptr1_p = jerry_api_create_string ("abc");
   jerry_api_string_t * str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
@@ -392,7 +392,7 @@ Release specified pointer to the string.
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_api_release_string (jerry_api_string_t * string_p);
 ```
@@ -401,7 +401,7 @@ jerry_api_release_string (jerry_api_string_t * string_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_string_t * str_ptr1_p = jerry_api_create_string ("abc");
   jerry_api_string_t * str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
@@ -430,7 +430,7 @@ Upon the JavaScript object becomes unused, all pointers to it should be released
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_create_object ();
 ```
@@ -439,7 +439,7 @@ jerry_api_create_object ();
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * object_p = jerry_api_create_object ();
 
@@ -469,7 +469,7 @@ The acquired pointer should be released with [jerry_api_release_object](#jerryap
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_acquire_object (jerry_api_object_t * object_p);
 ```
@@ -479,7 +479,7 @@ jerry_api_acquire_object (jerry_api_object_t * object_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * obj_ptr1_p = jerry_api_create_object ();
   jerry_api_object_t * obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
@@ -506,7 +506,7 @@ Release specified pointer to the object.
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_api_release_object (jerry_api_object_t * object_p);
 ```
@@ -515,7 +515,7 @@ jerry_api_release_object (jerry_api_object_t * object_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * obj_ptr1_p = jerry_api_create_object ();
   jerry_api_object_t * obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
@@ -542,7 +542,7 @@ Get the Global object.
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_get_global (void);
 ```
@@ -553,7 +553,7 @@ Received pointer should be released with [jerry_api_release_object](#jerryapirel
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * glob_obj_p = jerry_api_get_global ();
 
@@ -585,7 +585,7 @@ Create field (named data property) in an object
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_add_object_field (jerry_api_object_t * object_p,
                             const char * field_name_p,
@@ -603,7 +603,7 @@ jerry_api_add_object_field (jerry_api_object_t * object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t * obj_p = jerry_api_create_object ();
 
@@ -629,7 +629,7 @@ Delete field (property) in the specified object
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_delete_object_field (jerry_api_object_t * object_p,
                                const char * field_name_p);
@@ -642,7 +642,7 @@ jerry_api_delete_object_field (jerry_api_object_t * object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t* obj_p;
   ... // receive or construct obj_p
@@ -663,7 +663,7 @@ Get value of field (property) in the specified object, i.e. perform [[Get]] oper
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_get_object_field_value (jerry_api_object_t * object_p,
                                   const char * field_name_p,
@@ -680,7 +680,7 @@ If value was retrieved successfully, it should be freed with [jerry_api_release_
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t* obj_p;
   ... // receive or construct obj_p
@@ -708,7 +708,7 @@ Set value of a field (property) in the specified object, i.e. perform [[Put]] op
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_set_object_field_value (jerry_api_object_t * object_p,
                                   const char * field_name_p,
@@ -723,7 +723,7 @@ jerry_api_set_object_field_value (jerry_api_object_t * object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t* obj_p;
   jerry_api_value_t val;
@@ -747,7 +747,7 @@ Get native handle, previously associated with specified object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_get_object_native_handle (jerry_api_object_t * object_p,
                                     uintptr_t* out_handle_p);
@@ -759,7 +759,7 @@ jerry_api_get_object_native_handle (jerry_api_object_t * object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t* obj_p;
   uintptr_t handle_set;
@@ -791,7 +791,7 @@ If native handle or "free" callback were already set for the object, correspondi
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_api_set_object_native_handle (jerry_api_object_t * object_p,
                                     uintptr_t handle,
@@ -804,7 +804,7 @@ jerry_api_set_object_native_handle (jerry_api_object_t * object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_object_t* obj_p;
   uintptr_t handle_set;
@@ -833,7 +833,7 @@ Check whether the specified object is a function object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_is_function (const jerry_api_object_t* object_p);
 ```
@@ -843,7 +843,7 @@ jerry_api_is_function (const jerry_api_object_t* object_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_value_t val;
 
@@ -870,7 +870,7 @@ Check whether the specified object is a constructor function object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_is_constructor (const jerry_api_object_t* object_p);
 ```
@@ -880,7 +880,7 @@ jerry_api_is_constructor (const jerry_api_object_t* object_p);
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_value_t val;
 
@@ -907,7 +907,7 @@ Call function object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_call_function (jerry_api_object_t * function_object_p,
                          jerry_api_object_t * this_arg_p,
@@ -928,7 +928,7 @@ jerry_api_call_function (jerry_api_object_t * function_object_p,
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_value_t val;
 
@@ -966,7 +966,7 @@ Construct object invoking specified function object as constructor.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_construct_object (jerry_api_object_t * function_object_p,
                             jerry_api_value_t * retval_p,
@@ -985,7 +985,7 @@ If call was performed successfully, returned value should be freed with [jerry_a
 
 **Example**
 
-```cpp
+```c
 {
   jerry_api_value_t val;
 
@@ -1022,7 +1022,7 @@ The data type represents pointer to call handler of a native function object.
 
 **Structure**
 
-```cpp
+```c
 typedef bool (* jerry_external_handler_t) (const jerry_api_object_t * function_obj_p,
                                           const jerry_api_value_t * this_p,
                                           jerry_api_value_t * ret_val_p,
@@ -1041,7 +1041,7 @@ Create an external function object.
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_create_external_function (jerry_external_handler_t handler_p);
 ```
@@ -1053,7 +1053,7 @@ Received pointer should be released with [jerry_api_release_object](#jerryapirel
 
 **Example**
 
-```cpp
+```c
 static bool
 handler (const jerry_api_object_t * function_obj_p,
          const jerry_api_value_t * this_p,
@@ -1099,7 +1099,7 @@ Upon the JavaScript array object becomes unused, all pointers to it should be re
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_create_array_object (jerry_api_size_t array_size);
 ```
@@ -1109,7 +1109,7 @@ jerry_api_create_array_object (jerry_api_size_t array_size);
 
  **Example**
 
-```cpp
+```c
 {
     jerry_api_object_t * array_object_p = jerry_api_create_array_object (10);
 
@@ -1139,7 +1139,7 @@ Set value of an indexed element in the specified array object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_set_array_index_value (jerry_api_object_t * array_object_p,
                                  jerry_api_length_t index,
@@ -1153,7 +1153,7 @@ jerry_api_set_array_index_value (jerry_api_object_t * array_object_p,
 
 **Example**
 
-```cpp
+```c
 {
     jerry_api_object_t * array_object_p = jerry_api_create_array_object (10);
     jerry_api_value_t val;
@@ -1178,7 +1178,7 @@ Get value of an indexed element in the specified array object.
 
 **Prototype**
 
-```cpp
+```c
 bool
 jerry_api_get_array_index_value (jerry_api_object_t * array_object_p,
                                  jerry_api_length_t index,
@@ -1192,7 +1192,7 @@ jerry_api_get_array_index_value (jerry_api_object_t * array_object_p,
 
 **Example**
 
-```cpp
+```c
 {
     jerry_api_object_t* array_object_p;
     ... // receive or construct array_object_p
@@ -1218,7 +1218,7 @@ Release specified pointer to the value.
 
 **Prototype**
 
-```cpp
+```c
 void
 jerry_api_release_value (jerry_api_value_t * value_p);
 ```
@@ -1226,7 +1226,7 @@ jerry_api_release_value (jerry_api_value_t * value_p);
 - `value_p` - pointer to the value.
 
 **Example**
-```cpp
+```c
 {
     jerry_api_value_t val1;
     jerry_api_value_t val2;
@@ -1259,7 +1259,7 @@ it should be throwed inside of handle attached to external function object.
 
 **Prototype**
 
-```cpp
+```c
 jerry_api_object_t*
 jerry_api_create_error (jerry_api_error_t error_type,
                         const jerry_api_char_t * message_p);
@@ -1271,7 +1271,7 @@ jerry_api_create_error (jerry_api_error_t error_type,
 
 **Example**
 
-```cpp
+```c
 static bool
 handler (const jerry_api_object_t * function_obj_p,
          const jerry_api_value_t * this_p,

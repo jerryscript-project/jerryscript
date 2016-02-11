@@ -1,5 +1,5 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright 2015-2016 Samsung Electronics Co., Ltd.
+// Copyright 2015-2016 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ d = new Date(1420070400000);
 assert (d.valueOf() == 1420070400000);
 
 d = new Date(2015,0,1,0,0,0,0);
-assert (d.valueOf() == 1420070400000);
+assert (d.valueOf() - (d.getTimezoneOffset() * 60000) == 1420070400000);
 
 d = new Date(8.64e+15);
 assert (d.valueOf() == 8.64e+15);
@@ -80,6 +80,3 @@ catch (e)
 assert (typeof Date (2015) == "string");
 assert (typeof Date() != typeof (new Date ()));
 assert (Date (Number.NaN) == Date ());
-
-// Fixme: remove this case when Date() gives the current time.
-assert (Date (2015,1,2) == "Thu Jan 01 1970 00:00:00 GMT+0000");

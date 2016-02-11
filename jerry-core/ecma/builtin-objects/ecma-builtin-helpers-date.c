@@ -26,6 +26,8 @@
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
+#include <time.h>
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -445,13 +447,14 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
-  /*
-   * FIXME:
-   *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
-   *        Introduce system macros at first.
-   */
-  TODO ("Implement time functions in jerry-libc.");
-  return ECMA_NUMBER_ZERO;
+  struct timezone tz;
+
+  if (gettimeofday (NULL, &tz) != 0)
+  {
+    return ecma_raise_type_error ("gettimeofday failed");
+  }
+
+  return tz.tz_minuteswest * -ECMA_DATE_MS_PER_MINUTE;
 } /* ecma_date_local_tza */
 
 /**
@@ -470,13 +473,14 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  /*
-   * FIXME:
-   *        Get the real system time. ex: localtime_r, gmtime_r, daylight on Linux
-   *        Introduce system macros at first.
-   */
-  TODO ("Implement time functions in jerry-libc.");
-  return ECMA_NUMBER_ZERO;
+  struct timezone tz;
+
+  if (gettimeofday (NULL, &tz) != 0)
+  {
+    return ecma_raise_type_error ("gettimeofday failed");
+  }
+
+  return tz.tz_dsttime;
 } /* ecma_date_daylight_saving_ta */
 
 /**
@@ -1062,7 +1066,7 @@ ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
   /*
    * Character length of the result string.
    */
-  const uint32_t result_string_length = 33;
+  const uint32_t result_string_length = 34;
 
   lit_utf8_byte_t character_buffer[result_string_length];
   lit_utf8_byte_t *dest_p = character_buffer;
@@ -1082,10 +1086,23 @@ ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
   dest_p = ecma_date_value_to_string_common (dest_p, datetime_number);
 
   int32_t time_zone = (int32_t) (ecma_date_local_tza () + ecma_date_daylight_saving_ta (datetime_number));
-  *dest_p++ = (time_zone >= 0) ? LIT_CHAR_PLUS : LIT_CHAR_MINUS;
+  if (time_zone >= 0)
+  {
+    *dest_p++ = LIT_CHAR_PLUS;
+  }
+  else
+  {
+    *dest_p++ = LIT_CHAR_MINUS;
+    time_zone = -time_zone;
+  }
 
-  dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone / 60, 2);
-  dest_p = ecma_date_value_number_to_bytes (dest_p, time_zone % 60, 2);
+  dest_p = ecma_date_value_number_to_bytes (dest_p,
+                                            time_zone / (int32_t) ECMA_DATE_MS_PER_HOUR,
+                                            2);
+  *dest_p++ = LIT_CHAR_COLON;
+  dest_p = ecma_date_value_number_to_bytes (dest_p,
+                                            time_zone % (int32_t) ECMA_DATE_MS_PER_HOUR,
+                                            2);
 
   JERRY_ASSERT ((uint32_t) (dest_p - character_buffer) == result_string_length);
 

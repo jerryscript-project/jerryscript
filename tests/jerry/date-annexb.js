@@ -1,5 +1,5 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright 2015-2016 Samsung Electronics Co., Ltd.
+// Copyright 2015-2016 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,8 +40,7 @@ assert (d.getFullYear() === 2004 && d.getMonth() === 1 && d.getDate() === 29);
 d.setYear(2015);
 assert (d.getFullYear() === 2015 && d.getMonth() === 2 && d.getDate() === 1);
 
-d = new Date(2015, 8, 17);
-assert (d.toGMTString() === "Thu, 17 Sep 2015 00:00:00 GMT");
+assert (/Thu, 17 Sep 2015 \d{2}:\d{2}:\d{2} GMT/.test (new Date("2015-09-17").toGMTString()));
 
 d = new Date(NaN);
 assert (d.toGMTString() === "Invalid Date");

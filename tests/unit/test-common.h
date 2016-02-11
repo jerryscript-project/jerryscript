@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <sys/time.h>
-
 
 /**
  * Verify that unit tests are built with all debug checks enabled

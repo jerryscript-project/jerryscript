@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "jerry-libc-defs.h"
 
@@ -383,6 +385,18 @@ fwrite (const void *ptr, /**< data to write */
 
   return bytes_written / size;
 } /* fwrite */
+
+/**
+ * This function can get the time as well as a timezone.
+ *
+ * @return 0 if success, -1 otherwise
+ */
+int
+gettimeofday (void *tp,  /**< struct timeval */
+              void *tzp) /**< struct timezone */
+{
+  return (int) syscall_2 (__NR_gettimeofday, (long int) tp, (long int) tzp);
+} /* gettimeofday */
 
 // FIXME
 #if 0

@@ -55,21 +55,30 @@ ecma_builtin_helper_def_prop (ecma_object_t *, ecma_string_t *, ecma_value_t,
  * See also:
  *          ECMA-262 v5, 15.9.1.1, 15.9.1.10
  */
-/* Hours in a day. */
+
+/** Hours in a day. */
 #define ECMA_DATE_HOURS_PER_DAY         ((ecma_number_t) 24)
-/* Minutes in an hour. */
+
+/** Minutes in an hour. */
 #define ECMA_DATE_MINUTES_PER_HOUR      ((ecma_number_t) 60)
-/* Seconds in a minute. */
+
+/** Seconds in a minute. */
 #define ECMA_DATE_SECONDS_PER_MINUTE    ((ecma_number_t) 60)
-/* Milliseconds in a second. */
+
+/** Milliseconds in a second. */
 #define ECMA_DATE_MS_PER_SECOND         ((ecma_number_t) 1000)
-/* ECMA_DATE_MS_PER_MINUTE == 60000 */
+
+/** ECMA_DATE_MS_PER_MINUTE == 60000 */
 #define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
-/* ECMA_DATE_MS_PER_HOUR == 3600000 */
+
+/** ECMA_DATE_MS_PER_HOUR == 3600000 */
 #define ECMA_DATE_MS_PER_HOUR           (ECMA_DATE_MS_PER_MINUTE * ECMA_DATE_MINUTES_PER_HOUR)
-/* ECMA_DATE_MS_PER_DAY == 86400000 */
+
+/** ECMA_DATE_MS_PER_DAY == 86400000 */
 #define ECMA_DATE_MS_PER_DAY            (ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY)
-/* This gives a range of 8,640,000,000,000,000 milliseconds
+
+/**
+ * This gives a range of 8,640,000,000,000,000 milliseconds
  * to either side of 01 January, 1970 UTC.
  */
 #define ECMA_DATE_MAX_VALUE             8.64e15

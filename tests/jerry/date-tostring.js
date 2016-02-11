@@ -1,5 +1,5 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright 2015-2016 Samsung Electronics Co., Ltd.
+// Copyright 2015-2016 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ assert (new Date (2015, 7, 1, 0, Infinity, 0) == "Invalid Date");
 assert (new Date (NaN, 1, 1, 0, 0, 0) == "Invalid Date");
 assert (new Date (2015, NaN, 1, 0, 0, 0) == "Invalid Date");
 assert (new Date (2015, 7, 1, 0, NaN, 0) == "Invalid Date");
-assert (new Date ("2015-02-13") == "Fri Feb 13 2015 00:00:00 GMT+0000");
-assert (new Date ("2015-07-08T11:29:05.023") == "Wed Jul 08 2015 11:29:05 GMT+0000");
+assert (/Fri Feb 13 2015 \d{2}:\d{2}:\d{2} GMT\+\d{2}:\d{2}/.test (new Date ("2015-02-13")));
+assert (/Wed Jul 08 2015 \d{2}:\d{2}:\d{2} GMT\+\d{2}:\d{2}/.test (new Date ("2015-07-08T11:29:05.023")));
 
 try
 {
@@ -35,12 +35,12 @@ catch (e)
 }
 
 var date = new Date(0);
-assert (date.toString() === "Thu Jan 01 1970 00:00:00 GMT+0000");
+assert (/Thu Jan 01 1970 \d{2}:\d{2}:\d{2} GMT\+\d{2}:\d{2}/.test (date.toString()));
 assert (date.toUTCString() === "Thu, 01 Jan 1970 00:00:00 GMT");
 assert (date.toISOString() === "1970-01-01T00:00:00.000Z");
 
 date = new Date("2015-08-12T09:40:20.000Z")
-assert (date.toString() === "Wed Aug 12 2015 09:40:20 GMT+0000");
+assert (/Wed Aug 12 2015 \d{2}:\d{2}:\d{2} GMT\+\d{2}:\d{2}/.test (date.toString()));
 assert (date.toUTCString() === "Wed, 12 Aug 2015 09:40:20 GMT");
 assert (date.toISOString() === "2015-08-12T09:40:20.000Z");
 
@@ -146,9 +146,5 @@ assert (typeof Date() != typeof (new Date ()));
 assert (Date () == (new Date ()).toString ());
 assert (Date (2015, 1, 1) == (new Date ()).toString ());
 assert (Date (Number.NaN) == Date ());
-
-// Fixme: remove these cases when TZA and DST are supported.
-assert (new Date ("2015-07-08T11:29:05.023-02:00").toString () == "Wed Jul 08 2015 13:29:05 GMT+0000");
-assert (new Date ("2015-07-08T11:29:05.023-02:00").toLocaleString () == "Wed Jul 08 2015 13:29:05 GMT+0000");
 
 assert (new Date ("2015-07-08T11:29:05.023Z").toISOString() == "2015-07-08T11:29:05.023Z");

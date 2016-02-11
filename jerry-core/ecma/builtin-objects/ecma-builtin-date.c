@@ -17,6 +17,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -448,13 +449,17 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
 static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
 {
-  /*
-   * FIXME:
-   *        Get the real system time. ex: gettimeofday() on Linux
-   *        Introduce system macros at first.
-   */
+  struct _timeval tv;
   ecma_number_t *now_num_p = ecma_alloc_number ();
   *now_num_p = ECMA_NUMBER_ZERO;
+
+  if (gettimeofday (&tv, NULL) != 0)
+  {
+    return ecma_raise_type_error ("gettimeofday failed");
+  }
+
+  *now_num_p = ((ecma_number_t) tv.tv_sec) * 1000.0 + ((ecma_number_t) (tv.tv_usec / 1000));
+
   return ecma_make_number_value (now_num_p);
 } /* ecma_builtin_date_now */
 

@@ -1,4 +1,5 @@
 /* Copyright 2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +17,10 @@
 #include "lit-literal.h"
 
 #include "ecma-helpers.h"
-#include "rcs-allocator.h"
-#include "rcs-records.h"
-#include "rcs-iterator.h"
+#include "lit-cpointer.h"
+#include "lit-magic-strings.h"
 #include "lit-literal-storage.h"
+
 
 /**
  * Initialize literal storage
@@ -27,10 +28,6 @@
 void
 lit_init (void)
 {
-  JERRY_ASSERT (rcs_get_node_data_space_size () % RCS_DYN_STORAGE_LENGTH_UNIT == 0);
-
-  rcs_chunked_list_init (&rcs_lit_storage);
-
   lit_magic_strings_ex_init ();
 } /* lit_init */
 
@@ -40,18 +37,11 @@ lit_init (void)
 void
 lit_finalize (void)
 {
-  rcs_chunked_list_cleanup (&rcs_lit_storage);
-  rcs_chunked_list_free (&rcs_lit_storage);
+  while (lit_storage)
+  {
+    lit_storage = lit_free_literal (lit_storage);
+  }
 } /* lit_finalize */
-
-/**
- * Dump records from the literal storage
- */
-void
-lit_dump_literals (void)
-{
-  lit_storage_dump_literals (&rcs_lit_storage);
-} /* lit_dump_literals */
 
 /**
  * Create new literal in literal storage from characters buffer.
@@ -78,7 +68,7 @@ lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string t
 
     if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_utf8 (m_str_id), str_size))
     {
-      return lit_storage_create_magic_literal (&rcs_lit_storage, m_str_id);
+      return lit_create_magic_literal (m_str_id);
     }
   }
 
@@ -94,11 +84,11 @@ lit_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string t
 
     if (!strncmp ((const char *) str_p, (const char *) lit_get_magic_string_ex_utf8 (m_str_ex_id), str_size))
     {
-      return lit_storage_create_magic_literal_ex (&rcs_lit_storage, m_str_ex_id);
+      return lit_create_magic_literal_ex (m_str_ex_id);
     }
   }
 
-  return lit_storage_create_charset_literal (&rcs_lit_storage, str_p, str_size);
+  return lit_create_charset_literal (str_p, str_size);
 } /* lit_create_literal_from_utf8_string */
 
 /**
@@ -117,57 +107,73 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
 
   lit_literal_t lit;
 
-  for (lit = rcs_record_get_first (&rcs_lit_storage);
+  for (lit = lit_storage;
        lit != NULL;
-       lit = rcs_record_get_next (&rcs_lit_storage, lit))
+       lit = lit_cpointer_decompress (lit->next))
   {
-    rcs_record_type_t type = rcs_record_get_type (lit);
+    const lit_record_type_t type = (lit_record_type_t) lit->type;
 
-    if (RCS_RECORD_TYPE_IS_CHARSET (type))
+    switch (type)
     {
-      if (rcs_record_get_hash (lit) != str_hash)
+      case LIT_RECORD_TYPE_CHARSET:
       {
-        continue;
-      }
+        const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
 
-      if (rcs_record_get_length (lit) != str_size)
-      {
-        continue;
-      }
+        if (rec_p->hash != str_hash)
+        {
+          continue;
+        }
 
-      if (rcs_record_is_equal_charset (&rcs_lit_storage, lit, str_p, str_size))
-      {
-        return lit;
-      }
-    }
-    else if (RCS_RECORD_TYPE_IS_MAGIC_STR (type))
-    {
-      lit_magic_string_id_t magic_id = rcs_record_get_magic_str_id (lit);
-      const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (magic_id);
+        if (rec_p->size != str_size)
+        {
+          continue;
+        }
 
-      if (lit_get_magic_string_size (magic_id) != str_size)
-      {
-        continue;
-      }
+        if (!strncmp (rec_p + 1, (const char *) str_p, str_size))
+        {
+          return lit;
+        }
 
-      if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
-      {
-        return lit;
+        break;
       }
-    }
-    else if (RCS_RECORD_TYPE_IS_MAGIC_STR_EX (type))
-    {
-      lit_magic_string_ex_id_t magic_id = rcs_record_get_magic_str_ex_id (lit);
-      const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_ex_utf8 (magic_id);
-
-      if (lit_get_magic_string_ex_size (magic_id) != str_size)
+      case LIT_RECORD_TYPE_MAGIC_STR:
       {
-        continue;
+        lit_magic_string_id_t magic_id = (lit_magic_string_id_t) ((lit_magic_record_t *) lit)->magic_id;
+        const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (magic_id);
+
+        if (lit_get_magic_string_size (magic_id) != str_size)
+        {
+          continue;
+        }
+
+        if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
+        {
+          return lit;
+        }
+
+        break;
       }
-
-      if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
+      case LIT_RECORD_TYPE_MAGIC_STR_EX:
       {
-        return lit;
+        lit_magic_string_ex_id_t magic_id = ((lit_magic_record_t *) lit)->magic_id;
+        const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_ex_utf8 (magic_id);
+
+        if (lit_get_magic_string_ex_size (magic_id) != str_size)
+        {
+          continue;
+        }
+
+        if (!strncmp ((const char *) magic_str_p, (const char *) str_p, str_size))
+        {
+          return lit;
+        }
+
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (type == LIT_RECORD_TYPE_NUMBER);
+        break;
       }
     }
   }
@@ -183,7 +189,7 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
  */
 lit_literal_t
 lit_find_or_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< string, could be non-zero-terminated */
-                                             lit_utf8_size_t str_size) /**< length of the string */
+                                             const lit_utf8_size_t str_size) /**< length of the string */
 {
   lit_literal_t lit = lit_find_literal_by_utf8_string (str_p, str_size);
 
@@ -201,10 +207,10 @@ lit_find_or_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< 
  *
  * @return pointer to a newly created record
  */
-lit_literal_t
-lit_create_literal_from_num (ecma_number_t num) /**< number to initialize a new number literal */
+lit_literal_t __attr_always_inline___
+lit_create_literal_from_num (const ecma_number_t num) /**< number to initialize a new number literal */
 {
-  return lit_storage_create_number_literal (&rcs_lit_storage, num);
+  return lit_create_number_literal (num);
 } /* lit_create_literal_from_num */
 
 /**
@@ -231,21 +237,21 @@ lit_find_or_create_literal_from_num (ecma_number_t num) /**< number which a lite
  * @return pointer to existing or null
  */
 lit_literal_t
-lit_find_literal_by_num (ecma_number_t num) /**< a number to search for */
+lit_find_literal_by_num (const ecma_number_t num) /**< a number to search for */
 {
   lit_literal_t lit;
-  for (lit = rcs_record_get_first (&rcs_lit_storage);
+  for (lit = lit_storage;
        lit != NULL;
-       lit = rcs_record_get_next (&rcs_lit_storage, lit))
+       lit = lit_cpointer_decompress (lit->next))
   {
-    rcs_record_type_t type = rcs_record_get_type (lit);
+    const lit_record_type_t type = (lit_record_type_t) lit->type;
 
-    if (!RCS_RECORD_TYPE_IS_NUMBER (type))
+    if (type != LIT_RECORD_TYPE_NUMBER)
     {
       continue;
     }
 
-    ecma_number_t lit_num = rcs_record_get_number (&rcs_lit_storage, lit);
+    const ecma_number_t lit_num = lit_number_literal_get_number (lit);
 
     if (lit_num == num)
     {
@@ -266,37 +272,37 @@ static bool
 lit_literal_equal_charset_rec (lit_literal_t lit, /**< literal to compare */
                                lit_literal_t record) /**< charset record to compare */
 {
-  switch (rcs_record_get_type (lit))
+  switch (lit->type)
   {
-    case RCS_RECORD_TYPE_CHARSET:
+    case LIT_RECORD_TYPE_CHARSET:
     {
-      return rcs_record_is_equal (&rcs_lit_storage, lit, record);
+      return lit_literal_equal_charset (lit,
+                                        lit_charset_literal_get_charset (record),
+                                        lit_charset_literal_get_size (record));
     }
-    case RCS_RECORD_TYPE_MAGIC_STR:
+    case LIT_RECORD_TYPE_MAGIC_STR:
     {
-      lit_magic_string_id_t magic_string_id = rcs_record_get_magic_str_id (lit);
-      return rcs_record_is_equal_charset (&rcs_lit_storage,
-                                          record,
-                                          lit_get_magic_string_utf8 (magic_string_id),
-                                          lit_get_magic_string_size (magic_string_id));
+      lit_magic_string_id_t magic_string_id = lit_magic_literal_get_magic_str_id (lit);
+      return lit_literal_equal_charset (record,
+                                        lit_get_magic_string_utf8 (magic_string_id),
+                                        lit_get_magic_string_size (magic_string_id));
     }
-    case RCS_RECORD_TYPE_MAGIC_STR_EX:
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
     {
-      lit_magic_string_ex_id_t magic_string_id = rcs_record_get_magic_str_ex_id (lit);
+      lit_magic_string_ex_id_t magic_string_id = lit_magic_literal_get_magic_str_ex_id (lit);
 
-      return rcs_record_is_equal_charset (&rcs_lit_storage,
-                                          record,
-                                          lit_get_magic_string_ex_utf8 (magic_string_id),
-                                          lit_get_magic_string_ex_size (magic_string_id));
+      return lit_literal_equal_charset (record,
+                                        lit_get_magic_string_ex_utf8 (magic_string_id),
+                                        lit_get_magic_string_ex_size (magic_string_id));
     }
-    case RCS_RECORD_TYPE_NUMBER:
+    case LIT_RECORD_TYPE_NUMBER:
     {
-      ecma_number_t num = rcs_record_get_number (&rcs_lit_storage, lit);
+      ecma_number_t num = lit_number_literal_get_number (lit);
 
       lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
       lit_utf8_size_t copied = ecma_number_to_utf8_string (num, buff, sizeof (buff));
 
-      return rcs_record_is_equal_charset (&rcs_lit_storage, record, buff, copied);
+      return lit_literal_equal_charset (record, buff, copied);
     }
     default:
     {
@@ -317,25 +323,29 @@ lit_literal_equal_utf8 (lit_literal_t lit, /**< literal to compare */
                         const lit_utf8_byte_t *str_p, /**< utf-8 string to compare */
                         lit_utf8_size_t str_size) /**< string size in bytes */
 {
-  switch (rcs_record_get_type (lit))
+  switch (lit->type)
   {
-    case RCS_RECORD_TYPE_CHARSET:
+    case LIT_RECORD_TYPE_CHARSET:
     {
-      return rcs_record_is_equal_charset (&rcs_lit_storage, lit, str_p, str_size);
+      if (lit_charset_literal_get_size (lit) != str_size)
+      {
+        return 0;
+      }
+      return !strncmp ((const char *) lit_charset_literal_get_charset (lit), (const char *) str_p, str_size);
     }
-    case RCS_RECORD_TYPE_MAGIC_STR:
+    case LIT_RECORD_TYPE_MAGIC_STR:
     {
-      lit_magic_string_id_t magic_id = rcs_record_get_magic_str_id (lit);
+      lit_magic_string_id_t magic_id = lit_magic_literal_get_magic_str_id (lit);
       return lit_compare_utf8_string_and_magic_string (str_p, str_size, magic_id);
     }
-    case RCS_RECORD_TYPE_MAGIC_STR_EX:
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
     {
-      lit_magic_string_ex_id_t magic_id = rcs_record_get_magic_str_ex_id (lit);
+      lit_magic_string_ex_id_t magic_id = lit_magic_literal_get_magic_str_ex_id (lit);
       return lit_compare_utf8_string_and_magic_string_ex (str_p, str_size, magic_id);
     }
-    case RCS_RECORD_TYPE_NUMBER:
+    case LIT_RECORD_TYPE_NUMBER:
     {
-      ecma_number_t num = rcs_record_get_number (&rcs_lit_storage, lit);
+      ecma_number_t num = lit_number_literal_get_number (lit);
 
       lit_utf8_byte_t num_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
       lit_utf8_size_t num_size = ecma_number_to_utf8_string (num, num_buf, sizeof (num_buf));
@@ -356,7 +366,7 @@ lit_literal_equal_utf8 (lit_literal_t lit, /**< literal to compare */
  *         false otherwise
  */
 bool
-lit_literal_equal_num (lit_literal_t lit,     /**< literal to check */
+lit_literal_equal_num (lit_literal_t lit, /**< literal to check */
                        ecma_number_t num) /**< number to compare with */
 {
   lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
@@ -364,6 +374,29 @@ lit_literal_equal_num (lit_literal_t lit,     /**< literal to check */
 
   return lit_literal_equal_utf8 (lit, buff, copied);
 } /* lit_literal_equal_num */
+
+
+/**
+ * Check if literal contains the string equal to the buffer
+ *
+ * @return true if equal
+ *         false otherwise
+ */
+bool
+lit_literal_equal_charset (lit_literal_t lit, /**< literal to checks */
+                           const lit_utf8_byte_t *buff, /**< string buffer */
+                           lit_utf8_size_t size) /**< buffer size */
+{
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
+
+  if (size != lit_charset_literal_get_size (lit))
+  {
+    return false;
+  }
+
+  return !strncmp ((const char *) buff, (const char *) lit_charset_literal_get_charset (lit), size);
+} /* lit_literal_equal_charset */
+
 
 /**
  * Check if two literals are equal
@@ -375,38 +408,42 @@ bool
 lit_literal_equal (lit_literal_t lit1, /**< first literal */
                    lit_literal_t lit2) /**< second literal */
 {
-  switch (rcs_record_get_type (lit2))
+  switch (lit2->type)
   {
-    case RCS_RECORD_TYPE_CHARSET:
+    case LIT_RECORD_TYPE_CHARSET:
     {
       return lit_literal_equal_charset_rec (lit1, lit2);
     }
-    case RCS_RECORD_TYPE_MAGIC_STR:
+    case LIT_RECORD_TYPE_MAGIC_STR:
     {
-      lit_magic_string_id_t magic_str_id = rcs_record_get_magic_str_id (lit2);
+      lit_magic_string_id_t magic_str_id = lit_magic_literal_get_magic_str_id (lit2);
 
       return lit_literal_equal_utf8 (lit1,
                                      lit_get_magic_string_utf8 (magic_str_id),
                                      lit_get_magic_string_size (magic_str_id));
     }
-    case RCS_RECORD_TYPE_MAGIC_STR_EX:
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
     {
-      lit_magic_string_ex_id_t magic_str_ex_id = rcs_record_get_magic_str_ex_id (lit2);
+      lit_magic_string_ex_id_t magic_str_ex_id = lit_magic_literal_get_magic_str_ex_id (lit2);
 
       return lit_literal_equal_utf8 (lit1,
                                      lit_get_magic_string_ex_utf8 (magic_str_ex_id),
                                      lit_get_magic_string_ex_size (magic_str_ex_id));
     }
-    case RCS_RECORD_TYPE_NUMBER:
+    case LIT_RECORD_TYPE_NUMBER:
     {
-      ecma_number_t num = rcs_record_get_number (&rcs_lit_storage, lit2);
+      ecma_number_t num = lit_number_literal_get_number (lit2);
       return lit_literal_equal_num (lit1, num);
     }
     default:
     {
       JERRY_UNREACHABLE ();
+      break;
     }
   }
+
+  JERRY_UNREACHABLE ();
+  return 0;
 } /* lit_literal_equal */
 
 /**
@@ -421,9 +458,9 @@ lit_literal_equal_type_utf8 (lit_literal_t lit, /**< literal to compare */
                              const lit_utf8_byte_t *str_p, /**< utf-8 string */
                              lit_utf8_size_t str_size) /**< string size */
 {
-  rcs_record_type_t type = rcs_record_get_type (lit);
+  const lit_record_type_t type = (const lit_record_type_t) lit->type;
 
-  if (RCS_RECORD_TYPE_IS_NUMBER (type) || RCS_RECORD_TYPE_IS_FREE (type))
+  if (type == LIT_RECORD_TYPE_NUMBER || type == LIT_RECORD_TYPE_FREE)
   {
     return false;
   }
@@ -456,7 +493,7 @@ bool
 lit_literal_equal_type_num (lit_literal_t lit,     /**< literal to check */
                             ecma_number_t num) /**< number to compare with */
 {
-  if (!RCS_RECORD_IS_NUMBER (lit))
+  if (lit->type != LIT_RECORD_TYPE_NUMBER)
   {
     return false;
   }
@@ -475,7 +512,7 @@ bool
 lit_literal_equal_type (lit_literal_t lit1, /**< first literal */
                         lit_literal_t lit2) /**< second literal */
 {
-  if (rcs_record_get_type (lit1) != rcs_record_get_type (lit2))
+  if (lit1->type != lit2->type)
   {
     return false;
   }
@@ -496,29 +533,32 @@ lit_literal_to_utf8_string (lit_literal_t lit, /**< literal to be processed */
                             size_t size) /**< size of the buffer */
 {
   JERRY_ASSERT (buff_p != NULL && size > 0);
-  rcs_record_type_t type = rcs_record_get_type (lit);
 
-  if (RCS_RECORD_TYPE_IS_CHARSET (type))
+  switch (lit->type)
   {
-    rcs_record_get_charset (&rcs_lit_storage, lit, buff_p, size);
-    return buff_p;
+    case LIT_RECORD_TYPE_CHARSET:
+    {
+      const size_t str_size = lit_charset_literal_get_size (lit);
+      memcpy (buff_p, lit_charset_literal_get_charset (lit), (size > str_size) ? str_size : size);
+      return buff_p;
+    }
+    case LIT_RECORD_TYPE_MAGIC_STR:
+    {
+      return lit_get_magic_string_utf8 (lit_magic_literal_get_magic_str_id (lit));
+    }
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
+    {
+      return lit_get_magic_string_ex_utf8 (lit_magic_literal_get_magic_str_ex_id (lit));
+    }
+    case LIT_RECORD_TYPE_NUMBER:
+    {
+      ecma_number_t number = lit_number_literal_get_number (lit);
+      ecma_number_to_utf8_string (number, buff_p, (ssize_t) size);
+      return buff_p;
+    }
   }
-  else if (RCS_RECORD_TYPE_IS_MAGIC_STR (type))
-  {
-    return lit_get_magic_string_utf8 (rcs_record_get_magic_str_id (lit));
-  }
-  else if (RCS_RECORD_TYPE_IS_MAGIC_STR_EX (type))
-  {
-    return lit_get_magic_string_ex_utf8 (rcs_record_get_magic_str_ex_id (lit));
-  }
-  else
-  {
-    JERRY_ASSERT (RCS_RECORD_TYPE_IS_NUMBER (type));
 
-    ecma_number_t number = rcs_record_get_number (&rcs_lit_storage, lit);
-    ecma_number_to_utf8_string (number, buff_p, (ssize_t) size);
-    return buff_p;
-  }
+  JERRY_UNREACHABLE ();
 } /* lit_literal_to_utf8_string */
 
 /**
@@ -548,9 +588,9 @@ lit_literal_exists (lit_literal_t lit) /**< literal to check for existence */
 {
   lit_literal_t current_lit;
 
-  for (current_lit = rcs_record_get_first (&rcs_lit_storage);
+  for (current_lit = lit_storage;
        current_lit != NULL;
-       current_lit = rcs_record_get_next (&rcs_lit_storage, current_lit))
+       current_lit = lit_cpointer_decompress (current_lit->next))
   {
     if (current_lit == lit)
     {
@@ -567,10 +607,9 @@ lit_literal_exists (lit_literal_t lit) /**< literal to check for existence */
  * @return literal
  */
 lit_literal_t
-lit_get_literal_by_cp (rcs_cpointer_t lit_cp) /**< compressed pointer to literal */
+lit_get_literal_by_cp (lit_cpointer_t lit_cp) /**< compressed pointer to literal */
 {
-  JERRY_ASSERT (lit_cp.u.packed_value != MEM_CP_NULL);
-  lit_literal_t lit = rcs_cpointer_decompress (lit_cp);
+  lit_literal_t lit = lit_cpointer_decompress (lit_cp);
   JERRY_ASSERT (lit_literal_exists (lit));
 
   return lit;
@@ -579,25 +618,41 @@ lit_get_literal_by_cp (rcs_cpointer_t lit_cp) /**< compressed pointer to literal
 lit_string_hash_t
 lit_charset_literal_get_hash (lit_literal_t lit) /**< literal */
 {
-  return rcs_record_get_hash (lit);
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
+
+  const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
+
+  return (lit_string_hash_t) rec_p->hash;
 } /* lit_charset_literal_get_hash */
 
 lit_magic_string_id_t
 lit_magic_literal_get_magic_str_id (lit_literal_t lit) /**< literal */
 {
-  return rcs_record_get_magic_str_id (lit);
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_MAGIC_STR);
+
+  const lit_magic_record_t *const rec_p = (const lit_magic_record_t *) lit;
+
+  return (lit_magic_string_id_t) rec_p->magic_id;
 } /* lit_magic_literal_get_magic_str_id */
 
 lit_magic_string_ex_id_t
-lit_magic_literal_ex_get_magic_str_id (lit_literal_t lit) /**< literal */
+lit_magic_literal_get_magic_str_ex_id (lit_literal_t lit) /**< literal */
 {
-  return rcs_record_get_magic_str_ex_id (lit);
-} /* lit_magic_literal_ex_get_magic_str_id */
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_MAGIC_STR_EX);
 
-lit_utf8_size_t
+  const lit_magic_record_t *const rec_p = (const lit_magic_record_t *) lit;
+
+  return (lit_magic_string_ex_id_t) rec_p->magic_id;
+} /* lit_magic_literal_get_magic_str_ex_id */
+
+lit_utf8_size_t __attr_always_inline___ __attr_pure___
 lit_charset_literal_get_size (lit_literal_t lit) /**< literal */
 {
-  return rcs_record_get_length (lit);
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
+
+  const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
+
+  return (lit_utf8_size_t) rec_p->size;
 } /* lit_charset_literal_get_size */
 
 /**
@@ -605,41 +660,32 @@ lit_charset_literal_get_size (lit_literal_t lit) /**< literal */
  *
  * @return code units count
  */
-ecma_length_t
+ecma_length_t __attr_always_inline___ __attr_pure___
 lit_charset_literal_get_length (lit_literal_t lit) /**< literal */
 {
-  TODO ("Add special case for literals which doesn't contain long characters");
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
 
-  rcs_iterator_t it_ctx = rcs_iterator_create (&rcs_lit_storage, lit);
-  rcs_iterator_skip (&it_ctx, RCS_CHARSET_HEADER_SIZE);
+  const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
 
-  lit_utf8_size_t lit_utf8_str_size = rcs_record_get_length (lit);
-  ecma_length_t length = 0;
-  lit_utf8_size_t i = 0;
-
-  while (i < lit_utf8_str_size)
-  {
-    lit_utf8_byte_t byte;
-    lit_utf8_size_t bytes_to_skip;
-
-    rcs_iterator_read (&it_ctx, &byte, sizeof (lit_utf8_byte_t));
-    bytes_to_skip = lit_get_unicode_char_size_by_utf8_first_byte (byte);
-    rcs_iterator_skip (&it_ctx, bytes_to_skip);
-
-    i += bytes_to_skip;
-    length++;
-  }
-
-#ifndef JERRY_NDEBUG
-  rcs_iterator_skip (&it_ctx, rcs_record_get_alignment_bytes_count (lit));
-  JERRY_ASSERT (rcs_iterator_finished (&it_ctx));
-#endif
-
-  return length;
+  return (ecma_length_t) rec_p->length;
 } /* lit_charset_literal_get_length */
 
-ecma_number_t
+ecma_number_t __attr_always_inline___ __attr_pure___
 lit_number_literal_get_number (lit_literal_t lit) /**< literal */
 {
-  return rcs_record_get_number (&rcs_lit_storage, lit);
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_NUMBER);
+
+  const lit_number_record_t *const rec_p = (const lit_number_record_t *) lit;
+
+  return rec_p->number;
 } /* lit_number_literal_get_number */
+
+lit_utf8_byte_t * __attr_always_inline___ __attr_pure___
+lit_charset_literal_get_charset (lit_literal_t lit) /**< literal */
+{
+  JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
+
+  const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
+
+  return (lit_utf8_byte_t *) (rec_p + 1);
+} /* lit_charset_literal_get_charset */

@@ -25,6 +25,7 @@
 #define JERRY_ECMA_HELPERS_H
 
 #include "ecma-globals.h"
+#include "lit-cpointer.h"
 #include "lit-strings.h"
 #include "mem-allocator.h"
 

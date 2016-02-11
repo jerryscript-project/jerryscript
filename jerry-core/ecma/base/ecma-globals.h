@@ -25,7 +25,6 @@
 
 #include "config.h"
 #include "jrt.h"
-#include "lit-globals.h"
 #include "lit-magic-strings.h"
 #include "mem-allocator.h"
 
@@ -384,7 +383,7 @@ typedef struct ecma_object_t
  */
 #define ECMA_OBJECT_OBJ_TYPE_POS (ECMA_OBJECT_OBJ_EXTENSIBLE_POS + \
                                   ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH)
-#define ECMA_OBJECT_OBJ_TYPE_WIDTH (4)
+#define ECMA_OBJECT_OBJ_TYPE_WIDTH (3)
 
 /**
  * Compressed pointer to prototype object (ecma_object_t)
@@ -721,7 +720,7 @@ typedef struct ecma_string_t
   union
   {
     /** Index of string in literal table */
-    lit_cpointer_t lit_cp;
+    mem_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
     __extension__ mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;

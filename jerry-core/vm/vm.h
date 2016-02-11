@@ -18,6 +18,7 @@
 #define VM_H
 
 #include "ecma-globals.h"
+#include "lit-cpointer.h"
 #include "jrt.h"
 #include "vm-defines.h"
 

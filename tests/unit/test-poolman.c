@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +48,7 @@ main (int __attr_unused___ argc,
 
     for (size_t j = 0; j < subiters; j++)
     {
-      ptrs[j] = mem_pools_alloc ();
-      // JERRY_ASSERT (ptrs[j] != NULL);
+      ptrs[j] = (uint8_t *) mem_pools_alloc ();
 
       if (ptrs[j] != NULL)
       {
@@ -85,11 +85,11 @@ main (int __attr_unused___ argc,
 
   printf ("Pools stats:\n");
   printf (" Chunk size: %u\n"
-          "  Pools: %lu\n"
-          "  Allocated chunks: %lu\n"
-          "  Free chunks: %lu\n"
-          "  Peak pools: %lu\n"
-          "  Peak allocated chunks: %lu\n\n",
+          "  Pools: %zu\n"
+          "  Allocated chunks: %zu\n"
+          "  Free chunks: %zu\n"
+          "  Peak pools: %zu\n"
+          "  Peak allocated chunks: %zu\n\n",
           MEM_POOL_CHUNK_SIZE,
           stats.pools_count,
           stats.allocated_chunks,

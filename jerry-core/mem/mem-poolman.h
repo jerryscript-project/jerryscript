@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +32,8 @@
 
 extern void mem_pools_init (void);
 extern void mem_pools_finalize (void);
-extern uint8_t *mem_pools_alloc (void);
-extern void mem_pools_free (uint8_t *);
+extern void *mem_pools_alloc (void);
+extern void mem_pools_free (void *);
 extern void mem_pools_collect_empty (void);
 
 #ifdef MEM_STATS
@@ -50,17 +51,14 @@ typedef struct
   /** non-resettable peak pools' count */
   size_t global_peak_pools_count;
 
-  /** allocated chunks count */
-  size_t allocated_chunks;
-
-  /** peak allocated chunks count */
-  size_t peak_allocated_chunks;
-
-  /** non-resettable peak allocated chunks count */
-  size_t global_peak_allocated_chunks;
-
   /** free chunks count */
   size_t free_chunks;
+
+  /* Number of newly allocated pool chunks */
+  size_t new_alloc_count;
+
+  /* Number of reused pool chunks */
+  size_t reused_count;
 } mem_pools_stats_t;
 
 extern void mem_pools_get_stats (mem_pools_stats_t *);

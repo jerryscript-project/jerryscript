@@ -1,5 +1,5 @@
- /* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged
+/* Copyright 2015 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@
 
 #include "lit-literal.h"
 #include "lit-literal-storage.h"
-#include "rcs-allocator.h"
-#include "rcs-iterator.h"
-#include "rcs-records.h"
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 
@@ -36,91 +33,87 @@ lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
                    size_t buffer_size, /**< buffer size */
                    size_t *in_out_buffer_offset_p) /**< in-out: buffer write offset */
 {
-  rcs_record_type_t record_type = rcs_record_get_type (lit);
-
-  if (RCS_RECORD_TYPE_IS_NUMBER (record_type))
+  const lit_record_type_t record_type = (lit_record_type_t) lit->type;
+  switch (record_type)
   {
-    double num_value = rcs_record_get_number (&rcs_lit_storage, lit);
-    size_t size = sizeof (num_value);
-
-    if (!jrt_write_to_buffer_by_offset (buffer_p,
-                                        buffer_size,
-                                        in_out_buffer_offset_p,
-                                        &num_value,
-                                        size))
+    case LIT_RECORD_TYPE_CHARSET:
     {
-      return 0;
-    }
+      const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit;
 
-    return (uint32_t) size;
-  }
-
-  if (RCS_RECORD_TYPE_IS_CHARSET (record_type))
-  {
-    lit_utf8_size_t length = rcs_record_get_length (lit);
-    if (!jrt_write_to_buffer_by_offset (buffer_p,
-                                        buffer_size,
-                                        in_out_buffer_offset_p,
-                                        &length,
-                                        sizeof (length)))
-    {
-      return 0;
-    }
-
-    rcs_iterator_t it_ctx = rcs_iterator_create (&rcs_lit_storage, lit);
-    rcs_iterator_skip (&it_ctx, RCS_CHARSET_HEADER_SIZE);
-
-    lit_utf8_size_t i;
-    for (i = 0; i < length; ++i)
-    {
-      lit_utf8_byte_t next_byte;
-      rcs_iterator_read (&it_ctx, &next_byte, sizeof (lit_utf8_byte_t));
-
+      lit_utf8_size_t size = lit_charset_literal_get_size (lit);
       if (!jrt_write_to_buffer_by_offset (buffer_p,
                                           buffer_size,
                                           in_out_buffer_offset_p,
-                                          &next_byte,
-                                          sizeof (next_byte)))
+                                          &size,
+                                          sizeof (size)))
       {
         return 0;
       }
 
-      rcs_iterator_skip (&it_ctx, sizeof (lit_utf8_byte_t));
+
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          (void *) (rec_p + 1),
+                                          size))
+      {
+        return 0;
+      }
+
+      return (uint32_t) (sizeof (uint32_t) + size * sizeof (uint8_t));
+
     }
-
-    return (uint32_t) (sizeof (uint32_t) + length * sizeof (uint8_t));
-  }
-
-  if (RCS_RECORD_TYPE_IS_MAGIC_STR (record_type))
-  {
-    lit_magic_string_id_t id = rcs_record_get_magic_str_id (lit);
-
-    if (!jrt_write_to_buffer_by_offset (buffer_p,
-                                        buffer_size,
-                                        in_out_buffer_offset_p,
-                                        &id,
-                                        sizeof (id)))
+    case LIT_RECORD_TYPE_NUMBER:
     {
-      return 0;
+      double num_value = lit_number_literal_get_number (lit);
+      const size_t size = sizeof (num_value);
+
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          &num_value,
+                                          size))
+      {
+        return 0;
+      }
+
+      return (uint32_t) size;
     }
-
-    return (uint32_t) sizeof (lit_magic_string_id_t);
-  }
-
-  if (RCS_RECORD_TYPE_IS_MAGIC_STR_EX (record_type))
-  {
-    lit_magic_string_ex_id_t id = rcs_record_get_magic_str_ex_id (lit);
-
-    if (!jrt_write_to_buffer_by_offset (buffer_p,
-                                        buffer_size,
-                                        in_out_buffer_offset_p,
-                                        &id,
-                                        sizeof (id)))
+    case LIT_RECORD_TYPE_MAGIC_STR:
     {
-      return 0;
-    }
+      lit_magic_string_id_t id = lit_magic_literal_get_magic_str_id (lit);
 
-    return (uint32_t) sizeof (lit_magic_string_ex_id_t);
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          &id,
+                                          sizeof (id)))
+      {
+        return 0;
+      }
+
+      return (uint32_t) sizeof (lit_magic_string_id_t);
+    }
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
+    {
+      lit_magic_string_ex_id_t id = lit_magic_literal_get_magic_str_ex_id (lit);
+
+      if (!jrt_write_to_buffer_by_offset (buffer_p,
+                                          buffer_size,
+                                          in_out_buffer_offset_p,
+                                          &id,
+                                          sizeof (id)))
+      {
+        return 0;
+      }
+
+      return (uint32_t) sizeof (lit_magic_string_ex_id_t);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
   }
 
   JERRY_UNREACHABLE ();
@@ -143,7 +136,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
                                 uint32_t *out_map_num_p, /**< out: number of literals */
                                 uint32_t *out_lit_table_size_p) /**< out: number of bytes, dumped to snapshot buffer */
 {
-  uint32_t literals_num = lit_storage_count_literals (&rcs_lit_storage);
+  uint32_t literals_num = lit_count_literals ();
   uint32_t lit_table_size = 0;
 
   *out_map_p = NULL;
@@ -167,18 +160,18 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
 
     size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
     lit_mem_to_snapshot_id_map_entry_t *id_map_p;
-    id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block (id_map_size, MEM_HEAP_ALLOC_SHORT_TERM);
+    id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block_store_size (id_map_size);
 
     uint32_t literal_index = 0;
     lit_literal_t lit;
 
-    for (lit = rcs_record_get_first (&rcs_lit_storage);
+    for (lit = lit_storage;
          lit != NULL;
-         lit = rcs_record_get_next (&rcs_lit_storage, lit))
+         lit = lit_cpointer_decompress (lit->next))
     {
-      rcs_record_type_t record_type = rcs_record_get_type (lit);
+      lit_record_type_t record_type = (lit_record_type_t) lit->type;
 
-      if (RCS_RECORD_TYPE_IS_FREE (record_type))
+      if (record_type == LIT_RECORD_TYPE_FREE)
       {
         continue;
       }
@@ -202,7 +195,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
         break;
       }
 
-      rcs_cpointer_t lit_cp = rcs_cpointer_compress (lit);
+      lit_cpointer_t lit_cp = lit_cpointer_compress (lit);
       id_map_p[literal_index].literal_id = lit_cp;
       id_map_p[literal_index].literal_offset = lit_table_size;
 
@@ -214,7 +207,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
 
     if (!is_ok)
     {
-      mem_heap_free_block (id_map_p);
+      mem_heap_free_block_size_stored (id_map_p);
       return false;
     }
 
@@ -291,7 +284,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
 
   size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
   lit_mem_to_snapshot_id_map_entry_t *id_map_p;
-  id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block (id_map_size, MEM_HEAP_ALLOC_SHORT_TERM);
+  id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block_store_size (id_map_size);
 
   bool is_ok = true;
   uint32_t lit_index;
@@ -301,7 +294,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
     uint32_t offset = (uint32_t) lit_table_read;
     JERRY_ASSERT (offset == lit_table_read);
 
-    rcs_record_type_t type;
+    lit_record_type_t type;
     if (!jrt_read_from_buffer_by_offset (lit_table_p,
                                          lit_table_size,
                                          &lit_table_read,
@@ -314,7 +307,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
 
     lit_literal_t lit;
 
-    if (RCS_RECORD_TYPE_IS_CHARSET (type))
+    if (type == LIT_RECORD_TYPE_CHARSET)
     {
       lit_utf8_size_t length;
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
@@ -331,7 +324,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       lit = (lit_literal_t) lit_find_or_create_literal_from_utf8_string (lit_table_p + lit_table_read, length);
       lit_table_read += length;
     }
-    else if (RCS_RECORD_TYPE_IS_MAGIC_STR (type))
+    else if (type == LIT_RECORD_TYPE_MAGIC_STR)
     {
       lit_magic_string_id_t id;
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
@@ -353,7 +346,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
        */
       lit = (lit_literal_t) lit_find_or_create_literal_from_utf8_string (magic_str_p, magic_str_sz);
     }
-    else if (RCS_RECORD_TYPE_IS_MAGIC_STR_EX (type))
+    else if (type == LIT_RECORD_TYPE_MAGIC_STR_EX)
     {
       lit_magic_string_ex_id_t id;
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
@@ -375,7 +368,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
        */
       lit = (lit_literal_t) lit_find_or_create_literal_from_utf8_string (magic_str_ex_p, magic_str_ex_sz);
     }
-    else if (RCS_RECORD_TYPE_IS_NUMBER (type))
+    else if (type == LIT_RECORD_TYPE_NUMBER)
     {
       double num;
       if (!jrt_read_from_buffer_by_offset (lit_table_p,
@@ -397,7 +390,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
     }
 
     id_map_p[lit_index].literal_offset = offset;
-    id_map_p[lit_index].literal_id = rcs_cpointer_compress (lit);
+    id_map_p[lit_index].literal_id = lit_cpointer_compress (lit);
   }
 
   if (is_ok)
@@ -408,7 +401,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
     return true;
   }
 
-  mem_heap_free_block (id_map_p);
+  mem_heap_free_block_size_stored (id_map_p);
   return false;
 } /* lit_load_literals_from_snapshot */
 

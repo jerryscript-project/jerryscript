@@ -1,5 +1,5 @@
 /* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged
+ * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,85 +15,144 @@
  */
 
 #include "lit-literal-storage.h"
+#include "lit-cpointer.h"
 
 #include "ecma-helpers.h"
-#include "rcs-allocator.h"
-#include "rcs-iterator.h"
-#include "rcs-records.h"
 
-rcs_record_set_t rcs_lit_storage;
+lit_record_t *lit_storage = NULL;
 
 /**
  * Create charset record in the literal storage
  *
  * @return pointer to the created record
  */
-rcs_record_t *
-lit_storage_create_charset_literal (rcs_record_set_t *rec_set_p, /**< recordset */
-                                    const lit_utf8_byte_t *str_p, /**< string to be placed into the record */
-                                    const lit_utf8_size_t buf_size) /**< size of the string (in bytes) */
+lit_record_t *
+lit_create_charset_literal (const lit_utf8_byte_t *str_p, /**< string to be placed into the record */
+                            const lit_utf8_size_t buf_size) /**< size in bytes of the buffer which holds the string */
 {
-  const size_t record_size = RCS_CHARSET_HEADER_SIZE + buf_size;
-  const size_t aligned_record_size = JERRY_ALIGNUP (record_size, RCS_DYN_STORAGE_LENGTH_UNIT);
-  const size_t alignment = aligned_record_size - record_size;
+  lit_charset_record_t *rec_p = (lit_charset_record_t *) mem_heap_alloc_block (buf_size + LIT_CHARSET_HEADER_SIZE);
 
-  rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_CHARSET, aligned_record_size);
+  rec_p->type = LIT_RECORD_TYPE_CHARSET;
+  rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
+  lit_storage = (lit_record_t *) rec_p;
 
-  rcs_record_set_alignment_bytes_count (rec_p, (uint8_t) alignment);
-  rcs_record_set_charset (rec_set_p, rec_p, str_p, buf_size);
-  rcs_record_set_hash (rec_p, lit_utf8_string_calc_hash (str_p, rcs_record_get_length (rec_p)));
+  rec_p->hash = (uint8_t) lit_utf8_string_calc_hash (str_p, buf_size);
+  rec_p->size = (uint16_t) buf_size;
+  rec_p->length = (uint16_t) lit_utf8_string_length (str_p, buf_size);
+  memcpy (rec_p + 1, str_p, buf_size);
 
-  return rec_p;
-} /* lit_storage_create_charset_literal */
+  return (lit_record_t *) rec_p;
+} /* lit_create_charset_literal */
 
 /**
  * Create magic string record in the literal storage.
  *
  * @return  pointer to the created record
  */
-rcs_record_t *
-lit_storage_create_magic_literal (rcs_record_set_t *rec_set_p, /**< recordset */
-                                  lit_magic_string_id_t id) /**< id of magic string */
+lit_record_t *
+lit_create_magic_literal (const lit_magic_string_id_t id) /**< id of magic string */
 {
-  rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_MAGIC_STR, RCS_MAGIC_STR_HEADER_SIZE);
-  rcs_record_set_magic_str_id (rec_p, id);
+  lit_magic_record_t *rec_p = (lit_magic_record_t *) mem_heap_alloc_block (sizeof (lit_magic_record_t));
+  rec_p->type = LIT_RECORD_TYPE_MAGIC_STR;
+  rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
+  lit_storage = (lit_record_t *) rec_p;
 
-  return rec_p;
-} /* lit_storage_create_magic_literal */
+  rec_p->magic_id = (uint32_t) id;
+
+  return (lit_record_t *) rec_p;
+} /* lit_create_magic_literal */
 
 /**
  * Create external magic string record in the literal storage.
  *
  * @return  pointer to the created record
  */
-rcs_record_t *
-lit_storage_create_magic_literal_ex (rcs_record_set_t *rec_set_p, /**< recordset */
-                                     lit_magic_string_ex_id_t id) /**< id of magic string */
+lit_record_t *
+lit_create_magic_literal_ex (const lit_magic_string_ex_id_t id) /**< id of magic string */
 {
-  rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_MAGIC_STR_EX, RCS_MAGIC_STR_HEADER_SIZE);
-  rcs_record_set_magic_str_ex_id (rec_p, id);
+  lit_magic_record_t *rec_p = (lit_magic_record_t *) mem_heap_alloc_block (sizeof (lit_magic_record_t));
+  rec_p->type = LIT_RECORD_TYPE_MAGIC_STR_EX;
+  rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
+  lit_storage = (lit_record_t *) rec_p;
 
-  return rec_p;
-} /* lit_storage_create_magic_literal_ex */
+  rec_p->magic_id = (uint32_t) id;
+
+  return (lit_record_t *) rec_p;
+} /* lit_create_magic_literal_ex */
 
 /**
  * Create number record in the literal storage.
  *
  * @return  pointer to the created record
  */
-rcs_record_t *
-lit_storage_create_number_literal (rcs_record_set_t *rec_set_p, /**< recordset */
-                                   ecma_number_t num) /**< numeric value */
+lit_record_t *
+lit_create_number_literal (const ecma_number_t num) /**< numeric value */
 {
-  const size_t record_size = RCS_NUMBER_HEADER_SIZE + sizeof (ecma_number_t);
-  rcs_record_t *rec_p = rcs_alloc_record (rec_set_p, RCS_RECORD_TYPE_NUMBER, record_size);
+  lit_number_record_t *rec_p = (lit_number_record_t *) mem_heap_alloc_block (sizeof (lit_number_record_t));
 
-  rcs_iterator_t it_ctx = rcs_iterator_create (rec_set_p, rec_p);
-  rcs_iterator_skip (&it_ctx, RCS_NUMBER_HEADER_SIZE);
-  rcs_iterator_write (&it_ctx, &num, sizeof (ecma_number_t));
+  rec_p->type = (uint8_t) LIT_RECORD_TYPE_NUMBER;
+  rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
+  lit_storage = (lit_record_t *) rec_p;
 
-  return rec_p;
-} /* lit_storage_create_number_literal */
+  rec_p->number = num;
+
+  return (lit_record_t *) rec_p;
+} /* lit_create_number_literal */
+
+/**
+ * Get size of stored literal
+ *
+ * @return size of literal
+ */
+size_t __attr_pure___
+lit_get_literal_size (const lit_record_t *lit_p) /**< literal record */
+{
+  const lit_record_type_t type = (const lit_record_type_t) lit_p->type;
+  size_t size = 0;
+
+  switch (type)
+  {
+    case LIT_RECORD_TYPE_NUMBER:
+    {
+      size = sizeof (lit_number_record_t);
+      break;
+    }
+    case LIT_RECORD_TYPE_CHARSET:
+    {
+      const lit_charset_record_t *const rec_p = (const lit_charset_record_t *) lit_p;
+      size = rec_p->size + LIT_CHARSET_HEADER_SIZE;
+      break;
+    }
+    case LIT_RECORD_TYPE_MAGIC_STR:
+    case LIT_RECORD_TYPE_MAGIC_STR_EX:
+    {
+      size = sizeof (lit_magic_record_t);
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
+  }
+
+  JERRY_ASSERT (size > 0);
+  return size;
+} /* lit_get_literal_size */
+
+
+/**
+ * Free stored literal
+ *
+ * @return pointer to the next literal in the list
+ */
+lit_record_t *
+lit_free_literal (lit_record_t *lit_p) /**< literal record */
+{
+  lit_record_t *const ret_p = lit_cpointer_decompress (lit_p->next);
+  mem_heap_free_block (lit_p, lit_get_literal_size (lit_p));
+  return ret_p;
+} /* lit_free_literal */
 
 /**
  * Count literal records in the storage
@@ -101,85 +160,80 @@ lit_storage_create_number_literal (rcs_record_set_t *rec_set_p, /**< recordset *
  * @return number of literals
  */
 uint32_t
-lit_storage_count_literals (rcs_record_set_t *rec_set_p) /**< recordset */
+lit_count_literals ()
 {
   uint32_t num = 0;
-  rcs_record_t *rec_p;
+  lit_record_t *rec_p;
 
-  for (rec_p = rcs_record_get_first (rec_set_p);
+  for (rec_p = lit_storage;
        rec_p != NULL;
-       rec_p = rcs_record_get_next (rec_set_p, rec_p))
+       rec_p = lit_cpointer_decompress (rec_p->next))
   {
-    if (rcs_record_get_type (rec_p) >= RCS_RECORD_TYPE_FIRST)
+    if (rec_p->type > LIT_RECORD_TYPE_FREE)
     {
       num++;
     }
   }
 
   return num;
-} /* lit_storage_count_literals */
+} /* lit_count_literals */
 
 /**
  * Dump the contents of the literal storage.
  */
 void
-lit_storage_dump_literals (rcs_record_set_t *rec_set_p) /**< recordset */
+lit_dump_literals ()
 {
-  rcs_record_t *rec_p;
+  lit_record_t *rec_p;
+  size_t i;
 
   printf ("LITERALS:\n");
 
-  for (rec_p = rcs_record_get_first (rec_set_p);
+  for (rec_p = lit_storage;
        rec_p != NULL;
-       rec_p = rcs_record_get_next (rec_set_p, rec_p))
+       rec_p = lit_cpointer_decompress (rec_p->next))
   {
     printf ("%p ", rec_p);
-    printf ("[%3zu] ", rcs_record_get_size (rec_p));
+    printf ("[%3zu] ", lit_get_literal_size (rec_p));
 
-    switch (rcs_record_get_type (rec_p))
+    switch (rec_p->type)
     {
-      case RCS_RECORD_TYPE_CHARSET:
+      case LIT_RECORD_TYPE_CHARSET:
       {
-        rcs_iterator_t it_ctx = rcs_iterator_create (rec_set_p, rec_p);
-        rcs_iterator_skip (&it_ctx, RCS_CHARSET_HEADER_SIZE);
-
-        size_t str_len = rcs_record_get_length (rec_p);
-        size_t i;
-
-        for (i = 0; i < str_len; ++i)
+        const lit_charset_record_t *const record_p = (const lit_charset_record_t *) rec_p;
+        char *str = (char *) (record_p + 1);
+        for (i = 0; i < record_p->size; ++i, ++str)
         {
           FIXME ("Support proper printing of characters which occupy more than one byte.")
 
-          lit_utf8_byte_t chr;
-          rcs_iterator_read (&it_ctx, &chr, sizeof (lit_utf8_byte_t));
-          rcs_iterator_skip (&it_ctx, sizeof (lit_utf8_byte_t));
-
-          printf ("%c", chr);
+          printf ("%c", *str);
         }
 
         printf (" : STRING");
 
         break;
       }
-      case RCS_RECORD_TYPE_MAGIC_STR:
+      case LIT_RECORD_TYPE_MAGIC_STR:
       {
-        lit_magic_string_id_t id = rcs_record_get_magic_str_id (rec_p);
+        lit_magic_string_id_t id = (lit_magic_string_id_t) ((lit_magic_record_t *) rec_p)->magic_id;
         printf ("%s : MAGIC STRING", lit_get_magic_string_utf8 (id));
         printf (" [id=%d] ", id);
 
         break;
       }
-      case RCS_RECORD_TYPE_MAGIC_STR_EX:
+      case LIT_RECORD_TYPE_MAGIC_STR_EX:
       {
-        lit_magic_string_ex_id_t id = rcs_record_get_magic_str_ex_id (rec_p);
+        lit_magic_string_ex_id_t id = ((lit_magic_record_t *) rec_p)->magic_id;
         printf ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_utf8 (id));
         printf (" [id=%d] ", id);
 
         break;
       }
-      case RCS_RECORD_TYPE_NUMBER:
+      case LIT_RECORD_TYPE_NUMBER:
       {
-        ecma_number_t value = rcs_record_get_number (rec_set_p, rec_p);
+        const lit_number_record_t *const record_p = (const lit_number_record_t *) rec_p;
+        ecma_number_t value;
+        memcpy (&value, &record_p->number, sizeof (ecma_number_t));
 
         if (ecma_number_is_nan (value))
         {
@@ -200,10 +254,10 @@ lit_storage_dump_literals (rcs_record_set_t *rec_set_p) /**< recordset */
       }
       default:
       {
-        printf (" : EMPTY RECORD");
+        JERRY_UNREACHABLE ();
       }
     }
 
     printf ("\n");
   }
-} /* lit_storage_dump_literals */
+} /* lit_dump_literals */

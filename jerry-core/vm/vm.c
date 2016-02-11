@@ -29,8 +29,8 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
+#include "lit-literal-storage.h"
 #include "opcodes.h"
-#include "rcs-records.h"
 #include "vm.h"
 #include "vm-stack.h"
 
@@ -269,7 +269,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                              lit_cpointer_t lit_cp) /**< literal */
 {
   ecma_compiled_code_t *bytecode_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                                lit_cp.u.value.base_cp);
+                                                                lit_cp);
   bool is_function = ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION) != 0);
 
   if (is_function)
@@ -390,8 +390,8 @@ enum
     else if (literal_index < const_literal_end) \
     { \
       lit_cpointer_t lit_cpointer = literal_start_p[literal_index]; \
-      lit_literal_t lit = rcs_cpointer_decompress (lit_cpointer); \
-      if (unlikely (RCS_RECORD_IS_NUMBER (lit))) \
+      lit_literal_t lit = lit_cpointer_decompress (lit_cpointer); \
+      if (unlikely (LIT_RECORD_IS_NUMBER (lit))) \
       { \
         ecma_number_t *number_p = ecma_alloc_number (); \
         *number_p = lit_number_literal_get_number (lit); \

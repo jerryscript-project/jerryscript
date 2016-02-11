@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +61,7 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
           JERRY_ASSERT (ptrs[i][k] == 0);
         }
 
-        mem_heap_free_block (ptrs[i]);
+        mem_heap_free_block_size_stored (ptrs[i]);
         ptrs[i] = NULL;
       }
     }
@@ -77,37 +78,18 @@ main (int __attr_unused___ argc,
 
   mem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
 
-  mem_heap_print (true, false, true);
+  mem_heap_print ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      if (rand () % 2)
-      {
-        size_t size = (size_t) rand () % test_threshold_block_size;
-        ptrs[j] = (uint8_t*) mem_heap_alloc_block (size,
-                                                   (rand () % 2) ?
-                                                   MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
-        sizes[j] = size;
-        is_one_chunked[j] = false;
-      }
-      else
-      {
-        ptrs[j] = (uint8_t*) mem_heap_alloc_chunked_block ((rand () % 2) ?
-                                                           MEM_HEAP_ALLOC_LONG_TERM : MEM_HEAP_ALLOC_SHORT_TERM);
-        sizes[j] = mem_heap_get_chunked_block_data_size ();
-        is_one_chunked[j] = true;
-      }
+      size_t size = (size_t) rand () % test_threshold_block_size;
+      ptrs[j] = (uint8_t*) mem_heap_alloc_block_store_size (size);
+      sizes[j] = size;
 
       JERRY_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
       memset (ptrs[j], 0, sizes[j]);
-
-      if (is_one_chunked[j])
-      {
-        JERRY_ASSERT (ptrs[j] != NULL
-                      && mem_heap_get_chunked_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
-      }
     }
 
     // mem_heap_print (true);
@@ -121,20 +103,14 @@ main (int __attr_unused___ argc,
           JERRY_ASSERT (ptrs[j][k] == 0);
         }
 
-        if (is_one_chunked[j])
-        {
-          JERRY_ASSERT (sizes[j] == 0
-                        || mem_heap_get_chunked_block_start (ptrs[j] + (size_t) rand () % sizes[j]) == ptrs[j]);
-        }
-
-        mem_heap_free_block (ptrs[j]);
+        mem_heap_free_block_size_stored (ptrs[j]);
 
         ptrs[j] = NULL;
       }
     }
   }
 
-  mem_heap_print (true, false, true);
+  mem_heap_print ();
 
   return 0;
 } /* main */

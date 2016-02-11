@@ -18,6 +18,7 @@
 #include "jerry-snapshot.h"
 #include "js-parser-internal.h"
 #include "lit-literal.h"
+#include "lit-cpointer.h"
 
 #ifdef PARSER_DUMP_BYTE_CODE
 static int parser_show_instrs = PARSER_FALSE;
@@ -100,7 +101,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       {
         lit_literal_t lit = lit_find_or_create_literal_from_utf8_string (char_p,
                                                                          literal_p->prop.length);
-        literal_p->u.value = rcs_cpointer_compress (lit);
+        literal_p->u.value = lit_cpointer_compress (lit);
 
         if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
@@ -521,7 +522,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
         lit_literal_t lit = lit_find_or_create_literal_from_utf8_string (literal_p->u.char_p,
                                                                          literal_p->prop.length);
-        literal_pool_p[literal_p->prop.index] = rcs_cpointer_compress (lit);
+        literal_pool_p[literal_p->prop.index] = lit_cpointer_compress (lit);
 
         if (!context_p->is_show_opcodes
             && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
@@ -535,7 +536,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
       else if ((literal_p->type == LEXER_FUNCTION_LITERAL)
                || (literal_p->type == LEXER_REGEXP_LITERAL))
       {
-        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].u.value.base_cp,
+        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index],
                                    literal_p->u.bytecode_p);
       }
       else
@@ -579,7 +580,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         JERRY_ASSERT (literal_p != NULL
                        && literal_p->type == LEXER_FUNCTION_LITERAL);
         init_index = literal_p->prop.index;
-        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].u.value.base_cp,
+        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index],
                                    literal_p->u.bytecode_p);
       }
 
@@ -1723,7 +1724,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         const uint8_t *char_p = context_p->source_end_p - (source_data & 0xfffff);
         lit_literal_t lit = lit_find_or_create_literal_from_utf8_string (char_p,
                                                                          source_data >> 20);
-        literal_pool_p[literal_p->prop.index] = rcs_cpointer_compress (lit);
+        literal_pool_p[literal_p->prop.index] = lit_cpointer_compress (lit);
       }
     }
   }
@@ -1753,7 +1754,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       {
         if (literal_p->u.char_p == NULL)
         {
-          literal_pool_p[argument_count] = rcs_cpointer_null_cp ();
+          literal_pool_p[argument_count] = lit_cpointer_null_cp ();
           argument_count++;
           continue;
         }
@@ -1775,7 +1776,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (context_p->status_flags & PARSER_NAMED_FUNCTION_EXP)
   {
-    ECMA_SET_NON_NULL_POINTER (literal_pool_p[const_literal_end].u.value.base_cp,
+    ECMA_SET_NON_NULL_POINTER (literal_pool_p[const_literal_end],
                                compiled_code_p);
   }
 

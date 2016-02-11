@@ -43,4 +43,9 @@
  */
 #define MEM_ALIGNMENT_LOG   3
 
+/**
+ * Logarithm of required alignment for allocated pools
+ */
+#define MEM_POOL_ALIGNMENT_LOG   3
+
 #endif /* MEM_CONFIG_H */

@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +49,14 @@
 #endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
+ * Max heap usage limit
+ */
+#define CONFIG_MEM_HEAP_MAX_LIMIT 8192
+
+/**
  * Desired limit of heap usage
  */
-#define CONFIG_MEM_HEAP_DESIRED_LIMIT (CONFIG_MEM_HEAP_AREA_SIZE / 32)
+#define CONFIG_MEM_HEAP_DESIRED_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_AREA_SIZE / 32, CONFIG_MEM_HEAP_MAX_LIMIT))
 
 /**
  * Log2 of maximum possible offset in the heap
@@ -80,7 +86,7 @@
  * Also the option affects size of ECMA Object Model's data types.
  * In any case size of any of the types should not exceed CONFIG_MEM_POOL_CHUNK_SIZE.
  */
-#define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH (10)
+#define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH (12)
 
 #define CONFIG_ECMA_REFERENCE_COUNTER_LIMIT ((1u << CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1u)
 

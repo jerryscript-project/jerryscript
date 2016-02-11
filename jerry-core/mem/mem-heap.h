@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,29 +29,18 @@
 
 #include "jrt.h"
 
-/**
- * Type of allocation (argument of mem_Alloc)
- *
- * @see mem_heap_alloc_block
- */
-typedef enum
-{
-  MEM_HEAP_ALLOC_SHORT_TERM, /**< allocated region will be freed soon */
-  MEM_HEAP_ALLOC_LONG_TERM /**< allocated region most likely will not be freed soon */
-} mem_heap_alloc_term_t;
 
 extern void mem_heap_init (void);
 extern void mem_heap_finalize (void);
-extern void *mem_heap_alloc_block (size_t, mem_heap_alloc_term_t);
-extern void *mem_heap_alloc_chunked_block (mem_heap_alloc_term_t);
-extern void mem_heap_free_block (void *);
-extern void *mem_heap_get_chunked_block_start (void *);
-extern size_t mem_heap_get_chunked_block_data_size (void);
+extern void *mem_heap_alloc_block (const size_t);
+extern void mem_heap_free_block (void *, const size_t);
+extern void *mem_heap_alloc_block_store_size (size_t);
+extern void mem_heap_free_block_size_stored (void *);
 extern uintptr_t mem_heap_compress_pointer (const void *);
 extern void *mem_heap_decompress_pointer (uintptr_t);
 extern bool mem_is_heap_pointer (const void *);
 extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t);
-extern void mem_heap_print (bool, bool, bool);
+extern void mem_heap_print ();
 
 #ifdef MEM_STATS
 /**
@@ -59,15 +49,6 @@ extern void mem_heap_print (bool, bool, bool);
 typedef struct
 {
   size_t size; /**< size */
-  size_t blocks; /**< blocks count */
-
-  size_t allocated_chunks; /**< currently allocated chunks */
-  size_t peak_allocated_chunks; /**< peak allocated chunks */
-  size_t global_peak_allocated_chunks; /**< non-resettable peak allocated chunks */
-
-  size_t allocated_blocks; /**< currently allocated blocks */
-  size_t peak_allocated_blocks; /**< peak allocated blocks */
-  size_t global_peak_allocated_blocks; /**< non-resettable peak allocated blocks */
 
   size_t allocated_bytes; /**< currently allocated bytes */
   size_t peak_allocated_bytes; /**< peak allocated bytes */
@@ -77,6 +58,15 @@ typedef struct
                            and due to block headers */
   size_t peak_waste_bytes; /**< peak bytes waste */
   size_t global_peak_waste_bytes; /**< non-resettable peak bytes waste */
+
+  size_t skip_count;
+  size_t nonskip_count;
+
+  size_t alloc_count;
+  size_t alloc_iter_count;
+
+  size_t free_count;
+  size_t free_iter_count;
 } mem_heap_stats_t;
 
 extern void mem_heap_get_stats (mem_heap_stats_t *);
@@ -111,7 +101,7 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
 #define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = (type *) (mem_heap_alloc_block (var_name ## ___size, MEM_HEAP_ALLOC_SHORT_TERM));
+  type *var_name = (type *) (mem_heap_alloc_block (var_name ## ___size));
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,
@@ -122,7 +112,7 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
   { \
     JERRY_ASSERT (var_name ## ___size != 0); \
     \
-    mem_heap_free_block (var_name); \
+    mem_heap_free_block (var_name, var_name ## ___size); \
   } \
   else \
   { \

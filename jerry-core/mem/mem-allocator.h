@@ -44,6 +44,11 @@ typedef uint16_t mem_cpointer_t;
 #define MEM_ALIGNMENT       (1u << MEM_ALIGNMENT_LOG)
 
 /**
+ * Required alignment for allocated units/blocks
+ */
+#define MEM_POOL_ALIGNMENT       (1 << MEM_POOL_ALIGNMENT_LOG)
+
+/**
  * Width of compressed memory pointer
  */
 #define MEM_CP_WIDTH (MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG)

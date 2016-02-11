@@ -213,6 +213,9 @@ project (Jerry C ASM)
 
 # Compiler / Linker flags
  set(COMPILE_FLAGS_JERRY "-fno-builtin")
+ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+   set(COMPILE_FLAGS_JERRY "${COMPILE_FLAGS_JERRY} -DMEM_HEAP_PTR_64")
+ endif()
  if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
   set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
  endif()

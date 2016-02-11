@@ -16,7 +16,6 @@
 #include "ecma-helpers.h"
 #include "lit-literal.h"
 #include "lit-literal-storage.h"
-#include "rcs-records.h"
 #include "test-common.h"
 
 // Iterations count
@@ -132,9 +131,6 @@ main (int __attr_unused___ argc,
 
     // Check empty string exists
     JERRY_ASSERT (lit_find_literal_by_utf8_string (NULL, 0));
-
-    rcs_chunked_list_cleanup (&rcs_lit_storage);
-    JERRY_ASSERT (rcs_record_get_first (&rcs_lit_storage) == NULL);
   }
 
   lit_finalize ();

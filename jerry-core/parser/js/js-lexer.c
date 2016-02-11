@@ -1566,13 +1566,13 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     num = -num;
   }
 
-  lit_cp = rcs_cpointer_compress (lit_find_or_create_literal_from_num (num));
+  lit_cp = lit_cpointer_compress (lit_find_or_create_literal_from_num (num));
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
 
   while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
     if (literal_p->type == LEXER_NUMBER_LITERAL
-        && literal_p->u.value.u.value.base_cp == lit_cp.u.value.base_cp)
+        && literal_p->u.value == lit_cp)
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;

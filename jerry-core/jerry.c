@@ -1,4 +1,5 @@
 /* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1967,14 +1968,14 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
       {
         lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-        if (literal_start_p[i].u.packed_value != MEM_CP_NULL)
+        if (literal_start_p[i] != MEM_CP_NULL)
         {
-          while (current_p->literal_id.u.packed_value != literal_start_p[i].u.packed_value)
+          while (current_p->literal_id != literal_start_p[i])
           {
             current_p++;
           }
 
-          literal_start_p[i].u.packed_value = (uint16_t) current_p->literal_offset;
+          literal_start_p[i] = (uint16_t) current_p->literal_offset;
         }
       }
 
@@ -1982,13 +1983,13 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
       {
         compiled_code_map_entry_t *current_p = snapshot_map_entries_p;
 
-        while (current_p->compiled_code_cp != literal_start_p[i].u.value.base_cp)
+        while (current_p->compiled_code_cp != literal_start_p[i])
         {
           current_p = ECMA_GET_NON_NULL_POINTER (compiled_code_map_entry_t,
                                                  current_p->next_cp);
         }
 
-        literal_start_p[i].u.packed_value = (uint16_t) current_p->offset;
+        literal_start_p[i] = (uint16_t) current_p->offset;
       }
     }
 
@@ -2095,26 +2096,17 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
     }
     else
     {
-      if (header.lit_table_size > 0xffff)
-      {
-        /* Aligning literals could increase this range, but
-         * it is not a requirement for low-memory environments. */
-        snapshot_buffer_write_offset = 0;
-      }
-      else
-      {
-        jerry_snapshot_set_offsets (buffer_p + compiled_code_start,
-                                    (uint32_t) compiled_code_size,
-                                    lit_map_p);
+      jerry_snapshot_set_offsets (buffer_p + compiled_code_start,
+                                  (uint32_t) compiled_code_size,
+                                  lit_map_p);
 
-        jrt_write_to_buffer_by_offset (buffer_p,
-                                       buffer_size,
-                                       &header_offset,
-                                       &header,
-                                       sizeof (header));
-      }
+      jrt_write_to_buffer_by_offset (buffer_p,
+                                     buffer_size,
+                                     &header_offset,
+                                     &header,
+                                     sizeof (header));
 
-      mem_heap_free_block (lit_map_p);
+      mem_heap_free_block_size_stored (lit_map_p);
     }
 
     ecma_bytecode_deref (bytecode_data_p);
@@ -2212,8 +2204,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   if (copy_bytecode)
   {
-    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (code_size,
-                                                                MEM_HEAP_ALLOC_LONG_TERM);
+    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block_store_size (code_size);
 
     memcpy (bytecode_p, snapshot_data_p + offset + sizeof (uint32_t), code_size);
   }
@@ -2223,8 +2214,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
     uint8_t *real_bytecode_p = ((uint8_t *) bytecode_p) + code_size;
 
-    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (code_size + 1 + sizeof (uint8_t *),
-                                                                MEM_HEAP_ALLOC_LONG_TERM);
+    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block_store_size (code_size + 1 + sizeof (uint8_t *));
 
     memcpy (bytecode_p, snapshot_data_p + offset + sizeof (uint32_t), code_size);
 
@@ -2242,9 +2232,9 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   {
     lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-    if (literal_start_p[i].u.packed_value != 0)
+    if (literal_start_p[i] != 0)
     {
-      while (current_p->literal_offset != literal_start_p[i].u.packed_value)
+      while (current_p->literal_offset != literal_start_p[i])
       {
         current_p++;
       }
@@ -2255,12 +2245,12 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   for (uint32_t i = const_literal_end; i < literal_end; i++)
   {
-    size_t literal_offset = ((size_t) literal_start_p[i].u.packed_value) << MEM_ALIGNMENT_LOG;
+    size_t literal_offset = ((size_t) literal_start_p[i]) << MEM_ALIGNMENT_LOG;
 
     if (literal_offset == offset)
     {
       /* Self reference */
-      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].u.value.base_cp,
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i],
                                  bytecode_p);
     }
     else
@@ -2271,7 +2261,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
                                                         lit_map_p,
                                                         copy_bytecode);
 
-      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].u.value.base_cp,
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i],
                                  literal_bytecode_p);
     }
   }
@@ -2357,7 +2347,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   if (lit_map_p != NULL)
   {
-    mem_heap_free_block (lit_map_p);
+    mem_heap_free_block_size_stored (lit_map_p);
   }
 
   if (bytecode_p == NULL)

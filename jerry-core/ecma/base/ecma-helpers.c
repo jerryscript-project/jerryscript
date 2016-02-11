@@ -1391,7 +1391,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
     for (uint32_t i = const_literal_end; i < literal_end; i++)
     {
-      mem_cpointer_t bytecode_cpointer = literal_start_p[i].u.value.base_cp;
+      mem_cpointer_t bytecode_cpointer = literal_start_p[i];
       ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
                                                                             bytecode_cpointer);
 
@@ -1411,7 +1411,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
   }
 
-  mem_heap_free_block (bytecode_p);
+  mem_heap_free_block_size_stored (bytecode_p);
 } /* ecma_bytecode_deref */
 
 /**

@@ -1,0 +1,29 @@
+language: c
+
+os: linux
+dist: trusty
+sudo: required
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
+
+install: make prerequisites
+
+script: "make -j VERBOSE=1 NINJA=1 $TARGET"
+
+env:
+  - TARGET="check-signed-off check-vera check-cpp"
+  - TARGET="build.linux test-js-precommit"
+  - TARGET=build.mcu_stm32f3
+  - TARGET=build.mcu_stm32f4
+  - TARGET=test-unit
+
+matrix:
+  include:
+    - os: osx
+      env: TARGET="build.darwin test-js-precommit"
+    - os: osx
+      env: TARGET=test-unit
+  allow_failures:
+    - os: osx

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Copyright 2014-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,9 +27,21 @@ function exit_err() {
   exit 1
 }
 
-USAGE="Usage:\n    sudo run.sh OLD_ENGINE NEW_ENGINE REPEATS TIMEOUT BENCH_FOLDER OUTPUT_FORMAT"
+# Check if the specified build supports memory statistics options
+function is_mem_stats_build() {
+  [ -x "$1" ] || fail_msg "Engine '$1' is not executable"
 
-if [ "$#" -ne 6 ]
+  tmpfile=`mktemp`
+  "$1" --mem-stats $tmpfile 2>&1 | grep -- "Ignoring memory statistics option because of '!MEM_STATS' build configuration." 2>&1 > /dev/null
+  code=$?
+  rm $tmpfile
+
+  return $code
+}
+
+USAGE="Usage:\n    tools/run-perf-test.sh OLD_ENGINE NEW_ENGINE REPEATS TIMEOUT BENCH_FOLDER [-m result-file-name.md]"
+
+if [ "$#" -lt 5 ]
 then
   echo -e "${USAGE}"
   exit_err "Argument number mismatch..."
@@ -40,13 +53,20 @@ REPEATS="$3"
 TIMEOUT="$4"
 BENCH_FOLDER="$5"
 OUTPUT_FORMAT="$6"
+OUTPUT_FILE="$7"
 
-if [ "${OUTPUT_FORMAT}" != "-m" ]
+if [ "$#" -gt 5 ]
 then
-  if [ "${OUTPUT_FORMAT}" != "-c" ]
+  if [ "${OUTPUT_FORMAT}" != "-m" ]
   then
-    exit_err "Please, use -m or -c as output format specifier"
+    exit_err "Please, use '-m result-file-name.md' as last arguments"
   fi
+  if [ -z "${OUTPUT_FILE}" ]
+  then
+    exit_err "Missing md file name. Please, define the filename. Ex.: '-m result-file-name.md'"
+  fi
+
+  rm -rf "${OUTPUT_FILE}"
 fi
 
 if [ "${REPEATS}" -lt 1 ]
@@ -164,13 +184,13 @@ function run-compare()
     if [ "${OUTPUT_FORMAT}" == "-m" ]
     then
       WIDTH=42
-      DIFF=$(printf "%s%s" "$DIFF" "$(printf "%$(($WIDTH - ${#DIFF}))s")")
-      PERCENT=$(printf "%s%s" "$(printf "%$(($WIDTH - ${#PERCENT}))s")" "$PERCENT")
+      MD_DIFF=$(printf "%s%s" "$DIFF" "$(printf "%$(($WIDTH - ${#DIFF}))s")")
+      MD_PERCENT=$(printf "%s%s" "$(printf "%$(($WIDTH - ${#PERCENT}))s")" "$PERCENT")
 
-      format="\`%s\`<br>\`%s\`"
-    else
-      format="%20s : %19s"
+      MD_FORMAT="\`%s\`<br>\`%s\`"
     fi
+
+    CONSOLE_FORMAT="%20s : %19s"
   else
     ext=""
 
@@ -185,13 +205,13 @@ function run-compare()
     if [ "${OUTPUT_FORMAT}" == "-m" ]
     then
       WIDTH=20
-      DIFF=$(printf "%s%s" "$DIFF" "$(printf "%$(($WIDTH - ${#DIFF}))s")")
-      PERCENT=$(printf "%s%s" "$(printf "%$(($WIDTH - ${#PERCENT}))s")" "$PERCENT")
+      MD_DIFF=$(printf "%s%s" "$DIFF" "$(printf "%$(($WIDTH - ${#DIFF}))s")")
+      MD_PERCENT=$(printf "%s%s" "$(printf "%$(($WIDTH - ${#PERCENT}))s")" "$PERCENT")
 
-      format="\`%s\`<br>\`%s\`"
-    else
-      format="%14s : %8s"
+      MD_FORMAT="\`%s\`<br>\`%s\`"
     fi
+
+    CONSOLE_FORMAT="%14s : %8s"
   fi
 
   rel_mult=$(echo "$rel_mult" "$rel" | awk '{print $1 * $2;}')
@@ -200,10 +220,10 @@ function run-compare()
 
   if [ "${OUTPUT_FORMAT}" == "-m" ]
   then
-    printf "$format" "$DIFF" "$PERCENT" | sed "s/ /$FIGURE_SPACE/g"
-  else
-    printf "$format" "$DIFF" "$PERCENT"
+    printf "$MD_FORMAT" "$MD_DIFF" "$MD_PERCENT" | sed "s/ /$FIGURE_SPACE/g" >> "${OUTPUT_FILE}"
   fi
+
+  printf "$CONSOLE_FORMAT" "$DIFF" "$PERCENT"
 }
 
 function run-test()
@@ -213,13 +233,31 @@ function run-test()
   # print only filename
   if [ "${OUTPUT_FORMAT}" == "-m" ]
   then
-    printf "%s | " "${TEST##*/}"
-  else
-    printf "%50s | " "${TEST##*/}"
+    printf "%s | " "${TEST##*/}" >> "${OUTPUT_FILE}"
   fi
-  run-compare "./tools/rss-measure.sh"      "mem"   "${TEST}" 0 k || return 1
+
+  printf "%50s | " "${TEST##*/}"
+
+  if [ "$IS_MEM_STAT" -ne 0 ]
+  then
+    run-compare "./tools/mem-stats-measure.sh"      "mem"   "${TEST}" 0   || return 1
+  else
+    run-compare "./tools/rss-measure.sh"      "mem"   "${TEST}" 0 k || return 1
+  fi
+
+  if [ "${OUTPUT_FORMAT}" == "-m" ]
+  then
+    printf " | " >> "${OUTPUT_FILE}"
+  fi
+
   printf " | "
   run-compare "./tools/perf.sh ${REPEATS}"  "perf"  "${TEST}" 3 s || return 1
+
+  if [ "${OUTPUT_FORMAT}" == "-m" ]
+  then
+    printf "\n" >> "${OUTPUT_FILE}"
+  fi
+
   printf "\n"
 }
 
@@ -235,12 +273,25 @@ function run-suite()
 
 date
 
+is_mem_stats_build "${ENGINE_OLD}" || is_mem_stats_build "${ENGINE_NEW}"
+IS_MEM_STAT=$?
+
 if [ "${OUTPUT_FORMAT}" == "-m" ]
 then
-  echo "Benchmark | RSS<br>(+ is better) | Perf<br>(+ is better)"
-  echo "---------: | --------- | ---------"
+  if [ "$IS_MEM_STAT" -ne 0 ]
+  then
+    echo "Benchmark | Peak alloc.<br>(+ is better) | Perf<br>(+ is better)" >> "${OUTPUT_FILE}"
+  else
+    echo "Benchmark | RSS<br>(+ is better) | Perf<br>(+ is better)" >> "${OUTPUT_FILE}"
+  fi
+  echo "---------: | --------- | ---------" >> "${OUTPUT_FILE}"
+fi
+
+if [ "$IS_MEM_STAT" -ne 0 ]
+then
+  printf "%50s | %25s | %35s\n" "Benchmark" "Peak alloc.(+ is better)" "Perf(+ is better)"
 else
-  printf "%50s | %25s | %35s\n" "Benchmark" "RSS<br>(+ is better)" "Perf<br>(+ is better)"
+  printf "%50s | %25s | %35s\n" "Benchmark" "RSS(+ is better)" "Perf(+ is better)"
 fi
 
 run-suite "${BENCH_FOLDER}"
@@ -288,11 +339,11 @@ if [ "${OUTPUT_FORMAT}" == "-m" ]
 then
   mem_percent_gmean_text=$(printf "RSS reduction: \`%0.3f%%\`" "$mem_percent_gmean")
   perf_percent_gmean_text=$(printf "Speed up: \`%0.3f%% %s\`" "$perf_percent_gmean" "$perf_percent_inaccuracy")
-  printf "%s | %s | %s\n" "$gmean_label_text" "$mem_percent_gmean_text" "$perf_percent_gmean_text"
-else
-  mem_percent_gmean_text=$(printf "RSS reduction: %0.3f%%" "$mem_percent_gmean")
-  perf_percent_gmean_text=$(printf "Speed up: %0.3f%% %s" "$perf_percent_gmean" "$perf_percent_inaccuracy")
-  printf "%50s | %25s | %51s\n" "$gmean_label_text" "$mem_percent_gmean_text" "$perf_percent_gmean_text"
+  printf "%s | %s | %s\n" "$gmean_label_text" "$mem_percent_gmean_text" "$perf_percent_gmean_text" >> "${OUTPUT_FILE}"
 fi
+
+mem_percent_gmean_text=$(printf "RSS reduction: %0.3f%%" "$mem_percent_gmean")
+perf_percent_gmean_text=$(printf "Speed up: %0.3f%% %s" "$perf_percent_gmean" "$perf_percent_inaccuracy")
+printf "%50s | %25s | %51s\n" "$gmean_label_text" "$mem_percent_gmean_text" "$perf_percent_gmean_text"
 
 date

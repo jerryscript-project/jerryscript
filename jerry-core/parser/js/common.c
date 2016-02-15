@@ -96,9 +96,7 @@ util_is_identifier_part_character (uint16_t chr) /**< EcmaScript character */
   }
 
   return (lit_char_is_unicode_letter (chr)
-          || lit_char_is_unicode_combining_mark (chr)
-          || lit_char_is_unicode_digit (chr)
-          || lit_char_is_unicode_connector_punctuation (chr));
+          || lit_char_is_unicode_non_letter_ident_part (chr));
 } /* util_is_identifier_part_character */
 
 /**

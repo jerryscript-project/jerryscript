@@ -14,8 +14,88 @@
  */
 
 #include "lit-char-helpers.h"
-
+#include "lit/lit-unicode-ranges.inc.h"
 #include "lit-strings.h"
+
+#define NUM_OF_ELEMENTS(array) (sizeof (array) / sizeof ((array)[0]))
+
+/**
+ * Binary search algorithm that searches the a
+ * character in the given char array.
+ *
+ * @return true - if the character is in the given array
+ *         false - otherwise
+ */
+static bool
+search_char_in_char_array (ecma_char_t c,               /**< code unit */
+                           const ecma_char_t *array,    /**< array */
+                           int size_of_array)           /**< length of the array */
+{
+  int bottom = 0;
+  int top = size_of_array - 1;
+
+  while (bottom <= top)
+  {
+    int middle = (bottom + top) / 2;
+    ecma_char_t current = array[middle];
+
+    if (current == c)
+    {
+      return true;
+    }
+
+    if (c < current)
+    {
+      top = middle - 1;
+    }
+    else
+    {
+      bottom = middle + 1;
+    }
+  }
+
+  return false;
+} /* search_char_in_char_array */
+
+/**
+ * Binary search algorithm that searches a character in the given intervals.
+ * Intervals specifed by two arrays. The first one contains the starting points
+ * of the intervals, the second one contains the length of them.
+ *
+ * @return true - if the the character is included (inclusively) in one of the intervals in the given array
+ *         false - otherwise
+ */
+static bool
+search_char_in_interval_array (ecma_char_t c,               /**< code unit */
+                               const ecma_char_t *array_sp, /**< array of interval starting points */
+                               const uint8_t *lengths,      /**< array of interval lengths */
+                               int size_of_array)           /**< length of the array */
+{
+  int bottom = 0;
+  int top = size_of_array - 1;
+
+  while (bottom <= top)
+  {
+    int middle = (bottom + top) / 2;
+    ecma_char_t current_sp = array_sp[middle];
+
+    if (current_sp <= c && c <= current_sp + lengths[middle])
+    {
+      return true;
+    }
+
+    if (c > current_sp)
+    {
+      bottom = middle + 1;
+    }
+    else
+    {
+      top = middle - 1;
+    }
+  }
+
+  return false;
+} /* search_char_in_interval_array */
 
 /**
  * Check if specified character is one of the Format-Control characters
@@ -32,30 +112,8 @@ lit_char_is_format_control (ecma_char_t c) /**< code unit */
 } /* lit_char_is_format_control */
 
 /**
- * Check if specified character is the Space Separator character
- *
- * See also:
- *          ECMA-262 v5, Table 2
- *
- * @return true - if the character falls into "Space, Separator" ("Zs") character category,
- *         false - otherwise.
- */
-bool
-lit_char_is_space_separator (ecma_char_t c) /**< code unit */
-{
-  /* Zs */
-#define LIT_UNICODE_RANGE_ZS(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-#include "lit-unicode-ranges.inc.h"
-
-  return false;
-} /* lit_char_is_space_separator */
-
-/**
- * Check if specified character is one of the Whitespace characters
+ * Check if specified character is one of the Whitespace characters including those
+ * that fall into "Space, Separator" ("Zs") Unicode character category.
  *
  * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 2,
  *         false - otherwise.
@@ -63,13 +121,21 @@ lit_char_is_space_separator (ecma_char_t c) /**< code unit */
 bool
 lit_char_is_white_space (ecma_char_t c) /**< code unit */
 {
-  return (c == LIT_CHAR_TAB
-          || c == LIT_CHAR_VTAB
-          || c == LIT_CHAR_FF
-          || c == LIT_CHAR_SP
-          || c == LIT_CHAR_NBSP
-          || c == LIT_CHAR_BOM
-          || lit_char_is_space_separator (c));
+  if (c <= 127)
+  {
+    return (c == LIT_CHAR_TAB
+            || c == LIT_CHAR_VTAB
+            || c == LIT_CHAR_FF
+            || c == LIT_CHAR_SP);
+  }
+  else
+  {
+    return (c == LIT_CHAR_NBSP
+            || c == LIT_CHAR_BOM
+            || (c >= unicode_separator_char_interv_sps[0]
+                && c <= unicode_separator_char_interv_sps[0] + unicode_separator_char_interv_lens[0])
+            || search_char_in_char_array (c, unicode_separator_chars, NUM_OF_ELEMENTS (unicode_separator_chars)));
+  }
 } /* lit_char_is_white_space */
 
 /**
@@ -119,60 +185,18 @@ lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
     return false;
   }
 
-  /* Lu */
-#define LIT_UNICODE_RANGE_LU(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-  /* Ll */
-#define LIT_UNICODE_RANGE_LL(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-  /* Lt */
-#define LIT_UNICODE_RANGE_LT(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-  /* Lm */
-#define LIT_UNICODE_RANGE_LM(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-  /* Lo */
-#define LIT_UNICODE_RANGE_LO(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-  /* Nl */
-#define LIT_UNICODE_RANGE_NL(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-#include "lit-unicode-ranges.inc.h"
-
-  return false;
+  return (search_char_in_interval_array (c, unicode_letter_interv_sps, unicode_letter_interv_lens,
+                                         NUM_OF_ELEMENTS (unicode_letter_interv_sps))
+          || search_char_in_char_array (c, unicode_letter_chars, NUM_OF_ELEMENTS (unicode_letter_chars)));
 } /* lit_char_is_unicode_letter */
 
 /**
- * Check if specified character is a unicode combining mark
- *
- * Note:
- *      Unicode combining mark is a character, included into one of the following categories:
- *       - Non-spacing mark (Mn);
- *       - Combining spacing mark (Mc).
+ * Check if specified character is a non-letter character and can be used as a
+ * non-first character of an identifier.
+ * These characters coverd by the following unicode categories:
+ *  - digit (Nd)
+ *  - punctuation mark (Mn, Mc)
+ *  - connector punctuation (Pc)
  *
  * See also:
  *          ECMA-262 v5, 7.6
@@ -181,82 +205,21 @@ lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
  *         false - otherwise.
  */
 bool
-lit_char_is_unicode_combining_mark (ecma_char_t c) /**< code unit */
+lit_char_is_unicode_non_letter_ident_part (ecma_char_t c) /**< code unit */
 {
-  /* Mn */
-#define LIT_UNICODE_RANGE_MN(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
+  if (c <= 127)
+  {
+    return LIT_CHAR_ASCII_DIGITS_BEGIN <= c && c <= LIT_CHAR_ASCII_DIGITS_END;
   }
-
-  /* Mc */
-#define LIT_UNICODE_RANGE_MC(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
+  else
+  {
+    return (search_char_in_interval_array (c, unicode_non_letter_ident_part_interv_sps,
+                                           unicode_non_letter_ident_part_interv_lens,
+                                           NUM_OF_ELEMENTS (unicode_non_letter_ident_part_interv_sps))
+            || search_char_in_char_array (c, unicode_non_letter_ident_part_chars,
+                                          NUM_OF_ELEMENTS (unicode_non_letter_ident_part_chars)));
   }
-
-#include "lit-unicode-ranges.inc.h"
-
-  return false;
-} /* lit_char_is_unicode_combining_mark */
-
-/**
- * Check if specified character is a unicode digit
- *
- * Note:
- *      Unicode digit is a character, included into the following category:
- *       - Decimal number (Nd).
- *
- * See also:
- *          ECMA-262 v5, 7.6
- *
- * @return true - if specified character falls into the specified category,
- *         false - otherwise.
- */
-bool
-lit_char_is_unicode_digit (ecma_char_t c) /**< code unit */
-{
-  /* Nd */
-#define LIT_UNICODE_RANGE_ND(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-#include "lit-unicode-ranges.inc.h"
-
-  return false;
-} /* lit_char_is_unicode_digit */
-
-/**
- * Check if specified character is a unicode connector punctuation
- *
- * Note:
- *      Unicode connector punctuation is a character, included into the following category:
- *       - Connector punctuation (Pc).
- *
- * See also:
- *          ECMA-262 v5, 7.6
- *
- * @return true - if specified character falls into the specified category,
- *         false - otherwise.
- */
-bool
-lit_char_is_unicode_connector_punctuation (ecma_char_t c) /**< code unit */
-{
-  /* Pc */
-#define LIT_UNICODE_RANGE_PC(range_begin, range_end) \
-  if (c >= (range_begin) && c <= (range_end)) \
-  { \
-    return true; \
-  }
-
-#include "lit-unicode-ranges.inc.h"
-
-  return false;
-} /* lit_char_is_unicode_connector_punctuation */
+} /* lit_char_is_unicode_non_letter_ident_part */
 
 /**
  * Check if specified character is one of OctalDigit characters (ECMA-262 v5, B.1.2)

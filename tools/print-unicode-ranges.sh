@@ -17,124 +17,170 @@
 #
 # http://www.unicode.org/Public/3.0-Update/UnicodeData-3.0.0.txt
 #
+
+# unicode categories:      Lu Ll Lt Mn Mc Me Nd Nl No Zs Zl Zp Cc Cf Cs Co Lm Lo Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So
+# letter:                  Lu Ll Lt Lm Lo Nl
+# non-letter-indent-part:
+#   digit:                 Nd
+#   punctuation mark:      Mn Mc
+#   connector punctuation: Pc
+# separators:              Zs
+
+if [ $# -le 4 ]; then
+  echo "useage: print-unicode-ranges.sh <unicode-data-path> <-i y sp|y len|n> <-cat letters|non-let-indent-parts|separators>"
+  echo "  -i:   y sp  - print interval starting points"
+  echo "        y len - print interval lengths"
+  echo "        n     - print individual characters"
+  echo "  -cat: whether print letters|non-let-indent-parts|separators category"
+  exit 1
+fi
+
+STARTING_POINT="len"
+
 UNICODE_DATA_PATH="$1"
+shift
 
-#
-# One of unicode character category names (Lu, Ll, Nl, etc.)
-#
-UNICODE_CHAR_CATEGORY="$2"
+while [ $# -gt 0 ]; do
+  if [ $1 == "-i" ]; then
+    shift
+    PRINT_INTERVALS="$1"
+    if [ $PRINT_INTERVALS == "y" ]; then
+      shift
+      STARTING_POINT="$1"
+      echo $STARTING_POINT
+    fi
+  elif [ $1 == "-cat" ]; then
+    shift
+    CATEGORY="$1"
+    echo $CATEGORY
+  fi
+  shift
+done
 
-UNICODE_CHAR_CATEGORY_UPPER_CASE=`echo $UNICODE_CHAR_CATEGORY | tr '[:lower:]' '[:upper:]'`
-
-#
-# 1. Print character codes, categories, and names
-# 2. Filter by category
-# 3. Print character codes and names without categories
-# 4. Sort
-# 5. Add '0x' to each line
-# 6. Combine hexadecimal numbers into named ranges
-# 7. Print ranges in format "LIT_UNICODE_RANGE_$UNICODE_CHAR_CATEGORY_UPPER_CASE (range_begin, range_end) /* range name */"
-#
-
-cut -d ';' "$UNICODE_DATA_PATH" -f 1,2,3 \
-      | grep ";$UNICODE_CHAR_CATEGORY\$" \
-      | cut -d ';' -f 1,2 \
-      | sort \
-      | awk 'BEGIN { FS=";"; OFS=";" } { print "0x"$1, $2; }' \
-      | awk --non-decimal-data \
-        'BEGIN \
-         { \
-           FS=";"; \
-           OFS=";"; \
-           is_in_range=0; \
-         } \
-         \
-         function output_next_range () \
-         { \
-           if (range_begin == range_prev) \
-           { \
-             print range_begin, range_prev, range_begin_name; \
-           } \
-           else \
-           { \
-             print range_begin, range_prev,  range_begin_name, range_prev_name; \
-           } \
-         } \
-         \
-         { \
-           if (is_in_range == 0) \
-           { \
-             is_in_range=1; \
-             range_begin=$1; \
-             range_prev=$1; \
-             range_begin_name=$2; \
-             range_prev_name=$2; \
-           } \
-           else \
-           { \
-             if (range_prev + 1 == $1) \
-             { \
-               range_prev=$1; \
-               range_prev_name=$2
-             } \
-             else \
-             { \
-               output_next_range(); \
-               range_begin=$1; \
-               range_prev=$1; \
-               range_begin_name=$2; \
-               range_prev_name=$2; \
-             } \
-           } \
-         } \
-         \
-         END \
-         { \
-           output_next_range(); \
-         }' \
-         | awk \
-          'BEGIN \
-           { \
-             FS = ";" \
-           } \
-           { \
-             range_string = sprintf ("LIT_UNICODE_RANGE_'$UNICODE_CHAR_CATEGORY_UPPER_CASE' (%s, %s)", $1, $2); \
-             range_string_length = length (range_string); \
-             \
-             range_begin_name=$3; \
-             range_end_name=$4; \
-             \
-             range_begin_name_length = length (range_begin_name); \
-             range_end_name_length = length (range_end_name); \
-             \
-             printf "%s", range_string; \
-             if (range_end_name_length == 0) \
-             { \
-               printf " /* %s */\n", range_begin_name; \
-             } \
-             else \
-             { \
-               if (range_begin_name_length > range_end_name_length) \
-               { \
-                 indent1 = 0; \
-                 indent2 = range_string_length + range_begin_name_length / 2;
-                 indent3 = range_string_length + (range_begin_name_length - range_end_name_length) / 2; \
-               } \
-               else \
-               { \
-                 indent1 = (range_end_name_length - range_begin_name_length) / 2; \
-                 indent2 = range_string_length + range_end_name_length / 2;
-                 indent3 = range_string_length; \
-               } \
-               indent3 = indent3 + 3; \
-               fmt1 = sprintf (" /* %%%ds%%s\n", indent1); \
-               fmt2 = sprintf (" %%%ds<--->\n", indent2); \
-               fmt3 = sprintf (" %%%ds%%s */\n", indent3); \
-               \
-               printf fmt1, "", $3; \
-               printf fmt2, ""; \
-               printf fmt3, "", $4; \
-             } \
-             \
-             printf "\n"; \
-           }'
+awk -v desired_category="$CATEGORY" \
+'BEGIN \
+  { \
+    FS=";"; OFS=";" \
+  } \
+  { \
+    cat=$3; \
+    if (desired_category == "letters" && (cat == "Lu" || cat == "Ll" || cat == "Lt" || cat == "Lm" || cat == "Lo" || cat == "Nl")) \
+    { \
+      print "0x"$1, $2, $3; \
+    } \
+    else if (desired_category == "non-let-indent-parts" && (cat == "Nd" || cat == "Mn" || cat == "Mc" || cat == "Pc")) \
+    { \
+      print "0x"$1, $2, $3; \
+    } \
+    else if (desired_category == "separators" && cat == "Zs") \
+    { \
+      print "0x"$1, $2, $3; \
+    } \
+  }' $UNICODE_DATA_PATH \
+| gawk --non-decimal-data -v print_intervals="$PRINT_INTERVALS" -v sp="$STARTING_POINT" \
+'BEGIN \
+  { \
+    FS = ";"; \
+    OFS = ";"; \
+    is_in_range = 0; \
+    print_count = 0; \
+  } \
+  \
+  function print_Nl() \
+  { \
+    ++print_count; \
+    if (print_count == 10) \
+    { \
+      printf "\n"; \
+      print_count = 0; \
+    } \
+  } \
+  \
+  function output_next_range () \
+  { \
+    if (range_begin != range_prev && print_intervals=="y") \
+    { \
+      i1 = strtonum(range_begin); \
+      i2 = strtonum(range_prev); \
+      len = i2 - i1; \
+      # if the length of an interval is > 255 have to spilt it into 255-lenth ones
+      if (len > 255) \
+      { \
+        numOfSubintervals = (len / 255);              # more precisely number of subintervals - 1 \
+        for (i = 1; i <= numOfSubintervals; ++i) \
+        { \
+          if (sp == "sp") \
+          { \
+            printf "0X%X, ", i1; \
+            print_Nl(); \
+          }
+          else \
+          { \
+            printf "%d, ", 255; \
+            print_Nl(); \
+          } \
+          i1 = i1 + 256;                              # next interval begins on the ending of the previous + 1 \
+        } \
+        if (sp == "sp") \
+        { \
+          printf "0X%X, ", i1; \
+          print_Nl(); \
+        } \
+        else \
+        { \
+          printf "%d, ", len % 255 - (i-1); \
+          print_Nl(); \
+        } \
+      } \
+      else \
+      { \
+        if (sp == "sp") \
+        { \
+          printf "%s, ", range_begin; \
+          print_Nl(); \
+        } \
+        else \
+        { \
+          printf "%d, ", len; \
+          print_Nl(); \
+        } \
+      } \
+    } \
+    else if (range_begin == range_prev && print_intervals != "y")\
+    { \
+      printf "%s, ", range_begin; \
+      print_Nl(); \
+    } \
+  } \
+  \
+  { \
+    if (is_in_range == 0) \
+    { \
+      is_in_range = 1; \
+      range_begin = $1; \
+      range_prev = $1; \
+      range_begin_name = $2; \
+      range_prev_name = $2; \
+    } \
+    else \
+    { \
+      if (range_prev + 1 == $1) \
+      { \
+        range_prev = $1; \
+        range_prev_name = $2
+      } \
+      else \
+      { \
+        output_next_range(); \
+        range_begin = $1; \
+        range_prev=$1; \
+        range_begin_name = $2; \
+        range_prev_name = $2; \
+      } \
+    } \
+  } \
+ \
+END \
+  { \
+    output_next_range(); \
+  }'

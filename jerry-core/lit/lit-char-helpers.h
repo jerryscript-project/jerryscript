@@ -37,7 +37,6 @@ extern bool lit_char_is_format_control (ecma_char_t);
 #define LIT_CHAR_NBSP ((ecma_char_t) 0x00A0) /* no-break space */
 /* LIT_CHAR_BOM is defined above */
 
-extern bool lit_char_is_space_separator (ecma_char_t);
 extern bool lit_char_is_white_space (ecma_char_t);
 
 /*
@@ -77,9 +76,7 @@ extern bool lit_char_is_line_terminator (ecma_char_t);
 /* LIT_CHAR_BACKSLASH defined above */
 
 extern bool lit_char_is_unicode_letter (ecma_char_t);
-extern bool lit_char_is_unicode_combining_mark (ecma_char_t);
-extern bool lit_char_is_unicode_digit (ecma_char_t);
-extern bool lit_char_is_unicode_connector_punctuation (ecma_char_t);
+extern bool lit_char_is_unicode_non_letter_ident_part (ecma_char_t);
 
 /*
  * Punctuator characters (ECMA-262 v5, 7.7)

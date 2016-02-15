@@ -205,7 +205,7 @@ jerry_api_value_is_object (const jerry_api_value_t *value_p) /**< pointer to api
 bool
 jerry_api_value_is_function (const jerry_api_value_t *value_p) /**< pointer to api value */
 {
-  return jerry_api_value_is_object (value_p) && jerry_api_is_function (value_p->v_object);
+  return jerry_api_value_is_object (value_p) && jerry_api_is_function (value_p->u.v_object);
 } /* jerry_api_value_is_function */
 
 /**
@@ -217,7 +217,7 @@ bool
 jerry_api_get_boolean_value (const jerry_api_value_t *value_p) /**< pointer to api value */
 {
   JERRY_ASSERT (jerry_api_value_is_boolean (value_p));
-  return value_p->v_bool;
+  return value_p->u.v_bool;
 } /* jerry_api_get_boolean_value */
 
 /**
@@ -237,15 +237,15 @@ jerry_api_get_number_value (const jerry_api_value_t *value_p) /**< pointer to ap
   JERRY_ASSERT (jerry_api_value_is_number (value_p));
   if (value_p->type == JERRY_API_DATA_TYPE_UINT32)
   {
-    return value_p->v_uint32;
+    return value_p->u.v_uint32;
   }
   else if (value_p->type == JERRY_API_DATA_TYPE_FLOAT32)
   {
-    return value_p->v_float32;
+    return value_p->u.v_float32;
   }
   else
   {
-    return value_p->v_float64;
+    return value_p->u.v_float64;
   }
 } /* jerry_api_get_number_value */
 
@@ -258,7 +258,7 @@ jerry_api_string_t *
 jerry_api_get_string_value (const jerry_api_value_t *value_p) /**< pointer to api value */
 {
   JERRY_ASSERT (jerry_api_value_is_string (value_p));
-  return value_p->v_string;
+  return value_p->u.v_string;
 } /* jerry_api_get_string_value */
 
 /**
@@ -270,7 +270,7 @@ jerry_api_object_t *
 jerry_api_get_object_value (const jerry_api_value_t *value_p) /**< pointer to api value */
 {
   JERRY_ASSERT (jerry_api_value_is_object (value_p));
-  return value_p->v_object;
+  return value_p->u.v_object;
 } /* jerry_api_get_object_value */
 
 /**
@@ -318,7 +318,7 @@ jerry_api_create_boolean_value (bool value) /**< bool value from which a jerry_a
 {
   jerry_api_value_t jerry_val;
   jerry_val.type = JERRY_API_DATA_TYPE_BOOLEAN;
-  jerry_val.v_bool = value;
+  jerry_val.u.v_bool = value;
   return jerry_val;
 } /* jerry_api_create_boolean_value */
 
@@ -332,7 +332,7 @@ jerry_api_create_number_value (double value) /**< double value from which a jerr
 {
   jerry_api_value_t jerry_val;
   jerry_val.type = JERRY_API_DATA_TYPE_FLOAT64;
-  jerry_val.v_float64 = value;
+  jerry_val.u.v_float64 = value;
   return jerry_val;
 } /* jerry_api_create_number_value */
 
@@ -345,7 +345,7 @@ jerry_api_create_object_value (jerry_api_object_t *value) /**< jerry_api_object_
 {
   jerry_api_value_t jerry_val;
   jerry_val.type = JERRY_API_DATA_TYPE_OBJECT;
-  jerry_val.v_object = value;
+  jerry_val.u.v_object = value;
   return jerry_val;
 } /* jerry_api_create_object_value */
 
@@ -358,7 +358,7 @@ jerry_api_create_string_value (jerry_api_string_t *value) /**< jerry_api_string_
 {
   jerry_api_value_t jerry_val;
   jerry_val.type = JERRY_API_DATA_TYPE_STRING;
-  jerry_val.v_string = value;
+  jerry_val.u.v_string = value;
   return jerry_val;
 } /* jerry_api_create_string_value */
 
@@ -391,7 +391,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
   else if (ecma_is_value_boolean (value))
   {
     out_value_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
-    out_value_p->v_bool = ecma_is_value_true (value);
+    out_value_p->u.v_bool = ecma_is_value_true (value);
   }
   else if (ecma_is_value_number (value))
   {
@@ -399,10 +399,10 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     out_value_p->type = JERRY_API_DATA_TYPE_FLOAT32;
-    out_value_p->v_float32 = *num;
+    out_value_p->u.v_float32 = *num;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
     out_value_p->type = JERRY_API_DATA_TYPE_FLOAT64;
-    out_value_p->v_float64 = *num;
+    out_value_p->u.v_float64 = *num;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
   }
   else if (ecma_is_value_string (value))
@@ -410,7 +410,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
     ecma_string_t *str = ecma_get_string_from_value (value);
 
     out_value_p->type = JERRY_API_DATA_TYPE_STRING;
-    out_value_p->v_string = ecma_copy_or_ref_ecma_string (str);
+    out_value_p->u.v_string = ecma_copy_or_ref_ecma_string (str);
   }
   else if (ecma_is_value_object (value))
   {
@@ -418,7 +418,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
     ecma_ref_object (obj);
 
     out_value_p->type = JERRY_API_DATA_TYPE_OBJECT;
-    out_value_p->v_object = obj;
+    out_value_p->u.v_object = obj;
   }
   else
   {
@@ -453,14 +453,14 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     }
     case JERRY_API_DATA_TYPE_BOOLEAN:
     {
-      *out_value_p = ecma_make_simple_value (api_value_p->v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      *out_value_p = ecma_make_simple_value (api_value_p->u.v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
       break;
     }
     case JERRY_API_DATA_TYPE_FLOAT32:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->v_float32);
+      *num = (ecma_number_t) (api_value_p->u.v_float32);
 
       *out_value_p = ecma_make_number_value (num);
 
@@ -469,7 +469,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     case JERRY_API_DATA_TYPE_FLOAT64:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->v_float64);
+      *num = (ecma_number_t) (api_value_p->u.v_float64);
 
       *out_value_p = ecma_make_number_value (num);
 
@@ -478,7 +478,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     case JERRY_API_DATA_TYPE_UINT32:
     {
       ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->v_uint32);
+      *num = (ecma_number_t) (api_value_p->u.v_uint32);
 
       *out_value_p = ecma_make_number_value (num);
 
@@ -486,7 +486,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     }
     case JERRY_API_DATA_TYPE_STRING:
     {
-      ecma_string_t *str_p = ecma_copy_or_ref_ecma_string (api_value_p->v_string);
+      ecma_string_t *str_p = ecma_copy_or_ref_ecma_string (api_value_p->u.v_string);
 
       *out_value_p = ecma_make_string_value (str_p);
 
@@ -494,7 +494,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
     }
     case JERRY_API_DATA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = api_value_p->v_object;
+      ecma_object_t *obj_p = api_value_p->u.v_object;
 
       ecma_ref_object (obj_p);
 
@@ -654,11 +654,11 @@ jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */
 
   if (value_p->type == JERRY_API_DATA_TYPE_STRING)
   {
-    jerry_api_release_string (value_p->v_string);
+    jerry_api_release_string (value_p->u.v_string);
   }
   else if (value_p->type == JERRY_API_DATA_TYPE_OBJECT)
   {
-    jerry_api_release_object (value_p->v_object);
+    jerry_api_release_object (value_p->u.v_object);
   }
 } /* jerry_api_release_value */
 
@@ -2040,14 +2040,14 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
       {
         lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-        if (literal_start_p[i].packed_value != MEM_CP_NULL)
+        if (literal_start_p[i].u.packed_value != MEM_CP_NULL)
         {
-          while (current_p->literal_id.packed_value != literal_start_p[i].packed_value)
+          while (current_p->literal_id.u.packed_value != literal_start_p[i].u.packed_value)
           {
             current_p++;
           }
 
-          literal_start_p[i].packed_value = (uint16_t) current_p->literal_offset;
+          literal_start_p[i].u.packed_value = (uint16_t) current_p->literal_offset;
         }
       }
 
@@ -2055,13 +2055,13 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
       {
         compiled_code_map_entry_t *current_p = snapshot_map_entries_p;
 
-        while (current_p->compiled_code_cp != literal_start_p[i].value.base_cp)
+        while (current_p->compiled_code_cp != literal_start_p[i].u.value.base_cp)
         {
           current_p = ECMA_GET_NON_NULL_POINTER (compiled_code_map_entry_t,
                                                  current_p->next_cp);
         }
 
-        literal_start_p[i].packed_value = (uint16_t) current_p->offset;
+        literal_start_p[i].u.packed_value = (uint16_t) current_p->offset;
       }
     }
 
@@ -2315,9 +2315,9 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   {
     lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-    if (literal_start_p[i].packed_value != 0)
+    if (literal_start_p[i].u.packed_value != 0)
     {
-      while (current_p->literal_offset != literal_start_p[i].packed_value)
+      while (current_p->literal_offset != literal_start_p[i].u.packed_value)
       {
         current_p++;
       }
@@ -2328,12 +2328,12 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   for (uint32_t i = const_literal_end; i < literal_end; i++)
   {
-    size_t literal_offset = ((size_t) literal_start_p[i].packed_value) << MEM_ALIGNMENT_LOG;
+    size_t literal_offset = ((size_t) literal_start_p[i].u.packed_value) << MEM_ALIGNMENT_LOG;
 
     if (literal_offset == offset)
     {
       /* Self reference */
-      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].value.base_cp,
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].u.value.base_cp,
                                  bytecode_p);
     }
     else
@@ -2344,7 +2344,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
                                                         lit_map_p,
                                                         copy_bytecode);
 
-      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].value.base_cp,
+      ECMA_SET_NON_NULL_POINTER (literal_start_p[i].u.value.base_cp,
                                  literal_bytecode_p);
     }
   }

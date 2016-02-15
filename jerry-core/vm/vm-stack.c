@@ -75,7 +75,8 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
                                                                         current);
 
-        ecma_free_value (*(ecma_value_t *) chunk_p->data, true);
+        lit_utf8_byte_t *data_ptr = chunk_p->data;
+        ecma_free_value (*(ecma_value_t *) data_ptr, true);
 
         current = chunk_p->next_chunk_cp;
         ecma_dealloc_collection_chunk (chunk_p);

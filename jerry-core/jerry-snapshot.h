@@ -26,9 +26,9 @@ typedef struct
 {
   uint32_t last_compiled_code_offset; /**< offset of the last compiled code */
   uint32_t lit_table_size; /**< size of literal table */
-  uint32_t is_run_global : 1; /**< flag, indicating whether the snapshot
-                               *   was dumped as 'Global scope'-mode code (true)
-                               *   or as eval-mode code (false) */
+  __extension__ uint32_t is_run_global : 1; /**< flag, indicating whether the snapshot
+                                             *   was dumped as 'Global scope'-mode code (true)
+                                             *   or as eval-mode code (false) */
 } jerry_snapshot_header_t;
 
 /**

@@ -68,7 +68,7 @@ rcs_record_set_prev (rcs_record_set_t *rec_sec_p, /**< recordset */
       rcs_iterator_t it_ctx = rcs_iterator_create (rec_sec_p, rec_p);
 
       rcs_iterator_skip (&it_ctx, RCS_DYN_STORAGE_LENGTH_UNIT);
-      rcs_iterator_write (&it_ctx, &prev_cpointer.packed_value, sizeof (uint16_t));
+      rcs_iterator_write (&it_ctx, &prev_cpointer.u.packed_value, sizeof (uint16_t));
 
       return;
     }
@@ -95,7 +95,7 @@ rcs_record_set_prev (rcs_record_set_t *rec_sec_p, /**< recordset */
   }
 
   rcs_cpointer_t cpointer = rcs_cpointer_compress (prev_p);
-  rcs_record_set_field (rec_p, begin_pos, RCS_CPOINTER_WIDTH, cpointer.packed_value);
+  rcs_record_set_field (rec_p, begin_pos, RCS_CPOINTER_WIDTH, cpointer.u.packed_value);
 } /* rcs_record_set_prev */
 
 /**
@@ -239,10 +239,10 @@ rcs_record_get_pointer (rcs_record_t *rec_p, /**< record */
 
   uint16_t value = (uint16_t) rcs_record_get_field (rec_p, field_pos, field_width);
 
-  JERRY_ASSERT (sizeof (cpointer) == sizeof (cpointer.value));
-  JERRY_ASSERT (sizeof (value) == sizeof (cpointer.value));
+  JERRY_ASSERT (sizeof (cpointer) == sizeof (cpointer.u.value));
+  JERRY_ASSERT (sizeof (value) == sizeof (cpointer.u.value));
 
-  cpointer.packed_value = value;
+  cpointer.u.packed_value = value;
 
   return rcs_cpointer_decompress (cpointer);
 } /* rcs_record_get_pointer */
@@ -279,7 +279,7 @@ rcs_record_get_prev (rcs_record_set_t *rec_sec_p, /**< recordset */
       rcs_iterator_t it_ctx = rcs_iterator_create (rec_sec_p, rec_p);
 
       rcs_iterator_skip (&it_ctx, RCS_DYN_STORAGE_LENGTH_UNIT);
-      rcs_iterator_read (&it_ctx, &cpointer.packed_value, sizeof (uint16_t));
+      rcs_iterator_read (&it_ctx, &cpointer.u.packed_value, sizeof (uint16_t));
 
       return rcs_cpointer_decompress (cpointer);
     }

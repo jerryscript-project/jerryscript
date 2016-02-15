@@ -281,7 +281,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                              lit_cpointer_t lit_cp) /**< literal */
 {
   ecma_compiled_code_t *bytecode_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                                lit_cp.value.base_cp);
+                                                                lit_cp.u.value.base_cp);
   bool is_function = ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION) != 0);
 
   if (is_function)
@@ -1859,7 +1859,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_IN);
 
-          result = *(ecma_value_t *) chunk_p->data;
+          lit_utf8_byte_t *data_ptr = chunk_p->data;
+          result = *(ecma_value_t *) data_ptr;
           context_top_p[-2] = chunk_p->next_chunk_cp;
 
           ecma_dealloc_collection_chunk (chunk_p);
@@ -1882,7 +1883,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t, stack_top_p[-2]);
 
-            ecma_string_t *prop_name_p = ecma_get_string_from_value (*(ecma_value_t *) chunk_p->data);
+            lit_utf8_byte_t *data_ptr = chunk_p->data;
+            ecma_string_t *prop_name_p = ecma_get_string_from_value (*(ecma_value_t *) data_ptr);
 
             if (ecma_op_object_get_property (ecma_get_object_from_value (stack_top_p[-3]),
                                              prop_name_p) == NULL)

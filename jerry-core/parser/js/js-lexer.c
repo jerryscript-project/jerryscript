@@ -1572,7 +1572,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
     if (literal_p->type == LEXER_NUMBER_LITERAL
-        && literal_p->u.value.value.base_cp == lit_cp.value.base_cp)
+        && literal_p->u.value.u.value.base_cp == lit_cp.u.value.base_cp)
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;

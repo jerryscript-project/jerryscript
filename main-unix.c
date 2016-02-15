@@ -177,7 +177,7 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
 {
   if (args_cnt == 1
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
-      && args_p[0].v_bool == true)
+      && args_p[0].u.v_bool == true)
   {
     return true;
   }
@@ -368,7 +368,7 @@ main (int argc,
   jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
   jerry_api_value_t assert_value;
   assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  assert_value.v_object = assert_func_p;
+  assert_value.u.v_object = assert_func_p;
 
   bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
                                                            (jerry_api_char_t *) "assert",
@@ -476,7 +476,7 @@ main (int argc,
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    if (!jerry_api_is_function (print_function.v_object))
+    if (!jerry_api_is_function (print_function.u.v_object))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -516,7 +516,7 @@ main (int argc,
           // print return value
           const jerry_api_value_t args[] = {ret_val};
           jerry_api_value_t ret_val_print;
-          if (jerry_api_call_function (print_function.v_object, NULL, &ret_val_print, args, 1))
+          if (jerry_api_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
           {
             jerry_api_release_value (&ret_val_print);
           }

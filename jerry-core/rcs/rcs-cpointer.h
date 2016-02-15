@@ -34,16 +34,16 @@ typedef struct
   {
     struct
     {
-      mem_cpointer_t base_cp : MEM_CP_WIDTH; /**< pointer to base of addressed area */
+      __extension__ mem_cpointer_t base_cp : MEM_CP_WIDTH; /**< pointer to base of addressed area */
 #if MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG
-      uint16_t ext : (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG); /**< extension of the basic
-                                                                             *   compressed pointer
-                                                                             *   used for more detailed
-                                                                             *   addressing */
+      __extension__ uint16_t ext : (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG); /**< extension of the basic
+                                                                                           *   compressed pointer
+                                                                                           *   used for more detailed
+                                                                                           *   addressing */
 #endif /* MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG */
     } value;
     uint16_t packed_value;
-  };
+  } u;
 } rcs_cpointer_t;
 
 extern rcs_cpointer_t rcs_cpointer_compress (rcs_record_t *);

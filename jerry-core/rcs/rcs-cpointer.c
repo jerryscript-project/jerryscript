@@ -26,17 +26,17 @@ rcs_cpointer_t
 rcs_cpointer_compress (rcs_record_t *pointer) /**< pointer to compress */
 {
   rcs_cpointer_t cpointer;
-  cpointer.packed_value = 0;
+  cpointer.u.packed_value = 0;
 
   uintptr_t base_pointer = JERRY_ALIGNDOWN ((uintptr_t) pointer, MEM_ALIGNMENT);
 
   if ((void *) base_pointer == NULL)
   {
-    cpointer.value.base_cp = MEM_CP_NULL;
+    cpointer.u.value.base_cp = MEM_CP_NULL;
   }
   else
   {
-    cpointer.value.base_cp = mem_compress_pointer ((void *) base_pointer) & MEM_CP_MASK;
+    cpointer.u.value.base_cp = mem_compress_pointer ((void *) base_pointer) & MEM_CP_MASK;
   }
 
 #if MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG
@@ -55,7 +55,7 @@ rcs_cpointer_compress (rcs_record_t *pointer) /**< pointer to compress */
                                                           RCS_DYN_STORAGE_LENGTH_UNIT_LOG,
                                                           MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
 
-  cpointer.value.ext = ext_part & ((1ull << (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG)) - 1);
+  cpointer.u.value.ext = ext_part & ((1ull << (MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG)) - 1);
 #endif /* MEM_ALIGNMENT > RCS_DYN_STORAGE_LENGTH_UNIT_LOG */
   JERRY_ASSERT (rcs_cpointer_decompress (cpointer) == pointer);
 
@@ -72,9 +72,9 @@ rcs_cpointer_decompress (rcs_cpointer_t compressed_pointer) /**< recordset-speci
 {
   uint8_t *base_pointer = NULL;
 
-  if (compressed_pointer.value.base_cp != MEM_CP_NULL)
+  if (compressed_pointer.u.value.base_cp != MEM_CP_NULL)
   {
-    base_pointer = (uint8_t *) mem_decompress_pointer (compressed_pointer.value.base_cp);
+    base_pointer = (uint8_t *) mem_decompress_pointer (compressed_pointer.u.value.base_cp);
   }
 
   uintptr_t diff = 0;
@@ -84,7 +84,7 @@ rcs_cpointer_decompress (rcs_cpointer_t compressed_pointer) /**< recordset-speci
    *     rcs_cpointer_compress
    */
 
-  diff = (uintptr_t) compressed_pointer.value.ext << RCS_DYN_STORAGE_LENGTH_UNIT_LOG;
+  diff = (uintptr_t) compressed_pointer.u.value.ext << RCS_DYN_STORAGE_LENGTH_UNIT_LOG;
 #endif /* MEM_ALIGNMENT_LOG > RCS_DYN_STORAGE_LENGTH_UNIT_LOG */
   rcs_record_t *rec_p = (rcs_record_t *) (base_pointer + diff);
 
@@ -99,6 +99,6 @@ rcs_cpointer_decompress (rcs_cpointer_t compressed_pointer) /**< recordset-speci
 rcs_cpointer_t rcs_cpointer_null_cp (void)
 {
   rcs_cpointer_t cp;
-  cp.packed_value = MEM_CP_NULL;
+  cp.u.packed_value = MEM_CP_NULL;
   return cp;
 } /* rcs_cpointer_null_cp */

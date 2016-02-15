@@ -760,7 +760,7 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
   JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
   JERRY_STATIC_ASSERT (((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE) == 0);
 
-  JERRY_ASSERT (mem_heap.area <= ptr && ptr < (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
+  JERRY_ASSERT (mem_heap.area <= (uint8_t *) ptr && (uint8_t *) ptr < (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
 
   uintptr_t uintptr = (uintptr_t) ptr;
   uintptr_t uintptr_chunk_aligned = JERRY_ALIGNDOWN (uintptr, MEM_HEAP_CHUNK_SIZE);

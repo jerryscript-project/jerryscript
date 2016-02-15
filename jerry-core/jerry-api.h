@@ -118,12 +118,10 @@ typedef struct jerry_api_value_t
 
     uint32_t v_uint32; /**< number converted 32-bit unsigned integer */
 
-    union
-    {
-      jerry_api_string_t *v_string; /**< pointer to a JS string */
-      jerry_api_object_t *v_object; /**< pointer to a JS object */
-    };
-  };
+    jerry_api_string_t *v_string; /**< pointer to a JS string */
+    jerry_api_object_t *v_object; /**< pointer to a JS object */
+
+  } u;
 } jerry_api_value_t;
 
 /**

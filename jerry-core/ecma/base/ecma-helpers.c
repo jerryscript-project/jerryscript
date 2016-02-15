@@ -1388,7 +1388,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
     for (uint32_t i = const_literal_end; i < literal_end; i++)
     {
-      mem_cpointer_t bytecode_cpointer = literal_start_p[i].value.base_cp;
+      mem_cpointer_t bytecode_cpointer = literal_start_p[i].u.value.base_cp;
       ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
                                                                             bytecode_cpointer);
 

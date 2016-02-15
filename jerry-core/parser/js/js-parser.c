@@ -535,7 +535,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
       else if ((literal_p->type == LEXER_FUNCTION_LITERAL)
                || (literal_p->type == LEXER_REGEXP_LITERAL))
       {
-        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].value.base_cp,
+        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].u.value.base_cp,
                                    literal_p->u.bytecode_p);
       }
       else
@@ -579,7 +579,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         JERRY_ASSERT (literal_p != NULL
                        && literal_p->type == LEXER_FUNCTION_LITERAL);
         init_index = literal_p->prop.index;
-        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].value.base_cp,
+        ECMA_SET_NON_NULL_POINTER (literal_pool_p[literal_p->prop.index].u.value.base_cp,
                                    literal_p->u.bytecode_p);
       }
 
@@ -1775,7 +1775,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (context_p->status_flags & PARSER_NAMED_FUNCTION_EXP)
   {
-    ECMA_SET_NON_NULL_POINTER (literal_pool_p[const_literal_end].value.base_cp,
+    ECMA_SET_NON_NULL_POINTER (literal_pool_p[const_literal_end].u.value.base_cp,
                                compiled_code_p);
   }
 

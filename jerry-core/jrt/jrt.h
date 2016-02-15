@@ -42,6 +42,10 @@
 # define __attr_pure___ __attribute__((pure))
 #endif /* !__attr_pure___ */
 
+#ifndef __GNUC__
+#define __extension__
+#endif /* !__GNUC__ */
+
 /**
  * Constants
  */

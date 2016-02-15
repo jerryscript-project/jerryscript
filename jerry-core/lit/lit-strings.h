@@ -99,7 +99,7 @@
  */
 typedef struct
 {
-  lit_utf8_size_t offset : LIT_ITERATOR_OFFSET_WIDTH; /** offset to utf-8 char */
+  __extension__ lit_utf8_size_t offset : LIT_ITERATOR_OFFSET_WIDTH; /** offset to utf-8 char */
   bool is_non_bmp_middle: 1; /** flag indicating that current position of the iterator is the middle of
                               *  4-byte char */
 } lit_utf8_iterator_pos_t;

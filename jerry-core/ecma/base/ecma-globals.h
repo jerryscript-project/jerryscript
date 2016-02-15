@@ -294,8 +294,8 @@ typedef enum
  */
 typedef struct
 {
-  mem_cpointer_t getter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to getter object */
-  mem_cpointer_t setter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to setter object */
+  __extension__ mem_cpointer_t getter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to getter object */
+  __extension__ mem_cpointer_t setter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to setter object */
 } ecma_getter_setter_pointers_t;
 
 /**
@@ -307,7 +307,7 @@ typedef struct __attr_packed___ ecma_property_t
   unsigned int type : 2;
 
   /** Compressed pointer to next property */
-  mem_cpointer_t next_property_p : ECMA_POINTER_FIELD_WIDTH;
+  __extension__ mem_cpointer_t next_property_p : ECMA_POINTER_FIELD_WIDTH;
 
   /** Property's details (depending on Type) */
   union
@@ -316,10 +316,10 @@ typedef struct __attr_packed___ ecma_property_t
     struct __attr_packed___ ecma_named_data_property_t
     {
       /** Value */
-      ecma_value_t value : ECMA_VALUE_SIZE;
+      __extension__ ecma_value_t value : ECMA_VALUE_SIZE;
 
       /** Compressed pointer to property's name (pointer to String) */
-      mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
+      __extension__ mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
 
       /** Flag indicating whether the property is registered in LCache */
       unsigned int is_lcached : 1;
@@ -338,7 +338,7 @@ typedef struct __attr_packed___ ecma_property_t
     struct __attr_packed___ ecma_named_accessor_property_t
     {
       /** Compressed pointer to property's name (pointer to String) */
-      mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
+      __extension__ mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
 
       /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
       unsigned int enumerable : 1;
@@ -350,7 +350,7 @@ typedef struct __attr_packed___ ecma_property_t
       unsigned int is_lcached : 1;
 
       /** Compressed pointer to pair of pointers - to property's getter and setter */
-      mem_cpointer_t getter_setter_pair_cp : ECMA_POINTER_FIELD_WIDTH;
+      __extension__ mem_cpointer_t getter_setter_pair_cp : ECMA_POINTER_FIELD_WIDTH;
     } named_accessor_property;
 
     /** Description of internal property */
@@ -795,10 +795,10 @@ typedef struct ecma_string_t
     lit_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
-    mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;
+    __extension__ mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;
 
     /** Compressed pointer to an ecma_number_t */
-    mem_cpointer_t number_cp : ECMA_POINTER_FIELD_WIDTH;
+    __extension__ mem_cpointer_t number_cp : ECMA_POINTER_FIELD_WIDTH;
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;

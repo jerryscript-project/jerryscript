@@ -570,7 +570,7 @@ lit_literal_exists (lit_literal_t lit) /**< literal to check for existence */
 lit_literal_t
 lit_get_literal_by_cp (rcs_cpointer_t lit_cp) /**< compressed pointer to literal */
 {
-  JERRY_ASSERT (lit_cp.packed_value != MEM_CP_NULL);
+  JERRY_ASSERT (lit_cp.u.packed_value != MEM_CP_NULL);
   lit_literal_t lit = rcs_cpointer_decompress (lit_cp);
   JERRY_ASSERT (lit_literal_exists (lit));
 

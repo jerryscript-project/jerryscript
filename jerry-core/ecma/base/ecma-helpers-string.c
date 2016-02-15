@@ -978,7 +978,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
     {
       case ECMA_STRING_CONTAINER_LIT_TABLE:
       {
-        JERRY_ASSERT (string1_p->u.lit_cp.packed_value != string2_p->u.lit_cp.packed_value);
+        JERRY_ASSERT (string1_p->u.lit_cp.u.packed_value != string2_p->u.lit_cp.u.packed_value);
         return false;
       }
       case ECMA_STRING_CONTAINER_MAGIC_STRING:

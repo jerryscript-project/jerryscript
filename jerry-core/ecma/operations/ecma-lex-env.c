@@ -216,8 +216,6 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     }
     ecma_deref_ecma_string (arguments_magic_string_p);
 
-    JERRY_ASSERT (!is_equal);
-
     if (is_equal)
     {
       return ecma_make_throw_obj_completion_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));

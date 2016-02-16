@@ -21,7 +21,7 @@
  */
 
 /**
- * \addtogroup ecmainitfinalize Initialization and finalization of ECMA
+ * \addtogroup ecmainitfinalize Initialization and finalization of ECMA components
  * @{
  */
 

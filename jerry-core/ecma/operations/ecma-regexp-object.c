@@ -1176,7 +1176,7 @@ void
 re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
                                 ecma_string_t *input_str_p, /**< input string */
                                 uint32_t num_of_elements, /**< Number of array elements */
-                                int32_t index) /** index of matching */
+                                int32_t index) /**< index of matching */
 {
   /* Set index property of the result array */
   ecma_string_t *result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);

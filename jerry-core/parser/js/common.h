@@ -164,4 +164,10 @@ void util_print_literal (lexer_literal_t *);
 #define PARSER_INLINE inline
 #define PARSER_NOINLINE __attribute__ ((noinline))
 
+/**
+ * @}
+ * @}
+ * @}
+ */
+
 #endif /* !COMMON_H */

@@ -53,8 +53,8 @@
  *
  * The routine converts all of its arguments to strings and outputs them using 'printf'.
  *
- * Code points, with except of <NUL> character, that are representable with one utf8-byte
- * are outputted as is, using '%c' format argument, and other code points are outputted as '\uhhll',
+ * Code points, with except of NUL character, that are representable with one utf8-byte
+ * are outputted as is, using "%c" format argument, and other code points are outputted as "\uhhll",
  * where hh and ll are values of code point's high and low bytes, correspondingly.
  *
  * @return completion value

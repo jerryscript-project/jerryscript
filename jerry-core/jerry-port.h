@@ -24,7 +24,7 @@
 # define EXTERN_C
 #endif /* !__cplusplus */
 
-/** \addtogroup jerry Jerry engine port
+/** \addtogroup jerry_port Jerry engine port
  * @{
  */
 

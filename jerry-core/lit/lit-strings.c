@@ -346,7 +346,7 @@ convert_code_point_to_high_surrogate (lit_code_point_t code_point) /**< code poi
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_iterator_peek_next (const lit_utf8_iterator_t *iter_p) /**< @in: utf-8 string iterator */
+lit_utf8_iterator_peek_next (const lit_utf8_iterator_t *iter_p) /**< [in] utf-8 string iterator */
 {
   JERRY_ASSERT (!lit_utf8_iterator_is_eos (iter_p));
 
@@ -377,7 +377,7 @@ lit_utf8_iterator_peek_next (const lit_utf8_iterator_t *iter_p) /**< @in: utf-8 
  * Increment iterator to point to next code unit
  */
 void
-lit_utf8_iterator_incr (lit_utf8_iterator_t *iter_p) /**< @in-out: utf-8 string iterator */
+lit_utf8_iterator_incr (lit_utf8_iterator_t *iter_p) /**< [in,out] utf-8 string iterator */
 {
   lit_utf8_iterator_read_next (iter_p);
 } /* lit_utf8_iterator_incr */
@@ -386,7 +386,7 @@ lit_utf8_iterator_incr (lit_utf8_iterator_t *iter_p) /**< @in-out: utf-8 string 
  * Skip specified number of code units
  */
 void
-lit_utf8_iterator_advance (lit_utf8_iterator_t *iter_p, /**< in-out: iterator */
+lit_utf8_iterator_advance (lit_utf8_iterator_t *iter_p, /**< [in,out] iterator */
                            ecma_length_t chars_count) /**< number of code units to skip */
 {
   while (chars_count--)
@@ -401,7 +401,7 @@ lit_utf8_iterator_advance (lit_utf8_iterator_t *iter_p, /**< in-out: iterator */
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_iterator_read_next (lit_utf8_iterator_t *iter_p) /**< @in-out: utf-8 string iterator */
+lit_utf8_iterator_read_next (lit_utf8_iterator_t *iter_p) /**< [in,out] utf-8 string iterator */
 {
   JERRY_ASSERT (!lit_utf8_iterator_is_eos (iter_p));
 
@@ -491,7 +491,7 @@ lit_utf8_string_length (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
 lit_utf8_size_t
 lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
                                lit_utf8_size_t buf_size, /**< size of the buffer in bytes */
-                               lit_code_point_t *code_point) /**< @out: code point */
+                               lit_code_point_t *code_point) /**< [out] code point */
 {
   JERRY_ASSERT (buf_p && buf_size);
 
@@ -543,7 +543,7 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
  */
 lit_utf8_size_t
 lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
-                               ecma_char_t *code_point) /**< @out: code point */
+                               ecma_char_t *code_point) /**< [out] code point */
 {
   JERRY_ASSERT (buf_p);
 
@@ -586,7 +586,7 @@ lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with cha
  */
 lit_utf8_size_t
 lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
-                                   ecma_char_t *code_point) /**< @out: code point */
+                                   ecma_char_t *code_point) /**< [out] code point */
 {
   JERRY_ASSERT (buf_p);
 

@@ -295,7 +295,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_op_array_get_separator_string (ecma_value_t separator) /** < possible separator */
+ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separator */
 {
   if (ecma_is_value_undefined (separator))
   {
@@ -318,8 +318,8 @@ ecma_op_array_get_separator_string (ecma_value_t separator) /** < possible separ
  *         Returned value must be freed with ecma_free_completion_value.
  */
 static ecma_completion_value_t
-ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /** < this object */
-                                      uint32_t index) /** < array index */
+ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
+                                      uint32_t index) /**< array index */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
@@ -357,7 +357,7 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /** < this object */
  */
 static ecma_completion_value_t
 ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argument */
-                                   const ecma_value_t separator_arg) /** < separator argument */
+                                   const ecma_value_t separator_arg) /**< separator argument */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
 

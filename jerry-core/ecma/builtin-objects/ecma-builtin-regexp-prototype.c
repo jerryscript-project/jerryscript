@@ -41,7 +41,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup regexp ECMA RegExp.prototype object built-in
+ * \addtogroup regexpprototype ECMA RegExp.prototype object built-in
  * @{
  */
 

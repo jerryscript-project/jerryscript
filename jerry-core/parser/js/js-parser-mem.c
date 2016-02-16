@@ -471,8 +471,8 @@ parser_stack_pop_uint16 (parser_context_t *context_p) /**< context */
  */
 void
 parser_stack_push (parser_context_t *context_p, /**< context */
-                   const void *data_p, /* data pushed onto the stack */
-                   uint32_t length) /* length of the data */
+                   const void *data_p, /**< data pushed onto the stack */
+                   uint32_t length) /**< length of the data */
 {
   uint32_t fragment_length = PARSER_STACK_PAGE_SIZE - context_p->stack.last_position;
   const uint8_t *bytes_p = (const uint8_t *) data_p;
@@ -529,8 +529,8 @@ parser_stack_push (parser_context_t *context_p, /**< context */
  */
 void
 parser_stack_pop (parser_context_t *context_p, /**< context */
-                  void *data_p, /* destination buffer, can be NULL */
-                  uint32_t length) /* length of the data */
+                  void *data_p, /**< destination buffer, can be NULL */
+                  uint32_t length) /**< length of the data */
 {
   uint8_t *bytes_p = (uint8_t *) data_p;
   parser_mem_page_t *page_p = context_p->stack.first_p;
@@ -604,8 +604,8 @@ parser_stack_iterator_skip (parser_stack_iterator_t *iterator, /**< iterator */
  */
 void
 parser_stack_iterator_read (parser_stack_iterator_t *iterator, /**< iterator */
-                            void *data_p, /* destination buffer */
-                            size_t length) /* length of the data */
+                            void *data_p, /**< destination buffer */
+                            size_t length) /**< length of the data */
 {
   uint8_t *bytes_p = (uint8_t *) data_p;
 
@@ -636,8 +636,8 @@ parser_stack_iterator_read (parser_stack_iterator_t *iterator, /**< iterator */
  */
 void
 parser_stack_iterator_write (parser_stack_iterator_t *iterator, /**< iterator */
-                             const void *data_p, /* destination buffer */
-                             size_t length) /* length of the data */
+                             const void *data_p, /**< destination buffer */
+                             size_t length) /**< length of the data */
 {
   const uint8_t *bytes_p = (const uint8_t *) data_p;
 

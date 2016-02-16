@@ -60,5 +60,9 @@ extern rcs_chunked_list_node_t *rcs_chunked_list_get_node_from_pointer (rcs_chun
 extern uint8_t *rcs_chunked_list_get_node_data_space (rcs_chunked_list_t *, rcs_chunked_list_node_t *);
 extern size_t rcs_chunked_list_get_node_data_space_size (void);
 
+/**
+ * @}
+ * @}
+ */
 
 #endif /* RCS_CHUNKED_LIST_H */

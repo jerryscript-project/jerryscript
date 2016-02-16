@@ -124,8 +124,8 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < this object */
-                                                   uint32_t index) /** < array index */
+ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< this object */
+                                                   uint32_t index) /**< array index */
 {
   ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
@@ -196,8 +196,8 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /** < t
  *         Returned value must be freed with ecma_free_completion_value.
  */
 ecma_completion_value_t
-ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /** < object */
-                                           bool only_enumerable_properties) /** < list enumerable properties? */
+ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
+                                           bool only_enumerable_properties) /**< list enumerable properties? */
 {
   JERRY_ASSERT (obj_p != NULL);
 
@@ -564,7 +564,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
                                        ecma_string_t *search_str_p, /**< string's length */
                                        bool first_index, /**< whether search for first (t) or last (f) index */
                                        ecma_length_t start_pos, /**< start position */
-                                       ecma_length_t *ret_index_p) /**> position found in original string */
+                                       ecma_length_t *ret_index_p) /**< position found in original string */
 {
   bool match_found = false;
 

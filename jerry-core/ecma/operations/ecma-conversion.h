@@ -22,7 +22,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmaconversion ECMA conversion
+ * \addtogroup ecmaconversion ECMA conversion routines
  * @{
  */
 

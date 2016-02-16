@@ -54,7 +54,7 @@ CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
 /**
  * memset
  *
- * @return @s
+ * @return @a s
  */
 void * __attr_used___ // FIXME
 memset (void *s,  /**< area to set values in */

@@ -501,8 +501,8 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
  *         false if the target object is not prototype of the base object
  */
 bool
-ecma_op_object_is_prototype_of (ecma_object_t *base_p, /** < base object */
-                                ecma_object_t *target_p) /** < target object */
+ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
+                                ecma_object_t *target_p) /**< target object */
 {
   do
   {

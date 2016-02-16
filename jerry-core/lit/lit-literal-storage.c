@@ -82,7 +82,7 @@ lit_storage_create_magic_literal_ex (rcs_record_set_t *rec_set_p, /**< recordset
  * @return  pointer to the created record
  */
 rcs_record_t *
-lit_storage_create_number_literal (rcs_record_set_t *rec_set_p, /** recordset */
+lit_storage_create_number_literal (rcs_record_set_t *rec_set_p, /**< recordset */
                                    ecma_number_t num) /**< numeric value */
 {
   const size_t record_size = RCS_NUMBER_HEADER_SIZE + sizeof (ecma_number_t);

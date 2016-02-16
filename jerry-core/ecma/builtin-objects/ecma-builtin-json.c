@@ -608,7 +608,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
 static ecma_completion_value_t
 ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
                         ecma_object_t *holder_p, /**< holder object */
-                        ecma_string_t *name_p) /** < property name */
+                        ecma_string_t *name_p) /**< property name */
 {
   JERRY_ASSERT (reviver_p);
   JERRY_ASSERT (holder_p);

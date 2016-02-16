@@ -56,14 +56,14 @@ typedef enum
   RE_OP_CHAR,                                     /**< any character */
   RE_OP_SAVE_AT_START,                            /**< save at start */
   RE_OP_SAVE_AND_MATCH,                           /**< save and match */
-  RE_OP_PERIOD,                                   /**< . */
-  RE_OP_ALTERNATIVE,                              /**< | */
+  RE_OP_PERIOD,                                   /**< "." */
+  RE_OP_ALTERNATIVE,                              /**< "|" */
   RE_OP_GREEDY_ITERATOR,                          /**< greedy iterator */
   RE_OP_NON_GREEDY_ITERATOR,                      /**< non-greedy iterator */
-  RE_OP_ASSERT_START,                             /**< ^ */
-  RE_OP_ASSERT_END,                               /**< $ */
-  RE_OP_ASSERT_WORD_BOUNDARY,                     /**< \b */
-  RE_OP_ASSERT_NOT_WORD_BOUNDARY,                 /**< \B */
+  RE_OP_ASSERT_START,                             /**< "^" */
+  RE_OP_ASSERT_END,                               /**< "$" */
+  RE_OP_ASSERT_WORD_BOUNDARY,                     /**< "\b" */
+  RE_OP_ASSERT_NOT_WORD_BOUNDARY,                 /**< "\B" */
   RE_OP_LOOKAHEAD_POS,                            /**< lookahead pos */
   RE_OP_LOOKAHEAD_NEG,                            /**< lookahead neg */
   RE_OP_BACKREFERENCE,                            /**< \[0..9] */

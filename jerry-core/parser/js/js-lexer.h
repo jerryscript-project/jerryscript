@@ -49,15 +49,15 @@ typedef enum
 #define LEXER_IS_UNARY_LVALUE_OP_TOKEN(token_type) \
   ((token_type) >= LEXER_KEYW_DELETE && (token_type) <= LEXER_DECREASE)
 
-  LEXER_PLUS,                    /**< + */
-  LEXER_NEGATE,                  /**< - */
-  LEXER_LOGICAL_NOT,             /**< ! */
-  LEXER_BIT_NOT,                 /**< ~ */
+  LEXER_PLUS,                    /**< "+" */
+  LEXER_NEGATE,                  /**< "-" */
+  LEXER_LOGICAL_NOT,             /**< "!" */
+  LEXER_BIT_NOT,                 /**< "~" */
   LEXER_KEYW_VOID,               /**< void */
   LEXER_KEYW_TYPEOF,             /**< typeof */
   LEXER_KEYW_DELETE,             /**< delete */
-  LEXER_INCREASE,                /**< ++ */
-  LEXER_DECREASE,                /**< -- */
+  LEXER_INCREASE,                /**< "++" */
+  LEXER_DECREASE,                /**< "--" */
 
   /* Binary operators
    * IMPORTANT: update CBC_BINARY_OP_TOKEN_TO_OPCODE,
@@ -69,53 +69,53 @@ typedef enum
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_ASSIGN_BIT_XOR)
 #define LEXER_FIRST_BINARY_OP LEXER_ASSIGN
 
-  LEXER_ASSIGN,                  /**< = (prec: 3) */
-  LEXER_ASSIGN_ADD,              /**< += (prec: 3) */
-  LEXER_ASSIGN_SUBTRACT,         /**< -= (prec: 3) */
-  LEXER_ASSIGN_MULTIPLY,         /**< *= (prec: 3) */
-  LEXER_ASSIGN_DIVIDE,           /**< /= (prec: 3) */
-  LEXER_ASSIGN_MODULO,           /**< %= (prec: 3) */
-  LEXER_ASSIGN_LEFT_SHIFT,       /**< <<= (prec: 3) */
-  LEXER_ASSIGN_RIGHT_SHIFT,      /**< >>= (prec: 3) */
-  LEXER_ASSIGN_UNS_RIGHT_SHIFT,  /**< >>>= (prec: 3) */
-  LEXER_ASSIGN_BIT_AND,          /**< &= (prec: 3) */
-  LEXER_ASSIGN_BIT_OR,           /**< |= (prec: 3) */
-  LEXER_ASSIGN_BIT_XOR,          /**< ^= (prec: 3) */
-  LEXER_QUESTION_MARK,           /**< ? (prec: 4) */
-  LEXER_LOGICAL_OR,              /**< || (prec: 5) */
-  LEXER_LOGICAL_AND,             /**< && (prec: 6) */
-  LEXER_BIT_OR,                  /**< | (prec: 7) */
-  LEXER_BIT_XOR,                 /**< ^ (prec: 8) */
-  LEXER_BIT_AND,                 /**< & (prec: 9) */
-  LEXER_EQUAL,                   /**< == (prec: 10) */
-  LEXER_NOT_EQUAL,               /**< != (prec: 10) */
-  LEXER_STRICT_EQUAL,            /**< === (prec: 10) */
-  LEXER_STRICT_NOT_EQUAL,        /**< !== (prec: 10) */
-  LEXER_LESS,                    /**< < (prec: 11) */
-  LEXER_GREATER,                 /**< > (prec: 11) */
-  LEXER_LESS_EQUAL,              /**< <= (prec: 11) */
-  LEXER_GREATER_EQUAL,           /**< >= (prec: 11) */
+  LEXER_ASSIGN,                  /**< "=" (prec: 3) */
+  LEXER_ASSIGN_ADD,              /**< "+=" (prec: 3) */
+  LEXER_ASSIGN_SUBTRACT,         /**< "-=" (prec: 3) */
+  LEXER_ASSIGN_MULTIPLY,         /**< "*=" (prec: 3) */
+  LEXER_ASSIGN_DIVIDE,           /**< "/=" (prec: 3) */
+  LEXER_ASSIGN_MODULO,           /**< "%=" (prec: 3) */
+  LEXER_ASSIGN_LEFT_SHIFT,       /**< "<<=" (prec: 3) */
+  LEXER_ASSIGN_RIGHT_SHIFT,      /**< ">>=" (prec: 3) */
+  LEXER_ASSIGN_UNS_RIGHT_SHIFT,  /**< ">>>=" (prec: 3) */
+  LEXER_ASSIGN_BIT_AND,          /**< "&=" (prec: 3) */
+  LEXER_ASSIGN_BIT_OR,           /**< "|=" (prec: 3) */
+  LEXER_ASSIGN_BIT_XOR,          /**< "^=" (prec: 3) */
+  LEXER_QUESTION_MARK,           /**< "?" (prec: 4) */
+  LEXER_LOGICAL_OR,              /**< "||" (prec: 5) */
+  LEXER_LOGICAL_AND,             /**< "&&" (prec: 6) */
+  LEXER_BIT_OR,                  /**< "|" (prec: 7) */
+  LEXER_BIT_XOR,                 /**< "^" (prec: 8) */
+  LEXER_BIT_AND,                 /**< "&" (prec: 9) */
+  LEXER_EQUAL,                   /**< "==" (prec: 10) */
+  LEXER_NOT_EQUAL,               /**< "!=" (prec: 10) */
+  LEXER_STRICT_EQUAL,            /**< "===" (prec: 10) */
+  LEXER_STRICT_NOT_EQUAL,        /**< "!==" (prec: 10) */
+  LEXER_LESS,                    /**< "<" (prec: 11) */
+  LEXER_GREATER,                 /**< ">" (prec: 11) */
+  LEXER_LESS_EQUAL,              /**< "<=" (prec: 11) */
+  LEXER_GREATER_EQUAL,           /**< ">=" (prec: 11) */
   LEXER_KEYW_IN,                 /**< in (prec: 11) */
   LEXER_KEYW_INSTANCEOF,         /**< instanceof (prec: 11) */
-  LEXER_LEFT_SHIFT,              /**< << (prec: 12) */
-  LEXER_RIGHT_SHIFT,             /**< >> (prec: 12) */
-  LEXER_UNS_RIGHT_SHIFT,         /**< >>> (prec: 12) */
-  LEXER_ADD,                     /**< + (prec: 13) */
-  LEXER_SUBTRACT,                /**< - (prec: 13) */
-  LEXER_MULTIPLY,                /**< * (prec: 14) */
-  LEXER_DIVIDE,                  /**< / (prec: 14) */
-  LEXER_MODULO,                  /**< % (prec: 14) */
+  LEXER_LEFT_SHIFT,              /**< "<<" (prec: 12) */
+  LEXER_RIGHT_SHIFT,             /**< ">>" (prec: 12) */
+  LEXER_UNS_RIGHT_SHIFT,         /**< ">>>" (prec: 12) */
+  LEXER_ADD,                     /**< "+" (prec: 13) */
+  LEXER_SUBTRACT,                /**< "-" (prec: 13) */
+  LEXER_MULTIPLY,                /**< "*" (prec: 14) */
+  LEXER_DIVIDE,                  /**< "/" (prec: 14) */
+  LEXER_MODULO,                  /**< "%" (prec: 14) */
 
-  LEXER_LEFT_BRACE,              /**< { */
-  LEXER_LEFT_PAREN,              /**< ( */
-  LEXER_LEFT_SQUARE,             /**< [ */
-  LEXER_RIGHT_BRACE,             /**< } */
-  LEXER_RIGHT_PAREN,             /**<_) */
-  LEXER_RIGHT_SQUARE,            /**< ] */
-  LEXER_DOT,                     /**< . */
-  LEXER_SEMICOLON,               /**< ; */
-  LEXER_COLON,                   /**< : */
-  LEXER_COMMA,                   /**< , */
+  LEXER_LEFT_BRACE,              /**< "{" */
+  LEXER_LEFT_PAREN,              /**< "(" */
+  LEXER_LEFT_SQUARE,             /**< "[" */
+  LEXER_RIGHT_BRACE,             /**< "}" */
+  LEXER_RIGHT_PAREN,             /**<_")" */
+  LEXER_RIGHT_SQUARE,            /**< "]" */
+  LEXER_DOT,                     /**< "." */
+  LEXER_SEMICOLON,               /**< ";" */
+  LEXER_COLON,                   /**< ":" */
+  LEXER_COMMA,                   /**< "," */
 
   LEXER_KEYW_BREAK,              /**< break */
   LEXER_KEYW_DO,                 /**< do */

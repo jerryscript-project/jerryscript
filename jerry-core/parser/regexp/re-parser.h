@@ -115,6 +115,7 @@ re_parse_next_token (re_parser_ctx_t *, re_token_t *);
 /**
  * @}
  * @}
+ * @}
  */
 
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

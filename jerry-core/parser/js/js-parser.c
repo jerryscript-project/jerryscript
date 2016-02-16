@@ -1462,7 +1462,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
 
   byte_code_p = (uint8_t *) compiled_code_p;
-  compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION | (1 << ECMA_BYTECODE_REF_SHIFT);
+  compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION | (1u << ECMA_BYTECODE_REF_SHIFT);
 
   if (needs_uint16_arguments)
   {

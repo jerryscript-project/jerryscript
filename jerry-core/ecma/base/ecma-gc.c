@@ -329,8 +329,8 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
           switch (property_id)
           {
-            case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
-            case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma-values */
+            case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
+            case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
             {
               JERRY_UNIMPLEMENTED ("Indexed array storage is not implemented yet.");
             }
@@ -363,7 +363,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
               break;
             }
 
-            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma-value */
+            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma value */
             {
               if (ecma_is_value_object (property_value))
               {
@@ -375,7 +375,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
               break;
             }
 
-            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma-values */
+            case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma values */
             {
               ecma_collection_header_t *bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
                                                                                       property_value);

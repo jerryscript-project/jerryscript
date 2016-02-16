@@ -50,13 +50,13 @@
  * See also:
  *          ECMA-262 v5, 15.6.4.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (value_of_ret,
                   ecma_builtin_boolean_prototype_object_value_of (this_arg),
@@ -75,7 +75,7 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< thi
     ret_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+  ret_value = ecma_make_string_value (ret_str_p);
 
   ECMA_FINALIZE (value_of_ret);
 
@@ -88,15 +88,15 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< thi
  * See also:
  *          ECMA-262 v5, 15.6.4.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
   if (ecma_is_value_boolean (this_arg))
   {
-    return ecma_make_normal_completion_value (this_arg);
+    return this_arg;
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -115,11 +115,11 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
 
       JERRY_ASSERT (ecma_is_value_boolean (ret_boolean_value));
 
-      return ecma_make_normal_completion_value (ret_boolean_value);
+      return ret_boolean_value;
     }
   }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  return ecma_raise_type_error ("");
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

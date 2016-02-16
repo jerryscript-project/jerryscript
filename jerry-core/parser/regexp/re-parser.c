@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,13 +106,13 @@ re_parse_octal (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
  * Parse RegExp iterators
  *
  * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ *         Returned value must be freed with ecma_free_value
  */
-static ecma_completion_value_t
+static ecma_value_t
 re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                    re_token_t *re_token_p) /**< out: output token */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   re_token_p->qmin = 1;
   re_token_p->qmax = 1;
@@ -239,7 +239,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
     }
   }
 
-  JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+  JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
   if (re_token_p->qmin > re_token_p->qmax)
   {
@@ -299,9 +299,9 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
  * Read the input pattern and parse the range of character class
  *
  * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
                      re_char_class_callback append_char_class, /**< callback function,
                                                                 *   which adds the char-ranges
@@ -557,13 +557,13 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
  * Read the input pattern and parse the next token for the RegExp compiler
  *
  * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                      re_token_t *out_token_p) /**< out: output token */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
   {

@@ -53,15 +53,15 @@
  * See also:
  *          ECMA-262 v5, B.2.5.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t pattern_arg, /**< pattern or RegExp object */
                                        ecma_value_t flags_arg) /**< flags */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
@@ -131,9 +131,9 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
          * we can't copy it without knowing its length."
          */
         re_compiled_code_t *new_bc_p = NULL;
-        ecma_completion_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
+        ecma_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */
-        JERRY_ASSERT (ecma_is_completion_value_empty (bc_comp));
+        JERRY_ASSERT (ecma_is_value_empty (bc_comp));
 
         re_compiled_code_t *old_bc_p = ECMA_GET_POINTER (re_compiled_code_t,
                                                          bc_prop_p->u.internal_property.value);
@@ -147,7 +147,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         re_initialize_props (this_obj_p, pattern_string_p, flags);
 
-        ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         ECMA_FINALIZE (obj_this);
       }
@@ -178,7 +178,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
       }
 
       /* Parse flags. */
-      if (ecma_is_completion_value_empty (ret_value) && !ecma_is_value_undefined (flags_arg))
+      if (ecma_is_value_empty (ret_value) && !ecma_is_value_undefined (flags_arg))
       {
         ECMA_TRY_CATCH (flags_str_value,
                         ecma_op_to_string (flags_arg),
@@ -191,7 +191,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ECMA_FINALIZE (flags_str_value);
       }
 
-      if (ecma_is_completion_value_empty (ret_value))
+      if (ecma_is_value_empty (ret_value))
       {
         ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
         ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
@@ -215,7 +215,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
         re_initialize_props (this_obj_p, pattern_string_p, flags);
-        ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
         ECMA_FINALIZE (bc_dummy);
 
@@ -240,14 +240,14 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
  * See also:
  *          ECMA-262 v5, 15.10.6.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
@@ -271,8 +271,8 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     if (bytecode_p == NULL)
     {
       /* Missing bytecode means empty RegExp: '/(?:)/', so always return empty string. */
-      ecma_completion_value_t result_array = ecma_op_create_array_object (0, 0, false);
-      ecma_object_t *result_array_obj_p = ecma_get_object_from_completion_value (result_array);
+      ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
+      ecma_object_t *result_array_obj_p = ecma_get_object_from_value (result_array);
       ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
       re_set_result_array_properties (result_array_obj_p,
                                       input_str_p,
@@ -314,14 +314,14 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
  * See also:
  *          ECMA-262 v5, 15.10.6.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (match_value,
                   ecma_builtin_regexp_prototype_exec (this_arg, arg),
@@ -329,11 +329,11 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 
   if (ecma_is_value_null (match_value))
   {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   ECMA_FINALIZE (match_value);
@@ -347,13 +347,13 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
  * See also:
  *          ECMA-262 v5, 15.10.6.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
@@ -425,7 +425,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
       output_str_p = concat_p;
     }
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (output_str_p));
+    ret_value = ecma_make_string_value (output_str_p);
 
     ECMA_FINALIZE (obj_this);
   }

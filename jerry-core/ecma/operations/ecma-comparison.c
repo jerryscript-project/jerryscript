@@ -34,7 +34,7 @@
  * @return true - if values are equal,
  *         false - otherwise.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                    ecma_value_t y) /**< second operand */
 {
@@ -59,7 +59,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                || (is_x_string && is_y_string)
                                || (is_x_object && is_y_object));
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (is_types_equal)
   {
@@ -69,7 +69,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
         || is_x_null)
     {
       // a., b.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
     }
     else if (is_x_number)
     { // c.
@@ -100,8 +100,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
 #endif /* !JERRY_NDEBUG */
 
-      ret_value = ecma_make_simple_completion_value (is_x_equal_to_y ?
-                                                     ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (is_x_equal_to_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else if (is_x_string)
     { // d.
@@ -110,13 +109,13 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
-      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else if (is_x_boolean)
     { // e.
       bool is_equal = (ecma_is_value_true (x) == ecma_is_value_true (y));
 
-      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
     else
     { // f.
@@ -124,13 +123,13 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
       bool is_equal = (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
 
-      ret_value = ecma_make_simple_completion_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
   }
   else if ((is_x_null && is_y_undefined)
            || (is_x_undefined && is_y_null))
   { // 2., 3.
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
   else if (is_x_number && is_y_string)
   {
@@ -202,7 +201,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   }
   else
   {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
   return ret_value;
@@ -325,15 +324,15 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
  *
  * See also: ECMA-262 v5, 11.8.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                      ecma_value_t y, /**< second operand */
                                      bool left_first) /**< 'LeftFirst' flag */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_value_t first_converted_value = left_first ? x : y;
   ecma_value_t second_converted_value = left_first ? y : x;
@@ -365,7 +364,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
         || ecma_number_is_nan (ny))
     {
       // c., d.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
@@ -428,8 +427,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       JERRY_ASSERT (is_x_less_than_y_check == is_x_less_than_y);
 #endif /* !JERRY_NDEBUG */
 
-      ret_value = ecma_make_simple_completion_value (is_x_less_than_y ?
-                                                     ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (is_x_less_than_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (ny);
@@ -444,8 +442,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 
     bool is_px_less = ecma_compare_ecma_strings_relational (str_x_p, str_y_p);
 
-    ret_value = ecma_make_simple_completion_value (is_px_less ? ECMA_SIMPLE_VALUE_TRUE
-                                                              : ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_simple_value (is_px_less ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   ECMA_FINALIZE (prim_second_converted_value);

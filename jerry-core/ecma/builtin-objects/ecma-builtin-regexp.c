@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@
 /**
  * Handle calling [[Call]] of built-in RegExp object
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
@@ -57,13 +57,13 @@ ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 /**
  * Handle calling [[Construct]] of built-in RegExp object
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_value_t pattern_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   ecma_value_t flags_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -83,7 +83,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   {
     if (ecma_is_value_undefined (flags_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (pattern_value, true));
+      ret_value = ecma_copy_value (pattern_value, true);
     }
     else
     {
@@ -117,7 +117,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
       pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
     }
 
-    if (ecma_is_completion_value_empty (ret_value) && !ecma_is_value_undefined (flags_value))
+    if (ecma_is_value_empty (ret_value) && !ecma_is_value_undefined (flags_value))
     {
       ECMA_TRY_CATCH (flags_str_value,
                       ecma_op_to_string (flags_value),
@@ -127,7 +127,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
       ECMA_FINALIZE (flags_str_value);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
     }

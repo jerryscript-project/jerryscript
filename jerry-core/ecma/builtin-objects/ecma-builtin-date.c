@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,11 +75,11 @@ ecma_date_parse_date_chars (lit_utf8_byte_t **str_p, /**< pointer to the cesu8 s
   *
   * @return result of MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))
   */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
                             ecma_length_t args_len) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_number_t *prim_value_p = ecma_alloc_number ();
   *prim_value_p = ecma_number_make_nan ();
 
@@ -95,7 +95,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   ecma_number_t milliseconds = ECMA_NUMBER_ZERO;
 
   /* 3. */
-  if (args_len >= 3 && ecma_is_completion_value_empty (ret_value))
+  if (args_len >= 3 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (date_value, ecma_op_to_number (args[2]), ret_value);
     date = *ecma_get_number_from_value (date_value);
@@ -103,7 +103,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   }
 
   /* 4. */
-  if (args_len >= 4 && ecma_is_completion_value_empty (ret_value))
+  if (args_len >= 4 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (hours_value, ecma_op_to_number (args[3]), ret_value);
     hours = *ecma_get_number_from_value (hours_value);
@@ -111,7 +111,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   }
 
   /* 5. */
-  if (args_len >= 5 && ecma_is_completion_value_empty (ret_value))
+  if (args_len >= 5 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (minutes_value, ecma_op_to_number (args[4]), ret_value);
     minutes = *ecma_get_number_from_value (minutes_value);
@@ -119,7 +119,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   }
 
   /* 6. */
-  if (args_len >= 6 && ecma_is_completion_value_empty (ret_value))
+  if (args_len >= 6 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (seconds_value, ecma_op_to_number (args[5]), ret_value);
     seconds = *ecma_get_number_from_value (seconds_value);
@@ -127,14 +127,14 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   }
 
   /* 7. */
-  if (args_len >= 7 && ecma_is_completion_value_empty (ret_value))
+  if (args_len >= 7 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (milliseconds_value, ecma_op_to_number (args[6]), ret_value);
     milliseconds = *ecma_get_number_from_value (milliseconds_value);
     ECMA_FINALIZE (milliseconds_value);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     if (!ecma_number_is_nan (year) && !ecma_number_is_infinity (year))
     {
@@ -163,9 +163,9 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   ECMA_FINALIZE (month_value);
   ECMA_FINALIZE (year_value);
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (prim_value_p));
+    ret_value = ecma_make_number_value (prim_value_p);
   }
   else
   {
@@ -182,14 +182,14 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
  *          ECMA-262 v5, 15.9.4.2
  *          ECMA-262 v5, 15.9.1.15
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argument */
                          ecma_value_t arg) /**< string */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_number_t *date_num_p = ecma_alloc_number ();
   *date_num_p = ecma_number_make_nan ();
 
@@ -389,7 +389,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (date_num_p));
+  ret_value = ecma_make_number_value (date_num_p);
 
   MEM_FINALIZE_LOCAL_ARRAY (date_start_p);
   ECMA_FINALIZE (date_str_value);
@@ -403,15 +403,15 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
  * See also:
  *          ECMA-262 v5, 15.9.4.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argument */
                        const ecma_value_t args[], /**< arguments list */
                        ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (args_number < 2)
   {
@@ -421,7 +421,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
      */
     ecma_number_t *nan_p = ecma_alloc_number ();
     *nan_p = ecma_number_make_nan ();
-    return ecma_make_normal_completion_value (ecma_make_number_value (nan_p));
+    return ecma_make_number_value (nan_p);
   }
 
   ECMA_TRY_CATCH (time_value, ecma_date_construct_helper (args, args_number), ret_value);
@@ -429,7 +429,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
   ecma_number_t *time_p = ecma_get_number_from_value (time_value);
   ecma_number_t *time_clip_p = ecma_alloc_number ();
   *time_clip_p = ecma_date_time_clip (*time_p);
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (time_clip_p));
+  ret_value = ecma_make_number_value (time_clip_p);
 
   ECMA_FINALIZE (time_value);
 
@@ -442,10 +442,10 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
  * See also:
  *          ECMA-262 v5, 15.9.4.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
 {
   /*
@@ -455,7 +455,7 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
    */
   ecma_number_t *now_num_p = ecma_alloc_number ();
   *now_num_p = ECMA_NUMBER_ZERO;
-  return ecma_make_normal_completion_value (ecma_make_number_value (now_num_p));
+  return ecma_make_number_value (now_num_p);
 } /* ecma_builtin_date_now */
 
 /**
@@ -464,13 +464,13 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
  * See also:
  *          ECMA-262 v5, 15.9.2.1
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p __attr_unused___, /**< arguments list */
                                  ecma_length_t arguments_list_len __attr_unused___) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (now_val,
                   ecma_builtin_date_now (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED)),
@@ -489,13 +489,13 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p __attr_unu
  * See also:
  *          ECMA-262 v5, 15.9.3.1
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_number_t *prim_value_num_p = NULL;
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
@@ -562,7 +562,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     *prim_value_num_p = ecma_number_make_nan ();
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     if (!ecma_number_is_nan (*prim_value_num_p) && ecma_number_is_infinity (*prim_value_num_p))
     {
@@ -577,11 +577,11 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
                                                                         ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
     ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_num_p);
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+    ret_value = ecma_make_object_value (obj_p);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
+    JERRY_ASSERT (ecma_is_value_error (ret_value));
     ecma_deref_object (obj_p);
   }
 

@@ -29,8 +29,6 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_LEX_ENV_TYPE_SIZE <= sizeof (uint64_t) * JERRY_
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_completion_value_t) == sizeof (uint32_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_label_descriptor_t) == sizeof (uint64_t));
 JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t));
 
 /** \addtogroup ecma ECMA
@@ -87,7 +85,6 @@ DECLARE_ROUTINES_FOR (number)
 DECLARE_ROUTINES_FOR (collection_header)
 DECLARE_ROUTINES_FOR (collection_chunk)
 DECLARE_ROUTINES_FOR (string)
-DECLARE_ROUTINES_FOR (label_descriptor)
 DECLARE_ROUTINES_FOR (getter_setter_pointers)
 DECLARE_ROUTINES_FOR (external_pointer)
 

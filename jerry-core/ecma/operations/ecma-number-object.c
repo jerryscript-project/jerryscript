@@ -35,20 +35,20 @@
  *
  * See also: ECMA-262 v5, 15.7.2.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Number constructor */
 {
-  ecma_completion_value_t conv_to_num_completion = ecma_op_to_number (arg);
+  ecma_value_t conv_to_num_completion = ecma_op_to_number (arg);
 
-  if (!ecma_is_completion_value_normal (conv_to_num_completion))
+  if (ecma_is_value_error (conv_to_num_completion))
   {
     return conv_to_num_completion;
   }
 
-  ecma_number_t *prim_value_p = ecma_get_number_from_completion_value (conv_to_num_completion);
+  ecma_number_t *prim_value_p = ecma_get_number_from_value (conv_to_num_completion);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
@@ -68,7 +68,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
   ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_p);
 
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  return ecma_make_object_value (obj_p);
 } /* ecma_op_create_number_object */
 
 /**

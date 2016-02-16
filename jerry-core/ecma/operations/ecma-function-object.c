@@ -46,7 +46,7 @@
  *         false - otherwise.
  */
 bool
-ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
+ecma_op_is_callable (ecma_value_t value) /**< ecma value */
 {
   if (!ecma_is_value_object (value))
   {
@@ -71,7 +71,7 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_is_constructor (ecma_value_t value) /**< ecma-value */
+ecma_is_constructor (ecma_value_t value) /**< ecma value */
 {
   if (!ecma_is_value_object (value))
   {
@@ -454,23 +454,23 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
  * and for built-in Function objects
  * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object */
                                ecma_value_t value) /**< argument 'V' */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     if (!ecma_is_value_object (value))
     {
-      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
     }
 
     ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
@@ -483,7 +483,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (!ecma_is_value_object (prototype_obj_value))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_raise_type_error ("");
     }
     else
     {
@@ -496,13 +496,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
         if (v_obj_p == NULL)
         {
-          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
 
           break;
         }
         else if (v_obj_p == prototype_obj_p)
         {
-          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
 
           break;
         }
@@ -516,7 +516,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION ||
            ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -544,10 +544,10 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
  * and for built-in Function objects
  * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        ecma_value_t this_arg_value, /**< 'this' argument's value */
                        const ecma_value_t *arguments_list_p, /**< arguments list */
@@ -557,7 +557,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                 && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT (ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -602,10 +602,9 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       else
       {
         // 3., 4.
-        ecma_completion_value_t completion = ecma_op_to_object (this_arg_value);
-        JERRY_ASSERT (ecma_is_completion_value_normal (completion));
+        this_binding = ecma_op_to_object (this_arg_value);
 
-        this_binding = ecma_get_completion_value_value (completion);
+        JERRY_ASSERT (!ecma_is_value_error (this_binding));
       }
 
       // 5.
@@ -628,28 +627,19 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         }
       }
 
-      ecma_completion_value_t completion = vm_run (bytecode_data_p,
-                                                   this_binding,
-                                                   local_env_p,
-                                                   false,
-                                                   arguments_list_p,
-                                                   arguments_list_len);
-
-      if (ecma_is_completion_value_return (completion))
-      {
-        ret_value = ecma_make_normal_completion_value (ecma_get_completion_value_value (completion));
-      }
-      else
-      {
-        ret_value = completion;
-      }
+      ret_value = vm_run (bytecode_data_p,
+                          this_binding,
+                          local_env_p,
+                          false,
+                          arguments_list_p,
+                          arguments_list_len);
 
       if (!is_no_lex_env)
       {
         ecma_deref_object (local_env_p);
       }
 
-      ecma_free_value (this_binding, true);
+      ecma_free_value (this_binding);
     }
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
@@ -733,7 +723,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     }
   }
 
-  JERRY_ASSERT (!ecma_is_completion_value_empty (ret_value));
+  JERRY_ASSERT (!ecma_is_value_empty (ret_value));
 
   return ret_value;
 } /* ecma_op_function_call */
@@ -743,10 +733,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
  * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION) and
  * externally defined (host) functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION).
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< Function object */
                                                const ecma_value_t *arguments_list_p, /**< arguments list */
                                                ecma_length_t arguments_list_len) /**< length of arguments list */
@@ -754,7 +744,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
 
@@ -800,21 +790,17 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
                                          arguments_list_len),
                   ret_value);
 
-  ecma_value_t obj_value;
-
   // 9.
   if (ecma_is_value_object (call_completion))
   {
-    obj_value = ecma_copy_value (call_completion, true);
+    ret_value = ecma_copy_value (call_completion, true);
   }
   else
   {
     // 10.
     ecma_ref_object (obj_p);
-    obj_value = ecma_make_object_value (obj_p);
+    ret_value = ecma_make_object_value (obj_p);
   }
-
-  ret_value = ecma_make_normal_completion_value (obj_value);
 
   ECMA_FINALIZE (call_completion);
 
@@ -833,10 +819,10 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
  *            and externally defined host functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
  *   15.3.4.5.1 - for Function objects, created through 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION).
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of arguments list */
@@ -845,7 +831,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                 && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT (ecma_is_constructor (ecma_make_object_value (func_obj_p)));
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -884,7 +870,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_raise_type_error ("");
     }
     else
     {
@@ -935,10 +921,10 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 5).
  *
- * @return completion value
- *         returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment */
                               ecma_string_t *function_name_p, /**< function name */
                               const ecma_compiled_code_t *bytecode_data_p, /**< bytecode data */
@@ -955,16 +941,16 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
   // c.
   bool func_already_declared = ecma_op_has_binding (lex_env_p, function_name_p);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // d.
   if (!func_already_declared)
   {
-    ecma_completion_value_t completion = ecma_op_create_mutable_binding (lex_env_p,
-                                                                         function_name_p,
-                                                                         is_configurable_bindings);
+    ecma_value_t completion = ecma_op_create_mutable_binding (lex_env_p,
+                                                              function_name_p,
+                                                              is_configurable_bindings);
 
-    JERRY_ASSERT (ecma_is_completion_value_empty (completion));
+    JERRY_ASSERT (ecma_is_value_empty (completion));
   }
   else if (ecma_is_lexical_environment_global (lex_env_p))
   {
@@ -975,7 +961,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
 
     if (ecma_is_property_configurable (existing_prop_p))
     {
-      ecma_completion_value_t completion;
+      ecma_value_t completion;
       completion = ecma_builtin_helper_def_prop (glob_obj_p,
                                                  function_name_p,
                                                  ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
@@ -984,11 +970,11 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
                                                  is_configurable_bindings, /* Configurable */
                                                  true); /* Failure handling */
 
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+      JERRY_ASSERT (ecma_is_value_true (completion));
     }
     else if (existing_prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_raise_type_error ("");
     }
     else
     {
@@ -997,14 +983,14 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
       if (!ecma_is_property_writable (existing_prop_p)
           || !ecma_is_property_enumerable (existing_prop_p))
       {
-        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+        ret_value = ecma_raise_type_error ("");
       }
     }
 
     ecma_deref_object (glob_obj_p);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     // f.
     ret_value = ecma_op_set_mutable_binding (lex_env_p,
@@ -1014,7 +1000,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
   }
   else
   {
-    JERRY_ASSERT (ecma_is_completion_value_throw (ret_value));
+    JERRY_ASSERT (ecma_is_value_error (ret_value));
   }
 
   ecma_deref_object (func_obj_p);

@@ -160,7 +160,7 @@
 #endif /* CONFIG_ECMA_COMPACT_PROFILE */
 
 /**
- * Number of ecma-values inlined into VM stack frame
+ * Number of ecma values inlined into VM stack frame
  */
 #define CONFIG_VM_STACK_FRAME_INLINED_VALUES_NUMBER (16)
 

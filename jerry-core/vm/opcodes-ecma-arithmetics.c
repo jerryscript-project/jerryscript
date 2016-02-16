@@ -37,15 +37,15 @@
  *   rightNum = ToNumber (rightValue);
  *   result = leftNum ArithmeticOp rightNum;
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation */
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /**< right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
@@ -81,7 +81,7 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
     }
   }
 
-  ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, ecma_make_number_value (res_p));
+  ret_value = ecma_make_number_value (res_p);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);
@@ -94,14 +94,14 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
  *
  * See also: ECMA-262 v5, 11.6.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_addition (ecma_value_t left_value, /**< left value */
                  ecma_value_t right_value) /**< right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (prim_left_value,
                   ecma_op_to_primitive (left_value,
@@ -123,7 +123,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 
     ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
 
-    ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, ecma_make_string_value (concat_str_p));
+    ret_value = ecma_make_string_value (concat_str_p);
 
     ECMA_FINALIZE (str_right_value);
     ECMA_FINALIZE (str_left_value);
@@ -146,13 +146,13 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
  *
  * See also: ECMA-262 v5, 11.4, 11.4.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_unary_plus (ecma_value_t left_value) /**< left value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
                                left_value,
@@ -161,7 +161,7 @@ opfunc_unary_plus (ecma_value_t left_value) /**< left value */
   ecma_number_t *tmp_p = ecma_alloc_number ();
 
   *tmp_p = num_var_value;
-  ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, ecma_make_number_value (tmp_p));
+  ret_value = ecma_make_number_value (tmp_p);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 
@@ -173,13 +173,13 @@ opfunc_unary_plus (ecma_value_t left_value) /**< left value */
  *
  * See also: ECMA-262 v5, 11.4, 11.4.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_unary_minus (ecma_value_t left_value) /**< left value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
                                left_value,
@@ -188,7 +188,7 @@ opfunc_unary_minus (ecma_value_t left_value) /**< left value */
   ecma_number_t *tmp_p = ecma_alloc_number ();
 
   *tmp_p = ecma_number_negate (num_var_value);
-  ret_value = ecma_make_completion_value (ECMA_COMPLETION_TYPE_NORMAL, ecma_make_number_value (tmp_p));
+  ret_value = ecma_make_number_value (tmp_p);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 

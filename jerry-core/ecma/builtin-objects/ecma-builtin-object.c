@@ -1,5 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,15 +48,15 @@
 /**
  * Handle calling [[Call]] of built-in Object object
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (arguments_list_len == 0
       || ecma_is_value_undefined (arguments_list_p[0])
@@ -75,9 +75,9 @@ ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 /**
  * Handle calling [[Construct]] of built-in Object object
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
@@ -87,20 +87,11 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   {
     ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+    return ecma_make_object_value (obj_p);
   }
   else
   {
-    ecma_completion_value_t new_obj_value = ecma_op_create_object_object_arg (arguments_list_p[0]);
-
-    if (!ecma_is_completion_value_normal (new_obj_value))
-    {
-      return new_obj_value;
-    }
-    else
-    {
-      return ecma_make_normal_completion_value (ecma_get_completion_value_value (new_obj_value));
-    }
+    return ecma_op_create_object_object_arg (arguments_list_p[0]);
   }
 } /* ecma_builtin_object_dispatch_construct */
 
@@ -110,19 +101,19 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * See also:
  *          ECMA-262 v5, 15.2.3.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                              ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -132,12 +123,12 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused
 
     if (prototype_p)
     {
-      ret_value = ecma_make_normal_completion_value (ecma_make_object_value (prototype_p));
+      ret_value = ecma_make_object_value (prototype_p);
       ecma_ref_object (prototype_p);
     }
     else
     {
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_NULL);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
     }
   }
 
@@ -150,19 +141,19 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused
  * See also:
  *          ECMA-262 v5, 15.2.3.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
   {
     /* 1. */
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -180,19 +171,19 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_
  * See also:
  *          ECMA-262 v5, 15.2.3.8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                  ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -205,7 +196,7 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
     ecma_collection_iterator_init (&iter, props_p);
 
     while (ecma_collection_iterator_next (&iter)
-           && ecma_is_completion_value_empty (ret_value))
+           && ecma_is_value_empty (ret_value))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
       ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -233,13 +224,13 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
 
     ecma_free_values_collection (props_p, true);
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       // 3.
       ecma_set_object_extensible (obj_p, false);
 
       // 4.
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg, true));
+      ret_value = ecma_copy_value (arg, true);
     }
   }
 
@@ -252,19 +243,19 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
  * See also:
  *          ECMA-262 v5, 15.2.3.9
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                    ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -278,7 +269,7 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
     ecma_collection_iterator_init (&iter, props_p);
 
     while (ecma_collection_iterator_next (&iter)
-           && ecma_is_completion_value_empty (ret_value))
+           && ecma_is_value_empty (ret_value))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
       ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
@@ -312,13 +303,13 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
 
     ecma_free_values_collection (props_p, true);
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       // 3.
       ecma_set_object_extensible (obj_p, false);
 
       // 4.
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg, true));
+      ret_value = ecma_copy_value (arg, true);
     }
   }
 
@@ -331,25 +322,25 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
  * See also:
  *          ECMA-262 v5, 15.2.3.10
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
     ecma_set_object_extensible (obj_p, false);
 
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg, true));
+    ret_value = ecma_copy_value (arg, true);
   }
 
   return ret_value;
@@ -361,19 +352,19 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unus
  * See also:
  *          ECMA-262 v5, 15.2.3.11
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -416,9 +407,8 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
     }
 
     // 4.
-    ret_value = ecma_make_simple_completion_value (is_sealed
-                                                   ? ECMA_SIMPLE_VALUE_TRUE
-                                                   : ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_simple_value (is_sealed ? ECMA_SIMPLE_VALUE_TRUE
+                                                  : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   return ret_value;
@@ -430,19 +420,19 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
  * See also:
  *          ECMA-262 v5, 15.2.3.12
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -493,9 +483,8 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
     }
 
     // 4.
-    ret_value = ecma_make_simple_completion_value (is_frozen
-                                                   ? ECMA_SIMPLE_VALUE_TRUE
-                                                   : ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_simple_value (is_frozen ? ECMA_SIMPLE_VALUE_TRUE
+                                                  : ECMA_SIMPLE_VALUE_FALSE);
   }
 
   return ret_value;
@@ -507,18 +496,18 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
  * See also:
  *          ECMA-262 v5, 15.2.3.13
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                           ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -526,8 +515,7 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___
 
     bool extensible = ecma_get_object_extensible (obj_p);
 
-    ret_value = ecma_make_simple_completion_value (extensible
-                                                   ? ECMA_SIMPLE_VALUE_TRUE
+    ret_value = ecma_make_simple_value (extensible ? ECMA_SIMPLE_VALUE_TRUE
                                                    : ECMA_SIMPLE_VALUE_FALSE);
   }
 
@@ -540,19 +528,19 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___
  * See also:
  *          ECMA-262 v5, 15.2.3.14
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                  ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
   {
     /* 1. */
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -570,20 +558,20 @@ ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 't
  * See also:
  *          ECMA-262 v5, 15.2.3.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                                         ecma_value_t arg1, /**< routine's first argument */
                                                         ecma_value_t arg2) /**< routine's second argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
     return ret_value;
   }
 
@@ -608,11 +596,11 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
 
     ecma_free_property_descriptor (&prop_desc);
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_object_value (desc_obj_p));
+    ret_value = ecma_make_object_value (desc_obj_p);
   }
   else
   {
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 
   ECMA_FINALIZE (name_str_value);
@@ -626,20 +614,20 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
  * See also:
  *          ECMA-262 v5, 15.2.3.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument */
                                    ecma_value_t arg1, /**< routine's first argument */
                                    ecma_value_t arg2) /**< routine's second argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg1) && !ecma_is_value_null (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -664,10 +652,9 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
     }
 
     // 5.
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (ecma_make_object_value (result_obj_p),
-                                                                      true));
+      ret_value = ecma_copy_value (ecma_make_object_value (result_obj_p), true);
     }
 
     ecma_deref_object (result_obj_p);
@@ -682,20 +669,20 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
  * See also:
  *          ECMA-262 v5, 15.2.3.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                               ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -720,7 +707,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     uint32_t property_descriptor_number = 0;
 
     while (ecma_collection_iterator_next (&iter)
-           && ecma_is_completion_value_empty (ret_value))
+           && ecma_is_value_empty (ret_value))
     {
       // 5.a
       ECMA_TRY_CATCH (desc_obj,
@@ -742,7 +729,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     // 6.
     ecma_collection_iterator_init (&iter, prop_names_p);
     for (uint32_t index = 0;
-         index < property_number && ecma_is_completion_value_empty (ret_value);
+         index < property_number && ecma_is_value_empty (ret_value);
          index++)
     {
       bool is_next = ecma_collection_iterator_next (&iter);
@@ -771,9 +758,9 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     ecma_free_values_collection (prop_names_p, true);
 
     // 7.
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg1, true));
+      ret_value = ecma_copy_value (arg1, true);
     }
 
     ECMA_FINALIZE (props);
@@ -788,20 +775,20 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
  * See also:
  *          ECMA-262 v5, 15.2.3.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2, /**< routine's second argument */
                                             ecma_value_t arg3) /**< routine's third argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -826,7 +813,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused_
                                                         true),
                     ret_value);
 
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (arg1, true));
+    ret_value = ecma_copy_value (arg1, true);
 
     ECMA_FINALIZE (define_own_prop_ret);
     ecma_free_property_descriptor (&prop_desc);

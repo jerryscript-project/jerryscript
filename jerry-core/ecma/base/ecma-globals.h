@@ -34,7 +34,7 @@
  */
 
 /**
- * Ecma-pointer field is used to calculate ecma-value's address.
+ * Ecma-pointer field is used to calculate ecma value's address.
  *
  * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
  * The offset is shifted right by MEM_ALIGNMENT_LOG.
@@ -52,7 +52,7 @@
  */
 
 /**
- * Type of ecma-value
+ * Type of ecma value
  */
 typedef enum
 {
@@ -63,7 +63,7 @@ typedef enum
 } ecma_type_t;
 
 /**
- * Simple ecma-values
+ * Simple ecma values
  */
 typedef enum
 {
@@ -80,7 +80,7 @@ typedef enum
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
   ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
   ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
-  ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma-values */
+  ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma values */
 } ecma_simple_value_t;
 
 /**
@@ -94,40 +94,9 @@ typedef enum
 } ecma_property_type_t;
 
 /**
- * Type of block evaluation (completion) result.
+ * Description of an ecma value
  *
- * See also: ECMA-262 v5, 8.9.
- */
-typedef enum
-{
-  ECMA_COMPLETION_TYPE_NORMAL, /**< default completion */
-  ECMA_COMPLETION_TYPE_RETURN, /**< completion with return */
-  ECMA_COMPLETION_TYPE_JUMP, /**< implementation-defined completion type
-                              *   for jump statements (break, continue)
-                              *   that require completion of one or several
-                              *   statements, before performing related jump.
-                              *
-                              *   For example, 'break' in the following code
-                              *   requires to return from opfunc_with handler
-                              *   before performing jump to the loop end:
-                              *
-                              *     for (var i = 0; i < 10; i++)
-                              *     {
-                              *        with (obj)
-                              *        {
-                              *          break;
-                              *        }
-                              *     }
-                              */
-  ECMA_COMPLETION_TYPE_THROW, /**< completion with throw */
-  ECMA_COMPLETION_TYPE_META /**< implementation-defined completion type
-                                 for meta opcode */
-} ecma_completion_type_t;
-
-/**
- * Description of an ecma-value
- *
- * Bit-field structure: type (2) | value (ECMA_POINTER_FIELD_WIDTH)
+ * Bit-field structure: type (2) | error (1) | value (ECMA_POINTER_FIELD_WIDTH)
  */
 typedef uint32_t ecma_value_t;
 
@@ -138,63 +107,23 @@ typedef uint32_t ecma_value_t;
 #define ECMA_VALUE_TYPE_WIDTH (2)
 
 /**
+ * Value is error (boolean)
+ */
+#define ECMA_VALUE_ERROR_POS (ECMA_VALUE_TYPE_POS + \
+                              ECMA_VALUE_TYPE_WIDTH)
+#define ECMA_VALUE_ERROR_WIDTH (1)
+
+/**
  * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
  */
-#define ECMA_VALUE_VALUE_POS (ECMA_VALUE_TYPE_POS + \
-                              ECMA_VALUE_TYPE_WIDTH)
+#define ECMA_VALUE_VALUE_POS (ECMA_VALUE_ERROR_POS + \
+                              ECMA_VALUE_ERROR_WIDTH)
 #define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
 
 /**
  * Size of ecma value description, in bits
  */
 #define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
-
-/**
- * Description of a block completion value
- *
- * See also: ECMA-262 v5, 8.9.
- *
- *                                               value (16)
- * Bit-field structure: type (8) | padding (8) <
- *                                               break / continue target
- */
-typedef uint32_t ecma_completion_value_t;
-
-/**
- * Value
- *
- * Used for normal, return, throw and exit completion types.
- */
-#define ECMA_COMPLETION_VALUE_VALUE_POS (0)
-#define ECMA_COMPLETION_VALUE_VALUE_WIDTH (ECMA_VALUE_SIZE)
-
-/**
- * Type (ecma_completion_type_t)
- */
-#define ECMA_COMPLETION_VALUE_TYPE_POS (JERRY_ALIGNUP (ECMA_COMPLETION_VALUE_VALUE_POS + \
-                                                                  ECMA_COMPLETION_VALUE_VALUE_WIDTH, \
-                                                                  JERRY_BITSINBYTE))
-#define ECMA_COMPLETION_VALUE_TYPE_WIDTH (8)
-
-/**
- * Size of ecma completion value description, in bits
- */
-#define ECMA_COMPLETION_VALUE_SIZE (ECMA_COMPLETION_VALUE_TYPE_POS + \
-                                    ECMA_COMPLETION_VALUE_TYPE_WIDTH)
-
-/**
- * Label
- *
- * Used for break and continue completion types.
- */
-typedef struct
-{
-  /** Target's offset */
-  uint32_t offset;
-
-  /** Levels to label left */
-  uint32_t depth;
-} ecma_label_descriptor_t;
 
 /**
  * Internal properties' identifiers.

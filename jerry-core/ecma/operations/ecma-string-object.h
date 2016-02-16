@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_op_create_string_object (const ecma_value_t *, ecma_length_t);
 
 extern ecma_property_t *

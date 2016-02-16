@@ -46,14 +46,14 @@ typedef enum
 
 extern ecma_object_t *ecma_new_standard_error (ecma_standard_error_t);
 extern ecma_object_t *ecma_new_standard_error_with_message (ecma_standard_error_t, ecma_string_t *);
-extern ecma_completion_value_t ecma_raise_standard_error (ecma_standard_error_t, const lit_utf8_byte_t *);
-extern ecma_completion_value_t ecma_raise_common_error (const char *);
-extern ecma_completion_value_t ecma_raise_eval_error (const char *);
-extern ecma_completion_value_t ecma_raise_range_error (const char *);
-extern ecma_completion_value_t ecma_raise_reference_error (const char *);
-extern ecma_completion_value_t ecma_raise_syntax_error (const char *);
-extern ecma_completion_value_t ecma_raise_type_error (const char *);
-extern ecma_completion_value_t ecma_raise_uri_error (const char *);
+extern ecma_value_t ecma_raise_standard_error (ecma_standard_error_t, const lit_utf8_byte_t *);
+extern ecma_value_t ecma_raise_common_error (const char *);
+extern ecma_value_t ecma_raise_eval_error (const char *);
+extern ecma_value_t ecma_raise_range_error (const char *);
+extern ecma_value_t ecma_raise_reference_error (const char *);
+extern ecma_value_t ecma_raise_syntax_error (const char *);
+extern ecma_value_t ecma_raise_type_error (const char *);
+extern ecma_value_t ecma_raise_uri_error (const char *);
 
 /**
  * @}

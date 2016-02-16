@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 #include "ecma-globals.h"
 #include "jerry-api.h"
 
-extern ecma_completion_value_t
+extern ecma_value_t
 jerry_dispatch_external_function (ecma_object_t *, ecma_external_pointer_t, ecma_value_t, ecma_collection_header_t *);
 
 extern void

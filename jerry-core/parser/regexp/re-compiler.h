@@ -111,7 +111,7 @@ typedef struct
   re_parser_ctx_t *parser_ctx_p;     /**< pointer of RegExp parser context */
 } re_compiler_ctx_t;
 
-ecma_completion_value_t
+ecma_value_t
 re_compile_bytecode (re_compiled_code_t **, ecma_string_t *, uint16_t);
 
 re_opcode_t

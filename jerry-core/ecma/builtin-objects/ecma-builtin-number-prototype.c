@@ -1,5 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,15 +81,15 @@ ecma_builtin_number_prototype_helper_round (uint64_t digits, /**< actual number 
  * See also:
  *          ECMA-262 v5, 15.7.4.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this argument */
                                                 const ecma_value_t *arguments_list_p, /**< arguments list */
                                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
   ecma_number_t this_arg_number = *ecma_get_number_from_value (this_value);
@@ -102,7 +102,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
   {
     ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+    ret_value = ecma_make_string_value (ret_str_p);
   }
   else
   {
@@ -120,13 +120,13 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
     if (radix < 2 || radix > 36)
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+      ret_value = ecma_raise_range_error ("");
     }
     else if (radix == 10)
     {
       ecma_string_t *ret_str_p = ecma_new_ecma_string_from_number (this_arg_number);
 
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (ret_str_p));
+      ret_value = ecma_make_string_value (ret_str_p);
     }
     else
     {
@@ -308,7 +308,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
       JERRY_ASSERT (buff_index <= buff_size);
       ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) buff_index);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str_p));
+      ret_value = ecma_make_string_value (str_p);
       MEM_FINALIZE_LOCAL_ARRAY (buff);
     }
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
@@ -323,10 +323,10 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
  * See also:
  *          ECMA-262 v5, 15.7.4.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
   return ecma_builtin_number_prototype_object_to_string (this_arg, NULL, 0);
@@ -338,15 +338,15 @@ ecma_builtin_number_prototype_object_to_locale_string (ecma_value_t this_arg) /*
  * See also:
  *          ECMA-262 v5, 15.7.4.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
   if (ecma_is_value_number (this_arg))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
+    return ecma_copy_value (this_arg, true);
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -363,11 +363,11 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;
 
-      return ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+      return ecma_make_number_value (ret_num_p);
     }
   }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  return ecma_raise_type_error ("");
 } /* ecma_builtin_number_prototype_object_value_of */
 
 /**
@@ -376,14 +376,14 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
  * See also:
  *          ECMA-262 v5, 15.7.4.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
   ecma_number_t this_num = *ecma_get_number_from_value (this_value);
@@ -393,7 +393,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
   /* 2. */
   if (arg_num <= -1 || arg_num >= 21)
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+    ret_value = ecma_raise_range_error ("");
   }
   else
   {
@@ -401,7 +401,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
     if (ecma_number_is_nan (this_num))
     {
       ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
+      ret_value = ecma_make_string_value (nan_str_p);
     }
     else
     {
@@ -425,11 +425,11 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           ecma_string_t *neg_inf_str_p = ecma_concat_ecma_strings (neg_str_p, infinity_str_p);
           ecma_deref_ecma_string (infinity_str_p);
           ecma_deref_ecma_string (neg_str_p);
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (neg_inf_str_p));
+          ret_value = ecma_make_string_value (neg_inf_str_p);
         }
         else
         {
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (infinity_str_p));
+          ret_value = ecma_make_string_value (infinity_str_p);
         }
       }
       else
@@ -561,7 +561,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           *p = 0;
           ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
 
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str));
+          ret_value = ecma_make_string_value (str);
           MEM_FINALIZE_LOCAL_ARRAY (buff);
         }
       }
@@ -579,14 +579,14 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
  * See also:
  *          ECMA-262 v5, 15.7.4.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**< this argument */
                                                      ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
@@ -597,7 +597,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
   /* 7. */
   if (arg_num <= -1.0 || arg_num >= 21.0)
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+    ret_value = ecma_raise_range_error ("");
   }
   else
   {
@@ -605,7 +605,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
     if (ecma_number_is_nan (this_num))
     {
       ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
+      ret_value = ecma_make_string_value (nan_str_p);
     }
     else
     {
@@ -629,11 +629,11 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
           ecma_string_t *neg_inf_str_p = ecma_concat_ecma_strings (neg_str_p, infinity_str_p);
           ecma_deref_ecma_string (infinity_str_p);
           ecma_deref_ecma_string (neg_str_p);
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (neg_inf_str_p));
+          ret_value = ecma_make_string_value (neg_inf_str_p);
         }
         else
         {
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (infinity_str_p));
+          ret_value = ecma_make_string_value (infinity_str_p);
         }
       }
       else
@@ -747,7 +747,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
         JERRY_ASSERT (actual_char_p - buff < buffer_size);
         *actual_char_p = '\0';
         ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
-        ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str));
+        ret_value = ecma_make_string_value (str);
         MEM_FINALIZE_LOCAL_ARRAY (buff);
       }
     }
@@ -764,14 +764,14 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
  * See also:
  *          ECMA-262 v5, 15.7.4.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
@@ -791,7 +791,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
     if (ecma_number_is_nan (this_num))
     {
       ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (nan_str_p));
+      ret_value = ecma_make_string_value (nan_str_p);
     }
     else
     {
@@ -815,17 +815,17 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
           ecma_string_t *neg_inf_str_p = ecma_concat_ecma_strings (neg_str_p, infinity_str_p);
           ecma_deref_ecma_string (infinity_str_p);
           ecma_deref_ecma_string (neg_str_p);
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (neg_inf_str_p));
+          ret_value = ecma_make_string_value (neg_inf_str_p);
         }
         else
         {
-          ret_value = ecma_make_normal_completion_value (ecma_make_string_value (infinity_str_p));
+          ret_value = ecma_make_string_value (infinity_str_p);
         }
       }
       /* 8. */
       else if (arg_num < 1.0 || arg_num >= 22.0)
       {
-        ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_RANGE));
+        ret_value = ecma_raise_range_error ("");
       }
       else
       {
@@ -980,7 +980,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
         *actual_char_p = '\0';
         ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
 
-        ret_value = ecma_make_normal_completion_value (ecma_make_string_value (str_p));
+        ret_value = ecma_make_string_value (str_p);
         MEM_FINALIZE_LOCAL_ARRAY (buff);
       }
     }

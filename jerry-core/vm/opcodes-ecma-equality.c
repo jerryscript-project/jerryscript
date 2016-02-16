@@ -37,14 +37,14 @@
  *
  * See also: ECMA-262 v5, 11.9.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_equal_value (ecma_value_t left_value, /**< left value */
                     ecma_value_t right_value) /**< right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_equality_compare (left_value,
@@ -53,7 +53,7 @@ opfunc_equal_value (ecma_value_t left_value, /**< left value */
 
   JERRY_ASSERT (ecma_is_value_boolean (compare_result));
 
-  ret_value = ecma_make_normal_completion_value (compare_result);
+  ret_value = compare_result;
 
   ECMA_FINALIZE (compare_result);
 
@@ -65,14 +65,14 @@ opfunc_equal_value (ecma_value_t left_value, /**< left value */
  *
  * See also: ECMA-262 v5, 11.9.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_not_equal_value (ecma_value_t left_value, /**< left value */
                         ecma_value_t right_value) /**< right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,
                   ecma_op_abstract_equality_compare (left_value, right_value),
@@ -82,8 +82,8 @@ opfunc_not_equal_value (ecma_value_t left_value, /**< left value */
 
   bool is_equal = ecma_is_value_true (compare_result);
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                                                                  : ECMA_SIMPLE_VALUE_TRUE));
+  ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                               : ECMA_SIMPLE_VALUE_TRUE);
 
   ECMA_FINALIZE (compare_result);
 
@@ -95,17 +95,17 @@ opfunc_not_equal_value (ecma_value_t left_value, /**< left value */
  *
  * See also: ECMA-262 v5, 11.9.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_equal_value_type (ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /**< right value */
 {
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-  return ecma_make_normal_completion_value (ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
-                                                                             : ECMA_SIMPLE_VALUE_FALSE));
+  return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
+                                          : ECMA_SIMPLE_VALUE_FALSE);
 } /* opfunc_equal_value_type */
 
 /**
@@ -113,17 +113,17 @@ opfunc_equal_value_type (ecma_value_t left_value, /**< left value */
  *
  * See also: ECMA-262 v5, 11.9.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 opfunc_not_equal_value_type (ecma_value_t left_value, /**< left value */
                              ecma_value_t right_value) /**< right value */
 {
   bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-  return ecma_make_normal_completion_value (ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                                                             : ECMA_SIMPLE_VALUE_TRUE));
+  return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
+                                          : ECMA_SIMPLE_VALUE_TRUE);
 } /* opfunc_not_equal_value_type */
 
 /**

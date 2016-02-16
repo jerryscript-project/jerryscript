@@ -44,9 +44,9 @@
 /**
  * Handle calling [[Call]] of built-in Function object
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_function_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                      ecma_length_t arguments_list_len) /**< number of arguments */
 {
@@ -61,16 +61,16 @@ ecma_builtin_function_dispatch_call (const ecma_value_t *arguments_list_p, /**< 
  * Performs the operation described in ECMA 262 v5.1 15.3.2.1 steps 5.a-d
  *
  *
- * @return completion value - concatenated arguments as a string.
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value - concatenated arguments as a string.
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_function_helper_get_function_expression (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_string_t *left_parenthesis_str_p, *right_parenthesis_str_p;
   ecma_string_t *left_brace_str_p, *right_brace_str_p;
@@ -99,7 +99,7 @@ ecma_builtin_function_helper_get_function_expression (const ecma_value_t *argume
   expr_str_p = concated_str_p;
 
   for (ecma_length_t idx = 0;
-       idx < number_of_function_args && ecma_is_completion_value_empty (ret_value);
+       idx < number_of_function_args && ecma_is_value_empty (ret_value);
        idx++)
   {
     ECMA_TRY_CATCH (str_arg_value,
@@ -122,7 +122,7 @@ ecma_builtin_function_helper_get_function_expression (const ecma_value_t *argume
     ECMA_FINALIZE (str_arg_value);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     concated_str_p = ecma_concat_ecma_strings (expr_str_p, right_parenthesis_str_p);
     ecma_deref_ecma_string (expr_str_p);
@@ -164,9 +164,9 @@ ecma_builtin_function_helper_get_function_expression (const ecma_value_t *argume
   ecma_deref_ecma_string (function_kw_str_p);
   ecma_deref_ecma_string (empty_str_p);
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (expr_str_p));
+    ret_value = ecma_make_string_value (expr_str_p);
   }
   else
   {
@@ -182,15 +182,15 @@ ecma_builtin_function_helper_get_function_expression (const ecma_value_t *argume
  * See also:
  *          ECMA-262 v5, 15.3.
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                           ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (arguments_value,
                   ecma_builtin_function_helper_get_function_expression (arguments_list_p,

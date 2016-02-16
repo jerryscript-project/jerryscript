@@ -53,10 +53,10 @@ ecma_assert_object_type_is_valid (ecma_object_type_t type) /**< object's impleme
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
@@ -88,7 +88,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 
   JERRY_ASSERT (false);
 
-  return ecma_make_empty_completion_value ();
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_get */
 
 /**
@@ -229,13 +229,13 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p, /**< property name */
-                    ecma_value_t value, /**< ecma-value */
+                    ecma_value_t value, /**< ecma value */
                     bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (obj_p != NULL
@@ -311,10 +311,10 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
                        ecma_string_t *property_name_p, /**< property name */
                        bool is_throw) /**< flag that controls failure handling */
@@ -351,7 +351,7 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
 
   JERRY_ASSERT (false);
 
-  return ecma_make_empty_completion_value ();
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_delete */
 
 /**
@@ -360,10 +360,10 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
                               ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
@@ -399,10 +399,10 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                     ecma_string_t *property_name_p, /**< property name */
                                     const ecma_property_descriptor_t *property_desc_p, /**< property
@@ -450,7 +450,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   JERRY_ASSERT (false);
 
-  return ecma_make_empty_completion_value ();
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_define_own_property */
 
 /**
@@ -459,7 +459,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 9
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
                              ecma_value_t value) /**< argument 'V' */
 {
@@ -476,7 +476,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return ecma_raise_type_error ("");
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:

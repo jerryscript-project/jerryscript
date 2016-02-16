@@ -35,10 +35,10 @@
  *
  * See also: ECMA-262 v5, 15.5.2.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                          are passed to String constructor */
                               ecma_length_t arguments_list_len) /**< length of the arguments' list */
@@ -57,18 +57,18 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   }
   else
   {
-    ecma_completion_value_t to_str_arg_value = ecma_op_to_string (arguments_list_p[0]);
+    ecma_value_t to_str_arg_value = ecma_op_to_string (arguments_list_p[0]);
 
-    if (ecma_is_completion_value_throw (to_str_arg_value))
+    if (ecma_is_value_error (to_str_arg_value))
     {
       return to_str_arg_value;
     }
     else
     {
-      JERRY_ASSERT (ecma_is_completion_value_normal (to_str_arg_value));
+      JERRY_ASSERT (!ecma_is_value_error (to_str_arg_value));
+      JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
 
-      JERRY_ASSERT (ecma_is_value_string (ecma_get_completion_value_value (to_str_arg_value)));
-      prim_prop_str_value_p = ecma_get_string_from_completion_value (to_str_arg_value);
+      prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);
 
       ecma_length_t string_len = ecma_string_get_length (prim_prop_str_value_p);
       length_value = ecma_uint32_to_number ((uint32_t) string_len);
@@ -106,7 +106,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_prop_value_p));
   ecma_deref_ecma_string (length_magic_string_p);
 
-  return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+  return ecma_make_object_value (obj_p);
 } /* ecma_op_create_string_object */
 
 /**
@@ -116,8 +116,8 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 15.5.5.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
 ecma_property_t*
 ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String object */

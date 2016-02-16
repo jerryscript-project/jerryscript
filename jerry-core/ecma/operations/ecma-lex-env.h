@@ -44,18 +44,18 @@ extern bool ecma_is_lexical_environment_global (ecma_object_t *);
  */
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
-extern ecma_completion_value_t ecma_op_get_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_completion_value_t ecma_op_get_value_object_base (ecma_reference_t);
-extern ecma_completion_value_t ecma_op_put_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool, ecma_value_t);
-extern ecma_completion_value_t ecma_op_put_value_object_base (ecma_reference_t, ecma_value_t);
+extern ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool);
+extern ecma_value_t ecma_op_get_value_object_base (ecma_reference_t);
+extern ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool, ecma_value_t);
+extern ecma_value_t ecma_op_put_value_object_base (ecma_reference_t, ecma_value_t);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
 extern bool ecma_op_has_binding (ecma_object_t *, ecma_string_t *);
-extern ecma_completion_value_t ecma_op_create_mutable_binding (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_completion_value_t ecma_op_set_mutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
-extern ecma_completion_value_t ecma_op_get_binding_value (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_completion_value_t ecma_op_delete_binding (ecma_object_t *, ecma_string_t *);
-extern ecma_completion_value_t ecma_op_implicit_this_value (ecma_object_t *);
+extern ecma_value_t ecma_op_create_mutable_binding (ecma_object_t *, ecma_string_t *, bool);
+extern ecma_value_t ecma_op_set_mutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
+extern ecma_value_t ecma_op_get_binding_value (ecma_object_t *, ecma_string_t *, bool);
+extern ecma_value_t ecma_op_delete_binding (ecma_object_t *, ecma_string_t *);
+extern ecma_value_t ecma_op_implicit_this_value (ecma_object_t *);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
 extern void ecma_op_create_immutable_binding (ecma_object_t *, ecma_string_t *);

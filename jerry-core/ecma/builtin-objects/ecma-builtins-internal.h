@@ -70,13 +70,13 @@ ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_
                 is_extensible, \
                 is_static, \
                 lowercase_name) \
-extern ecma_completion_value_t \
+extern ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *, \
                                                    ecma_length_t); \
-extern ecma_completion_value_t \
+extern ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *, \
                                                         ecma_length_t); \
-extern ecma_completion_value_t \
+extern ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \

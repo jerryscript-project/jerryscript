@@ -133,10 +133,10 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
 /**
  * Raise a standard ecma-error with the given type and message.
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
                            const lit_utf8_byte_t *msg_p) /**< error message */
 {
@@ -144,16 +144,16 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
                                                                lit_zt_utf8_string_size (msg_p));
   ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
   ecma_deref_ecma_string (error_msg_p);
-  return ecma_make_throw_obj_completion_value (error_obj_p);
+  return ecma_make_error_obj_value (error_obj_p);
 } /* ecma_raise_standard_error */
 
 /**
  * Raise a common error with the given message.
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_common_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_COMMON, (const lit_utf8_byte_t *) msg_p);
@@ -164,10 +164,10 @@ ecma_raise_common_error (const char *msg_p) /**< error message */
  *
  * See also: ECMA-262 v5, 15.11.6.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_eval_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_EVAL, (const lit_utf8_byte_t *) msg_p);
@@ -178,10 +178,10 @@ ecma_raise_eval_error (const char *msg_p) /**< error message */
  *
  * See also: ECMA-262 v5, 15.11.6.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_range_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_RANGE, (const lit_utf8_byte_t *) msg_p);
@@ -192,10 +192,10 @@ ecma_raise_range_error (const char *msg_p) /**< error message */
  *
  * See also: ECMA-262 v5, 15.11.6.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_reference_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_REFERENCE, (const lit_utf8_byte_t *) msg_p);
@@ -206,10 +206,10 @@ ecma_raise_reference_error (const char *msg_p) /**< error message */
  *
  * See also: ECMA-262 v5, 15.11.6.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_syntax_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_SYNTAX, (const lit_utf8_byte_t *) msg_p);
@@ -220,10 +220,10 @@ ecma_raise_syntax_error (const char *msg_p) /**< error message */
  *
 * See also: ECMA-262 v5, 15.11.6.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_type_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_TYPE, (const lit_utf8_byte_t *) msg_p);
@@ -234,10 +234,10 @@ ecma_raise_type_error (const char *msg_p) /**< error message */
  *
 * See also: ECMA-262 v5, 15.11.6.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_raise_uri_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_URI, (const lit_utf8_byte_t *) msg_p);

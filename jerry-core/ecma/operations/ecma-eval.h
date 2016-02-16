@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@
  * \addtogroup eval eval
  */
 
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_op_eval (ecma_string_t *, bool, bool);
 
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_op_eval_chars_buffer (const jerry_api_char_t *, size_t, bool, bool);
 
 /**

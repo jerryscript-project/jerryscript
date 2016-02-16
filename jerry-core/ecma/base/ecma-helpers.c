@@ -716,7 +716,7 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
                                                      property_p->u.named_data_property.name_p));
 
   ecma_value_t v = ecma_get_named_data_property_value (property_p);
-  ecma_free_value (v, false);
+  ecma_free_value_if_not_object (v);
 
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_data_property */
@@ -811,7 +811,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS:
     {
-      ecma_free_value (property_value, false);
+      ecma_free_value_if_not_object (property_value);
       break;
     }
 
@@ -951,7 +951,7 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
 /**
  * Get value field of named data property
  *
- * @return ecma-value
+ * @return ecma value
  */
 ecma_value_t
 ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property */
@@ -998,7 +998,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   else
   {
     ecma_value_t v = ecma_get_named_data_property_value (prop_p);
-    ecma_free_value (v, false);
+    ecma_free_value_if_not_object (v);
 
     ecma_set_named_data_property_value (prop_p, ecma_copy_value (value, false));
   }
@@ -1262,7 +1262,7 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 {
   if (prop_desc_p->is_value_defined)
   {
-    ecma_free_value (prop_desc_p->value, true);
+    ecma_free_value (prop_desc_p->value);
   }
 
   if (prop_desc_p->is_get_defined
@@ -1340,7 +1340,7 @@ ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
 
-  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags + (1 << ECMA_BYTECODE_REF_SHIFT));
+  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags + (1u << ECMA_BYTECODE_REF_SHIFT));
 } /* ecma_bytecode_ref */
 
 /**
@@ -1352,9 +1352,9 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 {
   JERRY_ASSERT ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) > 0);
 
-  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags - (1 << ECMA_BYTECODE_REF_SHIFT));
+  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags - (1u << ECMA_BYTECODE_REF_SHIFT));
 
-  if (bytecode_p->status_flags >= (1 << ECMA_BYTECODE_REF_SHIFT))
+  if (bytecode_p->status_flags >= (1u << ECMA_BYTECODE_REF_SHIFT))
   {
     /* Non-zero reference counter. */
     return;

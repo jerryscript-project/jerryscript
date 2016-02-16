@@ -47,16 +47,16 @@
  * See also:
  *          ECMA-262 v5, 13.2.3
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object should throw TypeError */
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  return ecma_raise_type_error ("");
 } /* ecma_builtin_type_error_thrower_dispatch_call */
 
 /**
@@ -65,16 +65,16 @@ ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_lis
  * See also:
  *          ECMA-262 v5, 13.2.3
  *
- * @return completion-value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_type_error_thrower_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object is not a constructor */
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  return ecma_raise_type_error ("");
 } /* ecma_builtin_type_error_thrower_dispatch_construct */
 
 /**

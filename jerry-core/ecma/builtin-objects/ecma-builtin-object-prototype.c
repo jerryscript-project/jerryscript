@@ -1,5 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,10 +51,10 @@
  * See also:
  *          ECMA-262 v5, 15.2.4.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
   return ecma_builtin_helper_object_to_string (this_arg);
@@ -66,10 +66,10 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this_arg) /**< this
  * See also:
  *          ECMA-262 v5, 15.2.4.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
   return ecma_op_to_object (this_arg);
@@ -81,13 +81,13 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this 
  * See also:
  *          ECMA-262 v5, 15.2.4.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  ecma_value_t return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   /* 1. */
   ECMA_TRY_CATCH (obj_val,
                   ecma_op_to_object (this_arg),
@@ -104,7 +104,7 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
   /* 3. */
   if (!ecma_op_is_callable (to_string_val))
   {
-    return_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -127,14 +127,14 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
  * See also:
  *          ECMA-262 v5, 15.2.4.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /**< this argument */
                                                        ecma_value_t arg) /**< first argument */
 {
-  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  ecma_value_t return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (to_string_val,
@@ -155,11 +155,11 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /*
 
   if (property_p != NULL)
   {
-    return_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
   else
   {
-    return_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   ECMA_FINALIZE (obj_val);
 
@@ -174,20 +174,20 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /*
  * See also:
  *          ECMA-262 v5, 15.2.4.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**< this argument */
                                                       ecma_value_t arg) /**< routine's first argument */
 {
   /* 1. Is the argument an object? */
   if (!ecma_is_value_object (arg))
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  ecma_value_t return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 2. ToObject(this) */
   ECMA_TRY_CATCH (obj_value,
@@ -204,9 +204,8 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**
   ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
 
   bool is_prototype_of = ecma_op_object_is_prototype_of (obj_p, v_obj_p);
-  return_value = ecma_make_simple_completion_value (is_prototype_of
-                                                    ? ECMA_SIMPLE_VALUE_TRUE
-                                                    : ECMA_SIMPLE_VALUE_FALSE);
+  return_value = ecma_make_simple_value (is_prototype_of ? ECMA_SIMPLE_VALUE_TRUE
+                                                         : ECMA_SIMPLE_VALUE_FALSE);
   ECMA_FINALIZE (v_obj_value);
 
   ECMA_FINALIZE (obj_value);
@@ -220,14 +219,14 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**
  * See also:
  *          ECMA-262 v5, 15.2.4.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_arg, /**< this argument */
                                                              ecma_value_t arg) /**< routine's first argument */
 {
-  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  ecma_value_t return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (to_string_val,
@@ -251,13 +250,12 @@ ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_a
   {
     bool is_enumerable = ecma_is_property_enumerable (property_p);
 
-    return_value = ecma_make_simple_completion_value (is_enumerable
-                                                      ? ECMA_SIMPLE_VALUE_TRUE
-                                                      : ECMA_SIMPLE_VALUE_FALSE);
+    return_value = ecma_make_simple_value (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
+                                                         : ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    return_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
   ECMA_FINALIZE (obj_val);

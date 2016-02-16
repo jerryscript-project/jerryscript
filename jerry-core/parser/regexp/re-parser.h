@@ -106,10 +106,10 @@ typedef struct
 
 typedef void (*re_char_class_callback) (void *re_ctx_p, uint32_t start, uint32_t end);
 
-ecma_completion_value_t
+ecma_value_t
 re_parse_char_class (re_parser_ctx_t *, re_char_class_callback, void *, re_token_t *);
 
-ecma_completion_value_t
+ecma_value_t
 re_parse_next_token (re_parser_ctx_t *, re_token_t *);
 
 /**

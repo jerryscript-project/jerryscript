@@ -26,13 +26,13 @@
 #include "jrt.h"
 
 /**
- * Allocate a collection of ecma-values.
+ * Allocate a collection of ecma values.
  *
  * @return pointer to the collection's header
  */
 ecma_collection_header_t *
-ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values */
-                            ecma_length_t values_number, /**< number of ecma-values */
+ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma values */
+                            ecma_length_t values_number, /**< number of ecma values */
                             bool do_ref_if_object) /**< if the value is object value,
                                                         increase reference counter of the object */
 {
@@ -77,7 +77,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma-values
 } /* ecma_new_values_collection */
 
 /**
- * Free the collection of ecma-values.
+ * Free the collection of ecma values.
  */
 void
 ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
@@ -104,7 +104,14 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
     {
       JERRY_ASSERT (cur_value_buf_iter_p < cur_value_buf_end_p);
 
-      ecma_free_value (*cur_value_buf_iter_p, do_deref_if_object);
+      if (do_deref_if_object)
+      {
+        ecma_free_value (*cur_value_buf_iter_p);
+      }
+      else
+      {
+        ecma_free_value_if_not_object (*cur_value_buf_iter_p);
+      }
 
       cur_value_buf_iter_p++;
       value_index++;
@@ -120,11 +127,11 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
 } /* ecma_free_values_collection */
 
 /**
- * Append new value to ecma-values collection
+ * Append new value to ecma values collection
  */
 void
 ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
-                                  ecma_value_t v, /**< ecma-value to append */
+                                  ecma_value_t v, /**< ecma value to append */
                                   bool do_ref_if_object) /**< if the value is object value,
                                                               increase reference counter of the object */
 {
@@ -192,10 +199,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
  *         the function invalidates all iterators that are configured to access the passed collection
  */
 void
-ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
-                                               bool do_deref_if_object) /**< if the value to remove
-                                                                         *   is object value, decrement
-                                                                         *   reference counter of the object */
+ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_p) /**< collection's header */
 {
   JERRY_ASSERT (header_p != NULL && header_p->unit_number > 0);
 
@@ -211,7 +215,7 @@ ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_
 
   ecma_value_t value_to_remove = values_p[pos_of_value_to_remove_in_chunk];
 
-  ecma_free_value (value_to_remove, do_deref_if_object);
+  ecma_free_value (value_to_remove);
 
   header_p->unit_number--;
 

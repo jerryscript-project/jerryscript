@@ -35,15 +35,15 @@
  *   rightNum = ToNumber (rightValue);
  *   result = leftNum BitwiseLogicOp rightNum;
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic operation */
                          ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /**< right value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
@@ -94,7 +94,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
     }
   }
 
-  ret_value = ecma_make_normal_completion_value (ecma_make_number_value (res_p));
+  ret_value = ecma_make_number_value (res_p);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);

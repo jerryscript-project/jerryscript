@@ -26,20 +26,20 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_reject (bool);
+extern ecma_value_t ecma_reject (bool);
 extern ecma_object_t *ecma_op_create_object_object_noarg (void);
-extern ecma_completion_value_t ecma_op_create_object_object_arg (ecma_value_t);
+extern ecma_value_t ecma_op_create_object_object_arg (ecma_value_t);
 extern ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *);
 
-extern ecma_completion_value_t ecma_op_general_object_get (ecma_object_t *, ecma_string_t *);
+extern ecma_value_t ecma_op_general_object_get (ecma_object_t *, ecma_string_t *);
 extern ecma_property_t *ecma_op_general_object_get_own_property (ecma_object_t *, ecma_string_t *);
 extern ecma_property_t *ecma_op_general_object_get_property (ecma_object_t *, ecma_string_t *);
-extern ecma_completion_value_t ecma_op_general_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
+extern ecma_value_t ecma_op_general_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
 extern bool ecma_op_general_object_can_put (ecma_object_t *, ecma_string_t *);
-extern ecma_completion_value_t ecma_op_general_object_delete (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_completion_value_t ecma_op_general_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
-extern ecma_completion_value_t
-ecma_op_general_object_define_own_property (ecma_object_t *, ecma_string_t *, const ecma_property_descriptor_t *, bool);
+extern ecma_value_t ecma_op_general_object_delete (ecma_object_t *, ecma_string_t *, bool);
+extern ecma_value_t ecma_op_general_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
+extern ecma_value_t ecma_op_general_object_define_own_property (ecma_object_t *, ecma_string_t *,
+                                                                const ecma_property_descriptor_t *, bool);
 
 /**
  * @}

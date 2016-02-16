@@ -1,5 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,10 +155,10 @@ ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *
  *         - ecma_builtin_json_object step 10.b
  *         - ecma_builtin_json_array step 10.b
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /**< left bracket*/
                                                 ecma_string_t *right_bracket_p, /**< right bracket*/
                                                 ecma_string_t *stepback_p, /**< stepback*/
@@ -212,7 +212,7 @@ ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /
   ecma_deref_ecma_string (final_str_p);
   final_str_p = tmp_str_p;
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (final_str_p));
+  return ecma_make_string_value (final_str_p);
 } /* ecma_builtin_helper_json_create_formatted_json */
 
 /**
@@ -225,10 +225,10 @@ ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, /
  *         - ecma_builtin_json_object step 10.a
  *         - ecma_builtin_json_array step 10.a
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_p, /**< left bracket*/
                                                     ecma_string_t *right_bracket_p, /**< right bracket*/
                                                     ecma_collection_header_t *partial_p) /**< key-value pairs*/
@@ -251,7 +251,7 @@ ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_
   ecma_deref_ecma_string (properties_str_p);
   properties_str_p = tmp_str_p;
 
-  return ecma_make_normal_completion_value (ecma_make_string_value (properties_str_p));
+  return ecma_make_string_value (properties_str_p);
 } /* ecma_builtin_helper_json_create_non_formatted_json */
 
 /**

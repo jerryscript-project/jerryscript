@@ -41,7 +41,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     case VM_CONTEXT_FINALLY_THROW:
     case VM_CONTEXT_FINALLY_RETURN:
     {
-      ecma_free_value (vm_stack_top_p[-2], true);
+      ecma_free_value (vm_stack_top_p[-2]);
 
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
@@ -76,13 +76,13 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                                                                         current);
 
         lit_utf8_byte_t *data_ptr = chunk_p->data;
-        ecma_free_value (*(ecma_value_t *) data_ptr, true);
+        ecma_free_value (*(ecma_value_t *) data_ptr);
 
         current = chunk_p->next_chunk_cp;
         ecma_dealloc_collection_chunk (chunk_p);
       }
 
-      ecma_free_value (vm_stack_top_p[-3], true);
+      ecma_free_value (vm_stack_top_p[-3]);
 
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;

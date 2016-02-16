@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_completion_value_t ecma_op_create_boolean_object (ecma_value_t);
+extern ecma_value_t ecma_op_create_boolean_object (ecma_value_t);
 
 /**
  * @}

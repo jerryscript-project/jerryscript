@@ -36,19 +36,19 @@
  *          ecma_op_eval_chars_buffer
  *          ECMA-262 v5, 15.1.2.1 (steps 2 to 8)
  *
- * @return completion value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_eval (ecma_string_t *code_p, /**< code string */
               bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
               bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
 {
-  ecma_completion_value_t ret_value;
+  ecma_value_t ret_value;
 
   lit_utf8_size_t chars_num = ecma_string_get_size (code_p);
   if (chars_num == 0)
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
   else
   {
@@ -80,9 +80,9 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
  *          ecma_op_eval
  *          ECMA-262 v5, 15.1.2.1 (steps 2 to 8)
  *
- * @return completion value
+ * @return ecma value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters buffer */
                            size_t code_buffer_size, /**< size of the buffer */
                            bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
@@ -90,7 +90,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 {
   JERRY_ASSERT (code_p != NULL);
 
-  ecma_completion_value_t completion;
+  ecma_value_t completion;
 
   ecma_compiled_code_t *bytecode_data_p;
   jsp_status_t parse_status;
@@ -104,11 +104,11 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 
   if (parse_status == JSP_STATUS_SYNTAX_ERROR)
   {
-    completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_SYNTAX));
+    completion = ecma_raise_syntax_error ("");
   }
   else if (parse_status == JSP_STATUS_REFERENCE_ERROR)
   {
-    completion = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+    completion = ecma_raise_reference_error ("");
   }
   else
   {

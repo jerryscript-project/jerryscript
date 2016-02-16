@@ -45,22 +45,22 @@
  * See also:
  *          ECMA-262 v5, 9.10
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
-ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
+ecma_value_t
+ecma_op_check_object_coercible (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
   if (ecma_is_value_undefined (value)
       || ecma_is_value_null (value))
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_raise_type_error ("");
   }
   else
   {
-    return ecma_make_empty_completion_value ();
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   }
 } /* ecma_op_check_object_coercible */
 
@@ -74,8 +74,8 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma-value */
  *         false - otherwise.
  */
 bool
-ecma_op_same_value (ecma_value_t x, /**< ecma-value */
-                    ecma_value_t y) /**< ecma-value */
+ecma_op_same_value (ecma_value_t x, /**< ecma value */
+                    ecma_value_t y) /**< ecma value */
 {
   const bool is_x_undefined = ecma_is_value_undefined (x);
   const bool is_x_null = ecma_is_value_null (x);
@@ -161,11 +161,11 @@ ecma_op_same_value (ecma_value_t x, /**< ecma-value */
  * See also:
  *          ECMA-262 v5, 9.1
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
-ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
+ecma_value_t
+ecma_op_to_primitive (ecma_value_t value, /**< ecma value */
                       ecma_preferred_type_hint_t preferred_type) /**< preferred type hint */
 {
   ecma_check_value_type_is_spec_defined (value);
@@ -178,7 +178,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
   }
   else
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    return ecma_copy_value (value, true);
   }
 } /* ecma_op_to_primitive */
 
@@ -188,12 +188,12 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma-value */
  * See also:
  *          ECMA-262 v5, 9.2
  *
- * @return completion value
+ * @return ecma value
  *         Returned value is simple and so need not be freed.
- *         However, ecma_free_completion_value may be called for it, but it is a no-op.
+ *         However, ecma_free_value may be called for it, but it is a no-op.
  */
-ecma_completion_value_t
-ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
+ecma_value_t
+ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -243,7 +243,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
     ret_value = ECMA_SIMPLE_VALUE_TRUE;
   }
 
-  return ecma_make_simple_completion_value (ret_value);
+  return ecma_make_simple_value (ret_value);
 } /* ecma_op_to_boolean */
 
 /**
@@ -252,17 +252,17 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma-value */
  * See also:
  *          ECMA-262 v5, 9.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
-ecma_op_to_number (ecma_value_t value) /**< ecma-value */
+ecma_value_t
+ecma_op_to_number (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
   if (ecma_is_value_number (value))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    return ecma_copy_value (value, true);
   }
   else if (ecma_is_value_string (value))
   {
@@ -271,11 +271,11 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = ecma_string_to_number (str_p);
 
-    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    return ecma_make_number_value (num_p);
   }
   else if (ecma_is_value_object (value))
   {
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     ECMA_TRY_CATCH (primitive_value,
                     ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
@@ -313,7 +313,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
       }
     }
 
-    return ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    return ecma_make_number_value (num_p);
   }
 } /* ecma_op_to_number */
 
@@ -323,17 +323,17 @@ ecma_op_to_number (ecma_value_t value) /**< ecma-value */
  * See also:
  *          ECMA-262 v5, 9.8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
-ecma_op_to_string (ecma_value_t value) /**< ecma-value */
+ecma_value_t
+ecma_op_to_string (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
   if (unlikely (ecma_is_value_object (value)))
   {
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     ECMA_TRY_CATCH (prim_value,
                     ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING),
@@ -381,7 +381,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
       }
     }
 
-    return ecma_make_normal_completion_value (ecma_make_string_value (res_p));
+    return ecma_make_string_value (res_p);
   }
 } /* ecma_op_to_string */
 
@@ -391,11 +391,11 @@ ecma_op_to_string (ecma_value_t value) /**< ecma-value */
  * See also:
  *          ECMA-262 v5, 9.9
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
-ecma_op_to_object (ecma_value_t value) /**< ecma-value */
+ecma_value_t
+ecma_op_to_object (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -409,14 +409,14 @@ ecma_op_to_object (ecma_value_t value) /**< ecma-value */
   }
   else if (ecma_is_value_object (value))
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (value, true));
+    return ecma_copy_value (value, true);
   }
   else
   {
     if (ecma_is_value_undefined (value)
         || ecma_is_value_null (value))
     {
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return ecma_raise_type_error ("");
     }
     else
     {
@@ -441,7 +441,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   // 2.
   ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-  ecma_completion_value_t completion;
+  ecma_value_t completion;
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
   {
     prop_desc.is_value_defined = true;
@@ -471,7 +471,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                      &prop_desc,
                                                      false);
     ecma_deref_ecma_string (value_magic_string_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+    JERRY_ASSERT (ecma_is_value_true (completion));
 
     // b.
     const bool is_writable = (src_prop_desc_p->is_writable);
@@ -484,7 +484,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                      &prop_desc,
                                                      false);
     ecma_deref_ecma_string (writable_magic_string_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+    JERRY_ASSERT (ecma_is_value_true (completion));
   }
   else
   {
@@ -508,7 +508,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                      &prop_desc,
                                                      false);
     ecma_deref_ecma_string (get_magic_string_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+    JERRY_ASSERT (ecma_is_value_true (completion));
 
     // b.
     if (src_prop_desc_p->set_p == NULL)
@@ -526,7 +526,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                      &prop_desc,
                                                      false);
     ecma_deref_ecma_string (set_magic_string_p);
-    JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+    JERRY_ASSERT (ecma_is_value_true (completion));
   }
 
   const bool is_enumerable = src_prop_desc_p->is_enumerable;
@@ -539,7 +539,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                    &prop_desc,
                                                    false);
   ecma_deref_ecma_string (enumerable_magic_string_p);
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+  JERRY_ASSERT (ecma_is_value_true (completion));
 
   const bool is_configurable = src_prop_desc_p->is_configurable;
   prop_desc.value = ecma_make_simple_value (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
@@ -551,7 +551,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
                                                    &prop_desc,
                                                    false);
   ecma_deref_ecma_string (configurable_magic_string_p);
-  JERRY_ASSERT (ecma_is_completion_value_normal_true (completion));
+  JERRY_ASSERT (ecma_is_value_true (completion));
 
   return obj_p;
 } /* ecma_op_from_property_descriptor */
@@ -562,21 +562,21 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
  * See also:
  *          ECMA-262 v5, 8.10.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
                                 ecma_property_descriptor_t *out_prop_desc_p) /**< out: filled property descriptor
                                                                                   if return value is normal
                                                                                   empty completion value */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
   if (!ecma_is_value_object (obj_value))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -615,9 +615,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
     ecma_deref_ecma_string (enumerable_magic_string_p);
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 4.
       ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE);
@@ -650,9 +650,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (configurable_magic_string_p);
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 5.
       ecma_string_t *value_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUE);
@@ -672,9 +672,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (value_magic_string_p);
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 6.
       ecma_string_t *writable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE);
@@ -707,9 +707,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (writable_magic_string_p);
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 7.
       ecma_string_t *get_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GET);
@@ -723,7 +723,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (!ecma_op_is_callable (get_prop_value)
             && !ecma_is_value_undefined (get_prop_value))
         {
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ret_value = ecma_raise_type_error ("");
         }
         else
         {
@@ -750,9 +750,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (get_magic_string_p);
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 8.
 
@@ -767,7 +767,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (!ecma_op_is_callable (set_prop_value)
             && !ecma_is_value_undefined (set_prop_value))
         {
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ret_value = ecma_raise_type_error ("");
         }
         else
         {
@@ -794,9 +794,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (set_magic_string_p);
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       // 9.
       if (prop_desc.is_get_defined
@@ -805,14 +805,14 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (prop_desc.is_value_defined
             || prop_desc.is_writable_defined)
         {
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ret_value = ecma_raise_type_error ("");
         }
       }
     }
 
-    if (!ecma_is_completion_value_throw (ret_value))
+    if (!ecma_is_value_error (ret_value))
     {
-      JERRY_ASSERT (ecma_is_completion_value_empty (ret_value));
+      JERRY_ASSERT (ecma_is_value_empty (ret_value));
     }
     else
     {

@@ -53,75 +53,75 @@ typedef enum
   NUMBER_BITWISE_NOT, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
-ecma_completion_value_t
+ecma_value_t
 vm_var_decl (vm_frame_ctx_t *, ecma_string_t *);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_call_n (ecma_value_t, ecma_value_t,
                const ecma_value_t *, ecma_length_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_construct_n (ecma_value_t,
                     const ecma_value_t *, ecma_length_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_equal_value (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_not_equal_value (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_equal_value_type (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_not_equal_value_type (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 do_number_arithmetic (number_arithmetic_op, ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_unary_plus (ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_unary_minus (ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 do_number_bitwise_logic (number_bitwise_logic_op, ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_addition (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_less_than (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_greater_than (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_less_or_equal_than (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_greater_or_equal_than (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_in (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_instanceof (ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_logical_not (ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 opfunc_typeof (ecma_value_t);
 
 void
 opfunc_set_accessor (bool, ecma_value_t, ecma_value_t, ecma_value_t);
 
-ecma_completion_value_t
+ecma_value_t
 vm_op_delete_prop (ecma_value_t, ecma_value_t, bool);
 
-ecma_completion_value_t
+ecma_value_t
 vm_op_delete_var (lit_cpointer_t, ecma_object_t *, bool);
 
 ecma_collection_header_t *

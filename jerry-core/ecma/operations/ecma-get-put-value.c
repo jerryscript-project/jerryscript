@@ -39,10 +39,10 @@
  *
  * See also: ECMA-262 v5, 8.7.1, sections 3 and 5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict) /**< flag indicating strict mode */
@@ -52,7 +52,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   // 3.
   if (unlikely (is_unresolvable_reference))
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+    return ecma_raise_reference_error ("");
   }
 
   // 5.
@@ -70,10 +70,10 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
  *
  * See also: ECMA-262 v5, 8.7.1, section 4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
 {
   const ecma_value_t base = ref.base;
@@ -105,7 +105,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
   else
   {
     // 4.b case 2
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     // 1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
@@ -121,13 +121,12 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     if (prop_p == NULL)
     {
       // 3.
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
     {
       // 4.
-      ecma_value_t prop_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
-      ret_value = ecma_make_normal_completion_value (prop_value);
+      ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
     }
     else
     {
@@ -139,7 +138,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
       // 6.
       if (obj_p == NULL)
       {
-        ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }
       else
       {
@@ -159,10 +158,10 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
  *
  * See also: ECMA-262 v5, 8.7.2, sections 3 and 5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
                                 ecma_string_t *var_name_string_p, /**< variable name */
                                 bool is_strict, /**< flag indicating strict mode */
@@ -176,24 +175,23 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     // 3.a.
     if (is_strict)
     {
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_REFERENCE));
+      return ecma_raise_reference_error ("");
     }
     else
     {
       // 3.b.
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
-      ecma_completion_value_t completion = ecma_op_object_put (global_object_p,
-                                                               var_name_string_p,
-                                                               value,
-                                                               false);
+      ecma_value_t completion = ecma_op_object_put (global_object_p,
+                                                    var_name_string_p,
+                                                    value,
+                                                    false);
 
       ecma_deref_object (global_object_p);
 
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (completion)
-                    || ecma_is_completion_value_normal_false (completion));
+      JERRY_ASSERT (ecma_is_value_boolean (completion));
 
-      return ecma_make_empty_completion_value ();
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
     }
   }
 
@@ -211,19 +209,19 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 /**
  * Reject sequence for PutValue
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_reject_put (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_raise_type_error ("");
   }
   else
   {
-    return ecma_make_empty_completion_value ();
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   }
 } /* ecma_reject_put */
 
@@ -232,10 +230,10 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
  *
  * See also: ECMA-262 v5, 8.7.2, section 4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                                ecma_value_t value) /**< ECMA-value */
 {
@@ -260,7 +258,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     ECMA_TRY_CATCH (put_ret_value,
                     ecma_op_object_put (obj_p,
@@ -270,7 +268,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                                         ref.is_strict),
                     ret_value);
 
-    ret_value = ecma_make_empty_completion_value ();
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     ECMA_FINALIZE (put_ret_value);
 
@@ -279,7 +277,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
   else
   {
     // 4.b case 2
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     // sub_1.
     ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
@@ -324,7 +322,7 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
                         ecma_op_function_call (setter_p, base, &value, 1),
                         ret_value);
 
-        ret_value = ecma_make_empty_completion_value ();
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
         ECMA_FINALIZE (call_ret);
       }

@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,24 +26,24 @@
  * @{
  */
 
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *, uint32_t);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_object_get_properties (ecma_object_t *, bool);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *, uint32_t *, ecma_value_t);
 extern uint32_t
 ecma_builtin_helper_array_index_normalize (ecma_number_t, uint32_t);
 extern uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t, uint32_t, bool);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t, ecma_value_t,
                                                       ecma_value_t, bool);
 extern bool
 ecma_builtin_helper_string_find_index (ecma_string_t *, ecma_string_t *, bool, ecma_length_t, ecma_length_t *);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *, ecma_string_t *, ecma_value_t,
                               bool, bool, bool, bool);
 
@@ -108,16 +108,16 @@ extern ecma_number_t ecma_date_make_day (ecma_number_t, ecma_number_t, ecma_numb
 extern ecma_number_t ecma_date_make_date (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_date_time_clip (ecma_number_t);
 extern ecma_number_t ecma_date_timezone_offset (ecma_number_t);
-extern ecma_completion_value_t ecma_date_set_internal_property (ecma_value_t, ecma_number_t,
+extern ecma_value_t ecma_date_set_internal_property (ecma_value_t, ecma_number_t,
                                                                 ecma_number_t, ecma_date_timezone_t);
 extern void ecma_date_insert_leading_zeros (ecma_string_t **, ecma_number_t, uint32_t);
 
-extern ecma_completion_value_t ecma_date_value_to_string (ecma_number_t);
-extern ecma_completion_value_t ecma_date_value_to_utc_string (ecma_number_t);
-extern ecma_completion_value_t ecma_date_value_to_iso_string (ecma_number_t);
-extern ecma_completion_value_t ecma_date_value_to_date_string (ecma_number_t);
-extern ecma_completion_value_t ecma_date_value_to_time_string (ecma_number_t);
-extern ecma_completion_value_t ecma_date_get_primitive_value (ecma_value_t);
+extern ecma_value_t ecma_date_value_to_string (ecma_number_t);
+extern ecma_value_t ecma_date_value_to_utc_string (ecma_number_t);
+extern ecma_value_t ecma_date_value_to_iso_string (ecma_number_t);
+extern ecma_value_t ecma_date_value_to_date_string (ecma_number_t);
+extern ecma_value_t ecma_date_value_to_time_string (ecma_number_t);
+extern ecma_value_t ecma_date_get_primitive_value (ecma_value_t);
 
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
@@ -147,14 +147,14 @@ typedef struct
 extern bool ecma_has_object_value_in_collection (ecma_collection_header_t *, ecma_value_t);
 extern bool ecma_has_string_value_in_collection (ecma_collection_header_t *, ecma_value_t);
 
-extern ecma_string_t *ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t);
-
+extern ecma_string_t *
+ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t);
 extern ecma_string_t *
 ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *, ecma_string_t *);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_json_create_formatted_json (ecma_string_t *, ecma_string_t *, ecma_string_t *,
                                                 ecma_collection_header_t *, ecma_json_stringify_context_t *);
-extern ecma_completion_value_t
+extern ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *, ecma_string_t *, ecma_collection_header_t *);
 
 /**

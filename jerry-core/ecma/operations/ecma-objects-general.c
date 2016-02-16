@@ -34,19 +34,19 @@
 /**
  * Reject sequence
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_reject (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_raise_type_error ("");
   }
   else
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 } /* ecma_reject */
 
@@ -77,7 +77,7 @@ ecma_op_create_object_object_noarg (void)
  *
  * @return pointer to newly created 'Object' object
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of constructor */
 {
   ecma_check_value_type_is_spec_defined (value);
@@ -98,7 +98,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
 
     ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
 
-    return ecma_make_normal_completion_value (ecma_make_object_value (obj_p));
+    return ecma_make_object_value (obj_p);
   }
 } /* ecma_op_create_object_object_arg */
 
@@ -135,10 +135,10 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
                             ecma_string_t *property_name_p) /**< property name */
 {
@@ -152,14 +152,13 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   // 2.
   if (prop_p == NULL)
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 
   // 3.
   if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
   {
-    return ecma_make_normal_completion_value (ecma_copy_value (ecma_get_named_data_property_value (prop_p),
-                                                               true));
+    return ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
   }
   else
   {
@@ -169,7 +168,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
     // 5.
     if (getter_p == NULL)
     {
-      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
     {
@@ -252,13 +251,13 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                             ecma_string_t *property_name_p, /**< property name */
-                            ecma_value_t value, /**< ecma-value */
+                            ecma_value_t value, /**< ecma value */
                             bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (obj_p != NULL
@@ -271,12 +270,12 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     if (is_throw)
     {
       // a.
-      return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      return ecma_raise_type_error ("");
     }
     else
     {
       // b.
-      return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
     }
   }
 
@@ -312,7 +311,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
     ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (desc_p);
     JERRY_ASSERT (setter_p != NULL);
 
-    ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
     ECMA_TRY_CATCH (call_ret,
                     ecma_op_function_call (setter_p,
@@ -321,7 +320,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                                            1),
                     ret_value);
 
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
 
     ECMA_FINALIZE (call_ret);
 
@@ -449,10 +448,10 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
                                ecma_string_t *property_name_p, /**< property name */
                                bool is_throw) /**< flag that controls failure handling */
@@ -467,7 +466,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   // 2.
   if (desc_p == NULL)
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   // 3.
@@ -477,17 +476,17 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
     ecma_delete_property (obj_p, desc_p);
 
     // b.
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
   else if (is_throw)
   {
     // 4.
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_raise_type_error ("");
   }
   else
   {
     // 5.
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
   JERRY_UNREACHABLE ();
@@ -500,10 +499,10 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
                                       ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
 {
@@ -538,20 +537,20 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_string_t *function_name_p = ecma_get_magic_string (function_name_magic_string_id);
 
-    ecma_completion_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
+    ecma_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
 
     ecma_deref_ecma_string (function_name_p);
 
-    if (!ecma_is_completion_value_normal (function_value_get_completion))
+    if (ecma_is_value_error (function_value_get_completion))
     {
       return function_value_get_completion;
     }
 
-    ecma_completion_value_t call_completion = ecma_make_empty_completion_value ();
+    ecma_value_t call_completion = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-    if (ecma_op_is_callable (ecma_get_completion_value_value (function_value_get_completion)))
+    if (ecma_op_is_callable (function_value_get_completion))
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_completion_value (function_value_get_completion);
+      ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value_get_completion);
 
       call_completion = ecma_op_function_call (func_obj_p,
                                                ecma_make_object_value (obj_p),
@@ -559,23 +558,19 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
                                                0);
     }
 
-    ecma_free_completion_value (function_value_get_completion);
+    ecma_free_value (function_value_get_completion);
 
-    if (!ecma_is_completion_value_normal (call_completion))
+    if (ecma_is_value_error (call_completion)
+        || (!ecma_is_value_empty (call_completion)
+           && !ecma_is_value_object (call_completion)))
     {
       return call_completion;
     }
 
-    if (!ecma_is_completion_value_empty (call_completion)
-        && !ecma_is_value_object (ecma_get_completion_value_value (call_completion)))
-    {
-      return call_completion;
-    }
-
-    ecma_free_completion_value (call_completion);
+    ecma_free_value (call_completion);
   }
 
-  return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+  return ecma_raise_type_error ("");
 } /* ecma_op_general_object_default_value */
 
 /**
@@ -585,10 +580,10 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.9
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_completion_value_t
+ecma_value_t
 ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                             ecma_string_t *property_name_p, /**< property name */
                                             const ecma_property_descriptor_t *property_desc_p, /**< property
@@ -650,7 +645,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
     }
 
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   // 5.
@@ -658,7 +653,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       && !property_desc_p->is_enumerable_defined
       && !property_desc_p->is_configurable_defined)
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   // 6.
@@ -723,7 +718,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
   if (is_every_field_in_desc_also_occurs_in_current_desc_with_same_value)
   {
-    return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   // 7.
@@ -863,7 +858,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
     ecma_set_property_configurable_attr (current_p, property_desc_p->is_configurable);
   }
 
-  return ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_op_general_object_define_own_property */
 
 /**

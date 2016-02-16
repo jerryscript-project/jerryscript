@@ -1,5 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,14 +52,14 @@
 /**
  * Helper function to set an object's length property
  *
- * @return completion value (return value of the [[Put]] method)
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value (return value of the [[Put]] method)
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< object*/
                                                 ecma_number_t length) /**< new length */
 {
-  ecma_completion_value_t ret_value;
+  ecma_value_t ret_value;
   ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
   ecma_number_t *len_p = ecma_alloc_number ();
@@ -81,18 +81,18 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
  * See also:
  *          ECMA-262 v5, 15.4.4.2
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t return_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this_value,
                   ecma_op_to_object (this_arg),
-                  return_value);
+                  ret_value);
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_this_value);
 
@@ -101,19 +101,19 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
   /* 2. */
   ECMA_TRY_CATCH (join_value,
                   ecma_op_object_get (obj_p, join_magic_string_p),
-                  return_value);
+                  ret_value);
 
   if (!ecma_op_is_callable (join_value))
   {
     /* 3. */
-    return_value = ecma_builtin_helper_object_to_string (this_arg);
+    ret_value = ecma_builtin_helper_object_to_string (this_arg);
   }
   else
   {
     /* 4. */
     ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
 
-    return_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+    ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
   }
 
   ECMA_FINALIZE (join_value);
@@ -122,7 +122,7 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
   ECMA_FINALIZE (obj_this_value);
 
-  return return_value;
+  return ret_value;
 } /* ecma_builtin_array_prototype_object_to_string */
 
 /**
@@ -131,13 +131,13 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
  * See also:
  *          ECMA-262 v5, 15.4.4.3
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_value,
@@ -167,7 +167,7 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
   if (length == 0)
   {
     ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+    ret_value = ecma_make_string_value (empty_string_p);
   }
   else
   {
@@ -179,7 +179,7 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
     ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
 
     /* 9-10. */
-    for (uint32_t k = 1; ecma_is_completion_value_empty (ret_value) && (k < length); k++)
+    for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
       ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
 
@@ -198,9 +198,9 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
       ecma_deref_ecma_string (part_string_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
+      ret_value = ecma_make_string_value (return_string_p);
     }
     else
     {
@@ -229,15 +229,15 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
  * See also:
  *          ECMA-262 v5, 15.4.4.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this argument */
                                             const ecma_value_t args[], /**< arguments list */
                                             ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -245,8 +245,8 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
                   ret_value);
 
   /* 2. */
-  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
-  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
   uint32_t new_length = 0;
 
   /* 5.b - 5.c for this_arg */
@@ -256,7 +256,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
 
   /* 5. */
   for (uint32_t arg_index = 0;
-       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index < args_number && ecma_is_value_empty (ret_value);
        arg_index++)
   {
     ECMA_TRY_CATCH (concat_value,
@@ -267,7 +267,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
 
   ECMA_FINALIZE (concat_this_value);
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
                     ecma_builtin_array_prototype_helper_set_length (new_array_p, ecma_uint32_to_number (new_length)),
@@ -277,7 +277,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
   }
   else
   {
-    ecma_free_completion_value (new_array);
+    ecma_free_value (new_array);
   }
 
   ECMA_FINALIZE (obj_this);
@@ -291,16 +291,17 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2 4th step
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+
+static ecma_value_t
 ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separator */
 {
   if (ecma_is_value_undefined (separator))
   {
     ecma_string_t *comma_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
-    return ecma_make_normal_completion_value (ecma_make_string_value (comma_string_p));
+    return ecma_make_string_value (comma_string_p);
   }
   else
   {
@@ -314,14 +315,14 @@ ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separa
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2
  *
- * @return ecma_completion_value_t value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma_value_t value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
                                       uint32_t index) /**< array index */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
 
   ECMA_TRY_CATCH (index_value,
@@ -332,7 +333,7 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
       || ecma_is_value_null (index_value))
   {
     ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+    ret_value = ecma_make_string_value (empty_string_p);
   }
   else
   {
@@ -352,14 +353,14 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
  * See also:
  *          ECMA-262 v5, 15.4.4.5
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argument */
                                    const ecma_value_t separator_arg) /**< separator argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_value,
@@ -391,7 +392,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
   {
     /* 6. */
     ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_normal_completion_value (ecma_make_string_value (empty_string_p));
+    ret_value = ecma_make_string_value (empty_string_p);
   }
   else
   {
@@ -405,7 +406,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
     ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
 
     /* 9-10. */
-    for (uint32_t k = 1; ecma_is_completion_value_empty (ret_value) && (k < length); k++)
+    for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
       /* 10.a */
       ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
@@ -427,9 +428,9 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
       ecma_deref_ecma_string (part_string_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_make_string_value (return_string_p));
+      ret_value = ecma_make_string_value (return_string_p);
     }
     else
     {
@@ -458,13 +459,13 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
  * See also:
  *          ECMA-262 v5, 15.4.4.6
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -493,7 +494,7 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
                     ret_value);
 
     /* 4.b */
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
     ECMA_FINALIZE (set_length_value)
   }
@@ -514,7 +515,7 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
                     ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
                     ret_value);
 
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (get_value, true));
+    ret_value = ecma_copy_value (get_value, true);
 
     ECMA_FINALIZE (set_length_value);
     ECMA_FINALIZE (del_value);
@@ -537,15 +538,15 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
  * See also:
  *          ECMA-262 v5, 15.4.4.7
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argument */
                                           const ecma_value_t *argument_list_p, /**< arguments list */
                                           ecma_length_t arguments_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this_value, ecma_op_to_object (this_arg), ret_value);
@@ -564,7 +565,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
 
   /* 5. */
   for (uint32_t index = 0;
-       index < arguments_number && ecma_is_completion_value_empty (ret_value);
+       index < arguments_number && ecma_is_value_empty (ret_value);
        index++, n++)
   {
     /* 5.a */
@@ -580,7 +581,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
   }
 
   /* 6. */
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
                     ecma_builtin_array_prototype_helper_set_length (obj_p, n),
@@ -589,7 +590,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
     ecma_number_t *ret_num_p = ecma_alloc_number ();
     *ret_num_p = n;
 
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (ret_num_p));
+    ret_value = ecma_make_number_value (ret_num_p);
 
     ECMA_FINALIZE (set_length_value)
   }
@@ -611,13 +612,13 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
  * See also:
  *          ECMA-262 v5, 15.4.4.8
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -640,7 +641,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this ar
   uint32_t middle = len / 2;
 
   /* 5-6. */
-  for (uint32_t lower = 0; lower < middle && ecma_is_completion_value_empty (ret_value); lower++)
+  for (uint32_t lower = 0; lower < middle && ecma_is_value_empty (ret_value); lower++)
   {
     /* 6.a */
     uint32_t upper = len - lower - 1;
@@ -687,10 +688,10 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this ar
     ecma_deref_ecma_string (upper_str_p);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     /* 7. */
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (obj_this, true));
+    ret_value = ecma_copy_value (obj_this, true);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -707,13 +708,13 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this ar
  * See also:
  *          ECMA-262 v5, 15.4.4.9
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -740,7 +741,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
                     ecma_builtin_array_prototype_helper_set_length (obj_p, ECMA_NUMBER_ZERO),
                     ret_value);
 
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
     ECMA_FINALIZE (set_length_value);
   }
@@ -752,7 +753,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
     ECMA_TRY_CATCH (first_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
 
     /* 6. and 7. */
-    for (uint32_t k = 1; k < len && ecma_is_completion_value_empty (ret_value); k++)
+    for (uint32_t k = 1; k < len && ecma_is_value_empty (ret_value); k++)
     {
       /* 7.a */
       ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (k);
@@ -782,7 +783,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
       ecma_deref_ecma_string (from_str_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       len--;
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (len);
@@ -795,7 +796,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
                       ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
                       ret_value);
       /* 10. */
-      ret_value = ecma_make_normal_completion_value (ecma_copy_value (first_value, true));
+      ret_value = ecma_copy_value (first_value, true);
 
       ECMA_FINALIZE (set_length_value);
       ECMA_FINALIZE (del_value);
@@ -820,15 +821,15 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
  * See also:
  *          ECMA-262 v5, 15.4.4.10
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg1, /**< start */
                               ecma_value_t arg2) /**< end */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -874,14 +875,14 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
 
   JERRY_ASSERT (start <= len && end <= len);
 
-  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
-  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   /* 9. */
   uint32_t n = 0;
 
   /* 10. */
-  for (uint32_t k = start; k < end && ecma_is_completion_value_empty (ret_value); k++, n++)
+  for (uint32_t k = start; k < end && ecma_is_value_empty (ret_value); k++, n++)
   {
     /* 10.a */
     ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (k);
@@ -896,14 +897,14 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
 
       /* 10.c.ii */
       /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-      ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
-                                                                       to_idx_str_p,
-                                                                       get_value,
-                                                                       true, /* Writable */
-                                                                       true, /* Enumerable */
-                                                                       true, /* Configurable */
-                                                                       false);
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                            to_idx_str_p,
+                                                            get_value,
+                                                            true, /* Writable */
+                                                            true, /* Enumerable */
+                                                            true, /* Configurable */
+                                                            false);
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_deref_ecma_string (to_idx_str_p);
 
@@ -913,13 +914,13 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
     ecma_deref_ecma_string (curr_idx_str_p);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ret_value = new_array;
   }
   else
   {
-    ecma_free_completion_value (new_array);
+    ecma_free_value (new_array);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -936,10 +937,10 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
  * See also:
  *          ECMA-262 v5, 15.4.4.11
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< left value */
                                                          ecma_value_t k, /**< right value */
                                                          ecma_value_t comparefn) /**< compare function */
@@ -950,7 +951,7 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
    * compares greater than any other value, undefined property values always
    * sort to the end of the result, followed by non-existent property values.
    */
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_number_t *result_p = ecma_alloc_number ();
 
   bool j_is_undef = ecma_is_value_undefined (j);
@@ -1033,9 +1034,9 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
     }
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (result_p));
+    ret_value = ecma_make_number_value (result_p);
   }
   else
   {
@@ -1049,23 +1050,23 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
  * Function used to reconstruct the ordered binary tree.
  * Shifts 'index' down in the tree until it is in the correct position.
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], /**< heap data array */
                                                           int index, /**< current item index */
                                                           int right, /**< right index is a maximum index */
                                                           ecma_value_t comparefn) /**< compare function */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* Left child of the current index. */
   int child = index * 2 + 1;
   ecma_value_t swap = array[index];
   bool should_break = false;
 
-  while (child <= right && ecma_is_completion_value_empty (ret_value) && !should_break)
+  while (child <= right && ecma_is_value_empty (ret_value) && !should_break)
   {
     if (child < right)
     {
@@ -1087,7 +1088,7 @@ ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], 
       ECMA_FINALIZE (child_compare_value);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       JERRY_ASSERT (child <= right);
 
@@ -1119,7 +1120,7 @@ ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], 
     }
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     /*
      * Loop ended, either current child does not exist, or is less than swap.
@@ -1129,7 +1130,7 @@ ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], 
     JERRY_ASSERT (parent >= 0 && parent <= right);
     array[parent] = swap;
 
-    ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 
   return ret_value;
@@ -1138,18 +1139,18 @@ ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], 
 /**
  * Heapsort function
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_array_heap_sort_helper (ecma_value_t array[], /**< array to sort */
                                                             int right, /**< right index */
                                                             ecma_value_t comparefn) /**< compare function */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* First, construct the ordered binary tree from the array. */
-  for (int i = right / 2; i >= 0 && ecma_is_completion_value_empty (ret_value); i--)
+  for (int i = right / 2; i >= 0 && ecma_is_value_empty (ret_value); i--)
   {
     ECMA_TRY_CATCH (value,
                     ecma_builtin_array_prototype_object_array_to_heap_helper (array,
@@ -1161,7 +1162,7 @@ ecma_builtin_array_prototype_object_array_heap_sort_helper (ecma_value_t array[]
   }
 
   /* Sorting elements. */
-  for (int i = right; i > 0 && ecma_is_completion_value_empty (ret_value); i--)
+  for (int i = right; i > 0 && ecma_is_value_empty (ret_value); i--)
   {
     /*
      * The top element will always contain the largest value.
@@ -1190,20 +1191,20 @@ ecma_builtin_array_prototype_object_array_heap_sort_helper (ecma_value_t array[]
  * See also:
  *          ECMA-262 v5, 15.4.4.11
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t arg1) /**< comparefn */
 {
   /* Check if the provided compare function is callable. */
   if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
   {
-    return ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    return ecma_raise_type_error ("");
   }
 
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (obj_this,
                   ecma_op_to_object (this_arg),
@@ -1230,7 +1231,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   /* Count properties with name that is array index less than len */
   while (ecma_collection_iterator_next (&iter)
-         && ecma_is_completion_value_empty (ret_value))
+         && ecma_is_value_empty (ret_value))
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
@@ -1250,7 +1251,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   /* Copy unsorted array into a native c array. */
   while (ecma_collection_iterator_next (&iter)
-         && ecma_is_completion_value_empty (ret_value))
+         && ecma_is_value_empty (ret_value))
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
@@ -1271,10 +1272,10 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   }
 
   JERRY_ASSERT (copied_num == defined_prop_count
-                || !ecma_is_completion_value_empty (ret_value));
+                || !ecma_is_value_empty (ret_value));
 
   /* Sorting. */
-  if (copied_num > 1 && ecma_is_completion_value_empty (ret_value))
+  if (copied_num > 1 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (sort_value,
                     ecma_builtin_array_prototype_object_array_heap_sort_helper (values_buffer,
@@ -1286,7 +1287,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   /* Put sorted values to the front of the array. */
   for (uint32_t index = 0;
-       index < copied_num && ecma_is_completion_value_empty (ret_value);
+       index < copied_num && ecma_is_value_empty (ret_value);
        index++)
   {
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
@@ -1300,7 +1301,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   /* Free values that were copied to the local array. */
   for (uint32_t index = 0; index < copied_num; index++)
   {
-    ecma_free_value (values_buffer[index], true);
+    ecma_free_value (values_buffer[index]);
   }
 
   MEM_FINALIZE_LOCAL_ARRAY (values_buffer);
@@ -1310,7 +1311,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   ecma_collection_iterator_init (&iter, array_index_props_p);
 
   while (ecma_collection_iterator_next (&iter)
-         && ecma_is_completion_value_empty (ret_value))
+         && ecma_is_value_empty (ret_value))
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
@@ -1327,9 +1328,9 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   ecma_free_values_collection (array_index_props_p, true);
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_make_normal_completion_value (ecma_copy_value (this_arg, true));
+    ret_value = ecma_copy_value (this_arg, true);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -1346,15 +1347,15 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
  * See also:
  *          ECMA-262 v5, 15.4.4.12
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this argument */
                                           const ecma_value_t args[], /**< arguments list */
                                           ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -1377,8 +1378,8 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
 
   const uint32_t len = ecma_number_to_uint32 (len_number);
 
-  ecma_completion_value_t new_array = ecma_op_create_array_object (0, 0, false);
-  ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   uint32_t start = 0;
   uint32_t delete_count = 0;
@@ -1438,7 +1439,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   uint32_t k;
 
   for (uint32_t del_item_idx, k = 0;
-       k < delete_count && ecma_is_completion_value_empty (ret_value);
+       k < delete_count && ecma_is_value_empty (ret_value);
        k++)
   {
     /* 9.a */
@@ -1457,14 +1458,14 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
 
       /* 9.c.ii */
       /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-      ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
-                                                                       idx_str_new_p,
-                                                                       get_value,
-                                                                       true, /* Writable */
-                                                                       true, /* Enumerable */
-                                                                       true, /* Configurable */
-                                                                       false);
-      JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                            idx_str_new_p,
+                                                            get_value,
+                                                            true, /* Writable */
+                                                            true, /* Enumerable */
+                                                            true, /* Configurable */
+                                                            false);
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_deref_ecma_string (idx_str_new_p);
       ECMA_FINALIZE (get_value);
@@ -1495,7 +1496,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
     if (item_count < delete_count)
     {
       /* 12.b */
-      for (k = start; k < (len - delete_count) && ecma_is_completion_value_empty (ret_value); k++)
+      for (k = start; k < (len - delete_count) && ecma_is_value_empty (ret_value); k++)
       {
         from = k + delete_count;
         ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (from);
@@ -1533,7 +1534,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
       }
 
       /* 12.d */
-      for (k = len; k > new_len && ecma_is_completion_value_empty (ret_value); k--)
+      for (k = len; k > new_len && ecma_is_value_empty (ret_value); k--)
       {
         ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 (k - 1);
         ECMA_TRY_CATCH (del_value,
@@ -1548,7 +1549,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
     else if (item_count > delete_count)
     {
       /* 13.b */
-      for (k = len - delete_count; k > start  && ecma_is_completion_value_empty (ret_value); k--)
+      for (k = len - delete_count; k > start  && ecma_is_value_empty (ret_value); k--)
       {
         from = k + delete_count - 1;
         ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (from);
@@ -1590,7 +1591,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   /* 15. */
   ecma_length_t idx = 0;
   for (ecma_length_t arg_index = 2;
-       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index < args_number && ecma_is_value_empty (ret_value);
        arg_index++, idx++)
   {
     ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) (start + idx));
@@ -1603,7 +1604,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   }
 
   /* 16. */
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
                     ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (new_len)),
@@ -1612,13 +1613,13 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
     ECMA_FINALIZE (set_length_value);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ret_value = new_array;
   }
   else
   {
-    ecma_free_completion_value (new_array);
+    ecma_free_value (new_array);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -1635,15 +1636,15 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
  * See also:
  *          ECMA-262 v5, 15.4.4.13
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this argument */
                                              const ecma_value_t args[], /**< arguments list */
                                              ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -1664,7 +1665,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
   uint32_t len = ecma_number_to_uint32 (len_number);
 
   /* 5. and 6. */
-  for (uint32_t k = len; k > 0 && ecma_is_completion_value_empty (ret_value); k--)
+  for (uint32_t k = len; k > 0 && ecma_is_value_empty (ret_value); k--)
   {
     /* 6.a */
     ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (k - 1);
@@ -1695,7 +1696,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
   }
 
   for (uint32_t arg_index = 0;
-       arg_index < args_number && ecma_is_completion_value_empty (ret_value);
+       arg_index < args_number && ecma_is_value_empty (ret_value);
        arg_index++)
   {
     ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (arg_index);
@@ -1705,7 +1706,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
     ecma_deref_ecma_string (to_str_p);
   }
 
-  if (ecma_is_completion_value_empty (ret_value))
+  if (ecma_is_value_empty (ret_value))
   {
     ecma_number_t new_len = ecma_uint32_to_number (len) + ecma_uint32_to_number (args_number);
     /* 10. */
@@ -1714,7 +1715,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
                     ret_value);
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = new_len;
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    ret_value = ecma_make_number_value (num_p);
 
     ECMA_FINALIZE (set_length_value);
   }
@@ -1733,15 +1734,15 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
  * See also:
  *          ECMA-262 v5, 15.4.4.14
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg1, /**< searchElement */
                                               ecma_value_t arg2) /**< fromIndex */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -1766,7 +1767,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
   {
     ecma_number_t *num_p = ecma_alloc_number ();
     *num_p = ecma_int32_to_number (-1);
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    ret_value = ecma_make_number_value (num_p);
   }
   else
   {
@@ -1782,7 +1783,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
     {
       JERRY_ASSERT (from_idx < len);
 
-      for (; from_idx < len && found_index < 0 && ecma_is_completion_value_empty (ret_value); from_idx++)
+      for (; from_idx < len && found_index < 0 && ecma_is_value_empty (ret_value); from_idx++)
       {
         ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (from_idx);
 
@@ -1805,11 +1806,11 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
       }
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       ecma_number_t *num_p = ecma_alloc_number ();
       *num_p = found_index;
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+      ret_value = ecma_make_number_value (num_p);
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_from_idx);
@@ -1832,15 +1833,15 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
  * See also:
  *          ECMA-262 v5, 15.4.4.15
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< this argument */
                                                    const ecma_value_t args[], /**< arguments list */
                                                    ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_value_t search_element = (args_number > 0) ? args[0] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
   /* 1. */
@@ -1867,7 +1868,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
   /* 4. */
   if (len == 0)
   {
-    ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+    ret_value = ecma_make_number_value (num_p);
   }
   else
   {
@@ -1936,7 +1937,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
      * for an underflow instead. This is safe, because from_idx will always start in [0, len - 1],
      * and len is in [0, UINT_MAX], so from_idx >= len means we've had an underflow, and should stop.
      */
-    for (; from_idx < len && *num_p < 0 && ecma_is_completion_value_empty (ret_value); from_idx--)
+    for (; from_idx < len && *num_p < 0 && ecma_is_value_empty (ret_value); from_idx--)
     {
       /* 8.a */
       ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (from_idx);
@@ -1959,9 +1960,9 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
       ecma_deref_ecma_string (idx_str_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_normal_completion_value (ecma_make_number_value (num_p));
+      ret_value = ecma_make_number_value (num_p);
     }
     else
     {
@@ -1983,15 +1984,15 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
  * See also:
  *          ECMA-262 v5, 15.4.4.16
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argument */
                                            ecma_value_t arg1, /**< callbackfn */
                                            ecma_value_t arg2) /**< thisArg */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -2014,7 +2015,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2023,13 +2024,13 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
     ecma_object_t *func_object_p;
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
-    ecma_completion_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (ecma_is_completion_value_normal (to_object_comp));
+    ecma_value_t to_object_comp = ecma_op_to_object (arg1);
+    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
 
-    func_object_p = ecma_get_object_from_completion_value (to_object_comp);
+    func_object_p = ecma_get_object_from_value (to_object_comp);
 
     /* 7. */
-    for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
     {
       /* 7.a */
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2048,9 +2049,9 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_completion_value_normal_false (ecma_op_to_boolean (call_value)))
+        if (ecma_is_value_false (ecma_op_to_boolean (call_value)))
         {
-          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
         }
 
         ECMA_FINALIZE (call_value);
@@ -2060,13 +2061,13 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
       ecma_deref_ecma_string (index_str_p);
     }
 
-    ecma_free_completion_value (to_object_comp);
+    ecma_free_value (to_object_comp);
     ecma_dealloc_number (num_p);
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       /* 8. */
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
     }
   }
 
@@ -2084,15 +2085,15 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
  * See also:
  *          ECMA-262 v5, 15.4.4.17
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t arg1, /**< callbackfn */
                                           ecma_value_t arg2) /**< thisArg */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -2115,7 +2116,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2124,13 +2125,13 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
     ecma_object_t *func_object_p;
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
-    ecma_completion_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (ecma_is_completion_value_normal (to_object_comp));
+    ecma_value_t to_object_comp = ecma_op_to_object (arg1);
+    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
 
-    func_object_p = ecma_get_object_from_completion_value (to_object_comp);
+    func_object_p = ecma_get_object_from_value (to_object_comp);
 
     /* 7. */
-    for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
     {
       /* 7.a */
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2149,9 +2150,9 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_completion_value_normal_true (ecma_op_to_boolean (call_value)))
+        if (ecma_is_value_true (ecma_op_to_boolean (call_value)))
         {
-          ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_TRUE);
+          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
         }
 
         ECMA_FINALIZE (call_value);
@@ -2161,13 +2162,13 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
       ecma_deref_ecma_string (index_str_p);
     }
 
-    ecma_free_completion_value (to_object_comp);
+    ecma_free_value (to_object_comp);
     ecma_dealloc_number (num_p);
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       /* 8. */
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
     }
   }
 
@@ -2185,15 +2186,15 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
  * See also:
  *          ECMA-262 v5, 15.4.4.18
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg1, /**< callbackfn */
                                               ecma_value_t arg2) /**< thisArg */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
                   ecma_op_to_object (this_arg),
@@ -2215,7 +2216,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2224,13 +2225,13 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
     ecma_object_t *func_object_p;
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
-    ecma_completion_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (ecma_is_completion_value_normal (to_object_comp));
+    ecma_value_t to_object_comp = ecma_op_to_object (arg1);
+    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
 
-    func_object_p = ecma_get_object_from_completion_value (to_object_comp);
+    func_object_p = ecma_get_object_from_value (to_object_comp);
 
     /* Iterate over array and call callbackfn on every element */
-    for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
     {
       /* 7.a */
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2255,13 +2256,13 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
       ecma_deref_ecma_string (index_str_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       /* 8. */
-      ret_value = ecma_make_simple_completion_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
 
-    ecma_free_completion_value (to_object_comp);
+    ecma_free_value (to_object_comp);
     ecma_dealloc_number (num_p);
   }
 
@@ -2279,15 +2280,15 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
  * See also:
  *          ECMA-262 v5, 15.4.4.19
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argument */
                                          ecma_value_t arg1, /**< callbackfn */
                                          ecma_value_t arg2) /**< thisArg */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -2310,7 +2311,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2322,14 +2323,14 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
     /* 5. arg2 is simply used as T */
 
     /* 6. */
-    ecma_completion_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-    JERRY_ASSERT (ecma_is_completion_value_normal (new_array));
-    ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+    ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+    JERRY_ASSERT (!ecma_is_value_error (new_array));
+    ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* 7-8. */
     ecma_value_t current_index;
 
-    for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
     {
       /* 8.a */
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2347,14 +2348,14 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
 
         /* 8.c.iii */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-        ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
-                                                                         index_str_p,
-                                                                         mapped_value,
-                                                                         true, /* Writable */
-                                                                         true, /* Enumerable */
-                                                                         true, /* Configurable */
-                                                                         false);
-        JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+        ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                              index_str_p,
+                                                              mapped_value,
+                                                              true, /* Writable */
+                                                              true, /* Enumerable */
+                                                              true, /* Configurable */
+                                                              false);
+        JERRY_ASSERT (ecma_is_value_true (put_comp));
 
         ECMA_FINALIZE (mapped_value);
         ECMA_FINALIZE (current_value);
@@ -2363,7 +2364,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
       ecma_deref_ecma_string (index_str_p);
     }
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       ECMA_TRY_CATCH (set_length_value,
                       ecma_builtin_array_prototype_helper_set_length (new_array_p, ecma_uint32_to_number (len)),
@@ -2373,7 +2374,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
     }
     else
     {
-      ecma_free_completion_value (new_array);
+      ecma_free_value (new_array);
     }
 
     ecma_dealloc_number (num_p);
@@ -2393,15 +2394,15 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
  * See also:
  *          ECMA-262 v5, 15.4.4.20
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg1, /**< callbackfn */
                                             ecma_value_t arg2) /**< thisArg */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
   ECMA_TRY_CATCH (obj_this,
@@ -2424,7 +2425,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2433,9 +2434,9 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
     ecma_object_t *func_object_p;
 
     /* 6. */
-    ecma_completion_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-    JERRY_ASSERT (ecma_is_completion_value_normal (new_array));
-    ecma_object_t *new_array_p = ecma_get_object_from_completion_value (new_array);
+    ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+    JERRY_ASSERT (!ecma_is_value_error (new_array));
+    ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* We already checked that arg1 is callable, so it will always be an object. */
     JERRY_ASSERT (ecma_is_value_object (arg1));
@@ -2445,7 +2446,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
     uint32_t new_array_index = 0;
 
     /* 9. */
-    for (uint32_t index = 0; index < len && ecma_is_completion_value_empty (ret_value); index++)
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
     {
       /* 9.a */
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2464,19 +2465,19 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
         /* 9.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_completion_value_normal_true (ecma_op_to_boolean (call_value)))
+        if (ecma_is_value_true (ecma_op_to_boolean (call_value)))
         {
           ecma_string_t *to_index_string_p = ecma_new_ecma_string_from_uint32 (new_array_index);
 
           /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-          ecma_completion_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
-                                                                           to_index_string_p,
-                                                                           get_value,
-                                                                           true, /* Writable */
-                                                                           true, /* Enumerable */
-                                                                           true, /* Configurable */
-                                                                           false);
-          JERRY_ASSERT (ecma_is_completion_value_normal_true (put_comp));
+          ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                                to_index_string_p,
+                                                                get_value,
+                                                                true, /* Writable */
+                                                                true, /* Enumerable */
+                                                                true, /* Configurable */
+                                                                false);
+          JERRY_ASSERT (ecma_is_value_true (put_comp));
 
           ecma_deref_ecma_string (to_index_string_p);
           new_array_index++;
@@ -2491,14 +2492,14 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
 
     ecma_dealloc_number (num_p);
 
-    if (ecma_is_completion_value_empty (ret_value))
+    if (ecma_is_value_empty (ret_value))
     {
       /* 10. */
       ret_value = new_array;
     }
     else
     {
-      ecma_free_completion_value (new_array);
+      ecma_free_value (new_array);
     }
   }
 
@@ -2516,15 +2517,15 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
  * See also:
  *          ECMA-262 v5, 15.4.4.21
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this argument */
                                             const ecma_value_t args[], /**< arguments list */
                                             ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_value_t callbackfn = (args_number > 0) ? args[0] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   ecma_value_t initial_value = (args_number > 1) ? args[1] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -2549,7 +2550,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
   /* 4. */
   if (!ecma_op_is_callable (callbackfn))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2563,7 +2564,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
     /* 5. */
     if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (initial_value))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_raise_type_error ("");
     }
     else
     {
@@ -2580,7 +2581,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         /* 8.a */
         bool k_present = false;
         /* 8.b */
-        while (!k_present && index < len && ecma_is_completion_value_empty (ret_value))
+        while (!k_present && index < len && ecma_is_value_empty (ret_value))
         {
           /* 8.b.i */
           ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2600,13 +2601,13 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         /* 8.c */
         if (!k_present)
         {
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ret_value = ecma_raise_type_error ("");
         }
       }
       /* 9. */
       ecma_value_t current_index;
 
-      for (; index < len && ecma_is_completion_value_empty (ret_value); index++)
+      for (; index < len && ecma_is_value_empty (ret_value); index++)
       {
         /* 9.a */
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
@@ -2627,7 +2628,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
                                                  4),
                           ret_value);
 
-          ecma_free_value (accumulator, true);
+          ecma_free_value (accumulator);
           accumulator = ecma_copy_value (call_value, true);
 
           ECMA_FINALIZE (call_value);
@@ -2637,13 +2638,13 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         /* 9.d in for loop */
       }
 
-      if (ecma_is_completion_value_empty (ret_value))
+      if (ecma_is_value_empty (ret_value))
       {
-        ret_value = ecma_make_normal_completion_value (ecma_copy_value (accumulator, true));
+        ret_value = ecma_copy_value (accumulator, true);
       }
     }
 
-    ecma_free_value (accumulator, true);
+    ecma_free_value (accumulator);
     ecma_dealloc_number (num_p);
   }
 
@@ -2661,15 +2662,15 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
  * See also:
  *          ECMA-262 v5, 15.4.4.22
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_completion_value.
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-static ecma_completion_value_t
+static ecma_value_t
 ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< this argument */
                                                   const ecma_value_t args[], /**< arguments list */
                                                   ecma_length_t args_number) /**< number of arguments */
 {
-  ecma_completion_value_t ret_value = ecma_make_empty_completion_value ();
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_value_t callbackfn = (args_number > 0) ? args[0] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   ecma_value_t initial_value = (args_number > 1) ? args[1] : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -2694,7 +2695,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
   /* 4. */
   if (!ecma_op_is_callable (callbackfn))
   {
-    ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+    ret_value = ecma_raise_type_error ("");
   }
   else
   {
@@ -2706,7 +2707,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
     /* 5. */
     if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (initial_value))
     {
-      ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+      ret_value = ecma_raise_type_error ("");
     }
     else
     {
@@ -2726,7 +2727,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         /* 8.a */
         bool k_present = false;
         /* 8.b */
-        while (!k_present && index >= 0 && ecma_is_completion_value_empty (ret_value))
+        while (!k_present && index >= 0 && ecma_is_value_empty (ret_value))
         {
           /* 8.b.i */
           ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
@@ -2746,13 +2747,13 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         /* 8.c */
         if (!k_present)
         {
-          ret_value = ecma_make_throw_obj_completion_value (ecma_new_standard_error (ECMA_ERROR_TYPE));
+          ret_value = ecma_raise_type_error ("");
         }
       }
       /* 9. */
       ecma_value_t current_index;
 
-      for (; index >= 0 && ecma_is_completion_value_empty (ret_value); index--)
+      for (; index >= 0 && ecma_is_value_empty (ret_value); index--)
       {
         /* 9.a */
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
@@ -2773,7 +2774,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
                                                  4),
                           ret_value);
 
-          ecma_free_value (accumulator, true);
+          ecma_free_value (accumulator);
           accumulator = ecma_copy_value (call_value, true);
 
           ECMA_FINALIZE (call_value);
@@ -2783,12 +2784,12 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         /* 9.d in for loop */
       }
 
-      if (ecma_is_completion_value_empty (ret_value))
+      if (ecma_is_value_empty (ret_value))
       {
-        ret_value = ecma_make_normal_completion_value (ecma_copy_value (accumulator, true));
+        ret_value = ecma_copy_value (accumulator, true);
       }
 
-      ecma_free_value (accumulator, true);
+      ecma_free_value (accumulator);
       ecma_dealloc_number (num_p);
     }
   }

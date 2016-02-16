@@ -6,6 +6,7 @@ sudo: required
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-qemu-arm.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
 
 install:
@@ -15,6 +16,7 @@ script: "make -j VERBOSE=1 NINJA=1 $TARGET"
 env:
   - TARGET="check-signed-off check-vera check-cppcheck"
   - TARGET="build.linux test-js-precommit"
+  - TARGET="build.linux test-js-precommit" TOOLCHAIN=build/configs/toolchain_linux_armv7l-hf.cmake TIMEOUT=300
   - TARGET=test-unit
 
 matrix:

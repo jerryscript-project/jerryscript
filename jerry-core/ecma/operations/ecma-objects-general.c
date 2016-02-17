@@ -57,7 +57,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
  *
  * @return pointer to newly created 'Object' object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_create_object_object_noarg (void)
 {
   ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
@@ -110,7 +110,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
  *
  * @return pointer to newly created object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prototype_p) /**< pointer to prototype of
                                                                                               the object
                                                                                               (can be NULL) */
@@ -192,7 +192,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                                          ecma_string_t *property_name_p) /**< property name */
 {
@@ -213,7 +213,7 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
                                      ecma_string_t *property_name_p) /**< property name */
 {

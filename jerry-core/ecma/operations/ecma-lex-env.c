@@ -76,7 +76,7 @@ ecma_finalize_environment (void)
  *
  * @return pointer to the object's instance
  */
-ecma_object_t*
+ecma_object_t *
 ecma_get_global_environment (void)
 {
   ecma_ref_object (ecma_global_lex_env_p);

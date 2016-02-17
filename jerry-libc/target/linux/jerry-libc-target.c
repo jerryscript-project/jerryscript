@@ -149,9 +149,9 @@ puts (const char *s) /**< string to print */
 void __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
-  syscall_1 (__NR_close, (long int)stdin);
-  syscall_1 (__NR_close, (long int)stdout);
-  syscall_1 (__NR_close, (long int)stderr);
+  syscall_1 (__NR_close, (long int) stdin);
+  syscall_1 (__NR_close, (long int) stdout);
+  syscall_1 (__NR_close, (long int) stderr);
 
   syscall_1 (__NR_exit_group, status);
 
@@ -168,9 +168,9 @@ exit (int status) /**< status code */
 void __attr_noreturn___ __attr_used___
 abort (void)
 {
-  syscall_1 (__NR_close, (long int)stdin);
-  syscall_1 (__NR_close, (long int)stdout);
-  syscall_1 (__NR_close, (long int)stderr);
+  syscall_1 (__NR_close, (long int) stdin);
+  syscall_1 (__NR_close, (long int) stdout);
+  syscall_1 (__NR_close, (long int) stderr);
 
   syscall_2 (__NR_kill, syscall_0 (__NR_getpid), SIGABRT);
 
@@ -186,7 +186,7 @@ abort (void)
  * @return FILE pointer - upon successful completion,
  *         NULL - otherwise
  */
-FILE*
+FILE *
 fopen (const char *path, /**< file path */
        const char *mode) /**< file open mode */
 {
@@ -267,7 +267,7 @@ fopen (const char *path, /**< file path */
 
   long int ret = syscall_3 (__NR_open, (long int) path, flags, access);
 
-  return (void*) (uintptr_t) (ret);
+  return (void *) (uintptr_t) (ret);
 } /* fopen */
 
 /**
@@ -289,7 +289,7 @@ rewind (FILE *stream) /**< stream pointer */
 int
 fclose (FILE *fp) /**< stream pointer */
 {
-  syscall_2 (__NR_close, (long int)fp, 0);
+  syscall_2 (__NR_close, (long int) fp, 0);
 
   return 0;
 } /* fclose */
@@ -303,7 +303,7 @@ fseek (FILE * fp, /**< stream pointer */
        int whence) /**< specifies position type
                     *   to add offset to */
 {
-  syscall_3 (__NR_lseek, (long int)fp, offset, whence);
+  syscall_3 (__NR_lseek, (long int) fp, offset, whence);
 
   return 0;
 } /* fseek */
@@ -314,7 +314,7 @@ fseek (FILE * fp, /**< stream pointer */
 long
 ftell (FILE * fp) /**< stream pointer */
 {
-  long int ret = syscall_3 (__NR_lseek, (long int)fp, 0, SEEK_CUR);
+  long int ret = syscall_3 (__NR_lseek, (long int) fp, 0, SEEK_CUR);
 
   return ret;
 } /* ftell */
@@ -342,10 +342,10 @@ fread (void *ptr, /**< address of buffer to read to */
   {
     ret = syscall_3 (__NR_read,
                      (long int) stream,
-                     (long int) ((uint8_t*) ptr + bytes_read),
+                     (long int) ((uint8_t *) ptr + bytes_read),
                      (long int) (size * nmemb - bytes_read));
 
-    bytes_read += (size_t)ret;
+    bytes_read += (size_t) ret;
   }
   while (bytes_read != size * nmemb && ret != 0);
 
@@ -374,10 +374,10 @@ fwrite (const void *ptr, /**< data to write */
   {
     long int ret = syscall_3 (__NR_write,
                               (long int) stream,
-                              (long int) ((uint8_t*) ptr + bytes_written),
+                              (long int) ((uint8_t *) ptr + bytes_written),
                               (long int) (size * nmemb - bytes_written));
 
-    bytes_written += (size_t)ret;
+    bytes_written += (size_t) ret;
   }
   while (bytes_written != size * nmemb);
 

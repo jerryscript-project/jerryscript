@@ -146,7 +146,7 @@ static void
 re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
                   re_opcode_t opcode) /**< input opcode */
 {
-  re_bytecode_list_append (bc_ctx_p, (uint8_t*) &opcode, sizeof (uint8_t));
+  re_bytecode_list_append (bc_ctx_p, (uint8_t *) &opcode, sizeof (uint8_t));
 } /* re_append_opcode */
 
 /**
@@ -156,7 +156,7 @@ static void
 re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
                uint32_t value) /**< input value */
 {
-  re_bytecode_list_append (bc_ctx_p, (uint8_t*) &value, sizeof (uint32_t));
+  re_bytecode_list_append (bc_ctx_p, (uint8_t *) &value, sizeof (uint32_t));
 } /* re_append_u32 */
 
 /**
@@ -178,7 +178,7 @@ re_insert_opcode (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
                   uint32_t offset, /**< distance from the start of the container */
                   re_opcode_t opcode) /**< input opcode */
 {
-  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t*) &opcode, sizeof (uint8_t));
+  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &opcode, sizeof (uint8_t));
 } /* re_insert_opcode */
 
 /**
@@ -189,7 +189,7 @@ re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
                uint32_t offset, /**< distance from the start of the container */
                uint32_t value) /**< input value */
 {
-  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t*) &value, sizeof (uint32_t));
+  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &value, sizeof (uint32_t));
 } /* re_insert_u32 */
 
 /**
@@ -209,7 +209,7 @@ re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
 uint32_t
 re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  uint32_t value = *((uint32_t*) *bc_p);
+  uint32_t value = *((uint32_t *) *bc_p);
   (*bc_p) += sizeof (uint32_t);
   return value;
 } /* re_get_value */
@@ -223,7 +223,7 @@ re_append_char_class (void *re_ctx_p, /**< RegExp compiler context */
                       uint32_t end) /**< character class range to */
 {
   /* FIXME: Handle ignore case flag and add unicode support. */
-  re_compiler_ctx_t *ctx_p = (re_compiler_ctx_t*) re_ctx_p;
+  re_compiler_ctx_t *ctx_p = (re_compiler_ctx_t *) re_ctx_p;
   re_append_u32 (ctx_p->bytecode_ctx_p, start);
   re_append_u32 (ctx_p->bytecode_ctx_p, end);
   ctx_p->parser_ctx_p->num_of_classes++;

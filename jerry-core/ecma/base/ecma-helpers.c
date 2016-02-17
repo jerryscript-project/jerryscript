@@ -39,7 +39,7 @@
  *
  * @return pointer to the object's descriptor
  */
-ecma_object_t*
+ecma_object_t *
 ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe of the object (or NULL) */
                     bool is_extensible, /**< value of extensible attribute */
                     ecma_object_type_t type) /**< object type */
@@ -88,7 +88,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
  *
  * @return pointer to the descriptor of lexical environment
  */
-ecma_object_t*
+ecma_object_t *
 ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer lexical environment */
 {
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
@@ -138,7 +138,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
  *
  * @return pointer to the descriptor of lexical environment
  */
-ecma_object_t*
+ecma_object_t *
 ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
                             ecma_object_t *binding_obj_p, /**< binding object */
                             bool provide_this) /**< provideThis flag */
@@ -430,7 +430,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
  *
  * @return pointer to newly created property
  */
-ecma_property_t*
+ecma_property_t *
 ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
                                ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
@@ -459,7 +459,7 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
                              ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
@@ -492,7 +492,7 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
  *
  * @return pointer to the property
  */
-ecma_property_t*
+ecma_property_t *
 ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
                             ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
@@ -509,7 +509,7 @@ ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
  *
  * @return pointer to newly created property
  */
-ecma_property_t*
+ecma_property_t *
 ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
                                  ecma_string_t *name_p, /**< property name */
                                  bool is_writable, /**< 'Writable' attribute */
@@ -553,7 +553,7 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
  *
  * @return pointer to newly created property
  */
-ecma_property_t*
+ecma_property_t *
 ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
                                      ecma_string_t *name_p, /**< property name */
                                      ecma_object_t *get_p, /**< getter */
@@ -606,7 +606,7 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in */
                           ecma_string_t *name_p) /**< property's name */
 {
@@ -663,7 +663,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in */
                          ecma_string_t *name_p) /**< property's name */
 {
@@ -686,7 +686,7 @@ ecma_get_named_property (ecma_object_t *obj_p, /**< object to find property in *
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property in */
                               ecma_string_t *name_p) /**< property's name */
 {
@@ -1009,7 +1009,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
  *
  * @return pointer to object - getter of the property
  */
-ecma_object_t*
+ecma_object_t *
 ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< named accessor property */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
@@ -1026,7 +1026,7 @@ ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< nam
  *
  * @return pointer to object - setter of the property
  */
-ecma_object_t*
+ecma_object_t *
 ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< named accessor property */
 {
   JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);

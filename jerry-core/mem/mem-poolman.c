@@ -552,7 +552,7 @@ mem_pools_alloc_longpath (void)
   JERRY_ASSERT (MEM_POOL_CHUNKS_NUMBER >= 1);
 
   MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST ();
-  mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t*) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
+  mem_pool_chunk_t *pool_start_p = (mem_pool_chunk_t *) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
 
   if (mem_free_chunk_p != NULL)
   {

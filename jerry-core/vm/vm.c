@@ -1987,7 +1987,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (vm_stack_find_finally (frame_ctx_p,
                                      &stack_top_p,
                                      VM_CONTEXT_FINALLY_JUMP,
-                                     (uint32_t)branch_offset))
+                                     (uint32_t) branch_offset))
           {
             JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
             byte_code_p = frame_ctx_p->byte_code_p;

@@ -126,11 +126,11 @@ rcs_iterator_access (rcs_iterator_t *ctx_p, /**< iterator context */
 
     if (access_type == RCS_ITERATOR_ACCESS_READ)
     {
-      memcpy ((uint8_t *)data + first_chunk_size, next_node_data_space_p, size - first_chunk_size);
+      memcpy ((uint8_t *) data + first_chunk_size, next_node_data_space_p, size - first_chunk_size);
     }
     else if (access_type == RCS_ITERATOR_ACCESS_WRITE)
     {
-      memcpy (next_node_data_space_p, (uint8_t *)data + first_chunk_size, size - first_chunk_size);
+      memcpy (next_node_data_space_p, (uint8_t *) data + first_chunk_size, size - first_chunk_size);
     }
     else
     {

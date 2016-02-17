@@ -526,7 +526,7 @@ mem_heap_alloc_block_internal (size_t size_in_bytes, /**< size of region to allo
  *
  * @return pointer to allocated memory block
  */
-static void*
+static void *
 mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of region to allocate in bytes */
                                            mem_block_length_type_t length_type, /**< length type of the block
                                                                                  *   (one-chunked or general) */
@@ -582,7 +582,7 @@ mem_heap_alloc_block_try_give_memory_back (size_t size_in_bytes, /**< size of re
  * @return pointer to allocated memory block - if allocation is successful,
  *         NULL - if requested region size is zero.
  */
-void*
+void *
 mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to allocate in bytes */
                       mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
@@ -613,7 +613,7 @@ mem_heap_alloc_block (size_t size_in_bytes,             /**< size of region to a
  *
  * @return pointer to allocated memory block
  */
-void*
+void *
 mem_heap_alloc_chunked_block (mem_heap_alloc_term_t alloc_term) /**< expected allocation term */
 {
   return mem_heap_alloc_block_try_give_memory_back (mem_heap_get_chunked_block_data_size (),
@@ -629,7 +629,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 {
   VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
 
-  uint8_t *uint8_ptr = (uint8_t*) ptr;
+  uint8_t *uint8_ptr = (uint8_t *) ptr;
 
   /* checking that uint8_ptr points to the heap */
   JERRY_ASSERT (uint8_ptr >= mem_heap.area && uint8_ptr <= (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
@@ -754,7 +754,7 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
  *
  * @return beginning of user data space of block identified by the pointer
  */
-void*
+void *
 mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 {
   JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
@@ -768,11 +768,11 @@ mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
   JERRY_ASSERT (uintptr >= uintptr_chunk_aligned);
 
 #ifndef JERRY_NDEBUG
-  size_t chunk_index = mem_heap_get_chunk_from_address ((void*) uintptr_chunk_aligned);
+  size_t chunk_index = mem_heap_get_chunk_from_address ((void *) uintptr_chunk_aligned);
   JERRY_ASSERT (mem_heap_length_types[chunk_index] == MEM_BLOCK_LENGTH_TYPE_ONE_CHUNKED);
 #endif /* !JERRY_NDEBUG */
 
-  return (void*) uintptr_chunk_aligned;
+  return (void *) uintptr_chunk_aligned;
 } /* mem_heap_get_chunked_block_start */
 
 /**
@@ -825,7 +825,7 @@ mem_heap_compress_pointer (const void *pointer_p) /**< pointer to compress */
  *
  * @return unpacked heap pointer
  */
-void*
+void *
 mem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
   JERRY_ASSERT (compressed_pointer != MEM_CP_NULL);
@@ -836,7 +836,7 @@ mem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decom
   int_ptr <<= MEM_ALIGNMENT_LOG;
   int_ptr += heap_start;
 
-  return (void*) int_ptr;
+  return (void *) int_ptr;
 } /* mem_heap_decompress_pointer */
 
 #ifndef JERRY_NDEBUG
@@ -852,7 +852,7 @@ mem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decom
 bool
 mem_is_heap_pointer (const void *pointer) /**< pointer */
 {
-  uint8_t *uint8_pointer = (uint8_t*) pointer;
+  uint8_t *uint8_pointer = (uint8_t *) pointer;
 
   return (uint8_pointer >= mem_heap.area && uint8_pointer <= ((uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE));
 } /* mem_is_heap_pointer */
@@ -875,7 +875,7 @@ mem_heap_print_block (bool dump_block_data, /**< print block with data (true)
 
   if (dump_block_data)
   {
-    uint8_t *block_data_p = (uint8_t*) mem_heap.area;
+    uint8_t *block_data_p = (uint8_t *) mem_heap.area;
     uint8_t *block_data_end_p = block_data_p + start_chunk * MEM_HEAP_CHUNK_SIZE;
 
 #ifdef JERRY_VALGRIND

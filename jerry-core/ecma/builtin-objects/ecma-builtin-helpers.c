@@ -482,7 +482,7 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
  *         - The String.prototype.indexOf routine.
  *         - The String.prototype.lastIndexOf routine.
  *
- * @return uint32_t - (last)index of search string
+ * @return uint32_t - (last) index of search string
  */
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */

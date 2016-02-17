@@ -155,7 +155,7 @@ rcs_chunked_list_cleanup (rcs_chunked_list_t *cl_p) /**< the chunked_list */
  *
  * @return pointer to the first node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_get_first (rcs_chunked_list_t *cl_p) /**< the chunked_list */
 {
   return cl_p->head_p;
@@ -167,7 +167,7 @@ rcs_chunked_list_get_first (rcs_chunked_list_t *cl_p) /**< the chunked_list */
  *
  * @return pointer to the last node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_get_last (rcs_chunked_list_t *cl_p) /**< the chunked_list */
 {
   return cl_p->tail_p;
@@ -178,7 +178,7 @@ rcs_chunked_list_get_last (rcs_chunked_list_t *cl_p) /**< the chunked_list */
  *
  * @return pointer to previous node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_get_prev (rcs_chunked_list_node_t *node_p) /**< the node in the chunked_list */
 {
   JERRY_ASSERT (node_p != NULL);
@@ -191,7 +191,7 @@ rcs_chunked_list_get_prev (rcs_chunked_list_node_t *node_p) /**< the node in the
  *
  * @return pointer to next node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_get_next (rcs_chunked_list_node_t *node_p) /**< the node in the chunked_list */
 {
   JERRY_ASSERT (node_p != NULL);
@@ -203,12 +203,12 @@ rcs_chunked_list_get_next (rcs_chunked_list_node_t *node_p) /**< the node in the
  *
  * @return pointer to the new node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_append_new (rcs_chunked_list_t *cl_p) /**< the chunked_list */
 {
   rcs_assert_chunked_list_is_correct (cl_p);
   rcs_chunked_list_node_t *node_p =
-  (rcs_chunked_list_node_t*) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
+  (rcs_chunked_list_node_t *) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
   rcs_chunked_list_set_prev (node_p, cl_p->tail_p);
   rcs_chunked_list_set_next (node_p, NULL);
 
@@ -234,13 +234,13 @@ rcs_chunked_list_append_new (rcs_chunked_list_t *cl_p) /**< the chunked_list */
  *
  * @return pointer to the new node
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_insert_new (rcs_chunked_list_t *cl_p, /**< the chunked_list */
                              rcs_chunked_list_node_t *after_p) /**< the node to insert the new node after */
 {
   rcs_assert_chunked_list_is_correct (cl_p);
   rcs_chunked_list_node_t *node_p =
-  (rcs_chunked_list_node_t*) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
+  (rcs_chunked_list_node_t *) mem_heap_alloc_chunked_block (MEM_HEAP_ALLOC_LONG_TERM);
   JERRY_ASSERT (cl_p->head_p != NULL);
   JERRY_ASSERT (cl_p->tail_p != NULL);
   rcs_assert_chunked_list_node_is_correct (cl_p, after_p);
@@ -302,11 +302,11 @@ rcs_chunked_list_remove (rcs_chunked_list_t *cl_p, /**< the chunked_list */
  *
  * @return pointer to the node that contains the pointed area
  */
-rcs_chunked_list_node_t*
+rcs_chunked_list_node_t *
 rcs_chunked_list_get_node_from_pointer (rcs_chunked_list_t *cl_p, /**< the chunked_list */
                                         void *ptr) /**< the pointer value */
 {
-  rcs_chunked_list_node_t *node_p = (rcs_chunked_list_node_t*) mem_heap_get_chunked_block_start (ptr);
+  rcs_chunked_list_node_t *node_p = (rcs_chunked_list_node_t *) mem_heap_get_chunked_block_start (ptr);
 
   rcs_assert_chunked_list_node_is_correct (cl_p, node_p);
 

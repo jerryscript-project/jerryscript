@@ -120,7 +120,7 @@ libc_printf_justified_string_output (FILE *stream, /**< stream pointer */
 /**
  * printf helper function that converts unsigned integer to string
  */
-static char*
+static char *
 libc_printf_uint_to_string (uintmax_t value, /**< integer value */
                             char *buffer_p, /**< buffer for output string */
                             size_t buffer_size, /**< buffer size */
@@ -205,57 +205,57 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
   /* true - positive, false - negative */
   bool sign = true;
   const size_t bits_in_byte = 8;
-  const uintmax_t value_sign_mask = ((uintmax_t)1) << (sizeof (value) * bits_in_byte - 1);
+  const uintmax_t value_sign_mask = ((uintmax_t) 1) << (sizeof (value) * bits_in_byte - 1);
 
   switch (length)
   {
     case LIBC_PRINTF_ARG_LENGTH_TYPE_NONE:
     {
-      value = (uintmax_t)va_arg (*args_list_p, int);
+      value = (uintmax_t) va_arg (*args_list_p, int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HH:
     {
-      value = (uintmax_t)va_arg (*args_list_p, int); /* char is promoted to int */
+      value = (uintmax_t) va_arg (*args_list_p, int); /* char is promoted to int */
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_H:
     {
-      value = (uintmax_t)va_arg (*args_list_p, int); /* short int is promoted to int */
+      value = (uintmax_t) va_arg (*args_list_p, int); /* short int is promoted to int */
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_L:
     {
-      value = (uintmax_t)va_arg (*args_list_p, long int);
+      value = (uintmax_t) va_arg (*args_list_p, long int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_LL:
     {
-      value = (uintmax_t)va_arg (*args_list_p, long long int);
+      value = (uintmax_t) va_arg (*args_list_p, long long int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_J:
     {
-      value = (uintmax_t)va_arg (*args_list_p, intmax_t);
+      value = (uintmax_t) va_arg (*args_list_p, intmax_t);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_Z:
     {
       is_signed = false;
-      value = (uintmax_t)va_arg (*args_list_p, size_t);
+      value = (uintmax_t) va_arg (*args_list_p, size_t);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_T:
     {
       is_signed = false;
-      value = (uintmax_t)va_arg (*args_list_p, ptrdiff_t);
+      value = (uintmax_t) va_arg (*args_list_p, ptrdiff_t);
       break;
     }
 
@@ -325,49 +325,49 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
   {
     case LIBC_PRINTF_ARG_LENGTH_TYPE_NONE:
     {
-      value = (uintmax_t)va_arg (*args_list_p, unsigned int);
+      value = (uintmax_t) va_arg (*args_list_p, unsigned int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HH:
     {
-      value = (uintmax_t)va_arg (*args_list_p, unsigned int); /* char is promoted to int */
+      value = (uintmax_t) va_arg (*args_list_p, unsigned int); /* char is promoted to int */
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_H:
     {
-      value = (uintmax_t)va_arg (*args_list_p, unsigned int); /* short int is promoted to int */
+      value = (uintmax_t) va_arg (*args_list_p, unsigned int); /* short int is promoted to int */
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_L:
     {
-      value = (uintmax_t)va_arg (*args_list_p, unsigned long int);
+      value = (uintmax_t) va_arg (*args_list_p, unsigned long int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_LL:
     {
-      value = (uintmax_t)va_arg (*args_list_p, unsigned long long int);
+      value = (uintmax_t) va_arg (*args_list_p, unsigned long long int);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_J:
     {
-      value = (uintmax_t)va_arg (*args_list_p, uintmax_t);
+      value = (uintmax_t) va_arg (*args_list_p, uintmax_t);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_Z:
     {
-      value = (uintmax_t)va_arg (*args_list_p, size_t);
+      value = (uintmax_t) va_arg (*args_list_p, size_t);
       break;
     }
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_T:
     {
-      value = (uintmax_t)va_arg (*args_list_p, ptrdiff_t);
+      value = (uintmax_t) va_arg (*args_list_p, ptrdiff_t);
       break;
     }
 
@@ -656,7 +656,7 @@ vfprintf (FILE *stream, /**< stream pointer */
           {
             char str[2] =
             {
-              (char)va_arg (args_copy, int), /* char is promoted to int */
+              (char) va_arg (args_copy, int), /* char is promoted to int */
               '\0'
             };
 
@@ -678,7 +678,7 @@ vfprintf (FILE *stream, /**< stream pointer */
           }
           else
           {
-            char *str_p = va_arg (args_copy, char*);
+            char *str_p = va_arg (args_copy, char *);
 
             libc_printf_justified_string_output (stream,
                                                  str_p,
@@ -693,7 +693,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         {
           va_list args_copy2;
           va_copy (args_copy2, args_copy);
-          void *value = va_arg (args_copy2, void*);
+          void *value = va_arg (args_copy2, void *);
           va_end (args_copy2);
 
           if (value == NULL)

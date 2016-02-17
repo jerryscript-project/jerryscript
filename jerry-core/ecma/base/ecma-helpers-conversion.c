@@ -1278,7 +1278,7 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
   }
 
   const int32_t int_part_shift = dot_shift;
-  const uint32_t frac_part_mask = ((((uint32_t)1) << int_part_shift) - 1);
+  const uint32_t frac_part_mask = ((((uint32_t) 1) << int_part_shift) - 1);
 
   uint32_t int_part = fraction >> int_part_shift;
   uint32_t frac_part = fraction & frac_part_mask;

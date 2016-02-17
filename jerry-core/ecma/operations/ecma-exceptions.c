@@ -35,7 +35,7 @@
  * @return pointer to ecma-object representing specified error
  *         with reference counter set to one.
  */
-ecma_object_t*
+ecma_object_t *
 ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
 {
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
@@ -112,7 +112,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
  * @return pointer to ecma-object representing specified error
  *         with reference counter set to one.
  */
-ecma_object_t*
+ecma_object_t *
 ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< native error type */
                                       ecma_string_t *message_string_p) /**< message string */
 {

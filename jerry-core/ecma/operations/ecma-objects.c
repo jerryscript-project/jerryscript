@@ -97,7 +97,7 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-static __attr_noinline___ ecma_property_t*
+static ecma_property_t * __attr_noinline___
 ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object */
                                           ecma_string_t *property_name_p) /**< property name */
 {
@@ -163,7 +163,7 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                                  ecma_string_t *property_name_p) /**< property name */
 {
@@ -192,7 +192,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
@@ -204,7 +204,7 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
   ecma_assert_object_type_is_valid (type);
 
   /*
-   * typedef ecma_property_t* (*get_property_ptr_t) (ecma_object_t *, ecma_string_t *);
+   * typedef ecma_property_t * (*get_property_ptr_t) (ecma_object_t *, ecma_string_t *);
    * static const get_property_ptr_t get_property [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_property,
@@ -246,7 +246,7 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
   ecma_assert_object_type_is_valid (type);
 
   /*
-   * typedef ecma_property_t* (*put_ptr_t) (ecma_object_t *, ecma_string_t *);
+   * typedef ecma_property_t * (*put_ptr_t) (ecma_object_t *, ecma_string_t *);
    * static const put_ptr_t put [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_put,
@@ -286,7 +286,7 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
   ecma_assert_object_type_is_valid (type);
 
   /*
-   * typedef ecma_property_t* (*can_put_ptr_t) (ecma_object_t *, ecma_string_t *);
+   * typedef ecma_property_t * (*can_put_ptr_t) (ecma_object_t *, ecma_string_t *);
    * static const can_put_ptr_t can_put [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_can_put,
@@ -374,7 +374,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
   ecma_assert_object_type_is_valid (type);
 
   /*
-   * typedef ecma_property_t* (*default_value_ptr_t) (ecma_object_t *, ecma_string_t *);
+   * typedef ecma_property_t * (*default_value_ptr_t) (ecma_object_t *, ecma_string_t *);
    * static const default_value_ptr_t default_value [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_default_value,

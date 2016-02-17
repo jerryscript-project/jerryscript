@@ -347,7 +347,7 @@ ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                                            ecma_string_t *property_name_p) /**< property name */
 {

@@ -71,7 +71,7 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
  *
  * @return pointer to the object's instance
  */
-ecma_object_t*
+ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
@@ -94,7 +94,7 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
  *
  * @return pointer to the object
  */
-static ecma_object_t*
+static ecma_object_t *
 ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_t *prototype_obj_p, /**< prototype object */
                           ecma_object_type_t obj_type, /**< object's type */
@@ -284,7 +284,7 @@ ecma_finalize_builtins (void)
  * @return pointer property, if one was instantiated,
  *         NULL - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
                                           ecma_string_t *string_p) /**< property's name */
 {
@@ -461,7 +461,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
  *
  * @return pointer to constructed Function object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**< identifier of built-in object
                                                                                   that initially contains property
                                                                                   with the routine */

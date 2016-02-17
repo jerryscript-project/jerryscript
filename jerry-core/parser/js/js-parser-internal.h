@@ -61,10 +61,10 @@
 
 /* The maximum of PARSER_CBC_STREAM_PAGE_SIZE is 127. */
 #define PARSER_CBC_STREAM_PAGE_SIZE \
-  ((uint32_t) (64 - sizeof (void*)))
+  ((uint32_t) (64 - sizeof (void *)))
 
 #define PARSER_STACK_PAGE_SIZE \
-  ((uint32_t) (((sizeof (void*) > 4) ? 128 : 64) - sizeof (void*)))
+  ((uint32_t) (((sizeof (void *) > 4) ? 128 : 64) - sizeof (void *)))
 
 /* Avoid compiler warnings for += operations. */
 #define PARSER_PLUS_EQUAL_U16(base, value) (base) = (uint16_t) ((base) + (value))

@@ -575,7 +575,7 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_api_string_t*
+jerry_api_string_t *
 jerry_api_acquire_string (jerry_api_string_t *string_p) /**< pointer passed to function */
 {
   jerry_assert_api_available ();
@@ -608,7 +608,7 @@ jerry_api_release_string (jerry_api_string_t *string_p) /**< pointer acquired th
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_acquire_object (jerry_api_object_t *object_p) /**< pointer passed to function */
 {
   jerry_assert_api_available ();
@@ -694,7 +694,7 @@ jerry_api_create_string_sz (const jerry_api_char_t *v, /**< string value */
  *
  * @return pointer to created object
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_object (void)
 {
   jerry_assert_api_available ();
@@ -737,7 +737,7 @@ jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
 bool
 jerry_api_set_array_index_value (jerry_api_object_t *array_obj_p, /* array object */
                                  jerry_api_length_t index, /* index to be written */
-                                 jerry_api_value_t *value_p) /* value to set*/
+                                 jerry_api_value_t *value_p) /* value to set */
 {
   ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
   ecma_value_t value;
@@ -787,7 +787,7 @@ jerry_api_get_array_index_value (jerry_api_object_t *array_obj_p, /* array objec
  *
  * @return pointer to created error object
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
                         const jerry_api_char_t *message_p) /**< value of 'message' property
                                                             *   of constructed error object */
@@ -805,7 +805,7 @@ jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
  *
  * @return pointer to created error object
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
                            const jerry_api_char_t *message_p, /**< value of 'message' property
                                                                *   of constructed error object */
@@ -883,7 +883,7 @@ jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
  *
  * @return pointer to created external function object
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_external_function (jerry_external_handler_t handler_p) /**< pointer to native handler
                                                                          *   for the function */
 {
@@ -1553,7 +1553,7 @@ jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function
  *
  * @return pointer to the global object
  */
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_get_global (void)
 {
   jerry_assert_api_available ();
@@ -1789,7 +1789,7 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
  *
  * @return run context
  */
-jerry_ctx_t*
+jerry_ctx_t *
 jerry_new_ctx (void)
 {
   jerry_assert_api_available ();

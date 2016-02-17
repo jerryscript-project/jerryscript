@@ -81,7 +81,7 @@ mem_compress_pointer (const void *pointer_p) /**< pointer to compress */
  *
  * @return unpacked pointer
  */
-void*
+void *
 mem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
   return mem_heap_decompress_pointer (compressed_pointer);

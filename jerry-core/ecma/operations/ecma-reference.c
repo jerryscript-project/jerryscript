@@ -36,7 +36,7 @@
  *          pointer to lexical environment - reference's base,
  *         else - NULL.
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
                                 ecma_string_t *name_p) /**< identifier's name */
 {

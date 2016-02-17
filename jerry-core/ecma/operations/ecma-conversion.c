@@ -435,7 +435,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
  *
  * @return constructed object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p) /**< property descriptor */
 {
   // 2.

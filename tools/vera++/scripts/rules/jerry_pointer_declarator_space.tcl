@@ -18,8 +18,10 @@
 foreach f [getSourceFileNames] {
     set lineNumber 1
     foreach line [getAllLines $f] {
-        if {[regexp {\w\*\s\w+} $line]} {
-            report $f $lineNumber "pointer dereference operator always should be aligned to right."
+        if {[regexp {\w\*\s\w+} $line]
+             || [regexp {\w\*\)} $line]
+             || [regexp {\w\*$} $line]} {
+            report $f $lineNumber "there should be a space between the referenced type and the pointer declarator."
         }
         incr lineNumber
     }

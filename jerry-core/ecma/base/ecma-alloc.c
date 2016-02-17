@@ -69,7 +69,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
 #define DEALLOC(ecma_type) void \
   ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *p ## ecma_type) \
 { \
-  mem_pools_free ((uint8_t*) p ## ecma_type); \
+  mem_pools_free ((uint8_t *) p ## ecma_type); \
 }
 
 /**

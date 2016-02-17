@@ -32,9 +32,9 @@ static unsigned int libc_random_gen_state[4] = { 1455997910, 1999515274, 1234451
 /**
  * Standard file descriptors
  */
-FILE *stdin  = (FILE*) 0;
-FILE *stdout = (FILE*) 1;
-FILE *stderr = (FILE*) 2;
+FILE *stdin  = (FILE *) 0;
+FILE *stdout = (FILE *) 1;
+FILE *stderr = (FILE *) 2;
 
 #ifdef __GNUC__
 /*

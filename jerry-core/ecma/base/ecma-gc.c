@@ -117,7 +117,7 @@ ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
 /**
  * Get next object in list of objects with same generation.
  */
-static ecma_object_t*
+static ecma_object_t *
 ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);

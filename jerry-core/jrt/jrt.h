@@ -192,7 +192,7 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 /**
  * sizeof, offsetof, ...
  */
-#define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name *)NULL)->member_name)
+#define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name *) NULL)->member_name)
 
 /**
  * Alignment

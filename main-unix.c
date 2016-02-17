@@ -74,7 +74,7 @@ read_sources (const char *script_file_names[],
 
     rewind (file);
 
-    const size_t current_source_size = (size_t)script_len;
+    const size_t current_source_size = (size_t) script_len;
 
     if (source_buffer_tail + current_source_size >= buffer + sizeof (buffer))
     {

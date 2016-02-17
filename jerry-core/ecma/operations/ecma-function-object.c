@@ -133,7 +133,7 @@ ecma_function_bind_merge_arg_lists (ecma_value_t *merged_args_list_p, /**< desti
  *
  * @return pointer to newly created Function object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
                                 bool is_decl_in_strict_mode, /**< is function declared in strict mode code? */
                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
@@ -377,7 +377,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
  *           current invocation,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t*
+ecma_property_t *
 ecma_op_function_object_get_own_property (ecma_object_t *obj_p, /**< the function object */
                                           ecma_string_t *property_name_p) /**< property name */
 {
@@ -413,7 +413,7 @@ ecma_op_function_object_get_own_property (ecma_object_t *obj_p, /**< the functio
  *
  * @return pointer to newly created external function object
  */
-ecma_object_t*
+ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< pointer to external native handler */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);

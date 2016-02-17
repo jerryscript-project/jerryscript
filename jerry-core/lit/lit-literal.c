@@ -31,7 +31,6 @@ lit_init (void)
 
   rcs_chunked_list_init (&rcs_lit_storage);
 
-  lit_magic_strings_init ();
   lit_magic_strings_ex_init ();
 } /* lit_init */
 

@@ -18,49 +18,11 @@
 #include "lit-strings.h"
 
 /**
- * Lengths of magic strings
- */
-static lit_magic_size_t lit_magic_string_sizes[LIT_MAGIC_STRING__COUNT];
-
-/**
  * External magic strings data array, count and lengths
  */
 static const lit_utf8_byte_t **lit_magic_string_ex_array = NULL;
 static uint32_t lit_magic_string_ex_count = 0;
 static const lit_utf8_size_t *lit_magic_string_ex_sizes = NULL;
-
-#ifndef JERRY_NDEBUG
-/**
- * Maximum length among lengths of magic strings
- */
-static ecma_length_t ecma_magic_string_max_length;
-#endif /* JERRY_NDEBUG */
-
-/**
- * Initialize data for string helpers
- */
-void
-lit_magic_strings_init (void)
-{
-  /* Initializing magic strings information */
-
-#ifndef JERRY_NDEBUG
-  ecma_magic_string_max_length = 0;
-#endif /* !JERRY_NDEBUG */
-
-  for (lit_magic_string_id_t id = (lit_magic_string_id_t) 0;
-       id < LIT_MAGIC_STRING__COUNT;
-       id = (lit_magic_string_id_t) (id + 1))
-  {
-    lit_magic_string_sizes[id] = (lit_magic_size_t) lit_zt_utf8_string_size (lit_get_magic_string_utf8 (id));
-
-#ifndef JERRY_NDEBUG
-    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, lit_magic_string_sizes[id]);
-
-    JERRY_ASSERT (ecma_magic_string_max_length <= LIT_MAGIC_STRING_LENGTH_LIMIT);
-#endif /* !JERRY_NDEBUG */
-  }
-} /* lit_magic_strings_init */
 
 /**
  * Initialize external magic strings
@@ -114,6 +76,16 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 lit_utf8_size_t
 lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 {
+  static const lit_magic_size_t lit_magic_string_sizes[] =
+  {
+#define LIT_MAGIC_STRING_DEF(id, utf8_string) \
+    sizeof(utf8_string) - 1,
+#include "lit-magic-strings.inc.h"
+#undef LIT_MAGIC_STRING_DEF
+  };
+
+  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+
   return lit_magic_string_sizes[id];
 } /* lit_get_magic_string_size */
 
@@ -172,10 +144,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
     JERRY_ASSERT (lit_magic_string_ex_sizes[id] == lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id)));
-
-    ecma_magic_string_max_length = JERRY_MAX (ecma_magic_string_max_length, lit_magic_string_ex_sizes[id]);
-
-    JERRY_ASSERT (ecma_magic_string_max_length <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+    JERRY_ASSERT (lit_magic_string_ex_sizes[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
   }
 #endif /* !JERRY_NDEBUG */
 } /* lit_magic_strings_ex_set */

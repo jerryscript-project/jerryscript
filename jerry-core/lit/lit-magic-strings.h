@@ -41,7 +41,6 @@ typedef enum
  */
 typedef uint32_t lit_magic_string_ex_id_t;
 
-extern void lit_magic_strings_init (void);
 extern void lit_magic_strings_ex_init (void);
 
 extern uint32_t lit_get_magic_string_ex_count (void);

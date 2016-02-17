@@ -359,8 +359,8 @@ static const keyword_string_t keyword_length_7[6] =
   LEXER_KEYWORD ("default", LEXER_KEYW_DEFAULT),
   LEXER_KEYWORD ("extends", LEXER_KEYW_EXTENDS),
   LEXER_KEYWORD ("finally", LEXER_KEYW_FINALLY),
-  LEXER_KEYWORD ("private", LEXER_KEYW_PRIVATE),
   LEXER_KEYWORD ("package", LEXER_KEYW_PACKAGE),
+  LEXER_KEYWORD ("private", LEXER_KEYW_PRIVATE),
   LEXER_KEYWORD_END ()
 };
 
@@ -390,8 +390,8 @@ static const keyword_string_t keyword_length_9[3] =
  */
 static const keyword_string_t keyword_length_10[3] =
 {
-  LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF),
   LEXER_KEYWORD ("implements", LEXER_KEYW_IMPLEMENTS),
+  LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF),
   LEXER_KEYWORD_END ()
 };
 

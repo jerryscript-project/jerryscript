@@ -15,11 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commit_hash=`git show -s --format=%H HEAD`
-author_name=`git show -s --format=%an HEAD`
-author_email=`git show -s --format=%ae HEAD`
+parent_hashes=(`git show -s --format=%p HEAD | head -1`)
+
+if [ "${#parent_hashes[@]}" -eq 1 ]
+then
+ commit_hash=`git show -s --format=%h HEAD | head -1`
+elif [ "${#parent_hashes[@]}" -eq 2 ]
+then
+ if git merge-base --is-ancestor "${parent_hashes[@]}"
+ then
+  commit_hash=${parent_hashes[1]}
+ else
+  echo "$0: cannot handle merge commit where first parent ${parent_hashes[0]} is not ancestor of second parent ${parent_hashes[1]}"
+  exit 1
+ fi
+else
+ echo "$0: cannot handle commit with ${#parent_hashes[@]} parents ${parent_hashes[@]}"
+ exit 1
+fi
+
+author_name=`git show -s --format=%an $commit_hash`
+author_email=`git show -s --format=%ae $commit_hash`
 required_signed_off_by_line="JerryScript-DCO-1.0-Signed-off-by: $author_name $author_email"
-actual_signed_off_by_line=`git show -s --format=%B HEAD | sed '/^$/d' | tail -n 1`
+actual_signed_off_by_line=`git show -s --format=%B $commit_hash | sed '/^$/d' | tail -n 1`
 
 if [ "$actual_signed_off_by_line" != "$required_signed_off_by_line" ]
 then

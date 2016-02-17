@@ -2,6 +2,7 @@
 # JerryScript: JavaScript engine for Internet of Things
 [![Join the chat at https://gitter.im/Samsung/jerryscript](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Samsung/jerryscript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/licence-Apache%202.0-brightgreen.svg?style=flat)](LICENSE)
+[![Build Status](https://travis-ci.org/Samsung/jerryscript.svg?branch=master)](https://travis-ci.org/Samsung/jerryscript)
 
 
 JerryScript is the lightweight JavaScript engine for very constrained devices such as microcontrollers:

@@ -1904,12 +1904,12 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */
 
-static lexer_lit_location_t lexer_get_literal =
+static const lexer_lit_location_t lexer_get_literal =
 {
   (const uint8_t *) "get", 3, LEXER_IDENT_LITERAL, PARSER_FALSE
 };
 
-static lexer_lit_location_t lexer_set_literal =
+static const lexer_lit_location_t lexer_set_literal =
 {
   (const uint8_t *) "set", 3, LEXER_IDENT_LITERAL, PARSER_FALSE
 };

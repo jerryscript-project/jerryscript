@@ -157,7 +157,7 @@ vm_init (ecma_compiled_code_t *program_p, /**< pointer to byte-code data */
 /**
  * Decode table for opcodes.
  */
-uint32_t vm_decode_table[] =
+static const uint32_t vm_decode_table[] =
 {
   CBC_OPCODE_LIST
 };
@@ -165,7 +165,7 @@ uint32_t vm_decode_table[] =
 /**
  * Decode table for extended opcodes.
  */
-uint32_t vm_ext_decode_table[] =
+static const uint32_t vm_ext_decode_table[] =
 {
   CBC_EXT_OPCODE_LIST
 };

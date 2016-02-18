@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +23,14 @@
 #include "jerry-api.h"
 #include "jerry-port.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* !__cplusplus */
+
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
-
-/**
- * Jerry flags
- */
-typedef uint32_t jerry_flag_t;
 
 #define JERRY_FLAG_EMPTY                  (0u)      /**< empty flag set */
 #define JERRY_FLAG_SHOW_OPCODES           (1u << 0) /**< dump byte-code to stdout after parse */
@@ -42,6 +43,11 @@ typedef uint32_t jerry_flag_t;
                                                      *   FIXME: Remove. */
 #define JERRY_FLAG_ENABLE_LOG             (1u << 5) /**< enable logging */
 #define JERRY_FLAG_ABORT_ON_FAIL          (1u << 6) /**< abort instead of exit in case of failure */
+
+/**
+ * Jerry flags
+ */
+typedef uint32_t jerry_flag_t;
 
 /**
  * Error codes
@@ -80,17 +86,16 @@ extern FILE *jerry_log_file;
  */
 typedef void (*jerry_error_callback_t) (jerry_fatal_code_t);
 
-extern EXTERN_C void jerry_init (jerry_flag_t);
-extern EXTERN_C void jerry_cleanup (void);
 
-extern EXTERN_C void jerry_get_memory_limits (size_t *, size_t *);
-extern EXTERN_C void jerry_reg_err_callback (jerry_error_callback_t);
+void jerry_init (jerry_flag_t);
+void jerry_cleanup (void);
 
-extern EXTERN_C bool jerry_parse (const jerry_api_char_t *, size_t);
-extern EXTERN_C jerry_completion_code_t jerry_run (void);
+void jerry_get_memory_limits (size_t *, size_t *);
+void jerry_reg_err_callback (jerry_error_callback_t);
 
-extern EXTERN_C jerry_completion_code_t
-jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
+bool jerry_parse (const jerry_api_char_t *, size_t);
+jerry_completion_code_t jerry_run (void);
+jerry_completion_code_t jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
 
 #ifdef CONFIG_JERRY_ENABLE_CONTEXTS
 /** \addtogroup jerry Jerry run contexts-related interface
@@ -102,11 +107,11 @@ jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
  */
 typedef struct jerry_ctx_t jerry_ctx_t;
 
-extern EXTERN_C jerry_ctx_t *jerry_new_ctx (void);
-extern EXTERN_C void jerry_cleanup_ctx (jerry_ctx_t *);
+jerry_ctx_t *jerry_new_ctx (void);
+void jerry_cleanup_ctx (jerry_ctx_t *);
 
-extern EXTERN_C void jerry_push_ctx (jerry_ctx_t *);
-extern EXTERN_C void jerry_pop_ctx (void);
+void jerry_push_ctx (jerry_ctx_t *);
+void jerry_pop_ctx (void);
 
 /**
  * @}
@@ -117,4 +122,7 @@ extern EXTERN_C void jerry_pop_ctx (void);
  * @}
  */
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_H */

@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +18,9 @@
 #define JERRY_LIBC_STDLIB_H
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
-
-extern EXTERN_C void __attribute__ ((noreturn)) exit (int);
-extern EXTERN_C void __attribute__ ((noreturn)) abort (void);
 
 /**
  * Maximum integer that could be returned by random number generator
@@ -33,7 +30,12 @@ extern EXTERN_C void __attribute__ ((noreturn)) abort (void);
  */
 #define RAND_MAX (0x7fffffffu)
 
-extern EXTERN_C int rand (void);
-extern EXTERN_C void srand (unsigned int);
+void __attribute__ ((noreturn)) exit (int);
+void __attribute__ ((noreturn)) abort (void);
+int rand (void);
+void srand (unsigned int);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_LIBC_STDLIB_H */

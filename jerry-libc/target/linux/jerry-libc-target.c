@@ -18,7 +18,6 @@
  * Jerry libc platform-specific functions linux implementation
  */
 
-#include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>

@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +20,20 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
-extern EXTERN_C int    memcmp (const void *s1, const void *s2, size_t n);
-extern EXTERN_C void*  memcpy (void *dest, const void *src, size_t n);
-extern EXTERN_C void*  memset (void *s, int c, size_t n);
-extern EXTERN_C int    strcmp (const char *s1, const char *s2);
-extern EXTERN_C size_t strlen (const char *s);
-extern EXTERN_C void*  memmove (void *dest, const void *src, size_t n);
-extern EXTERN_C int    strncmp (const char *s1, const char *s2, size_t n);
-extern EXTERN_C char*  strncpy (char *dest, const char *src, size_t n);
+void *memcpy (void *dest, const void *src, size_t n);
+void *memset (void *s, int c, size_t n);
+void *memmove (void *dest, const void *src, size_t n);
+int memcmp (const void *s1, const void *s2, size_t n);
+int strcmp (const char *s1, const char *s2);
+int strncmp (const char *s1, const char *s2, size_t n);
+char *strncpy (char *dest, const char *src, size_t n);
+size_t strlen (const char *s);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_LIBC_STRING_H */

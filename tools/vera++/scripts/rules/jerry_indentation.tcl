@@ -1,6 +1,7 @@
 #!/usr/bin/tclsh
 
-# Copyright 2014-2015 Samsung Electronics Co., Ltd.
+# Copyright 2014-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +53,7 @@ foreach fileName [getSourceFileNames] {
             set lastCheckedLineNumber $lineNumber
         } elseif {$type == "space"} {
         } elseif {$type != "eof"} {
-            if {$type == "rightbrace"} {
+            if {$type == "rightbrace" && $indent > 0} {
                 incr indent -2
             }
 
@@ -100,7 +101,9 @@ foreach fileName [getSourceFileNames] {
             }
 
             if {$type == "leftbrace"} {
-                incr indent 2
+                if {![regexp {^extern "C"} [getLine $fileName [expr {$lineNumber - 1}]]]} {
+                    incr indent 2
+                }
             } elseif {$type == "leftparen"} {
                 incr parentheses_level 1
             } elseif {$type == "rightparen"} {

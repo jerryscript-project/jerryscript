@@ -17,7 +17,7 @@
 
 foreach fileName [getSourceFileNames] {
     set funcStart 0
-    set funcName {}
+    set funcName ""
     set lineNumber 1
     foreach line [getAllLines $fileName] {
         if {[regexp {^((static |const )*\w+ )*\w+ \(.*[,\)]} $line]} {
@@ -33,17 +33,17 @@ foreach fileName [getSourceFileNames] {
         }
 
         if {$funcStart == 1} {
-            if {[regexp {^\}$} $line]} {
+            if {[regexp {^\}$} $line] && [string length $funcName] != 0} {
                 report $fileName $lineNumber "missing comment at the end of function: /* $funcName */"
                 set funcStart 0
-            } elseif {[regexp {^\} /\*\s*\w+\s*\*/$} $line]} {
+            } elseif {[regexp {^\} /\*\s*\w+\s*\*/$} $line] && [string length $funcName] != 0} {
                 set comment {}
                 regexp {^\} /\*\s*(\w+)\s*\*/$} $line -> comment
                 if {$comment != $funcName} {
-                    report $fileName $lineNumber "comment missmatch. (Current: $comment, Expected: $funcName)"
+                    report $fileName $lineNumber "comment missmatch. (Current: $comment, Expected: $funcName) "
                 }
                 set funcStart 0
-            } elseif {[regexp {^\}.*;$} $line]} {
+            } elseif {[regexp {^\}.*;?$} $line]} {
                 set funcStart 0
             }
         }

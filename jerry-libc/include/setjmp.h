@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +20,8 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
 /**
@@ -56,7 +56,10 @@
  */
 typedef uint64_t jmp_buf[14];
 
-extern EXTERN_C int setjmp (jmp_buf env);
-extern EXTERN_C void longjmp (jmp_buf env, int val);
+int setjmp (jmp_buf env);
+void longjmp (jmp_buf env, int val);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_LIBC_SETJMP_H */

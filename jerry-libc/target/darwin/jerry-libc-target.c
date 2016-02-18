@@ -18,7 +18,6 @@
  * Jerry libc platform-specific functions darwin implementation
  */
 
-#include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>

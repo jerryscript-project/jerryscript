@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +20,8 @@
 #include <stdio.h>
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
 /** \addtogroup jerry_port Jerry engine port
@@ -31,17 +31,15 @@
 /**
  * Target port functions for console output
  */
-extern EXTERN_C
 int jerry_port_logmsg (FILE *stream, const char *format, ...);
-
-extern EXTERN_C
 int jerry_port_errormsg (const char *format, ...);
-
-extern EXTERN_C
 int jerry_port_putchar (int c);
 
 /**
  * @}
  */
 
-#endif /* !JERRY_API_H */
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
+#endif /* !JERRY_PORT_H */

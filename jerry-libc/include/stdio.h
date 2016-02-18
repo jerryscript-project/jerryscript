@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +21,8 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
 /**
@@ -47,17 +47,20 @@ extern FILE *stderr;
 /**
  * I/O routines
  */
-extern EXTERN_C int vfprintf (FILE *stream, const char *format, va_list ap);
-extern EXTERN_C int puts (const char *s);
-extern EXTERN_C FILE *fopen (const char *path, const char *mode);
-extern EXTERN_C int fclose (FILE *fp);
-extern EXTERN_C size_t fread (void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern EXTERN_C size_t fwrite (const void *ptr, size_t size, size_t nmemb, FILE *stream);
-extern EXTERN_C int fseek (FILE *stream, long offset, int whence);
-extern EXTERN_C long ftell (FILE *stream);
-extern EXTERN_C int printf (const char *format, ...);
-extern EXTERN_C void rewind (FILE *stream);
-extern EXTERN_C int fprintf (FILE *stream, const char *format, ...);
-extern EXTERN_C int putchar (int c);
+int vfprintf (FILE *stream, const char *format, va_list ap);
+int puts (const char *s);
+FILE *fopen (const char *path, const char *mode);
+int fclose (FILE *fp);
+size_t fread (void *ptr, size_t size, size_t nmemb, FILE *stream);
+size_t fwrite (const void *ptr, size_t size, size_t nmemb, FILE *stream);
+int fseek (FILE *stream, long offset, int whence);
+long ftell (FILE *stream);
+int printf (const char *format, ...);
+void rewind (FILE *stream);
+int fprintf (FILE *stream, const char *format, ...);
+int putchar (int c);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_LIBC_STDIO_H */

@@ -18,9 +18,8 @@
 #define JERRY_LIBC_TIME_H
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
 /**
@@ -41,6 +40,9 @@ struct timezone
   int tz_dsttime;         /**< type of DST correction */
 };
 
-extern EXTERN_C int gettimeofday (void *tp, void *tzp);
+int gettimeofday (void *tp, void *tzp);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_LIBC_TIME_H */

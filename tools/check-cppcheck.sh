@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 Samsung Electronics Co., Ltd.
 # Copyright 2016 University of Szeged
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JERRY_CORE_FILES=`find ./jerry-core -name "*.c" -or -name "*.cpp" -or -name "*.h"`
-JERRY_LIBC_FILES=`find ./jerry-libc -name "*.c" -or -name "*.cpp" -or -name "*.h"`
-JERRY_MAIN_FILES=`find . -maxdepth 1 -name "*.c" -or -name "*.cpp" -or -name "*.h"`
+CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(nproc)}
 
-vera++ -r tools/vera++ -p jerry \
- -e --no-duplicate \
- $JERRY_CORE_FILES $JERRY_LIBC_FILES $JERRY_MAIN_FILES 
+JERRY_CORE_DIRS=`find jerry-core -type d`
+JERRY_LIBC_DIRS=`find jerry-libc -type d`
+
+INCLUDE_DIRS=()
+for DIR in $JERRY_CORE_DIRS $JERRY_LIBC_DIRS
+do
+ INCLUDE_DIRS=("${INCLUDE_DIRS[@]}" "-I$DIR")
+done
+
+cppcheck -j$CPPCHECK_JOBS --force \
+ --language=c++ --std=c++11 \
+ --enable=warning,style,performance,portability,information \
+ --error-exitcode=1 \
+ --exitcode-suppressions=tools/cppcheck/suppressions-list \
+ "${INCLUDE_DIRS[@]}" \
+ jerry-core jerry-libc *.c *h tests/unit

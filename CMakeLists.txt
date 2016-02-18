@@ -41,9 +41,6 @@ project (Jerry C ASM)
  set(PREFIX_IMPORTED_LIB imported_)
  set(SUFFIX_THIRD_PARTY_LIB .third_party.lib)
 
-# Static checkers
- include(build/static-checkers/add_cppcheck_for_target.cmake)
-
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
@@ -421,8 +418,6 @@ endif()
                            ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 
-    add_cppcheck_target(${TARGET_NAME})
-
     if("${PLATFORM}" STREQUAL "MCU")
      add_dependencies(${TARGET_NAME} mcu_header_with_script_to_run.${TARGET_NAME})
      add_custom_target(${TARGET_NAME}.bin
@@ -466,8 +461,6 @@ endif()
                         POST_BUILD
                         COMMAND echo $<TARGET_FILE:${LIBC_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
     endif()
-
-    add_cppcheck_target(${TARGET_NAME})
    endif()
   endfunction()
 
@@ -484,7 +477,6 @@ endif()
  # Unit tests declaration
   if(("${PLATFORM}" STREQUAL "LINUX") OR ("${PLATFORM}" STREQUAL "DARWIN"))
    add_custom_target(unittests)
-   add_custom_target(cppcheck.unittests)
 
    foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
     get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
@@ -512,9 +504,6 @@ endif()
                             ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 
-    add_cppcheck_target(${TARGET_NAME})
-
     add_dependencies(unittests ${TARGET_NAME})
-    add_dependencies(cppcheck.unittests cppcheck.${TARGET_NAME})
    endforeach()
   endif()

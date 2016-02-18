@@ -164,11 +164,11 @@ endif
 # $(3) - command description (printed if command fails)
 ifdef VERBOSE
 define SHLOG
-  $(1) || (echo "$(3) failed. No log file generated. (Run make without VERBOSE if log is needed.)"; exit 1;)
+  $(1) || (echo -e "\e[1;33m$(3) failed. No log file generated. (Run make without VERBOSE if log is needed.)\e[0m"; exit 1;)
 endef
 else
 define SHLOG
-  ( mkdir -p $$(dirname $(2)) ; $(1) 2>&1 | tee $(2) >/dev/null ; ( exit $${PIPESTATUS[0]} ) ) || (echo "$(3) failed. See $(2) for details."; exit 1;)
+  ( mkdir -p $$(dirname $(2)) ; $(1) 2>&1 | tee $(2) >/dev/null ; ( exit $${PIPESTATUS[0]} ) ) || (echo -e "\e[1;33m$(3) failed. See $(2) for details.\e[0m"; exit 1;)
 endef
 endif
 
@@ -241,35 +241,7 @@ endef
 $(foreach __SYSTEM,$(NATIVE_SYSTEM) $(MCU_SYSTEMS), \
   $(eval $(call GEN_MAKEFILE_RULE,$(BUILD_DIR)/$(__SYSTEM))))
 
-# Targets to perform build, check, and test steps in the build directories
-
-# Make rule macro to preform cppcheck on a build target.
-#
-# $(1) - rule to define in the current Makefile
-# $(2) - system name
-# $(3) - target(s) to check
-define CPPCHECK_RULE
-.PHONY: $(1)
-$(1): $$(BUILD_DIR)/$(2)/Makefile prerequisites
-	$$(Q) $$(call SHLOG,$$(BUILD_COMMAND) -C $$(BUILD_DIR)/$(2) $(3),$$(BUILD_DIR)/$(2)/$(1).log,cppcheck run)
-endef
-
-$(foreach __TARGET,$(JERRY_NATIVE_TARGETS), \
-  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),$(NATIVE_SYSTEM),cppcheck.$(__TARGET))))
-
-$(eval $(call CPPCHECK_RULE,check-cpp.$(NATIVE_SYSTEM),$(NATIVE_SYSTEM),$(foreach __TARGET,$(JERRY_NATIVE_TARGETS),cppcheck.$(__TARGET))))
-
-$(foreach __TARGET,$(JERRY_STM32F3_TARGETS), \
-  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),stm32f3,cppcheck.$(__TARGET))))
-
-$(eval $(call CPPCHECK_RULE,check-cpp.mcu_stm32f3,stm32f3,$(foreach __TARGET,$(JERRY_STM32F3_TARGETS),cppcheck.$(__TARGET))))
-
-$(foreach __TARGET,$(JERRY_STM32F4_TARGETS), \
-  $(eval $(call CPPCHECK_RULE,check-cpp.$(__TARGET),stm32f4,cppcheck.$(__TARGET))))
-
-$(eval $(call CPPCHECK_RULE,check-cpp.mcu_stm32f4,stm32f4,$(foreach __TARGET,$(JERRY_STM32F4_TARGETS),cppcheck.$(__TARGET))))
-
-$(eval $(call CPPCHECK_RULE,check-cpp.unittests,$(NATIVE_SYSTEM),cppcheck.unittests))
+# Targets to perform build and test steps in the build directories
 
 # Make rule macro to build a/some target(s) and copy out the result(s).
 #
@@ -348,11 +320,12 @@ check-signed-off:
 	$(Q) ./tools/check-signed-off.sh
 
 .PHONY: check-vera
-check-vera: prerequisites
-	$(Q) ./tools/check-vera.sh
+check-vera:
+	$(Q) $(call SHLOG,./tools/check-vera.sh,$(OUT_DIR)/vera.log,Vera++)
 
-.PHONY: check-cpp
-check-cpp: check-cpp.$(NATIVE_SYSTEM) $(foreach __SYSTEM,$(MCU_SYSTEMS),check-cpp.mcu_$(__SYSTEM)) check-cpp.unittests
+.PHONY: check-cppcheck
+check-cppcheck:
+	$(Q) $(call SHLOG,./tools/check-cppcheck.sh,$(OUT_DIR)/cppcheck.log,Cppcheck)
 
 .PHONY: build
 build: build.$(NATIVE_SYSTEM) $(foreach __SYSTEM,$(MCU_SYSTEMS),build.mcu_$(__SYSTEM))
@@ -380,7 +353,7 @@ test-js-precommit: \
 precommit: prerequisites
 	$(Q)+$(MAKE) --no-print-directory clean
 	$(Q) echo "Running checks..."
-	$(Q)+$(MAKE) --no-print-directory check-signed-off check-vera check-cpp
+	$(Q)+$(MAKE) --no-print-directory check-signed-off check-vera check-cppcheck
 	$(Q) echo "...building engine..."
 	$(Q)+$(MAKE) --no-print-directory build
 	$(Q) echo "...building and running unit tests..."

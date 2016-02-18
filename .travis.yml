@@ -13,7 +13,7 @@ install: make prerequisites
 script: "make -j VERBOSE=1 NINJA=1 $TARGET"
 
 env:
-  - TARGET="check-signed-off check-vera check-cpp"
+  - TARGET="check-signed-off check-vera check-cppcheck"
   - TARGET="build.linux test-js-precommit"
   - TARGET=build.mcu_stm32f3
   - TARGET=build.mcu_stm32f4

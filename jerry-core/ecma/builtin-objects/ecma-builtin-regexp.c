@@ -46,6 +46,7 @@
  * Handle calling [[Call]] of built-in RegExp object
  *
  * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
@@ -58,6 +59,7 @@ ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
  * Handle calling [[Construct]] of built-in RegExp object
  *
  * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
@@ -152,4 +154,4 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @}
  */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

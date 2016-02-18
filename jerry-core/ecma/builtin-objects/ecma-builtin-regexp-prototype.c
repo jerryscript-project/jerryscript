@@ -53,7 +53,9 @@
  * See also:
  *          ECMA-262 v5, B.2.5.1
  *
- * @return ecma value
+ * @return undefined        - if compiled successfully
+ *         error ecma value - otherwise
+ *
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
@@ -240,8 +242,10 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
  * See also:
  *          ECMA-262 v5, 15.10.6.2
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @return array object containing the results - if the matched
+ *         null                                - otherwise
+ *
+ *         May raise error, so returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
 ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
@@ -314,8 +318,10 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
  * See also:
  *          ECMA-262 v5, 15.10.6.3
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @return true  - if match is not null
+ *         false - otherwise
+ *
+ *         May raise error, so returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
@@ -439,4 +445,4 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
  * @}
  */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

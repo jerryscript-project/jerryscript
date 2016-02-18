@@ -56,11 +56,18 @@
 #define RE_GLOBAL_END_IDX   1
 
 /**
+ * Check if a RegExp opcode is a capture group or not
+ */
+#define RE_IS_CAPTURE_GROUP(x) (((x) < RE_OP_NON_CAPTURE_GROUP_START) ? 1 : 0)
+
+/**
  * Parse RegExp flags (global, ignoreCase, multiline)
  *
  * See also: ECMA-262 v5, 15.10.4.1
  *
- * @return ecma value
+ * @return empty ecma value - if parsed successfully
+ *         error ecma value - otherwise
+ *
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -123,7 +130,7 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
   return ret_value;
 } /* re_parse_regexp_flags  */
 
-/*
+/**
  * Initializes the source, global, ignoreCase, multiline, and lastIndex properties of RegExp instance.
  */
 void
@@ -223,11 +230,11 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
  *
  * See also: ECMA-262 v5, 15.10.4.1
  *
- * @return ecma value
+ * @return constructed RegExp object
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**< input pattern */
+ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**< RegExp bytecode */
 {
   JERRY_ASSERT (bytecode_p != NULL);
 
@@ -259,7 +266,9 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
  *
  * See also: ECMA-262 v5, 15.10.4.1
  *
- * @return ecma value
+ * @return constructed RegExp object - if pattern and flags were parsed successfully
+ *         error ecma value          - otherwise
+ *
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -367,8 +376,10 @@ re_canonicalize (ecma_char_t ch, /**< character */
  * See also:
  *          ECMA-262 v5, 15.10.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return true  - if matched
+ *         false - otherwise
+ *
+ *         May raise error, so returned value must be freed with ecma_free_value
  */
 static ecma_value_t
 re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
@@ -400,7 +411,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
 
         bool is_ignorecase = re_ctx_p->flags & RE_FLAG_IGNORE_CASE;
-        ecma_char_t ch1 = (ecma_char_t) re_get_value (&bc_p); /* Already canonicalized. */
+        ecma_char_t ch1 = (ecma_char_t) re_get_char (&bc_p); /* Already canonicalized. */
         ecma_char_t ch2 = re_canonicalize (lit_utf8_read_next (&str_curr_p), is_ignorecase);
         JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
 
@@ -613,8 +624,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         while (num_of_ranges)
         {
-          ecma_char_t ch1 = re_canonicalize ((ecma_char_t) re_get_value (&bc_p), is_ignorecase);
-          ecma_char_t ch2 = re_canonicalize ((ecma_char_t) re_get_value (&bc_p), is_ignorecase);
+          ecma_char_t ch1 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
+          ecma_char_t ch2 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
           JERRY_DDLOG ("num_of_ranges=%d, ch1=%d, ch2=%d, curr_ch=%d; ",
                        num_of_ranges, ch1, ch2, curr_ch);
 
@@ -698,6 +709,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           uint32_t offset = re_get_value (&bc_p);
           lit_utf8_byte_t *sub_str_p = NULL;
           ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
+
           if (ecma_is_value_true (match_value))
           {
             *out_str_p = sub_str_p;
@@ -707,6 +719,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           {
             return match_value;
           }
+
           bc_p += offset;
           old_bc_p = bc_p;
         }
@@ -839,6 +852,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         {
           offset = re_get_value (&bc_p);
           ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
+
           if (ecma_is_value_true (match_value))
           {
             *out_str_p = sub_str_p;
@@ -848,6 +862,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           {
             return match_value;
           }
+
           bc_p += offset;
           old_bc_p = bc_p;
         }
@@ -915,6 +930,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
           lit_utf8_byte_t *sub_str_p = NULL;
           ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
+
           if (ecma_is_value_true (match_value))
           {
             *out_str_p = sub_str_p;
@@ -1225,7 +1241,13 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
  * RegExp helper function to start the recursive matching algorithm
  * and create the result Array object
  *
- * @return ecma value
+ * See also:
+ *          ECMA-262 v5, 15.10.6.2
+ *
+ * @return array object - if matched
+ *         null         - otherwise
+ *
+ *         May raise error.
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -1475,4 +1497,4 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
  * @}
  */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */

@@ -105,7 +105,9 @@ re_parse_octal (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
 /**
  * Parse RegExp iterators
  *
- * @return completion value
+ * @return empty ecma value - if parsed successfully
+ *         error ecma value - otherwise
+ *
  *         Returned value must be freed with ecma_free_value
  */
 static ecma_value_t
@@ -298,7 +300,9 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
 /**
  * Read the input pattern and parse the range of character class
  *
- * @return completion value
+ * @return empty ecma value - if parsed successfully
+ *         error ecma value - otherwise
+ *
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -556,7 +560,9 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 /**
  * Read the input pattern and parse the next token for the RegExp compiler
  *
- * @return completion value
+ * @return empty ecma value - if parsed successfully
+ *         error ecma value - otherwise
+ *
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t

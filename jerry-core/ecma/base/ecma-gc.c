@@ -32,6 +32,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
+#include "re-compiler.h"
 #include "vm-defines.h"
 #include "vm-stack.h"
 
@@ -549,6 +550,11 @@ ecma_gc_run (void)
   ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
 
   ecma_gc_visited_flip_flag = !ecma_gc_visited_flip_flag;
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+  /* Free RegExp bytecodes stored in cache */
+  re_cache_gc_run ();
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
 } /* ecma_gc_run */
 
 /**

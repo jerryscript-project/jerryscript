@@ -33,6 +33,8 @@
 #define BUILTIN_UNDERSCORED_ID date
 #include "ecma-builtin-internal-routines-template.inc.h"
 
+#include <sys/time.h>
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -449,7 +451,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
 static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
 {
-  struct _timeval tv;
+  struct timeval tv;
   ecma_number_t *now_num_p = ecma_alloc_number ();
   *now_num_p = ECMA_NUMBER_ZERO;
 

@@ -25,10 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
-#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "jerry-libc-defs.h"
 
@@ -394,5 +393,5 @@ int
 gettimeofday (void *tp,  /**< struct timeval */
               void *tzp) /**< struct timezone */
 {
-  return (int) syscall_2 (__NR_gettimeofday, (long int) tp, (long int) tzp);
+  return (int) syscall_2 (gettimeofday, (long int) tp, (long int) tzp);
 } /* gettimeofday */

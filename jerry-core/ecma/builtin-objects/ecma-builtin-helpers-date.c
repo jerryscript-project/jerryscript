@@ -26,7 +26,16 @@
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
-#include <time.h>
+#include <sys/time.h>
+
+/**
+ * Timezone structure
+ */
+struct timezone
+{
+  int tz_minuteswest;     /**< minutes west of Greenwich */
+  int tz_dsttime;         /**< type of DST correction */
+};
 
 /** \addtogroup ecma ECMA
  * @{
@@ -447,9 +456,10 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
+  struct timeval tv;
   struct timezone tz;
 
-  if (gettimeofday (NULL, &tz) != 0)
+  if (gettimeofday (&tv, &tz) != 0)
   {
     return ecma_raise_type_error ("gettimeofday failed");
   }
@@ -473,9 +483,10 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
+  struct timeval tv;
   struct timezone tz;
 
-  if (gettimeofday (NULL, &tz) != 0)
+  if (gettimeofday (&tv, &tz) != 0)
   {
     return ecma_raise_type_error ("gettimeofday failed");
   }

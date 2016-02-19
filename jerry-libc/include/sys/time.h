@@ -25,19 +25,10 @@ extern "C"
 /**
  * Time value structure
  */
-struct _timeval
+struct timeval
 {
   unsigned long tv_sec;   /**< seconds */
   unsigned long tv_usec;  /**< microseconds */
-};
-
-/**
- * Timezone structure
- */
-struct timezone
-{
-  int tz_minuteswest;     /**< minutes west of Greenwich */
-  int tz_dsttime;         /**< type of DST correction */
 };
 
 int gettimeofday (void *tp, void *tzp);

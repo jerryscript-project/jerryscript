@@ -25,10 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syscall.h>
-#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "jerry-libc-defs.h"
 

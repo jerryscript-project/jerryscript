@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,10 +55,10 @@ lit_get_magic_string_ex_count (void)
 const lit_utf8_byte_t *
 lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 {
-  static const lit_utf8_byte_t *magic_strings[] =
+  static const lit_utf8_byte_t * const magic_strings[] =
   {
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
-    (lit_utf8_byte_t *) utf8_string,
+    (const lit_utf8_byte_t *) utf8_string,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
   };

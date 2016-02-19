@@ -64,17 +64,17 @@ typedef enum
 /**
  * Jerry engine build date
  */
-extern const char *jerry_build_date;
+extern const char * const jerry_build_date;
 
 /**
  * Jerry engine build commit hash
  */
-extern const char *jerry_commit_hash;
+extern const char * const jerry_commit_hash;
 
 /**
  * Jerry engine build branch name
  */
-extern const char *jerry_branch_name;
+extern const char * const jerry_branch_name;
 
 #ifdef JERRY_ENABLE_LOG
 extern int jerry_debug_level;

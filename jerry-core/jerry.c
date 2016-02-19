@@ -40,17 +40,17 @@
 /**
  * Jerry engine build date
  */
-const char *jerry_build_date = JERRY_BUILD_DATE;
+const char * const jerry_build_date = JERRY_BUILD_DATE;
 
 /**
  * Jerry engine build commit hash
  */
-const char *jerry_commit_hash = JERRY_COMMIT_HASH;
+const char * const jerry_commit_hash = JERRY_COMMIT_HASH;
 
 /**
  * Jerry engine build branch name
  */
-const char *jerry_branch_name = JERRY_BRANCH_NAME;
+const char * const jerry_branch_name = JERRY_BRANCH_NAME;
 
 /**
  * Jerry run-time configuration flags

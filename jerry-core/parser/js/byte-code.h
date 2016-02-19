@@ -680,8 +680,8 @@ extern const uint8_t cbc_ext_flags[];
 /**
  * Opcode names for debugging.
  */
-extern const char *cbc_names[];
-extern const char *cbc_ext_names[];
+extern const char * const cbc_names[];
+extern const char * const cbc_ext_names[];
 
 #endif /* PARSER_DUMP_BYTE_CODE */
 

@@ -22,13 +22,7 @@ then
  commit_hash=`git show -s --format=%h HEAD | head -1`
 elif [ "${#parent_hashes[@]}" -eq 2 ]
 then
- if git merge-base --is-ancestor "${parent_hashes[@]}"
- then
-  commit_hash=${parent_hashes[1]}
- else
-  echo "$0: cannot handle merge commit where first parent ${parent_hashes[0]} is not ancestor of second parent ${parent_hashes[1]}"
-  exit 1
- fi
+ commit_hash=${parent_hashes[1]}
 else
  echo "$0: cannot handle commit with ${#parent_hashes[@]} parents ${parent_hashes[@]}"
  exit 1

@@ -52,3 +52,11 @@ int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar (c);
 } /* jerry_port_putchar */
+
+/**
+ * Provide abort implementation for the engine
+ */
+void jerry_port_abort() {
+  abort();
+} /* jerry_port_abort */
+

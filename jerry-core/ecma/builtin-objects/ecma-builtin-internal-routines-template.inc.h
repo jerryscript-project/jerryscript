@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +28,14 @@
 #define PASTE_(x, y) PASTE__ (x, y)
 #define PASTE(x, y) PASTE_ (x, y)
 
-#define SORT_PROPERTY_NAMES_ROUTINE_NAME(builtin_underscored_id) \
-  PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _sort_property_names)
-#define TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME(builtin_underscored_id) \
-  PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _try_to_instantiate_property)
-#define LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME(builtin_underscored_id) \
-  PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _list_lazy_property_names)
-#define DISPATCH_ROUTINE_ROUTINE_NAME(builtin_underscored_id) \
-  PASTE (PASTE (ecma_builtin_, builtin_underscored_id), _dispatch_routine)
+#define FIND_PROPERTY_INDEX_ROUTINE_NAME \
+  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _find_property_index)
+#define TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME \
+  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _try_to_instantiate_property)
+#define LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME \
+  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _list_lazy_property_names)
+#define DISPATCH_ROUTINE_ROUTINE_NAME \
+  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _dispatch_routine)
 
 #define ROUTINE_ARG(n) , ecma_value_t arg ## n
 #define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
@@ -56,7 +57,7 @@
 #define ECMA_BUILTIN_PROPERTY_NAMES \
   PASTE (PASTE (ecma_builtin_property_names, _), BUILTIN_UNDERSCORED_ID)
 
-static lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
+static const lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
 {
 #define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
 #define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
@@ -67,34 +68,79 @@ static lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
 #include BUILTIN_INC_HEADER_NAME
 };
 
-/**
- * Sort builtin's property names array
- */
-void
-SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
+#define ECMA_BUILTIN_PROPERTY_NAME_INDEX(name) \
+  PASTE (PASTE (PASTE (PASTE (ecma_builtin_property_names, _), BUILTIN_UNDERSCORED_ID), _), name)
+
+enum
 {
-  bool swapped;
+#define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+#include BUILTIN_INC_HEADER_NAME
+};
 
-  do
+/**
+ * Return the index of a magic string ID in the ECMA_BUILTIN_PROPERTY_NAMES
+ * array, or -1 if not found.
+ *
+ * Note: we trust the compiler to find the optimal (most performance and/or
+ * memory effective) way of implementing the switch construct of this function
+ * in binary code (e.g., jump tables for large consecutive cases, binary search
+ * for non-consecutive cases, some simple conditional branches for low number of
+ * cases, etc. -- the worst case is a linear sequence of comparisons, but even
+ * that's not that bad, since we cannot have more than 64 IDs in the array).
+ */
+static int32_t
+FIND_PROPERTY_INDEX_ROUTINE_NAME (lit_magic_string_id_t id) /**< magic string id */
+{
+  switch (id)
   {
-    swapped = false;
-
-    for (ecma_length_t i = 1;
-         i < (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) / sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
-         i++)
+#define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+    case name: \
+    { \
+      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
+    }
+#include BUILTIN_INC_HEADER_NAME
+    default:
     {
-      if (ECMA_BUILTIN_PROPERTY_NAMES[i] < ECMA_BUILTIN_PROPERTY_NAMES[i - 1])
-      {
-        lit_magic_string_id_t id_temp = ECMA_BUILTIN_PROPERTY_NAMES[i - 1];
-        ECMA_BUILTIN_PROPERTY_NAMES[i - 1] = ECMA_BUILTIN_PROPERTY_NAMES[i];
-        ECMA_BUILTIN_PROPERTY_NAMES[i] = id_temp;
-
-        swapped = true;
-      }
+      return -1;
     }
   }
-  while (swapped);
-} /* SORT_PROPERTY_NAMES_ROUTINE_NAME */
+} /* FIND_PROPERTY_INDEX_ROUTINE_NAME */
 
 /**
  * If the property's name is one of built-in properties of the built-in object
@@ -105,8 +151,8 @@ SORT_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (void)
  *         NULL - otherwise.
  */
 ecma_property_t *
-TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *obj_p, /**< object */
-                                                                   ecma_string_t *prop_name_p) /**< property's name */
+TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
+                                          ecma_string_t *prop_name_p) /**< property's name */
 {
 #define OBJECT_ID(builtin_id) const ecma_builtin_id_t builtin_object_id = builtin_id;
 #include BUILTIN_INC_HEADER_NAME
@@ -121,12 +167,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
     return NULL;
   }
 
-  const ecma_length_t property_numbers = (ecma_length_t) (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) /
-                                                          sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
-  int32_t index;
-  index = ecma_builtin_bin_search_for_magic_string_id_in_array (ECMA_BUILTIN_PROPERTY_NAMES,
-                                                                property_numbers,
-                                                                id);
+  int32_t index = FIND_PROPERTY_INDEX_ROUTINE_NAME (id);
 
   if (index == -1)
   {
@@ -284,21 +325,18 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t
  * @return string values collection
  */
 void
-LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *object_p, /**< a built-in object */
-                                                                /** true -  list enumerable properties
-                                                                 *           into main collection,
-                                                                 *           and non-enumerable to
-                                                                 *           collection of 'skipped
-                                                                 *           non-enumerable'
-                                                                 *           properties,
-                                                                 *   false - list all properties into
-                                                                 *           main collection.
-                                                                 */
-                                                                bool separate_enumerable,
-                                                                /** 'main' collection */
-                                                                ecma_collection_header_t *main_collection_p,
-                                                                /** skipped 'non-enumerable' collection */
-                                                                ecma_collection_header_t *non_enum_collection_p)
+LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (ecma_object_t *object_p, /**< a built-in object */
+                                       bool separate_enumerable, /**< true -  list enumerable properties
+                                                                              into main collection,
+                                                                              and non-enumerable to
+                                                                              collection of 'skipped
+                                                                              non-enumerable'
+                                                                              properties,
+                                                                      false - list all properties into
+                                                                              main collection. */
+                                       ecma_collection_header_t *main_collection_p, /**< 'main' collection */
+                                       ecma_collection_header_t *non_enum_collection_p) /**< skipped 'non-enumerable'
+                                                                                             collection */
 {
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
   (void) for_enumerable_p;
@@ -313,16 +351,11 @@ LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *o
   const ecma_length_t properties_number = (ecma_length_t) (sizeof (ECMA_BUILTIN_PROPERTY_NAMES) /
                                                            sizeof (ECMA_BUILTIN_PROPERTY_NAMES[0]));
 
-  for (ecma_length_t i = 0;
-       i < properties_number;
-       i++)
+  for (ecma_length_t index = 0;
+       index < properties_number;
+       index++)
   {
-    lit_magic_string_id_t name = ECMA_BUILTIN_PROPERTY_NAMES[i];
-
-    int32_t index;
-    index = ecma_builtin_bin_search_for_magic_string_id_in_array (ECMA_BUILTIN_PROPERTY_NAMES,
-                                                                  properties_number,
-                                                                  name);
+    lit_magic_string_id_t name = ECMA_BUILTIN_PROPERTY_NAMES[index];
 
     uint32_t bit;
     ecma_internal_property_id_t mask_prop_id;
@@ -398,14 +431,14 @@ LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (ecma_object_t *o
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                                          identifier */
-                                                        ecma_value_t this_arg_value, /**< 'this' argument
-                                                                                          value */
-                                                        const ecma_value_t arguments_list[], /**< list of arguments
-                                                                                                   passed to routine */
-                                                        ecma_length_t arguments_number) /**< length of
-                                                                                             arguments' list */
+DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                 identifier */
+                               ecma_value_t this_arg_value, /**< 'this' argument
+                                                                 value */
+                               const ecma_value_t arguments_list[], /**< list of arguments
+                                                                         passed to routine */
+                               ecma_length_t arguments_number) /**< length of
+                                                                    arguments' list */
 {
   /* the arguments may be unused for some built-ins */
   (void) this_arg_value;
@@ -444,10 +477,11 @@ DISPATCH_ROUTINE_ROUTINE_NAME (BUILTIN_UNDERSCORED_ID) (uint16_t builtin_routine
 #undef PASTE__
 #undef PASTE_
 #undef PASTE
-#undef SORT_PROPERTY_NAMES_ROUTINE_NAME
-#undef DISPATCH_ROUTINE_ROUTINE_NAME
+#undef FIND_PROPERTY_INDEX_ROUTINE_NAME
 #undef TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME
+#undef LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME
+#undef DISPATCH_ROUTINE_ROUTINE_NAME
 #undef BUILTIN_UNDERSCORED_ID
 #undef BUILTIN_INC_HEADER_NAME
 #undef ECMA_BUILTIN_PROPERTY_NAMES
-
+#undef ECMA_BUILTIN_PROPERTY_NAME_INDEX

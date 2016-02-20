@@ -219,10 +219,6 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
     case builtin_id: \
     { \
       JERRY_ASSERT (ecma_builtin_objects[builtin_id] == NULL); \
-      if (is_static) \
-      { \
-        ecma_builtin_ ## lowercase_name ## _sort_property_names (); \
-      } \
       \
       ecma_object_t *prototype_obj_p; \
       if (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT) \
@@ -700,57 +696,6 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
 
   JERRY_UNREACHABLE ();
 } /* ecma_builtin_dispatch_routine */
-
-/**
- * Binary search for magic string identifier in array.
- *
- * Warning:
- *         array should be sorted in ascending order
- *
- * @return index of identifier, if it is contained in array,
- *         -1 - otherwise.
- */
-int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t ids[], /**< array to search in */
-                                                      ecma_length_t array_length, /**< number of elements
-                                                                                       in the array */
-                                                      lit_magic_string_id_t key) /**< value to search for */
-{
-#ifndef JERRY_NDEBUG
-  /* For binary search the values should be sorted */
-  for (ecma_length_t id_index = 1;
-       id_index < array_length;
-       id_index++)
-  {
-    JERRY_ASSERT (ids[id_index - 1] < ids[id_index]);
-  }
-#endif /* !JERRY_NDEBUG */
-
-  int32_t min = 0;
-  int32_t max = (int32_t) array_length - 1;
-
-  while (min <= max)
-  {
-    int32_t mid = (min + max) / 2;
-
-    if (ids[mid] == key)
-    {
-      return (int32_t) mid;
-    }
-    else if (ids[mid] > key)
-    {
-      max = mid - 1;
-    }
-    else
-    {
-      JERRY_ASSERT (ids[mid] < key);
-
-      min = mid + 1;
-    }
-  }
-
-  return -1;
-} /* ecma_builtin_bin_search_for_magic_string_id_in_array */
 
 /**
  * @}

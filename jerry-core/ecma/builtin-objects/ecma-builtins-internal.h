@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,9 +60,6 @@
 /* ecma-builtins.c */
 extern ecma_object_t *
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t, uint16_t, uint8_t);
-extern int32_t
-ecma_builtin_bin_search_for_magic_string_id_in_array (const lit_magic_string_id_t[],
-                                                      ecma_length_t, lit_magic_string_id_t);
 
 #define BUILTIN(builtin_id, \
                 object_type, \
@@ -88,9 +85,7 @@ extern void \
 ecma_builtin_ ## lowercase_name ## _list_lazy_property_names (ecma_object_t *, \
                                                               bool, \
                                                               ecma_collection_header_t *, \
-                                                              ecma_collection_header_t *); \
-extern void \
-ecma_builtin_ ## lowercase_name ## _sort_property_names (void);
+                                                              ecma_collection_header_t *);
 #include "ecma-builtins.inc.h"
 
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

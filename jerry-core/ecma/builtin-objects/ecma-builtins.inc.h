@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  */
 
 /* Description of built-in objects
-   in format (ECMA_BUILTIN_ID_id, object_type, class_magic_string_id, prototype_id, is_extensible, underscored_id) */
+   in format (ECMA_BUILTIN_ID_id, object_type, prototype_id, is_extensible, is_static, underscored_id) */
 
 /* The Object.prototype object (15.2.4) */
 BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,

@@ -97,27 +97,6 @@ bool jerry_parse (const jerry_api_char_t *, size_t);
 jerry_completion_code_t jerry_run (void);
 jerry_completion_code_t jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
 
-#ifdef CONFIG_JERRY_ENABLE_CONTEXTS
-/** \addtogroup jerry Jerry run contexts-related interface
- * @{
- */
-
-/**
- * Jerry run context descriptor
- */
-typedef struct jerry_ctx_t jerry_ctx_t;
-
-jerry_ctx_t *jerry_new_ctx (void);
-void jerry_cleanup_ctx (jerry_ctx_t *);
-
-void jerry_push_ctx (jerry_ctx_t *);
-void jerry_pop_ctx (void);
-
-/**
- * @}
- */
-#endif /* CONFIG_JERRY_ENABLE_CONTEXTS */
-
 /**
  * @}
  */

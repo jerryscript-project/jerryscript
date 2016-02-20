@@ -1751,6 +1751,7 @@ jerry_run (void)
 
   return vm_run_global ();
 } /* jerry_run */
+
 /**
  * Simple jerry runner
  *
@@ -1782,58 +1783,6 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
 
   return ret_code;
 } /* jerry_run_simple */
-
-#ifdef CONFIG_JERRY_ENABLE_CONTEXTS
-/**
- * Allocate new run context
- *
- * @return run context
- */
-jerry_ctx_t *
-jerry_new_ctx (void)
-{
-  jerry_assert_api_available ();
-
-  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
-} /* jerry_new_ctx */
-
-/**
- * Cleanup resources associated with specified run context
- */
-void
-jerry_cleanup_ctx (jerry_ctx_t *ctx_p) /**< run context */
-{
-  jerry_assert_api_available ();
-
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
-} /* jerry_cleanup_ctx */
-
-/**
- * Activate context and push it to contexts' stack
- */
-void
-jerry_push_ctx (jerry_ctx_t *ctx_p) /**< run context */
-{
-  jerry_assert_api_available ();
-
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Run contexts are not implemented", ctx_p);
-} /* jerry_push_ctx */
-
-/**
- * Pop from contexts' stack and activate new stack's top
- *
- * Note:
- *      default context (most placed on bottom of stack) cannot be popped
- */
-void
-jerry_pop_ctx (void)
-{
-  jerry_assert_api_available ();
-
-  JERRY_UNIMPLEMENTED ("Run contexts are not implemented");
-} /* jerry_pop_ctx */
-#endif /* CONFIG_JERRY_ENABLE_CONTEXTS */
-
 
 /**
  * Register external magic string array

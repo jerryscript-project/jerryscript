@@ -1,5 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@
 #define JERRY_FDLIBM_MATH_H
 
 #ifdef __cplusplus
-# define EXTERN_C "C"
-#else /* !__cplusplus */
-# define EXTERN_C
+extern "C"
+{
 #endif /* !__cplusplus */
 
 // General Constants
@@ -53,28 +52,31 @@
 #define M_2_SQRTPI 1.1283791670955125738961589031215452
 
 // Trigonometric functions
-extern EXTERN_C double cos(double);
-extern EXTERN_C double sin(double);
-extern EXTERN_C double tan(double);
-extern EXTERN_C double acos(double);
-extern EXTERN_C double asin(double);
-extern EXTERN_C double atan(double);
-extern EXTERN_C double atan2(double, double);
+double cos(double);
+double sin(double);
+double tan(double);
+double acos(double);
+double asin(double);
+double atan(double);
+double atan2(double, double);
 
 // Exponential and logarithmic functions
-extern EXTERN_C double exp(double);
-extern EXTERN_C double log(double);
+double exp(double);
+double log(double);
 
 // Power functions
-extern EXTERN_C double pow(double, double);
-extern EXTERN_C double sqrt(double);
+double pow(double, double);
+double sqrt(double);
 
 // Rounding and remainder functions
-extern EXTERN_C double ceil(double);
-extern EXTERN_C double floor(double);
+double ceil(double);
+double floor(double);
 
 // Other functions
-extern EXTERN_C double fabs(double);
-extern EXTERN_C double fmod(double, double);
+double fabs(double);
+double fmod(double, double);
 
+#ifdef __cplusplus
+}
+#endif /* !__cplusplus */
 #endif /* !JERRY_FDLIBM_MATH_H */

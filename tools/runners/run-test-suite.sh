@@ -20,9 +20,6 @@ TIMEOUT=${TIMEOUT:=5}
 ENGINE="$1"
 shift
 
-OUT_DIR="$1"
-shift
-
 TESTS="$1"
 shift
 
@@ -34,30 +31,20 @@ then
     exit 1
 fi
 
-mkdir -p $OUT_DIR
-
-TEST_FILES=$OUT_DIR/test.files
-TEST_FAILED=$OUT_DIR/test.failed
-TEST_PASSED=$OUT_DIR/test.passed
+TEST_FILES=test.files
+TEST_FAILED=test.failed
+TEST_PASSED=test.passed
 
 if [ -d $TESTS ]
 then
     TESTS_DIR=$TESTS
 
-    ( cd $TESTS; find . -path fail -prune -o -name "[^N]*.js" -print ) | sort > $TEST_FILES
-
-    if [ -d $TESTS/fail ]
-    then
-        for error_code in `cd $TESTS/fail && ls -d [0-9]*`
-        do
-            ( cd $TESTS; find ./fail/$error_code -name "[^N]*.js" -print ) | sort >> $TEST_FILES
-        done
-    fi
+    ( cd $TESTS; find . -name "[^N]*.js" ) | sort > $TEST_FILES
 elif [ -f $TESTS ]
 then
     TESTS_DIR=`dirname $TESTS`
 
-    cp $TESTS $TEST_FILES
+    grep -e '.js\s*$' $TESTS | sort > $TEST_FILES
 else
     echo "$0: $TESTS: not a test suite"
     exit 1
@@ -93,7 +80,7 @@ do
 
     echo -n "[$tested/$total] $ENGINE $ENGINE_ARGS $full_test: "
 
-    ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &>$ENGINE_TEMP; exit $? )
+    ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &>$ENGINE_TEMP )
     status_code=$?
 
     if [ $status_code -ne $error_code ]

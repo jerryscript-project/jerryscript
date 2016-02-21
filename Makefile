@@ -105,6 +105,15 @@ export NATIVE_MODS := $(MCU_MODS) mem_stats mem_stress_test
  # Compiler to use for external build
  EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
 
+# Directories
+export ROOT_DIR := $(shell pwd)
+export BUILD_DIR_PREFIX := $(ROOT_DIR)/build/obj
+export BUILD_DIR := $(BUILD_DIR_PREFIX)-VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
+export OUT_DIR := $(ROOT_DIR)/build/bin
+export PREREQUISITES_STATE_DIR := $(ROOT_DIR)/build/prerequisites
+
+SHELL := /bin/bash
+
 # Build targets
 export JERRY_NATIVE_TARGETS := \
   $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
@@ -132,18 +141,10 @@ export JERRY_TEST_TARGETS_CP := \
     $(__MODE).$(NATIVE_SYSTEM)-cp)
 
 # JS test suites (in the format of id:path)
-export JERRY_TEST_SUITE_J := j:./tests/jerry
-export JERRY_TEST_SUITE_JTS := jts:./tests/jerry-test-suite
-export JERRY_TEST_SUITE_JTS_PREC := jts-prec:./tests/jerry-test-suite/precommit-test-list
-export JERRY_TEST_SUITE_JTS_CP := jts-cp:./tests/jerry-test-suite/compact-profile-list
-
-# Directories
-export BUILD_DIR_PREFIX := ./build/obj
-export BUILD_DIR := $(BUILD_DIR_PREFIX)-VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
-export OUT_DIR := ./build/bin
-export PREREQUISITES_STATE_DIR := ./build/prerequisites
-
-SHELL := /bin/bash
+export JERRY_TEST_SUITE_J := j:$(ROOT_DIR)/tests/jerry
+export JERRY_TEST_SUITE_JTS := jts:$(ROOT_DIR)/tests/jerry-test-suite
+export JERRY_TEST_SUITE_JTS_PREC := jts-prec:$(ROOT_DIR)/tests/jerry-test-suite/precommit-test-list
+export JERRY_TEST_SUITE_JTS_CP := jts-cp:$(ROOT_DIR)/tests/jerry-test-suite/compact-profile-list
 
 # Default make target
 .PHONY: all
@@ -235,7 +236,7 @@ $(1)/Makefile: $(1)/toolchain.config
           -DENABLE_LTO=$$(LTO) \
           -DENABLE_ALL_IN_ONE=$$(ALL_IN_ONE) \
           -DUSE_COMPILER_DEFAULT_LIBC=$$(USE_COMPILER_DEFAULT_LIBC) \
-          -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` ../../.. 2>&1),$(1)/cmake.log,CMake run)
+          -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` $$(ROOT_DIR) 2>&1),$(1)/cmake.log,CMake run)
 endef
 
 $(foreach __SYSTEM,$(NATIVE_SYSTEM) $(MCU_SYSTEMS), \
@@ -295,9 +296,9 @@ $(eval $(call BUILD_RULE,unittests,$(NATIVE_SYSTEM),unittests))
 # its non-deterministically vanishing .a files.
 define JSTEST_RULE
 test-js.$(1).$(2): build.$$(NATIVE_SYSTEM)
-	$$(Q) $$(call SHLOG,./tools/runners/run-test-suite.sh \
+	$$(Q) mkdir -p $$(OUT_DIR)/$(1)/check/$(2)
+	$$(Q) $$(call SHLOG,cd $$(OUT_DIR)/$(1)/check/$(2) && $$(ROOT_DIR)/tools/runners/run-test-suite.sh \
           $$(OUT_DIR)/$(1)/jerry \
-          $$(OUT_DIR)/$(1)/check/$(2) \
           $(3),$$(OUT_DIR)/$(1)/check/$(2)/test.log,Testing)
 endef
 
@@ -332,7 +333,8 @@ build: build.$(NATIVE_SYSTEM) $(foreach __SYSTEM,$(MCU_SYSTEMS),build.mcu_$(__SY
 
 .PHONY: test-unit
 test-unit: unittests
-	$(Q) $(call SHLOG,./tools/runners/run-unittests.sh $(OUT_DIR)/unittests,$(OUT_DIR)/unittests/check/unittests.log,Unit tests)
+	$(Q) mkdir -p $(OUT_DIR)/unittests/check
+	$(Q) $(call SHLOG,cd $(OUT_DIR)/unittests/check && $(ROOT_DIR)/tools/runners/run-unittests.sh $(OUT_DIR)/unittests,$(OUT_DIR)/unittests/check/unittests.log,Unit tests)
 
 .PHONY: test-js
 test-js: \

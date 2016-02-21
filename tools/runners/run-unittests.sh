@@ -18,10 +18,8 @@
 DIR="$1"
 shift
 
-mkdir -p $DIR/check
-
-UNITTEST_ERROR=$DIR/check/unittests.failed
-UNITTEST_OK=$DIR/check/unittests.passed
+UNITTEST_ERROR=unittests.failed
+UNITTEST_OK=unittests.passed
 
 rm -f $UNITTEST_ERROR $UNITTEST_OK
 

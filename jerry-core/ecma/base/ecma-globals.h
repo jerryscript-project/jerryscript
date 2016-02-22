@@ -580,6 +580,11 @@ typedef double ecma_number_t;
 #define ECMA_NUMBER_HALF ((ecma_number_t) 0.5f)
 
 /**
+ * Value '-1' of ecma_number_t
+ */
+#define ECMA_NUMBER_MINUS_ONE ((ecma_number_t) -1)
+
+/**
  * Minimum positive and maximum value of ecma-number
  */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32

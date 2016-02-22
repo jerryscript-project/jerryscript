@@ -1121,7 +1121,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (base & 0x2)
           {
             /* For decrement operators */
-            increase = -ECMA_NUMBER_ONE;
+            increase = ECMA_NUMBER_MINUS_ONE;
           }
 
           /* Post operators require the unmodifed number value. */
@@ -2290,7 +2290,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   else
   {
     ecma_value_t *src_p = (ecma_value_t *) arg_p;
-    arg_list_len --;
+    arg_list_len--;
 
     if (arg_list_len > argument_end)
     {

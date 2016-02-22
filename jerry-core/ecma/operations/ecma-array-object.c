@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -179,8 +179,6 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p, is_throw);
     }
 
-    ecma_number_t new_len_num;
-
     // c.
     ecma_value_t completion = ecma_op_to_number (property_desc_p->value);
     if (ecma_is_value_error (completion))
@@ -191,7 +189,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     JERRY_ASSERT (!ecma_is_value_error (completion)
                   && ecma_is_value_number (completion));
 
-    new_len_num = *ecma_get_number_from_value (completion);
+    ecma_number_t new_len_num = *ecma_get_number_from_value (completion);
 
     ecma_free_value (completion);
 

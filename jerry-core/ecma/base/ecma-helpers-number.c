@@ -1,5 +1,5 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,9 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 
+#define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
+                              ECMA_NUMBER_BIASED_EXP_WIDTH)
+
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t),
                      size_of_ecma_number_t_must_be_equal_to_4_bytes);
@@ -38,16 +41,12 @@ ecma_number_pack (bool sign, /**< sign */
                   uint32_t biased_exp, /**< biased exponent */
                   uint64_t fraction) /**< fraction */
 {
-  const uint32_t fraction_pos = 0;
-  const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
-  const uint32_t sign_pos = biased_exp_pos + ECMA_NUMBER_BIASED_EXP_WIDTH;
-
   JERRY_ASSERT ((biased_exp & ~((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
   JERRY_ASSERT ((fraction & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
 
-  uint32_t packed_value = (((sign ? 1u : 0u) << sign_pos) |
-                           (biased_exp << biased_exp_pos) |
-                           (((uint32_t) fraction) << fraction_pos));
+  uint32_t packed_value = (((sign ? 1u : 0u) << ECMA_NUMBER_SIGN_POS) |
+                           (biased_exp << ECMA_NUMBER_FRACTION_WIDTH) |
+                           ((uint32_t) fraction));
 
   union
   {
@@ -69,10 +68,6 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
                     uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
-  const uint32_t fraction_pos = 0;
-  const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
-  const uint32_t sign_pos = biased_exp_pos + ECMA_NUMBER_BIASED_EXP_WIDTH;
-
   union
   {
     uint32_t u32_value;
@@ -85,12 +80,12 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
 
   if (sign_p != NULL)
   {
-    *sign_p = ((packed_value >> sign_pos) != 0);
+    *sign_p = ((packed_value >> ECMA_NUMBER_SIGN_POS) != 0);
   }
 
   if (biased_exp_p != NULL)
   {
-    *biased_exp_p = (((packed_value) & ~(1u << sign_pos)) >> biased_exp_pos);
+    *biased_exp_p = (((packed_value) & ~(1u << ECMA_NUMBER_SIGN_POS)) >> ECMA_NUMBER_FRACTION_WIDTH);
   }
 
   if (fraction_p != NULL)
@@ -107,10 +102,6 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 127;
 
-/**
- * Relative precision used in calculation with ecma-numbers
- */
-const ecma_number_t ecma_number_relative_eps = 1.0e-10f;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t),
                      size_of_ecma_number_t_must_be_equal_to_8_bytes);
@@ -125,13 +116,9 @@ ecma_number_pack (bool sign, /**< sign */
                   uint32_t biased_exp, /**< biased exponent */
                   uint64_t fraction) /**< fraction */
 {
-  const uint32_t fraction_pos = 0;
-  const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
-  const uint32_t sign_pos = biased_exp_pos + ECMA_NUMBER_BIASED_EXP_WIDTH;
-
-  uint64_t packed_value = (((sign ? 1ull : 0ull) << sign_pos) |
-                           (((uint64_t) biased_exp) << biased_exp_pos) |
-                           (fraction << fraction_pos));
+  uint64_t packed_value = (((sign ? 1ull : 0ull) << ECMA_NUMBER_SIGN_POS) |
+                           (((uint64_t) biased_exp) << ECMA_NUMBER_FRACTION_WIDTH) |
+                           fraction);
 
   JERRY_ASSERT ((biased_exp & ~((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
   JERRY_ASSERT ((fraction & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
@@ -156,10 +143,6 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
                     uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
-  const uint32_t fraction_pos = 0;
-  const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
-  const uint32_t sign_pos = biased_exp_pos + ECMA_NUMBER_BIASED_EXP_WIDTH;
-
   union
   {
     uint64_t u64_value;
@@ -171,12 +154,12 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
 
   if (sign_p != NULL)
   {
-    *sign_p = ((packed_value >> sign_pos) != 0);
+    *sign_p = ((packed_value >> ECMA_NUMBER_SIGN_POS) != 0);
   }
 
   if (biased_exp_p != NULL)
   {
-    *biased_exp_p = (uint32_t) (((packed_value) & ~(1ull << sign_pos)) >> biased_exp_pos);
+    *biased_exp_p = (uint32_t) (((packed_value) & ~(1ull << ECMA_NUMBER_SIGN_POS)) >> ECMA_NUMBER_FRACTION_WIDTH);
   }
 
   if (fraction_p != NULL)
@@ -193,10 +176,6 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 1023;
 
-/**
- * Relative precision used in calculation with ecma-numbers
- */
-const ecma_number_t ecma_number_relative_eps = 1.0e-16;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
@@ -638,7 +617,7 @@ ecma_number_trunc (ecma_number_t num) /**< ecma-number */
 
   if (exponent < 0)
   {
-    return 0;
+    return ECMA_NUMBER_ZERO;
   }
   else if (exponent < dot_shift)
   {
@@ -674,21 +653,18 @@ ecma_number_t
 ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
                             ecma_number_t right_num) /**< right operand */
 {
-  ecma_number_t n = left_num, d = right_num;
+  JERRY_ASSERT (!ecma_number_is_nan (left_num)
+                && !ecma_number_is_zero (left_num)
+                && !ecma_number_is_infinity (left_num));
+  JERRY_ASSERT (!ecma_number_is_nan (right_num)
+                && !ecma_number_is_zero (right_num)
+                && !ecma_number_is_infinity (right_num));
 
-  JERRY_ASSERT (!ecma_number_is_nan (n)
-                && !ecma_number_is_zero (n)
-                && !ecma_number_is_infinity (n));
-  JERRY_ASSERT (!ecma_number_is_nan (d)
-                && !ecma_number_is_zero (d)
-                && !ecma_number_is_infinity (d));
-
-  ecma_number_t q = ecma_number_trunc (ecma_number_divide (n, d));
-
-  ecma_number_t r = ecma_number_substract (n, ecma_number_multiply (d, q));
+  const ecma_number_t q = ecma_number_trunc (ecma_number_divide (left_num, right_num));
+  ecma_number_t r = ecma_number_substract (left_num, ecma_number_multiply (right_num, q));
 
   if (ecma_number_is_zero (r)
-      && ecma_number_is_negative (n))
+      && ecma_number_is_negative (left_num))
   {
     r = ecma_number_negate (r);
   }

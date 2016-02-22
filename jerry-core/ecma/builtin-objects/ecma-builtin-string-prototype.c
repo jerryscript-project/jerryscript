@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -367,15 +367,15 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**<
 
   if (ecma_compare_ecma_strings_relational (this_string_p, arg_string_p))
   {
-    *result_p = ecma_int32_to_number (-1);
+    *result_p = ECMA_NUMBER_MINUS_ONE;
   }
   else if (!ecma_compare_ecma_strings (this_string_p, arg_string_p))
   {
-    *result_p = ecma_int32_to_number (1);
+    *result_p = ECMA_NUMBER_ONE;
   }
   else
   {
-    *result_p = ecma_int32_to_number (0);
+    *result_p = ECMA_NUMBER_ZERO;
   }
 
   ret_value = ecma_make_number_value (result_p);

@@ -1430,7 +1430,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
          * instructions, since this form is constructed during post
          * processing and cannot be emitted directly. */
         *opcode_p = CBC_JUMP_FORWARD;
-        length --;
+        length--;
       }
       else
       {

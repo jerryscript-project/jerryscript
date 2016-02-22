@@ -961,18 +961,18 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
   {
     if (k_is_undef)
     {
-      *result_p = ecma_int32_to_number (0);
+      *result_p = ECMA_NUMBER_ZERO;
     }
     else
     {
-      *result_p = ecma_int32_to_number (1);
+      *result_p = ECMA_NUMBER_ONE;
     }
   }
   else
   {
     if (k_is_undef)
     {
-      *result_p = ecma_int32_to_number (-1);
+      *result_p = ECMA_NUMBER_MINUS_ONE;
     }
     else
     {
@@ -986,15 +986,15 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t j, /**< le
 
         if (ecma_compare_ecma_strings_relational (j_str_p, k_str_p))
         {
-          *result_p = ecma_int32_to_number (-1);
+          *result_p = ECMA_NUMBER_MINUS_ONE;
         }
         else if (!ecma_compare_ecma_strings (j_str_p, k_str_p))
         {
-          *result_p = ecma_int32_to_number (1);
+          *result_p = ECMA_NUMBER_ONE;
         }
         else
         {
-          *result_p = ecma_int32_to_number (0);
+          *result_p = ECMA_NUMBER_ZERO;
         }
 
         ECMA_FINALIZE (k_value);
@@ -1766,7 +1766,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
   if (len == 0)
   {
     ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = ecma_int32_to_number (-1);
+    *num_p = ECMA_NUMBER_MINUS_ONE;
     ret_value = ecma_make_number_value (num_p);
   }
   else
@@ -1774,7 +1774,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
     /* 5. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_from_idx, arg2, ret_value);
 
-    ecma_number_t found_index = ecma_int32_to_number (-1);
+    ecma_number_t found_index = ECMA_NUMBER_MINUS_ONE;
 
     uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len);
 
@@ -1863,7 +1863,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
   uint32_t len = ecma_number_to_uint32 (len_number);
 
   ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = ecma_int32_to_number (-1);
+  *num_p = ECMA_NUMBER_MINUS_ONE;
 
   /* 4. */
   if (len == 0)

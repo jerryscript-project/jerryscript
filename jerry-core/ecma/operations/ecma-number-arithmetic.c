@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,23 +38,21 @@ ecma_number_t
 ecma_op_number_remainder (ecma_number_t left_num, /**< left operand */
                           ecma_number_t right_num) /**< right operand */
 {
-  ecma_number_t n = left_num, d = right_num;
-
-  if (ecma_number_is_nan (n)
-      || ecma_number_is_nan (d)
-      || ecma_number_is_infinity (n)
-      || ecma_number_is_zero (d))
+  if (ecma_number_is_nan (left_num)
+      || ecma_number_is_nan (right_num)
+      || ecma_number_is_infinity (left_num)
+      || ecma_number_is_zero (right_num))
   {
     return ecma_number_make_nan ();
   }
-  else if (ecma_number_is_infinity (d)
-           || (ecma_number_is_zero (n)
-               && !ecma_number_is_zero (d)))
+  else if (ecma_number_is_infinity (right_num)
+           || (ecma_number_is_zero (left_num)
+               && !ecma_number_is_zero (right_num)))
   {
-    return n;
+    return left_num;
   }
 
-  return ecma_number_calc_remainder (n, d);
+  return ecma_number_calc_remainder (left_num, right_num);
 } /* ecma_op_number_remainder */
 
 /**

@@ -339,17 +339,16 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   const size_t data_size = new_size + sizeof (ecma_string_heap_header_t);
   ecma_string_heap_header_t *data_p = (ecma_string_heap_header_t *) mem_heap_alloc_block (data_size);
-  ssize_t bytes_copied1, bytes_copied2;
 
-  bytes_copied1 = ecma_string_to_utf8_string (string1_p,
-                                              (lit_utf8_byte_t *) (data_p + 1),
-                                              (ssize_t) str1_size);
-  JERRY_ASSERT (bytes_copied1 > 0);
+  ssize_t bytes_copied = ecma_string_to_utf8_string (string1_p,
+                                                     (lit_utf8_byte_t *) (data_p + 1),
+                                                     (ssize_t) str1_size);
+  JERRY_ASSERT (bytes_copied > 0);
 
-  bytes_copied2 = ecma_string_to_utf8_string (string2_p,
-                                              (lit_utf8_byte_t *) (data_p + 1) + str1_size,
-                                              (ssize_t) str2_size);
-  JERRY_ASSERT (bytes_copied2 > 0);
+  bytes_copied = ecma_string_to_utf8_string (string2_p,
+                                             (lit_utf8_byte_t *) (data_p + 1) + str1_size,
+                                             (ssize_t) str2_size);
+  JERRY_ASSERT (bytes_copied > 0);
 
   data_p->size = (uint16_t) new_size;
   data_p->length = (uint16_t) (ecma_string_get_length (string1_p) + ecma_string_get_length (string2_p));
@@ -469,8 +468,8 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_desc_p) /**< string descript
 } /* ecma_copy_or_ref_ecma_string */
 
 /**
- * Decrease reference counter and deallocate ecma-string if
- * after that the counter the counter becomes zero.
+ * Decrease reference counter and deallocate ecma-string
+ * if the counter becomes zero.
  */
 void
 ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
@@ -517,32 +516,6 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
   ecma_dealloc_string (string_p);
 } /* ecma_deref_ecma_string */
-
-/**
- * Assertion that specified ecma-string need not be freed
- */
-void
-ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *string_p) /**< ecma-string descriptor */
-{
-#ifdef JERRY_NDEBUG
-  (void) string_p;
-#else /* JERRY_NDEBUG */
-
-  /*
-   * No reference counter increment or decrement
-   * should be performed with ecma-string placed
-   * on stack
-   */
-  JERRY_ASSERT (string_p->refs == 1);
-
-  ecma_string_container_t container_type = (ecma_string_container_t) string_p->container;
-
-  JERRY_ASSERT (container_type == ECMA_STRING_CONTAINER_LIT_TABLE ||
-                container_type == ECMA_STRING_CONTAINER_MAGIC_STRING ||
-                container_type == ECMA_STRING_CONTAINER_MAGIC_STRING_EX ||
-                container_type == ECMA_STRING_CONTAINER_UINT32_IN_DESC);
-#endif /* !JERRY_NDEBUG */
-} /* ecma_check_that_ecma_string_need_not_be_freed */
 
 /**
  * Convert ecma-string to number
@@ -926,16 +899,12 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
-  const bool is_equal_hashes = (string1_p->hash == string2_p->hash);
-
-  if (!is_equal_hashes)
+  if (string1_p->hash != string2_p->hash)
   {
     return false;
   }
-  const bool is_equal_containers = (string1_p->container == string2_p->container);
-  const bool is_equal_fields = (string1_p->u.common_field == string2_p->u.common_field);
 
-  if (is_equal_containers && is_equal_fields)
+  if (ecma_compare_ecma_strings_equal_hashes (string1_p, string2_p))
   {
     return true;
   }

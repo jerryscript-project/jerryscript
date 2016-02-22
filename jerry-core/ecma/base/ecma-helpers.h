@@ -95,7 +95,6 @@ extern ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_st
 extern ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *, ecma_string_t *);
 extern ecma_string_t *ecma_copy_or_ref_ecma_string (ecma_string_t *);
 extern void ecma_deref_ecma_string (ecma_string_t *);
-extern void ecma_check_that_ecma_string_need_not_be_freed (const ecma_string_t *);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *);
 extern bool ecma_string_get_array_index (const ecma_string_t *, uint32_t *);
 
@@ -120,8 +119,6 @@ extern ecma_string_t *ecma_string_substr (const ecma_string_t *, ecma_length_t, 
 extern ecma_string_t *ecma_string_trim (const ecma_string_t *);
 
 /* ecma-helpers-number.c */
-extern const ecma_number_t ecma_number_relative_eps;
-
 extern ecma_number_t ecma_number_make_nan (void);
 extern ecma_number_t ecma_number_make_infinity (bool);
 extern bool ecma_number_is_nan (ecma_number_t);

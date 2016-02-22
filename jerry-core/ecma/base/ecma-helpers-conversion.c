@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -404,7 +404,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     /* Hex literal handling */
     begin_p += 2;
 
-    ecma_number_t num = 0;
+    ecma_number_t num = ECMA_NUMBER_ZERO;
 
     for (const lit_utf8_byte_t * iter_p = begin_p;
          iter_p <= end_p;
@@ -796,7 +796,7 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
     *p-- = digits[value % 10];
     value /= 10;
 
-    bytes_copied ++;
+    bytes_copied++;
   }
   while (value != 0);
 
@@ -821,9 +821,7 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 ecma_number_t
 ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
 {
-  ecma_number_t num_value = (ecma_number_t) value;
-
-  return num_value;
+  return (ecma_number_t) value;
 } /* ecma_uint32_to_number */
 
 /**
@@ -834,9 +832,7 @@ ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
 ecma_number_t
 ecma_int32_to_number (int32_t value) /**< signed 32-bit integer value */
 {
-  ecma_number_t num_value = (ecma_number_t) value;
-
-  return num_value;
+  return (ecma_number_t) value;
 } /* ecma_int32_to_number */
 
 /**
@@ -857,17 +853,8 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
     return 0;
   }
 
-  bool sign = ecma_number_is_negative (num);
-  ecma_number_t abs_num;
-
-  if (sign)
-  {
-    abs_num = ecma_number_negate (num);
-  }
-  else
-  {
-    abs_num = num;
-  }
+  const bool sign = ecma_number_is_negative (num);
+  const ecma_number_t abs_num = sign ? ecma_number_negate (num) : num;
 
   // 2 ^ 32
   const uint64_t uint64_2_pow_32 = (1ull << 32);
@@ -890,16 +877,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
   uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
-  uint32_t ret;
-
-  if (sign)
-  {
-    ret = -uint32_num;
-  }
-  else
-  {
-    ret = uint32_num;
-  }
+  const uint32_t ret = sign ? -uint32_num : uint32_num;
 
 #ifndef JERRY_NDEBUG
   if (sign

@@ -792,7 +792,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
 
       do
       {
-        source_p ++;
+        source_p++;
       }
       while (source_p < source_end_p
              && lexer_is_hex_digit (source_p[0]));
@@ -809,7 +809,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
 
       do
       {
-        source_p ++;
+        source_p++;
       }
       while (source_p < source_end_p
              && source_p[0] >= '0'

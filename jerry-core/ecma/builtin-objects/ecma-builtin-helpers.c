@@ -523,7 +523,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
   ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
 
   ecma_number_t *ret_num_p = ecma_alloc_number ();
-  *ret_num_p = ecma_int32_to_number (-1);
+  *ret_num_p = ECMA_NUMBER_MINUS_ONE;
 
   /* 8 (indexOf) -- 9 (lastIndexOf) */
   ecma_length_t index_of = 0;

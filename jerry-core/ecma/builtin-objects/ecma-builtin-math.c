@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -572,16 +572,16 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __attr_unused___, /**< 'th
     *num_p = arg_num;
   }
   else if (ecma_number_is_negative (arg_num)
-           && arg_num >= -0.5f)
+           && arg_num >= -ECMA_NUMBER_HALF)
   {
-    *num_p = ecma_number_negate (0.0f);
+    *num_p = ecma_number_negate (ECMA_NUMBER_ZERO);
   }
   else
   {
-    const ecma_number_t up_half = arg_num + 0.5f;
-    const ecma_number_t down_half = arg_num - 0.5f;
-    const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, 1);
-    const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, 1);
+    const ecma_number_t up_half = arg_num + ECMA_NUMBER_HALF;
+    const ecma_number_t down_half = arg_num - ECMA_NUMBER_HALF;
+    const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, ECMA_NUMBER_ONE);
+    const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, ECMA_NUMBER_ONE);
 
     if (up_rounded - arg_num <= arg_num - down_rounded)
     {

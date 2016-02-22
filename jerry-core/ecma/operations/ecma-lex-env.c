@@ -204,24 +204,6 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
-#ifndef JERRY_NDEBUG
-# ifdef CONFIG_ECMA_COMPACT_PROFILE
-    bool is_equal = false;
-
-    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    if (ecma_compare_ecma_strings (name_p, arguments_magic_string_p))
-    {
-      is_equal = true;
-    }
-    ecma_deref_ecma_string (arguments_magic_string_p);
-
-    if (is_equal)
-    {
-      return ecma_make_error_obj_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
-    }
-# endif /* CONFIG_ECMA_COMPACT_PROFILE */
-#endif /* !JERRY_NDEBUG */
-
     ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 
     if (ecma_is_property_writable (property_p))
@@ -276,26 +258,6 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
-#ifndef JERRY_NDEBUG
-# ifdef CONFIG_ECMA_COMPACT_PROFILE
-    bool is_equal = false;
-
-    ecma_string_t *arguments_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    if (ecma_compare_ecma_strings (name_p, arguments_magic_string_p))
-    {
-      is_equal = true;
-    }
-    ecma_deref_ecma_string (arguments_magic_string_p);
-
-    JERRY_ASSERT (!is_equal);
-
-    if (is_equal)
-    {
-      return ecma_make_error_obj_value (ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR));
-    }
-# endif /* CONFIG_ECMA_COMPACT_PROFILE */
-#endif /* !JERRY_NDEBUG */
-
     ecma_property_t *property_p = ecma_get_named_data_property (lex_env_p, name_p);
 
     ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);

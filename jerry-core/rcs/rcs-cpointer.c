@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,9 +49,9 @@ rcs_cpointer_compress (rcs_record_t *pointer) /**< pointer to compress */
   uintptr_t diff = (uintptr_t) pointer - base_pointer;
 
   JERRY_ASSERT (diff < MEM_ALIGNMENT);
-  JERRY_ASSERT (jrt_extract_bit_field (diff, 0, RCS_DYN_STORAGE_LENGTH_UNIT_LOG) == 0);
+  JERRY_ASSERT (JRT_EXTRACT_BIT_FIELD (uintptr_t, diff, 0, RCS_DYN_STORAGE_LENGTH_UNIT_LOG) == 0);
 
-  uintptr_t ext_part = (uintptr_t) jrt_extract_bit_field (diff,
+  uintptr_t ext_part = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uintptr_t, diff,
                                                           RCS_DYN_STORAGE_LENGTH_UNIT_LOG,
                                                           MEM_ALIGNMENT_LOG - RCS_DYN_STORAGE_LENGTH_UNIT_LOG);
 

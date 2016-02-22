@@ -35,7 +35,7 @@ rcs_record_set_field (rcs_record_t *rec_p, /**< record */
   JERRY_ASSERT (field_pos + field_width <= RCS_DYN_STORAGE_LENGTH_UNIT * JERRY_BITSINBYTE);
 
   uint32_t prev_value = *(uint32_t *) rec_p;
-  *(uint32_t *) rec_p = (uint32_t) jrt_set_bit_field_value (prev_value, value, field_pos, field_width);
+  *(uint32_t *) rec_p = JRT_SET_BIT_FIELD_VALUE (uint32_t, prev_value, value, field_pos, field_width);
 } /* rcs_record_set_field */
 
 /**
@@ -222,7 +222,7 @@ rcs_record_get_field (rcs_record_t *rec_p, /**< record */
   JERRY_ASSERT (field_pos + field_width <= RCS_DYN_STORAGE_LENGTH_UNIT * JERRY_BITSINBYTE);
 
   uint32_t value = *(uint32_t *) rec_p;
-  return (uint32_t) jrt_extract_bit_field (value, field_pos, field_width);
+  return JRT_EXTRACT_BIT_FIELD (uint32_t, value, field_pos, field_width);
 } /* rcs_record_get_field */
 
 /**

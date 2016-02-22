@@ -39,7 +39,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE >= ECMA_VALUE_SIZE
 ecma_type_t __attr_pure___
 ecma_get_value_type_field (ecma_value_t value) /**< ecma value */
 {
-  return (ecma_type_t) jrt_extract_bit_field (value,
+  return (ecma_type_t) JRT_EXTRACT_BIT_FIELD (ecma_value_t, value,
                                               ECMA_VALUE_TYPE_POS,
                                               ECMA_VALUE_TYPE_WIDTH);
 } /* ecma_get_value_type_field */
@@ -52,7 +52,7 @@ ecma_get_value_type_field (ecma_value_t value) /**< ecma value */
 static uintptr_t __attr_pure___
 ecma_get_value_value_field (ecma_value_t value) /**< ecma value */
 {
-  return (uintptr_t) jrt_extract_bit_field (value,
+  return (uintptr_t) JRT_EXTRACT_BIT_FIELD (ecma_value_t, value,
                                             ECMA_VALUE_VALUE_POS,
                                             ECMA_VALUE_VALUE_WIDTH);
 } /* ecma_get_value_value_field */
@@ -66,10 +66,10 @@ static ecma_value_t __attr_pure___
 ecma_set_value_type_field (ecma_value_t value, /**< ecma value to set field in */
                            ecma_type_t type_field) /**< new field value */
 {
-  return (ecma_value_t) jrt_set_bit_field_value (value,
-                                                 type_field,
-                                                 ECMA_VALUE_TYPE_POS,
-                                                 ECMA_VALUE_TYPE_WIDTH);
+  return JRT_SET_BIT_FIELD_VALUE (ecma_value_t, value,
+                                  type_field,
+                                  ECMA_VALUE_TYPE_POS,
+                                  ECMA_VALUE_TYPE_WIDTH);
 } /* ecma_set_value_type_field */
 
 /**
@@ -81,10 +81,10 @@ static ecma_value_t __attr_pure___
 ecma_set_value_value_field (ecma_value_t value, /**< ecma value to set field in */
                             uintptr_t value_field) /**< new field value */
 {
-  return (ecma_value_t) jrt_set_bit_field_value (value,
-                                                 value_field,
-                                                 ECMA_VALUE_VALUE_POS,
-                                                 ECMA_VALUE_VALUE_WIDTH);
+  return JRT_SET_BIT_FIELD_VALUE (ecma_value_t, value,
+                                  value_field,
+                                  ECMA_VALUE_VALUE_POS,
+                                  ECMA_VALUE_VALUE_WIDTH);
 } /* ecma_set_value_value_field */
 
 /**

@@ -111,10 +111,10 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
         JERRY_STATIC_ASSERT (sizeof (code_point) == 2,
                              size_of_code_point_must_be_equal_to_2_bytes);
 
-        uint32_t byte_high = (uint32_t) jrt_extract_bit_field (code_point,
+        uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
                                                                JERRY_BITSINBYTE,
                                                                JERRY_BITSINBYTE);
-        uint32_t byte_low = (uint32_t) jrt_extract_bit_field (code_point,
+        uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
                                                               0,
                                                               JERRY_BITSINBYTE);
 

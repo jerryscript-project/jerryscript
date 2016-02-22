@@ -94,7 +94,7 @@ ecma_gc_get_object_refs (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return (uint32_t) jrt_extract_bit_field (object_p->container,
+  return (uint32_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                            ECMA_OBJECT_GC_REFS_POS,
                                            ECMA_OBJECT_GC_REFS_WIDTH);
 } /* ecma_gc_get_object_refs */
@@ -108,7 +108,7 @@ ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  refs,
                                                  ECMA_OBJECT_GC_REFS_POS,
                                                  ECMA_OBJECT_GC_REFS_WIDTH);
@@ -123,7 +123,7 @@ ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-  uintptr_t next_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t next_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                          ECMA_OBJECT_GC_NEXT_CP_POS,
                                                          ECMA_OBJECT_GC_NEXT_CP_WIDTH);
 
@@ -144,7 +144,7 @@ ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
   ECMA_SET_POINTER (next_cp, next_object_p);
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  next_cp,
                                                  ECMA_OBJECT_GC_NEXT_CP_POS,
                                                  ECMA_OBJECT_GC_NEXT_CP_WIDTH);
@@ -158,7 +158,7 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  bool flag_value = (bool) jrt_extract_bit_field (object_p->container,
+  bool flag_value = (bool) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                   ECMA_OBJECT_GC_VISITED_POS,
                                                   ECMA_OBJECT_GC_VISITED_WIDTH);
 
@@ -179,7 +179,7 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
     is_visited = !is_visited;
   }
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  is_visited,
                                                  ECMA_OBJECT_GC_VISITED_POS,
                                                  ECMA_OBJECT_GC_VISITED_WIDTH);

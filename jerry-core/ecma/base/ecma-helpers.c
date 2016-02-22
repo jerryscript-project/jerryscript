@@ -48,19 +48,19 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
 
   ecma_init_gc_info (object_p);
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  ECMA_NULL_POINTER,
                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  false,
                                                  ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
                                                  ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  is_extensible,
                                                  ECMA_OBJECT_OBJ_EXTENSIBLE_POS,
                                                  ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH);
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  type,
                                                  ECMA_OBJECT_OBJ_TYPE_POS,
                                                  ECMA_OBJECT_OBJ_TYPE_WIDTH);
@@ -68,7 +68,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
   uint64_t prototype_object_cp;
   ECMA_SET_POINTER (prototype_object_cp, prototype_object_p);
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  prototype_object_cp,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                  ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
@@ -95,23 +95,23 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
   ecma_init_gc_info (new_lexical_environment_p);
 
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   ECMA_NULL_POINTER,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   true,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
 
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_POS,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_WIDTH);
 
   uint64_t outer_reference_cp;
   ECMA_SET_POINTER (outer_reference_cp, outer_lexical_environment_p);
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
@@ -120,7 +120,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
    * Declarative lexical environments do not really have the flag,
    * but to not leave the value initialized, setting the flag to false.
    */
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   false,
                                                                   ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
                                                                   ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH);
@@ -150,31 +150,31 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 
   ecma_init_gc_info (new_lexical_environment_p);
 
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   true,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
                                                                   ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
 
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_POS,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_WIDTH);
 
   uint64_t outer_reference_cp;
   ECMA_SET_POINTER (outer_reference_cp, outer_lexical_environment_p);
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   outer_reference_cp,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                   ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
 
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   provide_this,
                                                                   ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
                                                                   ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH);
 
   uint64_t bound_object_cp;
   ECMA_SET_NON_NULL_POINTER (bound_object_cp, binding_obj_p);
-  new_lexical_environment_p->container = jrt_set_bit_field_value (new_lexical_environment_p->container,
+  new_lexical_environment_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, new_lexical_environment_p->container,
                                                                   bound_object_cp,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                                   ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
@@ -190,7 +190,7 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 {
   JERRY_ASSERT (object_p != NULL);
 
-  return (bool) jrt_extract_bit_field (object_p->container,
+  return (bool) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                        ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS,
                                        ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH);
 } /* ecma_is_lexical_environment */
@@ -204,7 +204,7 @@ ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  return (bool) jrt_extract_bit_field (object_p->container,
+  return (bool) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                        ECMA_OBJECT_OBJ_EXTENSIBLE_POS,
                                        ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH);
 } /* ecma_get_object_extensible */
@@ -219,7 +219,7 @@ ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  is_extensible,
                                                  ECMA_OBJECT_OBJ_EXTENSIBLE_POS,
                                                  ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH);
@@ -234,7 +234,7 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  return (ecma_object_type_t) jrt_extract_bit_field (object_p->container,
+  return (ecma_object_type_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                      ECMA_OBJECT_OBJ_TYPE_POS,
                                                      ECMA_OBJECT_OBJ_TYPE_WIDTH);
 } /* ecma_get_object_type */
@@ -249,7 +249,7 @@ ecma_set_object_type (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  type,
                                                  ECMA_OBJECT_OBJ_TYPE_POS,
                                                  ECMA_OBJECT_OBJ_TYPE_WIDTH);
@@ -265,7 +265,7 @@ ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
-  uintptr_t prototype_object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t prototype_object_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS,
                                                                      ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH);
   return ECMA_GET_POINTER (ecma_object_t,
@@ -288,7 +288,7 @@ ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= width);
 
-  uintptr_t flag_value = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t flag_value = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                             offset,
                                                             width);
 
@@ -308,8 +308,8 @@ ecma_set_object_is_builtin (ecma_object_t *object_p, /**< object */
   const uint32_t offset = ECMA_OBJECT_OBJ_IS_BUILTIN_POS;
   const uint32_t width = ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH;
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
-                                                 (uintptr_t) is_builtin,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
+                                                 is_builtin,
                                                  offset,
                                                  width);
 } /* ecma_set_object_is_builtin */
@@ -323,7 +323,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 
-  return (ecma_lexical_environment_type_t) jrt_extract_bit_field (object_p->container,
+  return (ecma_lexical_environment_type_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_POS,
                                                                   ECMA_OBJECT_LEX_ENV_TYPE_WIDTH);
 } /* ecma_get_lex_env_type */
@@ -338,7 +338,7 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
-  uintptr_t outer_reference_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t outer_reference_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS,
                                                                     ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH);
   return ECMA_GET_POINTER (ecma_object_t,
@@ -359,7 +359,7 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
                 ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  uintptr_t properties_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t properties_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   return ECMA_GET_POINTER (ecma_property_t,
@@ -383,7 +383,7 @@ ecma_set_property_list (ecma_object_t *object_p, /**< object or lexical environm
   uint64_t properties_cp;
   ECMA_SET_POINTER (properties_cp, property_list_p);
 
-  object_p->container = jrt_set_bit_field_value (object_p->container,
+  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
                                                  properties_cp,
                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                  ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
@@ -400,7 +400,7 @@ ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound 
                 ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  bool provide_this = (jrt_extract_bit_field (object_p->container,
+  bool provide_this = (JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                               ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS,
                                               ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH) != 0);
 
@@ -418,7 +418,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
                 ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND);
 
   JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
-  uintptr_t object_cp = (uintptr_t) jrt_extract_bit_field (object_p->container,
+  uintptr_t object_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
                                                            ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS,
                                                            ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH);
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_cp);

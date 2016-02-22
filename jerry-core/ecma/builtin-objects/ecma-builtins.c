@@ -313,7 +313,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
       JERRY_STATIC_ASSERT (sizeof (uint8_t) * JERRY_BITSINBYTE == ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH,
                            bits_in_uint8_t_must_be_equal_to_ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
-      uint8_t length_prop_value = (uint8_t) jrt_extract_bit_field (builtin_routine_desc,
+      uint8_t length_prop_value = (uint8_t) JRT_EXTRACT_BIT_FIELD (uint64_t, builtin_routine_desc,
                                                                    ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS,
                                                                    ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
 
@@ -476,15 +476,15 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 
   ecma_set_object_is_builtin (func_obj_p, true);
 
-  uint64_t packed_value = jrt_set_bit_field_value (0,
+  uint64_t packed_value = JRT_SET_BIT_FIELD_VALUE (uint64_t, 0ull,
                                                    builtin_id,
                                                    ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS,
                                                    ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH);
-  packed_value = jrt_set_bit_field_value (packed_value,
+  packed_value = JRT_SET_BIT_FIELD_VALUE (uint64_t, packed_value,
                                           routine_id,
                                           ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                           ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
-  packed_value = jrt_set_bit_field_value (packed_value,
+  packed_value = JRT_SET_BIT_FIELD_VALUE (uint64_t, packed_value,
                                           length_prop_value,
                                           ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS,
                                           ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
@@ -519,12 +519,12 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                                                                ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
     uint64_t builtin_routine_desc = desc_prop_p->u.internal_property.value;
 
-    uint64_t built_in_id_field = jrt_extract_bit_field (builtin_routine_desc,
+    uint64_t built_in_id_field = JRT_EXTRACT_BIT_FIELD (uint64_t, builtin_routine_desc,
                                                         ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS,
                                                         ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH);
     JERRY_ASSERT (built_in_id_field < ECMA_BUILTIN_ID__COUNT);
 
-    uint64_t routine_id_field = jrt_extract_bit_field (builtin_routine_desc,
+    uint64_t routine_id_field = JRT_EXTRACT_BIT_FIELD (uint64_t, builtin_routine_desc,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
     JERRY_ASSERT ((uint16_t) routine_id_field == routine_id_field);

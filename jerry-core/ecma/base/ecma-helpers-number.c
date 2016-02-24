@@ -25,7 +25,8 @@
 #include "ecma-helpers.h"
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t),
+                     size_of_ecma_number_t_must_be_equal_to_4_bytes);
 
 /**
  * Packing sign, fraction and biased exponent to ecma-number
@@ -111,7 +112,8 @@ const int32_t ecma_number_exponent_bias = 127;
  */
 const ecma_number_t ecma_number_relative_eps = 1.0e-10f;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t),
+                     size_of_ecma_number_t_must_be_equal_to_8_bytes);
 
 /**
  * Packing sign, fraction and biased exponent to ecma-number

@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -310,7 +311,8 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                                                ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
       uint64_t builtin_routine_desc = desc_prop_p->u.internal_property.value;
 
-      JERRY_STATIC_ASSERT (sizeof (uint8_t) * JERRY_BITSINBYTE == ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
+      JERRY_STATIC_ASSERT (sizeof (uint8_t) * JERRY_BITSINBYTE == ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH,
+                           bits_in_uint8_t_must_be_equal_to_ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);
       uint8_t length_prop_value = (uint8_t) jrt_extract_bit_field (builtin_routine_desc,
                                                                    ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS,
                                                                    ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH);

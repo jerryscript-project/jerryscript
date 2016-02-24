@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -255,7 +255,8 @@ rcs_record_get_pointer (rcs_record_t *rec_p, /**< record */
 rcs_record_type_t
 rcs_record_get_type (rcs_record_t *rec_p) /**< record */
 {
-  JERRY_STATIC_ASSERT (sizeof (rcs_record_type_t) * JERRY_BITSINBYTE >= RCS_HEADER_TYPE_WIDTH);
+  JERRY_STATIC_ASSERT (sizeof (rcs_record_type_t) * JERRY_BITSINBYTE >= RCS_HEADER_TYPE_WIDTH,
+                       bits_in_rcs_record_type_t_must_be_greater_than_or_equal_to_RCS_HEADER_TYPE_WIDTH);
 
   return (rcs_record_type_t) rcs_record_get_field (rec_p, RCS_HEADER_TYPE_POS, RCS_HEADER_TYPE_WIDTH);
 } /* rcs_record_get_type */

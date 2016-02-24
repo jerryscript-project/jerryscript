@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +61,8 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
     is_new = false;
   }
 
-  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value));
+  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value),
+                       size_of_internal_property_value_must_be_greater_than_or_equal_to_4_bytes);
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {
@@ -118,8 +120,6 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
 
     return false;
   }
-
-  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value));
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {

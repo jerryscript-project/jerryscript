@@ -28,7 +28,8 @@
 #include "jrt-bit-fields.h"
 #include "vm-defines.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE >= ECMA_VALUE_SIZE);
+JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE >= ECMA_VALUE_SIZE,
+                     bits_in_ecma_value_t_must_be_greater_than_or_equal_to_ECMA_VALUE_SIZE);
 
 /**
  * Get type field of ecma value

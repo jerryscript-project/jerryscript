@@ -1,5 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,8 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
       }
       else
       {
-        JERRY_STATIC_ASSERT (sizeof (code_point) == 2);
+        JERRY_STATIC_ASSERT (sizeof (code_point) == 2,
+                             size_of_code_point_must_be_equal_to_2_bytes);
 
         uint32_t byte_high = (uint32_t) jrt_extract_bit_field (code_point,
                                                                JERRY_BITSINBYTE,

@@ -444,7 +444,11 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
   ECMA_SET_POINTER (new_property_p->next_property_p, list_head_p);
   ecma_set_property_list (object_p, new_property_p);
 
-  JERRY_STATIC_ASSERT (ECMA_INTERNAL_PROPERTY__COUNT <= (1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH));
+  JERRY_STATIC_ASSERT (
+    ECMA_INTERNAL_PROPERTY__COUNT <= (1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH),
+    ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH_bits_must_be_able_to_represent_ECMA_INTERNAL_PROPERTY__COUNT_values
+  );
+
   JERRY_ASSERT (property_id < ECMA_INTERNAL_PROPERTY__COUNT);
 
   new_property_p->u.internal_property.type = property_id & ((1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH) - 1);

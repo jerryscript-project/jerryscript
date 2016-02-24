@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,16 +21,24 @@
 #include "jrt.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t),
+                     size_of_ecma_property_t_must_be_less_than_or_equal_to_8_bytes);
 
-JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t));
-JERRY_STATIC_ASSERT (ECMA_OBJECT_OBJ_TYPE_SIZE <= sizeof (uint64_t) * JERRY_BITSINBYTE);
-JERRY_STATIC_ASSERT (ECMA_OBJECT_LEX_ENV_TYPE_SIZE <= sizeof (uint64_t) * JERRY_BITSINBYTE);
+JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t),
+                     size_of_ecma_object_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (ECMA_OBJECT_OBJ_TYPE_SIZE <= sizeof (uint64_t) * JERRY_BITSINBYTE,
+                     ECMA_OBJECT_OBJ_TYPE_SIZE_must_be_less_than_or_equal_to_64_bits);
+JERRY_STATIC_ASSERT (ECMA_OBJECT_LEX_ENV_TYPE_SIZE <= sizeof (uint64_t) * JERRY_BITSINBYTE,
+                     ECMA_OBJECT_LEX_ENV_TYPE_SIZE_must_be_less_than_or_equal_to_64_bits);
 
-JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t));
-JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t),
+                     size_of_ecma_collection_header_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t),
+                     size_of_ecma_collection_chunk_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t),
+                     size_of_ecma_string_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t),
+                     size_of_ecma_getter_setter_pointers_t_must_be_less_than_or_equal_to_8_bytes);
 
 /** \addtogroup ecma ECMA
  * @{

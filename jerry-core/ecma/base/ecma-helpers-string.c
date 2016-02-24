@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +42,9 @@
 /**
  * The length should be representable with int32_t.
  */
-JERRY_STATIC_ASSERT ((uint32_t) ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH) ==
-                     ECMA_STRING_MAX_CONCATENATION_LENGTH);
+JERRY_STATIC_ASSERT ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH ==
+                     ECMA_STRING_MAX_CONCATENATION_LENGTH,
+                     ECMA_STRING_MAX_CONCATENATION_LENGTH_should_be_representable_with_int32_t);
 
 static void
 ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p,

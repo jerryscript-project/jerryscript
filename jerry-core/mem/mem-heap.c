@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +107,8 @@ typedef enum __attr_packed___
 /**
  * Chunk size should satisfy the required alignment value
  */
-JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0);
+JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0,
+                     MEM_HEAP_CHUNK_SIZE_must_be_multiple_of_MEM_ALIGNMENT);
 
 typedef enum
 {
@@ -160,7 +162,8 @@ typedef size_t mem_heap_bitmap_storage_item_t;
 /**
  * Overall number of bitmap bits is multiple of number of bits in a bitmap storage item
  */
-JERRY_STATIC_ASSERT (MEM_HEAP_BITMAP_BITS % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM == 0);
+JERRY_STATIC_ASSERT (MEM_HEAP_BITMAP_BITS % MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM == 0,
+                     MEM_HEAP_BITMAP_BITS_must_be_multiple_of_MEM_HEAP_BITMAP_BITS_IN_STORAGE_ITEM);
 
 /**
  * Number of bitmap storage items
@@ -197,7 +200,8 @@ mem_heap_t mem_heap __attribute__ ((section (JERRY_HEAP_SECTION_ATTR)));
 /**
  * Check size of heap is corresponding to configuration
  */
-JERRY_STATIC_ASSERT (sizeof (mem_heap) <= MEM_HEAP_SIZE);
+JERRY_STATIC_ASSERT (sizeof (mem_heap) <= MEM_HEAP_SIZE,
+                     size_of_mem_heap_must_be_less_than_or_equal_to_MEM_HEAP_SIZE);
 
 /**
  * Bitmap of 'is allocated' flags
@@ -329,10 +333,14 @@ mem_heap_mark_chunk_allocated (size_t chunk_index, /**< index of the heap chunk 
 void
 mem_heap_init (void)
 {
-  JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
-  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_ALIGNMENT == 0);
-  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE == 0);
-  JERRY_STATIC_ASSERT (MEM_HEAP_AREA_SIZE % MEM_HEAP_CHUNK_SIZE == 0);
+  JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0,
+                       MEM_HEAP_CHUNK_SIZE_must_be_power_of_2);
+  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_ALIGNMENT == 0,
+                       mem_heap_area_must_be_multiple_of_MEM_ALIGNMENT);
+  JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE == 0,
+                        mem_heap_area_must_be_multiple_of_MEM_HEAP_CHUNK_SIZE);
+  JERRY_STATIC_ASSERT (MEM_HEAP_AREA_SIZE % MEM_HEAP_CHUNK_SIZE == 0,
+                       MEM_HEAP_AREA_SIZE_must_be_multiple_of_MEM_HEAP_CHUNK_SIZE);
 
   JERRY_ASSERT (MEM_HEAP_AREA_SIZE <= (1u << MEM_HEAP_OFFSET_LOG));
 
@@ -757,9 +765,6 @@ mem_heap_free_block (void *ptr) /**< pointer to beginning of data space of the b
 void *
 mem_heap_get_chunked_block_start (void *ptr) /**< pointer into a block */
 {
-  JERRY_STATIC_ASSERT ((MEM_HEAP_CHUNK_SIZE & (MEM_HEAP_CHUNK_SIZE - 1u)) == 0);
-  JERRY_STATIC_ASSERT (((uintptr_t) mem_heap.area % MEM_HEAP_CHUNK_SIZE) == 0);
-
   JERRY_ASSERT (mem_heap.area <= (uint8_t *) ptr && (uint8_t *) ptr < (uint8_t *) mem_heap.area + MEM_HEAP_AREA_SIZE);
 
   uintptr_t uintptr = (uintptr_t) ptr;

@@ -1,5 +1,6 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- *
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
+
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,10 +60,10 @@
  *         __LINE__ may be the same for asserts in a header
  *         and in an implementation file.
  */
-#define JERRY_STATIC_ASSERT_GLUE_(a, b) a ## b
-#define JERRY_STATIC_ASSERT_GLUE(a, b) JERRY_STATIC_ASSERT_GLUE_ (a, b)
-#define JERRY_STATIC_ASSERT(x) \
-  typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__) \
+#define JERRY_STATIC_ASSERT_GLUE_(a, b, c) a ## b ## c
+#define JERRY_STATIC_ASSERT_GLUE(a, b, c) JERRY_STATIC_ASSERT_GLUE_ (a, b, c)
+#define JERRY_STATIC_ASSERT(x, msg) \
+  typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) \
   [ (x) ? 1 : -1 ] __attr_unused___
 
 #define CALL_PRAGMA(x) _Pragma (#x)

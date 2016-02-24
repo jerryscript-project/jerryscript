@@ -45,7 +45,8 @@ typedef struct
   uint16_t padding;
 } ecma_lcache_hash_entry_t;
 
-JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t));
+JERRY_STATIC_ASSERT (sizeof (ecma_lcache_hash_entry_t) == sizeof (uint64_t),
+                     size_of_ecma_lcache_hash_entry_t_must_be_equal_to_8_bytes);
 
 /**
  * LCache hash value length, in bits

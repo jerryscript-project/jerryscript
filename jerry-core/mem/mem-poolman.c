@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +113,8 @@ struct mem_pool_chunk
 /**
  * The condition is assumed when using pointer arithmetics on (mem_pool_chunk_t *) pointer type
  */
-JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_t) == MEM_POOL_CHUNK_SIZE);
+JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_t) == MEM_POOL_CHUNK_SIZE,
+                     size_of_mem_pool_chunk_t_must_be_equal_to_MEM_POOL_CHUNK_SIZE);
 
 /**
  * List of free pool chunks
@@ -567,9 +569,10 @@ mem_pools_alloc_longpath (void)
   mem_free_chunks_number += MEM_POOL_CHUNKS_NUMBER;
 #endif /* !JERRY_NDEBUG */
 
-  JERRY_STATIC_ASSERT (MEM_POOL_CHUNK_SIZE % MEM_ALIGNMENT == 0);
-  JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_t) == MEM_POOL_CHUNK_SIZE);
-  JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_index_t) <= MEM_POOL_CHUNK_SIZE);
+  JERRY_STATIC_ASSERT (MEM_POOL_CHUNK_SIZE % MEM_ALIGNMENT == 0,
+                       MEM_POOL_CHUNK_SIZE_must_be_multiple_of_MEM_ALIGNMENT);
+  JERRY_STATIC_ASSERT (sizeof (mem_pool_chunk_index_t) <= MEM_POOL_CHUNK_SIZE,
+                       size_of_mem_pool_chunk_index_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
   JERRY_ASSERT ((mem_pool_chunk_index_t) MEM_POOL_CHUNKS_NUMBER == MEM_POOL_CHUNKS_NUMBER);
   JERRY_ASSERT (MEM_POOL_SIZE == MEM_POOL_CHUNKS_NUMBER * MEM_POOL_CHUNK_SIZE);
 

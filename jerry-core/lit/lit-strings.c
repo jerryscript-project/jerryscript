@@ -17,7 +17,8 @@
 
 #include "jrt-libc-includes.h"
 
-JERRY_STATIC_ASSERT (sizeof (lit_utf8_iterator_pos_t) == sizeof (lit_utf8_size_t));
+JERRY_STATIC_ASSERT (sizeof (lit_utf8_iterator_pos_t) == sizeof (lit_utf8_size_t),
+                     size_of_lit_utf8_iterator_pos_t_must_be_equal_to_size_of_lit_utf8_size_t);
 
 /**
  * Compare two iterator positions

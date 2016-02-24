@@ -1382,7 +1382,8 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
                            jerry_api_length_t args_count) /**< number of the arguments */
 {
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
-  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t));
+  JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t),
+                       size_of_args_count_must_be_equal_to_size_of_ecma_length_t);
 
   bool is_successful = true;
 

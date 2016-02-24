@@ -96,7 +96,7 @@ read_sources (const char *script_file_names[],
 
   if (i < files_count)
   {
-    JERRY_ERROR_MSG ("Failed to read script N%d\n", i + 1);
+    JERRY_ERROR_MSG ("Failed to open file: %s\n", script_file_names[i]);
 
     return NULL;
   }

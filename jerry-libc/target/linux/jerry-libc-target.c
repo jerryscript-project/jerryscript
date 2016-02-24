@@ -33,15 +33,6 @@
 
 LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
 
-/**
- * Exit program with ERR_SYSCALL if syscall_ret_val is negative
- */
-#define LIBC_EXIT_ON_ERROR(syscall_ret_val) \
-  if ((syscall_ret_val) < 0) \
-{ \
-  libc_fatal ("Syscall", __FILE__, __func__, __LINE__); \
-}
-
 static long int syscall_0 (long int syscall_no);
 static long int syscall_1 (long int syscall_no, long int arg1);
 static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
@@ -60,11 +51,7 @@ extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2
 static __attr_noinline___ long int
 syscall_0 (long int syscall_no) /**< syscall number */
 {
-  long int ret = syscall_0_asm (syscall_no);
-
-  LIBC_EXIT_ON_ERROR (ret);
-
-  return ret;
+  return syscall_0_asm (syscall_no);
 } /* syscall_0 */
 
 /**
@@ -76,11 +63,7 @@ static __attr_noinline___ long int
 syscall_1 (long int syscall_no, /**< syscall number */
            long int arg1) /**< argument */
 {
-  long int ret = syscall_1_asm (syscall_no, arg1);
-
-  LIBC_EXIT_ON_ERROR (ret);
-
-  return ret;
+  return syscall_1_asm (syscall_no, arg1);
 } /* syscall_1 */
 
 /**
@@ -93,11 +76,7 @@ syscall_2 (long int syscall_no, /**< syscall number */
            long int arg1, /**< first argument */
            long int arg2) /**< second argument */
 {
-  long int ret = syscall_2_asm (syscall_no, arg1, arg2);
-
-  LIBC_EXIT_ON_ERROR (ret);
-
-  return ret;
+  return syscall_2_asm (syscall_no, arg1, arg2);
 } /* syscall_2 */
 
 /**
@@ -111,11 +90,7 @@ syscall_3 (long int syscall_no, /**< syscall number */
            long int arg2, /**< second argument */
            long int arg3) /**< third argument */
 {
-  long int ret = syscall_3_asm (syscall_no, arg1, arg2, arg3);
-
-  LIBC_EXIT_ON_ERROR (ret);
-
-  return ret;
+  return syscall_3_asm (syscall_no, arg1, arg2, arg3);
 } /* syscall_3 */
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */

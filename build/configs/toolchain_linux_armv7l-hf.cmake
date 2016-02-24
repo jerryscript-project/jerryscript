@@ -23,4 +23,4 @@ find_program(CMAKE_STRIP NAMES arm-linux-gnueabihf-strip strip)
 #
 # If this is changed, setjmp / longjmp for ARMv7 should be updated accordingly
 #
-set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb -mfpu=vfpv3-d16)
+set(FLAGS_COMMON_ARCH -mthumb -mfpu=vfp -march=armv7)

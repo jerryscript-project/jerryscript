@@ -188,6 +188,36 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
   }
 } /* assert_handler */
 
+static void
+print_usage (char *name)
+{
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "Try '%s --help' for more information.\n",
+          name, name);
+} /* print_usage */
+
+static void
+print_help (char *name)
+{
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "\n"
+          "Options:\n"
+          "  -h, --help\n"
+          "  -v, --version\n"
+          "  --mem-stats\n"
+          "  --mem-stats-separate\n"
+          "  --parse-only\n"
+          "  --show-opcodes\n"
+          "  --save-snapshot-for-global FILE\n"
+          "  --save-snapshot-for-eval FILE\n"
+          "  --exec-snapshot FILE\n"
+          "  --log-level [0-3]\n"
+          "  --log-file FILE\n"
+          "  --abort-on-fail\n"
+          "\n",
+          name);
+} /* print_help */
+
 int
 main (int argc,
       char **argv)
@@ -226,12 +256,18 @@ main (int argc,
 #endif /* JERRY_ENABLE_LOG */
   for (i = 1; i < argc; i++)
   {
-    if (!strcmp ("-v", argv[i]))
+    if (!strcmp ("-h", argv[i]) || !strcmp ("--help", argv[i]))
+    {
+      print_help (argv[0]);
+      return JERRY_STANDALONE_EXIT_CODE_OK;
+    }
+    else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
     {
       printf ("Build date: \t%s\n", jerry_build_date);
       printf ("Commit hash:\t%s\n", jerry_commit_hash);
       printf ("Branch name:\t%s\n", jerry_branch_name);
       printf ("\n");
+      return JERRY_STANDALONE_EXIT_CODE_OK;
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
@@ -255,65 +291,79 @@ main (int argc,
       is_save_snapshot_mode = true;
       is_save_snapshot_mode_for_global_or_eval = !strcmp ("--save-snapshot-for-global", argv[i]);
 
-      flags |= JERRY_FLAG_PARSE_ONLY;
-
-      if (save_snapshot_file_name_p == NULL
-          && ++i < argc)
+      if (save_snapshot_file_name_p != NULL)
       {
-        save_snapshot_file_name_p = argv[i];
-      }
-      else
-      {
-        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        JERRY_ERROR_MSG ("Error: snapshot file name already specified\n");
+        print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
+
+      if (++i >= argc)
+      {
+        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+
+      flags |= JERRY_FLAG_PARSE_ONLY;
+      save_snapshot_file_name_p = argv[i];
     }
     else if (!strcmp ("--exec-snapshot", argv[i]))
     {
-      if (++i < argc)
+      if (++i >= argc)
       {
-        JERRY_ASSERT (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
-        exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
-      }
-      else
-      {
-        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
+
+      JERRY_ASSERT (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
+      exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
-      flags |= JERRY_FLAG_ENABLE_LOG;
-      if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
+      if (++i >= argc)
       {
-#ifdef JERRY_ENABLE_LOG
-        jerry_debug_level = argv[i][0] - '0';
-#endif /* JERRY_ENABLE_LOG */
-      }
-      else
-      {
-        JERRY_ERROR_MSG ("Error: wrong format or invalid argument\n");
+        JERRY_ERROR_MSG ("Error: no level specified for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
+
+      if (strlen (argv[i]) != 1 || argv[i][0] < '0' || argv[i][0] > '3')
+      {
+        JERRY_ERROR_MSG ("Error: wrong format for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+
+#ifdef JERRY_ENABLE_LOG
+      flags |= JERRY_FLAG_ENABLE_LOG;
+      jerry_debug_level = argv[i][0] - '0';
+#endif /* JERRY_ENABLE_LOG */
     }
     else if (!strcmp ("--log-file", argv[i]))
     {
-      flags |= JERRY_FLAG_ENABLE_LOG;
-      if (++i < argc)
+      if (++i >= argc)
       {
-#ifdef JERRY_ENABLE_LOG
-        log_file_name = argv[i];
-#endif /* JERRY_ENABLE_LOG */
-      }
-      else
-      {
-        JERRY_ERROR_MSG ("Error: wrong format of the arguments\n");
+        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
+
+#ifdef JERRY_ENABLE_LOG
+      flags |= JERRY_FLAG_ENABLE_LOG;
+      log_file_name = argv[i];
+#endif /* JERRY_ENABLE_LOG */
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {
       flags |= JERRY_FLAG_ABORT_ON_FAIL;
+    }
+    else if (!strncmp ("-", argv[i], 1))
+    {
+      JERRY_ERROR_MSG ("Error: unrecognized option: %s\n", argv[i]);
+      print_usage (argv[0]);
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
     else
     {

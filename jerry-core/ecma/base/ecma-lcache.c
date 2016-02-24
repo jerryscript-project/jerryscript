@@ -236,11 +236,11 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 bool __attr_always_inline___
 ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                     const ecma_string_t *prop_name_p, /**< property's name */
-                    ecma_property_t **prop_p_p) /**< out: if return value is true,
+                    ecma_property_t **prop_p_p) /**< [out] if return value is true,
                                                  *         then here will be pointer to property,
                                                  *         if the object contains property with specified name,
                                                  *         or, otherwise - NULL;
-                                                 *        if return value is false,
+                                                 *         if return value is false,
                                                  *         then the output parameter is not set */
 {
 #ifndef CONFIG_ECMA_LCACHE_DISABLE

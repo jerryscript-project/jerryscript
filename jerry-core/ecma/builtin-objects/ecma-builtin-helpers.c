@@ -328,7 +328,7 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
  */
 ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
-                                        uint32_t *length_p, /**< in-out: array's length */
+                                        uint32_t *length_p, /**< [in,out] array's length */
                                         ecma_value_t value) /**< value to concat */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);

@@ -160,7 +160,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
 bool
 lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
                           lit_utf8_size_t string_size, /**< string size in bytes */
-                          lit_magic_string_id_t *out_id_p) /**< out: magic string's id */
+                          lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
 {
   TODO (Improve performance of search);
 
@@ -190,7 +190,7 @@ lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
  */
 bool lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
                                   lit_utf8_size_t string_size, /**< string size in bytes */
-                                  lit_magic_string_ex_id_t *out_id_p) /**< out: magic string's id */
+                                  lit_magic_string_ex_id_t *out_id_p) /**< [out] magic string's id */
 {
   TODO (Improve performance of search);
 

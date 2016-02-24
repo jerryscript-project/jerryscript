@@ -31,7 +31,7 @@ static uint32_t
 lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
                    uint8_t *buffer_p, /**< buffer to dump to */
                    size_t buffer_size, /**< buffer size */
-                   size_t *in_out_buffer_offset_p) /**< in-out: buffer write offset */
+                   size_t *in_out_buffer_offset_p) /**< [in,out] buffer write offset */
 {
   const lit_record_type_t record_type = (lit_record_type_t) lit->type;
   switch (record_type)
@@ -127,14 +127,14 @@ lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
  *         false - otherwise.
  */
 bool
-lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer */
+lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot buffer */
                                 size_t buffer_size, /**< size of the buffer */
-                                size_t *in_out_buffer_offset_p, /**< in-out: write position in the buffer */
-                                lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< out: map from literal identifiers
+                                size_t *in_out_buffer_offset_p, /**< [in,out] write position in the buffer */
+                                lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< [out] map from literal identifiers
                                                                                  *        to the literal offsets
                                                                                  *        in snapshot */
-                                uint32_t *out_map_num_p, /**< out: number of literals */
-                                uint32_t *out_lit_table_size_p) /**< out: number of bytes, dumped to snapshot buffer */
+                                uint32_t *out_map_num_p, /**< [out] number of literals */
+                                uint32_t *out_lit_table_size_p) /**< [out] number of bytes, dumped to snapshot buffer */
 {
   uint32_t literals_num = lit_count_literals ();
   uint32_t lit_table_size = 0;
@@ -256,11 +256,11 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< output snapshot buffer *
 bool
 lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with literal table in snapshot */
                                  uint32_t lit_table_size, /**< size of literal table in snapshot */
-                                 lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< out: map from literal offsets
+                                 lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< [out] map from literal offsets
                                                                                   *   in snapshot to identifiers
                                                                                   *   of loaded literals in literal
                                                                                   *   storage */
-                                 uint32_t *out_map_num_p) /**< out: literals number */
+                                 uint32_t *out_map_num_p) /**< [out] literals number */
 {
   *out_map_p = NULL;
   *out_map_num_p = 0;

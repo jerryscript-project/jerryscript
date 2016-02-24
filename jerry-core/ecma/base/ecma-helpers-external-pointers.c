@@ -106,7 +106,7 @@ bool
 ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
                                  ecma_internal_property_id_t id, /**< identifier of internal property
                                                                   *   to get value from */
-                                 ecma_external_pointer_t *out_pointer_p) /**< out: value of the external pointer */
+                                 ecma_external_pointer_t *out_pointer_p) /**< [out] value of the external pointer */
 {
   JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
                 || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE

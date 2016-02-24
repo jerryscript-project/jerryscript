@@ -65,7 +65,7 @@
  */
 ecma_value_t
 re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags */
-                       uint16_t *flags_p) /**< Output: parsed flag bits */
+                       uint16_t *flags_p) /**< [out] parsed flag bits */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -374,7 +374,7 @@ static ecma_value_t
 re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
                  uint8_t *bc_p, /**< pointer to the current RegExp bytecode */
                  lit_utf8_byte_t *str_p, /**< input string pointer */
-                 lit_utf8_byte_t **out_str_p) /**< Output: matching substring iterator */
+                 lit_utf8_byte_t **out_str_p) /**< [out] matching substring iterator */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   re_opcode_t op;

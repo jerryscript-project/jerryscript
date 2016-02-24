@@ -660,7 +660,7 @@ mem_heap_print ()
  * Get heap memory usage statistics
  */
 void
-mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p) /**< out: heap stats */
+mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p) /**< [out] heap stats */
 {
   *out_heap_stats_p = mem_heap_stats;
 } /* mem_heap_get_stats */

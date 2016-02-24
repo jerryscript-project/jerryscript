@@ -28,9 +28,9 @@
 bool __attr_always_inline___
 jrt_read_from_buffer_by_offset (const uint8_t *buffer_p, /**< buffer */
                                 size_t buffer_size, /**< size of buffer */
-                                size_t *in_out_buffer_offset_p, /**< in: offset to read from,
-                                                                 *   out: offset, incremented on sizeof (T) */
-                                void *out_data_p, /**< out: data */
+                                size_t *in_out_buffer_offset_p, /**< [in,out] offset to read from /
+                                                                 * incremented on sizeof (T) */
+                                void *out_data_p, /**< [out] data */
                                 size_t out_data_size) /**< size of the readable data */
 {
   if (*in_out_buffer_offset_p + out_data_size > buffer_size)
@@ -56,8 +56,8 @@ jrt_read_from_buffer_by_offset (const uint8_t *buffer_p, /**< buffer */
 bool __attr_always_inline___
 jrt_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
                                size_t buffer_size, /**< size of buffer */
-                               size_t *in_out_buffer_offset_p, /**< in: offset to read from,
-                                                                *   out: offset, incremented on sizeof (T) */
+                               size_t *in_out_buffer_offset_p,  /**< [in,out] offset to read from /
+                                                                 * incremented on sizeof (T) */
                                const void *data_p, /**< data */
                                size_t data_size) /**< size of the writable data */
 {

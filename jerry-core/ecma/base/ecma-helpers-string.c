@@ -609,7 +609,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
  */
 bool
 ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
-                             uint32_t *out_index_p) /**< out: index */
+                             uint32_t *out_index_p) /**< [out] index */
 {
   bool is_array_index = true;
   if (str_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
@@ -1302,7 +1302,7 @@ ecma_get_magic_string_ex (lit_magic_string_ex_id_t id) /**< external magic strin
  */
 static bool
 ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
-                               lit_magic_string_id_t *out_id_p) /**< out: magic string's id */
+                               lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
 {
   lit_utf8_byte_t utf8_string_buffer[LIT_MAGIC_STRING_LENGTH_LIMIT];
 
@@ -1323,7 +1323,7 @@ ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string *
  */
 static bool
 ecma_is_ex_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
-                                  lit_magic_string_ex_id_t *out_id_p) /**< out: external magic string's id */
+                                  lit_magic_string_ex_id_t *out_id_p) /**< [out] external magic string's id */
 {
   lit_utf8_byte_t utf8_string_buffer[LIT_MAGIC_STRING_LENGTH_LIMIT];
 
@@ -1342,7 +1342,7 @@ ecma_is_ex_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-strin
  */
 bool
 ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
-                      lit_magic_string_id_t *out_id_p) /**< out: magic string's id */
+                      lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
 {
   if (string_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING)
   {
@@ -1375,7 +1375,7 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
  */
 bool
 ecma_is_ex_string_magic (const ecma_string_t *string_p, /**< ecma-string */
-                         lit_magic_string_ex_id_t *out_id_p) /**< out: external magic string's id */
+                         lit_magic_string_ex_id_t *out_id_p) /**< [out] external magic string's id */
 {
   if (string_p->container == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
   {

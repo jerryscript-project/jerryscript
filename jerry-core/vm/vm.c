@@ -308,7 +308,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  *         false - otherwise.
  */
 static bool __attr_always_inline___
-vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< in-out: this value */
+vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value */
 {
   if (ecma_is_value_object (*this_value_p))
   {

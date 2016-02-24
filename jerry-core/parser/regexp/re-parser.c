@@ -110,7 +110,7 @@ re_parse_octal (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
  */
 static ecma_value_t
 re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-                   re_token_t *re_token_p) /**< out: output token */
+                   re_token_t *re_token_p) /**< [out] output token */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -307,7 +307,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
                                                                 *   which adds the char-ranges
                                                                 *   to the bytecode */
                      void *re_ctx_p, /**< regexp compiler context */
-                     re_token_t *out_token_p) /**< out: output token */
+                     re_token_t *out_token_p) /**< [out] output token */
 {
   re_token_type_t token_type = ((re_compiler_ctx_t *) re_ctx_p)->current_token.type;
   out_token_p->qmax = out_token_p->qmin = 1;
@@ -561,7 +561,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
  */
 ecma_value_t
 re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-                     re_token_t *out_token_p) /**< out: output token */
+                     re_token_t *out_token_p) /**< [out] output token */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 

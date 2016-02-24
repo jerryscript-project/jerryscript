@@ -65,9 +65,9 @@ ecma_number_pack (bool sign, /**< sign */
  */
 static void
 ecma_number_unpack (ecma_number_t num, /**< ecma-number */
-                    bool *sign_p, /**< optional out: sign */
-                    uint32_t *biased_exp_p, /**< optional out: biased exponent */
-                    uint64_t *fraction_p) /**< optional out: fraction */
+                    bool *sign_p, /**< [out] sign (optional) */
+                    uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
+                    uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
   const uint32_t fraction_pos = 0;
   const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
@@ -152,9 +152,9 @@ ecma_number_pack (bool sign, /**< sign */
  */
 static void
 ecma_number_unpack (ecma_number_t num, /**< ecma-number */
-                    bool *sign_p, /**< optional out: sign */
-                    uint32_t *biased_exp_p, /**< optional out: biased exponent */
-                    uint64_t *fraction_p) /**< optional out: fraction */
+                    bool *sign_p, /**< [out] sign (optional) */
+                    uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
+                    uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
   const uint32_t fraction_pos = 0;
   const uint32_t biased_exp_pos = fraction_pos + ECMA_NUMBER_FRACTION_WIDTH;
@@ -364,8 +364,8 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
  */
 int32_t
 ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
-                                       uint64_t *out_fraction_p, /**< out: fraction of the number */
-                                       int32_t *out_exponent_p) /**< out: exponent of the number */
+                                       uint64_t *out_fraction_p, /**< [out] fraction of the number */
+                                       int32_t *out_exponent_p) /**< [out] exponent of the number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
 

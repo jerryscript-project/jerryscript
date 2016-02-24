@@ -372,7 +372,7 @@ jerry_api_create_string_value (jerry_api_string_t *value) /**< jerry_api_string_
  *      just when it becomes unnecessary.
  */
 static void
-jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< out: api value */
+jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< [out] api value */
                                            ecma_value_t value) /**< ecma value (undefined,
                                                                 *   null, boolean, number,
                                                                 *   string or object */
@@ -435,7 +435,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
  *      the output ecma value should be freed with ecma_free_value when it becomes unnecessary.
  */
 static void
-jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: ecma value */
+jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out] ecma value */
                                            const jerry_api_value_t *api_value_p) /**< value in Jerry API format */
 {
   switch (api_value_p->type)
@@ -521,7 +521,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< out: 
  * @return completion code
  */
 static jerry_completion_code_t
-jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< out: api value */
+jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< [out] api value */
                                              ecma_value_t completion) /**< completion of 'eval'-mode
                                                                        *   code execution */
 {
@@ -559,7 +559,7 @@ jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< o
  */
 ssize_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string descriptor */
-                                 jerry_api_char_t *buffer_p, /**< output characters buffer */
+                                 jerry_api_char_t *buffer_p, /**< [out] output characters buffer */
                                  ssize_t buffer_size) /**< size of output buffer */
 {
   jerry_assert_api_available ();
@@ -1117,7 +1117,7 @@ jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to dele
  */
 bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
                                        const jerry_api_char_t *field_name_p, /**< field name */
-                                       jerry_api_value_t *field_value_p) /**< out: field value */
+                                       jerry_api_value_t *field_value_p) /**< [out] field value */
 {
   return jerry_api_get_object_field_value_sz (object_p,
                                               field_name_p,
@@ -1197,7 +1197,7 @@ bool
 jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object */
                                      const jerry_api_char_t *field_name_p, /**< name of the field */
                                      jerry_api_size_t field_name_size, /**< size of field name in bytes */
-                                     jerry_api_value_t *field_value_p) /**< out: field value, if retrieved
+                                     jerry_api_value_t *field_value_p) /**< [out] field value, if retrieved
  * successfully */
 {
   jerry_assert_api_available ();
@@ -1293,7 +1293,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
  */
 bool
 jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to get handle from */
-                                    uintptr_t *out_handle_p) /**< out: handle value */
+                                    uintptr_t *out_handle_p) /**< [out] handle value */
 {
   jerry_assert_api_available ();
 
@@ -1454,7 +1454,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
  * Construct new TypeError object
  */
 static void
-jerry_api_construct_type_error (jerry_api_value_t *retval_p) /**< out: value with constructed
+jerry_api_construct_type_error (jerry_api_value_t *retval_p) /**< [out] value with constructed
                                                               *        TypeError object */
 {
   ecma_object_t *type_error_obj_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
@@ -1578,7 +1578,7 @@ jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
                 size_t source_size, /**< length of source code */
                 bool is_direct, /**< perform eval invocation in direct mode */
                 bool is_strict, /**< perform eval as it is called from strict mode code */
-                jerry_api_value_t *retval_p) /**< out: returned value */
+                jerry_api_value_t *retval_p) /**< [out] returned value */
 {
   jerry_assert_api_available ();
 
@@ -1665,9 +1665,9 @@ jerry_cleanup (void)
  * Get Jerry configured memory limits
  */
 void
-jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< out: Jerry's maximum usage of
+jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< [out] Jerry's maximum usage of
                                                             *        data + bss + brk sections */
-                         size_t *out_stack_limit_p) /**< out: Jerry's maximum usage of stack */
+                         size_t *out_stack_limit_p) /**< [out] Jerry's maximum usage of stack */
 {
   *out_data_bss_brk_limit_p = CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE;
   *out_stack_limit_p = CONFIG_MEM_STACK_LIMIT;
@@ -2286,7 +2286,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
                                           *   buffer could be freed after the call).
                                           *   Otherwise (if the flag is not set) - the buffer could only be
                                           *   freed after the engine stops (i.e. after call to jerry_cleanup). */
-                     jerry_api_value_t *retval_p) /**< out: returned value (ECMA-262 'undefined' if
+                     jerry_api_value_t *retval_p) /**< [out] returned value (ECMA-262 'undefined' if
                                                    * code is executed as global scope code) */
 {
   jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));

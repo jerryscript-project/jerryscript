@@ -925,7 +925,7 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
  * Insert leading zeros to a string of a number if needed.
  */
 void
-ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< input/output string */
+ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< [in,out] ecma string */
                                 ecma_number_t num, /**< input number */
                                 uint32_t length) /**< length of string of number */
 {

@@ -567,7 +567,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
  */
 ecma_value_t
 ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
-                                ecma_property_descriptor_t *out_prop_desc_p) /**< out: filled property descriptor
+                                ecma_property_descriptor_t *out_prop_desc_p) /**< [out] filled property descriptor
                                                                                   if return value is normal
                                                                                   empty completion value */
 {

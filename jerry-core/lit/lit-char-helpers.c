@@ -392,7 +392,7 @@ lit_char_is_word_char (ecma_char_t c) /**< code unit */
  */
 lit_utf8_size_t
 lit_char_to_lower_case (ecma_char_t character, /**< input character value */
-                        ecma_char_t *output_buffer_p, /**< buffer for the result characters */
+                        ecma_char_t *output_buffer_p, /**< [out] buffer for the result characters */
                         size_t buffer_size) /**< buffer size */
 {
   TODO ("Needs a proper lower case implementation. See issue #323.");

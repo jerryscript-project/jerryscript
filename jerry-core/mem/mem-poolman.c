@@ -201,7 +201,7 @@ mem_pools_collect_empty ()
  * Get pools memory usage statistics
  */
 void
-mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p) /**< out: pools' stats */
+mem_pools_get_stats (mem_pools_stats_t *out_pools_stats_p) /**< [out] pools' stats */
 {
   JERRY_ASSERT (out_pools_stats_p != NULL);
 

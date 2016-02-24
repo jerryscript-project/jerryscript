@@ -631,7 +631,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-re_compile_bytecode (re_compiled_code_t **out_bytecode_p, /**< out:pointer to bytecode */
+re_compile_bytecode (re_compiled_code_t **out_bytecode_p, /**< [out]pointer to bytecode */
                      ecma_string_t *pattern_str_p, /**< pattern */
                      uint16_t flags) /**< flags */
 {

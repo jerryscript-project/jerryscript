@@ -972,7 +972,7 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 static void
 ecma_number_helper_binary_to_decimal (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARG (fraction_uint128), /**< mantissa */
                                       int32_t binary_exponent, /**< binary exponent */
-                                      int32_t *out_decimal_exp_p) /**< out: decimal exponent */
+                                      int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
 {
   int32_t decimal_exp = 0;
 
@@ -1043,9 +1043,9 @@ ecma_number_helper_binary_to_decimal (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARG 
   */
 void
 ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
-                        uint64_t *out_digits_p, /**< out: digits */
-                        int32_t *out_digits_num_p, /**< out: number of digits */
-                        int32_t *out_decimal_exp_p) /**< out: decimal exponent */
+                        uint64_t *out_digits_p, /**< [out] digits */
+                        int32_t *out_digits_num_p, /**< [out] number of digits */
+                        int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
   JERRY_ASSERT (!ecma_number_is_zero (num));

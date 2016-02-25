@@ -2088,7 +2088,7 @@ lexer_decode_unicode_sequence (const uint8_t *source_p) /**< source pointer */
  */
 int
 lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
-                        lexer_lit_location_t *right) /**< right identifier */
+                        const lexer_lit_location_t *right) /**< right identifier */
 {
   const uint8_t *left_p;
   const uint8_t *right_p;

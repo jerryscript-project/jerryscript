@@ -355,7 +355,7 @@ void lexer_construct_literal_object (parser_context_t *, lexer_lit_location_t *,
 int lexer_construct_number_object (parser_context_t *, int, int);
 void lexer_construct_function_object (parser_context_t *, uint32_t);
 void lexer_construct_regexp_object (parser_context_t *, int);
-int lexer_same_identifiers (lexer_lit_location_t *, lexer_lit_location_t *);
+int lexer_same_identifiers (lexer_lit_location_t *, const lexer_lit_location_t *);
 
 /* Parser functions. */
 

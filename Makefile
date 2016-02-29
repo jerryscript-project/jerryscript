@@ -86,6 +86,11 @@ BUILD_NAME:=
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC)
   endif
 
+ # Apply strip to release binaries
+  ifneq ($(STRIP_RELEASE_BINARY),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DSTRIP_RELEASE_BINARY=$(STRIP_RELEASE_BINARY)
+  endif
+
 # Directories
 export ROOT_DIR := $(shell pwd)
 export BUILD_DIR_PREFIX := $(ROOT_DIR)/build/obj

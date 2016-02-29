@@ -49,56 +49,47 @@ export MCU_MODS := cp cp_minimal
 export NATIVE_MODS := $(MCU_MODS) mem_stats mem_stress_test
 
 # Options
- # Valgrind
-  VALGRIND ?= OFF
+CMAKE_DEFINES:=
+BUILD_NAME:=
 
-  ifneq ($(VALGRIND),ON)
-   VALGRIND := OFF
+ # Valgrind
+  ifneq ($(VALGRIND),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_VALGRIND=$(VALGRIND)
+   BUILD_NAME:=$(BUILD_NAME)-VALGRIND-$(VALGRIND)
   endif
 
  # Valgrind Freya
-  VALGRIND_FREYA ?= OFF
-
-  ifneq ($(VALGRIND_FREYA),ON)
-   VALGRIND_FREYA := OFF
+  ifneq ($(VALGRIND_FREYA),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_VALGRIND_FREYA=$(VALGRIND_FREYA)
+   BUILD_NAME:=$(BUILD_NAME)-VALGRIND_FREYA-$(VALGRIND_FREYA)
   endif
 
  # LTO
-  ifeq ($(NATIVE_SYSTEM),darwin)
-   LTO ?= OFF
-  else
-   LTO ?= ON
-  endif
-
-  ifneq ($(LTO),ON)
-   LTO := OFF
+  ifneq ($(LTO),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_LTO=$(LTO)
+   BUILD_NAME:=$(BUILD_NAME)-LTO-$(LTO)
   endif
 
  # LOG
-  LOG ?= OFF
-  ifneq ($(LOG),ON)
-   LOG := OFF
+  ifneq ($(LOG),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_LOG=$(LOG)
   endif
 
  # All-in-one build
-  ifeq ($(NATIVE_SYSTEM),darwin)
-   ALL_IN_ONE ?= ON
-  else
-   ALL_IN_ONE ?= OFF
+  ifneq ($(ALL_IN_ONE),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE)
+   BUILD_NAME:=$(BUILD_NAME)-ALL_IN_ONE-$(ALL_IN_ONE)
   endif
 
-  ifneq ($(ALL_IN_ONE),ON)
-   ALL_IN_ONE := OFF
-  endif
-
-# External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
-  USE_COMPILER_DEFAULT_LIBC ?= NO
+  ifneq ($(USE_COMPILER_DEFAULT_LIBC),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC)
+  endif
 
 # Directories
 export ROOT_DIR := $(shell pwd)
 export BUILD_DIR_PREFIX := $(ROOT_DIR)/build/obj
-export BUILD_DIR := $(BUILD_DIR_PREFIX)-VALGRIND-$(VALGRIND)-VALGRIND_FREYA-$(VALGRIND_FREYA)-LTO-$(LTO)-ALL_IN_ONE-$(ALL_IN_ONE)
+export BUILD_DIR := $(BUILD_DIR_PREFIX)$(BUILD_NAME)
 export OUT_DIR := $(ROOT_DIR)/build/bin
 export PREREQUISITES_STATE_DIR := $(ROOT_DIR)/build/prerequisites
 
@@ -220,12 +211,7 @@ define GEN_MAKEFILE_RULE
 .PHONY: $(1)/Makefile
 $(1)/Makefile: $(1)/toolchain.config
 	$$(Q) $$(call SHLOG,(cd $(1) && cmake -G $$(BUILD_GENERATOR) \
-          -DENABLE_VALGRIND=$$(VALGRIND) \
-          -DENABLE_VALGRIND_FREYA=$$(VALGRIND_FREYA) \
-          -DENABLE_LOG=$$(LOG) \
-          -DENABLE_LTO=$$(LTO) \
-          -DENABLE_ALL_IN_ONE=$$(ALL_IN_ONE) \
-          -DUSE_COMPILER_DEFAULT_LIBC=$$(USE_COMPILER_DEFAULT_LIBC) \
+          $$(CMAKE_DEFINES) \
           -DCMAKE_TOOLCHAIN_FILE=`cat toolchain.config` $$(ROOT_DIR) 2>&1),$(1)/cmake.log,CMake run)
 endef
 

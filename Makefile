@@ -94,16 +94,6 @@ export NATIVE_MODS := $(MCU_MODS) mem_stats mem_stress_test
 # External build configuration
  # Flag, indicating whether to use compiler's default libc (YES / NO)
   USE_COMPILER_DEFAULT_LIBC ?= NO
- # List of include paths for external libraries (semicolon-separated)
-  EXTERNAL_LIBS_INTERFACE ?=
- # External libc interface
-  ifeq ($(USE_COMPILER_DEFAULT_LIBC),YES)
-   ifneq ($(EXTERNAL_LIBC_INTERFACE),)
-    $(error EXTERNAL_LIBC_INTERFACE should not be specified in case compiler's default libc is used)
-   endif
-  endif
- # Compiler to use for external build
- EXTERNAL_C_COMPILER ?= arm-none-eabi-gcc
 
 # Directories
 export ROOT_DIR := $(shell pwd)

@@ -90,34 +90,32 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
 {
   JERRY_ASSERT (code_p != NULL);
 
-  ecma_value_t completion;
+  ecma_value_t ret_value;
 
   ecma_compiled_code_t *bytecode_data_p;
   jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
+  jerry_api_object_t *error_obj_p = NULL;
 
   parse_status = parser_parse_eval (code_p,
                                     code_buffer_size,
                                     is_strict_call,
-                                    &bytecode_data_p);
+                                    &bytecode_data_p,
+                                    &error_obj_p);
 
-  if (parse_status == JSP_STATUS_SYNTAX_ERROR)
+  if (parse_status == JSP_STATUS_OK)
   {
-    completion = ecma_raise_syntax_error ("");
-  }
-  else if (parse_status == JSP_STATUS_REFERENCE_ERROR)
-  {
-    completion = ecma_raise_reference_error ("");
+    ret_value = vm_run_eval (bytecode_data_p, is_direct);
   }
   else
   {
-    JERRY_ASSERT (parse_status == JSP_STATUS_OK);
+    JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR);
 
-    completion = vm_run_eval (bytecode_data_p, is_direct);
+    ret_value = ecma_make_error_obj_value (error_obj_p);
   }
 
-  return completion;
+  return ret_value;
 } /* ecma_op_eval_chars_buffer */
 
 /**

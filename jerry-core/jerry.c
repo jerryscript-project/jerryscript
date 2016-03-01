@@ -1704,7 +1704,8 @@ jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callbac
  */
 bool
 jerry_parse (const jerry_api_char_t *source_p, /**< script source */
-             size_t source_size) /**< script source size */
+             size_t source_size, /**< script source size */
+             jerry_api_object_t **error_obj_p) /**< [out] error object */
 {
   jerry_assert_api_available ();
 
@@ -1717,11 +1718,12 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
 
   parse_status = parser_parse_script (source_p,
                                       source_size,
-                                      &bytecode_data_p);
+                                      &bytecode_data_p,
+                                      error_obj_p);
 
   if (parse_status != JSP_STATUS_OK)
   {
-    JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR || parse_status == JSP_STATUS_REFERENCE_ERROR);
+    JERRY_ASSERT (parse_status == JSP_STATUS_SYNTAX_ERROR);
 
     return false;
   }
@@ -1747,11 +1749,11 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run (void)
+jerry_run (jerry_api_object_t **error_obj_p)
 {
   jerry_assert_api_available ();
 
-  return vm_run_global ();
+  return vm_run_global (error_obj_p);
 } /* jerry_run */
 
 /**
@@ -1767,8 +1769,9 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
   jerry_init (flags);
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
+  jerry_api_object_t *error_obj_p = NULL;
 
-  if (!jerry_parse (script_source, script_source_size))
+  if (!jerry_parse (script_source, script_source_size, &error_obj_p))
   {
     /* unhandled SyntaxError */
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
@@ -1777,7 +1780,7 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
   {
     if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
     {
-      ret_code = jerry_run ();
+      ret_code = jerry_run (&error_obj_p);
     }
   }
 
@@ -2055,17 +2058,25 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   size_t compiled_code_start = snapshot_buffer_write_offset;
 
   snapshot_report_byte_code_compilation = true;
+  jerry_api_object_t *error_obj_p = NULL;
 
   if (is_for_global)
   {
-    parse_status = parser_parse_script (source_p, source_size, &bytecode_data_p);
+    parse_status = parser_parse_script (source_p, source_size, &bytecode_data_p, &error_obj_p);
   }
   else
   {
     parse_status = parser_parse_eval (source_p,
                                       source_size,
                                       false,
-                                      &bytecode_data_p);
+                                      &bytecode_data_p,
+                                      &error_obj_p);
+  }
+
+  if (parse_status != JSP_STATUS_OK)
+  {
+    JERRY_ASSERT (error_obj_p != NULL);
+    ecma_deref_object (error_obj_p);
   }
 
   snapshot_report_byte_code_compilation = false;
@@ -2361,7 +2372,21 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   {
     vm_init (bytecode_p, false);
 
-    ret_code = vm_run_global ();
+    ecma_object_t *error_obj_p = NULL;
+
+    ret_code = vm_run_global (&error_obj_p);
+
+    if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
+    {
+      JERRY_ASSERT (error_obj_p != NULL);
+
+      ecma_deref_object (error_obj_p);
+    }
+    else
+    {
+      JERRY_ASSERT (ret_code == JERRY_COMPLETION_CODE_OK);
+      JERRY_ASSERT (error_obj_p == NULL);
+    }
 
     vm_finalize ();
   }
@@ -2385,3 +2410,49 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
 #endif /* !JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
+
+/**
+ * Call the ToString ecma builtin operation on the api value.
+ *
+ * @return string value
+ */
+jerry_api_string_t *
+jerry_api_value_to_string (const jerry_api_value_t *in_value_p) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  ecma_value_t in_value;
+  jerry_api_convert_api_value_to_ecma_value (&in_value, in_value_p);
+
+  ecma_value_t str_value = ecma_op_to_string (in_value);
+
+  ecma_free_value (in_value);
+
+  return (jerry_api_string_t *) ecma_get_string_from_value (str_value);
+} /* jerry_api_value_to_string */
+
+/**
+ * Get size of Jerry string
+ *
+ * @return number of bytes in the buffer needed to represent the string
+ */
+jerry_api_size_t
+jerry_api_get_string_size (const jerry_api_string_t *str_p) /**< input string */
+{
+  jerry_assert_api_available ();
+
+  return ecma_string_get_size ((ecma_string_t *) str_p);
+} /* jerry_api_get_string_size */
+
+/**
+ * Get length of Jerry string
+ *
+ * @return number of characters in the string
+ */
+jerry_api_length_t
+jerry_api_get_string_length (const jerry_api_string_t *str_p) /**< input string */
+{
+  jerry_assert_api_available ();
+
+  return ecma_string_get_length ((ecma_string_t *) str_p);
+} /* jerry_api_get_string_length */

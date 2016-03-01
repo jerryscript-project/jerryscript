@@ -2254,19 +2254,22 @@ parser_set_show_instrs (int show_instrs) /**< flag indicating whether to dump by
 #endif /* PARSER_DUMP_BYTE_CODE */
 } /* parser_set_show_instrs */
 
-
 /**
  * Parse EcamScript source code
  */
 jsp_status_t
 parser_parse_script (const jerry_api_char_t *source_p, /**< source code */
                      size_t size, /**< size of the source code */
-                     ecma_compiled_code_t **bytecode_data_p) /**< result */
+                     ecma_compiled_code_t **bytecode_data_p, /**< [out] JS bytecode */
+                     jerry_api_object_t **error_obj_p) /**< [out] error object */
 {
-  *bytecode_data_p = parser_parse_source (source_p, size, false, NULL);
+  parser_error_location parse_error;
+  *bytecode_data_p = parser_parse_source (source_p, size, false, &parse_error);
 
   if (!*bytecode_data_p)
   {
+    *error_obj_p = jerry_api_create_error (JERRY_API_ERROR_SYNTAX,
+                                           (const jerry_api_char_t *) parser_error_to_string (parse_error.error));
     return JSP_STATUS_SYNTAX_ERROR;
   }
 
@@ -2280,18 +2283,21 @@ jsp_status_t
 parser_parse_eval (const jerry_api_char_t *source_p, /**< source code */
                    size_t size, /**< size of the source code */
                    bool is_strict, /**< strict mode */
-                   ecma_compiled_code_t **bytecode_data_p) /**< result */
+                   ecma_compiled_code_t **bytecode_data_p, /**< [out] JS bytecode */
+                   jerry_api_object_t **error_obj_p) /**< [out] error object */
 {
-  *bytecode_data_p = parser_parse_source (source_p, size, is_strict, NULL);
+  parser_error_location parse_error;
+  *bytecode_data_p = parser_parse_source (source_p, size, is_strict, &parse_error);
 
   if (!*bytecode_data_p)
   {
+    *error_obj_p = jerry_api_create_error (JERRY_API_ERROR_SYNTAX,
+                                           (const jerry_api_char_t *) parser_error_to_string (parse_error.error));
     return JSP_STATUS_SYNTAX_ERROR;
   }
 
   return JSP_STATUS_OK;
 } /* parser_parse_eval */
-
 
 /**
  * @}

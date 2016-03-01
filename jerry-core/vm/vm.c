@@ -177,7 +177,7 @@ static const uint32_t vm_ext_decode_table[] =
  * @return completion code
  */
 jerry_completion_code_t
-vm_run_global (void)
+vm_run_global (ecma_object_t **error_obj_p)
 {
   jerry_completion_code_t ret_code;
 
@@ -186,23 +186,23 @@ vm_run_global (void)
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
 
-  ecma_value_t completion_value = vm_run (__program,
-                                          ecma_make_object_value (glob_obj_p),
-                                          lex_env_p,
-                                          false,
-                                          NULL,
-                                          0);
+  ecma_value_t ret_value = vm_run (__program,
+                                   ecma_make_object_value (glob_obj_p),
+                                   lex_env_p,
+                                   false,
+                                   NULL,
+                                   0);
 
-  if (ecma_is_value_error (completion_value))
+  if (ecma_is_value_error (ret_value))
   {
+    *error_obj_p = ecma_get_object_from_value (ret_value);
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
   else
   {
+    ecma_free_value (ret_value);
     ret_code = JERRY_COMPLETION_CODE_OK;
   }
-
-  ecma_free_value (completion_value);
 
   ecma_deref_object (glob_obj_p);
   ecma_deref_object (lex_env_p);

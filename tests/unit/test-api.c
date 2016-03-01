@@ -332,14 +332,15 @@ main (void)
   jerry_api_object_t *global_obj_p, *obj_p;
   jerry_api_object_t *external_func_p, *external_construct_p;
   jerry_api_object_t *throw_test_handler_p;
+  jerry_api_object_t *err_obj_p = NULL;
   jerry_api_value_t res, args[2];
   char buffer[32];
 
-  is_ok = jerry_parse ((jerry_api_char_t *) test_source, strlen (test_source));
-  JERRY_ASSERT (is_ok);
+  is_ok = jerry_parse ((jerry_api_char_t *) test_source, strlen (test_source), &err_obj_p);
+  JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
-  is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);
-  JERRY_ASSERT (is_ok);
+  is_ok = (jerry_run (&err_obj_p) == JERRY_COMPLETION_CODE_OK);
+  JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
   global_obj_p = jerry_api_get_global ();
 
@@ -684,11 +685,11 @@ main (void)
                                          magic_string_lengths);
 
   const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
-  is_ok = jerry_parse ((jerry_api_char_t *) ms_code_src_p, strlen (ms_code_src_p));
-  JERRY_ASSERT (is_ok);
+  is_ok = jerry_parse ((jerry_api_char_t *) ms_code_src_p, strlen (ms_code_src_p), &err_obj_p);
+  JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
-  is_ok = (jerry_run () == JERRY_COMPLETION_CODE_OK);
-  JERRY_ASSERT (is_ok);
+  is_ok = (jerry_run (&err_obj_p) == JERRY_COMPLETION_CODE_OK);
+  JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
   jerry_cleanup ();
 

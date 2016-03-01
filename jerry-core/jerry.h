@@ -93,8 +93,8 @@ void jerry_cleanup (void);
 void jerry_get_memory_limits (size_t *, size_t *);
 void jerry_reg_err_callback (jerry_error_callback_t);
 
-bool jerry_parse (const jerry_api_char_t *, size_t);
-jerry_completion_code_t jerry_run (void);
+bool jerry_parse (const jerry_api_char_t *, size_t, jerry_api_object_t **);
+jerry_completion_code_t jerry_run (jerry_api_object_t **);
 jerry_completion_code_t jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
 
 /**

@@ -135,16 +135,20 @@ typedef enum
 {
   JSP_STATUS_OK,             /**< parse finished successfully, no early errors occured */
   JSP_STATUS_SYNTAX_ERROR,   /**< SyntaxError early error occured */
-  JSP_STATUS_REFERENCE_ERROR /**< ReferenceError early error occured */
 } jsp_status_t;
 
 extern void parser_set_show_instrs (int);
 
 /* Note: source must be a valid UTF-8 string */
-extern jsp_status_t parser_parse_script (const jerry_api_char_t *, size_t,
-                                         ecma_compiled_code_t **);
-extern jsp_status_t parser_parse_eval (const jerry_api_char_t *, size_t, bool,
-                                       ecma_compiled_code_t **);
+extern jsp_status_t parser_parse_script (const jerry_api_char_t *,
+                                         size_t,
+                                         ecma_compiled_code_t **,
+                                         jerry_api_object_t **);
+extern jsp_status_t parser_parse_eval (const jerry_api_char_t *,
+                                       size_t,
+                                       bool,
+                                       ecma_compiled_code_t **,
+                                       jerry_api_object_t **);
 
 const char *parser_error_to_string (parser_error_t);
 

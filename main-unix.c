@@ -411,6 +411,8 @@ main (int argc,
     }
   }
 
+  jerry_api_object_t *err_obj_p = NULL;
+
   if (is_ok)
   {
     size_t source_size;
@@ -450,14 +452,14 @@ main (int argc,
       }
       else
       {
-        if (!jerry_parse (source_p, source_size))
+        if (!jerry_parse (source_p, source_size, &err_obj_p))
         {
           /* unhandled SyntaxError */
           ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
         }
         else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
         {
-          ret_code = jerry_run ();
+          ret_code = jerry_run (&err_obj_p);
         }
       }
     }
@@ -534,8 +536,6 @@ main (int argc,
     jerry_api_release_value (&print_function);
   }
 
-  jerry_cleanup ();
-
 #ifdef JERRY_ENABLE_LOG
   if (jerry_log_file && jerry_log_file != stdout)
   {
@@ -546,10 +546,36 @@ main (int argc,
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_OK;
   }
-  else
+  else if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
   {
+    if (err_obj_p != NULL)
+    {
+      jerry_api_char_t err_str_buf[256];
+
+      jerry_api_value_t err_value = jerry_api_create_object_value (err_obj_p);
+      jerry_api_string_t *err_str_p = jerry_api_value_to_string (&err_value);
+
+      jerry_api_size_t err_str_size = jerry_api_get_string_size (err_str_p);
+      JERRY_ASSERT (err_str_size < 256);
+      ssize_t sz = jerry_api_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
+      JERRY_ASSERT (sz > 0);
+      err_str_buf[err_str_size] = 0;
+
+      JERRY_ERROR_MSG ("%s\n", err_str_buf);
+
+      jerry_api_release_string (err_str_p);
+      jerry_api_release_object (err_obj_p);
+    }
+
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
+
+  JERRY_ASSERT (ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT
+                || ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION);
+  jerry_cleanup ();
+  return JERRY_STANDALONE_EXIT_CODE_FAIL;
 } /* main */

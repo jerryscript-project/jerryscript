@@ -328,6 +328,128 @@ vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value
 } /* vm_get_implicit_this_value */
 
 /**
+ * 'Function call' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.2.3
+ */
+static void
+opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
+{
+  uint8_t opcode = frame_ctx_p->byte_code_p[0];
+  uint32_t arguments_list_len;
+
+  if (opcode >= CBC_CALL0)
+  {
+    arguments_list_len = (unsigned int) ((opcode - CBC_CALL0) / 6);
+  }
+  else
+  {
+    arguments_list_len = frame_ctx_p->byte_code_p[1];
+  }
+
+  bool is_call_prop = ((opcode - CBC_CALL) % 6) >= 3;
+
+  ecma_value_t this_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
+
+  if (is_call_prop)
+  {
+    this_value = stack_top_p[-3];
+
+    if (vm_get_implicit_this_value (&this_value))
+    {
+      ecma_free_value (stack_top_p[-3]);
+      stack_top_p[-3] = this_value;
+    }
+  }
+
+  ecma_value_t func_value = stack_top_p[-1];
+  ecma_value_t completion_value;
+
+  if (!ecma_op_is_callable (func_value))
+  {
+    completion_value = ecma_raise_type_error ("");
+  }
+  else
+  {
+    ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
+
+    completion_value = ecma_op_function_call (func_obj_p,
+                                              this_value,
+                                              stack_top_p,
+                                              arguments_list_len);
+  }
+
+  is_direct_eval_form_call = false;
+
+  /* Free registers. */
+  for (uint32_t i = 0; i < arguments_list_len; i++)
+  {
+    ecma_free_value (stack_top_p[i]);
+  }
+
+  if (is_call_prop)
+  {
+    ecma_free_value (*(--stack_top_p));
+    ecma_free_value (*(--stack_top_p));
+  }
+
+  ecma_free_value (stack_top_p[-1]);
+  stack_top_p[-1] = completion_value;
+
+  frame_ctx_p->stack_top_p = stack_top_p;
+} /* opfunc_call */
+
+/**
+ * 'Constructor call' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.2.2
+ */
+static void
+opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
+{
+  uint8_t opcode = frame_ctx_p->byte_code_p[0];
+  unsigned int arguments_list_len;
+
+  if (opcode >= CBC_NEW0)
+  {
+    arguments_list_len = (unsigned int) (opcode - CBC_NEW0);
+  }
+  else
+  {
+    arguments_list_len = frame_ctx_p->byte_code_p[1];
+  }
+
+  ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
+  ecma_value_t constructor_value = stack_top_p[-1];
+  ecma_value_t completion_value;
+
+  if (!ecma_is_constructor (constructor_value))
+  {
+    completion_value = ecma_raise_type_error ("");
+  }
+  else
+  {
+    ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
+
+    completion_value = ecma_op_function_construct (constructor_obj_p,
+                                                   stack_top_p,
+                                                   arguments_list_len);
+  }
+
+  /* Free registers. */
+  for (uint32_t i = 0; i < arguments_list_len; i++)
+  {
+    ecma_free_value (stack_top_p[i]);
+  }
+
+  ecma_free_value (stack_top_p[-1]);
+  stack_top_p[-1] = completion_value;
+
+  frame_ctx_p->stack_top_p = stack_top_p;
+} /* opfunc_construct */
+
+/**
  * Indicate which value should be freed.
  */
 enum
@@ -572,7 +694,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
  *
  * @return ecma value
  */
-ecma_value_t
+static ecma_value_t __attr_noinline___
 vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
@@ -621,7 +743,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     const_literal_end = args_p->const_literal_end;
   }
 
-  stack_top_p = frame_ctx_p->registers_p + register_end;
+  stack_top_p = frame_ctx_p->stack_top_p;
 
   /* Outer loop for exception handling. */
   while (true)
@@ -1216,50 +1338,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK);
           continue;
         }
-        case VM_OC_CALL_N:
-        case VM_OC_CALL_PROP_N:
-        {
-          right_value = (unsigned int) ((opcode - CBC_CALL0) / 6);
-          /* FALLTHRU */
-        }
         case VM_OC_CALL:
-        case VM_OC_CALL_PROP:
         {
-          ecma_value_t this_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+          JERRY_ASSERT (free_flags == 0);
 
-          stack_top_p -= right_value;
-
-          if (VM_OC_GROUP_GET_INDEX (opcode_data) >= VM_OC_CALL_PROP_N)
+          if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
           {
-            this_value = stack_top_p[-3];
-
-            if (vm_get_implicit_this_value (&this_value))
-            {
-              ecma_free_value (stack_top_p[-3]);
-              stack_top_p[-3] = this_value;
-            }
+            frame_ctx_p->call_operation = VM_EXEC_CALL;
+            frame_ctx_p->byte_code_p = byte_code_start_p;
+            frame_ctx_p->stack_top_p = stack_top_p;
+            frame_ctx_p->call_block_result = block_result;
+            return;
           }
+          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
 
-          last_completion_value = opfunc_call_n (this_value,
-                                                 stack_top_p[-1],
-                                                 stack_top_p,
-                                                 right_value);
-
-          is_direct_eval_form_call = false;
-
-          /* Free registers. */
-          for (uint32_t i = 0; i < right_value; i++)
-          {
-            ecma_free_value (stack_top_p[i]);
-          }
-
-          ecma_free_value (*(--stack_top_p));
-
-          if (VM_OC_GROUP_GET_INDEX (opcode_data) >= VM_OC_CALL_PROP_N)
-          {
-            ecma_free_value (*(--stack_top_p));
-            ecma_free_value (*(--stack_top_p));
-          }
+          last_completion_value = *(--stack_top_p);
+          block_result = frame_ctx_p->call_block_result;
 
           if (ecma_is_value_error (last_completion_value))
           {
@@ -1274,29 +1368,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_free_value (last_completion_value);
           }
-
           break;
-        }
-        case VM_OC_NEW_N:
-        {
-          right_value = opcode - (uint32_t) CBC_NEW0;
-          /* FALLTHRU */
         }
         case VM_OC_NEW:
         {
-          stack_top_p -= right_value;
+          JERRY_ASSERT (free_flags == 0);
 
-          last_completion_value = opfunc_construct_n (stack_top_p[-1],
-                                                      stack_top_p,
-                                                      right_value);
-
-          /* Free registers. */
-          for (uint32_t i = 0; i < right_value; i++)
+          if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
           {
-            ecma_free_value (stack_top_p[i]);
+            frame_ctx_p->call_operation = VM_EXEC_CONSTRUCT;
+            frame_ctx_p->byte_code_p = byte_code_start_p;
+            frame_ctx_p->stack_top_p = stack_top_p;
+            frame_ctx_p->call_block_result = block_result;
+            return;
           }
+          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
 
-          ecma_free_value (*(--stack_top_p));
+          last_completion_value = *(--stack_top_p);
+          block_result = frame_ctx_p->call_block_result;
 
           if (ecma_is_value_error (last_completion_value))
           {
@@ -2265,6 +2354,8 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     register_end = args_p->register_end;
   }
 
+  frame_ctx_p->stack_top_p = frame_ctx_p->registers_p + register_end;
+
   if (arg_list_len == 0)
   {
     ecma_collection_header_t *arg_collection_p = (ecma_collection_header_t *) arg_p;
@@ -2320,9 +2411,30 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   prev_context_p = vm_top_context_p;
   vm_top_context_p = frame_ctx_p;
 
-  vm_init_loop (frame_ctx_p);
+  completion_value = vm_init_loop (frame_ctx_p);
 
-  completion_value = vm_loop (frame_ctx_p);
+  if (!ecma_is_value_error (completion_value))
+  {
+    while (true)
+    {
+      completion_value = vm_loop (frame_ctx_p);
+
+      if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
+      {
+        break;
+      }
+
+      if (frame_ctx_p->call_operation == VM_EXEC_CALL)
+      {
+        opfunc_call (frame_ctx_p);
+      }
+      else
+      {
+        JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
+        opfunc_construct (frame_ctx_p);
+      }
+    }
+  }
 
   /* Free arguments and registers */
   for (uint32_t i = 0; i < register_end; i++)
@@ -2418,6 +2530,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.context_depth = 0;
   frame_ctx.is_eval_code = is_eval_code;
+  frame_ctx.call_operation = VM_NO_EXEC_OP;
 
   arg_list_len++;
 

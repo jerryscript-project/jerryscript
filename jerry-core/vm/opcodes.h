@@ -57,14 +57,6 @@ ecma_value_t
 vm_var_decl (vm_frame_ctx_t *, ecma_string_t *);
 
 ecma_value_t
-opfunc_call_n (ecma_value_t, ecma_value_t,
-               const ecma_value_t *, ecma_length_t);
-
-ecma_value_t
-opfunc_construct_n (ecma_value_t,
-                    const ecma_value_t *, ecma_length_t);
-
-ecma_value_t
 opfunc_equal_value (ecma_value_t, ecma_value_t);
 
 ecma_value_t

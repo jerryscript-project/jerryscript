@@ -107,14 +107,8 @@ typedef enum
   VM_OC_THROW,                   /**< throw */
   VM_OC_THROW_REFERENCE_ERROR,   /**< throw reference error */
 
-  /* The PROP forms must get the highest opcodes. */
   VM_OC_EVAL,                    /**< eval */
-  VM_OC_CALL_N,                  /**< call n */
   VM_OC_CALL,                    /**< call */
-  VM_OC_CALL_PROP_N,             /**< call property n */
-  VM_OC_CALL_PROP,               /**< call property */
-
-  VM_OC_NEW_N,                   /**< new n */
   VM_OC_NEW,                     /**< new */
 
   VM_OC_JUMP,                    /**< jump */
@@ -185,12 +179,23 @@ typedef enum
   VM_OC_PUT_BLOCK = VM_OC_PUT_DATA_CREATE_FLAG (0x8),
 } vm_oc_put_types;
 
+/**
+ * Non-recursive vm_loop: the vm_loop can be suspended
+ * to execute a call /construct operation. These return
+ * types of the vm_loop tells whether a call operation
+ * is in progress or the vm_loop is finished.
+ */
+typedef enum
+{
+  VM_NO_EXEC_OP,                 /**< do nothing */
+  VM_EXEC_CALL,                  /**< invoke a function */
+  VM_EXEC_CONSTRUCT,             /**< construct a new object */
+} vm_call_operation;
+
 extern void vm_init (ecma_compiled_code_t *, bool);
 extern void vm_finalize (void);
 extern jerry_completion_code_t vm_run_global (void);
 extern ecma_value_t vm_run_eval (ecma_compiled_code_t *, bool);
-
-extern ecma_value_t vm_loop (vm_frame_ctx_t *);
 
 extern ecma_value_t vm_run (const ecma_compiled_code_t *, ecma_value_t,
                             ecma_object_t *, bool, const ecma_value_t *,

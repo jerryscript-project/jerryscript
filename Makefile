@@ -227,7 +227,7 @@ $(foreach __SYSTEM,$(NATIVE_SYSTEM) $(MCU_SYSTEMS), \
 # $(3) - target(s) to build with the cmake-generated Makefile
 define BUILD_RULE
 .PHONY: $(1)
-$(1): $$(BUILD_DIR)/$(2)/Makefile prerequisites
+$(1): $$(BUILD_DIR)/$(2)/Makefile
 	$$(Q) $$(call SHLOG,$$(BUILD_COMMAND) -C $$(BUILD_DIR)/$(2) $(3),$$(BUILD_DIR)/$(2)/$(1).log,Build)
 	$$(Q) $$(foreach __TARGET,$(3), \
             mkdir -p $$(OUT_DIR)/$$(__TARGET); \

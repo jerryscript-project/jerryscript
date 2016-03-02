@@ -76,7 +76,7 @@ fi
 
 for bench in $BENCHMARKS
 do
-  test=`basename -s '.js' $bench`
+  test=`basename $bench .js`
 
   echo "$test" | awk "$PRINT_TEST_NAME_AWK_SCRIPT"
   MEM_STATS=$("$JERRY_MEM_STATS" --mem-stats --mem-stats-separate $bench | grep -e "Peak allocated =" | grep -o "[0-9]*")

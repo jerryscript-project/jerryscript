@@ -185,6 +185,11 @@ project (JerryCore C ASM)
    set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
   endif()
 
+ # Date system calls
+  if("${ENABLE_DATE_SYS_CALLS}" STREQUAL "ON")
+   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_DATE_SYS_CALLS)
+  endif()
+
 # Platform-specific configuration
  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_${PLATFORM_EXT}})
 

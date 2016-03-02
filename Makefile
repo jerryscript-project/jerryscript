@@ -75,6 +75,11 @@ BUILD_NAME:=
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_LOG=$(LOG)
   endif
 
+ # Date system calls
+  ifneq ($(DATE_SYS_CALLS),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_DATE_SYS_CALLS=$(DATE_SYS_CALLS)
+  endif
+
  # All-in-one build
   ifneq ($(ALL_IN_ONE),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE)

@@ -26,16 +26,10 @@
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
 
+#ifdef JERRY_ENABLE_DATE_SYS_CALLS
 #include <sys/time.h>
 
-/**
- * Timezone structure
- */
-struct timezone
-{
-  int tz_minuteswest;     /**< minutes west of Greenwich */
-  int tz_dsttime;         /**< type of DST correction */
-};
+#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -456,15 +450,21 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
+#ifdef JERRY_ENABLE_DATE_SYS_CALLS
   struct timeval tv;
   struct timezone tz;
 
+  tz.tz_minuteswest = 0; /* gettimeofday may not fill tz, so zero-initializing */
+
   if (gettimeofday (&tv, &tz) != 0)
   {
-    return ecma_raise_type_error ("gettimeofday failed");
+    return ecma_number_make_nan ();
   }
 
   return tz.tz_minuteswest * -ECMA_DATE_MS_PER_MINUTE;
+#else /* !JERRY_ENABLE_DATE_SYS_CALLS */
+  return ECMA_NUMBER_ZERO;
+#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
 } /* ecma_date_local_tza */
 
 /**
@@ -483,15 +483,21 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
+#ifdef JERRY_ENABLE_DATE_SYS_CALLS
   struct timeval tv;
   struct timezone tz;
 
+  tz.tz_dsttime = 0; /* gettimeofday may not fill tz, so zero-initializing */
+
   if (gettimeofday (&tv, &tz) != 0)
   {
-    return ecma_raise_type_error ("gettimeofday failed");
+    return ecma_number_make_nan ();
   }
 
   return tz.tz_dsttime;
+#else /* !JERRY_ENABLE_DATE_SYS_CALLS */
+  return ECMA_NUMBER_ZERO;
+#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
 } /* ecma_date_daylight_saving_ta */
 
 /**

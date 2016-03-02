@@ -83,16 +83,6 @@ typedef enum
 } ecma_simple_value_t;
 
 /**
- * Type of ecma-property
- */
-typedef enum
-{
-  ECMA_PROPERTY_NAMEDDATA, /**< named data property */
-  ECMA_PROPERTY_NAMEDACCESSOR, /**< named accessor property */
-  ECMA_PROPERTY_INTERNAL /**< internal property */
-} ecma_property_type_t;
-
-/**
  * Description of an ecma value
  *
  * Bit-field structure: type (2) | error (1) | value (ECMA_POINTER_FIELD_WIDTH)
@@ -213,84 +203,78 @@ typedef enum
 } ecma_property_configurable_value_t;
 
 /**
- * Width of internal property type field's width
+ * Property's flag list.
  */
-#define ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH   (5)
+typedef enum
+{
+  ECMA_PROPERTY_FLAG_NAMEDDATA = 1u << 0, /**< property is named data */
+  ECMA_PROPERTY_FLAG_NAMEDACCESSOR = 1u << 1, /**< property is named accessor */
+  ECMA_PROPERTY_FLAG_INTERNAL = 1u << 2, /**< property is internal property */
+  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << 3, /**< property is configurable */
+  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << 4, /**< property is enumerable */
+  ECMA_PROPERTY_FLAG_WRITABLE = 1u << 5, /**< property is writable */
+  ECMA_PROPERTY_FLAG_LCACHED = 1u << 6, /**< property is lcached */
+} ecma_property_flags_t;
 
 /**
  * Pair of pointers - to property's getter and setter
  */
 typedef struct
 {
-  __extension__ mem_cpointer_t getter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to getter object */
-  __extension__ mem_cpointer_t setter_p : ECMA_POINTER_FIELD_WIDTH; /**< pointer to setter object */
+  mem_cpointer_t getter_p; /**< pointer to getter object */
+  mem_cpointer_t setter_p; /**< pointer to setter object */
 } ecma_getter_setter_pointers_t;
 
 /**
  * Description of ecma-property
  */
-typedef struct __attr_packed___ ecma_property_t
+typedef struct ecma_property_t
 {
-  /** Property's type (ecma_property_type_t) */
-  unsigned int type : 2;
-
   /** Compressed pointer to next property */
-  __extension__ mem_cpointer_t next_property_p : ECMA_POINTER_FIELD_WIDTH;
+  mem_cpointer_t next_property_p;
 
-  /** Property's details (depending on Type) */
+  /** Property's flags (ecma_property_flags_t) */
+  uint8_t flags;
+
+  /** Property's header part (depending on Type) */
   union
   {
-    /** Description of named data property */
-    struct __attr_packed___ ecma_named_data_property_t
+    /** Named data property value upper bits */
+    uint8_t named_data_property_value_high;
+    /** Internal property type */
+    uint8_t internal_property_type;
+  } h;
+
+  /** Property's value part (depending on Type) */
+  union
+  {
+    /** Description of named data property (second part) */
+    struct
     {
-      /** Value */
-      __extension__ ecma_value_t value : ECMA_VALUE_SIZE;
-
       /** Compressed pointer to property's name (pointer to String) */
-      __extension__ mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
+      mem_cpointer_t name_p;
 
-      /** Flag indicating whether the property is registered in LCache */
-      unsigned int is_lcached : 1;
-
-      /** Attribute 'Writable' (ecma_property_writable_value_t) */
-      unsigned int writable : 1;
-
-      /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-      unsigned int enumerable : 1;
-
-      /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-      unsigned int configurable : 1;
+      /** Lower 16 bits of value */
+      uint16_t value_low;
     } named_data_property;
 
-    /** Description of named accessor property */
-    struct __attr_packed___ ecma_named_accessor_property_t
+    /** Description of named accessor property (second part) */
+    struct
     {
       /** Compressed pointer to property's name (pointer to String) */
-      __extension__ mem_cpointer_t name_p : ECMA_POINTER_FIELD_WIDTH;
-
-      /** Attribute 'Enumerable' (ecma_property_enumerable_value_t) */
-      unsigned int enumerable : 1;
-
-      /** Attribute 'Configurable' (ecma_property_configurable_value_t) */
-      unsigned int configurable : 1;
-
-      /** Flag indicating whether the property is registered in LCache */
-      unsigned int is_lcached : 1;
+      mem_cpointer_t name_p;
 
       /** Compressed pointer to pair of pointers - to property's getter and setter */
-      __extension__ mem_cpointer_t getter_setter_pair_cp : ECMA_POINTER_FIELD_WIDTH;
+      mem_cpointer_t getter_setter_pair_cp;
     } named_accessor_property;
 
-    /** Description of internal property */
-    struct __attr_packed___ ecma_internal_property_t
+    /** Description of internal property (second part) */
+    struct
     {
-      /** Internal property's type */
-      unsigned int type : ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH;
-
       /** Value (may be a compressed pointer) */
       uint32_t value;
     } internal_property;
-  } u;
+  } v;
 } ecma_property_t;
 
 /**

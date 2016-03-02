@@ -61,12 +61,12 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
     is_new = false;
   }
 
-  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->u.internal_property.value),
+  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (prop_p->v.internal_property.value),
                        size_of_internal_property_value_must_be_greater_than_or_equal_to_4_bytes);
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {
-    prop_p->u.internal_property.value = (uint32_t) ptr_value;
+    prop_p->v.internal_property.value = (uint32_t) ptr_value;
   }
   else
   {
@@ -76,12 +76,12 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
     {
       handler_p = ecma_alloc_external_pointer ();
 
-      ECMA_SET_NON_NULL_POINTER (prop_p->u.internal_property.value, handler_p);
+      ECMA_SET_NON_NULL_POINTER (prop_p->v.internal_property.value, handler_p);
     }
     else
     {
       handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                             prop_p->u.internal_property.value);
+                                             prop_p->v.internal_property.value);
     }
 
     *handler_p = ptr_value;
@@ -123,12 +123,12 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {
-    *out_pointer_p = (ecma_external_pointer_t) prop_p->u.internal_property.value;
+    *out_pointer_p = (ecma_external_pointer_t) prop_p->v.internal_property.value;
   }
   else
   {
     ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                                                    prop_p->u.internal_property.value);
+                                                                    prop_p->v.internal_property.value);
     *out_pointer_p = *handler_p;
   }
 
@@ -147,9 +147,9 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
 void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal property */
 {
-  JERRY_ASSERT (prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
-                || prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
-                || prop_p->u.internal_property.type == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
+  JERRY_ASSERT (prop_p->h.internal_property_type == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
+                || prop_p->h.internal_property_type == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
+                || prop_p->h.internal_property_type == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
   if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
   {
@@ -158,7 +158,7 @@ ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal p
   else
   {
     ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                                                    prop_p->u.internal_property.value);
+                                                                    prop_p->v.internal_property.value);
 
     ecma_dealloc_external_pointer (handler_p);
   }

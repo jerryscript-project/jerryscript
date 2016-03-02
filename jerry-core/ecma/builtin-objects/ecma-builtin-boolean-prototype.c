@@ -107,9 +107,9 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE);
 
-      JERRY_ASSERT (prim_value_prop_p->u.internal_property.value < ECMA_SIMPLE_VALUE__COUNT);
+      JERRY_ASSERT (prim_value_prop_p->v.internal_property.value < ECMA_SIMPLE_VALUE__COUNT);
 
-      ecma_simple_value_t prim_simple_value = (ecma_simple_value_t) prim_value_prop_p->u.internal_property.value;
+      ecma_simple_value_t prim_simple_value = (ecma_simple_value_t) prim_value_prop_p->v.internal_property.value;
 
       ecma_value_t ret_boolean_value = ecma_make_simple_value (prim_simple_value);
 

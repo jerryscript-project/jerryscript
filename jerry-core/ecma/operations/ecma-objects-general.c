@@ -156,7 +156,7 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
   }
 
   // 3.
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
   {
     return ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
   }
@@ -283,8 +283,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
   ecma_property_t *own_desc_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
   // 3.
-  if (own_desc_p != NULL
-      && own_desc_p->type == ECMA_PROPERTY_NAMEDDATA)
+  if (own_desc_p != NULL && (own_desc_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA))
   {
     // a.
     ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor ();
@@ -304,8 +303,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
   ecma_property_t *desc_p = ecma_op_object_get_property (obj_p, property_name_p);
 
   // 5.
-  if (desc_p != NULL
-      && desc_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+  if (desc_p != NULL && (desc_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR))
   {
     // a.
     ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (desc_p);
@@ -366,7 +364,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   if (prop_p != NULL)
   {
     // a.
-    if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
     {
       ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (prop_p);
 
@@ -382,8 +380,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
     else
     {
       // b.
-
-      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+      JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
       return ecma_is_property_writable (prop_p);
     }
@@ -408,7 +405,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   }
 
   // 7.
-  if (inherited_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+  if (inherited_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
   {
     ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (inherited_p);
 
@@ -424,7 +421,7 @@ ecma_op_general_object_can_put (ecma_object_t *obj_p, /**< the object */
   else
   {
     // 8.
-    JERRY_ASSERT (inherited_p->type == ECMA_PROPERTY_NAMEDDATA);
+    JERRY_ASSERT (inherited_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
     // a.
     if (!ecma_get_object_extensible (obj_p))
@@ -657,8 +654,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
 
   // 6.
-  const bool is_current_data_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDDATA);
-  const bool is_current_accessor_descriptor = (current_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  const bool is_current_data_descriptor = (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
+  const bool is_current_accessor_descriptor = (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
   JERRY_ASSERT (is_current_data_descriptor || is_current_accessor_descriptor);
 
@@ -822,28 +819,28 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   // 12.
   if (property_desc_p->is_value_defined)
   {
-    JERRY_ASSERT (current_p->type == ECMA_PROPERTY_NAMEDDATA);
+    JERRY_ASSERT (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
     ecma_named_data_property_assign_value (obj_p, current_p, property_desc_p->value);
   }
 
   if (property_desc_p->is_writable_defined)
   {
-    JERRY_ASSERT (current_p->type == ECMA_PROPERTY_NAMEDDATA);
+    JERRY_ASSERT (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
     ecma_set_property_writable_attr (current_p, property_desc_p->is_writable);
   }
 
   if (property_desc_p->is_get_defined)
   {
-    JERRY_ASSERT (current_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+    JERRY_ASSERT (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
     ecma_set_named_accessor_property_getter (obj_p, current_p, property_desc_p->get_p);
   }
 
   if (property_desc_p->is_set_defined)
   {
-    JERRY_ASSERT (current_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+    JERRY_ASSERT (current_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
     ecma_set_named_accessor_property_setter (obj_p, current_p, property_desc_p->set_p);
   }

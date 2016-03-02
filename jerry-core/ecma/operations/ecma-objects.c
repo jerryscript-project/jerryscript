@@ -628,20 +628,19 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
          prop_iter_p != NULL;
          prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
     {
-      if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA
-          || prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+      if (prop_iter_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR))
       {
         ecma_string_t *name_p;
 
-        if (prop_iter_p->type == ECMA_PROPERTY_NAMEDDATA)
+        if (prop_iter_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
         {
-          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_data_property.name_p);
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->v.named_data_property.name_p);
         }
         else
         {
-          JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+          JERRY_ASSERT (prop_iter_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
-          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->u.named_accessor_property.name_p);
+          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->v.named_accessor_property.name_p);
         }
 
         if (!(is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p)))
@@ -697,7 +696,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
       else
       {
-        JERRY_ASSERT (prop_iter_p->type == ECMA_PROPERTY_INTERNAL);
+        JERRY_ASSERT (prop_iter_p->flags & ECMA_PROPERTY_FLAG_INTERNAL);
       }
     }
 
@@ -903,7 +902,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       {
         ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
                                                                           ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
-        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->u.internal_property.value;
+        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->v.internal_property.value;
 
         switch (builtin_id)
         {
@@ -984,7 +983,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         }
         else
         {
-          return (lit_magic_string_id_t) class_name_prop_p->u.internal_property.value;
+          return (lit_magic_string_id_t) class_name_prop_p->v.internal_property.value;
         }
       }
     }

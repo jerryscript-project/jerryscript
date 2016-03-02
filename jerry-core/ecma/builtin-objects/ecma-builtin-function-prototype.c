@@ -247,7 +247,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
                                                             ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
-    ECMA_SET_NON_NULL_POINTER (target_function_prop_p->u.internal_property.value, this_arg_obj_p);
+    ECMA_SET_NON_NULL_POINTER (target_function_prop_p->v.internal_property.value, this_arg_obj_p);
 
     /* 8. */
     ecma_property_t *bound_this_prop_p;
@@ -256,11 +256,11 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
     if (arg_count > 0)
     {
-      bound_this_prop_p->u.internal_property.value = ecma_copy_value (arguments_list_p[0], false);
+      bound_this_prop_p->v.internal_property.value = ecma_copy_value (arguments_list_p[0], false);
     }
     else
     {
-      bound_this_prop_p->u.internal_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      bound_this_prop_p->v.internal_property.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
 
     if (arg_count > 1)
@@ -270,7 +270,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
       ecma_property_t *bound_args_prop_p;
       bound_args_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-      ECMA_SET_NON_NULL_POINTER (bound_args_prop_p->u.internal_property.value, bound_args_collection_p);
+      ECMA_SET_NON_NULL_POINTER (bound_args_prop_p->v.internal_property.value, bound_args_collection_p);
     }
 
     /*

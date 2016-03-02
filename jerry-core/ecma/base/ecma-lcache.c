@@ -302,8 +302,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
 
   if (prop_p != NULL)
   {
-    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA
-                  || prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+    JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
     bool is_cached = ecma_is_property_lcached (prop_p);
 
@@ -314,15 +313,15 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
 
     ecma_set_property_lcached (prop_p, false);
 
-    if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+    if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
     {
       prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                               prop_p->u.named_data_property.name_p);
+                                               prop_p->v.named_data_property.name_p);
     }
     else
     {
       prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                               prop_p->u.named_accessor_property.name_p);
+                                               prop_p->v.named_accessor_property.name_p);
     }
   }
   else

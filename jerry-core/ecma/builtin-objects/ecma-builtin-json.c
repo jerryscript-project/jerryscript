@@ -1455,7 +1455,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
       JERRY_ASSERT (ecma_is_property_enumerable (property_p));
 
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+      if (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
       {
         ecma_append_to_values_collection (property_keys_p, *iter.current_value_p, true);
       }

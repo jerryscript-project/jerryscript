@@ -438,21 +438,16 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
 
   ecma_property_t *new_property_p = ecma_alloc_property ();
 
-  new_property_p->type = ECMA_PROPERTY_INTERNAL;
+  new_property_p->flags = ECMA_PROPERTY_FLAG_INTERNAL;
 
   ecma_property_t *list_head_p = ecma_get_property_list (object_p);
   ECMA_SET_POINTER (new_property_p->next_property_p, list_head_p);
   ecma_set_property_list (object_p, new_property_p);
 
-  JERRY_STATIC_ASSERT (
-    ECMA_INTERNAL_PROPERTY__COUNT <= (1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH),
-    ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH_bits_must_be_able_to_represent_ECMA_INTERNAL_PROPERTY__COUNT_values
-  );
-
   JERRY_ASSERT (property_id < ECMA_INTERNAL_PROPERTY__COUNT);
 
-  new_property_p->u.internal_property.type = property_id & ((1ull << ECMA_PROPERTY_INTERNAL_PROPERTY_TYPE_WIDTH) - 1);
-  new_property_p->u.internal_property.value = ECMA_NULL_POINTER;
+  new_property_p->h.internal_property_type = (uint8_t) property_id;
+  new_property_p->v.internal_property.value = ECMA_NULL_POINTER;
 
   return new_property_p;
 } /* ecma_create_internal_property */
@@ -476,12 +471,10 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
        property_p != NULL;
        property_p = ECMA_GET_POINTER (ecma_property_t, property_p->next_property_p))
   {
-    if (property_p->type == ECMA_PROPERTY_INTERNAL)
+    if ((property_p->flags & ECMA_PROPERTY_FLAG_INTERNAL)
+        && property_p->h.internal_property_type == property_id)
     {
-      if (property_p->u.internal_property.type == property_id)
-      {
-        return property_p;
-      }
+      return property_p;
     }
   }
 
@@ -526,16 +519,22 @@ ecma_create_named_data_property (ecma_object_t *obj_p, /**< object */
   ecma_property_t *prop_p = ecma_alloc_property ();
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  prop_p->type = ECMA_PROPERTY_NAMEDDATA;
+  prop_p->flags = ECMA_PROPERTY_FLAG_NAMEDDATA;
 
-  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_data_property.name_p, name_p);
+  ECMA_SET_NON_NULL_POINTER (prop_p->v.named_data_property.name_p, name_p);
 
-  prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
-  prop_p->u.named_data_property.enumerable = is_enumerable ? ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE;
-  prop_p->u.named_data_property.configurable = (is_configurable ?
-                                                ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
-
-  prop_p->u.named_data_property.is_lcached = false;
+  if (is_configurable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+  }
+  if (is_enumerable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_ENUMERABLE);
+  }
+  if (is_writable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_WRITABLE);
+  }
 
   ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
@@ -572,18 +571,20 @@ ecma_create_named_accessor_property (ecma_object_t *obj_p, /**< object */
   ecma_getter_setter_pointers_t *getter_setter_pointers_p = ecma_alloc_getter_setter_pointers ();
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  prop_p->type = ECMA_PROPERTY_NAMEDACCESSOR;
+  prop_p->flags = ECMA_PROPERTY_FLAG_NAMEDACCESSOR;
 
-  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.name_p, name_p);
+  ECMA_SET_NON_NULL_POINTER (prop_p->v.named_accessor_property.name_p, name_p);
 
-  prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
-                                                  ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
-  prop_p->u.named_accessor_property.configurable = (is_configurable ?
-                                                    ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
+  if (is_configurable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+  }
+  if (is_enumerable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_ENUMERABLE);
+  }
 
-  prop_p->u.named_accessor_property.is_lcached = false;
-
-  ECMA_SET_NON_NULL_POINTER (prop_p->u.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
+  ECMA_SET_NON_NULL_POINTER (prop_p->v.named_accessor_property.getter_setter_pair_cp, getter_setter_pointers_p);
 
   /*
    * See also:
@@ -630,15 +631,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   {
     ecma_string_t *property_name_p;
 
-    if (property_p->type == ECMA_PROPERTY_NAMEDDATA)
+    if (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
     {
       property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   property_p->u.named_data_property.name_p);
+                                                   property_p->v.named_data_property.name_p);
     }
-    else if (property_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+    else if (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
     {
       property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   property_p->u.named_accessor_property.name_p);
+                                                   property_p->v.named_accessor_property.name_p);
     }
     else
     {
@@ -699,7 +700,7 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
-  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (property_p != NULL && (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA));
 
   return property_p;
 } /* ecma_get_named_data_property */
@@ -712,12 +713,12 @@ ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property
                                ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (property_p != NULL && (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA));
 
   ecma_lcache_invalidate (object_p, NULL, property_p);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_data_property.name_p));
+                                                     property_p->v.named_data_property.name_p));
 
   ecma_value_t v = ecma_get_named_data_property_value (property_p);
   ecma_free_value_if_not_object (v);
@@ -733,16 +734,16 @@ ecma_free_named_accessor_property (ecma_object_t *object_p, /**< object the prop
                                    ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (property_p != NULL && (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
   ecma_lcache_invalidate (object_p, NULL, property_p);
 
   ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     property_p->u.named_accessor_property.name_p));
+                                                     property_p->v.named_accessor_property.name_p));
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p;
   getter_setter_pointers_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
-                                                        property_p->u.named_accessor_property.getter_setter_pair_cp);
+                                                        property_p->v.named_accessor_property.getter_setter_pair_cp);
   ecma_dealloc_getter_setter_pointers (getter_setter_pointers_p);
   ecma_dealloc_property (property_p);
 } /* ecma_free_named_accessor_property */
@@ -753,10 +754,10 @@ ecma_free_named_accessor_property (ecma_object_t *object_p, /**< object the prop
 static void
 ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 {
-  JERRY_ASSERT (property_p != NULL && property_p->type == ECMA_PROPERTY_INTERNAL);
+  JERRY_ASSERT (property_p != NULL && (property_p->flags & ECMA_PROPERTY_FLAG_INTERNAL));
 
-  ecma_internal_property_id_t property_id = (ecma_internal_property_id_t) property_p->u.internal_property.type;
-  uint32_t property_value = property_p->u.internal_property.value;
+  ecma_internal_property_id_t property_id = (ecma_internal_property_id_t) property_p->h.internal_property_type;
+  uint32_t property_value = property_p->v.internal_property.value;
 
   switch (property_id)
   {
@@ -865,28 +866,19 @@ void
 ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to */
                     ecma_property_t *prop_p) /**< property */
 {
-  switch ((ecma_property_type_t) prop_p->type)
+  JERRY_ASSERT (object_p != NULL && prop_p != NULL);
+
+  if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
   {
-    case ECMA_PROPERTY_NAMEDDATA:
-    {
-      ecma_free_named_data_property (object_p, prop_p);
-
-      break;
-    }
-
-    case ECMA_PROPERTY_NAMEDACCESSOR:
-    {
-      ecma_free_named_accessor_property (object_p, prop_p);
-
-      break;
-    }
-
-    case ECMA_PROPERTY_INTERNAL:
-    {
-      ecma_free_internal_property (prop_p);
-
-      break;
-    }
+    ecma_free_named_data_property (object_p, prop_p);
+  }
+  else if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
+  {
+    ecma_free_named_accessor_property (object_p, prop_p);
+  }
+  else
+  {
+    ecma_free_internal_property (prop_p);
   }
 } /* ecma_free_property */
 
@@ -952,29 +944,34 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
 #endif /* JERRY_NDEBUG */
 } /* ecma_assert_object_contains_the_property */
 
+JERRY_STATIC_ASSERT (ECMA_VALUE_SIZE <= 24,
+                     maximum_ECMA_VALUE_SIZE_must_be_less_than_or_equal_to_24);
+
 /**
  * Get value field of named data property
  *
  * @return ecma value
  */
-ecma_value_t
+ecma_value_t __attr_always_inline___
 ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
-  return prop_p->u.named_data_property.value;
+  ecma_value_t upper_bits = prop_p->h.named_data_property_value_high;
+  return (upper_bits << 16) | (prop_p->v.named_data_property.value_low);
 } /* ecma_get_named_data_property_value */
 
 /**
  * Set value field of named data property
  */
-void
+void __attr_always_inline___
 ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
                                     ecma_value_t value) /**< value to set */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
-  prop_p->u.named_data_property.value = value & ((1ull << ECMA_VALUE_SIZE) - 1);
+  prop_p->h.named_data_property_value_high = (uint8_t) (value >> 16);
+  prop_p->v.named_data_property.value_low = (uint16_t) value;
 } /* ecma_set_named_data_property_value */
 
 /**
@@ -988,7 +985,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        ecma_property_t *prop_p, /**< property */
                                        ecma_value_t value) /**< value to assign */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
   ecma_assert_object_contains_the_property (obj_p, prop_p);
 
   if (ecma_is_value_number (value)
@@ -1016,11 +1013,11 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
 ecma_object_t *
 ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< named accessor property */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p;
   getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
-                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+                                               prop_p->v.named_accessor_property.getter_setter_pair_cp);
 
   return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->getter_p);
 } /* ecma_get_named_accessor_property_getter */
@@ -1033,11 +1030,11 @@ ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< nam
 ecma_object_t *
 ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< named accessor property */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p;
   getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
-                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+                                               prop_p->v.named_accessor_property.getter_setter_pair_cp);
 
   return ECMA_GET_POINTER (ecma_object_t, getter_setter_pointers_p->setter_p);
 } /* ecma_get_named_accessor_property_setter */
@@ -1050,12 +1047,12 @@ ecma_set_named_accessor_property_getter (ecma_object_t *object_p, /**< the prope
                                          ecma_property_t *prop_p, /**< named accessor property */
                                          ecma_object_t *getter_p) /**< getter object */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p;
   getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
-                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+                                               prop_p->v.named_accessor_property.getter_setter_pair_cp);
 
   ECMA_SET_POINTER (getter_setter_pointers_p->getter_p, getter_p);
 } /* ecma_set_named_accessor_property_getter */
@@ -1068,12 +1065,12 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
                                          ecma_property_t *prop_p, /**< named accessor property */
                                          ecma_object_t *setter_p) /**< setter object */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
   ecma_getter_setter_pointers_t *getter_setter_pointers_p;
   getter_setter_pointers_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
-                                               prop_p->u.named_accessor_property.getter_setter_pair_cp);
+                                               prop_p->v.named_accessor_property.getter_setter_pair_cp);
 
   ECMA_SET_POINTER (getter_setter_pointers_p->setter_p, setter_p);
 } /* ecma_set_named_accessor_property_setter */
@@ -1084,12 +1081,12 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
  * @return true - property is writable,
  *         false - otherwise.
  */
-bool
+bool __attr_always_inline___
 ecma_is_property_writable (ecma_property_t *prop_p) /**< property */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
-  return (prop_p->u.named_data_property.writable == ECMA_PROPERTY_WRITABLE);
+  return (prop_p->flags & ECMA_PROPERTY_FLAG_WRITABLE) != 0;
 } /* ecma_is_property_writable */
 
 /**
@@ -1100,9 +1097,16 @@ ecma_set_property_writable_attr (ecma_property_t *prop_p, /**< property */
                                  bool is_writable) /**< should the property
                                                     *  be writable? */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
-  prop_p->u.named_data_property.writable = is_writable ? ECMA_PROPERTY_WRITABLE : ECMA_PROPERTY_NOT_WRITABLE;
+  if (is_writable)
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_WRITABLE);
+  }
+  else
+  {
+    prop_p->flags = (uint8_t) (prop_p->flags & ~ECMA_PROPERTY_FLAG_WRITABLE);
+  }
 } /* ecma_set_property_writable_attr */
 
 /**
@@ -1111,19 +1115,12 @@ ecma_set_property_writable_attr (ecma_property_t *prop_p, /**< property */
  * @return true - property is enumerable,
  *         false - otherwise.
  */
-bool
+bool __attr_always_inline___
 ecma_is_property_enumerable (ecma_property_t *prop_p) /**< property */
 {
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
-  {
-    return (prop_p->u.named_data_property.enumerable == ECMA_PROPERTY_ENUMERABLE);
-  }
-  else
-  {
-    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
-    return (prop_p->u.named_accessor_property.enumerable == ECMA_PROPERTY_ENUMERABLE);
-  }
+  return (prop_p->flags & ECMA_PROPERTY_FLAG_ENUMERABLE) != 0;
 } /* ecma_is_property_enumerable */
 
 /**
@@ -1134,17 +1131,15 @@ ecma_set_property_enumerable_attr (ecma_property_t *prop_p, /**< property */
                                    bool is_enumerable) /**< should the property
                                                         *  be enumerable? */
 {
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
+
+  if (is_enumerable)
   {
-    prop_p->u.named_data_property.enumerable = (is_enumerable ?
-                                                ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_ENUMERABLE);
   }
   else
   {
-    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-
-    prop_p->u.named_accessor_property.enumerable = (is_enumerable ?
-                                                    ECMA_PROPERTY_ENUMERABLE : ECMA_PROPERTY_NOT_ENUMERABLE);
+    prop_p->flags = (uint8_t) (prop_p->flags & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
   }
 } /* ecma_set_property_enumerable_attr */
 
@@ -1154,19 +1149,12 @@ ecma_set_property_enumerable_attr (ecma_property_t *prop_p, /**< property */
  * @return true - property is configurable,
  *         false - otherwise.
  */
-bool
+bool __attr_always_inline___
 ecma_is_property_configurable (ecma_property_t *prop_p) /**< property */
 {
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
-  {
-    return (prop_p->u.named_data_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
-  }
-  else
-  {
-    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
-    return (prop_p->u.named_accessor_property.configurable == ECMA_PROPERTY_CONFIGURABLE);
-  }
+  return (prop_p->flags & ECMA_PROPERTY_FLAG_CONFIGURABLE) != 0;
 } /* ecma_is_property_configurable */
 
 /**
@@ -1177,17 +1165,15 @@ ecma_set_property_configurable_attr (ecma_property_t *prop_p, /**< property */
                                      bool is_configurable) /**< should the property
                                                             *  be configurable? */
 {
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
+
+  if (is_configurable)
   {
-    prop_p->u.named_data_property.configurable = (is_configurable ?
-                                                  ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_CONFIGURABLE);
   }
   else
   {
-    JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
-
-    prop_p->u.named_accessor_property.configurable = (is_configurable ?
-                                                      ECMA_PROPERTY_CONFIGURABLE : ECMA_PROPERTY_NOT_CONFIGURABLE);
+    prop_p->flags = (uint8_t) (prop_p->flags & ~ECMA_PROPERTY_FLAG_CONFIGURABLE);
   }
 } /* ecma_set_property_configurable_attr */
 
@@ -1196,20 +1182,12 @@ ecma_set_property_configurable_attr (ecma_property_t *prop_p, /**< property */
  *
  * @return true / false
  */
-bool
+bool __attr_always_inline___
 ecma_is_property_lcached (ecma_property_t *prop_p) /**< property */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA
-                || prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
-  {
-    return prop_p->u.named_data_property.is_lcached;
-  }
-  else
-  {
-    return prop_p->u.named_accessor_property.is_lcached;
-  }
+  return (prop_p->flags & ECMA_PROPERTY_FLAG_LCACHED) != 0;
 } /* ecma_is_property_lcached */
 
 /**
@@ -1219,16 +1197,15 @@ void
 ecma_set_property_lcached (ecma_property_t *prop_p, /**< property */
                            bool is_lcached) /**< contained (true) or not (false) */
 {
-  JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA
-                || prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+  JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  if (is_lcached)
   {
-    prop_p->u.named_data_property.is_lcached = (is_lcached != 0);
+    prop_p->flags = (uint8_t) (prop_p->flags | ECMA_PROPERTY_FLAG_LCACHED);
   }
   else
   {
-    prop_p->u.named_accessor_property.is_lcached = (is_lcached != 0);
+    prop_p->flags = (uint8_t) (prop_p->flags & ~ECMA_PROPERTY_FLAG_LCACHED);
   }
 } /* ecma_set_property_lcached */
 
@@ -1304,14 +1281,14 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
   prop_desc.is_configurable = ecma_is_property_configurable (prop_p);
   prop_desc.is_configurable_defined = true;
 
-  if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+  if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
   {
     prop_desc.value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
     prop_desc.is_value_defined = true;
     prop_desc.is_writable = ecma_is_property_writable (prop_p);
     prop_desc.is_writable_defined = true;
   }
-  else if (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR)
+  else if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
   {
     prop_desc.get_p = ecma_get_named_accessor_property_getter (prop_p);
     prop_desc.is_get_defined = true;

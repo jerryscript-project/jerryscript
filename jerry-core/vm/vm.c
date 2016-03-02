@@ -1011,7 +1011,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             property_p = ecma_find_named_property (object_p, prop_name_p);
           }
 
-          if (property_p != NULL && property_p->type != ECMA_PROPERTY_NAMEDDATA)
+          if (property_p != NULL && !(property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA))
           {
             ecma_delete_property (object_p, property_p);
             property_p = NULL;
@@ -1087,7 +1087,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (length_prop_p != NULL);
 
-          left_value = length_prop_p->u.named_data_property.value;
+          left_value = ecma_get_named_data_property_value (length_prop_p);
           length_num_p = ecma_get_number_from_value (left_value);
 
           ecma_deref_ecma_string (length_str_p);

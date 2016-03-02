@@ -278,7 +278,7 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
       ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
 
       // 2.b
-      if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
+      if ((property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA) && ecma_is_property_writable (property_p))
       {
         prop_desc.is_writable = false;
       }
@@ -462,10 +462,10 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
         // 2.a
         ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
-        JERRY_ASSERT (property_p->type == ECMA_PROPERTY_NAMEDDATA || property_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+        JERRY_ASSERT (property_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
         // 2.b
-        if (property_p->type == ECMA_PROPERTY_NAMEDDATA && ecma_is_property_writable (property_p))
+        if ((property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA) && ecma_is_property_writable (property_p))
         {
           is_frozen = false;
           break;

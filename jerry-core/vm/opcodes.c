@@ -157,7 +157,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
   ecma_string_t *accessor_name_p = ecma_get_string_from_value (accessor_name);
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
-  if (property_p != NULL && property_p->type != ECMA_PROPERTY_NAMEDACCESSOR)
+  if (property_p != NULL && !(property_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR))
   {
     ecma_delete_property (object_p, property_p);
     property_p = NULL;

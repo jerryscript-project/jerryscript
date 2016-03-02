@@ -578,11 +578,11 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_CLASS);
-    class_prop_p->u.internal_property.value = LIT_MAGIC_STRING_DATE_UL;
+    class_prop_p->v.internal_property.value = LIT_MAGIC_STRING_DATE_UL;
 
     ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                         ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-    ECMA_SET_POINTER (prim_value_prop_p->u.internal_property.value, prim_value_num_p);
+    ECMA_SET_POINTER (prim_value_prop_p->v.internal_property.value, prim_value_num_p);
 
     ret_value = ecma_make_object_value (obj_p);
   }

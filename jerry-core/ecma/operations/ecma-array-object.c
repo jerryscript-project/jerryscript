@@ -156,7 +156,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   // 1.
   ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
-  JERRY_ASSERT (len_prop_p != NULL && len_prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+  JERRY_ASSERT (len_prop_p != NULL && (len_prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA));
 
   // 2.
   ecma_value_t old_len_value = ecma_get_named_data_property_value (len_prop_p);

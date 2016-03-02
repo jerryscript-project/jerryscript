@@ -330,7 +330,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
     }
     else
     {
-      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDDATA);
+      JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
 
       if (!ecma_is_property_configurable (prop_p))
       {

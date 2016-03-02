@@ -123,7 +123,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
       // 3.
       ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
-    else if (prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+    else if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
     {
       // 4.
       ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
@@ -131,7 +131,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     else
     {
       // 5.
-      JERRY_ASSERT (prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+      JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
 
       ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
 
@@ -303,17 +303,16 @@ ecma_op_put_value_object_base (ecma_reference_t ref, /**< ECMA-reference */
       ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, referenced_name_p);
 
       // sub_4., sub_7
-      if ((own_prop_p != NULL
-           && own_prop_p->type == ECMA_PROPERTY_NAMEDDATA)
+      if ((own_prop_p != NULL && (own_prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA))
           || (prop_p == NULL)
-          || (prop_p->type != ECMA_PROPERTY_NAMEDACCESSOR))
+          || !(prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR))
       {
         ret_value = ecma_reject_put (ref.is_strict);
       }
       else
       {
         // sub_6.
-        JERRY_ASSERT (prop_p != NULL && prop_p->type == ECMA_PROPERTY_NAMEDACCESSOR);
+        JERRY_ASSERT (prop_p != NULL && (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
 
         ecma_object_t *setter_p = ecma_get_named_accessor_property_setter (prop_p);
         JERRY_ASSERT (setter_p != NULL);

@@ -138,14 +138,14 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         JERRY_ASSERT (ecma_is_value_empty (bc_comp));
 
         re_compiled_code_t *old_bc_p = ECMA_GET_POINTER (re_compiled_code_t,
-                                                         bc_prop_p->u.internal_property.value);
+                                                         bc_prop_p->v.internal_property.value);
         if (old_bc_p != NULL)
         {
           /* Free the old bytecode */
           ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
         }
 
-        ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
+        ECMA_SET_POINTER (bc_prop_p->v.internal_property.value, new_bc_p);
 
         re_initialize_props (this_obj_p, pattern_string_p, flags);
 
@@ -207,7 +207,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                         ret_value);
 
         re_compiled_code_t *old_bc_p = ECMA_GET_POINTER (re_compiled_code_t,
-                                                         bc_prop_p->u.internal_property.value);
+                                                         bc_prop_p->v.internal_property.value);
 
         if (old_bc_p != NULL)
         {
@@ -215,7 +215,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
           ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
         }
 
-        ECMA_SET_POINTER (bc_prop_p->u.internal_property.value, new_bc_p);
+        ECMA_SET_POINTER (bc_prop_p->v.internal_property.value, new_bc_p);
         re_initialize_props (this_obj_p, pattern_string_p, flags);
         ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -270,7 +270,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
     bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
-    void *bytecode_p = ECMA_GET_POINTER (void, bytecode_prop_p->u.internal_property.value);
+    void *bytecode_p = ECMA_GET_POINTER (void, bytecode_prop_p->v.internal_property.value);
 
     if (bytecode_p == NULL)
     {
@@ -380,7 +380,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     ecma_deref_ecma_string (magic_string_p);
 
     ecma_string_t *src_sep_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SLASH_CHAR);
-    ecma_string_t *source_str_p = ecma_get_string_from_value (source_prop_p->u.named_data_property.value);
+    ecma_string_t *source_str_p = ecma_get_string_from_value (ecma_get_named_data_property_value (source_prop_p));
     ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, ecma_copy_or_ref_ecma_string (source_str_p));
     ecma_deref_ecma_string (source_str_p);
 
@@ -394,7 +394,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     ecma_property_t *global_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (global_prop_p->u.named_data_property.value))
+    if (ecma_is_value_true (ecma_get_named_data_property_value (global_prop_p)))
     {
       ecma_string_t *g_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_G_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, g_flag_str_p);
@@ -408,7 +408,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     ecma_property_t *ignorecase_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (ignorecase_prop_p->u.named_data_property.value))
+    if (ecma_is_value_true (ecma_get_named_data_property_value (ignorecase_prop_p)))
     {
       ecma_string_t *ic_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_I_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, ic_flag_str_p);
@@ -422,7 +422,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     ecma_property_t *multiline_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (multiline_prop_p->u.named_data_property.value))
+    if (ecma_is_value_true (ecma_get_named_data_property_value (multiline_prop_p)))
     {
       ecma_string_t *m_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_M_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, m_flag_str_p);

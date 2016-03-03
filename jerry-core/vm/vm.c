@@ -1348,7 +1348,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             frame_ctx_p->byte_code_p = byte_code_start_p;
             frame_ctx_p->stack_top_p = stack_top_p;
             frame_ctx_p->call_block_result = block_result;
-            return;
+            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
           }
           frame_ctx_p->call_operation = VM_NO_EXEC_OP;
 
@@ -1380,7 +1380,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             frame_ctx_p->byte_code_p = byte_code_start_p;
             frame_ctx_p->stack_top_p = stack_top_p;
             frame_ctx_p->call_block_result = block_result;
-            return;
+            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
           }
           frame_ctx_p->call_operation = VM_NO_EXEC_OP;
 

@@ -104,11 +104,13 @@ export JERRY_NATIVE_TARGETS := \
 
 export JERRY_STM32F3_TARGETS := \
   $(foreach __MODE,$(RELEASE_MODES), \
+    $(__MODE).mcu_stm32f3 \
     $(foreach __MOD,$(MCU_MODS), \
       $(__MODE).mcu_stm32f3-$(__MOD)))
 
 export JERRY_STM32F4_TARGETS := \
   $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
+    $(__MODE).mcu_stm32f4 \
     $(foreach __MOD,$(MCU_MODS), \
       $(__MODE).mcu_stm32f4-$(__MOD)))
 

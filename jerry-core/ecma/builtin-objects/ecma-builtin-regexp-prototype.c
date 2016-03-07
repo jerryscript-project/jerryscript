@@ -68,7 +68,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
   else
   {
@@ -80,7 +80,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
     {
       if (!ecma_is_value_undefined (flags_arg))
       {
-        ret_value = ecma_raise_type_error ("Invalid argument of RegExp compile.");
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp compile."));
       }
       else
       {
@@ -256,7 +256,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
   else
   {
@@ -364,7 +364,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ret_value = ecma_raise_type_error ("Incomplete RegExp type");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
   else
   {

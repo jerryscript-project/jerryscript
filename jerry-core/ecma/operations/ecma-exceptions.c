@@ -141,10 +141,20 @@ ecma_value_t
 ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
                            const lit_utf8_byte_t *msg_p) /**< error message */
 {
-  ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p,
-                                                               lit_zt_utf8_string_size (msg_p));
-  ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
-  ecma_deref_ecma_string (error_msg_p);
+  ecma_object_t *error_obj_p;
+
+  if (msg_p != NULL)
+  {
+    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p,
+                                                                 lit_zt_utf8_string_size (msg_p));
+    error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
+    ecma_deref_ecma_string (error_msg_p);
+  }
+  else
+  {
+    error_obj_p = ecma_new_standard_error (error_type);
+  }
+
   return ecma_make_error_obj_value (error_obj_p);
 } /* ecma_raise_standard_error */
 

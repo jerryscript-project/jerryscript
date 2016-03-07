@@ -28,6 +28,12 @@
  * @{
  */
 
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+#define ECMA_ERR_MSG(msg) msg
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+#define ECMA_ERR_MSG(msg) NULL
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+
 /**
  * Native errors.
  *

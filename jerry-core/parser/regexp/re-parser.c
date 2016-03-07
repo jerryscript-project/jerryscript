@@ -164,7 +164,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
       {
         if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
         {
-          return ecma_raise_syntax_error ("invalid quantifier");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid quantifier"));
         }
 
         ch = *parser_ctx_p->input_curr_p++;
@@ -173,7 +173,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
         {
           if (digits >= ECMA_NUMBER_MAX_DIGITS)
           {
-            return ecma_raise_syntax_error ("RegExp quantifier error: too many digits.");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: too many digits."));
           }
           digits++;
           qmin = qmin * 10 + lit_char_hex_to_int (ch);
@@ -182,19 +182,19 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
         {
           if (qmax != RE_ITERATOR_INFINITE)
           {
-            return ecma_raise_syntax_error ("RegExp quantifier error: double comma.");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: double comma."));
           }
 
           if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
           {
-            return ecma_raise_syntax_error ("invalid quantifier");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid quantifier"));
           }
 
           if (*parser_ctx_p->input_curr_p == LIT_CHAR_RIGHT_BRACE)
           {
             if (digits == 0)
             {
-              return ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
+              return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: missing digits."));
             }
 
             parser_ctx_p->input_curr_p++;
@@ -210,7 +210,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
         {
           if (digits == 0)
           {
-            return ecma_raise_syntax_error ("RegExp quantifier error: missing digits.");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: missing digits."));
           }
 
           if (qmax != RE_ITERATOR_INFINITE)
@@ -228,7 +228,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
         }
         else
         {
-          return ecma_raise_syntax_error ("RegExp quantifier error: unknown char.");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: unknown char."));
         }
       }
 
@@ -245,7 +245,7 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
 
   if (re_token_p->qmin > re_token_p->qmax)
   {
-    ret_value = ecma_raise_syntax_error ("RegExp quantifier error: qmin > qmax.");
+    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: qmin > qmax."));
   }
 
   return ret_value;
@@ -329,7 +329,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
   {
     if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
     {
-      return ecma_raise_syntax_error ("invalid character class, end of string");
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string"));
     }
 
     uint32_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
@@ -346,7 +346,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
     {
       if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error ("invalid character class, end of string after '-'");
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '-'"));
       }
 
       if (start != RE_CHAR_UNDEF
@@ -361,7 +361,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
     {
       if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error ("invalid character class, end of string after '\\'");
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\'"));
       }
 
       ch = *parser_ctx_p->input_curr_p++;
@@ -416,7 +416,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
         if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 2, &code_point))
         {
-          return ecma_raise_syntax_error ("invalid character class, end of string after '\\x'");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\x'"));
         }
 
         parser_ctx_p->input_curr_p += 2;
@@ -428,7 +428,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
         if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 4, &code_point))
         {
-          return ecma_raise_syntax_error ("invalid character class, end of string after '\\u'");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\u'"));
         }
 
         parser_ctx_p->input_curr_p += 4;
@@ -514,7 +514,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       {
         if (is_range)
         {
-          return ecma_raise_syntax_error ("invalid character class, invalid range");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, invalid range"));
         }
         else
         {
@@ -531,7 +531,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         {
           if (start > ch)
           {
-            return ecma_raise_syntax_error ("invalid character class, wrong order");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, wrong order"));
           }
           else
           {
@@ -606,7 +606,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     {
       if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error ("invalid regular experssion");
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid regular experssion"));
       }
 
       out_token_p->type = RE_TOK_CHAR;
@@ -671,7 +671,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
         if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 2, &code_point))
         {
-          return ecma_raise_syntax_error ("decode error");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
         }
 
         parser_ctx_p->input_curr_p += 2;
@@ -684,7 +684,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
         if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 4, &code_point))
         {
-          return ecma_raise_syntax_error ("decode error");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
         }
 
         parser_ctx_p->input_curr_p += 4;
@@ -727,7 +727,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
           if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
               && lit_char_is_decimal_digit (*parser_ctx_p->input_curr_p))
           {
-            return ecma_raise_syntax_error ("RegExp escape pattern error.");
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp escape pattern error."));
           }
 
           out_token_p->value = LIT_UNICODE_CODE_POINT_NULL;
@@ -749,7 +749,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
             {
               if (index >= RE_MAX_RE_DECESC_DIGITS)
               {
-                ret_value = ecma_raise_syntax_error ("RegExp escape pattern error: decimal escape too long.");
+                ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp escape error: decimal escape too long."));
                 return ret_value;
               }
               if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
@@ -823,7 +823,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     {
       if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error ("Unterminated group");
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated group"));
       }
 
       if (*parser_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
@@ -831,7 +831,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
         parser_ctx_p->input_curr_p++;
         if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
         {
-          return ecma_raise_syntax_error ("Invalid group");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
         }
 
         ch = *parser_ctx_p->input_curr_p++;
@@ -853,7 +853,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
         }
         else
         {
-          return ecma_raise_syntax_error ("Invalid group");
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
         }
       }
       else
@@ -875,7 +875,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
       if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error ("invalid character class");
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class"));
       }
 
       if (*parser_ctx_p->input_curr_p == LIT_CHAR_CIRCUMFLEX)
@@ -891,7 +891,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     case LIT_CHAR_PLUS:
     case LIT_CHAR_LEFT_BRACE:
     {
-      return ecma_raise_syntax_error ("Invalid RegExp token.");
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
     }
     case LIT_CHAR_NULL:
     {

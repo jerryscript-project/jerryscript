@@ -119,7 +119,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error ("");
+  return ecma_raise_type_error (ECMA_ERR_MSG (""));
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

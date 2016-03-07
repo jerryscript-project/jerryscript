@@ -67,7 +67,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     uint32_t num_uint32 = ecma_number_to_uint32 (*num_p);
     if (*num_p != ecma_uint32_to_number (num_uint32))
     {
-      return ecma_raise_range_error ("");
+      return ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -198,7 +198,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     // d.
     if (ecma_uint32_to_number (new_len_uint32) != new_len_num)
     {
-      return ecma_raise_range_error ("");
+      return ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
     else
     {

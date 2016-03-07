@@ -409,7 +409,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
         if (expect_eof)
         {
-          ret_value = ecma_raise_syntax_error ("Unexpected end of paren.");
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of paren."));
         }
         else
         {
@@ -422,7 +422,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         if (!expect_eof)
         {
-          ret_value = ecma_raise_syntax_error ("Unexpected end of pattern.");
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of pattern."));
         }
         else
         {
@@ -434,7 +434,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       default:
       {
-        ret_value = ecma_raise_syntax_error ("Unexpected RegExp token.");
+        ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected RegExp token."));
         break;
       }
     }
@@ -564,7 +564,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
     /* 2. Check for invalid backreference */
     if (re_ctx.highest_backref >= re_ctx.num_of_captures)
     {
-      ret_value = ecma_raise_syntax_error ("Invalid backreference.\n");
+      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid backreference.\n"));
     }
     else
     {

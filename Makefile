@@ -80,6 +80,11 @@ BUILD_NAME:=
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_DATE_SYS_CALLS=$(DATE_SYS_CALLS)
   endif
 
+ # Fill error messages for builtin error objects
+  ifneq ($(ERROR_MESSAGES),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_ERROR_MESSAGES=$(ERROR_MESSAGES)
+  endif
+
  # All-in-one build
   ifneq ($(ALL_IN_ONE),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_ALL_IN_ONE=$(ALL_IN_ONE)

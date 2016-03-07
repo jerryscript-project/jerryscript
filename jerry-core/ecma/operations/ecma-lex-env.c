@@ -212,7 +212,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     }
     else if (is_strict)
     {
-      return ecma_raise_type_error ("");
+      return ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
   }
   else
@@ -269,7 +269,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
       /* unitialized immutable binding */
       if (is_strict)
       {
-        return ecma_raise_reference_error ("");
+        return ecma_raise_reference_error (ECMA_ERR_MSG (""));
       }
       else
       {
@@ -289,7 +289,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       if (is_strict)
       {
-        return ecma_raise_reference_error ("");
+        return ecma_raise_reference_error (ECMA_ERR_MSG (""));
       }
       else
       {

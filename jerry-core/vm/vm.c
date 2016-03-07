@@ -70,7 +70,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 {
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
-    return ecma_raise_type_error ("");
+    return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
 
   ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -368,7 +368,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_op_is_callable (func_value))
   {
-    completion_value = ecma_raise_type_error ("");
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -426,7 +426,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_is_constructor (constructor_value))
   {
-    completion_value = ecma_raise_type_error ("");
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -496,7 +496,7 @@ enum
         } \
         else \
         { \
-          last_completion_value = ecma_raise_reference_error (""); \
+          last_completion_value = ecma_raise_reference_error (ECMA_ERR_MSG ("")); \
         } \
         \
         ecma_deref_ecma_string (name_p); \
@@ -1151,7 +1151,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
             else
             {
-              last_completion_value = ecma_raise_reference_error ("");
+              last_completion_value = ecma_raise_reference_error (ECMA_ERR_MSG (""));
             }
 
             if (ecma_is_value_error (last_completion_value))
@@ -1329,7 +1329,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_REFERENCE_ERROR:
         {
-          last_completion_value = ecma_raise_reference_error ("");
+          last_completion_value = ecma_raise_reference_error (ECMA_ERR_MSG (""));
           goto error;
         }
         case VM_OC_EVAL:

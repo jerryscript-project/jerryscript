@@ -52,7 +52,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   // 3.
   if (unlikely (is_unresolvable_reference))
   {
-    return ecma_raise_reference_error ("");
+    return ecma_raise_reference_error (ECMA_ERR_MSG (""));
   }
 
   // 5.
@@ -175,7 +175,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     // 3.a.
     if (is_strict)
     {
-      return ecma_raise_reference_error ("");
+      return ecma_raise_reference_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -217,7 +217,7 @@ ecma_reject_put (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_raise_type_error ("");
+    return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {

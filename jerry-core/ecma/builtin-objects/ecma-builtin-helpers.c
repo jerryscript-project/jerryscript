@@ -165,7 +165,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
     }
     else
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
 
     ECMA_FINALIZE (to_locale_value);

@@ -195,7 +195,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -229,7 +229,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {

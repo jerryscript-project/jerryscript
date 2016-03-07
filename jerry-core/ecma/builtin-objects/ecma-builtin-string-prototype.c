@@ -88,7 +88,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error ("");
+  return ecma_raise_type_error (ECMA_ERR_MSG (""));
 } /* ecma_builtin_string_prototype_object_to_string */
 
 /**

@@ -483,7 +483,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (!ecma_is_value_object (prototype_obj_value))
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -516,7 +516,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION ||
            ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -871,7 +871,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -975,7 +975,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
     }
     else if (existing_prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -984,7 +984,7 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
       if (!ecma_is_property_writable (existing_prop_p)
           || !ecma_is_property_enumerable (existing_prop_p))
       {
-        ret_value = ecma_raise_type_error ("");
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
       }
     }
 

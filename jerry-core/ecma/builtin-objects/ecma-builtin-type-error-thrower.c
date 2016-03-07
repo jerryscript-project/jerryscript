@@ -56,7 +56,7 @@ ecma_builtin_type_error_thrower_dispatch_call (const ecma_value_t *arguments_lis
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object should throw TypeError */
-  return ecma_raise_type_error ("");
+  return ecma_raise_type_error (ECMA_ERR_MSG (""));
 } /* ecma_builtin_type_error_thrower_dispatch_call */
 
 /**
@@ -74,7 +74,7 @@ ecma_builtin_type_error_thrower_dispatch_construct (const ecma_value_t *argument
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   /* The object is not a constructor */
-  return ecma_raise_type_error ("");
+  return ecma_raise_type_error (ECMA_ERR_MSG (""));
 } /* ecma_builtin_type_error_thrower_dispatch_construct */
 
 /**

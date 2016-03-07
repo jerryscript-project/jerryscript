@@ -20,7 +20,6 @@ try {
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incomplete RegExp type");
 }
 
 try {
@@ -30,7 +29,6 @@ try {
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incomplete RegExp type");
 }
 
 try {
@@ -40,5 +38,4 @@ try {
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incomplete RegExp type");
 }

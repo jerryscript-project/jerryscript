@@ -31,7 +31,6 @@ try
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incompatible type");
 }
 
 var date = new Date(0);
@@ -56,7 +55,6 @@ try
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incompatible type");
 }
 
 assert (new Date (NaN).toTimeString () == "Invalid Date");
@@ -72,7 +70,6 @@ try
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incompatible type");
 }
 
 assert (new Date ("2015-07-16").toISOString () == "2015-07-16T00:00:00.000Z");
@@ -106,7 +103,6 @@ try
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incompatible type");
 }
 
 assert (new Date (NaN).toUTCString () == "Invalid Date");
@@ -121,7 +117,6 @@ try
 catch (e)
 {
   assert (e instanceof TypeError);
-  assert (e.message === "Incompatible type");
 }
 
 assert (new Date (NaN).toJSON () == null);

@@ -738,7 +738,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
 
   if (ecma_is_value_undefined (final_result))
   {
-    ret_value = ecma_raise_syntax_error ("");
+    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -1417,7 +1417,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   /* 1. */
   if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
-    return ecma_raise_type_error ("");
+    return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -1617,7 +1617,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   /* 1. */
   if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
-    return ecma_raise_type_error ("");
+    return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);

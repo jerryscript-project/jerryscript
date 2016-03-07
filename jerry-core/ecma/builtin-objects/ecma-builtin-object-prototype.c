@@ -104,7 +104,7 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
   /* 3. */
   if (!ecma_op_is_callable (to_string_val))
   {
-    return_value = ecma_raise_type_error ("");
+    return_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {

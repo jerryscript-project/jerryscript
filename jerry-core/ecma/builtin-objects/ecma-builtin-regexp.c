@@ -89,7 +89,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     }
     else
     {
-      ret_value = ecma_raise_type_error ("Invalid argument of RegExp call.");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp call."));
     }
   }
   else

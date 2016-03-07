@@ -21,5 +21,4 @@ try
 catch (e)
 {
   assert (e instanceof SyntaxError);
-  assert (e.message === "Unexpected end of paren.");
 }

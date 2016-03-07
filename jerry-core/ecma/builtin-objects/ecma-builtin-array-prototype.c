@@ -1201,7 +1201,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   /* Check if the provided compare function is callable. */
   if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error ("");
+    return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -2015,7 +2015,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2116,7 +2116,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2216,7 +2216,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2311,7 +2311,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2425,7 +2425,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2550,7 +2550,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
   /* 4. */
   if (!ecma_op_is_callable (callbackfn))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2564,7 +2564,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
     /* 5. */
     if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (initial_value))
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -2601,7 +2601,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
         /* 8.c */
         if (!k_present)
         {
-          ret_value = ecma_raise_type_error ("");
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
         }
       }
       /* 9. */
@@ -2695,7 +2695,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
   /* 4. */
   if (!ecma_op_is_callable (callbackfn))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -2707,7 +2707,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
     /* 5. */
     if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (initial_value))
     {
-      ret_value = ecma_raise_type_error ("");
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
@@ -2747,7 +2747,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         /* 8.c */
         if (!k_present)
         {
-          ret_value = ecma_raise_type_error ("");
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
         }
       }
       /* 9. */

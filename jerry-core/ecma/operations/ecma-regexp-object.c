@@ -94,7 +94,7 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
       {
         if (*flags_p & RE_FLAG_GLOBAL)
         {
-          ret_value = ecma_raise_syntax_error ("Invalid RegExp flags.");
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
         }
         *flags_p |= RE_FLAG_GLOBAL;
         break;
@@ -103,7 +103,7 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
       {
         if (*flags_p & RE_FLAG_IGNORE_CASE)
         {
-          ret_value = ecma_raise_syntax_error ("Invalid RegExp flags.");
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
         }
         *flags_p |= RE_FLAG_IGNORE_CASE;
         break;
@@ -112,14 +112,14 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
       {
         if (*flags_p & RE_FLAG_MULTILINE)
         {
-          ret_value = ecma_raise_syntax_error ("Invalid RegExp flags.");
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
         }
         *flags_p |= RE_FLAG_MULTILINE;
         break;
       }
       default:
       {
-        ret_value = ecma_raise_syntax_error ("Invalid RegExp flags.");
+        ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
         break;
       }
     }
@@ -1167,7 +1167,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       default:
       {
         JERRY_DDLOG ("UNKNOWN opcode (%d)!\n", (uint32_t) op);
-        return ecma_raise_common_error ("");
+        return ecma_raise_common_error (ECMA_ERR_MSG (""));
       }
     }
   }
@@ -1271,7 +1271,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   if (bc_p == NULL)
   {
-    return ecma_raise_type_error ("Incompatible type");
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
 
   ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);

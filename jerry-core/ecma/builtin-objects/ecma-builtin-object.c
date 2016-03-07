@@ -113,7 +113,7 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused
   /* 1. */
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -153,7 +153,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_
   if (!ecma_is_value_object (arg))
   {
     /* 1. */
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -183,7 +183,7 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -255,7 +255,7 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -333,7 +333,7 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unus
 
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -364,7 +364,7 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -432,7 +432,7 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
   // 1.
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -507,7 +507,7 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___
 
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -540,7 +540,7 @@ ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 't
   if (!ecma_is_value_object (arg))
   {
     /* 1. */
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -571,7 +571,7 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __
   // 1.
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     return ret_value;
   }
 
@@ -627,7 +627,7 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
   // 1.
   if (!ecma_is_value_object (arg1) && !ecma_is_value_null (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -682,7 +682,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
   // 1.
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -788,7 +788,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused_
 
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_raise_type_error ("");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
   else
   {

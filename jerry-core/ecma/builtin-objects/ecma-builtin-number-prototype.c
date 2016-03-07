@@ -120,7 +120,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
     if (radix < 2 || radix > 36)
     {
-      ret_value = ecma_raise_range_error ("");
+      ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
     else if (radix == 10)
     {
@@ -367,7 +367,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
     }
   }
 
-  return ecma_raise_type_error ("");
+  return ecma_raise_type_error (ECMA_ERR_MSG (""));
 } /* ecma_builtin_number_prototype_object_value_of */
 
 /**
@@ -393,7 +393,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
   /* 2. */
   if (arg_num <= -1 || arg_num >= 21)
   {
-    ret_value = ecma_raise_range_error ("");
+    ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -597,7 +597,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
   /* 7. */
   if (arg_num <= -1.0 || arg_num >= 21.0)
   {
-    ret_value = ecma_raise_range_error ("");
+    ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
   }
   else
   {
@@ -825,7 +825,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
       /* 8. */
       else if (arg_num < 1.0 || arg_num >= 22.0)
       {
-        ret_value = ecma_raise_range_error ("");
+        ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
       }
       else
       {

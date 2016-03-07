@@ -1337,7 +1337,7 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
   if (!ecma_is_value_object (this_arg)
       || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
   {
-    ret_value = ecma_raise_type_error ("Incompatible type");
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
   else
   {

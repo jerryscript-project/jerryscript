@@ -461,7 +461,7 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
 
   if (gettimeofday (&tv, NULL) != 0)
   {
-    return ecma_raise_type_error ("gettimeofday failed");
+    return ecma_raise_type_error (ECMA_ERR_MSG ("gettimeofday failed"));
   }
 
   *now_num_p = ((ecma_number_t) tv.tv_sec) * 1000.0 + ((ecma_number_t) (tv.tv_usec / 1000));

@@ -50,5 +50,5 @@ int jerry_port_errormsg (const char *format, /**< format string */
  */
 int jerry_port_putchar (int c) /**< character to put */
 {
-  return putchar (c);
+  return putchar ((unsigned char) c);
 } /* jerry_port_putchar */

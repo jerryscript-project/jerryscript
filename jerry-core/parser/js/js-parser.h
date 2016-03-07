@@ -137,8 +137,6 @@ typedef enum
   JSP_STATUS_SYNTAX_ERROR,   /**< SyntaxError early error occured */
 } jsp_status_t;
 
-extern void parser_set_show_instrs (int);
-
 /* Note: source must be a valid UTF-8 string */
 extern jsp_status_t parser_parse_script (const jerry_api_char_t *,
                                          size_t,

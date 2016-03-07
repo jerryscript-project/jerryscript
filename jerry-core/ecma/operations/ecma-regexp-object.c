@@ -306,7 +306,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   bytecode_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
   /* Compile bytecode. */
-  re_compiled_code_t *bc_p = NULL;
+  const re_compiled_code_t *bc_p = NULL;
   ECMA_TRY_CATCH (empty, re_compile_bytecode (&bc_p, pattern_p, flags), ret_value);
 
   ECMA_SET_POINTER (bytecode_prop_p->v.internal_property.value, bc_p);

@@ -37,9 +37,9 @@
 /**
  * Node for free chunk list
  */
-typedef struct
+typedef struct mem_pools_chunk
 {
-  struct mem_pools_chunk_t *next_p; /* pointer to next pool chunk */
+  struct mem_pools_chunk *next_p; /* pointer to next pool chunk */
 #ifndef MEM_HEAP_PTR_64
   uint32_t dummy; /* dummy member for alignment */
 #endif

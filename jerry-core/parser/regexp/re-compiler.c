@@ -41,12 +41,12 @@
  */
 static void
 re_append_char_class (void *re_ctx_p, /**< RegExp compiler context */
-                      ecma_char_t start, /**< character class range from */
-                      ecma_char_t end) /**< character class range to */
+                      uint32_t start, /**< character class range from */
+                      uint32_t end) /**< character class range to */
 {
   re_compiler_ctx_t *ctx_p = (re_compiler_ctx_t *) re_ctx_p;
-  re_append_char (ctx_p->bytecode_ctx_p, start);
-  re_append_char (ctx_p->bytecode_ctx_p, end);
+  re_append_char (ctx_p->bytecode_ctx_p, (ecma_char_t) start);
+  re_append_char (ctx_p->bytecode_ctx_p, (ecma_char_t) end);
   ctx_p->parser_ctx_p->num_of_classes++;
 } /* re_append_char_class */
 
@@ -452,7 +452,7 @@ static const re_compiled_code_t *re_cache[RE_CACHE_SIZE];
  * @return compiled bytecode - if found
  *         NULL              - otherwise
  */
-re_compiled_code_t *
+const re_compiled_code_t *
 re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
                            uint16_t flags, /**< flags */
                            uint32_t *idx) /**< [out] index */
@@ -461,7 +461,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
 
   for (*idx = 0u; *idx < RE_CACHE_SIZE; (*idx)++)
   {
-    re_compiled_code_t *cached_bytecode_p = re_cache[*idx];
+    const re_compiled_code_t *cached_bytecode_p = re_cache[*idx];
 
     if (cached_bytecode_p != NULL)
     {
@@ -495,13 +495,13 @@ re_cache_gc_run ()
 {
   for (uint32_t i = 0u; i < RE_CACHE_SIZE; i++)
   {
-    re_compiled_code_t *cached_bytecode_p = re_cache[i];
+    const re_compiled_code_t *cached_bytecode_p = re_cache[i];
 
     if (cached_bytecode_p != NULL
         && (cached_bytecode_p->flags >> ECMA_BYTECODE_REF_SHIFT) == 1)
     { /* Only the cache has reference for the bytecode */
 
-      ecma_bytecode_deref (cached_bytecode_p);
+      ecma_bytecode_deref ((ecma_compiled_code_t *) cached_bytecode_p);
       re_cache[i] = NULL;
     }
   }
@@ -516,7 +516,7 @@ re_cache_gc_run ()
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-re_compile_bytecode (re_compiled_code_t **out_bytecode_p, /**< [out] pointer to bytecode */
+re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] pointer to bytecode */
                      ecma_string_t *pattern_str_p, /**< pattern */
                      uint16_t flags) /**< flags */
 {
@@ -604,7 +604,7 @@ re_compile_bytecode (re_compiled_code_t **out_bytecode_p, /**< [out] pointer to 
 
       if (cache_idx < RE_CACHE_SIZE)
       {
-        ecma_bytecode_ref (*out_bytecode_p);
+        ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
         re_cache[cache_idx] = *out_bytecode_p;
       }
       else

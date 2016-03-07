@@ -260,7 +260,7 @@ void *mem_heap_alloc_block_internal (const size_t size)
     }
     else
     {
-      JERRY_ASSERT (MEM_HEAP_GET_ADDR_FROM_OFFSET (mem_heap.first.next_offset)->size > MEM_ALIGNMENT);
+      JERRY_ASSERT (data_space_p->size > MEM_ALIGNMENT);
       mem_heap_free_t *const remaining_p = MEM_HEAP_GET_ADDR_FROM_OFFSET (mem_heap.first.next_offset) + 1;
 
       VALGRIND_DEFINED_SPACE (remaining_p, sizeof (mem_heap_free_t));

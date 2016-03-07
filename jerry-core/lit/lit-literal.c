@@ -129,7 +129,7 @@ lit_find_literal_by_utf8_string (const lit_utf8_byte_t *str_p, /**< a string to 
           continue;
         }
 
-        if (!strncmp (rec_p + 1, (const char *) str_p, str_size))
+        if (!strncmp ((const char *) (rec_p + 1), (const char *) str_p, str_size))
         {
           return lit;
         }

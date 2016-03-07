@@ -132,7 +132,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         /* FIXME: "We currently have to re-compile the bytecode, because
          * we can't copy it without knowing its length."
          */
-        re_compiled_code_t *new_bc_p = NULL;
+        const re_compiled_code_t *new_bc_p = NULL;
         ecma_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */
         JERRY_ASSERT (ecma_is_value_empty (bc_comp));
@@ -201,7 +201,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
         /* Try to compile bytecode from new source. */
-        re_compiled_code_t *new_bc_p = NULL;
+        const re_compiled_code_t *new_bc_p = NULL;
         ECMA_TRY_CATCH (bc_dummy,
                         re_compile_bytecode (&new_bc_p, pattern_string_p, flags),
                         ret_value);

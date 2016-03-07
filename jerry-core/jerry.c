@@ -2171,7 +2171,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
-    re_compiled_code_t *re_bytecode_p = NULL;
+    const re_compiled_code_t *re_bytecode_p = NULL;
 
     const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (uint16_t);
 

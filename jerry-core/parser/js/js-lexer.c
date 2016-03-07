@@ -1808,7 +1808,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   context_p->literal_count++;
 
   /* Compile the RegExp literal and store the RegExp bytecode pointer */
-  re_compiled_code_t *re_bytecode_p = NULL;
+  const re_compiled_code_t *re_bytecode_p = NULL;
   ecma_value_t completion_value;
 
   ecma_string_t *pattern_str_p = ecma_new_ecma_string_from_utf8 (regex_start_p, length);

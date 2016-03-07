@@ -35,11 +35,6 @@
 #define CONFIG_MEM_POOL_CHUNK_SIZE (8)
 
 /**
- * Size of heap chunk
- */
-#define CONFIG_MEM_HEAP_CHUNK_SIZE (64)
-
-/**
  * Size of heap
  */
 #ifndef CONFIG_MEM_HEAP_AREA_SIZE

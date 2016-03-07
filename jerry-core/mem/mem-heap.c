@@ -90,12 +90,6 @@ void mem_heap_valgrind_freya_mempool_request (void)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */
 
-/**
- * Chunk size should satisfy the required alignment value
- */
-JERRY_STATIC_ASSERT (MEM_HEAP_CHUNK_SIZE % MEM_ALIGNMENT == 0,
-                     MEM_HEAP_CHUNK_SIZE_must_be_multiple_of_MEM_ALIGNMENT);
-
 /* Calculate heap area size, leaving space for a pointer to the free list */
 #define MEM_HEAP_AREA_SIZE (MEM_HEAP_SIZE - MEM_ALIGNMENT)
 #define MEM_HEAP_END_OF_LIST ((mem_heap_free_t *const) ~((uint32_t) 0x0))
@@ -550,17 +544,6 @@ mem_heap_free_block_size_stored (void *ptr) /**< pointer to the memory block */
   JERRY_ASSERT (original_p + 1 == ptr);
   mem_heap_free_block (original_p, original_p->size);
 } /* mem_heap_free_block_size_stored */
-
-/**
- * Recommend allocation size based on chunk size.
- *
- * @return recommended allocation size
- */
-size_t __attr_pure___
-mem_heap_recommend_allocation_size (size_t minimum_allocation_size) /**< minimum allocation size */
-{
-  return JERRY_ALIGNUP (minimum_allocation_size, MEM_HEAP_CHUNK_SIZE);
-} /* mem_heap_recommend_allocation_size */
 
 /**
  * Compress pointer

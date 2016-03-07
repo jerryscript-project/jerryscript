@@ -39,7 +39,6 @@ extern void mem_heap_free_block_size_stored (void *);
 extern uintptr_t mem_heap_compress_pointer (const void *);
 extern void *mem_heap_decompress_pointer (uintptr_t);
 extern bool mem_is_heap_pointer (const void *);
-extern size_t __attr_pure___ mem_heap_recommend_allocation_size (size_t);
 extern void mem_heap_print ();
 
 #ifdef MEM_STATS

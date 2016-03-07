@@ -545,8 +545,8 @@ re_compile_bytecode (re_compiled_code_t **out_bytecode_p, /**< [out] pointer to 
     lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
     MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size, lit_utf8_byte_t);
 
-    ssize_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, (ssize_t) pattern_str_size);
-    JERRY_ASSERT (sz >= 0);
+    lit_utf8_size_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, pattern_str_size);
+    JERRY_ASSERT (sz == pattern_str_size);
 
     re_parser_ctx_t parser_ctx;
     parser_ctx.input_start_p = pattern_start_p;

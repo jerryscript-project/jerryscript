@@ -116,16 +116,16 @@ handler (const jerry_api_object_t *function_obj_p,
          const jerry_api_length_t args_cnt)
 {
   char buffer[32];
-  ssize_t sz;
+  jerry_api_size_t sz;
 
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
 
   JERRY_ASSERT (args_cnt == 2);
 
   JERRY_ASSERT (args_p[0].type == JERRY_API_DATA_TYPE_STRING);
-  sz = jerry_api_string_to_char_buffer (args_p[0].u.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -1);
-  sz = jerry_api_string_to_char_buffer (args_p[0].u.v_string, (jerry_api_char_t *) buffer, -sz);
+  sz = jerry_api_get_string_size (args_p[0].u.v_string);
+  JERRY_ASSERT (sz == 1);
+  sz = jerry_api_string_to_char_buffer (args_p[0].u.v_string, (jerry_api_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 1);
   JERRY_ASSERT (!strncmp (buffer, "1", (size_t) sz));
 
@@ -239,7 +239,7 @@ static bool foreach (const jerry_api_string_t *name,
                      const jerry_api_value_t *value, void *user_data)
 {
   char str_buf_p[128];
-  ssize_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
+  jerry_api_size_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
   str_buf_p[sz] = '\0';
 
   if (!strncmp (str_buf_p, "alpha", (size_t)sz))
@@ -274,7 +274,7 @@ static bool foreach (const jerry_api_string_t *name,
   else if (!strncmp (str_buf_p, "echo", (size_t)sz))
   {
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_STRING);
-    ssize_t echo_sz = jerry_api_string_to_char_buffer (value->u.v_string, (jerry_api_char_t *)str_buf_p, 128);
+    jerry_api_size_t echo_sz = jerry_api_string_to_char_buffer (value->u.v_string, (jerry_api_char_t *)str_buf_p, 128);
     str_buf_p[echo_sz] = '\0';
     JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t)echo_sz));
   }
@@ -294,10 +294,10 @@ static bool foreach_exception (const jerry_api_string_t *name, const jerry_api_v
   UNUSED (value);
   UNUSED (user_data);
   char str_buf_p[128];
-  ssize_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
+  jerry_api_size_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *) str_buf_p, 128);
   str_buf_p[sz] = '\0';
 
-  if (!strncmp (str_buf_p, "foxtrot", (size_t)sz))
+  if (!strncmp (str_buf_p, "foxtrot", (size_t) sz))
   {
     JERRY_ASSERT (false);
   }
@@ -326,7 +326,7 @@ main (void)
   jerry_init (JERRY_FLAG_EMPTY);
 
   bool is_ok, is_exception;
-  ssize_t sz;
+  jerry_api_size_t sz;
   jerry_api_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_api_value_t val_external, val_external_construct, val_call_external;
   jerry_api_object_t *global_obj_p, *obj_p;
@@ -346,7 +346,7 @@ main (void)
 
   // Test corner case for jerry_api_string_to_char_buffer
   test_api_init_api_value_string (&args[0], "");
-  sz = jerry_api_string_to_char_buffer (args[0].u.v_string, NULL, 0);
+  sz = jerry_api_get_string_size (args[0].u.v_string);
   JERRY_ASSERT (sz == 0);
   jerry_api_release_value (&args[0]);
 
@@ -396,9 +396,9 @@ main (void)
   is_ok = jerry_api_call_function (val_foo.u.v_object, NULL, &res, args, 2);
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_STRING);
-  sz = jerry_api_string_to_char_buffer (res.u.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -4);
-  sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, -sz);
+  sz = jerry_api_get_string_size (res.u.v_string);
+  JERRY_ASSERT (sz == 4);
+  sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 4);
   jerry_api_release_value (&res);
   JERRY_ASSERT (!strncmp (buffer, "abcd", (size_t) sz));
@@ -496,9 +496,9 @@ main (void)
   jerry_api_release_value (&val_call_external);
   JERRY_ASSERT (is_ok
                 && res.type == JERRY_API_DATA_TYPE_STRING);
-  sz = jerry_api_string_to_char_buffer (res.u.v_string, NULL, 0);
-  JERRY_ASSERT (sz == -19);
-  sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, -sz);
+  sz = jerry_api_get_string_size (res.u.v_string);
+  JERRY_ASSERT (sz == 19);
+  sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 19);
   jerry_api_release_value (&res);
   JERRY_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
@@ -738,9 +738,9 @@ main (void)
 
     JERRY_ASSERT (is_ok
                   && res.type == JERRY_API_DATA_TYPE_STRING);
-    sz = jerry_api_string_to_char_buffer (res.u.v_string, NULL, 0);
-    JERRY_ASSERT (sz == -20);
-    sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, -sz);
+    sz = jerry_api_get_string_size (res.u.v_string);
+    JERRY_ASSERT (sz == 20);
+    sz = jerry_api_string_to_char_buffer (res.u.v_string, (jerry_api_char_t *) buffer, sz);
     JERRY_ASSERT (sz == 20);
     jerry_api_release_value (&res);
     JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));

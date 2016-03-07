@@ -1204,10 +1204,10 @@ ecma_builtin_string_prototype_object_replace_main (ecma_builtin_replace_search_c
                             replace_size,
                             lit_utf8_byte_t);
 
-    ssize_t sz = ecma_string_to_utf8_string (replace_string_p,
-                                             replace_start_p,
-                                             (ssize_t) (replace_size));
-    JERRY_ASSERT (sz >= 0);
+    lit_utf8_size_t sz = ecma_string_to_utf8_string (replace_string_p,
+                                                     replace_start_p,
+                                                     replace_size);
+    JERRY_ASSERT (sz == replace_size);
 
     context_p->replace_string_p = replace_string_p;
     context_p->replace_str_curr_p = replace_start_p;
@@ -2079,10 +2079,10 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
                           input_size,
                           lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
-                                           input_start_p,
-                                           (ssize_t) (input_size));
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
+                                                   input_start_p,
+                                                   input_size);
+  JERRY_ASSERT (sz == input_size);
 
   /*
    * The URI encoding has two major phases: first we compute
@@ -2097,8 +2097,8 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   {
     ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
+    ecma_length_t character_length;
     lit_utf8_byte_t utf8_byte_buffer[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
-    lit_utf8_size_t character_length;
 
     if (lower_case)
     {
@@ -2115,7 +2115,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
     JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
 
-    for (lit_utf8_size_t i = 0; i < character_length; i++)
+    for (ecma_length_t i = 0; i < character_length; i++)
     {
       output_length += lit_code_unit_to_utf8 (character_buffer[i], utf8_byte_buffer);
     }
@@ -2136,7 +2136,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   {
     ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-    lit_utf8_size_t character_length;
+    ecma_length_t character_length;
 
     if (lower_case)
     {
@@ -2153,7 +2153,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
     JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
 
-    for (lit_utf8_size_t i = 0; i < character_length; i++)
+    for (ecma_length_t i = 0; i < character_length; i++)
     {
       output_char_p += lit_code_unit_to_utf8 (character_buffer[i], output_char_p);
     }

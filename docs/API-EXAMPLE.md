@@ -192,17 +192,14 @@ print_value (const jerry_api_value_t * value_p)
     // String value
     case JERRY_API_DATA_TYPE_STRING:
     {
-      ssize_t neg_req_sz, sz;
+      jerry_api_size_t req_sz, sz;
       // determining required buffer size
-      neg_req_sz = jerry_api_string_to_char_buffer (value_p->v_string,
-                                                    NULL,
-                                                    0);
-      assert (neg_req_sz < 0);
-      char * str_buf_p = (char*) malloc (-neg_req_sz);
+      req_sz = jerry_api_get_string_size (value_p->v_string);
+      char * str_buf_p = (char*) malloc (req_sz);
       sz = jerry_api_string_to_char_buffer (value_p->v_string,
                                             str_buf_p,
-                                            -neg_req_sz);
-      assert (sz == -neg_req_sz);
+                                            req_sz);
+      assert (sz == req_sz);
 
       printf ("%s", str_buf_p);
 

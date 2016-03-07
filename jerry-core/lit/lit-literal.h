@@ -49,9 +49,6 @@ extern bool lit_literal_equal_type_num (lit_literal_t, ecma_number_t);
 extern bool lit_literal_equal_type (lit_literal_t, lit_literal_t);
 extern bool lit_literal_equal_charset (lit_literal_t, const lit_utf8_byte_t *, lit_utf8_size_t);
 
-extern const lit_utf8_byte_t *lit_literal_to_utf8_string (lit_literal_t, lit_utf8_byte_t *, size_t);
-extern const char *lit_literal_to_str_internal_buf (lit_literal_t);
-
 extern lit_literal_t lit_get_literal_by_cp (lit_cpointer_t);
 
 extern ecma_number_t lit_number_literal_get_number (lit_literal_t);

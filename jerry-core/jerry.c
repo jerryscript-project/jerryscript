@@ -548,19 +548,18 @@ jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< [
  */
 
 /**
- * Copy string characters to specified buffer.
+ * Copy string characters to specified buffer. It is the caller's responsibility
+ * to make sure that the string fits in the buffer.
  *
  * Note:
  *   '\0' could occur in characters.
  *
- * @return number of bytes, actually copied to the buffer - if string's content was copied successfully;
- *         otherwise (in case size of buffer is insufficient) - negative number, which is calculated
- *         as negation of buffer size, that is required to hold the string's content.
+ * @return number of bytes, actually copied to the buffer.
  */
-ssize_t
+jerry_api_size_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string descriptor */
                                  jerry_api_char_t *buffer_p, /**< [out] output characters buffer */
-                                 ssize_t buffer_size) /**< size of output buffer */
+                                 jerry_api_size_t buffer_size) /**< size of output buffer */
 {
   jerry_assert_api_available ();
 

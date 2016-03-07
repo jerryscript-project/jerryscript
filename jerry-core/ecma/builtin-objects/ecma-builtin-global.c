@@ -88,8 +88,8 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
                             utf8_str_size,
                             lit_utf8_byte_t);
 
-    ssize_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, (ssize_t) utf8_str_size);
-    JERRY_ASSERT (actual_sz == (ssize_t) utf8_str_size);
+    lit_utf8_size_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, utf8_str_size);
+    JERRY_ASSERT (actual_sz == utf8_str_size);
 
     lit_utf8_byte_t *utf8_str_curr_p = utf8_str_p;
     const lit_utf8_byte_t *utf8_str_end_p = utf8_str_p + utf8_str_size;
@@ -212,10 +212,10 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   {
     MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
 
-    ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                       string_buff,
-                                                       (ssize_t) str_size);
-    JERRY_ASSERT (bytes_copied >= 0);
+    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
+                                                               string_buff,
+                                                               str_size);
+    JERRY_ASSERT (bytes_copied == str_size);
     lit_utf8_byte_t *string_curr_p = string_buff;
     lit_utf8_byte_t *string_end_p = string_buff + str_size;
 
@@ -437,10 +437,10 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   {
     MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
 
-    ssize_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                       string_buff,
-                                                       (ssize_t) str_size);
-    JERRY_ASSERT (bytes_copied >= 0);
+    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
+                                                               string_buff,
+                                                               str_size);
+    JERRY_ASSERT (bytes_copied == str_size);
 
     lit_utf8_byte_t *str_curr_p = string_buff;
     lit_utf8_byte_t *str_end_p = string_buff + str_size;
@@ -771,10 +771,10 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
                           input_size + 1,
                           lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
-                                           input_start_p,
-                                           (ssize_t) (input_size));
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
+                                                   input_start_p,
+                                                   input_size);
+  JERRY_ASSERT (sz == input_size);
 
   input_start_p[input_size] = LIT_BYTE_NULL;
 
@@ -1049,10 +1049,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
                           input_size,
                           lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
-                                           input_start_p,
-                                           (ssize_t) (input_size));
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
+                                                   input_start_p,
+                                                   input_size);
+  JERRY_ASSERT (sz == input_size);
 
   /*
    * The URI encoding has two major phases: first we validate the input,
@@ -1270,10 +1270,10 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
                           input_size,
                           lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p,
-                                           input_start_p,
-                                           (ssize_t) (input_size));
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
+                                                   input_start_p,
+                                                   input_size);
+  JERRY_ASSERT (sz == input_size);
 
   /*
    * The escape routine has two major phases: first we compute
@@ -1390,8 +1390,8 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**
 
   /* 3. */
   MEM_DEFINE_LOCAL_ARRAY (input_start_p, input_size, lit_utf8_byte_t);
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p, input_start_p, (ssize_t) (input_size));
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p, input_start_p, input_size);
+  JERRY_ASSERT (sz == input_size);
 
   lit_utf8_byte_t *input_curr_p = input_start_p;
   lit_utf8_byte_t *input_end_p = input_start_p + input_size;

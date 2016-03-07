@@ -710,12 +710,12 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
 
   ecma_string_t *string_p = ecma_get_string_from_value (string);
   ecma_length_t string_size = (uint32_t) ecma_string_get_size (string_p);
-  size_t buffer_size = sizeof (lit_utf8_byte_t) * (string_size + 1);
+  lit_utf8_size_t buffer_size = sizeof (lit_utf8_byte_t) * (string_size + 1);
 
   MEM_DEFINE_LOCAL_ARRAY (str_start_p, buffer_size, lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (string_p, str_start_p, (ssize_t) buffer_size);
-  JERRY_ASSERT (sz == (ssize_t) string_size);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, str_start_p, buffer_size);
+  JERRY_ASSERT (sz == string_size);
 
   str_start_p[string_size] = LIT_BYTE_NULL;
 
@@ -1068,11 +1068,11 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
 
   MEM_DEFINE_LOCAL_ARRAY (string_buff, string_size, lit_utf8_byte_t);
 
-  ssize_t bytes_copied = ecma_string_to_utf8_string (string_p,
-                                                     string_buff,
-                                                     (ssize_t) string_size);
+  lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string_p,
+                                                             string_buff,
+                                                             string_size);
 
-  JERRY_ASSERT (bytes_copied > 0 || !string_size);
+  JERRY_ASSERT (bytes_copied == string_size);
 
   lit_utf8_byte_t *str_p = string_buff;
   const lit_utf8_byte_t *str_end_p = str_p + string_size;

@@ -79,8 +79,8 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
   lit_utf8_size_t flags_str_size = ecma_string_get_size (flags_str_p);
   MEM_DEFINE_LOCAL_ARRAY (flags_start_p, flags_str_size, lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (flags_str_p, flags_start_p, (ssize_t) flags_str_size);
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (flags_str_p, flags_start_p, flags_str_size);
+  JERRY_ASSERT (sz == flags_str_size);
 
   lit_utf8_byte_t *flags_str_curr_p = flags_start_p;
   const lit_utf8_byte_t *flags_str_end_p = flags_start_p + flags_str_size;
@@ -349,7 +349,7 @@ re_canonicalize (ecma_char_t ch, /**< character */
     {
       /* 2. */
       ecma_char_t u[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-      lit_utf8_size_t size = lit_char_to_upper_case (ch, u, LIT_MAXIMUM_OTHER_CASE_LENGTH);
+      ecma_length_t size = lit_char_to_upper_case (ch, u, LIT_MAXIMUM_OTHER_CASE_LENGTH);
 
       /* 3. */
       if (size == 1)
@@ -1281,8 +1281,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   re_matcher_ctx_t re_ctx;
   lit_utf8_byte_t *input_curr_p = NULL;
-  ssize_t sz = ecma_string_to_utf8_string (input_string_p, input_buffer_p, (ssize_t) input_string_size);
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p, input_buffer_p, input_string_size);
+  JERRY_ASSERT (sz == input_string_size);
 
   if (input_string_size == 0u)
   {

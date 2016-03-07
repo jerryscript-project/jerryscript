@@ -56,14 +56,13 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
                             chars_num,
                             lit_utf8_byte_t);
 
-    const ssize_t buf_size = (ssize_t) chars_num;
-    ssize_t buffer_size_req = ecma_string_to_utf8_string (code_p,
-                                                          code_utf8_buffer_p,
-                                                          buf_size);
-    JERRY_ASSERT (buffer_size_req == buf_size);
+    lit_utf8_size_t buffer_size_req = ecma_string_to_utf8_string (code_p,
+                                                                  code_utf8_buffer_p,
+                                                                  chars_num);
+    JERRY_ASSERT (buffer_size_req == chars_num);
 
     ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
-                                           (size_t) buf_size,
+                                           chars_num,
                                            is_direct,
                                            is_called_from_strict_mode_code);
 

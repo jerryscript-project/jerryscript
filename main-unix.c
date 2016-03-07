@@ -560,8 +560,8 @@ main (int argc,
 
       jerry_api_size_t err_str_size = jerry_api_get_string_size (err_str_p);
       JERRY_ASSERT (err_str_size < 256);
-      ssize_t sz = jerry_api_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
-      JERRY_ASSERT (sz > 0);
+      jerry_api_size_t sz = jerry_api_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
+      JERRY_ASSERT (sz == err_str_size);
       err_str_buf[err_str_size] = 0;
 
       JERRY_ERROR_MSG ("%s\n", err_str_buf);

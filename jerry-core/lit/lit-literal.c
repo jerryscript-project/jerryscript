@@ -521,63 +521,6 @@ lit_literal_equal_type (lit_literal_t lit1, /**< first literal */
 } /* lit_literal_equal_type */
 
 /**
- * Get the contents of the literal as a zero-terminated string.
- * If literal is a magic string record, the corresponding string is not copied to the buffer,
- * but is returned directly.
- *
- * @return pointer to the zero-terminated string.
- */
-const lit_utf8_byte_t *
-lit_literal_to_utf8_string (lit_literal_t lit, /**< literal to be processed */
-                            lit_utf8_byte_t *buff_p, /**< buffer to use as a string storage */
-                            size_t size) /**< size of the buffer */
-{
-  JERRY_ASSERT (buff_p != NULL && size > 0);
-
-  switch (lit->type)
-  {
-    case LIT_RECORD_TYPE_CHARSET:
-    {
-      const size_t str_size = lit_charset_literal_get_size (lit);
-      memcpy (buff_p, lit_charset_literal_get_charset (lit), (size > str_size) ? str_size : size);
-      return buff_p;
-    }
-    case LIT_RECORD_TYPE_MAGIC_STR:
-    {
-      return lit_get_magic_string_utf8 (lit_magic_literal_get_magic_str_id (lit));
-    }
-    case LIT_RECORD_TYPE_MAGIC_STR_EX:
-    {
-      return lit_get_magic_string_ex_utf8 (lit_magic_literal_get_magic_str_ex_id (lit));
-    }
-    case LIT_RECORD_TYPE_NUMBER:
-    {
-      ecma_number_t number = lit_number_literal_get_number (lit);
-      ecma_number_to_utf8_string (number, buff_p, (ssize_t) size);
-      return buff_p;
-    }
-  }
-
-  JERRY_UNREACHABLE ();
-} /* lit_literal_to_utf8_string */
-
-/**
- * Get the contents of the literal as a C string.
- * If literal holds a very long string, it would be trimmed to ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER characters.
- *
- * @return pointer to the C string.
- */
-const char *
-lit_literal_to_str_internal_buf (lit_literal_t lit) /**< literal */
-{
-  static lit_utf8_byte_t buff[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER + 1];
-  memset (buff, 0, sizeof (buff));
-
-  return (const char *) lit_literal_to_utf8_string (lit, buff, sizeof (buff) - 1);
-} /* lit_literal_to_str_internal_buf */
-
-
-/**
  * Check if literal really exists in the storage
  *
  * @return true if literal exists in the storage

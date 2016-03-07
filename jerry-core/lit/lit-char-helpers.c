@@ -353,10 +353,10 @@ lit_char_is_word_char (ecma_char_t c) /**< code unit */
  * @return the length of the lowercase character sequence
  *         which is always between 1 and LIT_MAXIMUM_OTHER_CASE_LENGTH.
  */
-lit_utf8_size_t
+ecma_length_t
 lit_char_to_lower_case (ecma_char_t character, /**< input character value */
                         ecma_char_t *output_buffer_p, /**< [out] buffer for the result characters */
-                        size_t buffer_size) /**< buffer size */
+                        ecma_length_t buffer_size) /**< buffer size */
 {
   TODO ("Needs a proper lower case implementation. See issue #323.");
 
@@ -387,10 +387,10 @@ lit_char_to_lower_case (ecma_char_t character, /**< input character value */
  * @return the length of the uppercase character sequence
  *         which is always between 1 and LIT_MAXIMUM_OTHER_CASE_LENGTH.
  */
-lit_utf8_size_t
+ecma_length_t
 lit_char_to_upper_case (ecma_char_t character, /**< input character value */
                         ecma_char_t *output_buffer_p, /**< buffer for the result characters */
-                        size_t buffer_size) /**< buffer size */
+                        ecma_length_t buffer_size) /**< buffer size */
 {
   TODO ("Needs a proper upper case implementation. See issue #323.");
 

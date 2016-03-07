@@ -394,9 +394,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return ECMA_NUMBER_ZERO;
   }
 
-  const ssize_t literal_len = end_p - begin_p + 1;
-
-  if (literal_len > 2
+  if ((end_p >= begin_p + 2)
       && begin_p[0] == dec_digits_range[0]
       && (begin_p[1] == hex_x_chars[0]
           || begin_p[1] == hex_x_chars[1]))
@@ -779,15 +777,15 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
  *
  * @return number of bytes copied to buffer
  */
-ssize_t
+lit_utf8_size_t
 ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
                             lit_utf8_byte_t *out_buffer_p, /**< buffer for string */
-                            ssize_t buffer_size) /**< size of buffer */
+                            lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
   lit_utf8_byte_t *p = out_buffer_p + buffer_size - 1;
-  size_t bytes_copied = 0;
+  lit_utf8_size_t bytes_copied = 0;
 
   do
   {
@@ -806,11 +804,10 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 
   if (likely (p != out_buffer_p))
   {
-    ssize_t bytes_to_move = out_buffer_p + buffer_size - p;
-    memmove (out_buffer_p, p, (size_t) bytes_to_move);
+    memmove (out_buffer_p, p, bytes_copied);
   }
 
-  return (ssize_t) bytes_copied;
+  return bytes_copied;
 } /* ecma_uint32_to_utf8_string */
 
 /**
@@ -1299,7 +1296,7 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
 lit_utf8_size_t
 ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
                             lit_utf8_byte_t *buffer_p, /**< buffer for utf-8 string */
-                            ssize_t buffer_size) /**< size of buffer */
+                            lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
   const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
@@ -1323,14 +1320,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
       // 2.
       *dst_p++ = digits[0];
 
-      JERRY_ASSERT (dst_p - buffer_p <= (ssize_t) buffer_size);
+      JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
       size = (lit_utf8_size_t) (dst_p - buffer_p);
     }
     else if (ecma_number_is_negative (num))
     {
       // 3.
       *dst_p++ = minus_char;
-      ssize_t new_buffer_size = (buffer_size - (dst_p - buffer_p));
+      lit_utf8_size_t new_buffer_size = (lit_utf8_size_t) ((buffer_p + buffer_size) - dst_p);
       size = 1 + ecma_number_to_utf8_string (ecma_number_negate (num), dst_p, new_buffer_size);
     }
     else if (ecma_number_is_infinity (num))
@@ -1349,7 +1346,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
       uint32_t num_uint32 = ecma_number_to_uint32 (num);
       if (ecma_uint32_to_number (num_uint32) == num)
       {
-        size = (lit_utf8_size_t) ecma_uint32_to_utf8_string (num_uint32, dst_p, buffer_size);
+        size = ecma_uint32_to_utf8_string (num_uint32, dst_p, buffer_size);
       }
       else
       {
@@ -1366,7 +1363,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
         if (k <= n && n <= 21)
         {
           dst_p += n;
-          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+          JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
 
           size = (lit_utf8_size_t) (dst_p - buffer_p);
 
@@ -1385,7 +1382,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
         {
           // 7.
           dst_p += k + 1;
-          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+          JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
 
           size = (lit_utf8_size_t) (dst_p - buffer_p);
 
@@ -1407,7 +1404,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
         {
           // 8.
           dst_p += k - n + 1 + 1;
-          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+          JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
 
           size = (lit_utf8_size_t) (dst_p - buffer_p);
 
@@ -1441,7 +1438,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
           {
             // 10.
             dst_p += k + 1;
-            JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+            JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
 
             for (int32_t i = 0; i < k - 1; i++)
             {
@@ -1457,14 +1454,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
           }
 
           // 9., 10.
-          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p + 2) <= buffer_size);
+          JERRY_ASSERT (dst_p + 2 <= buffer_p + buffer_size);
           *dst_p++ = e_chars[0];
           *dst_p++ = (n >= 1) ? plus_char : minus_char;
           int32_t t = (n >= 1) ? (n - 1) : -(n - 1);
 
           if (t == 0)
           {
-            JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+            JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
             *dst_p++ = digits[0];
           }
           else
@@ -1480,7 +1477,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
             while (t_mod != 0)
             {
-              JERRY_ASSERT ((ssize_t) (dst_p - buffer_p + 1) <= buffer_size);
+              JERRY_ASSERT (dst_p + 1 <= buffer_p + buffer_size);
               *dst_p++ = digits[t / t_mod];
 
               t -= (t / t_mod) * t_mod;
@@ -1488,7 +1485,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
             }
           }
 
-          JERRY_ASSERT ((ssize_t) (dst_p - buffer_p) <= buffer_size);
+          JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
           size = (lit_utf8_size_t) (dst_p - buffer_p);
         }
 

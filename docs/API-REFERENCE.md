@@ -290,10 +290,10 @@ Copy string characters to specified buffer, append zero character at end of the 
 **Prototype**
 
 ```c
-ssize_t
+jerry_api_size_t
 jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
                                  char * buffer_p,
-                                 ssize_t buffer_size);
+                                 jerry_api_size_t buffer_size);
 ```
 
 - `string_p` - pointer to a string;
@@ -319,15 +319,13 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
 
     if (is_string) {
       // neg_req_sz would be negative, as zero-size buffer is insufficient for any string
-      ssize_t neg_req_sz = jerry_api_string_to_char_buffer (val.string_p,
-                                                            NULL,
-                                                            0);
-      char * str_buf_p = (char*) malloc (-neg_req_sz);
+      jerry_api_size_t req_sz = jerry_api_get_string_size (val.string_p);
+      char * str_buf_p = (char*) malloc (req_sz);
 
       // sz would be -neg_req_sz
-      size_t sz = jerry_api_string_to_char_buffer (val.string_p,
-                                                   str_buf_p,
-                                                   -neg_req_sz);
+      jerry_api_size_t sz = jerry_api_string_to_char_buffer (val.string_p,
+                                                             str_buf_p,
+                                                             req_sz);
 
       printf ("%s", str_buf_p);
 

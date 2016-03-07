@@ -132,43 +132,37 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
         }
         else
         {
-          const lit_utf8_size_t size = (ecma_string_get_size (name_string_p) +
-                                        ecma_string_get_size (msg_string_p) +
-                                        lit_get_magic_string_size (LIT_MAGIC_STRING_COLON_CHAR) +
-                                        lit_get_magic_string_size (LIT_MAGIC_STRING_SPACE_CHAR));
+          const lit_utf8_size_t name_size = ecma_string_get_size (name_string_p);
+          const lit_utf8_size_t msg_size = ecma_string_get_size (msg_string_p);
+          const lit_utf8_size_t colon_size = lit_get_magic_string_size (LIT_MAGIC_STRING_COLON_CHAR);
+          const lit_utf8_size_t space_size = lit_get_magic_string_size (LIT_MAGIC_STRING_SPACE_CHAR);
+          const lit_utf8_size_t size = name_size + msg_size + colon_size + space_size;
 
-          const ssize_t buffer_size = (ssize_t) size;
-          ssize_t buffer_size_left = buffer_size;
-
-          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, buffer_size, lit_utf8_byte_t);
+          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
           lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
 
-          ssize_t bytes = ecma_string_to_utf8_string (name_string_p, ret_str_buffer_p, buffer_size_left);
-          JERRY_ASSERT (bytes >= 0 && buffer_size_left - bytes >= 0);
-
-          buffer_size_left -= bytes;
-          ret_str_buffer_p = ret_str_buffer + buffer_size - buffer_size_left;
+          lit_utf8_size_t bytes = ecma_string_to_utf8_string (name_string_p, ret_str_buffer_p, name_size);
+          JERRY_ASSERT (bytes == name_size);
+          ret_str_buffer_p = ret_str_buffer_p + bytes;
+          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
 
           ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_COLON_CHAR,
                                                               ret_str_buffer_p,
-                                                              buffer_size_left);
-          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer);
-          JERRY_ASSERT (buffer_size_left >= 0);
+                                                              colon_size);
+          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
 
           ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_SPACE_CHAR,
                                                               ret_str_buffer_p,
-                                                              buffer_size_left);
-          buffer_size_left = buffer_size - (ret_str_buffer_p - ret_str_buffer);
-          JERRY_ASSERT (buffer_size_left >= 0);
+                                                              space_size);
+          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
 
-          bytes = ecma_string_to_utf8_string (msg_string_p, ret_str_buffer_p, buffer_size_left);
-          JERRY_ASSERT (bytes >= 0 && buffer_size_left - bytes >= 0);
-
-          buffer_size_left -= bytes;
-          JERRY_ASSERT (buffer_size_left >= 0);
+          bytes = ecma_string_to_utf8_string (msg_string_p, ret_str_buffer_p, msg_size);
+          JERRY_ASSERT (bytes == msg_size);
+          ret_str_buffer_p = ret_str_buffer_p + bytes;
+          JERRY_ASSERT (ret_str_buffer_p == ret_str_buffer + size);
 
           ret_str_p = ecma_new_ecma_string_from_utf8 (ret_str_buffer,
-                                                      (jerry_api_size_t) (buffer_size - buffer_size_left));
+                                                      size);
 
           MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }

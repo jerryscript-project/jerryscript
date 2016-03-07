@@ -208,8 +208,8 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
   lit_utf8_size_t date_str_size = ecma_string_get_size (date_str_p);
   MEM_DEFINE_LOCAL_ARRAY (date_start_p, date_str_size, lit_utf8_byte_t);
 
-  ssize_t sz = ecma_string_to_utf8_string (date_str_p, date_start_p, (ssize_t) date_str_size);
-  JERRY_ASSERT (sz >= 0);
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (date_str_p, date_start_p, date_str_size);
+  JERRY_ASSERT (sz == date_str_size);
 
   lit_utf8_byte_t *date_str_curr_p = date_start_p;
   const lit_utf8_byte_t *date_str_end_p = date_start_p + date_str_size;

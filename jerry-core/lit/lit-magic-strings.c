@@ -257,14 +257,14 @@ lit_compare_utf8_string_and_magic_string_ex (const lit_utf8_byte_t *string_p, /*
 extern lit_utf8_byte_t *
 lit_copy_magic_string_to_buffer (lit_magic_string_id_t id, /**< magic string id */
                                  lit_utf8_byte_t *buffer_p, /**< destination buffer */
-                                 ssize_t buffer_size) /**< size of buffer */
+                                 lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   const lit_utf8_byte_t *magic_string_bytes_p = lit_get_magic_string_utf8 (id);
   lit_utf8_size_t magic_string_bytes_count = lit_get_magic_string_size (id);
 
   const lit_utf8_byte_t *str_iter_p = magic_string_bytes_p;
   lit_utf8_byte_t *buf_iter_p = buffer_p;
-  ssize_t bytes_copied = 0;
+  lit_utf8_size_t bytes_copied = 0;
 
   while (magic_string_bytes_count--)
   {

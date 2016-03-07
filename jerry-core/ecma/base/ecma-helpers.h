@@ -98,8 +98,8 @@ extern void ecma_deref_ecma_string (ecma_string_t *);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *);
 extern bool ecma_string_get_array_index (const ecma_string_t *, uint32_t *);
 
-extern ssize_t __attr_return_value_should_be_checked___
-ecma_string_to_utf8_string (const ecma_string_t *, lit_utf8_byte_t *, ssize_t);
+extern lit_utf8_size_t __attr_return_value_should_be_checked___
+ecma_string_to_utf8_string (const ecma_string_t *, lit_utf8_byte_t *, lit_utf8_size_t);
 
 extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *, const ecma_string_t *);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_t *);
@@ -239,12 +239,12 @@ ecma_free_external_pointer_in_property (ecma_property_t *);
 
 /* ecma-helpers-conversion.c */
 extern ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *, lit_utf8_size_t);
-extern ssize_t ecma_uint32_to_utf8_string (uint32_t, lit_utf8_byte_t *, ssize_t);
+extern lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t, lit_utf8_byte_t *, lit_utf8_size_t);
 extern uint32_t ecma_number_to_uint32 (ecma_number_t);
 extern int32_t ecma_number_to_int32 (ecma_number_t);
 extern ecma_number_t ecma_int32_to_number (int32_t);
 extern ecma_number_t ecma_uint32_to_number (uint32_t);
-extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, ssize_t);
+extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
 #endif /* !JERRY_ECMA_HELPERS_H */
 

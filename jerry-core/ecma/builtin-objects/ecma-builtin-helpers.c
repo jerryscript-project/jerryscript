@@ -84,11 +84,10 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   /* Building string "[object #type#]" where type is 'Undefined',
      'Null' or one of possible object's classes.
      The string with null character is maximum 19 characters long. */
-  const ssize_t buffer_size = 19;
+  const lit_utf8_size_t buffer_size = 19;
   MEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, lit_utf8_byte_t);
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
-  ssize_t buffer_size_left = buffer_size;
 
   const lit_magic_string_id_t magic_string_ids[] =
   {
@@ -101,13 +100,12 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
   for (uint32_t i = 0; i < sizeof (magic_string_ids) / sizeof (lit_magic_string_id_t); ++i)
   {
-    buffer_ptr = lit_copy_magic_string_to_buffer (magic_string_ids[i], buffer_ptr, buffer_size_left);
-    buffer_size_left = buffer_size - (buffer_ptr - str_buffer);
+    buffer_ptr = lit_copy_magic_string_to_buffer (magic_string_ids[i], buffer_ptr,
+                                                  (lit_utf8_size_t) ((str_buffer + buffer_size) - buffer_ptr));
+    JERRY_ASSERT (buffer_ptr <= str_buffer + buffer_size);
   }
 
-  JERRY_ASSERT (buffer_size_left >= 0);
-
-  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_size - buffer_size_left));
+  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
 
   MEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 
@@ -588,10 +586,10 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
                               original_size,
                               lit_utf8_byte_t);
 
-      ssize_t sz = ecma_string_to_utf8_string (original_str_p,
-                                               original_str_utf8_p,
-                                               (ssize_t) (original_size));
-      JERRY_ASSERT (sz >= 0);
+      lit_utf8_size_t sz = ecma_string_to_utf8_string (original_str_p,
+                                                       original_str_utf8_p,
+                                                       original_size);
+      JERRY_ASSERT (sz == original_size);
 
       ecma_length_t index = start_pos;
 
@@ -606,10 +604,10 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
                               search_size,
                               lit_utf8_byte_t);
 
-      ssize_t sz = ecma_string_to_utf8_string (search_str_p,
-                                               search_str_utf8_p,
-                                               (ssize_t) (search_size));
-      JERRY_ASSERT (sz >= 0);
+      lit_utf8_size_t sz = ecma_string_to_utf8_string (search_str_p,
+                                                       search_str_utf8_p,
+                                                       search_size);
+      JERRY_ASSERT (sz == search_size);
 
       lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
 

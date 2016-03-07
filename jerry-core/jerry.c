@@ -1851,7 +1851,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   snapshot_last_compiled_code_offset = snapshot_buffer_write_offset;
 
-  compiled_code_map_entry_t *new_entry = (compiled_code_map_entry_t *) mem_pools_alloc ();
+  compiled_code_map_entry_t *new_entry;
+  new_entry = (compiled_code_map_entry_t *) mem_heap_alloc_block (sizeof (compiled_code_map_entry_t));
 
   if (new_entry == NULL)
   {
@@ -2133,7 +2134,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   {
     compiled_code_map_entry_t *next_p = ECMA_GET_POINTER (compiled_code_map_entry_t,
                                                           current_p->next_cp);
-    mem_pools_free ((uint8_t *) current_p);
+    mem_heap_free_block (current_p, sizeof (compiled_code_map_entry_t));
     current_p = next_p;
   }
 

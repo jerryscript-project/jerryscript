@@ -272,6 +272,7 @@ jerry_api_value_t jerry_api_create_string_value (jerry_api_string_t *value);
 jerry_api_size_t jerry_api_string_to_char_buffer (const jerry_api_string_t *, jerry_api_char_t *, jerry_api_size_t);
 jerry_api_string_t *jerry_api_acquire_string (jerry_api_string_t *);
 jerry_api_object_t *jerry_api_acquire_object (jerry_api_object_t *);
+jerry_api_value_t *jerry_api_acquire_value (jerry_api_value_t *);
 
 void jerry_api_release_object (jerry_api_object_t *);
 void jerry_api_release_string (jerry_api_string_t *);

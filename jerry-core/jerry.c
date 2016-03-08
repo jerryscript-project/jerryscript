@@ -635,7 +635,40 @@ jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired th
 } /* jerry_api_release_object */
 
 /**
+ * Acquire specified Jerry API value.
+ *
+ * Note:
+ *      For values of string and object types this acquires the underlying data,
+ *      for all other types it is a no-op.
+ *
+ * Warning:
+ *         Acquired pointer should be released with jerry_api_release_value
+ *
+ * @return pointer that may be used outside of the engine
+ */
+jerry_api_value_t *
+jerry_api_acquire_value (jerry_api_value_t *value_p) /**< API value */
+{
+  jerry_assert_api_available ();
+
+  if (value_p->type == JERRY_API_DATA_TYPE_STRING)
+  {
+    jerry_api_acquire_string (value_p->u.v_string);
+  }
+  else if (value_p->type == JERRY_API_DATA_TYPE_OBJECT)
+  {
+    jerry_api_acquire_object (value_p->u.v_object);
+  }
+
+  return value_p;
+} /* jerry_api_acquire_value */
+
+/**
  * Release specified Jerry API value
+ *
+ * Note:
+ *      For values of string and object types this releases the underlying data,
+ *      for all other types it is a no-op.
  */
 void
 jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */

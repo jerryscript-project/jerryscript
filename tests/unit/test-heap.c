@@ -85,7 +85,7 @@ main (int __attr_unused___ argc,
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
       size_t size = (size_t) rand () % test_threshold_block_size;
-      ptrs[j] = (uint8_t*) mem_heap_alloc_block_store_size (size);
+      ptrs[j] = (uint8_t *) mem_heap_alloc_block_store_size (size);
       sizes[j] = size;
 
       JERRY_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);

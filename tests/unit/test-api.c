@@ -239,10 +239,10 @@ static bool foreach (const jerry_api_string_t *name,
                      const jerry_api_value_t *value, void *user_data)
 {
   char str_buf_p[128];
-  jerry_api_size_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *)str_buf_p, 128);
+  jerry_api_size_t sz = jerry_api_string_to_char_buffer (name, (jerry_api_char_t *) str_buf_p, 128);
   str_buf_p[sz] = '\0';
 
-  if (!strncmp (str_buf_p, "alpha", (size_t)sz))
+  if (!strncmp (str_buf_p, "alpha", (size_t) sz))
   {
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT32);
@@ -252,16 +252,16 @@ static bool foreach (const jerry_api_string_t *name,
     JERRY_ASSERT (value->u.v_float64 == 32.0);
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
   }
-  else if (!strncmp (str_buf_p, "bravo", (size_t)sz))
+  else if (!strncmp (str_buf_p, "bravo", (size_t) sz))
   {
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_BOOLEAN);
     JERRY_ASSERT (value->u.v_bool == false);
   }
-  else if (!strncmp (str_buf_p, "charlie", (size_t)sz))
+  else if (!strncmp (str_buf_p, "charlie", (size_t) sz))
   {
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_OBJECT);
   }
-  else if (!strncmp (str_buf_p, "delta", (size_t)sz))
+  else if (!strncmp (str_buf_p, "delta", (size_t) sz))
   {
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT32);
@@ -271,19 +271,19 @@ static bool foreach (const jerry_api_string_t *name,
     JERRY_ASSERT (value->u.v_float64 == 123.45);
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
   }
-  else if (!strncmp (str_buf_p, "echo", (size_t)sz))
+  else if (!strncmp (str_buf_p, "echo", (size_t) sz))
   {
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_STRING);
-    jerry_api_size_t echo_sz = jerry_api_string_to_char_buffer (value->u.v_string, (jerry_api_char_t *)str_buf_p, 128);
+    jerry_api_size_t echo_sz = jerry_api_string_to_char_buffer (value->u.v_string, (jerry_api_char_t *) str_buf_p, 128);
     str_buf_p[echo_sz] = '\0';
-    JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t)echo_sz));
+    JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t) echo_sz));
   }
   else
   {
     JERRY_ASSERT (false);
   }
 
-  JERRY_ASSERT (!strncmp ((const char*)user_data, "user_data", 9));
+  JERRY_ASSERT (!strncmp ((const char *) user_data, "user_data", 9));
   return true;
 } /* foreach */
 
@@ -440,7 +440,7 @@ main (void)
 
   // foreach properties
   jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "p", &val_p);
-  is_ok = jerry_api_foreach_object_field (val_p.u.v_object, foreach, (void*)"user_data");
+  is_ok = jerry_api_foreach_object_field (val_p.u.v_object, foreach, (void *) "user_data");
   JERRY_ASSERT (is_ok);
 
   // break foreach at third element

@@ -242,6 +242,9 @@ ecma_gc_init (void)
 {
   ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = NULL;
   ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
+  ecma_gc_visited_flip_flag = false;
+  ecma_gc_objects_number = 0;
+  ecma_gc_new_objects_since_last_gc = 0;
 } /* ecma_gc_init */
 
 /**

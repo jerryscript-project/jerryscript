@@ -50,9 +50,6 @@ typedef struct
 ecma_value_t
 re_compile_bytecode (const re_compiled_code_t **, ecma_string_t *, uint16_t);
 
-const re_compiled_code_t *
-re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, uint16_t flags, uint32_t *idx);
-
 void re_cache_gc_run ();
 
 /**

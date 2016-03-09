@@ -445,23 +445,23 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 } /* re_parse_alternative */
 
 static const re_compiled_code_t *re_cache[RE_CACHE_SIZE];
+static uint8_t re_cache_idx = RE_CACHE_SIZE;
 
 /**
  * Search for the given pattern in the RegExp cache
  *
- * @return compiled bytecode - if found
- *         NULL              - otherwise
+ * @return index of bytecode in cache - if found
+ *         RE_CACHE_SIZE              - otherwise
  */
-const re_compiled_code_t *
+static uint8_t
 re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
-                           uint16_t flags, /**< flags */
-                           uint32_t *idx) /**< [out] index */
+                           uint16_t flags) /**< flags */
 {
-  uint32_t free_idx = RE_CACHE_SIZE;
+  uint8_t free_idx = RE_CACHE_SIZE;
 
-  for (*idx = 0u; *idx < RE_CACHE_SIZE; (*idx)++)
+  for (uint8_t idx = 0u; idx < RE_CACHE_SIZE; idx++)
   {
-    const re_compiled_code_t *cached_bytecode_p = re_cache[*idx];
+    const re_compiled_code_t *cached_bytecode_p = re_cache[idx];
 
     if (cached_bytecode_p != NULL)
     {
@@ -472,19 +472,18 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
           && ecma_compare_ecma_strings (cached_pattern_str_p, pattern_str_p))
       {
         JERRY_DDLOG ("RegExp is found in cache\n");
-        return re_cache[*idx];
+        return idx;
       }
     }
     else
     {
       /* mark as free, so it can be overridden if the cache is full */
-      free_idx = *idx;
+      free_idx = idx;
     }
   }
 
   JERRY_DDLOG ("RegExp is NOT found in cache\n");
-  *idx = free_idx;
-  return NULL;
+  return free_idx;
 } /* re_find_bytecode_in_cache */
 
 /**
@@ -521,6 +520,20 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
                      uint16_t flags) /**< flags */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  uint8_t cache_idx = re_find_bytecode_in_cache (pattern_str_p, flags);
+
+  if (cache_idx < RE_CACHE_SIZE)
+  {
+    *out_bytecode_p = re_cache[cache_idx];
+
+    if (*out_bytecode_p != NULL)
+    {
+      ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
+      return ret_value;
+    }
+  }
+
+  /* not in the RegExp cache, so compile it */
   re_compiler_ctx_t re_ctx;
   re_ctx.flags = flags;
   re_ctx.highest_backref = 0;
@@ -533,90 +546,93 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
   re_ctx.bytecode_ctx_p = &bc_ctx;
 
-  uint32_t cache_idx;
-  *out_bytecode_p = re_find_bytecode_in_cache (pattern_str_p, flags, &cache_idx);
+  lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
+  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size, lit_utf8_byte_t);
 
-  if (*out_bytecode_p != NULL)
+  lit_utf8_size_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, pattern_str_size);
+  JERRY_ASSERT (sz == pattern_str_size);
+
+  re_parser_ctx_t parser_ctx;
+  parser_ctx.input_start_p = pattern_start_p;
+  parser_ctx.input_curr_p = pattern_start_p;
+  parser_ctx.input_end_p = pattern_start_p + pattern_str_size;
+  parser_ctx.num_of_groups = -1;
+  re_ctx.parser_ctx_p = &parser_ctx;
+
+  /* 1. Parse RegExp pattern */
+  re_ctx.num_of_captures = 1;
+  re_append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
+
+  ECMA_TRY_CATCH (empty, re_parse_alternative (&re_ctx, true), ret_value);
+
+  /* 2. Check for invalid backreference */
+  if (re_ctx.highest_backref >= re_ctx.num_of_captures)
   {
-    ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
+    ret_value = ecma_raise_syntax_error ("Invalid backreference.\n");
   }
   else
-  { /* not in the RegExp cache, so compile it */
-    lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
-    MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size, lit_utf8_byte_t);
+  {
+    re_append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
+    re_append_opcode (&bc_ctx, RE_OP_EOF);
 
-    lit_utf8_size_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, pattern_str_size);
-    JERRY_ASSERT (sz == pattern_str_size);
+    /* 3. Insert extra informations for bytecode header */
+    re_compiled_code_t re_compiled_code;
 
-    re_parser_ctx_t parser_ctx;
-    parser_ctx.input_start_p = pattern_start_p;
-    parser_ctx.input_curr_p = pattern_start_p;
-    parser_ctx.input_end_p = pattern_start_p + pattern_str_size;
-    parser_ctx.num_of_groups = -1;
-    re_ctx.parser_ctx_p = &parser_ctx;
+    re_compiled_code.flags = re_ctx.flags | (1u << ECMA_BYTECODE_REF_SHIFT);
+    ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp,
+                               ecma_copy_or_ref_ecma_string (pattern_str_p));
+    re_compiled_code.num_of_captures = re_ctx.num_of_captures * 2;
+    re_compiled_code.num_of_non_captures = re_ctx.num_of_non_captures;
 
-    /* 1. Parse RegExp pattern */
-    re_ctx.num_of_captures = 1;
-    re_append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
-
-    ECMA_TRY_CATCH (empty, re_parse_alternative (&re_ctx, true), ret_value);
-
-    /* 2. Check for invalid backreference */
-    if (re_ctx.highest_backref >= re_ctx.num_of_captures)
-    {
-      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid backreference.\n"));
-    }
-    else
-    {
-      re_append_opcode (&bc_ctx, RE_OP_SAVE_AND_MATCH);
-      re_append_opcode (&bc_ctx, RE_OP_EOF);
-
-      /* 3. Insert extra informations for bytecode header */
-      re_compiled_code_t re_compiled_code;
-
-      re_compiled_code.flags = re_ctx.flags | (1u << ECMA_BYTECODE_REF_SHIFT);
-      ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp,
-                                 ecma_copy_or_ref_ecma_string (pattern_str_p));
-      re_compiled_code.num_of_captures = re_ctx.num_of_captures * 2;
-      re_compiled_code.num_of_non_captures = re_ctx.num_of_non_captures;
-
-      re_bytecode_list_insert (&bc_ctx,
-                               0,
-                               (uint8_t *) &re_compiled_code,
-                               sizeof (re_compiled_code_t));
-    }
-
-    ECMA_FINALIZE (empty);
-
-    MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
-
-    if (!ecma_is_value_empty (ret_value))
-    {
-      /* Compilation failed, free bytecode. */
-      mem_heap_free_block_size_stored (bc_ctx.block_start_p);
-      *out_bytecode_p = NULL;
-    }
-    else
-    {
-      /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
-      JERRY_ASSERT (bc_ctx.block_start_p != NULL);
-      *out_bytecode_p = (re_compiled_code_t *) bc_ctx.block_start_p;
-
-      if (cache_idx < RE_CACHE_SIZE)
-      {
-        ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
-        re_cache[cache_idx] = *out_bytecode_p;
-      }
-      else
-      {
-        JERRY_DDLOG ("RegExp cache is full! Cannot add new bytecode to it.");
-      }
-    }
+    re_bytecode_list_insert (&bc_ctx,
+                             0,
+                             (uint8_t *) &re_compiled_code,
+                             sizeof (re_compiled_code_t));
   }
 
+  ECMA_FINALIZE (empty);
+
+  MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
+
+  if (!ecma_is_value_empty (ret_value))
+  {
+    /* Compilation failed, free bytecode. */
+    JERRY_DDLOG ("RegExp compilation failed!\n");
+    mem_heap_free_block_size_stored (bc_ctx.block_start_p);
+    *out_bytecode_p = NULL;
+  }
+  else
+  {
 #ifdef JERRY_ENABLE_LOG
-  re_dump_bytecode (&bc_ctx);
+    re_dump_bytecode (&bc_ctx);
 #endif
+
+    /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
+    JERRY_ASSERT (bc_ctx.block_start_p != NULL);
+    *out_bytecode_p = (re_compiled_code_t *) bc_ctx.block_start_p;
+
+    if (cache_idx == RE_CACHE_SIZE)
+    {
+      if (re_cache_idx == 0u)
+      {
+        re_cache_idx = RE_CACHE_SIZE;
+      }
+
+      const re_compiled_code_t *cached_bytecode_p = re_cache[--re_cache_idx];
+      JERRY_DDLOG ("RegExp cache is full! Remove the element on idx: %d\n", re_cache_idx);
+
+      if (cached_bytecode_p != NULL)
+      {
+        ecma_bytecode_deref ((ecma_compiled_code_t *) cached_bytecode_p);
+      }
+
+      cache_idx = re_cache_idx;
+    }
+
+    JERRY_DDLOG ("Insert bytecode into RegExp cache (idx: %d).\n", cache_idx);
+    ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
+    re_cache[cache_idx] = *out_bytecode_p;
+  }
 
   return ret_value;
 } /* re_compile_bytecode */

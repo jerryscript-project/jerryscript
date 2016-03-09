@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_NUMBER_H
-#define ECMA_NUMBER_H
+#ifndef ECMA_NUMBER_ARITHMETIC_H
+#define ECMA_NUMBER_ARITHMETIC_H
 
 #include "ecma-globals.h"
 
@@ -34,4 +34,4 @@ extern ecma_number_t ecma_op_number_remainder (ecma_number_t, ecma_number_t);
  * @}
  */
 
-#endif /* ECMA_NUMBER_H */
+#endif /* !ECMA_NUMBER_ARITHMETIC_H */

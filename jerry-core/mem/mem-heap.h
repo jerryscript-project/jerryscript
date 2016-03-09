@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,8 +24,8 @@
 /**
  * Heap allocator interface
  */
-#ifndef JERRY_MEM_HEAP_H
-#define JERRY_MEM_HEAP_H
+#ifndef MEM_HEAP_H
+#define MEM_HEAP_H
 
 #include "jrt.h"
 
@@ -124,4 +124,4 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
  * @}
  */
 
-#endif /* !JERRY_MEM_HEAP_H */
+#endif /* !MEM_HEAP_H */

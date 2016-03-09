@@ -21,8 +21,8 @@
  * @{
  */
 
-#ifndef JERRY_ECMA_HELPERS_H
-#define JERRY_ECMA_HELPERS_H
+#ifndef ECMA_HELPERS_H
+#define ECMA_HELPERS_H
 
 #include "ecma-globals.h"
 #include "lit-cpointer.h"
@@ -246,7 +246,7 @@ extern ecma_number_t ecma_int32_to_number (int32_t);
 extern ecma_number_t ecma_uint32_to_number (uint32_t);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
-#endif /* !JERRY_ECMA_HELPERS_H */
+#endif /* !ECMA_HELPERS_H */
 
 /**
  * @}

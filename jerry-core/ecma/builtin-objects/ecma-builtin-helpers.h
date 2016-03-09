@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_OBJECT_PROTOTYPE_H
-#define ECMA_OBJECT_PROTOTYPE_H
+#ifndef ECMA_BUILTIN_HELPERS_H
+#define ECMA_BUILTIN_HELPERS_H
 
 #include "ecma-globals.h"
 
@@ -171,4 +171,4 @@ ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *, ecma_string
  * @}
  */
 
-#endif /* !ECMA_OBJECT_PROPERTY_H */
+#endif /* !ECMA_BUILTIN_HELPERS_H */

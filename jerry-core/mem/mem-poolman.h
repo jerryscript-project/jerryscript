@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,8 +25,8 @@
 /**
  * Pool manager interface
  */
-#ifndef JERRY_MEM_POOLMAN_H
-#define JERRY_MEM_POOLMAN_H
+#ifndef MEM_POOLMAN_H
+#define MEM_POOLMAN_H
 
 #include "jrt.h"
 
@@ -65,7 +65,7 @@ extern void mem_pools_get_stats (mem_pools_stats_t *);
 extern void mem_pools_stats_reset_peak (void);
 #endif /* MEM_STATS */
 
-#endif /* JERRY_MEM_POOLMAN_H */
+#endif /* !MEM_POOLMAN_H */
 
 /**
  * @}

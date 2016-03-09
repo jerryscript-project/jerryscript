@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_ECMA_CONVERSION_H
-#define JERRY_ECMA_CONVERSION_H
+#ifndef ECMA_CONVERSION_H
+#define ECMA_CONVERSION_H
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -53,4 +53,4 @@ extern ecma_value_t ecma_op_to_property_descriptor (ecma_value_t, ecma_property_
  * @}
  */
 
-#endif /* !JERRY_ECMA_CONVERSION_H */
+#endif /* !ECMA_CONVERSION_H */

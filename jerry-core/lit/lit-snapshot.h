@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef RCS_SNAPSHOT_H
-#define RCS_SNAPSHOT_H
+#ifndef LIT_SNAPSHOT_H
+#define LIT_SNAPSHOT_H
 
 #include "lit-cpointer.h"
 #include "ecma-globals.h"
@@ -44,4 +44,4 @@ lit_load_literals_from_snapshot (const uint8_t *,
                                  uint32_t *);
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
-#endif /* !RCS_SNAPSHOT_H */
+#endif /* !LIT_SNAPSHOT_H */

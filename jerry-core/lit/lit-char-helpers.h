@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -237,4 +237,4 @@ extern bool lit_char_is_word_char (ecma_char_t);
 ecma_length_t lit_char_to_lower_case (ecma_char_t, ecma_char_t *, ecma_length_t);
 ecma_length_t lit_char_to_upper_case (ecma_char_t, ecma_char_t *, ecma_length_t);
 
-#endif /* LIT_CHAR_HELPERS_H */
+#endif /* !LIT_CHAR_HELPERS_H */

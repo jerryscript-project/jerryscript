@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 /**
  * Allocator interface
  */
-#ifndef JERRY_MEM_ALLOCATOR_H
-#define JERRY_MEM_ALLOCATOR_H
+#ifndef MEM_ALLOCATOR_H
+#define MEM_ALLOCATOR_H
 
 #include "jrt.h"
 #include "mem-config.h"
@@ -125,7 +125,7 @@ extern void mem_stats_reset_peak (void);
 extern void mem_stats_print (void);
 #endif /* MEM_STATS */
 
-#endif /* !JERRY_MEM_ALLOCATOR_H */
+#endif /* !MEM_ALLOCATOR_H */
 
 /**
  * @}

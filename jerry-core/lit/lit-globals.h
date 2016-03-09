@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,4 +138,4 @@ typedef uint8_t lit_string_hash_t;
  */
 #define LIT_STRING_HASH_LAST_BYTES_COUNT (2)
 
-#endif /* LIT_GLOBALS_H */
+#endif /* !LIT_GLOBALS_H */

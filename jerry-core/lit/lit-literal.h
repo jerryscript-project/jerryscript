@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,4 +61,4 @@ extern lit_literal_t lit_literal_get_next (lit_literal_t);
 extern lit_magic_string_id_t lit_magic_literal_get_magic_str_id (lit_literal_t);
 extern lit_magic_string_ex_id_t lit_magic_literal_get_magic_str_ex_id (lit_literal_t);
 
-#endif /* LIT_LITERAL_H */
+#endif /* !LIT_LITERAL_H */

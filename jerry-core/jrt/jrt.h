@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_GLOBALS_H
-#define JERRY_GLOBALS_H
+#ifndef JRT_H
+#define JRT_H
 
 #include <stdio.h>
 #include <string.h>
@@ -217,4 +217,4 @@ extern bool jrt_read_from_buffer_by_offset (const uint8_t *, size_t, size_t *, v
 
 extern bool jrt_write_to_buffer_by_offset (uint8_t *, size_t, size_t *, const void *, size_t);
 
-#endif /* !JERRY_GLOBALS_H */
+#endif /* !JRT_H */

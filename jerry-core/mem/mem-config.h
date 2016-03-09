@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,4 +38,4 @@
  */
 #define MEM_ALIGNMENT_LOG   3
 
-#endif /* MEM_CONFIG_H */
+#endif /* !MEM_CONFIG_H */

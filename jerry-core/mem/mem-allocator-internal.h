@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,4 +30,4 @@ extern void mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_
  * @}
  */
 
-#endif /* MEM_ALLOCATOR_INTERNAL_H */
+#endif /* !MEM_ALLOCATOR_INTERNAL_H */

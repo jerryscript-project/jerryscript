@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef JERRY_ECMA_ALLOC_H
-#define  JERRY_ECMA_ALLOC_H
+#ifndef ECMA_ALLOC_H
+#define ECMA_ALLOC_H
 
 #include "ecma-globals.h"
 
@@ -122,7 +122,7 @@ extern ecma_external_pointer_t *ecma_alloc_external_pointer (void);
 extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *);
 
 
-#endif /* JERRY_ECMA_ALLOC_H */
+#endif /* !ECMA_ALLOC_H */
 
 /**
  * @}

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_BIT_FIELDS_H
-#define JERRY_BIT_FIELDS_H
+#ifndef JRT_BIT_FIELDS_H
+#define JRT_BIT_FIELDS_H
 
 /**
  * Extract a bit-field.
@@ -42,4 +42,4 @@
 #define JRT_SET_BIT_FIELD_VALUE(type, container, new_bit_field_value, lsb, width) \
   (((container) & ~(((((type) 1) << (width)) - 1) << (lsb))) | (((type) new_bit_field_value) << (lsb)))
 
-#endif /* !JERRY_BIT_FIELDS_H */
+#endif /* !JRT_BIT_FIELDS_H */

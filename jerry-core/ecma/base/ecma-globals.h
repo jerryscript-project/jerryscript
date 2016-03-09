@@ -20,8 +20,8 @@
  * @{
  */
 
-#ifndef JERRY_ECMA_GLOBALS_H
-#define JERRY_ECMA_GLOBALS_H
+#ifndef ECMA_GLOBALS_H
+#define ECMA_GLOBALS_H
 
 #include "config.h"
 #include "jrt.h"
@@ -756,7 +756,7 @@ typedef struct
  * @}
  */
 
-#endif  /* JERRY_ECMA_GLOBALS_H */
+#endif  /* !ECMA_GLOBALS_H */
 
 /**
  * @}

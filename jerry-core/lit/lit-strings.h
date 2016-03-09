@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef LIT_UNICODE_HELPERS_H
-#define LIT_UNICODE_HELPERS_H
+#ifndef LIT_STRINGS_H
+#define LIT_STRINGS_H
 
 #include "jrt.h"
 #include "lit-globals.h"
@@ -191,4 +191,4 @@ void lit_utf8_decr (lit_utf8_byte_t **);
 /* print */
 void lit_put_ecma_char (ecma_char_t);
 
-#endif /* LIT_UNICODE_HELPERS_H */
+#endif /* !LIT_STRINGS_H */

@@ -20,7 +20,7 @@ project (Jerry C ASM)
  string(TOUPPER "${PLATFORM}" PLATFORM)
 
 # Compiler configuration
- if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
+ if(NOT (("${PLATFORM}" STREQUAL "DARWIN") OR ("${PLATFORM}" STREQUAL "EXTERNAL")))
   if(NOT CMAKE_COMPILER_IS_GNUCC)
    message(FATAL_ERROR "gcc compiler is required")
   endif()
@@ -129,6 +129,15 @@ project (Jerry C ASM)
   endif()
 
   set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
+ endif()
+
+
+ # Should we use external jerry-port.c?
+ if(DEFINED EXTERNAL_PORT_FILE AND NOT EXTERNAL_PORT_FILE STREQUAL "UNDEFINED")
+   set(SOURCE_PORT_IMPLEMENTATION ${EXTERNAL_PORT_FILE})
+   set(USE_DEFAULT_PORT FALSE)
+ else()
+   set(USE_DEFAULT_PORT TRUE)
  endif()
 
 # Are there any interfaces for external libraries, other than libc, that should be registered?

@@ -1,0 +1,65 @@
+CURDIR     = `pwd`
+SRCPATH    = ${CURDIR}/targets/pebble/source
+TYPE       = release
+MODIFIER   ?=
+BUILD_DIR  ?= build
+INTERM     = $(BUILD_DIR)/obj-pebble
+OUTPUT     = $(BUILD_DIR)/bin/$(TYPE).pebble
+COPYTARGET = $(BUILD_DIR)/lib
+JERRYHEAP  ?= 16
+PORT_FILE = $(SRCPATH)/jerry_port.c
+
+CFLAGS += -Wno-error=format
+CFLAGS += -Wno-error=unused-parameter
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-strict-aliasing
+CFLAGS += -Wno-pedantic
+
+CMAKE_FLAGS = \
+	 -DENABLE_LTO=OFF \
+	 -DCMAKE_RULE_MESSAGES=OFF \
+	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
+	 -DEXTERNAL_CMAKE_C_COMPILER=$(CC) \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=arm7-m \
+	 -DEXTERNAL_COMPILE_FLAGS="$(CFLAGS)" \
+	 -DEXTERNAL_PORT_FILE="$(PORT_FILE)" \
+	 -DEXTERNAL_MEM_HEAP_SIZE_KB=$(JERRYHEAP)
+
+
+ifdef PBLTEST
+$(warning RUNNING PBLTEST)
+CFLAGS += -Wno-conversion
+CFLAGS += -Wno-unknown-warning-option
+CFLAGS += -Wno-error=int-to-pointer-cast
+CFLAGS += -DMEM_HEAP_PTR_64
+CMAKE_FLAGS += -DUSE_COMPILER_DEFAULT_LIBC=NO
+CMAKE_FLAGS += -DEXTERNAL_CMAKE_C_COMPILER_FAMILY=CLANG
+else
+# Building firmware -> use pblibc
+CMAKE_FLAGS += -DUSE_COMPILER_DEFAULT_LIBC=NO
+CMAKE_FLAGS += -DEXTERNAL_LIBC_INTERFACE=$(CURDIR)/../../../libc/include/
+CMAKE_FLAGS += -DEXTERNAL_CMAKE_C_COMPILER_FAMILY=GNU
+endif
+
+
+.PHONY: jerry clean
+
+
+all: jerry
+
+
+jerry:
+	mkdir -p $(INTERM)
+	mkdir -p $(OUTPUT)
+	mkdir -p $(COPYTARGET)
+	cmake -B$(INTERM) -H./ $(CMAKE_FLAGS)
+	make -s -C $(INTERM) $(TYPE).external$(MODIFIER)
+	cp `cat $(INTERM)/$(TYPE).external$(MODIFIER)/list` $(OUTPUT)/.
+	cp $(OUTPUT)/lib$(TYPE)$(MODIFIER).jerry-core.a $(COPYTARGET)/libjerrycore.a
+	cp $(OUTPUT)/lib$(TYPE)$(MODIFIER).jerry-fdlibm.third_party.lib.a $(COPYTARGET)/libfdlibm.a
+
+
+clean:
+	rm -rf $(INTERM)
+	rm -rf $(OUTPUT)
+	

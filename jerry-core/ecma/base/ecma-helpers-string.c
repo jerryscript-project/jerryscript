@@ -918,7 +918,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
     return false;
   }
 
-  const lit_utf8_byte_t *utf8_string1_p, *utf8_string2_p;
+  lit_utf8_byte_t *utf8_string1_p, *utf8_string2_p;
   bool is_utf8_string1_on_heap = false, is_utf8_string2_on_heap = false;
   lit_utf8_byte_t utf8_string1_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
   lit_utf8_size_t utf8_string1_size;

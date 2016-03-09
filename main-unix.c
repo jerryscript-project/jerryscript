@@ -215,9 +215,9 @@ main (int argc,
   const char *exec_snapshot_file_names[JERRY_MAX_COMMAND_LINE_ARGS];
   int exec_snapshots_count = 0;
 
-  bool is_dump_snapshot_mode = false;
-  bool is_dump_snapshot_mode_for_global_or_eval = false;
-  const char *dump_snapshot_file_name_p = NULL;
+  bool is_save_snapshot_mode = false;
+  bool is_save_snapshot_mode_for_global_or_eval = false;
+  const char *save_snapshot_file_name_p = NULL;
 
   bool is_repl_mode = false;
 
@@ -249,18 +249,18 @@ main (int argc,
     {
       flags |= JERRY_FLAG_SHOW_OPCODES;
     }
-    else if (!strcmp ("--dump-snapshot-for-global", argv[i])
-             || !strcmp ("--dump-snapshot-for-eval", argv[i]))
+    else if (!strcmp ("--save-snapshot-for-global", argv[i])
+             || !strcmp ("--save-snapshot-for-eval", argv[i]))
     {
-      is_dump_snapshot_mode = true;
-      is_dump_snapshot_mode_for_global_or_eval = !strcmp ("--dump-snapshot-for-global", argv[i]);
+      is_save_snapshot_mode = true;
+      is_save_snapshot_mode_for_global_or_eval = !strcmp ("--save-snapshot-for-global", argv[i]);
 
       flags |= JERRY_FLAG_PARSE_ONLY;
 
-      if (dump_snapshot_file_name_p == NULL
+      if (save_snapshot_file_name_p == NULL
           && ++i < argc)
       {
-        dump_snapshot_file_name_p = argv[i];
+        save_snapshot_file_name_p = argv[i];
       }
       else
       {
@@ -321,17 +321,17 @@ main (int argc,
     }
   }
 
-  if (is_dump_snapshot_mode)
+  if (is_save_snapshot_mode)
   {
     if (files_counter == 0)
     {
-      JERRY_ERROR_MSG ("--dump-snapshot argument is passed, but no script was specified on command line\n");
+      JERRY_ERROR_MSG ("--save-snapshot argument is passed, but no script was specified on command line\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
     if (exec_snapshots_count != 0)
     {
-      JERRY_ERROR_MSG ("--dump-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      JERRY_ERROR_MSG ("--save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -426,14 +426,14 @@ main (int argc,
 
     if (source_p != NULL)
     {
-      if (is_dump_snapshot_mode)
+      if (is_save_snapshot_mode)
       {
-        static uint8_t snapshot_dump_buffer[ JERRY_BUFFER_SIZE ];
+        static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
 
         size_t snapshot_size = jerry_parse_and_save_snapshot (source_p,
                                                               source_size,
-                                                              is_dump_snapshot_mode_for_global_or_eval,
-                                                              snapshot_dump_buffer,
+                                                              is_save_snapshot_mode_for_global_or_eval,
+                                                              snapshot_save_buffer,
                                                               JERRY_BUFFER_SIZE);
         if (snapshot_size == 0)
         {
@@ -441,8 +441,8 @@ main (int argc,
         }
         else
         {
-          FILE *snapshot_file_p = fopen (dump_snapshot_file_name_p, "w");
-          fwrite (snapshot_dump_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
+          FILE *snapshot_file_p = fopen (save_snapshot_file_name_p, "w");
+          fwrite (snapshot_save_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
           fclose (snapshot_file_p);
         }
       }

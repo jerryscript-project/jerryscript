@@ -2045,7 +2045,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
                                size_t source_size, /**< script source size */
                                bool is_for_global, /**< snapshot would be executed as global (true)
                                                     *   or eval (false) */
-                               uint8_t *buffer_p, /**< buffer to dump snapshot to */
+                               uint8_t *buffer_p, /**< buffer to save snapshot to */
                                size_t buffer_size) /**< the buffer's size */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
@@ -2101,7 +2101,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
   uint32_t literals_num;
 
-  if (!lit_dump_literals_for_snapshot (buffer_p,
+  if (!lit_save_literals_for_snapshot (buffer_p,
                                        buffer_size,
                                        &snapshot_buffer_write_offset,
                                        &lit_map_p,

@@ -28,7 +28,7 @@ typedef struct
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 extern bool
-lit_dump_literals_for_snapshot (uint8_t *,
+lit_save_literals_for_snapshot (uint8_t *,
                                 size_t,
                                 size_t *,
                                 lit_mem_to_snapshot_id_map_entry_t **,

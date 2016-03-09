@@ -30,7 +30,7 @@ typedef struct
   uint32_t lit_table_offset; /**< offset of the literal table */
   uint32_t lit_table_size; /**< size of literal table */
   uint32_t is_run_global; /**< flag, indicating whether the snapshot
-                            *   was dumped as 'Global scope'-mode code (true)
+                            *   was saved as 'Global scope'-mode code (true)
                             *   or as eval-mode code (false) */
 } jerry_snapshot_header_t;
 

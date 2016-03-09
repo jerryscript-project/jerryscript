@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,14 +22,14 @@
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 
 /**
- * Dump a record to specified snapshot buffer.
+ * Save a record to specified snapshot buffer.
  *
- * @return number of bytes dumped,
- *         or 0 - upon dump failure
+ * @return number of bytes saved,
+ *         or 0 - upon save failure
  */
 static uint32_t
-lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
-                   uint8_t *buffer_p, /**< buffer to dump to */
+lit_snapshot_save (lit_literal_t lit, /**< literal to save */
+                   uint8_t *buffer_p, /**< buffer to save to */
                    size_t buffer_size, /**< buffer size */
                    size_t *in_out_buffer_offset_p) /**< [in,out] buffer write offset */
 {
@@ -118,23 +118,23 @@ lit_snapshot_dump (lit_literal_t lit, /**< literal to dump */
 
   JERRY_UNREACHABLE ();
   return 0;
-} /* lit_snapshot_dump */
+} /* lit_snapshot_save */
 
 /**
- * Dump literals to specified snapshot buffer.
+ * Save literals to specified snapshot buffer.
  *
- * @return true, if dump was performed successfully (i.e. buffer size is sufficient),
+ * @return true, if save was performed successfully (i.e. buffer size is sufficient),
  *         false - otherwise.
  */
 bool
-lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot buffer */
+lit_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot buffer */
                                 size_t buffer_size, /**< size of the buffer */
                                 size_t *in_out_buffer_offset_p, /**< [in,out] write position in the buffer */
                                 lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< [out] map from literal identifiers
                                                                                  *        to the literal offsets
                                                                                  *        in snapshot */
                                 uint32_t *out_map_num_p, /**< [out] number of literals */
-                                uint32_t *out_lit_table_size_p) /**< [out] number of bytes, dumped to snapshot buffer */
+                                uint32_t *out_lit_table_size_p) /**< [out] number of bytes, saved to snapshot buffer */
 {
   uint32_t literals_num = lit_count_literals ();
   uint32_t lit_table_size = 0;
@@ -186,7 +186,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
         break;
       }
 
-      uint32_t bytes = lit_snapshot_dump (lit, buffer_p, buffer_size, in_out_buffer_offset_p);
+      uint32_t bytes = lit_snapshot_save (lit, buffer_p, buffer_size, in_out_buffer_offset_p);
 
       if (bytes == 0)
       {
@@ -241,7 +241,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
   *out_map_num_p = literals_num;
   *out_lit_table_size_p = aligned_size;
   return true;
-} /* lit_dump_literals_for_snapshot */
+} /* lit_save_literals_for_snapshot */
 
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
@@ -250,7 +250,7 @@ lit_dump_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
 /**
  * Load literals from snapshot.
  *
- * @return true, if load was performed successfully (i.e. literals dump in the snapshot is consistent),
+ * @return true, if load was performed successfully (i.e. literals saved in the snapshot are consistent),
  *         false - otherwise (i.e. snapshot is incorrect).
  */
 bool

@@ -2444,15 +2444,3 @@ jerry_api_get_string_size (const jerry_api_string_t *str_p) /**< input string */
   return ecma_string_get_size ((ecma_string_t *) str_p);
 } /* jerry_api_get_string_size */
 
-/**
- * Get length of Jerry string
- *
- * @return number of characters in the string
- */
-jerry_api_length_t
-jerry_api_get_string_length (const jerry_api_string_t *str_p) /**< input string */
-{
-  jerry_assert_api_available ();
-
-  return ecma_string_get_length ((ecma_string_t *) str_p);
-} /* jerry_api_get_string_length */

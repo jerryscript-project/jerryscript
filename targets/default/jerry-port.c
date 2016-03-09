@@ -16,6 +16,10 @@
 #include "jerry-port.h"
 #include <stdarg.h>
 
+#define MEM_HEAP_INTERNAL
+
+#include "mem-heap-internal.h"
+
 /**
  * Provide log message to filestream implementation for the engine.
  */
@@ -59,4 +63,22 @@ int jerry_port_putchar (int c) /**< character to put */
 void jerry_port_abort() {
   abort();
 } /* jerry_port_abort */
+
+#ifndef JERRY_HEAP_SECTION_ATTR
+static mem_heap_t mem_heap;
+#else
+static mem_heap_t mem_heap __attribute__ ((section (JERRY_HEAP_SECTION_ATTR)));
+#endif
+
+mem_heap_t *jerry_port_init_heap(void) {
+  return &mem_heap;
+}
+
+void jerry_port_finalize_heap(mem_heap_t *mem_heap) {
+  return;
+}
+
+mem_heap_t *jerry_port_get_heap(void) {
+  return &mem_heap;
+}
 

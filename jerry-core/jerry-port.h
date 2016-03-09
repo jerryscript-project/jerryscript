@@ -24,6 +24,12 @@ extern "C"
 {
 #endif /* !__cplusplus */
 
+/**
+ * Forward definition of heap data structure
+ */
+struct mem_heap;
+typedef struct mem_heap mem_heap_t;
+
 /** \addtogroup jerry_port Jerry engine port
  * @{
  */
@@ -36,6 +42,16 @@ int jerry_port_errormsg (const char *format, ...);
 int jerry_port_putchar (int c);
 
 void jerry_port_abort (void);
+
+
+/**
+ * Target port functions for memory management
+ */
+mem_heap_t *jerry_port_init_heap (void);
+
+void jerry_port_finalize_heap (mem_heap_t *mem_heap);
+
+mem_heap_t *jerry_port_get_heap (void);
 
 /**
  * @}

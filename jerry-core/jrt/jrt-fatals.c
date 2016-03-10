@@ -33,13 +33,13 @@ void __noreturn
 jerry_fatal (jerry_fatal_code_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  printf ("Error: ");
+  JERRY_ERROR_MSG ("Error: ");
 
   switch (code)
   {
     case ERR_OUT_OF_MEMORY:
     {
-      printf ("ERR_OUT_OF_MEMORY\n");
+      JERRY_ERROR_MSG ("ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -54,12 +54,12 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_UNIMPLEMENTED_CASE:
     {
-      printf ("ERR_UNIMPLEMENTED_CASE\n");
+      JERRY_ERROR_MSG ("ERR_UNIMPLEMENTED_CASE\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
+      JERRY_ERROR_MSG ("ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }
@@ -92,7 +92,7 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const uint32_t line) /**< line */
 {
 #if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
-  printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
+  JERRY_ERROR_MSG ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
           assertion, file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG */
   (void) assertion;
@@ -115,7 +115,8 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
                    const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("ICE: Unreachable control path at %s(%s):%lu was executed", file, function, (unsigned long) line);
+  JERRY_ERROR_MSG ("ICE: Unreachable control path at %s(%s):%lu was executed",
+      file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -124,9 +125,9 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
 
   if (comment != NULL)
   {
-    printf ("(%s)", comment);
+    JERRY_ERROR_MSG ("(%s)", comment);
   }
-  printf (".\n");
+  JERRY_ERROR_MSG (".\n");
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
@@ -142,7 +143,7 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
                      const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
+  JERRY_ERROR_MSG ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
 #else /* !JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -151,9 +152,9 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
 
   if (comment != NULL)
   {
-    printf ("(%s)", comment);
+    JERRY_ERROR_MSG ("(%s)", comment);
   }
-  printf (".\n");
+  JERRY_ERROR_MSG (".\n");
 
   jerry_fatal (ERR_UNIMPLEMENTED_CASE);
 } /* jerry_unimplemented */

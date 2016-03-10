@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#include "jrt-bit-fields.h"
 #include "lit-char-helpers.h"
 #include "lit/lit-unicode-ranges.inc.h"
 #include "lit-strings.h"
+
+#include <stdlib.h>
 
 #define NUM_OF_ELEMENTS(array) (sizeof (array) / sizeof ((array)[0]))
 
@@ -96,6 +99,43 @@ search_char_in_interval_array (ecma_char_t c,               /**< code unit */
 
   return false;
 } /* search_char_in_interval_array */
+
+/**
+ * Print a specified character.
+ */
+void
+lit_char_put (ecma_char_t c) /**< code unit */
+{
+  JERRY_STATIC_ASSERT (sizeof (c) == 2,
+                       size_of_code_point_must_be_equal_to_2_bytes);
+
+  if (c != LIT_CHAR_NULL && c <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    jerry_port_putchar ((char) c);
+  }
+  else
+  {
+    uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, c,
+                                                           JERRY_BITSINBYTE,
+                                                           JERRY_BITSINBYTE);
+    uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, c,
+                                                          0,
+                                                          JERRY_BITSINBYTE);
+
+
+    jerry_port_putchar ('\\');
+    jerry_port_putchar ('u');
+    // print high byte
+    char out_buf[3];
+    itoa ((int) byte_high, out_buf, 16);
+    jerry_port_putchar (out_buf[0]);
+    jerry_port_putchar (out_buf[1]);
+    // print low byte
+    itoa ((int) byte_low, out_buf, 16);
+    jerry_port_putchar (out_buf[0]);
+    jerry_port_putchar (out_buf[1]);
+  }
+} /* lit_char_put */
 
 /**
  * Check if specified character is one of the Format-Control characters

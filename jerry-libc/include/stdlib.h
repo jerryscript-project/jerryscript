@@ -34,6 +34,7 @@ void __attribute__ ((noreturn)) exit (int);
 void __attribute__ ((noreturn)) abort (void);
 int rand (void);
 void srand (unsigned int);
+char *itoa (int, char *, int);
 
 #ifdef __cplusplus
 }

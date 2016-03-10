@@ -185,10 +185,6 @@ int jerryscript_entry (int argc, char *argv[])
     {
       flags |= JERRY_FLAG_MEM_STATS;
     }
-    else if (!strcmp ("--mem-stats-per-opcode", argv[i]))
-    {
-      flags |= JERRY_FLAG_MEM_STATS_PER_OPCODE;
-    }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
       flags |= JERRY_FLAG_MEM_STATS_SEPARATE;

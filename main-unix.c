@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -236,10 +236,6 @@ main (int argc,
     else if (!strcmp ("--mem-stats", argv[i]))
     {
       flags |= JERRY_FLAG_MEM_STATS;
-    }
-    else if (!strcmp ("--mem-stats-per-opcode", argv[i]))
-    {
-      flags |= JERRY_FLAG_MEM_STATS_PER_OPCODE;
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {

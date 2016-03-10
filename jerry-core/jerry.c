@@ -1619,16 +1619,14 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 #endif /* !JERRY_ENABLE_LOG */
   }
 
-  if (flags & (JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
+  if (flags & (JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_SEPARATE))
   {
 #ifndef MEM_STATS
-    flags &= ~(JERRY_FLAG_MEM_STATS
-               | JERRY_FLAG_MEM_STATS_PER_OPCODE
-               | JERRY_FLAG_MEM_STATS_SEPARATE);
+    flags &= (jerry_flag_t) ~(JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_SEPARATE);
 
     JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
 #else /* !MEM_STATS */
-    if (flags & (JERRY_FLAG_MEM_STATS_PER_OPCODE | JERRY_FLAG_MEM_STATS_SEPARATE))
+    if (flags & JERRY_FLAG_MEM_STATS_SEPARATE)
     {
       flags |= JERRY_FLAG_MEM_STATS;
     }
@@ -1735,9 +1733,7 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
   }
 #endif /* MEM_STATS */
 
-  bool is_show_mem_stats_per_instruction = ((jerry_flags & JERRY_FLAG_MEM_STATS_PER_OPCODE) != 0);
-
-  vm_init (bytecode_data_p, is_show_mem_stats_per_instruction);
+  vm_init (bytecode_data_p);
 
   return true;
 } /* jerry_parse */
@@ -2370,7 +2366,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   if (header_p->is_run_global)
   {
-    vm_init (bytecode_p, false);
+    vm_init (bytecode_p);
 
     ecma_object_t *error_obj_p = NULL;
 

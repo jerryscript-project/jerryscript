@@ -32,22 +32,20 @@ extern "C"
  * @{
  */
 
-#define JERRY_FLAG_EMPTY                  (0u)      /**< empty flag set */
-#define JERRY_FLAG_SHOW_OPCODES           (1u << 0) /**< dump byte-code to stdout after parse */
-#define JERRY_FLAG_MEM_STATS              (1u << 1) /**< dump memory statistics */
-#define JERRY_FLAG_MEM_STATS_PER_OPCODE   (1u << 2) /**< dump per-instruction memory statistics during execution
-                                                     *   (in the mode full GC is performed after execution of each
-                                                     *   opcode handler) */
-#define JERRY_FLAG_MEM_STATS_SEPARATE     (1u << 3) /**< dump memory statistics and reset peak values after parse */
-#define JERRY_FLAG_PARSE_ONLY             (1u << 4) /**< parse only, prevents script execution (only for testing)
-                                                     *   FIXME: Remove. */
-#define JERRY_FLAG_ENABLE_LOG             (1u << 5) /**< enable logging */
-#define JERRY_FLAG_ABORT_ON_FAIL          (1u << 6) /**< abort instead of exit in case of failure */
-
 /**
  * Jerry flags
  */
-typedef uint32_t jerry_flag_t;
+typedef enum
+{
+  JERRY_FLAG_EMPTY              = (0u),      /**< empty flag set */
+  JERRY_FLAG_SHOW_OPCODES       = (1u << 0), /**< dump byte-code to stdout after parse */
+  JERRY_FLAG_MEM_STATS          = (1u << 1), /**< dump memory statistics */
+  JERRY_FLAG_MEM_STATS_SEPARATE = (1u << 2), /**< dump memory statistics and reset peak values after parse */
+  JERRY_FLAG_PARSE_ONLY         = (1u << 3), /**< parse only, prevents script execution (only for testing)
+                                              *   FIXME: Remove. */
+  JERRY_FLAG_ENABLE_LOG         = (1u << 4), /**< enable logging */
+  JERRY_FLAG_ABORT_ON_FAIL      = (1u << 5), /**< abort instead of exit in case of failure */
+} jerry_flag_t;
 
 /**
  * Error codes

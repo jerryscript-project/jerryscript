@@ -141,11 +141,8 @@ vm_op_set_value (ecma_value_t object, /**< base object */
  * Initialize interpreter.
  */
 void
-vm_init (ecma_compiled_code_t *program_p, /**< pointer to byte-code data */
-         bool dump_mem_stats) /**< dump per-instruction memory usage change statistics */
+vm_init (ecma_compiled_code_t *program_p) /**< pointer to byte-code data */
 {
-  JERRY_ASSERT (!dump_mem_stats);
-
   JERRY_ASSERT (__program == NULL);
 
   __program = program_p;

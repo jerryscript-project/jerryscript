@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,10 @@ lit_init (void)
 void
 lit_finalize (void)
 {
+#ifdef JERRY_ENABLE_LOG
+  lit_dump_literals ();
+#endif /* JERRY_ENABLE_LOG */
+
   while (lit_storage)
   {
     lit_storage = lit_free_literal (lit_storage);

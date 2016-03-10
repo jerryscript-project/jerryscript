@@ -29,7 +29,6 @@
 
 extern void lit_init ();
 extern void lit_finalize ();
-extern void lit_dump_literals ();
 
 extern lit_literal_t lit_create_literal_from_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 extern lit_literal_t lit_find_literal_by_utf8_string (const lit_utf8_byte_t *, lit_utf8_size_t);

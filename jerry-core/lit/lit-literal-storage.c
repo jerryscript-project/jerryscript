@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -178,6 +178,7 @@ lit_count_literals ()
   return num;
 } /* lit_count_literals */
 
+#ifdef JERRY_ENABLE_LOG
 /**
  * Dump the contents of the literal storage.
  */
@@ -187,14 +188,14 @@ lit_dump_literals ()
   lit_record_t *rec_p;
   size_t i;
 
-  printf ("LITERALS:\n");
+  JERRY_DLOG ("LITERALS:\n");
 
   for (rec_p = lit_storage;
        rec_p != NULL;
        rec_p = lit_cpointer_decompress (rec_p->next))
   {
-    printf ("%p ", rec_p);
-    printf ("[%3zu] ", lit_get_literal_size (rec_p));
+    JERRY_DLOG ("%p ", rec_p);
+    JERRY_DLOG ("[%3zu] ", lit_get_literal_size (rec_p));
 
     switch (rec_p->type)
     {
@@ -206,26 +207,26 @@ lit_dump_literals ()
         {
           FIXME ("Support proper printing of characters which occupy more than one byte.")
 
-          printf ("%c", *str);
+          JERRY_DLOG ("%c", *str);
         }
 
-        printf (" : STRING");
+        JERRY_DLOG (" : STRING");
 
         break;
       }
       case LIT_RECORD_TYPE_MAGIC_STR:
       {
         lit_magic_string_id_t id = (lit_magic_string_id_t) ((lit_magic_record_t *) rec_p)->magic_id;
-        printf ("%s : MAGIC STRING", lit_get_magic_string_utf8 (id));
-        printf (" [id=%d] ", id);
+        JERRY_DLOG ("%s : MAGIC STRING", lit_get_magic_string_utf8 (id));
+        JERRY_DLOG (" [id=%d] ", id);
 
         break;
       }
       case LIT_RECORD_TYPE_MAGIC_STR_EX:
       {
         lit_magic_string_ex_id_t id = ((lit_magic_record_t *) rec_p)->magic_id;
-        printf ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_utf8 (id));
-        printf (" [id=%d] ", id);
+        JERRY_DLOG ("%s : EXT MAGIC STRING", lit_get_magic_string_ex_utf8 (id));
+        JERRY_DLOG (" [id=%d] ", id);
 
         break;
       }
@@ -237,7 +238,7 @@ lit_dump_literals ()
 
         if (ecma_number_is_nan (value))
         {
-          printf ("%s : NUMBER", "NaN");
+          JERRY_DLOG ("%s : NUMBER", "NaN");
         }
         else
         {
@@ -247,7 +248,7 @@ lit_dump_literals ()
           lit_utf8_size_t sz = ecma_number_to_utf8_string (value, buff, sizeof (buff));
           JERRY_ASSERT (sz <= ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER);
 
-          printf ("%s : NUMBER", buff);
+          JERRY_DLOG ("%s : NUMBER", buff);
         }
 
         break;
@@ -258,6 +259,7 @@ lit_dump_literals ()
       }
     }
 
-    printf ("\n");
+    JERRY_DLOG ("\n");
   }
 } /* lit_dump_literals */
+#endif /* JERRY_ENABLE_LOG */

@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,7 +93,10 @@ extern lit_record_t *lit_free_literal (lit_record_t *);
 extern size_t lit_get_literal_size (const lit_record_t *);
 
 extern uint32_t lit_count_literals ();
+
+#ifdef JERRY_ENABLE_LOG
 extern void lit_dump_literals ();
+#endif /* JERRY_ENABLE_LOG */
 
 #define LIT_RECORD_IS_CHARSET(lit) (((lit_record_t *) lit)->type == LIT_RECORD_TYPE_CHARSET)
 #define LIT_RECORD_IS_MAGIC_STR(lit) (((lit_record_t *) lit)->type == LIT_RECORD_TYPE_MAGIC_STR)

@@ -218,6 +218,26 @@ mem_pools_stats_reset_peak (void)
 } /* mem_pools_stats_reset_peak */
 
 /**
+ * Print pools memory usage statistics
+ */
+void
+mem_pools_stats_print (void)
+{
+  printf ("Pools stats:\n"
+          "  Chunk size: %zu\n"
+          "  Pool chunks: %zu\n"
+          "  Peak pool chunks: %zu\n"
+          "  Free chunks: %zu\n"
+          "  Pool reuse ratio: %zu.%04zu\n",
+          MEM_POOL_CHUNK_SIZE,
+          mem_pools_stats.pools_count,
+          mem_pools_stats.peak_pools_count,
+          mem_pools_stats.free_chunks,
+          mem_pools_stats.reused_count / mem_pools_stats.new_alloc_count,
+          mem_pools_stats.reused_count % mem_pools_stats.new_alloc_count * 10000 / mem_pools_stats.new_alloc_count);
+} /* mem_pools_stats_print */
+
+/**
  * Initalize pools' memory usage statistics account structure
  */
 static void

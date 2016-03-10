@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -144,22 +144,7 @@ mem_stats_reset_peak (void)
 void
 mem_stats_print (void)
 {
-  mem_heap_print ();
-
-  mem_pools_stats_t stats;
-  mem_pools_get_stats (&stats);
-
-  printf ("Pools stats:\n");
-  printf ("  Chunk size: %zu\n"
-          "  Pool chunks: %zu\n"
-          "  Peak pool chunks: %zu\n"
-          "  Free chunks: %zu\n"
-          "  Pool reuse ratio: %zu.%04zu\n",
-          MEM_POOL_CHUNK_SIZE,
-          stats.pools_count,
-          stats.peak_pools_count,
-          stats.free_chunks,
-          stats.reused_count / stats.new_alloc_count,
-          stats.reused_count % stats.new_alloc_count * 10000 / stats.new_alloc_count);
+  mem_heap_stats_print ();
+  mem_pools_stats_print ();
 } /* mem_stats_print */
 #endif /* MEM_STATS */

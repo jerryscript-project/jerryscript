@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,22 +80,7 @@ main (int __attr_unused___ argc,
   }
 
 #ifdef MEM_STATS
-  mem_pools_stats_t stats;
-  mem_pools_get_stats (&stats);
-
-  printf ("Pools stats:\n");
-  printf (" Chunk size: %u\n"
-          "  Pools: %zu\n"
-          "  Allocated chunks: %zu\n"
-          "  Free chunks: %zu\n"
-          "  Peak pools: %zu\n"
-          "  Peak allocated chunks: %zu\n\n",
-          MEM_POOL_CHUNK_SIZE,
-          stats.pools_count,
-          stats.allocated_chunks,
-          stats.free_chunks,
-          stats.peak_pools_count,
-          stats.peak_allocated_chunks);
+  mem_pools_stats_print ();
 #endif /* MEM_STATS */
 
   mem_finalize (false);

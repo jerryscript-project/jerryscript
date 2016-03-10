@@ -607,37 +607,6 @@ mem_is_heap_pointer (const void *pointer) /**< pointer */
 } /* mem_is_heap_pointer */
 #endif /* !JERRY_NDEBUG */
 
-/**
- * Print heap
- */
-void
-mem_heap_print ()
-{
-#ifdef MEM_STATS
-  printf ("Heap stats:\n");
-  printf ("  Heap size = %zu bytes\n"
-          "  Allocated = %zu bytes\n"
-          "  Waste = %zu bytes\n"
-          "  Peak allocated = %zu bytes\n"
-          "  Peak waste = %zu bytes\n"
-          "  Skip-ahead ratio = %zu.%04zu\n"
-          "  Average alloc iteration = %zu.%04zu\n"
-          "  Average free iteration = %zu.%04zu\n",
-          mem_heap_stats.size,
-          mem_heap_stats.allocated_bytes,
-          mem_heap_stats.waste_bytes,
-          mem_heap_stats.peak_allocated_bytes,
-          mem_heap_stats.peak_waste_bytes,
-          mem_heap_stats.skip_count / mem_heap_stats.nonskip_count,
-          mem_heap_stats.skip_count % mem_heap_stats.nonskip_count * 10000 / mem_heap_stats.nonskip_count,
-          mem_heap_stats.alloc_iter_count / mem_heap_stats.alloc_count,
-          mem_heap_stats.alloc_iter_count % mem_heap_stats.alloc_count * 10000 / mem_heap_stats.alloc_count,
-          mem_heap_stats.free_iter_count / mem_heap_stats.free_count,
-          mem_heap_stats.free_iter_count % mem_heap_stats.free_count * 10000 / mem_heap_stats.free_count);
-  printf ("\n");
-#endif /* !MEM_STATS */
-} /* mem_heap_print */
-
 #ifdef MEM_STATS
 /**
  * Get heap memory usage statistics
@@ -645,6 +614,8 @@ mem_heap_print ()
 void
 mem_heap_get_stats (mem_heap_stats_t *out_heap_stats_p) /**< [out] heap stats */
 {
+  JERRY_ASSERT (out_heap_stats_p != NULL);
+
   *out_heap_stats_p = mem_heap_stats;
 } /* mem_heap_get_stats */
 
@@ -657,6 +628,35 @@ mem_heap_stats_reset_peak (void)
   mem_heap_stats.peak_allocated_bytes = mem_heap_stats.allocated_bytes;
   mem_heap_stats.peak_waste_bytes = mem_heap_stats.waste_bytes;
 } /* mem_heap_stats_reset_peak */
+
+/**
+ * Print heap memory usage statistics
+ */
+void
+mem_heap_stats_print (void)
+{
+  printf ("Heap stats:\n"
+          "  Heap size = %zu bytes\n"
+          "  Allocated = %zu bytes\n"
+          "  Waste = %zu bytes\n"
+          "  Peak allocated = %zu bytes\n"
+          "  Peak waste = %zu bytes\n"
+          "  Skip-ahead ratio = %zu.%04zu\n"
+          "  Average alloc iteration = %zu.%04zu\n"
+          "  Average free iteration = %zu.%04zu\n"
+          "\n",
+          mem_heap_stats.size,
+          mem_heap_stats.allocated_bytes,
+          mem_heap_stats.waste_bytes,
+          mem_heap_stats.peak_allocated_bytes,
+          mem_heap_stats.peak_waste_bytes,
+          mem_heap_stats.skip_count / mem_heap_stats.nonskip_count,
+          mem_heap_stats.skip_count % mem_heap_stats.nonskip_count * 10000 / mem_heap_stats.nonskip_count,
+          mem_heap_stats.alloc_iter_count / mem_heap_stats.alloc_count,
+          mem_heap_stats.alloc_iter_count % mem_heap_stats.alloc_count * 10000 / mem_heap_stats.alloc_count,
+          mem_heap_stats.free_iter_count / mem_heap_stats.free_count,
+          mem_heap_stats.free_iter_count % mem_heap_stats.free_count * 10000 / mem_heap_stats.free_count);
+} /* mem_heap_stats_print */
 
 /**
  * Initalize heap memory usage statistics account structure

@@ -63,6 +63,7 @@ typedef struct
 
 extern void mem_pools_get_stats (mem_pools_stats_t *);
 extern void mem_pools_stats_reset_peak (void);
+extern void mem_pools_stats_print (void);
 #endif /* MEM_STATS */
 
 #endif /* !MEM_POOLMAN_H */

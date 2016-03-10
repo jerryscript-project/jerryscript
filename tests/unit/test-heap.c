@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,7 +78,9 @@ main (int __attr_unused___ argc,
 
   mem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
 
-  mem_heap_print ();
+#ifdef MEM_STATS
+  mem_heap_stats_print ();
+#endif /* MEM_STATS */
 
   for (uint32_t i = 0; i < test_iters; i++)
   {
@@ -110,7 +112,9 @@ main (int __attr_unused___ argc,
     }
   }
 
-  mem_heap_print ();
+#ifdef MEM_STATS
+  mem_heap_stats_print ();
+#endif /* MEM_STATS */
 
   return 0;
 } /* main */

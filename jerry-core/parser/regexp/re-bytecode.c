@@ -239,7 +239,7 @@ re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
 void
 re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
-  re_compiled_code_t *compiled_code_p = bc_ctx_p->block_start_p;
+  re_compiled_code_t *compiled_code_p = (re_compiled_code_t *) bc_ctx_p->block_start_p;
   JERRY_DLOG ("%d ", compiled_code_p->flags);
   JERRY_DLOG ("%d ", compiled_code_p->num_of_captures);
   JERRY_DLOG ("%d | ", compiled_code_p->num_of_non_captures);

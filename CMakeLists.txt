@@ -132,6 +132,15 @@ project (Jerry C ASM)
   set(INCLUDE_LIBC_INTERFACE ${EXTERNAL_LIBC_INTERFACE})
  endif()
 
+
+ # Should we use external jerry-port.c?
+ if(DEFINED EXTERNAL_PORT_FILE AND NOT EXTERNAL_PORT_FILE STREQUAL "UNDEFINED")
+   set(SOURCE_PORT_IMPLEMENTATION ${EXTERNAL_PORT_FILE})
+   set(USE_DEFAULT_PORT FALSE)
+ else()
+   set(USE_DEFAULT_PORT TRUE)
+ endif()
+
 # Are there any interfaces for external libraries, other than libc, that should be registered?
  if(DEFINED EXTERNAL_LIBS_INTERFACE AND NOT EXTERNAL_LIBS_INTERFACE STREQUAL "UNDEFINED")
   set(INCLUDE_EXTERNAL_LIBS_INTERFACE )

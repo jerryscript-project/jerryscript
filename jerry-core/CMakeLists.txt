@@ -147,6 +147,13 @@ project (JerryCore C ASM)
       ${SOURCE_CORE_PARSER_REGEXP}
       ${SOURCE_CORE_JRT})
 
+ # Jerry port
+ if(USE_DEFAULT_PORT)
+   file(GLOB SOURCE_PORT_FILES ${CMAKE_SOURCE_DIR}/targets/default/*.c)
+ else()
+   set(SOURCE_PORT_FILES ${SOURCE_PORT_IMPLEMENTATION})
+ endif()
+
  # All-in-one build
  if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")
   set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.c")
@@ -157,9 +164,13 @@ project (JerryCore C ASM)
    file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
   endforeach()
 
+  foreach(FILE ${SOURCE_PORT_FILES})
+   file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
+  endforeach()
+
   set(SOURCE_CORE ${ALL_IN_FILE})
  else()
-  set(SOURCE_CORE ${SOURCE_CORE_FILES})
+  set(SOURCE_CORE ${SOURCE_CORE_FILES} ${SOURCE_PORT_FILES})
  endif()
 
 # Per-option configuration

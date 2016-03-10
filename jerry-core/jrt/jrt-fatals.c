@@ -69,7 +69,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       && code != ERR_OUT_OF_MEMORY
       && jerry_is_abort_on_fail ())
   {
-    abort ();
+    jerry_port_abort ();
   }
   else
   {

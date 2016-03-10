@@ -15,6 +15,7 @@
 
 #include "jerry-port.h"
 #include <stdarg.h>
+#include <stdlib.h>
 
 /**
  * Provide log message to filestream implementation for the engine.
@@ -52,3 +53,11 @@ int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar ((unsigned char) c);
 } /* jerry_port_putchar */
+
+/**
+ * Provide abort implementation for the engine
+ */
+void jerry_port_abort (void)
+{
+  abort ();
+} /* jerry_port_abort */

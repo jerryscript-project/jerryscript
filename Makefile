@@ -73,16 +73,19 @@ BUILD_NAME:=
  # LOG
   ifneq ($(LOG),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_LOG=$(LOG)
+   BUILD_NAME:=$(BUILD_NAME)-LOG-$(LOG)
   endif
 
  # Date system calls
   ifneq ($(DATE_SYS_CALLS),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_DATE_SYS_CALLS=$(DATE_SYS_CALLS)
+   BUILD_NAME:=$(BUILD_NAME)-DATE_SYS_CALLS-$(DATE_SYS_CALLS)
   endif
 
  # Fill error messages for builtin error objects
   ifneq ($(ERROR_MESSAGES),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DENABLE_ERROR_MESSAGES=$(ERROR_MESSAGES)
+   BUILD_NAME:=$(BUILD_NAME)-ERROR_MESSAGES-$(ERROR_MESSAGES)
   endif
 
  # All-in-one build
@@ -91,15 +94,20 @@ BUILD_NAME:=
    BUILD_NAME:=$(BUILD_NAME)-ALL_IN_ONE-$(ALL_IN_ONE)
   endif
 
- # Flag, indicating whether to use compiler's default libc (YES / NO)
-  ifneq ($(USE_COMPILER_DEFAULT_LIBC),)
-   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DUSE_COMPILER_DEFAULT_LIBC=$(USE_COMPILER_DEFAULT_LIBC)
+ # Flag, indicating whether to use compiler's default libc (ON / OFF)
+  ifneq ($(COMPILER_DEFAULT_LIBC),)
+   CMAKE_DEFINES:=$(CMAKE_DEFINES) -DCOMPILER_DEFAULT_LIBC=$(COMPILER_DEFAULT_LIBC)
+   BUILD_NAME:=$(BUILD_NAME)-COMPILER_DEFAULT_LIBC-$(COMPILER_DEFAULT_LIBC)
   endif
 
  # Apply strip to release binaries
   ifneq ($(STRIP_RELEASE_BINARY),)
    CMAKE_DEFINES:=$(CMAKE_DEFINES) -DSTRIP_RELEASE_BINARY=$(STRIP_RELEASE_BINARY)
   endif
+
+# For testing build-options
+export BUILD_OPTIONS_TEST_MCU := LTO LOG DATE_SYS_CALLS ERROR_MESSAGES ALL_IN_ONE
+export BUILD_OPTIONS_TEST_NATIVE := $(BUILD_OPTIONS_TEST_MCU) VALGRIND VALGRIND_FREYA COMPILER_DEFAULT_LIBC
 
 # Directories
 export ROOT_DIR := $(shell pwd)
@@ -137,6 +145,18 @@ export JERRY_TEST_TARGETS := \
 export JERRY_TEST_TARGETS_CP := \
   $(foreach __MODE,$(DEBUG_MODES) $(RELEASE_MODES), \
     $(__MODE).$(NATIVE_SYSTEM)-cp)
+
+# Build-options test targets
+export JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE := \
+  $(foreach __MODE,$(RELEASE_MODES), \
+    $(__MODE).$(NATIVE_SYSTEM))
+
+JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE += unittests
+
+export JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU := \
+  $(foreach __MODE,$(RELEASE_MODES), \
+    $(foreach __SYSTEM,$(MCU_SYSTEMS), \
+      $(__MODE).mcu_$(__SYSTEM)))
 
 # JS test suites (in the format of id:path)
 export JERRY_TEST_SUITE_J := j:$(ROOT_DIR)/tests/jerry
@@ -196,7 +216,9 @@ define WRITE_TOOLCHAIN_CONFIG
 endef
 
 .PHONY: $(BUILD_DIR)/$(NATIVE_SYSTEM)/toolchain.config
-$(BUILD_DIR)/$(NATIVE_SYSTEM)/toolchain.config:
+.PHONY: $(BUILD_DIR)/$(NATIVE_SYSTEM)/unittests/toolchain.config
+$(BUILD_DIR)/$(NATIVE_SYSTEM)/toolchain.config \
+$(BUILD_DIR)/$(NATIVE_SYSTEM)/unittests/toolchain.config:
 	$(Q) if [ "$$TOOLCHAIN" == "" ]; \
           then \
             arch=`uname -m`; \
@@ -234,6 +256,8 @@ endef
 
 $(foreach __SYSTEM,$(NATIVE_SYSTEM) $(MCU_SYSTEMS), \
   $(eval $(call GEN_MAKEFILE_RULE,$(BUILD_DIR)/$(__SYSTEM))))
+
+$(eval $(call GEN_MAKEFILE_RULE,$(BUILD_DIR)/$(NATIVE_SYSTEM)/unittests))
 
 # Targets to perform build and test steps in the build directories
 
@@ -274,7 +298,7 @@ $(foreach __TARGET,$(JERRY_STM32F4_TARGETS), \
 
 $(eval $(call BUILD_RULE,build.mcu_stm32f4,stm32f4,$(patsubst %,%.bin,$(JERRY_STM32F4_TARGETS))))
 
-$(eval $(call BUILD_RULE,unittests,$(NATIVE_SYSTEM),unittests))
+$(eval $(call BUILD_RULE,unittests,$(NATIVE_SYSTEM)/unittests,unittests))
 
 # Make rule macro to test a build target with a test suite.
 #
@@ -302,6 +326,24 @@ $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
 $(foreach __TARGET,$(JERRY_TEST_TARGETS_CP), \
   $(foreach __SUITE,$(JERRY_TEST_SUITE_JTS_CP), \
     $(eval $(call JSTEST_RULE,$(__TARGET),$(firstword $(subst :, ,$(__SUITE))),$(lastword $(subst :, ,$(__SUITE)))))))
+
+# Make rule macro to test a build target with a build option.
+#
+# $(1) - name of the target to test
+# $(2) - name of the option to test
+define OPTIONSTEST_RULE
+.PHONY: test-option.$(1)-$(2)
+test-option.$(1)-$(2):
+	$$(Q)+$(MAKE) --no-print-directory $(2)=ON $(1)
+endef
+
+$(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE), \
+  $(foreach __OPTION, $(BUILD_OPTIONS_TEST_NATIVE), \
+    $(eval $(call OPTIONSTEST_RULE,$(__TARGET),$(__OPTION)))))
+
+$(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU), \
+  $(foreach __OPTION, $(BUILD_OPTIONS_TEST_MCU), \
+    $(eval $(call OPTIONSTEST_RULE,$(__TARGET),$(__OPTION)))))
 
 # Targets to perform batch builds, checks, and tests
 
@@ -343,6 +385,15 @@ test-js-precommit: \
         $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
           $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS_PREC), \
             test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
+
+.PHONY: test-buildoptions
+test-buildoptions: \
+        $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE), \
+          $(foreach __OPTION, $(BUILD_OPTIONS_TEST_NATIVE), \
+            test-option.$(__TARGET)-$(__OPTION))) \
+        $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU), \
+          $(foreach __OPTION, $(BUILD_OPTIONS_TEST_MCU), \
+            test-option.$(__TARGET)-$(__OPTION))) \
 
 .PHONY: precommit
 precommit: prerequisites

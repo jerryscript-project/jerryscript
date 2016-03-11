@@ -41,12 +41,12 @@
  */
 static void
 re_append_char_class (void *re_ctx_p, /**< RegExp compiler context */
-                      uint32_t start, /**< character class range from */
-                      uint32_t end) /**< character class range to */
+                      ecma_char_t start, /**< character class range from */
+                      ecma_char_t end) /**< character class range to */
 {
   re_compiler_ctx_t *ctx_p = (re_compiler_ctx_t *) re_ctx_p;
-  re_append_char (ctx_p->bytecode_ctx_p, (ecma_char_t) start);
-  re_append_char (ctx_p->bytecode_ctx_p, (ecma_char_t) end);
+  re_append_char (ctx_p->bytecode_ctx_p, start);
+  re_append_char (ctx_p->bytecode_ctx_p, end);
   ctx_p->parser_ctx_p->num_of_classes++;
 } /* re_append_char_class */
 

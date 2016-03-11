@@ -1,4 +1,5 @@
 /* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +18,8 @@
 #define LIT_CHAR_HELPERS_H
 
 #include "lit-globals.h"
+
+#define LIT_CHAR_UNDEF ((ecma_char_t) 0xFFFF) /* undefined character */
 
 /*
  * Format control characters (ECMA-262 v5, Table 1)
@@ -213,7 +216,7 @@ extern bool lit_char_is_hex_digit (ecma_char_t);
 extern uint32_t lit_char_hex_to_int (ecma_char_t);
 
 /* read a hex encoded code point from a zero terminated buffer */
-bool lit_read_code_point_from_hex (lit_utf8_byte_t *, lit_utf8_size_t, lit_code_point_t *);
+bool lit_read_code_unit_from_hex (lit_utf8_byte_t *, lit_utf8_size_t, ecma_char_ptr_t);
 
 /**
  * Null character

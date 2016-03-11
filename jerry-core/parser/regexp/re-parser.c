@@ -315,7 +315,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 {
   re_token_type_t token_type = ((re_compiler_ctx_t *) re_ctx_p)->current_token.type;
   out_token_p->qmax = out_token_p->qmin = 1;
-  uint32_t start = RE_CHAR_UNDEF;
+  ecma_char_t start = LIT_CHAR_UNDEF;
   bool is_range = false;
   parser_ctx_p->num_of_classes = 0;
 
@@ -332,11 +332,11 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string"));
     }
 
-    uint32_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+    ecma_char_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
 
     if (ch == LIT_CHAR_RIGHT_SQUARE)
     {
-      if (start != RE_CHAR_UNDEF)
+      if (start != LIT_CHAR_UNDEF)
       {
         append_char_class (re_ctx_p, start, start);
       }
@@ -349,7 +349,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '-'"));
       }
 
-      if (start != RE_CHAR_UNDEF
+      if (start != LIT_CHAR_UNDEF
           && !is_range
           && *parser_ctx_p->input_curr_p != LIT_CHAR_RIGHT_SQUARE)
       {
@@ -412,40 +412,40 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       }
       else if (ch == LIT_CHAR_LOWERCASE_X)
       {
-        lit_code_point_t code_point;
+        ecma_char_t code_unit;
 
-        if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 2, &code_point))
+        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 2, &code_unit))
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\x'"));
         }
 
         parser_ctx_p->input_curr_p += 2;
-        append_char_class (re_ctx_p, code_point, code_point);
+        append_char_class (re_ctx_p, code_unit, code_unit);
       }
       else if (ch == LIT_CHAR_LOWERCASE_U)
       {
-        lit_code_point_t code_point;
+        ecma_char_t code_unit;
 
-        if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 4, &code_point))
+        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 4, &code_unit))
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\u'"));
         }
 
         parser_ctx_p->input_curr_p += 4;
-        append_char_class (re_ctx_p, code_point, code_point);
+        append_char_class (re_ctx_p, code_unit, code_unit);
       }
       else if (ch == LIT_CHAR_LOWERCASE_D)
       {
         /* See ECMA-262 v5, 15.10.2.12 */
         append_char_class (re_ctx_p, LIT_CHAR_ASCII_DIGITS_BEGIN, LIT_CHAR_ASCII_DIGITS_END);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_UPPERCASE_D)
       {
         /* See ECMA-262 v5, 15.10.2.12 */
         append_char_class (re_ctx_p, LIT_CHAR_NULL, LIT_CHAR_ASCII_DIGITS_BEGIN - 1);
         append_char_class (re_ctx_p, LIT_CHAR_ASCII_DIGITS_END + 1, LIT_UTF16_CODE_UNIT_MAX);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_LOWERCASE_S)
       {
@@ -461,7 +461,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         append_char_class (re_ctx_p, 0x205FUL, 0x205FUL); /* Medium Mathematical Space */
         append_char_class (re_ctx_p, 0x3000UL, 0x3000UL); /* Ideographic Space */
         append_char_class (re_ctx_p, LIT_CHAR_BOM, LIT_CHAR_BOM);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_UPPERCASE_S)
       {
@@ -478,7 +478,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         append_char_class (re_ctx_p, 0x2060UL, 0x2FFFUL);
         append_char_class (re_ctx_p, 0x3001UL, LIT_CHAR_BOM - 1);
         append_char_class (re_ctx_p, LIT_CHAR_BOM + 1, LIT_UTF16_CODE_UNIT_MAX);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_LOWERCASE_W)
       {
@@ -487,7 +487,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         append_char_class (re_ctx_p, LIT_CHAR_UPPERCASE_A, LIT_CHAR_UPPERCASE_Z);
         append_char_class (re_ctx_p, LIT_CHAR_UNDERSCORE, LIT_CHAR_UNDERSCORE);
         append_char_class (re_ctx_p, LIT_CHAR_LOWERCASE_A, LIT_CHAR_LOWERCASE_Z);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_UPPERCASE_W)
       {
@@ -497,20 +497,19 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         append_char_class (re_ctx_p, LIT_CHAR_UPPERCASE_Z + 1, LIT_CHAR_UNDERSCORE - 1);
         append_char_class (re_ctx_p, LIT_CHAR_UNDERSCORE + 1, LIT_CHAR_LOWERCASE_A - 1);
         append_char_class (re_ctx_p, LIT_CHAR_LOWERCASE_Z + 1, LIT_UTF16_CODE_UNIT_MAX);
-        ch = RE_CHAR_UNDEF;
+        ch = LIT_CHAR_UNDEF;
       }
-      else if (ch <= LIT_UTF16_CODE_UNIT_MAX
-               && lit_char_is_octal_digit ((ecma_char_t) ch)
+      else if (lit_char_is_octal_digit ((ecma_char_t) ch)
                && ch != LIT_CHAR_0)
       {
         parser_ctx_p->input_curr_p--;
-        ch = re_parse_octal (parser_ctx_p);
+        ch = (ecma_char_t) re_parse_octal (parser_ctx_p);
       }
     } /* ch == LIT_CHAR_BACKSLASH */
 
-    if (ch == RE_CHAR_UNDEF)
+    if (ch == LIT_CHAR_UNDEF)
     {
-      if (start != RE_CHAR_UNDEF)
+      if (start != LIT_CHAR_UNDEF)
       {
         if (is_range)
         {
@@ -519,13 +518,13 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         else
         {
           append_char_class (re_ctx_p, start, start);
-          start = RE_CHAR_UNDEF;
+          start = LIT_CHAR_UNDEF;
         }
       }
     }
     else
     {
-      if (start != RE_CHAR_UNDEF)
+      if (start != LIT_CHAR_UNDEF)
       {
         if (is_range)
         {
@@ -536,7 +535,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
           else
           {
             append_char_class (re_ctx_p, start, ch);
-            start = RE_CHAR_UNDEF;
+            start = LIT_CHAR_UNDEF;
             is_range = false;
           }
         }
@@ -667,28 +666,28 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       else if (ch == LIT_CHAR_LOWERCASE_X
                && re_hex_lookup (parser_ctx_p, 2))
       {
-        lit_code_point_t code_point;
+        ecma_char_t code_unit;
 
-        if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 2, &code_point))
+        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 2, &code_unit))
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
         }
 
         parser_ctx_p->input_curr_p += 2;
-        out_token_p->value = code_point;
+        out_token_p->value = code_unit;
       }
       else if (ch == LIT_CHAR_LOWERCASE_U
                && re_hex_lookup (parser_ctx_p, 4))
       {
-        lit_code_point_t code_point;
+        ecma_char_t code_unit;
 
-        if (!lit_read_code_point_from_hex (parser_ctx_p->input_curr_p, 4, &code_point))
+        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 4, &code_unit))
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
         }
 
         parser_ctx_p->input_curr_p += 4;
-        out_token_p->value = code_point;
+        out_token_p->value = code_unit;
       }
       else if (ch == LIT_CHAR_LOWERCASE_D)
       {

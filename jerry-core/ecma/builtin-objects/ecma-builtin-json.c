@@ -178,15 +178,15 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         }
         case LIT_CHAR_LOWERCASE_U:
         {
-          lit_code_point_t code_point;
+          ecma_char_t code_unit;
 
-          if (!(lit_read_code_point_from_hex (current_p + 1, 4, &code_point)))
+          if (!(lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit)))
           {
             return;
           }
 
           current_p += 5;
-          write_p += lit_code_point_to_cesu8 (code_point, write_p);
+          write_p += lit_code_unit_to_utf8 (code_unit, write_p);
           continue;
         }
         default:

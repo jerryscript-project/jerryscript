@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,25 +96,25 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
 
     while (utf8_str_curr_p < utf8_str_end_p)
     {
-      ecma_char_t code_point = lit_utf8_read_next (&utf8_str_curr_p);
+      ecma_char_t code_unit = lit_utf8_read_next (&utf8_str_curr_p);
 
-      if (code_point == LIT_CHAR_NULL)
+      if (code_unit == LIT_CHAR_NULL)
       {
         printf ("\\u0000");
       }
-      else if (code_point <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+      else if (code_unit <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
       {
-        printf ("%c", (char) code_point);
+        printf ("%c", (char) code_unit);
       }
       else
       {
-        JERRY_STATIC_ASSERT (sizeof (code_point) == 2,
+        JERRY_STATIC_ASSERT (sizeof (code_unit) == 2,
                              size_of_code_point_must_be_equal_to_2_bytes);
 
-        uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
+        uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_unit,
                                                                JERRY_BITSINBYTE,
                                                                JERRY_BITSINBYTE);
-        uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
+        uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_unit,
                                                               0,
                                                               JERRY_BITSINBYTE);
 
@@ -801,9 +801,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
       continue;
     }
 
-    lit_code_point_t decoded_byte;
+    ecma_char_t decoded_byte;
 
-    if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte))
+    if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
     {
       ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
       break;
@@ -857,9 +857,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
         continue;
       }
 
-      lit_code_point_t decoded_byte;
+      ecma_char_t decoded_byte;
 
-      if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &decoded_byte))
+      if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
       {
         ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
         break;
@@ -916,16 +916,16 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
           }
           else
           {
-            lit_code_point_t cp;
+            ecma_char_t chr;
 
-            if (!lit_read_code_point_from_hex (input_char_p + 1, 2, &cp)
-                || ((cp & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER))
+            if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &chr)
+                || ((chr & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER))
             {
               is_valid = false;
               break;
             }
 
-            octets[i] = (lit_utf8_byte_t) cp;
+            octets[i] = (lit_utf8_byte_t) chr;
             input_char_p += URI_ENCODED_BYTE_SIZE;
           }
         }

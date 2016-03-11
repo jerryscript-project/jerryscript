@@ -76,11 +76,6 @@ typedef enum
 #define RE_MAX_RE_DECESC_DIGITS 9
 
 /**
- * Undefined character (out of the range of the codeunit)
- */
-#define RE_CHAR_UNDEF 0xFFFFFFFF
-
-/**
  * RegExp token type
  */
 typedef struct
@@ -104,7 +99,7 @@ typedef struct
   uint32_t num_of_classes;        /**< number of character classes */
 } re_parser_ctx_t;
 
-typedef void (*re_char_class_callback) (void *re_ctx_p, uint32_t start, uint32_t end);
+typedef void (*re_char_class_callback) (void *re_ctx_p, ecma_char_t start, ecma_char_t end);
 
 ecma_value_t
 re_parse_char_class (re_parser_ctx_t *, re_char_class_callback, void *, re_token_t *);

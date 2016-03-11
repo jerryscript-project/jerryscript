@@ -67,4 +67,4 @@ setjmp:
 .type longjmp, %function
 longjmp:
   _LONGJMP
-.size longjmu, . - setjmp
+.size longjmp, . - setjmp

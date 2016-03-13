@@ -11,31 +11,22 @@
  * ====================================================
  */
 
-/* 
+/*
  * scalbn (double x, int n)
- * scalbn(x,n) returns x* 2**n  computed by  exponent  
- * manipulation rather than by actually performing an 
+ * scalbn(x,n) returns x* 2**n  computed by  exponent
+ * manipulation rather than by actually performing an
  * exponentiation or a multiplication.
  */
 
 #include "fdlibm.h"
 
-#ifdef __STDC__
 static const double
-#else
-static double
-#endif
-two54   =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
-twom54  =  5.55111512312578270212e-17, /* 0x3C900000, 0x00000000 */
+two54  = 1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
+twom54 = 5.55111512312578270212e-17, /* 0x3C900000, 0x00000000 */
 huge   = 1.0e+300,
 tiny   = 1.0e-300;
 
-#ifdef __STDC__
-	double scalbn (double x, int n)
-#else
-	double scalbn (x,n)
-	double x; int n;
-#endif
+double scalbn (double x, int n)
 {
 	int  k,hx,lx;
 	hx = __HI(x);
@@ -45,7 +36,7 @@ tiny   = 1.0e-300;
             if ((lx|(hx&0x7fffffff))==0) return x; /* +-0 */
 	    x *= two54; 
 	    hx = __HI(x);
-	    k = ((hx&0x7ff00000)>>20) - 54; 
+	    k = ((hx&0x7ff00000)>>20) - 54;
             if (n< -50000) return tiny*x; 	/*underflow*/
 	    }
         if (k==0x7ff) return x+x;		/* NaN or Inf */

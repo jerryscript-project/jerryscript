@@ -10,7 +10,6 @@
  * ====================================================
  */
 
-/* INDENT OFF */
 /* __kernel_tan( x, y, k )
  * kernel tan function on [-pi/4, pi/4], pi/4 ~ 0.7854
  * Input x is assumed to be bounded by ~pi/4 in magnitude.
@@ -26,9 +25,9 @@
  *	   	tan(x) ~ x + T1*x + ... + T13*x
  *	   where
  *
- * 	        |tan(x)         2     4            26   |     -59.2
- * 	        |----- - (1+T1*x +T2*x +.... +T13*x    )| <= 2
- * 	        |  x 					|
+ *	        |tan(x)         2     4            26   |     -59.2
+ *	        |----- - (1+T1*x +T2*x +.... +T13*x    )| <= 2
+ *	        |  x 					|
  *
  *	   Note: tan(x+y) = tan(x) + tan'(x)*y
  *		          ~ tan(x) + (1+x*x)*y
@@ -68,10 +67,9 @@ static const double xxx[] = {
 #define	pio4	xxx[14]
 #define	pio4lo	xxx[15]
 #define	T	xxx
-/* INDENT ON */
 
-double
-__kernel_tan(double x, double y, int iy) {
+double __kernel_tan(double x, double y, int iy)
+{
 	double z, r, v, w, s;
 	int ix, hx;
 

@@ -11,15 +11,15 @@
  * ====================================================
  */
 
-/* __ieee754_acos(x)
- * Method :                  
+/* acos(x)
+ * Method :
  *	acos(x)  = pi/2 - asin(x)
  *	acos(-x) = pi/2 + asin(x)
  * For |x|<=0.5
  *	acos(x) = pi/2 - (x + x*x^2*R(x^2))	(see asin.c)
  * For x>0.5
- * 	acos(x) = pi/2 - (pi/2 - 2asin(sqrt((1-x)/2)))
- *		= 2asin(sqrt((1-x)/2))  
+ *	acos(x) = pi/2 - (pi/2 - 2asin(sqrt((1-x)/2)))
+ *		= 2asin(sqrt((1-x)/2))
  *		= 2s + 2s*z*R(z) 	...z=(1-x)/2, s=sqrt(z)
  *		= 2f + (2c + 2s*z*R(z))
  *     where f=hi part of s, and c = (z-f*f)/(s+f) is the correction term
@@ -37,13 +37,9 @@
 
 #include "fdlibm.h"
 
-#ifdef __STDC__
-static const double 
-#else
-static double 
-#endif
-one=  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
-pi =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
+static const double
+one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+pi  =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
 pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
 pio2_lo =  6.12323399573676603587e-17, /* 0x3C91A626, 0x33145C07 */
 pS0 =  1.66666666666666657415e-01, /* 0x3FC55555, 0x55555555 */
@@ -57,12 +53,7 @@ qS2 =  2.02094576023350569471e+00, /* 0x40002AE5, 0x9C598AC8 */
 qS3 = -6.88283971605453293030e-01, /* 0xBFE6066C, 0x1B8D0159 */
 qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 
-#ifdef __STDC__
-	double __ieee754_acos(double x)
-#else
-	double __ieee754_acos(x)
-	double x;
-#endif
+double acos(double x)
 {
 	double z,p,q,r,w,s,c,df;
 	int hx,ix;

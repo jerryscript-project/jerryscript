@@ -11,13 +11,13 @@
  * ====================================================
  */
 
-/* __ieee754_asin(x)
- * Method :                  
+/* asin(x)
+ * Method :
  *	Since  asin(x) = x + x^3/6 + x^5*3/40 + x^7*15/336 + ...
  *	we approximate asin(x) on [0,0.5] by
  *		asin(x) = x + x*x^2*R(x^2)
  *	where
- *		R(x^2) is a rational approximation of (asin(x)-x)/x^3 
+ *		R(x^2) is a rational approximation of (asin(x)-x)/x^3
  *	and its remez error is bounded by
  *		|(asin(x)-x)/x^3 - R(x^2)| < 2^(-58.75)
  *
@@ -44,11 +44,7 @@
 
 #include "fdlibm.h"
 
-#ifdef __STDC__
 static const double 
-#else
-static double 
-#endif
 one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
 huge =  1.000e+300,
 pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
@@ -66,12 +62,7 @@ qS2 =  2.02094576023350569471e+00, /* 0x40002AE5, 0x9C598AC8 */
 qS3 = -6.88283971605453293030e-01, /* 0xBFE6066C, 0x1B8D0159 */
 qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 
-#ifdef __STDC__
-	double __ieee754_asin(double x)
-#else
-	double __ieee754_asin(x)
-	double x;
-#endif
+double asin(double x)
 {
 	double t = 0,w,p,q,c,r,s;
 	int hx,ix;
@@ -80,8 +71,8 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	if(ix>= 0x3ff00000) {		/* |x|>= 1 */
 	    if(((ix-0x3ff00000)|__LO(x))==0)
 		    /* asin(1)=+-pi/2 with inexact */
-		return x*pio2_hi+x*pio2_lo;	
-	    return (x-x)/(x-x);		/* asin(|x|>1) is NaN */   
+		return x*pio2_hi+x*pio2_lo;
+	    return (x-x)/(x-x);		/* asin(|x|>1) is NaN */
 	} else if (ix<0x3fe00000) {	/* |x|<0.5 */
 	    if(ix<0x3e400000) {		/* if |x| < 2**-27 */
 		if(huge+x>one) return x;/* return x with inexact if x!=0*/
@@ -109,6 +100,6 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	    p  = 2.0*s*r-(pio2_lo-2.0*c);
 	    q  = pio4_hi-2.0*w;
 	    t  = pio4_hi-(p-q);
-	}    
-	if(hx>0) return t; else return -t;    
+	}
+	if(hx>0) return t; else return -t;
 }

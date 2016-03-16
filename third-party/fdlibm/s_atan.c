@@ -48,23 +48,20 @@ static const double atanlo[] = {
   6.12323399573676603587e-17, /* atan(inf)lo 0x3C91A626, 0x33145C07 */
 };
 
-static const double aT[] = {
-  3.33333333333329318027e-01, /* 0x3FD55555, 0x5555550D */
- -1.99999999998764832476e-01, /* 0xBFC99999, 0x9998EBC4 */
-  1.42857142725034663711e-01, /* 0x3FC24924, 0x920083FF */
- -1.11111104054623557880e-01, /* 0xBFBC71C6, 0xFE231671 */
-  9.09088713343650656196e-02, /* 0x3FB745CD, 0xC54C206E */
- -7.69187620504482999495e-02, /* 0xBFB3B0F2, 0xAF749A6D */
-  6.66107313738753120669e-02, /* 0x3FB10D66, 0xA0D03D51 */
- -5.83357013379057348645e-02, /* 0xBFADDE2D, 0x52DEFD9A */
-  4.97687799461593236017e-02, /* 0x3FA97B4B, 0x24760DEB */
- -3.65315727442169155270e-02, /* 0xBFA2B444, 0x2C6A6C2F */
-  1.62858201153657823623e-02, /* 0x3F90AD3A, 0xE322DA11 */
-};
+#define aT0   3.33333333333329318027e-01 /* 0x3FD55555, 0x5555550D */
+#define aT1  -1.99999999998764832476e-01 /* 0xBFC99999, 0x9998EBC4 */
+#define aT2   1.42857142725034663711e-01 /* 0x3FC24924, 0x920083FF */
+#define aT3  -1.11111104054623557880e-01 /* 0xBFBC71C6, 0xFE231671 */
+#define aT4   9.09088713343650656196e-02 /* 0x3FB745CD, 0xC54C206E */
+#define aT5  -7.69187620504482999495e-02 /* 0xBFB3B0F2, 0xAF749A6D */
+#define aT6   6.66107313738753120669e-02 /* 0x3FB10D66, 0xA0D03D51 */
+#define aT7  -5.83357013379057348645e-02 /* 0xBFADDE2D, 0x52DEFD9A */
+#define aT8   4.97687799461593236017e-02 /* 0x3FA97B4B, 0x24760DEB */
+#define aT9  -3.65315727442169155270e-02 /* 0xBFA2B444, 0x2C6A6C2F */
+#define aT10  1.62858201153657823623e-02 /* 0x3F90AD3A, 0xE322DA11 */
 
-static const double
-one   = 1.0,
-huge   = 1.0e300;
+#define one  1.0
+#define huge 1.0e300
 
 double atan(double x)
 {
@@ -103,8 +100,8 @@ double atan(double x)
 	z = x*x;
 	w = z*z;
     /* break sum from i=0 to 10 aT[i]z**(i+1) into odd and even poly */
-	s1 = z*(aT[0]+w*(aT[2]+w*(aT[4]+w*(aT[6]+w*(aT[8]+w*aT[10])))));
-	s2 = w*(aT[1]+w*(aT[3]+w*(aT[5]+w*(aT[7]+w*aT[9]))));
+	s1 = z*(aT0+w*(aT2+w*(aT4+w*(aT6+w*(aT8+w*aT10)))));
+	s2 = w*(aT1+w*(aT3+w*(aT5+w*(aT7+w*aT9))));
 	if (id<0) return x - x*(s1+s2);
 	else {
 	    z = atanhi[id] - ((x*(s1+s2) - atanlo[id]) - x);

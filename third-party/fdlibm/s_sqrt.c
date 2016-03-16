@@ -83,9 +83,8 @@
 
 #include "fdlibm.h"
 
-static const double
-one  = 1.0,
-tiny = 1.0e-300;
+#define one  1.0
+#define tiny 1.0e-300
 
 double sqrt(double x)
 {
@@ -361,7 +360,7 @@ B.  sqrt(x) by Reciproot Iteration
 
     (3)	Final adjustment
 
-	By twiddling y's last bit it is possible to force y to be 
+	By twiddling y's last bit it is possible to force y to be
 	correctly rounded according to the prevailing rounding mode
 	as follows. Let r and i be copies of the rounding mode and
 	inexact flag before entering the square root program. Also we

@@ -142,11 +142,10 @@ static const double PIo2[] = {
   2.16741683877804819444e-51, /* 0x3569F31D, 0x00000000 */
 };
 
-static const double
-zero   = 0.0,
-one    = 1.0,
-two24   =  1.67772160000000000000e+07, /* 0x41700000, 0x00000000 */
-twon24  =  5.96046447753906250000e-08; /* 0x3E700000, 0x00000000 */
+#define zero   0.0
+#define one    1.0
+#define two24  1.67772160000000000000e+07 /* 0x41700000, 0x00000000 */
+#define twon24 5.96046447753906250000e-08 /* 0x3E700000, 0x00000000 */
 
 int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec, const int *ipio2)
 {

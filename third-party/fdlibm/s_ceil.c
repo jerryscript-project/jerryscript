@@ -22,7 +22,7 @@
 
 #include "fdlibm.h"
 
-static const double huge = 1.0e300;
+#define huge 1.0e300
 
 double ceil(double x)
 {

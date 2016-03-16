@@ -20,8 +20,9 @@
 #include "fdlibm.h"
 
 static const double
-one    = 1.0,
 Zero[] = {0.0, -0.0,};
+
+#define one 1.0
 
 double fmod(double x, double y)
 {

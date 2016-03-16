@@ -54,7 +54,7 @@
 /* Maximum code size.
  * Limit: 16777215. Recommended: 65535, 16777215. */
 #ifndef PARSER_MAXIMUM_CODE_SIZE
-#define PARSER_MAXIMUM_CODE_SIZE 16777215
+#define PARSER_MAXIMUM_CODE_SIZE (65535 << (MEM_ALIGNMENT_LOG))
 #endif
 
 /* Maximum number of values pushed onto the stack by a function.

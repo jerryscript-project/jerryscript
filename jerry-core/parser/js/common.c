@@ -165,7 +165,7 @@ util_free_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
     {
-      PARSER_FREE ((uint8_t *) literal_p->u.char_p);
+      mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
     }
   }
   else if ((literal_p->type == LEXER_FUNCTION_LITERAL)

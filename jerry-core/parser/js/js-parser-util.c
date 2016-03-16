@@ -619,7 +619,7 @@ parser_set_breaks_to_current_position (parser_context_t *context_p, /**< context
     {
       parser_set_branch_to_current_position (context_p, &current_p->branch);
     }
-    parser_free (current_p);
+    parser_free (current_p, sizeof (parser_branch_node_t));
     current_p = next_p;
   }
 } /* parser_set_breaks_to_current_position */

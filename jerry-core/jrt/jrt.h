@@ -200,11 +200,11 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
  */
 
 /**
- * Aligns @a value to @a alignment.
+ * Aligns @a value to @a alignment. @a must be the power of 2.
  *
  * Returns minimum positive value, that divides @a alignment and is more than or equal to @a value
  */
-#define JERRY_ALIGNUP(value, alignment) ((alignment) * (((value) + (alignment) - 1) / (alignment)))
+#define JERRY_ALIGNUP(value, alignment) (((value) + ((alignment) - 1)) & ~((alignment) - 1))
 
 /**
  * min, max

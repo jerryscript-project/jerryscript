@@ -741,16 +741,14 @@ typedef uintptr_t ecma_external_pointer_t;
   */
 typedef struct
 {
-  uint16_t status_flags;            /**< various status flags */
+  uint16_t size;                    /**< real size >> MEM_ALIGNMENT_LOG */
+  uint16_t refs;                    /**< reference counter for the byte code */
+  uint16_t status_flags;            /**< various status flags:
+                                      *    CBC_CODE_FLAGS_FUNCTION flag tells whether
+                                      *    the byte code is function or regular expression.
+                                      *    If function, the other flags must be CBC_CODE_FLAGS...
+                                      *    If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;
-
-/**
- * Shift value for byte code reference counting.
- * The last 10 bit of the first uint16_t value
- * of compact byte code or regexp byte code
- * is reserved for reference counting.
- */
-#define ECMA_BYTECODE_REF_SHIFT 6
 
 /**
  * @}

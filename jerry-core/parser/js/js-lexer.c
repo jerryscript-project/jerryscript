@@ -1203,7 +1203,7 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
 
   if (has_escape)
   {
-    literal_p->u.char_p = (uint8_t *) PARSER_MALLOC (length);
+    literal_p->u.char_p = (uint8_t *) mem_heap_alloc_block_store_size (length);
     memcpy ((uint8_t *) literal_p->u.char_p, char_p, length);
   }
   else
@@ -1245,6 +1245,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
     {
       destination_start_p = (uint8_t *) parser_malloc_local (context_p, literal_p->length);
       context_p->allocated_buffer_p = destination_start_p;
+      context_p->allocated_buffer_size = literal_p->length;
     }
 
     destination_p = destination_start_p;
@@ -1502,7 +1503,8 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (context_p->allocated_buffer_p == destination_start_p);
 
     context_p->allocated_buffer_p = NULL;
-    parser_free_local (destination_start_p);
+    parser_free_local (destination_start_p,
+                       context_p->allocated_buffer_size);
   }
 
   JERRY_ASSERT (context_p->allocated_buffer_p == NULL);
@@ -1825,15 +1827,6 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   {
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
   }
-
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-  if (snapshot_report_byte_code_compilation)
-  {
-    snapshot_add_compiled_code ((ecma_compiled_code_t *) re_bytecode_p,
-                                regex_start_p,
-                                length);
-  }
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
   literal_p->type = LEXER_REGEXP_LITERAL;
   literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;

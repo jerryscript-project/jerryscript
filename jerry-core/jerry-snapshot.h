@@ -24,27 +24,19 @@
  */
 typedef struct
 {
-  uint32_t last_compiled_code_offset; /**< offset of the last compiled code */
+  /* The size of this structure is recommended to be divisible by
+   * MEM_ALIGNMENT. Otherwise some bytes after the header are wasted. */
+  uint32_t version; /**< version number */
+  uint32_t lit_table_offset; /**< offset of the literal table */
   uint32_t lit_table_size; /**< size of literal table */
-  __extension__ uint32_t is_run_global : 1; /**< flag, indicating whether the snapshot
-                                             *   was dumped as 'Global scope'-mode code (true)
-                                             *   or as eval-mode code (false) */
+  uint32_t is_run_global; /**< flag, indicating whether the snapshot
+                            *   was dumped as 'Global scope'-mode code (true)
+                            *   or as eval-mode code (false) */
 } jerry_snapshot_header_t;
 
 /**
  * Jerry snapshot format version
  */
-#define JERRY_SNAPSHOT_VERSION (3u)
-
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-
-/* Snapshot support functions */
-
-extern bool snapshot_report_byte_code_compilation;
-
-extern void
-snapshot_add_compiled_code (ecma_compiled_code_t *, const uint8_t *, uint32_t);
-
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#define JERRY_SNAPSHOT_VERSION (4u)
 
 #endif /* !JERRY_SNAPSHOT_H */

@@ -105,7 +105,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
         if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          PARSER_FREE ((uint8_t *) char_p);
+          mem_heap_free_block_size_stored ((void *) char_p);
         }
       }
     }
@@ -527,7 +527,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         if (!context_p->is_show_opcodes
             && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          PARSER_FREE (literal_p->u.char_p);
+          mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
         }
 #else /* PARSER_DUMP_BYTE_CODE */
         literal_pool_p[literal_p->prop.index] = literal_p->u.value;
@@ -1460,10 +1460,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
   total_size += length + context_p->literal_count * sizeof (lit_cpointer_t);
+  total_size = JERRY_ALIGNUP (total_size, MEM_ALIGNMENT);
+
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
 
   byte_code_p = (uint8_t *) compiled_code_p;
-  compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION | (1u << ECMA_BYTECODE_REF_SHIFT);
+  compiled_code_p->size = (uint16_t) (total_size >> MEM_ALIGNMENT_LOG);
+  compiled_code_p->refs = 1;
+  compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION;
 
   if (needs_uint16_arguments)
   {
@@ -1517,20 +1521,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   literal_pool_p = (lit_cpointer_t *) byte_code_p;
   byte_code_p += context_p->literal_count * sizeof (lit_cpointer_t);
-
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-
-  if (snapshot_report_byte_code_compilation
-      && context_p->argument_count > 0)
-  {
-    /* Reset all arguments to NULL. */
-    for (offset = 0; offset < context_p->argument_count; offset++)
-    {
-      literal_pool_p[offset] = NOT_A_LITERAL;
-    }
-  }
-
-#endif
 
   dst_p = parser_generate_initializers (context_p,
                                         byte_code_p,
@@ -1705,7 +1695,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       if ((literal_p->type == LEXER_IDENT_LITERAL || literal_p->type == LEXER_STRING_LITERAL)
           && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
       {
-        PARSER_FREE (literal_p->u.char_p);
+        mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
       }
     }
   }
@@ -1779,15 +1769,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     ECMA_SET_NON_NULL_POINTER (literal_pool_p[const_literal_end],
                                compiled_code_p);
   }
-
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-
-  if (snapshot_report_byte_code_compilation)
-  {
-    snapshot_add_compiled_code (compiled_code_p, NULL, (uint32_t) total_size);
-  }
-
-#endif
 
   return compiled_code_p;
 } /* parser_post_processing */
@@ -1924,7 +1905,8 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
 
     if (context.allocated_buffer_p != NULL)
     {
-      parser_free_local (context.allocated_buffer_p);
+      parser_free_local (context.allocated_buffer_p,
+                         context.allocated_buffer_size);
     }
 
     if (error_location != NULL)

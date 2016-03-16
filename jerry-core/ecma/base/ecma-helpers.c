@@ -1316,12 +1316,12 @@ void
 ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 {
   /* Abort program if maximum reference number is reached. */
-  if ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) >= 0x3ff)
+  if (bytecode_p->refs >= UINT16_MAX)
   {
     jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
 
-  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags + (1u << ECMA_BYTECODE_REF_SHIFT));
+  bytecode_p->refs++;
 } /* ecma_bytecode_ref */
 
 /**
@@ -1331,11 +1331,11 @@ ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 void
 ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 {
-  JERRY_ASSERT ((bytecode_p->status_flags >> ECMA_BYTECODE_REF_SHIFT) > 0);
+  JERRY_ASSERT (bytecode_p->refs > 0);
 
-  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags - (1u << ECMA_BYTECODE_REF_SHIFT));
+  bytecode_p->refs--;
 
-  if (bytecode_p->status_flags >= (1u << ECMA_BYTECODE_REF_SHIFT))
+  if (bytecode_p->refs > 0)
   {
     /* Non-zero reference counter. */
     return;
@@ -1388,7 +1388,8 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
   }
 
-  mem_heap_free_block_size_stored (bytecode_p);
+  mem_heap_free_block (bytecode_p,
+                       ((size_t) bytecode_p->size) << MEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
 
 /**

@@ -236,6 +236,7 @@ typedef struct
   parser_error_t error;                       /**< error code */
   void *allocated_buffer_p;                   /**< dinamically allocated buffer
                                                *   which needs to be freed on error */
+  uint32_t allocated_buffer_size;             /**< size of the dinamically allocated buffer */
 
   /* Parser members. */
   uint32_t status_flags;                      /**< status flags */
@@ -283,9 +284,9 @@ typedef struct
 /* Memory management.
  * Note: throws an error if unsuccessful. */
 void *parser_malloc (parser_context_t *, size_t);
-void parser_free (void *);
+void parser_free (void *, size_t);
 void *parser_malloc_local (parser_context_t *, size_t);
-void parser_free_local (void *);
+void parser_free_local (void *, size_t);
 
 /* Parser byte stream. */
 

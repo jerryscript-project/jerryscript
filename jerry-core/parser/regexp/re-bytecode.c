@@ -54,11 +54,11 @@ re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytec
   JERRY_ASSERT (bc_ctx_p->current_p >= bc_ctx_p->block_start_p);
   size_t current_ptr_offset = (size_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
-  uint8_t *new_block_start_p = (uint8_t *) mem_heap_alloc_block_store_size (new_block_size);
+  uint8_t *new_block_start_p = (uint8_t *) mem_heap_alloc_block (new_block_size);
   if (bc_ctx_p->current_p)
   {
     memcpy (new_block_start_p, bc_ctx_p->block_start_p, (size_t) (current_ptr_offset));
-    mem_heap_free_block_size_stored (bc_ctx_p->block_start_p);
+    mem_heap_free_block (bc_ctx_p->block_start_p, old_size);
   }
   bc_ctx_p->block_start_p = new_block_start_p;
   bc_ctx_p->block_end_p = new_block_start_p + new_block_size;
@@ -109,10 +109,10 @@ re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode conte
   {
     uint8_t *dest_p = src_p + length;
     uint8_t *tmp_block_start_p;
-    tmp_block_start_p = (uint8_t *) mem_heap_alloc_block_store_size (re_get_bytecode_length (bc_ctx_p) - offset);
+    tmp_block_start_p = (uint8_t *) mem_heap_alloc_block (re_get_bytecode_length (bc_ctx_p) - offset);
     memcpy (tmp_block_start_p, src_p, (size_t) (re_get_bytecode_length (bc_ctx_p) - offset));
     memcpy (dest_p, tmp_block_start_p, (size_t) (re_get_bytecode_length (bc_ctx_p) - offset));
-    mem_heap_free_block_size_stored (tmp_block_start_p);
+    mem_heap_free_block (tmp_block_start_p, re_get_bytecode_length (bc_ctx_p) - offset);
   }
   memcpy (src_p, bytecode_p, length);
 

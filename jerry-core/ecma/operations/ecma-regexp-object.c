@@ -256,7 +256,7 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
   /* Initialize RegExp object properties */
   re_initialize_props (obj_p,
                        ECMA_GET_NON_NULL_POINTER (ecma_string_t, bytecode_p->pattern_cp),
-                       bytecode_p->flags);
+                       bytecode_p->header.status_flags);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_regexp_object_from_bytecode */
@@ -1298,7 +1298,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   re_ctx.input_end_p = input_end_p;
 
   /* 1. Read bytecode header and init regexp matcher context. */
-  re_ctx.flags = bc_p->flags;
+  re_ctx.flags = bc_p->header.status_flags;
 
   if (ignore_global)
   {

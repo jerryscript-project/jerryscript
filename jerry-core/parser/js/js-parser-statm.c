@@ -1285,7 +1285,7 @@ parser_parse_case_statement (parser_context_t *context_p) /**< context */
   parser_stack_iterator_write (&iterator, &switch_statement, sizeof (parser_switch_statement_t));
 
   parser_set_branch_to_current_position (context_p, &branch_p->branch);
-  parser_free (branch_p);
+  parser_free (branch_p, sizeof (parser_branch_node_t));
 } /* parser_parse_case_statement */
 
 /**
@@ -2102,7 +2102,7 @@ parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
         while (branch_list_p != NULL)
         {
           parser_branch_node_t *next_p = branch_list_p->next_p;
-          parser_free (branch_list_p);
+          parser_free (branch_list_p, sizeof (parser_branch_node_t));
           branch_list_p = next_p;
         }
         branch_list_p = loop.branch_list_p;
@@ -2133,7 +2133,7 @@ parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
     while (branch_list_p != NULL)
     {
       parser_branch_node_t *next_p = branch_list_p->next_p;
-      parser_free (branch_list_p);
+      parser_free (branch_list_p, sizeof (parser_branch_node_t));
       branch_list_p = next_p;
     }
   }

@@ -468,7 +468,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
       ecma_string_t *cached_pattern_str_p;
       cached_pattern_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, cached_bytecode_p->pattern_cp);
 
-      if ((cached_bytecode_p->flags & RE_FLAGS_MASK) == flags
+      if ((cached_bytecode_p->header.status_flags & RE_FLAGS_MASK) == flags
           && ecma_compare_ecma_strings (cached_pattern_str_p, pattern_str_p))
       {
         JERRY_DDLOG ("RegExp is found in cache\n");
@@ -497,9 +497,9 @@ re_cache_gc_run ()
     const re_compiled_code_t *cached_bytecode_p = re_cache[i];
 
     if (cached_bytecode_p != NULL
-        && (cached_bytecode_p->flags >> ECMA_BYTECODE_REF_SHIFT) == 1)
-    { /* Only the cache has reference for the bytecode */
-
+        && cached_bytecode_p->header.refs == 1)
+    {
+      /* Only the cache has reference for the bytecode */
       ecma_bytecode_deref ((ecma_compiled_code_t *) cached_bytecode_p);
       re_cache[i] = NULL;
     }
@@ -578,7 +578,8 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
     /* 3. Insert extra informations for bytecode header */
     re_compiled_code_t re_compiled_code;
 
-    re_compiled_code.flags = re_ctx.flags | (1u << ECMA_BYTECODE_REF_SHIFT);
+    re_compiled_code.header.refs = 1;
+    re_compiled_code.header.status_flags = re_ctx.flags;
     ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp,
                                ecma_copy_or_ref_ecma_string (pattern_str_p));
     re_compiled_code.num_of_captures = re_ctx.num_of_captures * 2;
@@ -594,11 +595,13 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
   MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
 
+  size_t byte_code_size = (size_t) (bc_ctx.block_end_p - bc_ctx.block_start_p);
+
   if (!ecma_is_value_empty (ret_value))
   {
     /* Compilation failed, free bytecode. */
     JERRY_DDLOG ("RegExp compilation failed!\n");
-    mem_heap_free_block_size_stored (bc_ctx.block_start_p);
+    mem_heap_free_block (bc_ctx.block_start_p, byte_code_size);
     *out_bytecode_p = NULL;
   }
   else
@@ -610,6 +613,8 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
     /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
     JERRY_ASSERT (bc_ctx.block_start_p != NULL);
     *out_bytecode_p = (re_compiled_code_t *) bc_ctx.block_start_p;
+
+    ((re_compiled_code_t *) bc_ctx.block_start_p)->header.size = (uint16_t) (byte_code_size >> MEM_ALIGNMENT_LOG);
 
     if (cache_idx == RE_CACHE_SIZE)
     {

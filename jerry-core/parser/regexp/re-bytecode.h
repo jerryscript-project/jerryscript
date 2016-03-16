@@ -85,7 +85,7 @@ typedef enum
  */
 typedef struct
 {
-  uint16_t flags;                    /**< RegExp flags */
+  ecma_compiled_code_t header;       /**< compiled code header */
   mem_cpointer_t pattern_cp;         /**< original RegExp pattern */
   uint32_t num_of_captures;          /**< number of capturing brackets */
   uint32_t num_of_non_captures;      /**< number of non capturing brackets */

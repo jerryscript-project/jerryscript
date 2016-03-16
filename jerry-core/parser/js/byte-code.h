@@ -617,7 +617,7 @@
  */
 typedef struct
 {
-  uint16_t status_flags;            /**< various status flags */
+  ecma_compiled_code_t header;      /**< compiled code header */
   uint8_t stack_limit;              /**< maximum number of values stored on the stack */
   uint8_t argument_end;             /**< number of arguments expected by the function */
   uint8_t register_end;             /**< end position of the register group */
@@ -631,7 +631,7 @@ typedef struct
  */
 typedef struct
 {
-  uint16_t status_flags;            /**< various status flags */
+  ecma_compiled_code_t header;      /**< compiled code header */
   uint16_t stack_limit;             /**< maximum number of values stored on the stack */
   uint16_t argument_end;            /**< number of arguments expected by the function */
   uint16_t register_end;            /**< end position of the register group */

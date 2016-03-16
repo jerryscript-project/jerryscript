@@ -81,12 +81,3 @@ extern int finite (double);
  */
 extern double copysign (double, double);
 extern double scalbn (double, int);
-
-/* ieee style elementary functions */
-extern int    __ieee754_rem_pio2 (double,double*);
-
-/* fdlibm kernel function */
-extern double __kernel_sin (double,double,int);
-extern double __kernel_cos (double,double);
-extern double __kernel_tan (double,double,int);
-extern int    __kernel_rem_pio2 (double*,double*,int,int,int,const int*);

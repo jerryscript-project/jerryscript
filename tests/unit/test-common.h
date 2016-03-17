@@ -18,7 +18,7 @@
 
 #include "jrt.h"
 
-#include <math.h>
+#include "fdlibm-math.h"
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>

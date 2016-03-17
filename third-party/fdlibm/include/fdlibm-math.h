@@ -52,29 +52,29 @@ extern "C"
 #define M_2_SQRTPI 1.1283791670955125738961589031215452
 
 // Trigonometric functions
-double cos(double);
-double sin(double);
-double tan(double);
-double acos(double);
-double asin(double);
-double atan(double);
-double atan2(double, double);
+double cos (double);
+double sin (double);
+double tan (double);
+double acos (double);
+double asin (double);
+double atan (double);
+double atan2 (double, double);
 
 // Exponential and logarithmic functions
-double exp(double);
-double log(double);
+double exp (double);
+double log (double);
 
 // Power functions
-double pow(double, double);
-double sqrt(double);
+double pow (double, double);
+double sqrt (double);
 
 // Rounding and remainder functions
-double ceil(double);
-double floor(double);
+double ceil (double);
+double floor (double);
 
 // Other functions
-double fabs(double);
-double fmod(double, double);
+double fabs (double);
+double fmod (double, double);
 
 #ifdef __cplusplus
 }

@@ -13,43 +13,43 @@
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly
    but these catch some common cases. */
 
-#if defined(i386) || defined(__i386) || defined(__i386__) || \
-	defined(i486) || defined(__i486) || defined(__i486__) || \
-	defined(intel) || defined(x86) || defined(i86pc) || \
-	defined(__alpha) || defined(__osf__) || \
-	defined(__x86_64__) || defined(__arm__)
+#if (defined (i386) || defined (__i386) || defined (__i386__) || \
+     defined (i486) || defined (__i486) || defined (__i486__) || \
+     defined (intel) || defined (x86) || defined (i86pc) || \
+     defined (__alpha) || defined (__osf__) || \
+     defined (__x86_64__) || defined (__arm__))
 #define __LITTLE_ENDIAN
 #endif
 
 #ifdef __LITTLE_ENDIAN
-#define __HI(x) *(1+(int*)&x)
-#define __LO(x) *(int*)&x
+#define __HI(x) *(1 + (int *) &x)
+#define __LO(x) *(int *) &x
 #else
-#define __HI(x) *(int*)&x
-#define __LO(x) *(1+(int*)&x)
+#define __HI(x) *(int *) &x
+#define __LO(x) *(1 + (int *) &x)
 #endif
 
 /*
  * ANSI/POSIX
  */
 
-#define	MAXFLOAT	((float)3.40282346638528860e+38)
+#define MAXFLOAT        ((float) 3.40282346638528860e+38)
 
-#define	HUGE		MAXFLOAT
+#define HUGE            MAXFLOAT
 
 /*
  * set X_TLOSS = pi*2**52, which is possibly defined in <values.h>
  * (one may replace the following line by "#include <values.h>")
  */
 
-#define X_TLOSS		1.41484755040568800000e+16
+#define X_TLOSS         1.41484755040568800000e+16
 
-#define	DOMAIN		1
-#define	SING		2
-#define	OVERFLOW	3
-#define	UNDERFLOW	4
-#define	TLOSS		5
-#define	PLOSS		6
+#define DOMAIN          1
+#define SING            2
+#define OVERFLOW        3
+#define UNDERFLOW       4
+#define TLOSS           5
+#define PLOSS           6
 
 /*
  * ANSI/POSIX

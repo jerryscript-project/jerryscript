@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +68,14 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma values
 
     JERRY_ASSERT (cur_value_buf_iter_p + 1 <= cur_value_buf_end_p);
 
-    *cur_value_buf_iter_p++ = ecma_copy_value (values_buffer[value_index], do_ref_if_object);
+    if (do_ref_if_object)
+    {
+      *cur_value_buf_iter_p++ = ecma_copy_value (values_buffer[value_index]);
+    }
+    else
+    {
+      *cur_value_buf_iter_p++ = ecma_copy_value_if_not_object (values_buffer[value_index]);
+    }
   }
 
   *next_chunk_cp_p = ECMA_NULL_POINTER;
@@ -189,7 +197,14 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
 
   JERRY_ASSERT ((uint8_t *) (values_p + pos_of_new_value_in_chunk + 1) <= (uint8_t *) (chunk_p + 1));
 
-  values_p[pos_of_new_value_in_chunk] = ecma_copy_value (v, do_ref_if_object);
+  if (do_ref_if_object)
+  {
+    values_p[pos_of_new_value_in_chunk] = ecma_copy_value (v);
+  }
+  else
+  {
+    values_p[pos_of_new_value_in_chunk] = ecma_copy_value_if_not_object (v);
+  }
 } /* ecma_append_to_values_collection */
 
 /**

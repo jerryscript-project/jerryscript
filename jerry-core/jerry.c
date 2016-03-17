@@ -749,7 +749,7 @@ jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
   JERRY_ASSERT (size > 0);
 
   ecma_number_t *length_num_p = ecma_alloc_number ();
-  *length_num_p = ecma_uint32_to_number (size);
+  *length_num_p = ((ecma_number_t) size);
   ecma_value_t array_length = ecma_make_number_value (length_num_p);
 
   jerry_api_length_t argument_size = 1;

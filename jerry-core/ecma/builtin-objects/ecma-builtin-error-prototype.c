@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +89,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
     if (unlikely (ecma_is_value_error (name_to_str_completion)))
     {
-      ret_value = ecma_copy_value (name_to_str_completion, true);
+      ret_value = ecma_copy_value (name_to_str_completion);
     }
     else
     {
@@ -113,7 +114,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
       if (unlikely (ecma_is_value_error (msg_to_str_completion)))
       {
-        ret_value = ecma_copy_value (msg_to_str_completion, true);
+        ret_value = ecma_copy_value (msg_to_str_completion);
       }
       else
       {

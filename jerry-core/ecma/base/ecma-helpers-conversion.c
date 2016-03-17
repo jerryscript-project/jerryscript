@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -811,28 +812,6 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 } /* ecma_uint32_to_utf8_string */
 
 /**
- * ECMA-defined conversion of UInt32 value to Number value
- *
- * @return number - result of conversion.
- */
-ecma_number_t
-ecma_uint32_to_number (uint32_t value) /**< unsigned 32-bit integer value */
-{
-  return (ecma_number_t) value;
-} /* ecma_uint32_to_number */
-
-/**
- * ECMA-defined conversion of Int32 value to Number value
- *
- * @return number - result of conversion.
- */
-ecma_number_t
-ecma_int32_to_number (int32_t value) /**< signed 32-bit integer value */
-{
-  return (ecma_number_t) value;
-} /* ecma_int32_to_number */
-
-/**
  * ECMA-defined conversion of Number value to UInt32 value
  *
  * See also:
@@ -1344,7 +1323,8 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
       // 5.
       uint32_t num_uint32 = ecma_number_to_uint32 (num);
-      if (ecma_uint32_to_number (num_uint32) == num)
+
+      if (((ecma_number_t) num_uint32) == num)
       {
         size = ecma_uint32_to_utf8_string (num_uint32, dst_p, buffer_size);
       }

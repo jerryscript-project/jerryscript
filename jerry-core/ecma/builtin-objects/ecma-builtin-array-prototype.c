@@ -270,7 +270,7 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
   if (ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (new_array_p, ecma_uint32_to_number (new_length)),
+                    ecma_builtin_array_prototype_helper_set_length (new_array_p, ((ecma_number_t) new_length)),
                     ret_value);
     ret_value = new_array;
     ECMA_FINALIZE (set_length_value);
@@ -512,10 +512,10 @@ ecma_builtin_array_prototype_object_pop (ecma_value_t this_arg) /**< this argume
 
     /* 5.d */
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ((ecma_number_t) len)),
                     ret_value);
 
-    ret_value = ecma_copy_value (get_value, true);
+    ret_value = ecma_copy_value (get_value);
 
     ECMA_FINALIZE (set_length_value);
     ECMA_FINALIZE (del_value);
@@ -561,7 +561,7 @@ ecma_builtin_array_prototype_object_push (ecma_value_t this_arg, /**< this argum
   /* 3. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (length_var, length_value, ret_value);
 
-  ecma_number_t n = ecma_uint32_to_number (ecma_number_to_uint32 (length_var));
+  ecma_number_t n = ((ecma_number_t) ecma_number_to_uint32 (length_var));
 
   /* 5. */
   for (uint32_t index = 0;
@@ -691,7 +691,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg) /**< this ar
   if (ecma_is_value_empty (ret_value))
   {
     /* 7. */
-    ret_value = ecma_copy_value (obj_this, true);
+    ret_value = ecma_copy_value (obj_this);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -793,10 +793,10 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
 
       /* 9. */
       ECMA_TRY_CATCH (set_length_value,
-                      ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (len)),
+                      ecma_builtin_array_prototype_helper_set_length (obj_p, ((ecma_number_t) len)),
                       ret_value);
       /* 10. */
-      ret_value = ecma_copy_value (first_value, true);
+      ret_value = ecma_copy_value (first_value);
 
       ECMA_FINALIZE (set_length_value);
       ECMA_FINALIZE (del_value);
@@ -1266,7 +1266,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
     ECMA_TRY_CATCH (index_value, ecma_op_object_get (obj_p, property_name_p), ret_value);
 
-    values_buffer[copied_num++] = ecma_copy_value (index_value, true);
+    values_buffer[copied_num++] = ecma_copy_value (index_value);
 
     ECMA_FINALIZE (index_value);
   }
@@ -1330,7 +1330,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_copy_value (this_arg, true);
+    ret_value = ecma_copy_value (this_arg);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);
@@ -1607,7 +1607,7 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   if (ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (set_length_value,
-                    ecma_builtin_array_prototype_helper_set_length (obj_p, ecma_uint32_to_number (new_len)),
+                    ecma_builtin_array_prototype_helper_set_length (obj_p, ((ecma_number_t) new_len)),
                     ret_value);
 
     ECMA_FINALIZE (set_length_value);
@@ -1670,7 +1670,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
     /* 6.a */
     ecma_string_t *from_str_p = ecma_new_ecma_string_from_uint32 (k - 1);
     /* 6.b */
-    ecma_number_t new_idx = ecma_uint32_to_number (k) + ecma_uint32_to_number (args_number) - 1;
+    ecma_number_t new_idx = ((ecma_number_t) k) + ((ecma_number_t) args_number) - 1;
     ecma_string_t *to_str_p = ecma_new_ecma_string_from_number (new_idx);
 
     /* 6.c */
@@ -1708,7 +1708,7 @@ ecma_builtin_array_prototype_object_unshift (ecma_value_t this_arg, /**< this ar
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_number_t new_len = ecma_uint32_to_number (len) + ecma_uint32_to_number (args_number);
+    ecma_number_t new_len = ((ecma_number_t) len) + ((ecma_number_t) args_number);
     /* 10. */
     ECMA_TRY_CATCH (set_length_value,
                     ecma_builtin_array_prototype_helper_set_length (obj_p, new_len),
@@ -1796,7 +1796,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
           /* 9.b.ii */
           if (ecma_op_strict_equality_compare (arg1, get_value))
           {
-            found_index = ecma_uint32_to_number (from_idx);
+            found_index = ((ecma_number_t) from_idx);
           }
 
           ECMA_FINALIZE (get_value);
@@ -1951,7 +1951,7 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
         /* 8.b.ii */
         if (ecma_op_strict_equality_compare (search_element, get_value))
         {
-          *num_p = ecma_uint32_to_number (from_idx);
+          *num_p = ((ecma_number_t) from_idx);
         }
 
         ECMA_FINALIZE (get_value);
@@ -2041,7 +2041,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
         /* 7.c.i */
         ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
 
-        *num_p = ecma_uint32_to_number (index);
+        *num_p = ((ecma_number_t) index);
         current_index = ecma_make_number_value (num_p);
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
@@ -2142,7 +2142,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
         /* 7.c.i */
         ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
 
-        *num_p = ecma_uint32_to_number (index);
+        *num_p = ((ecma_number_t) index);
         current_index = ecma_make_number_value (num_p);
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
@@ -2242,7 +2242,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
         /* 7.c.i */
         ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
 
-        *num_p = ecma_uint32_to_number (index);
+        *num_p = ((ecma_number_t) index);
         current_index = ecma_make_number_value (num_p);
 
         /* 7.c.ii */
@@ -2340,7 +2340,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
         /* 8.c.i */
         ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
         /* 8.c.ii */
-        *num_p = ecma_uint32_to_number (index);
+        *num_p = ((ecma_number_t) index);
         current_index = ecma_make_number_value (num_p);
         ecma_value_t call_args[] = {current_value, current_index, obj_this};
 
@@ -2367,7 +2367,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
     if (ecma_is_value_empty (ret_value))
     {
       ECMA_TRY_CATCH (set_length_value,
-                      ecma_builtin_array_prototype_helper_set_length (new_array_p, ecma_uint32_to_number (len)),
+                      ecma_builtin_array_prototype_helper_set_length (new_array_p, ((ecma_number_t) len)),
                       ret_value);
       ret_value = new_array;
       ECMA_FINALIZE (set_length_value);
@@ -2457,7 +2457,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
         /* 9.c.i */
         ECMA_TRY_CATCH (get_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
 
-        *num_p = ecma_uint32_to_number (index);
+        *num_p = ((ecma_number_t) index);
         current_index = ecma_make_number_value (num_p);
 
         ecma_value_t call_args[] = { get_value, current_index, obj_this };
@@ -2574,7 +2574,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
       /* 7.a */
       if (args_number > 1)
       {
-        accumulator = ecma_copy_value (initial_value, true);
+        accumulator = ecma_copy_value (initial_value);
       }
       else
       {
@@ -2590,7 +2590,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
           if ((k_present = (ecma_op_object_get_property (obj_p, index_str_p) != NULL)))
           {
             ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
-            accumulator = ecma_copy_value (current_value, true);
+            accumulator = ecma_copy_value (current_value);
             ECMA_FINALIZE (current_value);
           }
           /* 8.b.iv */
@@ -2617,7 +2617,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
           /* 9.c.i */
           ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
           /* 9.c.ii */
-          *num_p = ecma_uint32_to_number (index);
+          *num_p = ((ecma_number_t) index);
           current_index = ecma_make_number_value (num_p);
           ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
 
@@ -2629,7 +2629,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
                           ret_value);
 
           ecma_free_value (accumulator);
-          accumulator = ecma_copy_value (call_value, true);
+          accumulator = ecma_copy_value (call_value);
 
           ECMA_FINALIZE (call_value);
           ECMA_FINALIZE (current_value);
@@ -2640,7 +2640,7 @@ ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this arg
 
       if (ecma_is_value_empty (ret_value))
       {
-        ret_value = ecma_copy_value (accumulator, true);
+        ret_value = ecma_copy_value (accumulator);
       }
     }
 
@@ -2720,7 +2720,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
       /* 7.a */
       if (args_number > 1)
       {
-        accumulator = ecma_copy_value (initial_value, true);
+        accumulator = ecma_copy_value (initial_value);
       }
       else
       {
@@ -2736,7 +2736,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
           if ((k_present = (ecma_op_object_get_property (obj_p, index_str_p) != NULL)))
           {
             ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
-            accumulator = ecma_copy_value (current_value, true);
+            accumulator = ecma_copy_value (current_value);
             ECMA_FINALIZE (current_value);
           }
           /* 8.b.iv */
@@ -2763,7 +2763,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
           /* 9.c.i */
           ECMA_TRY_CATCH (current_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
           /* 9.c.ii */
-          *num_p = ecma_uint32_to_number ((uint32_t) index);
+          *num_p = ((ecma_number_t) (uint32_t) index);
           current_index = ecma_make_number_value (num_p);
           ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
 
@@ -2775,7 +2775,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
                           ret_value);
 
           ecma_free_value (accumulator);
-          accumulator = ecma_copy_value (call_value, true);
+          accumulator = ecma_copy_value (call_value);
 
           ECMA_FINALIZE (call_value);
           ECMA_FINALIZE (current_value);
@@ -2786,7 +2786,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
 
       if (ecma_is_value_empty (ret_value))
       {
-        ret_value = ecma_copy_value (accumulator, true);
+        ret_value = ecma_copy_value (accumulator);
       }
 
       ecma_free_value (accumulator);

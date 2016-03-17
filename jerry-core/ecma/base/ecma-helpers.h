@@ -80,7 +80,8 @@ extern ecma_number_t *ecma_get_number_from_value (ecma_value_t) __attr_pure___;
 extern ecma_string_t *ecma_get_string_from_value (ecma_value_t) __attr_pure___;
 extern ecma_object_t *ecma_get_object_from_value (ecma_value_t) __attr_pure___;
 extern ecma_value_t ecma_get_value_from_error_value (ecma_value_t) __attr_pure___;
-extern ecma_value_t ecma_copy_value (ecma_value_t, bool);
+extern ecma_value_t ecma_copy_value (ecma_value_t);
+extern ecma_value_t ecma_copy_value_if_not_object (ecma_value_t);
 extern void ecma_free_value (ecma_value_t);
 extern void ecma_free_value_if_not_object (ecma_value_t);
 
@@ -243,8 +244,6 @@ extern ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *, lit_ut
 extern lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t, lit_utf8_byte_t *, lit_utf8_size_t);
 extern uint32_t ecma_number_to_uint32 (ecma_number_t);
 extern int32_t ecma_number_to_int32 (ecma_number_t);
-extern ecma_number_t ecma_int32_to_number (int32_t);
-extern ecma_number_t ecma_uint32_to_number (uint32_t);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
 #endif /* !ECMA_HELPERS_H */

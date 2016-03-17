@@ -853,7 +853,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
         /* 4.b.ii.2 */
         if (ecma_is_value_string (value))
         {
-          item = ecma_copy_value (value, true);
+          item = ecma_copy_value (value);
         }
         /* 4.b.ii.3 */
         else if (ecma_is_value_number (value))
@@ -862,7 +862,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
                           ecma_op_to_string (value),
                           ret_value);
 
-          item = ecma_copy_value (str_val, true);
+          item = ecma_copy_value (str_val);
 
           ECMA_FINALIZE (str_val);
         }
@@ -880,7 +880,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
                             ecma_op_to_string (value),
                             ret_value);
 
-            item = ecma_copy_value (val, true);
+            item = ecma_copy_value (val);
 
             ECMA_FINALIZE (val);
           }
@@ -916,7 +916,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_value_t space = ecma_copy_value (arg3, true);
+    ecma_value_t space = ecma_copy_value (arg3);
 
     /* 5. */
     if (ecma_is_value_object (arg3))
@@ -932,7 +932,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
                         ret_value);
 
         ecma_free_value (space);
-        space = ecma_copy_value (val, true);
+        space = ecma_copy_value (val);
 
         ECMA_FINALIZE (val);
       }
@@ -944,7 +944,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
                         ret_value);
 
         ecma_free_value (space);
-        space = ecma_copy_value (val, true);
+        space = ecma_copy_value (val);
 
         ECMA_FINALIZE (val);
       }
@@ -1028,7 +1028,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
                       ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
                       ret_value);
 
-      ret_value = ecma_copy_value (str_val, true);
+      ret_value = ecma_copy_value (str_val);
 
       ECMA_FINALIZE (str_val);
 
@@ -1229,7 +1229,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                   ecma_op_object_get (holder_p, key_p),
                   ret_value);
 
-  ecma_value_t my_val = ecma_copy_value (value, true);
+  ecma_value_t my_val = ecma_copy_value (value);
 
   /* 2. */
   if (ecma_is_value_object (my_val))
@@ -1254,7 +1254,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                       ret_value);
 
       ecma_free_value (my_val);
-      my_val = ecma_copy_value (func_ret_val, true);
+      my_val = ecma_copy_value (func_ret_val);
 
       ECMA_FINALIZE (func_ret_val);
     }
@@ -1276,7 +1276,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                     ret_value);
 
     ecma_free_value (my_val);
-    my_val = ecma_copy_value (func_ret_val, true);
+    my_val = ecma_copy_value (func_ret_val);
 
     ECMA_FINALIZE (func_ret_val);
   }
@@ -1295,7 +1295,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                       ret_value);
 
       ecma_free_value (my_val);
-      my_val = ecma_copy_value (val, true);
+      my_val = ecma_copy_value (val);
 
       ECMA_FINALIZE (val);
     }
@@ -1307,7 +1307,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                       ret_value);
 
       ecma_free_value (my_val);
-      my_val = ecma_copy_value (val, true);
+      my_val = ecma_copy_value (val);
 
       ECMA_FINALIZE (val);
     }
@@ -1319,7 +1319,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                       ret_value);
 
       ecma_free_value (my_val);
-      my_val = ecma_copy_value (val, true);
+      my_val = ecma_copy_value (val);
 
       ECMA_FINALIZE (val);
     }
@@ -1370,7 +1370,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                         ecma_builtin_json_array (obj_p, context_p),
                         ret_value);
 
-        ret_value = ecma_copy_value (val, true);
+        ret_value = ecma_copy_value (val);
 
         ECMA_FINALIZE (val);
       }
@@ -1381,7 +1381,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                         ecma_builtin_json_object (obj_p, context_p),
                         ret_value);
 
-        ret_value = ecma_copy_value (val, true);
+        ret_value = ecma_copy_value (val);
 
         ECMA_FINALIZE (val);
       }

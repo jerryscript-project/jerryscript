@@ -173,7 +173,7 @@ ecma_builtin_global_object_eval (ecma_value_t this_arg __attr_unused___, /**< th
   if (!ecma_is_value_string (x))
   {
     /* step 1 */
-    ret_value = ecma_copy_value (x, true);
+    ret_value = ecma_copy_value (x);
   }
   else
   {

@@ -591,7 +591,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       // 1.
       if (is_strict)
       {
-        this_binding = ecma_copy_value (this_arg_value, true);
+        this_binding = ecma_copy_value (this_arg_value);
       }
       else if (ecma_is_value_undefined (this_arg_value)
                || ecma_is_value_null (this_arg_value))
@@ -794,7 +794,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   // 9.
   if (ecma_is_value_object (call_completion))
   {
-    ret_value = ecma_copy_value (call_completion, true);
+    ret_value = ecma_copy_value (call_completion);
   }
   else
   {

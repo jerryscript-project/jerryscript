@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -256,7 +257,10 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
       ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                     ecma_lcache_hash_table[hash_key][i].prop_name_cp);
 
-      if (ecma_compare_ecma_strings_equal_hashes (prop_name_p, entry_prop_name_p))
+      JERRY_ASSERT (prop_name_p->hash == entry_prop_name_p->hash);
+
+      if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
+          && prop_name_p->u.common_field == entry_prop_name_p->u.common_field)
       {
         ecma_property_t *prop_p = ECMA_GET_POINTER (ecma_property_t, ecma_lcache_hash_table[hash_key][i].prop_cp);
         JERRY_ASSERT (prop_p == NULL || ecma_is_property_lcached (prop_p));

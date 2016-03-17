@@ -85,7 +85,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   {
     if (ecma_is_value_undefined (flags_value))
     {
-      ret_value = ecma_copy_value (pattern_value, true);
+      ret_value = ecma_copy_value (pattern_value);
     }
     else
     {

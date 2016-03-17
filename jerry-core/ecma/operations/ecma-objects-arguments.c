@@ -80,7 +80,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   // 1.
   ecma_number_t *len_p = ecma_alloc_number ();
-  *len_p = ecma_uint32_to_number (arguments_number);
+  *len_p = ((ecma_number_t) arguments_number);
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);

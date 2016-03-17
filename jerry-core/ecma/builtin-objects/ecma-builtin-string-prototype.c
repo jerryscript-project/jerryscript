@@ -68,7 +68,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
 {
   if (ecma_is_value_string (this_arg))
   {
-    return ecma_copy_value (this_arg, true);
+    return ecma_copy_value (this_arg);
   }
   else if (ecma_is_value_object (this_arg))
   {
@@ -214,7 +214,7 @@ ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< t
     JERRY_ASSERT (ecma_number_is_nan (index_num) || ecma_number_to_uint32 (index_num) == ecma_number_trunc (index_num));
 
     ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
-    *ret_num_p = ecma_uint32_to_number (new_ecma_char);
+    *ret_num_p = ((ecma_number_t) new_ecma_char);
   }
 
   ecma_value_t new_value = ecma_make_number_value (ret_num_p);
@@ -419,7 +419,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
   if (ecma_is_value_object (arg)
       && ecma_object_get_class_name (ecma_get_object_from_value (arg)) == LIT_MAGIC_STRING_REGEXP_UL)
   {
-    regexp_value = ecma_copy_value (arg, true);
+    regexp_value = ecma_copy_value (arg);
   }
   else
   {
@@ -429,7 +429,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
                     ecma_builtin_regexp_dispatch_construct (regexp_arguments, 1),
                     ret_value);
 
-    regexp_value = ecma_copy_value (new_regexp_value, true);
+    regexp_value = ecma_copy_value (new_regexp_value);
 
     ECMA_FINALIZE (new_regexp_value);
   }
@@ -584,7 +584,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
         else
         {
           /* 8.h. */
-          ret_value = ecma_copy_value (new_array_value, true);
+          ret_value = ecma_copy_value (new_array_value);
         }
       }
 
@@ -733,7 +733,7 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
 
       JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (*index_number_p) == context_p->match_start);
 
-      ret_value = ecma_copy_value (match_value, true);
+      ret_value = ecma_copy_value (match_value);
 
       ECMA_FINALIZE (result_string_value);
       ECMA_FINALIZE (index_value);
@@ -765,7 +765,7 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
       context_p->match_start = index_of;
       context_p->match_end = index_of + ecma_string_get_length (search_string_p);
 
-      ret_value = ecma_copy_value (new_array_value, true);
+      ret_value = ecma_copy_value (new_array_value);
 
       ECMA_FINALIZE (new_array_value);
     }
@@ -824,7 +824,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                       ecma_op_object_get (match_object_p, index_p),
                       ret_value);
 
-      arguments_list[i] = ecma_copy_value (current_value, true);
+      arguments_list[i] = ecma_copy_value (current_value);
       values_copied++;
 
       ECMA_FINALIZE (current_value);
@@ -837,7 +837,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
       *index_number_p = context_p->match_start;
       arguments_list[match_length] = ecma_make_number_value (index_number_p);
-      arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string, true);
+      arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string);
 
       ECMA_TRY_CATCH (result_value,
                       ecma_op_function_call (context_p->replace_function_p,
@@ -850,7 +850,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                       ecma_op_to_string (result_value),
                       ret_value);
 
-      ret_value = ecma_copy_value (to_string_value, true);
+      ret_value = ecma_copy_value (to_string_value);
 
       ECMA_FINALIZE (to_string_value);
       ECMA_FINALIZE (result_value);
@@ -1370,7 +1370,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
   if (ecma_is_value_object (regexp_arg)
       && ecma_object_get_class_name (ecma_get_object_from_value (regexp_arg)) == LIT_MAGIC_STRING_REGEXP_UL)
   {
-    regexp_value = ecma_copy_value (regexp_arg, true);
+    regexp_value = ecma_copy_value (regexp_arg);
   }
   else
   {
@@ -1381,7 +1381,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
                     ecma_builtin_regexp_dispatch_construct (regexp_arguments, 1),
                     ret_value);
 
-    regexp_value = ecma_copy_value (new_regexp_value, true);
+    regexp_value = ecma_copy_value (new_regexp_value);
 
     ECMA_FINALIZE (new_regexp_value);
   }
@@ -1536,7 +1536,7 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
   if (ecma_is_value_object (separator)
       && ecma_object_get_class_name (ecma_get_object_from_value (separator)) == LIT_MAGIC_STRING_REGEXP_UL)
   {
-    ecma_value_t regexp_value = ecma_copy_value (separator, false);
+    ecma_value_t regexp_value = ecma_copy_value_if_not_object (separator);
 
     ECMA_TRY_CATCH (to_string_val,
                     ecma_op_to_string (input_string),
@@ -1611,7 +1611,7 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
         ecma_deref_ecma_string (magic_index_str_p);
 
         ecma_number_t *index_num_p = ecma_alloc_number ();
-        *index_num_p = ecma_uint32_to_number (start_idx);
+        *index_num_p = ((ecma_number_t) start_idx);
 
         ecma_named_data_property_assign_value (match_array_p, index_prop_p, ecma_make_number_value (index_num_p));
 
@@ -1719,7 +1719,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
         if (ecma_is_value_object (arg1)
             && ecma_object_get_class_name (ecma_get_object_from_value (arg1)) == LIT_MAGIC_STRING_REGEXP_UL)
         {
-          separator = ecma_copy_value (arg1, true);
+          separator = ecma_copy_value (arg1);
         }
         else
         {
@@ -1727,7 +1727,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
                           ecma_op_to_string (arg1),
                           ret_value);
 
-          separator = ecma_copy_value (separator_to_string_val, true);
+          separator = ecma_copy_value (separator_to_string_val);
 
           ECMA_FINALIZE (separator_to_string_val);
         }

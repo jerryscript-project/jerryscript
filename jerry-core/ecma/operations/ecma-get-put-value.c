@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,7 +127,7 @@ ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
     else if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
     {
       // 4.
-      ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
+      ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
     }
     else
     {

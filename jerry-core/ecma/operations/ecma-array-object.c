@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +66,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
   {
     ecma_number_t *num_p = ecma_get_number_from_value (arguments_list_p[0]);
     uint32_t num_uint32 = ecma_number_to_uint32 (*num_p);
-    if (*num_p != ecma_uint32_to_number (num_uint32))
+    if (*num_p != ((ecma_number_t) num_uint32))
     {
       return ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
@@ -100,7 +101,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_number_t *length_num_p = ecma_alloc_number ();
-  *length_num_p = ecma_uint32_to_number (length);
+  *length_num_p = ((ecma_number_t) length);
 
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
@@ -196,7 +197,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     uint32_t new_len_uint32 = ecma_number_to_uint32 (new_len_num);
 
     // d.
-    if (ecma_uint32_to_number (new_len_uint32) != new_len_num)
+    if (((ecma_number_t) new_len_uint32) != new_len_num)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
@@ -321,7 +322,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 ecma_number_t *new_len_num_p = ecma_get_number_from_value (new_len_property_desc.value);
 
                 // 1.
-                *new_len_num_p = ecma_uint32_to_number (index + 1u);
+                *new_len_num_p = ((ecma_number_t) index + 1u);
 
                 // 2.
                 if (!new_writable)
@@ -428,7 +429,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     {
       // i., ii.
       ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = ecma_number_add (ecma_uint32_to_number (index), ECMA_NUMBER_ONE);
+      *num_p = ecma_number_add (((ecma_number_t) index), ECMA_NUMBER_ONE);
 
       ecma_named_data_property_assign_value (obj_p, len_prop_p, ecma_make_number_value (num_p));
 

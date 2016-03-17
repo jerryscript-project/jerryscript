@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -230,7 +230,7 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
       ecma_set_object_extensible (obj_p, false);
 
       // 4.
-      ret_value = ecma_copy_value (arg, true);
+      ret_value = ecma_copy_value (arg);
     }
   }
 
@@ -309,7 +309,7 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
       ecma_set_object_extensible (obj_p, false);
 
       // 4.
-      ret_value = ecma_copy_value (arg, true);
+      ret_value = ecma_copy_value (arg);
     }
   }
 
@@ -340,7 +340,7 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unus
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
     ecma_set_object_extensible (obj_p, false);
 
-    ret_value = ecma_copy_value (arg, true);
+    ret_value = ecma_copy_value (arg);
   }
 
   return ret_value;
@@ -654,7 +654,7 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
     // 5.
     if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_copy_value (ecma_make_object_value (result_obj_p), true);
+      ret_value = ecma_copy_value (ecma_make_object_value (result_obj_p));
     }
 
     ecma_deref_object (result_obj_p);
@@ -760,7 +760,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     // 7.
     if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_copy_value (arg1, true);
+      ret_value = ecma_copy_value (arg1);
     }
 
     ECMA_FINALIZE (props);
@@ -813,7 +813,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused_
                                                         true),
                     ret_value);
 
-    ret_value = ecma_copy_value (arg1, true);
+    ret_value = ecma_copy_value (arg1);
 
     ECMA_FINALIZE (define_own_prop_ret);
     ecma_free_property_descriptor (&prop_desc);

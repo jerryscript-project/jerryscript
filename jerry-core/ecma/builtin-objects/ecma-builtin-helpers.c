@@ -527,7 +527,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
   ecma_length_t index_of = 0;
   if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, first_index, start, &index_of))
   {
-    *ret_num_p = ecma_uint32_to_number (index_of);
+    *ret_num_p = ((ecma_number_t) index_of);
   }
 
   ret_value = ecma_make_number_value (ret_num_p);

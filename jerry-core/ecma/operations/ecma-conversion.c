@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,7 +179,7 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma value */
   }
   else
   {
-    return ecma_copy_value (value, true);
+    return ecma_copy_value (value);
   }
 } /* ecma_op_to_primitive */
 
@@ -262,7 +263,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
 
   if (ecma_is_value_number (value))
   {
-    return ecma_copy_value (value, true);
+    return ecma_copy_value (value);
   }
   else if (ecma_is_value_string (value))
   {
@@ -409,7 +410,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   }
   else if (ecma_is_value_object (value))
   {
-    return ecma_copy_value (value, true);
+    return ecma_copy_value (value);
   }
   else
   {
@@ -664,7 +665,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
                         ret_value);
 
         prop_desc.is_value_defined = true;
-        prop_desc.value = ecma_copy_value (value_prop_value, true);
+        prop_desc.value = ecma_copy_value (value_prop_value);
 
         ECMA_FINALIZE (value_prop_value);
       }

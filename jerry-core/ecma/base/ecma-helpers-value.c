@@ -1,4 +1,5 @@
 /* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -397,38 +398,16 @@ ecma_get_value_from_error_value (ecma_value_t value) /**< ecma value */
 /**
  * Copy ecma value.
  *
- * Note:
- *  Operation algorithm.
- *   switch (valuetype)
- *    case simple:
- *      simply return the value as it was passed;
- *    case number:
- *      copy the number
- *      and return new ecma value
- *      pointing to copy of the number;
- *    case string:
- *      increase reference counter of the string
- *      and return the value as it was passed.
- *    case object;
- *      increase reference counter of the object if do_ref_if_object is true
- *      and return the value as it was passed.
- *
- * @return See note.
+ * @return copy of the given value
  */
 ecma_value_t
-ecma_copy_value (ecma_value_t value, /**< ecma value */
-                 bool do_ref_if_object) /**< if the value is object value,
-                                             increment reference counter of the object */
+ecma_copy_value (ecma_value_t value)  /**< value description */
 {
-  ecma_value_t value_copy = 0;
-
   switch (ecma_get_value_type_field (value))
   {
     case ECMA_TYPE_SIMPLE:
     {
-      value_copy = value;
-
-      break;
+      return value;
     }
     case ECMA_TYPE_NUMBER:
     {
@@ -437,37 +416,37 @@ ecma_copy_value (ecma_value_t value, /**< ecma value */
       ecma_number_t *number_copy_p = ecma_alloc_number ();
       *number_copy_p = *num_p;
 
-      value_copy = ecma_make_number_value (number_copy_p);
-
-      break;
+      return ecma_make_number_value (number_copy_p);
     }
     case ECMA_TYPE_STRING:
     {
-      ecma_string_t *string_p = ecma_get_string_from_value (value);
-
-      string_p = ecma_copy_or_ref_ecma_string (string_p);
-
-      value_copy = ecma_make_string_value (string_p);
-
-      break;
+      return ecma_make_string_value (ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (value)));
     }
     case ECMA_TYPE_OBJECT:
     {
-      ecma_object_t *obj_p = ecma_get_object_from_value (value);
-
-      if (do_ref_if_object)
-      {
-        ecma_ref_object (obj_p);
-      }
-
-      value_copy = value;
-
-      break;
+      ecma_ref_object (ecma_get_object_from_value (value));
+      return value;
     }
   }
 
-  return value_copy;
+  JERRY_UNREACHABLE ();
 } /* ecma_copy_value */
+
+/**
+ * Copy the ecma value if not an object
+ *
+ * @return copy of the given value
+ */
+ecma_value_t
+ecma_copy_value_if_not_object (ecma_value_t value) /**< value description */
+{
+  if (ecma_get_value_type_field (value) != ECMA_TYPE_OBJECT)
+  {
+    return ecma_copy_value (value);
+  }
+
+  return value;
+} /* ecma_copy_value_if_not_object */
 
 /**
  * Free the ecma value

@@ -238,7 +238,7 @@ ecma_string_t *
 ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 {
   uint32_t uint32_num = ecma_number_to_uint32 (num);
-  if (num == ecma_uint32_to_number (uint32_num))
+  if (num == ((ecma_number_t) uint32_num))
   {
     return ecma_new_ecma_string_from_uint32 (uint32_num);
   }
@@ -533,7 +533,7 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     {
       uint32_t uint32_number = str_p->u.uint32_number;
 
-      return ecma_uint32_to_number (uint32_number);
+      return ((ecma_number_t) uint32_number);
     }
 
     case ECMA_STRING_CONTAINER_HEAP_NUMBER:
@@ -1003,35 +1003,12 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 } /* ecma_compare_ecma_strings_longpath */
 
 /**
- * Compare ecma-string to ecma-string if they're hashes are equal
- *
- * @return true - if strings are equal;
- *         false - may be.
- */
-bool
-ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *string1_p, /* ecma-string */
-                                        const ecma_string_t *string2_p) /* ecma-string */
-{
-  JERRY_ASSERT (string1_p->hash == string2_p->hash);
-
-  if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_GET_CONTAINER (string2_p)
-      && string1_p->u.common_field == string2_p->u.common_field)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-} /* ecma_compare_ecma_strings_equal_hashes */
-
-/**
  * Compare ecma-string to ecma-string
  *
  * @return true - if strings are equal;
  *         false - otherwise.
  */
-bool
+bool __attr_always_inline___
 ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
                            const ecma_string_t *string2_p) /* ecma-string */
 {
@@ -1042,14 +1019,13 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
     return false;
   }
 
-  if (ecma_compare_ecma_strings_equal_hashes (string1_p, string2_p))
+  if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_GET_CONTAINER (string2_p)
+      && string1_p->u.common_field == string2_p->u.common_field)
   {
     return true;
   }
-  else
-  {
-    return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
-  }
+
+  return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_strings */
 
 /**

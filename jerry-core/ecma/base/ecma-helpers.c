@@ -1001,7 +1001,7 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
     ecma_value_t v = ecma_get_named_data_property_value (prop_p);
     ecma_free_value_if_not_object (v);
 
-    ecma_set_named_data_property_value (prop_p, ecma_copy_value (value, false));
+    ecma_set_named_data_property_value (prop_p, ecma_copy_value_if_not_object (value));
   }
 } /* ecma_named_data_property_assign_value */
 
@@ -1283,7 +1283,7 @@ ecma_get_property_descriptor_from_property (ecma_property_t *prop_p) /**< proper
 
   if (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
   {
-    prop_desc.value = ecma_copy_value (ecma_get_named_data_property_value (prop_p), true);
+    prop_desc.value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
     prop_desc.is_value_defined = true;
     prop_desc.is_writable = ecma_is_property_writable (prop_p);
     prop_desc.is_writable_defined = true;

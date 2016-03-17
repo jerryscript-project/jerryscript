@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -139,7 +139,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
                           ecma_op_object_get (obj_p, curr_idx_str_p),
                           ret_value);
 
-          arguments_list_p[index] = ecma_copy_value (get_value, true);
+          arguments_list_p[index] = ecma_copy_value (get_value);
           last_index = index + 1;
 
           ECMA_FINALIZE (get_value);
@@ -256,7 +256,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
     if (arg_count > 0)
     {
-      bound_this_prop_p->v.internal_property.value = ecma_copy_value (arguments_list_p[0], false);
+      bound_this_prop_p->v.internal_property.value = ecma_copy_value_if_not_object (arguments_list_p[0]);
     }
     else
     {
@@ -292,7 +292,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       const ecma_length_t bound_arg_count = arg_count > 1 ? arg_count - 1 : 0;
 
       /* 15.a */
-      *length_p = *ecma_get_number_from_value (get_len_value) - ecma_uint32_to_number (bound_arg_count);
+      *length_p = *ecma_get_number_from_value (get_len_value) - ((ecma_number_t) bound_arg_count);
       ecma_free_value (get_len_value);
 
       /* 15.b */

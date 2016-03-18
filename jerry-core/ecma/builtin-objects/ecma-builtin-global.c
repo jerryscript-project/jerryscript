@@ -97,34 +97,12 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
     while (utf8_str_curr_p < utf8_str_end_p)
     {
       ecma_char_t code_point = lit_utf8_read_next (&utf8_str_curr_p);
-
-      if (code_point == LIT_CHAR_NULL)
-      {
-        printf ("\\u0000");
-      }
-      else if (code_point <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-      {
-        printf ("%c", (char) code_point);
-      }
-      else
-      {
-        JERRY_STATIC_ASSERT (sizeof (code_point) == 2,
-                             size_of_code_point_must_be_equal_to_2_bytes);
-
-        uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
-                                                               JERRY_BITSINBYTE,
-                                                               JERRY_BITSINBYTE);
-        uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_point,
-                                                              0,
-                                                              JERRY_BITSINBYTE);
-
-        printf ("\\u%02x%02x", byte_high, byte_low);
-      }
+      lit_char_put (code_point);
     }
 
     if (arg_index < args_number - 1)
     {
-      printf (" ");
+      jerry_port_putchar (' ');
     }
 
     MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
@@ -132,7 +110,7 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
     ECMA_FINALIZE (str_value);
   }
 
-  printf ("\n");
+  jerry_port_putchar ('\n');
 
   if (ecma_is_value_empty (ret_value))
   {

@@ -237,4 +237,6 @@ extern bool lit_char_is_word_char (ecma_char_t);
 ecma_length_t lit_char_to_lower_case (ecma_char_t, ecma_char_t *, ecma_length_t);
 ecma_length_t lit_char_to_upper_case (ecma_char_t, ecma_char_t *, ecma_length_t);
 
+void lit_char_put (ecma_char_t c);
+
 #endif /* !LIT_CHAR_HELPERS_H */

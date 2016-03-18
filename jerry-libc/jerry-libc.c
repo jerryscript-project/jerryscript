@@ -263,3 +263,22 @@ srand (unsigned int seed) /**< new seed */
   libc_random_gen_state[2] =
   libc_random_gen_state[3] = seed;
 } /* srand */
+
+/**
+ * Convert an integer to a string using base and write the result to buffer.
+ */
+char *
+itoa (int value, char *buffer, int base)
+{
+  static char b[32] = {0};
+  unsigned i;
+
+  for (i = 30; value && i; --i, value /= base)
+  {
+    b[i] = "0123456789abcdef"[value % base];
+  }
+
+  strncpy (buffer, &b[i+1], 32 - i);
+
+  return buffer;
+} /* itoa */

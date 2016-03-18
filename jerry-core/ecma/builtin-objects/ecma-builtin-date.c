@@ -33,10 +33,6 @@
 #define BUILTIN_UNDERSCORED_ID date
 #include "ecma-builtin-internal-routines-template.inc.h"
 
-#ifdef JERRY_ENABLE_DATE_SYS_CALLS
-#include <sys/time.h>
-#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -456,16 +452,10 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
   ecma_number_t *now_num_p = ecma_alloc_number ();
   *now_num_p = ECMA_NUMBER_ZERO;
 
-#ifdef JERRY_ENABLE_DATE_SYS_CALLS
-  struct timeval tv;
-
-  if (gettimeofday (&tv, NULL) != 0)
+  if (jerry_port_get_time (now_num_p) != 0)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("gettimeofday failed"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Get time failed"));
   }
-
-  *now_num_p = ((ecma_number_t) tv.tv_sec) * 1000.0 + ((ecma_number_t) (tv.tv_usec / 1000));
-#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
 
   return ecma_make_number_value (now_num_p);
 } /* ecma_builtin_date_now */

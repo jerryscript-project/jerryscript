@@ -36,6 +36,11 @@ int jerry_port_errormsg (const char *format, ...);
 int jerry_port_putchar (int c);
 
 /**
+ * Target port functions for date and time
+ */
+int jerry_port_get_time (double *out_time);
+
+/**
  * @}
  */
 

@@ -15,6 +15,9 @@
 
 #include "jerry-port.h"
 #include <stdarg.h>
+#ifdef JERRY_ENABLE_DATE_SYS_CALLS
+#include <sys/time.h>
+#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
 
 /**
  * Provide log message to filestream implementation for the engine.
@@ -52,3 +55,27 @@ int jerry_port_putchar (int c) /**< character to put */
 {
   return putchar ((unsigned char) c);
 } /* jerry_port_putchar */
+
+/**
+ * Provide datetime implementation for the engine
+ */
+int jerry_port_get_time (double *out_time)
+{
+  (void) out_time;
+
+#ifdef JERRY_ENABLE_DATE_SYS_CALLS
+  struct timeval tv;
+
+  if (gettimeofday (&tv, NULL) != 0)
+  {
+    return -1;
+  }
+  else
+  {
+    *out_time = ((double) tv.tv_sec) * 1000.0 + ((double) (tv.tv_usec / 1000.0));
+    return 0;
+  }
+#endif /* JERRY_ENABLE_DATE_SYS_CALLS */
+
+  return 0;
+} /* jerry_port_get_time */

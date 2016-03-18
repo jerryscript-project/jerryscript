@@ -15,7 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(nproc)}
+if [[ "$OSTYPE" == "linux"* ]]; then
+    CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(nproc)}
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(sysctl -n hw.ncpu)}
+else
+    CPPCHECK_JOBS=${CPPCHECK_JOBS:=1}
+fi
 
 JERRY_CORE_DIRS=`find jerry-core -type d`
 JERRY_LIBC_DIRS=`find jerry-libc -type d`

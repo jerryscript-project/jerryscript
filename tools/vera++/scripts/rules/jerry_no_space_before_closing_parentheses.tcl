@@ -1,6 +1,7 @@
 #!/usr/bin/tclsh
 
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +15,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-foreach f [getSourceFileNames] {
-    set lineNumber 1
-    foreach line [getAllLines $f] {
-        if {[regexp {[[:graph:]][[:blank:]]+\)} $line]} {
-            report $f $lineNumber "there should be no blank characters before closing parentheses"
+proc check_part_of_the_file {file line_num col_start col_end} {
+    if {$col_start == $col_end} {
+        return
+    }
+
+    set line [getLine $file $line_num]
+    set line [string range $line $col_start $col_end]
+
+    if {[regexp {[[:graph:]][[:blank:]]+\)} $line]} {
+        report $file $line_num "there should be no blank characters before closing parentheses"
+    }
+}
+
+foreach fileName [getSourceFileNames] {
+    set checkLine 1
+    set checkColStart 0
+    set seenOmitToken false
+    foreach token [getTokens $fileName 1 0 -1 -1 {}] {
+        set lineNumber [lindex $token 1]
+        set colNumber [lindex $token 2]
+        set tokenType [lindex $token 3]
+
+        if {$checkLine != $lineNumber} {
+            if {!$seenOmitToken} {
+                check_part_of_the_file $fileName $checkLine $checkColStart end
+            }
+            set checkColStart $colNumber
+            set checkLine $lineNumber
+        } elseif {$seenOmitToken} {
+            set checkColStart $colNumber
         }
-        incr lineNumber
+
+        if {$tokenType in {ccomment cppcomment stringlit}} {
+            check_part_of_the_file $fileName $checkLine $checkColStart $colNumber
+            set seenOmitToken true
+        } else {
+            set seenOmitToken false
+        }
     }
 }

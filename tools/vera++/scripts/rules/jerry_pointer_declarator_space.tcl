@@ -15,14 +15,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-foreach f [getSourceFileNames] {
-    set lineNumber 1
-    foreach line [getAllLines $f] {
-        if {[regexp {\w\*\s\w+} $line]
-             || [regexp {\w\*\)} $line]
-             || [regexp {\w\*$} $line]} {
-            report $f $lineNumber "there should be a space between the referenced type and the pointer declarator."
+proc check_part_of_the_file {file line_num col_start col_end} {
+    if {$col_start == $col_end} {
+        return
+    }
+
+    set line [getLine $file $line_num]
+    set line [string range $line $col_start $col_end]
+
+    if {[regexp {\w\*\s\w+} $line]
+         || [regexp {\w\*\)} $line]
+         || [regexp {\w\*$} $line]} {
+        report $file $line_num "there should be a space between the referenced type and the pointer declarator."
+    }
+}
+
+foreach fileName [getSourceFileNames] {
+    set checkLine 1
+    set checkColStart 0
+    set seenOmitToken false
+    foreach token [getTokens $fileName 1 0 -1 -1 {}] {
+        set lineNumber [lindex $token 1]
+        set colNumber [lindex $token 2]
+        set tokenType [lindex $token 3]
+
+        if {$checkLine != $lineNumber} {
+            if {!$seenOmitToken} {
+                check_part_of_the_file $fileName $checkLine $checkColStart end
+            }
+            set checkColStart $colNumber
+            set checkLine $lineNumber
+        } elseif {$seenOmitToken} {
+            set checkColStart $colNumber
         }
-        incr lineNumber
+
+        if {$tokenType in {ccomment cppcomment stringlit}} {
+            check_part_of_the_file $fileName $checkLine $checkColStart $colNumber
+            set seenOmitToken true
+        } else {
+            set seenOmitToken false
+        }
     }
 }

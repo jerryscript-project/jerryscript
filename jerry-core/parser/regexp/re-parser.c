@@ -421,6 +421,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
         parser_ctx_p->input_curr_p += 2;
         append_char_class (re_ctx_p, code_unit, code_unit);
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_LOWERCASE_U)
       {
@@ -433,6 +434,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
         parser_ctx_p->input_curr_p += 4;
         append_char_class (re_ctx_p, code_unit, code_unit);
+        ch = LIT_CHAR_UNDEF;
       }
       else if (ch == LIT_CHAR_LOWERCASE_D)
       {

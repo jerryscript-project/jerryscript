@@ -100,6 +100,7 @@ extern bool ecma_string_get_array_index (const ecma_string_t *, uint32_t *);
 
 extern lit_utf8_size_t __attr_return_value_should_be_checked___
 ecma_string_to_utf8_string (const ecma_string_t *, lit_utf8_byte_t *, lit_utf8_size_t);
+extern const lit_utf8_byte_t *ecma_string_raw_chars (const ecma_string_t *, lit_utf8_size_t *, bool *);
 
 extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *, const ecma_string_t *);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_t *);

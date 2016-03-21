@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,7 +139,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
   uint32_t uint32_index;
   ecma_string_t *new_prop_name_p;
 
-  if (property_name_p->container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  if (ECMA_STRING_GET_CONTAINER (property_name_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
     uint32_index = property_name_p->u.uint32_number;
 

@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +16,10 @@
 
 /*
  * List of ECMA magic strings
+ *
+ * These strings must be ascii strings. If non-ascii strings
+ * will be ever needed, a divider will be added to separate
+ * ascii and non-ascii groups.
  */
 LIT_MAGIC_STRING_DEF (LIT_MAGIC_STRING_ARGUMENTS, "arguments")
 LIT_MAGIC_STRING_DEF (LIT_MAGIC_STRING_EVAL, "eval")

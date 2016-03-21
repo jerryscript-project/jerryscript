@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -686,8 +687,37 @@ typedef enum
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
-  ECMA_STRING_CONTAINER_MAGIC_STRING_EX /**< the ecma-string is equal to one of external magic strings */
+  ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
+
+  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_MAGIC_STRING_EX /**< maximum value */
 } ecma_string_container_t;
+
+/**
+ * Mask for getting the container of a string.
+ */
+#define ECMA_STRING_CONTAINER_MASK 0x7u
+
+/**
+ * Value for increasing or decreasing the reference counter.
+ */
+#define ECMA_STRING_REF_ONE (1u << 3)
+
+/**
+ * Maximum value of the reference counter (8191).
+ */
+#define ECMA_STRING_MAX_REF (0x1fffu << 3)
+
+/**
+ * Set reference counter to zero (for refs_and_container member below).
+ */
+#define ECMA_STRING_SET_REF_TO_ONE(refs_and_container) \
+  ((uint16_t) (((refs_and_container) & ECMA_STRING_CONTAINER_MASK) | ECMA_STRING_REF_ONE))
+
+/**
+ * Returns with the container type of a string.
+ */
+#define ECMA_STRING_GET_CONTAINER(string_desc_p) \
+  ((ecma_string_container_t) ((string_desc_p)->refs_and_container & ECMA_STRING_CONTAINER_MASK))
 
 /**
  * ECMA string-value descriptor
@@ -695,10 +725,7 @@ typedef enum
 typedef struct ecma_string_t
 {
   /** Reference counter for the string */
-  unsigned int refs : CONFIG_ECMA_REFERENCE_COUNTER_WIDTH;
-
-  /** Where the string's data is placed (ecma_string_container_t) */
-  uint8_t container;
+  uint16_t refs_and_container;
 
   /** Hash of the string (calculated from two last characters of the string) */
   lit_string_hash_t hash;
@@ -712,10 +739,10 @@ typedef struct ecma_string_t
     mem_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
-    __extension__ mem_cpointer_t collection_cp : ECMA_POINTER_FIELD_WIDTH;
+    mem_cpointer_t collection_cp;
 
     /** Compressed pointer to an ecma_number_t */
-    __extension__ mem_cpointer_t number_cp : ECMA_POINTER_FIELD_WIDTH;
+    mem_cpointer_t number_cp;
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;

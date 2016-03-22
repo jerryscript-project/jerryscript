@@ -111,13 +111,13 @@ $(document).ajaxStop(function () {
       transInfo[date] = element['info'];
       engines.forEach(function(engine, index) {
         var sum = undefined;   // default value
-        var max = undefined;      // default value
+        var max = undefined;   // default value
         var maxTest = '';      // default value
         var numTests = 0;
         var benchmark_obj = element[benchmark];
         if (benchmark_obj) {
           var record =  benchmark_obj[measureType][engine];
-          if (record) {
+          if (record && Object.keys(record).length > 0) {
             sum = Object.sum(record);
             maxTest = Object.maxKey(record);
             max = record[maxTest];

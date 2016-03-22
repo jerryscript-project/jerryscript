@@ -40,9 +40,6 @@
 typedef struct mem_pools_chunk
 {
   struct mem_pools_chunk *next_p; /* pointer to next pool chunk */
-#ifndef MEM_HEAP_PTR_64
-  uint32_t dummy; /* dummy member for alignment */
-#endif
 } mem_pools_chunk_t;
 
 /**
@@ -107,8 +104,8 @@ static void mem_pools_stat_dealloc (void);
 void
 mem_pools_init (void)
 {
-  JERRY_STATIC_ASSERT (sizeof (mem_pools_chunk_t) == MEM_POOL_CHUNK_SIZE,
-                       size_of_mem_pool_chunk_t_must_be_equal_to_MEM_POOL_CHUNK_SIZE);
+  JERRY_STATIC_ASSERT (sizeof (mem_pools_chunk_t) <= MEM_POOL_CHUNK_SIZE,
+                       size_of_mem_pools_chunk_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
 
   mem_free_chunk_p = NULL;
 

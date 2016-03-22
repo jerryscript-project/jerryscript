@@ -103,7 +103,7 @@ typedef struct
   uint32_t size; /* Size of region */
 } mem_heap_free_t;
 
-#ifdef MEM_HEAP_PTR_64
+#if UINTPTR_MAX > UINT32_MAX
 #define MEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) ((uint8_t *) (p) - (uint8_t *) mem_heap.area))
 #define MEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((mem_heap_free_t *) &mem_heap.area[u])
 #else

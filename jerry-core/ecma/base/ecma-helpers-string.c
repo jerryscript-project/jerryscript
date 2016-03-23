@@ -712,7 +712,7 @@ static const uint32_t max_uint32_len = (uint32_t) (sizeof (nums_with_ascending_l
  *
  * @return size in bytes
  */
-static ecma_length_t __attr_always_inline___
+static inline ecma_length_t __attr_always_inline___
 ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number in the string-descriptor */
 {
   ecma_length_t size = 1;
@@ -731,7 +731,7 @@ ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number i
  *
  * @return number of bytes in the buffer
  */
-static lit_utf8_size_t __attr_always_inline___
+static inline lit_utf8_size_t __attr_always_inline___
 ecma_string_get_heap_number_size (mem_cpointer_t number_cp) /**< Compressed pointer to an ecma_number_t */
 {
   const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, number_cp);

@@ -129,7 +129,7 @@ mem_pools_finalize (void)
  * @return pointer to allocated chunk, if allocation was successful,
  *         or NULL - if not enough memory.
  */
-void * __attribute__((hot)) __attr_always_inline___
+inline void * __attribute__((hot)) __attr_always_inline___
 mem_pools_alloc (void)
 {
 #ifdef MEM_GC_BEFORE_EACH_ALLOC

@@ -115,7 +115,7 @@ typedef struct
 /**
  * Get end of region
  */
-static mem_heap_free_t *  __attr_always_inline___ __attr_pure___
+static inline mem_heap_free_t *  __attr_always_inline___ __attr_pure___
 mem_heap_get_region_end (mem_heap_free_t *curr_p) /**< current region */
 {
   return (mem_heap_free_t *)((uint8_t *) curr_p + curr_p->size);
@@ -413,7 +413,7 @@ mem_heap_alloc_block (const size_t size)
  *
  * Note: block will only be aligned to 4 bytes.
  */
-void * __attr_always_inline___
+inline void * __attr_always_inline___
 mem_heap_alloc_block_store_size (size_t size) /**< required size */
 {
   if (unlikely (size == 0))
@@ -537,7 +537,7 @@ mem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the b
 /**
  * Free block with stored size
  */
-void __attr_always_inline___
+inline void __attr_always_inline___
 mem_heap_free_block_size_stored (void *ptr) /**< pointer to the memory block */
 {
   mem_heap_free_t *const original_p = ((mem_heap_free_t *) ptr) - 1;

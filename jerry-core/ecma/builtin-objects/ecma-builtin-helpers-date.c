@@ -56,7 +56,7 @@
  *
  * @return  time value for day number
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_day (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -83,7 +83,7 @@ ecma_date_day (ecma_number_t time) /**< time value */
  *
  * @return  time value within the day
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_time_within_day (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -102,7 +102,7 @@ ecma_date_time_within_day (ecma_number_t time) /**< time value */
  *
  * @return  number of days
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_days_in_year (ecma_number_t year) /**< year value */
 {
   if (ecma_number_is_nan (year))
@@ -136,7 +136,7 @@ ecma_date_days_in_year (ecma_number_t year) /**< year value */
  *
  * @return  day number of the first day of a year
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_day_from_year (ecma_number_t year) /**< year value */
 {
   if (ecma_number_is_nan (year))
@@ -158,7 +158,7 @@ ecma_date_day_from_year (ecma_number_t year) /**< year value */
  *
  * @return  time value of the start of a year
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_time_from_year (ecma_number_t year) /**< year value */
 {
   if (ecma_number_is_nan (year))
@@ -224,7 +224,7 @@ ecma_date_year_from_time (ecma_number_t time) /**< time value */
  *
  * @return  1 if time within a leap year and otherwise is zero
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_in_leap_year (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -243,7 +243,7 @@ ecma_date_in_leap_year (ecma_number_t time) /**< time value */
  *
  * @return  number of days within year
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_day_within_year (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -428,7 +428,7 @@ ecma_date_date_from_time (ecma_number_t time) /**< time value */
  *
  * @return  weekday number
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_week_day (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -447,7 +447,7 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
  *
  * @return  local time zone adjustment
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_local_tza ()
 {
 #ifdef JERRY_ENABLE_DATE_SYS_CALLS
@@ -475,7 +475,7 @@ ecma_date_local_tza ()
  *
  * @return  daylight saving time adjustment
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -520,7 +520,7 @@ ecma_date_daylight_saving_ta (ecma_number_t time) /**< time value */
  *
  * @return  local time
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_local_time (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -543,7 +543,7 @@ ecma_date_local_time (ecma_number_t time) /**< time value */
  *
  * @return  utc value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_utc (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -573,7 +573,7 @@ ecma_date_utc (ecma_number_t time) /**< time value */
  *
  * @return  hour value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_hour_from_time (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -604,7 +604,7 @@ ecma_date_hour_from_time (ecma_number_t time) /**< time value */
  *
  * @return  minute value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_min_from_time (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -635,7 +635,7 @@ ecma_date_min_from_time (ecma_number_t time) /**< time value */
  *
  * @return  second value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_sec_from_time (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -666,7 +666,7 @@ ecma_date_sec_from_time (ecma_number_t time) /**< time value */
  *
  * @return  millisecond value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_ms_from_time (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))
@@ -828,7 +828,7 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
  *
  * @return  date value
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_make_date (ecma_number_t day, /**< day value */
                      ecma_number_t time) /**< time value */
 {
@@ -855,7 +855,7 @@ ecma_date_make_date (ecma_number_t day, /**< day value */
  *
  * @return  number of milliseconds
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_time_clip (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time)
@@ -879,7 +879,7 @@ ecma_date_time_clip (ecma_number_t time) /**< time value */
  *
  * @return  timezone offset
  */
-ecma_number_t __attr_always_inline___
+inline ecma_number_t __attr_always_inline___
 ecma_date_timezone_offset (ecma_number_t time) /**< time value */
 {
   if (ecma_number_is_nan (time))

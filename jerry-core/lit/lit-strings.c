@@ -699,7 +699,7 @@ lit_utf8_decr (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
  *
  * @return ecma-string's hash
  */
-lit_string_hash_t __attr_always_inline___
+inline lit_string_hash_t __attr_always_inline___
 lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, /**< hash to be combined with */
                               const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
                               lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
@@ -722,7 +722,7 @@ lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, /**< hash to be comb
  *
  * @return ecma-string's hash
  */
-lit_string_hash_t __attr_always_inline___
+inline lit_string_hash_t __attr_always_inline___
 lit_utf8_string_calc_hash (const lit_utf8_byte_t *utf8_buf_p, /**< characters buffer */
                            lit_utf8_size_t utf8_buf_size) /**< number of characters in the buffer */
 {
@@ -763,7 +763,7 @@ lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 stri
  *
  * @return number of bytes occupied in CESU-8
  */
-lit_utf8_size_t __attr_always_inline___
+inline lit_utf8_size_t __attr_always_inline___
 lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byte_t first_byte) /**< buffer with characters */
 {
   if ((first_byte & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)

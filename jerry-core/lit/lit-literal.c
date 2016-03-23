@@ -211,7 +211,7 @@ lit_find_or_create_literal_from_utf8_string (const lit_utf8_byte_t *str_p, /**< 
  *
  * @return pointer to a newly created record
  */
-lit_literal_t __attr_always_inline___
+inline lit_literal_t __attr_always_inline___
 lit_create_literal_from_num (const ecma_number_t num) /**< number to initialize a new number literal */
 {
   return lit_create_number_literal (num);
@@ -592,7 +592,7 @@ lit_magic_literal_get_magic_str_ex_id (lit_literal_t lit) /**< literal */
   return (lit_magic_string_ex_id_t) rec_p->magic_id;
 } /* lit_magic_literal_get_magic_str_ex_id */
 
-lit_utf8_size_t __attr_always_inline___ __attr_pure___
+inline lit_utf8_size_t __attr_always_inline___ __attr_pure___
 lit_charset_literal_get_size (lit_literal_t lit) /**< literal */
 {
   JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
@@ -607,7 +607,7 @@ lit_charset_literal_get_size (lit_literal_t lit) /**< literal */
  *
  * @return code units count
  */
-ecma_length_t __attr_always_inline___ __attr_pure___
+inline ecma_length_t __attr_always_inline___ __attr_pure___
 lit_charset_literal_get_length (lit_literal_t lit) /**< literal */
 {
   JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);
@@ -617,7 +617,7 @@ lit_charset_literal_get_length (lit_literal_t lit) /**< literal */
   return (ecma_length_t) rec_p->length;
 } /* lit_charset_literal_get_length */
 
-ecma_number_t __attr_always_inline___ __attr_pure___
+inline ecma_number_t __attr_always_inline___ __attr_pure___
 lit_number_literal_get_number (lit_literal_t lit) /**< literal */
 {
   JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_NUMBER);
@@ -627,7 +627,7 @@ lit_number_literal_get_number (lit_literal_t lit) /**< literal */
   return rec_p->number;
 } /* lit_number_literal_get_number */
 
-lit_utf8_byte_t * __attr_always_inline___ __attr_pure___
+inline lit_utf8_byte_t * __attr_always_inline___ __attr_pure___
 lit_charset_literal_get_charset (lit_literal_t lit) /**< literal */
 {
   JERRY_ASSERT (lit->type == LIT_RECORD_TYPE_CHARSET);

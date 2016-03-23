@@ -94,7 +94,7 @@ ecma_set_value_value_field (ecma_value_t value, /**< ecma value to set field in 
  * @return true - if the value contains implementation-defined empty simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_empty (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -107,7 +107,7 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-undefined simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -120,7 +120,7 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-null simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_null (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -133,7 +133,7 @@ ecma_is_value_null (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-true or ecma-false simple values,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -147,7 +147,7 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-true simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_true (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -160,7 +160,7 @@ ecma_is_value_true (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-false simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_false (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -173,7 +173,7 @@ ecma_is_value_false (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-array-hole simple value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SIMPLE
@@ -186,7 +186,7 @@ ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-number value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_number (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
@@ -198,7 +198,7 @@ ecma_is_value_number (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-string value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_string (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
@@ -210,7 +210,7 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains object value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_object (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
@@ -222,7 +222,7 @@ ecma_is_value_object (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains an error value,
  *         false - otherwise.
  */
-bool __attr_pure___ __attr_always_inline___
+inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_error (ecma_value_t value) /**< ecma value */
 {
   return (value & (1u << ECMA_VALUE_ERROR_POS)) != 0;
@@ -246,7 +246,7 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 /**
  * Simple value constructor
  */
-ecma_value_t __attr_const___ __attr_always_inline___
+inline ecma_value_t __attr_const___ __attr_always_inline___
 ecma_make_simple_value (const ecma_simple_value_t value) /**< simple value */
 {
   ecma_value_t ret_value = 0;

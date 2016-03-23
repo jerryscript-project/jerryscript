@@ -952,7 +952,7 @@ JERRY_STATIC_ASSERT (ECMA_VALUE_SIZE <= 24,
  *
  * @return ecma value
  */
-ecma_value_t __attr_always_inline___
+inline ecma_value_t __attr_always_inline___
 ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
@@ -964,7 +964,7 @@ ecma_get_named_data_property_value (const ecma_property_t *prop_p) /**< property
 /**
  * Set value field of named data property
  */
-void __attr_always_inline___
+inline void __attr_always_inline___
 ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
                                     ecma_value_t value) /**< value to set */
 {
@@ -1081,7 +1081,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
  * @return true - property is writable,
  *         false - otherwise.
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_is_property_writable (ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
@@ -1115,7 +1115,7 @@ ecma_set_property_writable_attr (ecma_property_t *prop_p, /**< property */
  * @return true - property is enumerable,
  *         false - otherwise.
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_is_property_enumerable (ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
@@ -1149,7 +1149,7 @@ ecma_set_property_enumerable_attr (ecma_property_t *prop_p, /**< property */
  * @return true - property is configurable,
  *         false - otherwise.
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_is_property_configurable (ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));
@@ -1182,7 +1182,7 @@ ecma_set_property_configurable_attr (ecma_property_t *prop_p, /**< property */
  *
  * @return true / false
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_is_property_lcached (ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (prop_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR));

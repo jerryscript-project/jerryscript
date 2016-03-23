@@ -234,7 +234,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
  * @return true - if (object, property name) pair is registered in LCache,
  *         false - probably, not registered.
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                     const ecma_string_t *prop_name_p, /**< property's name */
                     ecma_property_t **prop_p_p) /**< [out] if return value is true,

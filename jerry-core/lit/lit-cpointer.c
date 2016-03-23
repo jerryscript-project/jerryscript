@@ -22,7 +22,7 @@
  *
  * @return dynamic storage-specific extended compressed pointer
  */
-lit_cpointer_t __attr_pure___ __attr_always_inline___
+inline lit_cpointer_t __attr_pure___ __attr_always_inline___
 lit_cpointer_compress (lit_record_t *pointer) /**< pointer to compress */
 {
   if (pointer == NULL)
@@ -38,7 +38,7 @@ lit_cpointer_compress (lit_record_t *pointer) /**< pointer to compress */
  *
  * @return decompressed pointer
  */
-lit_record_t * __attr_pure___ __attr_always_inline___
+inline lit_record_t * __attr_pure___ __attr_always_inline___
 lit_cpointer_decompress (lit_cpointer_t compressed_pointer) /**< recordset-specific compressed pointer */
 {
   if (compressed_pointer == MEM_CP_NULL)
@@ -54,7 +54,7 @@ lit_cpointer_decompress (lit_cpointer_t compressed_pointer) /**< recordset-speci
  *
  * @return NULL compressed pointer
  */
-lit_cpointer_t __attr_pure___ __attr_always_inline___
+inline lit_cpointer_t __attr_pure___ __attr_always_inline___
 lit_cpointer_null_cp (void)
 {
   return MEM_CP_NULL;

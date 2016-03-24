@@ -1,0 +1,6 @@
+{
+  "build": {
+    "target": "st-nucleo-f401re-gcc,*",
+    "targetSetExplicitly": true
+  }
+}

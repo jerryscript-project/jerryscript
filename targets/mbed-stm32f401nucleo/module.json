@@ -1,0 +1,12 @@
+{
+  "name": "jerry",
+  "version": "1.0.0",
+  "bin": "./source",
+  "private": true,
+  "description": "There is a target bugfix for ST32F401 Nucleo board.",
+  "author": "orbanl",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mbed-drivers": "^1.4.0"
+  }
+}

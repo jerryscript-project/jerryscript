@@ -1,0 +1,74 @@
+{
+    "info": {
+        "jerryscript": {
+            "version": "2027caeda5d3d93cad7ce44d334c5b5b079d7b99",
+            "size": 180948
+        },
+        "duktape": {
+            "version": "b7ba8c50fa5b994f31a8a98f38a31a053cc28edc",
+            "size": 174116
+        }
+    },
+    "sunspider-1.0.2": {
+        "performance": {
+            "jerryscript-snapshot": {
+                "math-spectral-norm.js": 1.5,
+                "3d-cube.js": 2.58,
+                "access-fannkuch.js": 7.788,
+                "access-nbody.js": 2.9,
+                "bitops-bitwise-and.js": 3.292,
+                "math-partial-sums.js": 1.584,
+                "controlflow-recursive.js": 0.956,
+                "bitops-bits-in-byte.js": 2.404,
+                "access-binary-trees.js": 1.372,
+                "bitops-3bit-bits-in-byte.js": 1.632,
+                "string-fasta.js": 3.32,
+                "math-cordic.js": 2.876
+            }
+        },
+        "memory": {
+            "jerryscript-snapshot": {
+                "math-spectral-norm.js": 28,
+                "3d-cube.js": 72,
+                "access-fannkuch.js": 28,
+                "access-nbody.js": 28,
+                "bitops-bitwise-and.js": 20,
+                "math-partial-sums.js": 20,
+                "controlflow-recursive.js": 128,
+                "bitops-bits-in-byte.js": 20,
+                "access-binary-trees.js": 72,
+                "bitops-3bit-bits-in-byte.js": 20,
+                "string-fasta.js": 36,
+                "math-cordic.js": 20
+            }
+        }
+    },
+    "ubench": {
+        "performance": {
+            "jerryscript-snapshot": {
+                "loop-empty.js": 30.604,
+                "function-empty.js": 19.728,
+                "function-excess-args.js": 21.052,
+                "function-closure.js": 2.684,
+                "function-missing-args.js": 15.784,
+                "loop-sum.js": 36.32,
+                "loop-empty-resolve.js": 3.448,
+                "function-correct-args.js": 22.092,
+                "function-sum.js": 18.052
+            }
+        },
+        "memory": {
+            "jerryscript-snapshot": {
+                "loop-empty.js": 20,
+                "function-empty.js": 20,
+                "function-excess-args.js": 20,
+                "function-closure.js": 28,
+                "function-missing-args.js": 20,
+                "loop-sum.js": 20,
+                "loop-empty-resolve.js": 20,
+                "function-correct-args.js": 20,
+                "function-sum.js": 20
+            }
+        }
+    }
+}

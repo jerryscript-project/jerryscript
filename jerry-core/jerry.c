@@ -1988,6 +1988,8 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
     {
       lit_cpointer_t *literal_start_p;
+      uint32_t argument_end;
+      uint32_t register_end;
       uint32_t const_literal_end;
 
       if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
@@ -1995,6 +1997,8 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
         literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
 
         cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        register_end = args_p->register_end;
         const_literal_end = args_p->const_literal_end;
       }
       else
@@ -2002,10 +2006,36 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
         literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
 
         cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        register_end = args_p->register_end;
         const_literal_end = args_p->const_literal_end;
       }
 
-      for (uint32_t i = 0; i < const_literal_end; i++)
+      for (uint32_t i = 0; i < register_end; i++)
+      {
+        literal_start_p[i] = MEM_CP_NULL;
+      }
+
+      if ((bytecode_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
+          && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE))
+      {
+        for (uint32_t i = 0; i < argument_end; i++)
+        {
+          lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
+
+          if (literal_start_p[i] != MEM_CP_NULL)
+          {
+            while (current_p->literal_id != literal_start_p[i])
+            {
+              current_p++;
+            }
+
+            literal_start_p[i] = (uint16_t) current_p->literal_offset;
+          }
+        }
+      }
+
+      for (uint32_t i = register_end; i < const_literal_end; i++)
       {
         lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 

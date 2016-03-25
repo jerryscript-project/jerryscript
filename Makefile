@@ -106,8 +106,7 @@ BUILD_NAME:=
   endif
 
 # For testing build-options
-export BUILD_OPTIONS_TEST_MCU := LTO LOG DATE_SYS_CALLS ERROR_MESSAGES ALL_IN_ONE
-export BUILD_OPTIONS_TEST_NATIVE := $(BUILD_OPTIONS_TEST_MCU) VALGRIND VALGRIND_FREYA COMPILER_DEFAULT_LIBC
+export BUILD_OPTIONS_TEST_NATIVE := LTO LOG DATE_SYS_CALLS ERROR_MESSAGES ALL_IN_ONE VALGRIND VALGRIND_FREYA COMPILER_DEFAULT_LIBC
 
 # Directories
 export ROOT_DIR := $(shell pwd)
@@ -152,11 +151,6 @@ export JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE := \
     $(__MODE).$(NATIVE_SYSTEM))
 
 JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE += unittests
-
-export JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU := \
-  $(foreach __MODE,$(RELEASE_MODES), \
-    $(foreach __SYSTEM,$(MCU_SYSTEMS), \
-      $(__MODE).mcu_$(__SYSTEM)))
 
 # JS test suites (in the format of id:path)
 export JERRY_TEST_SUITE_J := j:$(ROOT_DIR)/tests/jerry
@@ -341,10 +335,6 @@ $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE), \
   $(foreach __OPTION, $(BUILD_OPTIONS_TEST_NATIVE), \
     $(eval $(call OPTIONSTEST_RULE,$(__TARGET),$(__OPTION)))))
 
-$(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU), \
-  $(foreach __OPTION, $(BUILD_OPTIONS_TEST_MCU), \
-    $(eval $(call OPTIONSTEST_RULE,$(__TARGET),$(__OPTION)))))
-
 # Targets to perform batch builds, checks, and tests
 
 .PHONY: clean
@@ -390,10 +380,7 @@ test-js-precommit: \
 test-buildoptions: \
         $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE), \
           $(foreach __OPTION, $(BUILD_OPTIONS_TEST_NATIVE), \
-            test-option.$(__TARGET)-$(__OPTION))) \
-        $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_MCU), \
-          $(foreach __OPTION, $(BUILD_OPTIONS_TEST_MCU), \
-            test-option.$(__TARGET)-$(__OPTION))) \
+            test-option.$(__TARGET)-$(__OPTION)))
 
 .PHONY: precommit
 precommit: prerequisites

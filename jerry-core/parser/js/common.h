@@ -47,16 +47,6 @@
 #include "lit-literal.h"
 #include "mem-heap.h"
 
-/* UTF character management. Only ASCII characters are
- * supported for simplicity. */
-
-int util_is_identifier_start (const uint8_t *);
-int util_is_identifier_part (const uint8_t *);
-int util_is_identifier_start_character (uint16_t);
-int util_is_identifier_part_character (uint16_t);
-size_t util_to_utf8_bytes (uint8_t *, uint16_t);
-size_t util_get_utf8_length (uint16_t);
-
 /* Immediate management. */
 
 /**

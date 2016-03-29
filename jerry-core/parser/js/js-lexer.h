@@ -171,7 +171,8 @@ typedef enum
 } lexer_token_type_t;
 
 #define LEXER_NEWLINE_LS_PS_BYTE_1 0xe2
-#define LEXER_NEWLINE_LS_PS_BYTE_23(source) ((source)[1] == 0x80 && ((source)[2] | 0x1) == 0xa9)
+#define LEXER_NEWLINE_LS_PS_BYTE_23(source) \
+  ((source)[1] == LIT_UTF8_2_BYTE_CODE_POINT_MIN && ((source)[2] | 0x1) == 0xa9)
 #define LEXER_UTF8_4BYTE_START 0xf0
 
 #define LEXER_IS_LEFT_BRACKET(type) \
@@ -191,8 +192,6 @@ typedef enum
 
 #define LEXER_BINARY_LVALUE_OP_TOKEN_TO_OPCODE(token_type) \
    ((cbc_opcode_t) ((((token_type) - LEXER_ASSIGN_ADD) * 2) + CBC_ASSIGN_ADD))
-
-#define LEXER_TO_ASCII_LOWERCASE(character) ((character) | 0x20)
 
 /**
  * Lexer literal object types.

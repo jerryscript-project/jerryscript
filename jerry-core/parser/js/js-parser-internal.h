@@ -351,12 +351,13 @@ void parser_set_continues_to_current_position (parser_context_t *, parser_branch
 void lexer_next_token (parser_context_t *);
 void lexer_expect_identifier (parser_context_t *, uint8_t);
 void lexer_scan_identifier (parser_context_t *, int);
+ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
 void lexer_expect_object_literal_id (parser_context_t *, int);
 void lexer_construct_literal_object (parser_context_t *, lexer_lit_location_t *, uint8_t);
 int lexer_construct_number_object (parser_context_t *, int, int);
 void lexer_construct_function_object (parser_context_t *, uint32_t);
 void lexer_construct_regexp_object (parser_context_t *, int);
-int lexer_same_identifiers (lexer_lit_location_t *, const lexer_lit_location_t *);
+int lexer_compare_identifier_to_current (parser_context_t *, const lexer_lit_location_t *);
 
 /* Parser functions. */
 

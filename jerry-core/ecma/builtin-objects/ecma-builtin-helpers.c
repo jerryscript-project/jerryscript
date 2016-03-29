@@ -565,12 +565,8 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
                                        ecma_length_t *ret_index_p) /**< position found in original string */
 {
   bool match_found = false;
-
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);
-  const lit_utf8_size_t original_size = ecma_string_get_size (original_str_p);
-
   const ecma_length_t search_len = ecma_string_get_length (search_str_p);
-  const lit_utf8_size_t search_size = ecma_string_get_size (search_str_p);
 
   if (search_len <= original_len)
   {
@@ -582,34 +578,20 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
     else
     {
       /* create utf8 string from original string and advance to position */
-      MEM_DEFINE_LOCAL_ARRAY (original_str_utf8_p,
-                              original_size,
-                              lit_utf8_byte_t);
-
-      lit_utf8_size_t sz = ecma_string_to_utf8_string (original_str_p,
-                                                       original_str_utf8_p,
-                                                       original_size);
-      JERRY_ASSERT (sz == original_size);
+      ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
 
       ecma_length_t index = start_pos;
 
-      lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p;
+      lit_utf8_byte_t *original_str_curr_p = (lit_utf8_byte_t *) original_str_utf8_p;
       for (ecma_length_t idx = 0; idx < index; idx++)
       {
         lit_utf8_incr (&original_str_curr_p);
       }
 
       /* create utf8 string from search string */
-      MEM_DEFINE_LOCAL_ARRAY (search_str_utf8_p,
-                              search_size,
-                              lit_utf8_byte_t);
+      ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
 
-      lit_utf8_size_t sz = ecma_string_to_utf8_string (search_str_p,
-                                                       search_str_utf8_p,
-                                                       search_size);
-      JERRY_ASSERT (sz == search_size);
-
-      lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
+      lit_utf8_byte_t *search_str_curr_p = (lit_utf8_byte_t *) search_str_utf8_p;
 
       /* iterate original string and try to match at each position */
       bool searching = true;
@@ -667,8 +649,8 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
         }
       }
 
-      MEM_FINALIZE_LOCAL_ARRAY (search_str_utf8_p);
-      MEM_FINALIZE_LOCAL_ARRAY (original_str_utf8_p);
+      ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
+      ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
     }
   }
 

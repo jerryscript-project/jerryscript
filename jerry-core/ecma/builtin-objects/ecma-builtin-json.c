@@ -76,12 +76,12 @@ typedef struct
 {
   ecma_json_token_type_t type; /**< type of the current token */
   lit_utf8_byte_t *current_p; /**< current position of the string processed by the parser */
-  lit_utf8_byte_t *end_p; /**< end of the string processed by the parser */
+  const lit_utf8_byte_t *end_p; /**< end of the string processed by the parser */
   union
   {
     struct
     {
-      lit_utf8_byte_t *start_p; /**< when type is string_token, it contains the start of the string */
+      const lit_utf8_byte_t *start_p; /**< when type is string_token, it contains the start of the string */
       lit_utf8_size_t size; /**< when type is string_token, it contains the size of the string */
     } string;
     ecma_number_t number; /**< when type is number_token, it contains the value of the number */
@@ -286,11 +286,11 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
   lit_utf8_byte_t *current_p = token_p->current_p;
   token_p->type = invalid_token;
 
-  /*
-   * No need for end check since the string is zero terminated.
-   */
-  while (*current_p == LIT_CHAR_SP || *current_p == LIT_CHAR_CR
-         || *current_p == LIT_CHAR_LF || *current_p == LIT_CHAR_TAB)
+  while (current_p < token_p->end_p
+         && (*current_p == LIT_CHAR_SP
+             || *current_p == LIT_CHAR_CR
+             || *current_p == LIT_CHAR_LF
+             || *current_p == LIT_CHAR_TAB))
   {
     current_p++;
   }
@@ -500,7 +500,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           break;
         }
 
-        lit_utf8_byte_t *string_start_p = token_p->u.string.start_p;
+        const lit_utf8_byte_t *string_start_p = token_p->u.string.start_p;
         lit_utf8_size_t string_size = token_p->u.string.size;
         ecma_builtin_json_parse_next_token (token_p);
 
@@ -709,19 +709,12 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
                   ret_value);
 
   ecma_string_t *string_p = ecma_get_string_from_value (string);
-  ecma_length_t string_size = (uint32_t) ecma_string_get_size (string_p);
-  lit_utf8_size_t buffer_size = sizeof (lit_utf8_byte_t) * (string_size + 1);
 
-  MEM_DEFINE_LOCAL_ARRAY (str_start_p, buffer_size, lit_utf8_byte_t);
-
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, str_start_p, buffer_size);
-  JERRY_ASSERT (sz == string_size);
-
-  str_start_p[string_size] = LIT_BYTE_NULL;
+  ECMA_STRING_TO_UTF8_STRING (string_p, str_start_p, str_start_size);
 
   ecma_json_token_t token;
-  token.current_p = str_start_p;
-  token.end_p = str_start_p + string_size;
+  token.current_p = (lit_utf8_byte_t *) str_start_p;
+  token.end_p = str_start_p + str_start_size;
 
   ecma_value_t final_result = ecma_builtin_json_parse_value (&token);
 
@@ -767,7 +760,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (str_start_p);
+  ECMA_FINALIZE_UTF8_STRING (str_start_p, str_start_size);
 
   ECMA_FINALIZE (string);
   return ret_value;
@@ -1064,18 +1057,10 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
   ecma_string_t *product_str_p = ecma_copy_or_ref_ecma_string (quote_str_p);
   ecma_string_t *tmp_str_p;
 
-  ecma_length_t string_size = ecma_string_get_size (string_p);
+  ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);
 
-  MEM_DEFINE_LOCAL_ARRAY (string_buff, string_size, lit_utf8_byte_t);
-
-  lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string_p,
-                                                             string_buff,
-                                                             string_size);
-
-  JERRY_ASSERT (bytes_copied == string_size);
-
-  lit_utf8_byte_t *str_p = string_buff;
-  const lit_utf8_byte_t *str_end_p = str_p + string_size;
+  lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) string_buff;
+  const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
 
   while (str_p < str_end_p)
   {
@@ -1196,7 +1181,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (string_buff);
+  ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
 
   /* 3. */
   tmp_str_p = ecma_concat_ecma_strings (product_str_p, quote_str_p);

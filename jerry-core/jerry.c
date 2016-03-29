@@ -1886,23 +1886,22 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
     ecma_string_t *pattern_string_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                  pattern_cp);
 
-    ecma_length_t pattern_size = ecma_string_get_size (pattern_string_p);
+    ecma_length_t pattern_size = 0;
 
-    MEM_DEFINE_LOCAL_ARRAY (buffer_p, pattern_size, lit_utf8_byte_t);
+    ECMA_STRING_TO_UTF8_STRING (pattern_string_p, buffer_p, buffer_size);
 
-    lit_utf8_size_t sz = ecma_string_to_utf8_string (pattern_string_p, buffer_p, pattern_size);
-    JERRY_ASSERT (sz == pattern_size);
+    pattern_size = buffer_size;
 
     if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
                                         snapshot_buffer_size,
                                         &snapshot_buffer_write_offset,
                                         buffer_p,
-                                        pattern_size))
+                                        buffer_size))
     {
       snapshot_error_occured = true;
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (buffer_p);
+    ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 
     snapshot_buffer_write_offset = JERRY_ALIGNUP (snapshot_buffer_write_offset, MEM_ALIGNMENT);
 

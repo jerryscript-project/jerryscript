@@ -549,25 +549,18 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
-      const lit_utf8_size_t string_size = ecma_string_get_size (str_p);
+      ecma_number_t num;
 
-      if (string_size == 0)
+      ECMA_STRING_TO_UTF8_STRING (str_p, str_buffer_p, str_buffer_size);
+
+      if (str_buffer_size == 0)
       {
         return ECMA_NUMBER_ZERO;
       }
 
-      ecma_number_t num;
+      num = ecma_utf8_string_to_number (str_buffer_p, str_buffer_size);
 
-      MEM_DEFINE_LOCAL_ARRAY (str_buffer_p, string_size, lit_utf8_byte_t);
-
-      lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (str_p,
-                                                                 str_buffer_p,
-                                                                 string_size);
-      JERRY_ASSERT (bytes_copied == string_size);
-
-      num = ecma_utf8_string_to_number (str_buffer_p, string_size);
-
-      MEM_FINALIZE_LOCAL_ARRAY (str_buffer_p);
+      ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
 
       return num;
     }
@@ -1345,12 +1338,16 @@ static bool
 ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
                                lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
 {
-  lit_utf8_byte_t utf8_string_buffer[LIT_MAGIC_STRING_LENGTH_LIMIT];
+  lit_utf8_size_t utf8_str_size;
+  bool is_ascii;
+  const lit_utf8_byte_t *utf8_str_p = ecma_string_raw_chars (string_p, &utf8_str_size, &is_ascii);
 
-  lit_utf8_size_t copied = ecma_string_to_utf8_string (string_p, utf8_string_buffer, sizeof (utf8_string_buffer));
-  JERRY_ASSERT (copied <= sizeof (utf8_string_buffer));
+  if (utf8_str_p == NULL || !is_ascii)
+  {
+    return false;
+  }
 
-  return lit_is_utf8_string_magic (utf8_string_buffer, (lit_utf8_size_t) copied, out_id_p);
+  return lit_is_utf8_string_magic (utf8_str_p, utf8_str_size, out_id_p);
 } /* ecma_is_string_magic_longpath */
 
 /**
@@ -1366,12 +1363,16 @@ static bool
 ecma_is_ex_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
                                   lit_magic_string_ex_id_t *out_id_p) /**< [out] external magic string's id */
 {
-  lit_utf8_byte_t utf8_string_buffer[LIT_MAGIC_STRING_LENGTH_LIMIT];
+  lit_utf8_size_t utf8_str_size;
+  bool is_ascii;
+  const lit_utf8_byte_t *utf8_str_p = ecma_string_raw_chars (string_p, &utf8_str_size, &is_ascii);
 
-  lit_utf8_size_t copied = ecma_string_to_utf8_string (string_p, utf8_string_buffer, sizeof (utf8_string_buffer));
-  JERRY_ASSERT (copied <= sizeof (utf8_string_buffer));
+  if (utf8_str_p == NULL || !is_ascii)
+  {
+    return false;
+  }
 
-  return lit_is_ex_utf8_string_magic (utf8_string_buffer, (lit_utf8_size_t) copied, out_id_p);
+  return lit_is_ex_utf8_string_magic (utf8_str_p, utf8_str_size, out_id_p);
 } /* ecma_is_ex_string_magic_longpath */
 
 /**
@@ -1556,19 +1557,14 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 {
   ecma_string_t *ret_string_p;
 
-  lit_utf8_size_t buffer_size = ecma_string_get_size (string_p);
+  ECMA_STRING_TO_UTF8_STRING (string_p, utf8_str_p, utf8_str_size);
 
-  if (buffer_size > 0)
+  if (utf8_str_size > 0)
   {
-    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-
-    lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, buffer_size);
-    JERRY_ASSERT (sz == buffer_size);
-
     ecma_char_t ch;
     lit_utf8_size_t read_size;
-    lit_utf8_byte_t *nonws_start_p = utf8_str_p + buffer_size;
-    lit_utf8_byte_t *current_p = utf8_str_p;
+    const lit_utf8_byte_t *nonws_start_p = utf8_str_p + utf8_str_size;
+    const lit_utf8_byte_t *current_p = utf8_str_p;
 
     /* Trim front. */
     while (current_p < nonws_start_p)
@@ -1585,7 +1581,7 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
       current_p += read_size;
     }
 
-    current_p = utf8_str_p + buffer_size;
+    current_p = utf8_str_p + utf8_str_size;
 
     /* Trim back. */
     while (current_p > utf8_str_p)
@@ -1611,16 +1607,15 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
     {
       ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     }
-
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
   }
   else
   {
     ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  return ret_string_p;
+  ECMA_FINALIZE_UTF8_STRING (utf8_str_p, utf8_str_size);
 
+  return ret_string_p;
 } /* ecma_string_trim */
 
 /**

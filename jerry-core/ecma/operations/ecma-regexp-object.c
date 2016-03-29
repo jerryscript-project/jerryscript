@@ -76,14 +76,10 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  lit_utf8_size_t flags_str_size = ecma_string_get_size (flags_str_p);
-  MEM_DEFINE_LOCAL_ARRAY (flags_start_p, flags_str_size, lit_utf8_byte_t);
+  ECMA_STRING_TO_UTF8_STRING (flags_str_p, flags_start_p, flags_start_size);
 
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (flags_str_p, flags_start_p, flags_str_size);
-  JERRY_ASSERT (sz == flags_str_size);
-
-  lit_utf8_byte_t *flags_str_curr_p = flags_start_p;
-  const lit_utf8_byte_t *flags_str_end_p = flags_start_p + flags_str_size;
+  const lit_utf8_byte_t *flags_str_curr_p = flags_start_p;
+  const lit_utf8_byte_t *flags_str_end_p = flags_start_p + flags_start_size;
 
   while (flags_str_curr_p < flags_str_end_p
          && ecma_is_value_empty (ret_value))
@@ -125,7 +121,7 @@ re_parse_regexp_flags (ecma_string_t *flags_str_p, /**< Input string with flags 
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (flags_start_p);
+  ECMA_FINALIZE_UTF8_STRING (flags_start_p, flags_start_size);
 
   return ret_value;
 } /* re_parse_regexp_flags  */
@@ -1274,27 +1270,23 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
 
-  ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
-  lit_utf8_size_t input_string_size = ecma_string_get_size (input_string_p);
-
-  MEM_DEFINE_LOCAL_ARRAY (input_buffer_p, input_string_size, lit_utf8_byte_t);
-
   re_matcher_ctx_t re_ctx;
   lit_utf8_byte_t *input_curr_p = NULL;
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p, input_buffer_p, input_string_size);
-  JERRY_ASSERT (sz == input_string_size);
 
-  if (input_string_size == 0u)
+  ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
+  ECMA_STRING_TO_UTF8_STRING (input_string_p, input_buffer_p, input_buffer_size);
+
+  if (input_buffer_size == 0u)
   {
     input_curr_p = (lit_utf8_byte_t *) lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
-    input_curr_p = input_buffer_p;
+    input_curr_p = (lit_utf8_byte_t *) input_buffer_p;
   }
 
   re_ctx.input_start_p = input_curr_p;
-  const lit_utf8_byte_t *input_end_p = re_ctx.input_start_p + input_string_size;
+  const lit_utf8_byte_t *input_end_p = re_ctx.input_start_p + input_buffer_size;
   re_ctx.input_end_p = input_end_p;
 
   /* 1. Read bytecode header and init regexp matcher context. */
@@ -1333,7 +1325,9 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   bool is_match = false;
   re_ctx.num_of_iterations_p = num_of_iter_p;
   int32_t index = 0;
-  ecma_length_t input_str_len = lit_utf8_string_length (input_buffer_p, input_string_size);
+  ecma_length_t input_str_len;
+
+  input_str_len = lit_utf8_string_length (input_buffer_p, input_buffer_size);
 
   if (input_buffer_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
@@ -1435,7 +1429,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
       ecma_object_t *result_array_obj_p = ecma_get_object_from_value (result_array);
 
-      ecma_string_t *input_str_p = ecma_new_ecma_string_from_utf8 (input_buffer_p, input_string_size);
+      ecma_string_t *input_str_p = ecma_new_ecma_string_from_utf8 (input_buffer_p, input_buffer_size);
       re_set_result_array_properties (result_array_obj_p, input_str_p, re_ctx.num_of_captures / 2, index);
       ecma_deref_ecma_string (input_str_p);
 
@@ -1492,7 +1486,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   MEM_FINALIZE_LOCAL_ARRAY (num_of_iter_p);
   MEM_FINALIZE_LOCAL_ARRAY (saved_p);
-  MEM_FINALIZE_LOCAL_ARRAY (input_buffer_p);
+  ECMA_FINALIZE_UTF8_STRING (input_buffer_p, input_buffer_size);
 
   return ret_value;
 } /* ecma_regexp_exec_helper */

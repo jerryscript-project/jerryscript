@@ -259,7 +259,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
 {
   int char_class_in = 0;
   parser_ctx_p->num_of_groups = 0;
-  lit_utf8_byte_t *curr_p = parser_ctx_p->input_start_p;
+  lit_utf8_byte_t *curr_p = (lit_utf8_byte_t *) parser_ctx_p->input_start_p;
 
   while (curr_p < parser_ctx_p->input_end_p)
   {

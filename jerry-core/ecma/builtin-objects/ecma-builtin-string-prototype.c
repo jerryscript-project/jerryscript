@@ -1198,23 +1198,15 @@ ecma_builtin_string_prototype_object_replace_main (ecma_builtin_replace_search_c
                     ret_value);
 
     ecma_string_t *replace_string_p = ecma_get_string_from_value (to_string_replace_val);
-    lit_utf8_size_t replace_size = ecma_string_get_size (replace_string_p);
 
-    MEM_DEFINE_LOCAL_ARRAY (replace_start_p,
-                            replace_size,
-                            lit_utf8_byte_t);
-
-    lit_utf8_size_t sz = ecma_string_to_utf8_string (replace_string_p,
-                                                     replace_start_p,
-                                                     replace_size);
-    JERRY_ASSERT (sz == replace_size);
+    ECMA_STRING_TO_UTF8_STRING (replace_string_p, replace_start_p, replace_start_size);
 
     context_p->replace_string_p = replace_string_p;
-    context_p->replace_str_curr_p = replace_start_p;
+    context_p->replace_str_curr_p = (lit_utf8_byte_t *) replace_start_p;
 
     ret_value = ecma_builtin_string_prototype_object_replace_loop (context_p);
 
-    MEM_FINALIZE_LOCAL_ARRAY (replace_start_p);
+    ECMA_FINALIZE_UTF8_STRING (replace_start_p, replace_start_size);
     ECMA_FINALIZE (to_string_replace_val);
   }
 
@@ -2073,16 +2065,8 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
   /* 3. */
   ecma_string_t *input_string_p = ecma_get_string_from_value (to_string_val);
-  lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_size,
-                          lit_utf8_byte_t);
-
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
-                                                   input_start_p,
-                                                   input_size);
-  JERRY_ASSERT (sz == input_size);
+  ECMA_STRING_TO_UTF8_STRING (input_string_p, input_start_p, input_start_size);
 
   /*
    * The URI encoding has two major phases: first we compute
@@ -2090,8 +2074,8 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
    */
 
   lit_utf8_size_t output_length = 0;
-  lit_utf8_byte_t *input_str_curr_p = input_start_p;
-  const lit_utf8_byte_t *input_str_end_p = input_start_p + input_size;
+  lit_utf8_byte_t *input_str_curr_p = (lit_utf8_byte_t *) input_start_p;
+  const lit_utf8_byte_t *input_str_end_p = input_start_p + input_start_size;
 
   while (input_str_curr_p < input_str_end_p)
   {
@@ -2130,7 +2114,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   lit_utf8_byte_t *output_char_p = output_start_p;
 
   /* Encoding the output. */
-  input_str_curr_p = input_start_p;
+  input_str_curr_p = (lit_utf8_byte_t *) input_start_p;
 
   while (input_str_curr_p < input_str_end_p)
   {
@@ -2166,7 +2150,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   ret_value = ecma_make_string_value (output_string_p);
 
   MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
-  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+  ECMA_FINALIZE_UTF8_STRING (input_start_p, input_start_size);
 
   ECMA_FINALIZE (to_string_val);
   ECMA_FINALIZE (check_coercible_val);

@@ -92,9 +92,9 @@ typedef struct
   */
 typedef struct
 {
-  lit_utf8_byte_t *input_start_p; /**< start of input pattern */
+  const lit_utf8_byte_t *input_start_p; /**< start of input pattern */
   lit_utf8_byte_t *input_curr_p;  /**< current position in input pattern */
-  lit_utf8_byte_t *input_end_p;   /**< end of input pattern */
+  const lit_utf8_byte_t *input_end_p;   /**< end of input pattern */
   int num_of_groups;              /**< number of groups */
   uint32_t num_of_classes;        /**< number of character classes */
 } re_parser_ctx_t;

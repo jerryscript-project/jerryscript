@@ -52,21 +52,14 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
   }
   else
   {
-    MEM_DEFINE_LOCAL_ARRAY (code_utf8_buffer_p,
-                            chars_num,
-                            lit_utf8_byte_t);
-
-    lit_utf8_size_t buffer_size_req = ecma_string_to_utf8_string (code_p,
-                                                                  code_utf8_buffer_p,
-                                                                  chars_num);
-    JERRY_ASSERT (buffer_size_req == chars_num);
+    ECMA_STRING_TO_UTF8_STRING (code_p, code_utf8_buffer_p, code_utf8_buffer_size);
 
     ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
                                            chars_num,
                                            is_direct,
                                            is_called_from_strict_mode_code);
 
-    MEM_FINALIZE_LOCAL_ARRAY (code_utf8_buffer_p);
+    ECMA_FINALIZE_UTF8_STRING (code_utf8_buffer_p, code_utf8_buffer_size);
   }
 
   return ret_value;

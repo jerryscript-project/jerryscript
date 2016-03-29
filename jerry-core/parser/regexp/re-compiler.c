@@ -546,16 +546,12 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
   re_ctx.bytecode_ctx_p = &bc_ctx;
 
-  lit_utf8_size_t pattern_str_size = ecma_string_get_size (pattern_str_p);
-  MEM_DEFINE_LOCAL_ARRAY (pattern_start_p, pattern_str_size, lit_utf8_byte_t);
-
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (pattern_str_p, pattern_start_p, pattern_str_size);
-  JERRY_ASSERT (sz == pattern_str_size);
+  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start_p, pattern_start_size);
 
   re_parser_ctx_t parser_ctx;
   parser_ctx.input_start_p = pattern_start_p;
-  parser_ctx.input_curr_p = pattern_start_p;
-  parser_ctx.input_end_p = pattern_start_p + pattern_str_size;
+  parser_ctx.input_curr_p = (lit_utf8_byte_t *) pattern_start_p;
+  parser_ctx.input_end_p = pattern_start_p + pattern_start_size;
   parser_ctx.num_of_groups = -1;
   re_ctx.parser_ctx_p = &parser_ctx;
 
@@ -593,7 +589,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
   ECMA_FINALIZE (empty);
 
-  MEM_FINALIZE_LOCAL_ARRAY (pattern_start_p);
+  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
 
   size_t byte_code_size = (size_t) (bc_ctx.block_end_p - bc_ctx.block_start_p);
 

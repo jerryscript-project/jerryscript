@@ -52,6 +52,36 @@
  */
 #define ECMA_SET_POINTER(field, non_compressed_pointer) MEM_CP_SET_POINTER (field, non_compressed_pointer)
 
+/**
+ * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
+ */
+#define ECMA_STRING_TO_UTF8_STRING(ecma_str_ptr, /**< ecma string pointer */ \
+                                   utf8_ptr, /**< [out] output buffer pointer */ \
+                                   utf8_str_size) /**< [out] output buffer size */ \
+  lit_utf8_size_t utf8_str_size; \
+  bool utf8_ptr ## must_be_freed; \
+  const lit_utf8_byte_t *utf8_ptr = ecma_string_raw_chars (ecma_str_ptr, &utf8_str_size, &utf8_ptr ## must_be_freed); \
+  utf8_ptr ## must_be_freed = false; /* it was used as 'is_ascii' in  'ecma_string_raw_chars', so we must reset it */ \
+  \
+  if (utf8_ptr == NULL) \
+  { \
+    utf8_ptr = (const lit_utf8_byte_t *) (mem_heap_alloc_block (utf8_str_size)); \
+    lit_utf8_size_t sz = ecma_string_to_utf8_string (ecma_str_ptr, (lit_utf8_byte_t *) utf8_ptr, utf8_str_size); \
+    JERRY_ASSERT (sz == utf8_str_size); \
+    utf8_ptr ## must_be_freed = true; \
+  }
+
+/**
+ * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
+ */
+#define ECMA_FINALIZE_UTF8_STRING(utf8_ptr, /**< pointer to character buffer */ \
+                                  utf8_str_size) /**< buffer size */ \
+  if (utf8_ptr ## must_be_freed) \
+  { \
+    JERRY_ASSERT (utf8_ptr != NULL); \
+    mem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
+  }
+
 /* ecma-helpers-value.c */
 extern ecma_type_t ecma_get_value_type_field (ecma_value_t) __attr_pure___;
 

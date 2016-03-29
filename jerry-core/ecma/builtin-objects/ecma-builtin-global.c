@@ -203,23 +203,17 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  lit_utf8_size_t str_size = ecma_string_get_size (number_str_p);
+  ECMA_STRING_TO_UTF8_STRING (number_str_p, string_buff, string_buff_size);
 
-  if (str_size > 0)
+  if (string_buff_size > 0)
   {
-    MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
-
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                               string_buff,
-                                                               str_size);
-    JERRY_ASSERT (bytes_copied == str_size);
-    lit_utf8_byte_t *string_curr_p = string_buff;
-    lit_utf8_byte_t *string_end_p = string_buff + str_size;
+    lit_utf8_byte_t *string_curr_p = (lit_utf8_byte_t *) string_buff;
+    const lit_utf8_byte_t *string_end_p = string_buff + string_buff_size;
 
     /* 2. Remove leading whitespace. */
 
-    lit_utf8_byte_t *start_p = string_end_p;
-    lit_utf8_byte_t *end_p = string_end_p;
+    lit_utf8_byte_t *start_p = (lit_utf8_byte_t *) string_end_p;
+    lit_utf8_byte_t *end_p = start_p;
 
     while (string_curr_p < string_end_p)
     {
@@ -396,7 +390,6 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
       ret_value = ecma_make_number_value (ret_num_p);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (string_buff);
   }
   else
   {
@@ -405,6 +398,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
     ret_value = ecma_make_number_value (ret_num_p);
   }
 
+  ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
   ECMA_FINALIZE (string_var);
   return ret_value;
 } /* ecma_builtin_global_object_parse_int */
@@ -428,22 +422,15 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
   ECMA_TRY_CATCH (string_var, ecma_op_to_string (string), ret_value);
 
   ecma_string_t *number_str_p = ecma_get_string_from_value (string_var);
-  lit_utf8_size_t str_size = ecma_string_get_size (number_str_p);
+  ECMA_STRING_TO_UTF8_STRING (number_str_p, string_buff, string_buff_size);
 
-  if (str_size > 0)
+  if (string_buff_size > 0)
   {
-    MEM_DEFINE_LOCAL_ARRAY (string_buff, str_size, lit_utf8_byte_t);
+    lit_utf8_byte_t *str_curr_p = (lit_utf8_byte_t *) string_buff;
+    const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
 
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (number_str_p,
-                                                               string_buff,
-                                                               str_size);
-    JERRY_ASSERT (bytes_copied == str_size);
-
-    lit_utf8_byte_t *str_curr_p = string_buff;
-    lit_utf8_byte_t *str_end_p = string_buff + str_size;
-
-    lit_utf8_byte_t *start_p = str_end_p;
-    lit_utf8_byte_t *end_p = str_end_p;
+    lit_utf8_byte_t *start_p = (lit_utf8_byte_t *) str_end_p;
+    lit_utf8_byte_t *end_p = (lit_utf8_byte_t *) str_end_p;
 
     /* 2. Find first non whitespace char and set starting position. */
     while (str_curr_p < str_end_p)
@@ -626,7 +613,6 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       *ret_num_p = ecma_number_make_nan ();
       ret_value = ecma_make_number_value (ret_num_p);
     }
-    MEM_FINALIZE_LOCAL_ARRAY (string_buff);
   }
   /* String length is zero. */
   else
@@ -636,6 +622,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
     ret_value = ecma_make_number_value (ret_num_p);
   }
 
+  ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
   ECMA_FINALIZE (string_var);
 
   return ret_value;

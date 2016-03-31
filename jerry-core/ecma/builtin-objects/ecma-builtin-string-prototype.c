@@ -2074,7 +2074,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
    */
 
   lit_utf8_size_t output_length = 0;
-  lit_utf8_byte_t *input_str_curr_p = (lit_utf8_byte_t *) input_start_p;
+  const lit_utf8_byte_t *input_str_curr_p = input_start_p;
   const lit_utf8_byte_t *input_str_end_p = input_start_p + input_start_size;
 
   while (input_str_curr_p < input_str_end_p)
@@ -2114,7 +2114,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
   lit_utf8_byte_t *output_char_p = output_start_p;
 
   /* Encoding the output. */
-  input_str_curr_p = (lit_utf8_byte_t *) input_start_p;
+  input_str_curr_p = input_start_p;
 
   while (input_str_curr_p < input_str_end_p)
   {

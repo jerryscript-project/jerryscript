@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +113,7 @@ main (int __attr_unused___ argc,
 
   lit_utf8_byte_t cesu8_string[max_bytes_in_string];
   ecma_char_t code_units[max_code_units_in_string];
-  lit_utf8_byte_t *saved_positions[max_code_units_in_string];
+  const lit_utf8_byte_t *saved_positions[max_code_units_in_string];
 
   for (int i = 0; i < test_iters; i++)
   {
@@ -126,7 +127,7 @@ main (int __attr_unused___ argc,
 
     JERRY_ASSERT (lit_utf8_string_length (cesu8_string, cesu8_string_size) == length);
 
-    lit_utf8_byte_t *curr_p = cesu8_string;
+    const lit_utf8_byte_t *curr_p = cesu8_string;
     const lit_utf8_byte_t *end_p = cesu8_string + cesu8_string_size;
 
     ecma_length_t calculated_length = 0;

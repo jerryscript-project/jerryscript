@@ -380,13 +380,13 @@ re_canonicalize (ecma_char_t ch, /**< character */
 static ecma_value_t
 re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
                  uint8_t *bc_p, /**< pointer to the current RegExp bytecode */
-                 lit_utf8_byte_t *str_p, /**< input string pointer */
-                 lit_utf8_byte_t **out_str_p) /**< [out] matching substring iterator */
+                 const lit_utf8_byte_t *str_p, /**< input string pointer */
+                 const lit_utf8_byte_t **out_str_p) /**< [out] matching substring iterator */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   re_opcode_t op;
 
-  lit_utf8_byte_t *str_curr_p = str_p;
+  const lit_utf8_byte_t *str_curr_p = str_p;
 
   while ((op = re_get_opcode (&bc_p)))
   {
@@ -541,7 +541,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_LOOKAHEAD_NEG:
       {
         ecma_value_t match_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
 
         uint32_t array_size = re_ctx_p->num_of_captures + re_ctx_p->num_of_non_captures;
         MEM_DEFINE_LOCAL_ARRAY (saved_bck_p, array_size, lit_utf8_byte_t *);
@@ -668,7 +668,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           break; /* capture is 'undefined', always matches! */
         }
 
-        lit_utf8_byte_t *sub_str_p = re_ctx_p->saved_p[backref_idx];
+        const lit_utf8_byte_t *sub_str_p = re_ctx_p->saved_p[backref_idx];
 
         while (sub_str_p < re_ctx_p->saved_p[backref_idx + 1])
         {
@@ -697,13 +697,13 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         uint8_t *old_bc_p;
 
         JERRY_DDLOG ("Execute RE_OP_SAVE_AT_START\n");
-        lit_utf8_byte_t *old_start_p = re_ctx_p->saved_p[RE_GLOBAL_START_IDX];
+        const lit_utf8_byte_t *old_start_p = re_ctx_p->saved_p[RE_GLOBAL_START_IDX];
         re_ctx_p->saved_p[RE_GLOBAL_START_IDX] = str_curr_p;
 
         do
         {
           uint32_t offset = re_get_value (&bc_p);
-          lit_utf8_byte_t *sub_str_p = NULL;
+          const lit_utf8_byte_t *sub_str_p = NULL;
           ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
 
           if (ecma_is_value_true (match_value))
@@ -760,8 +760,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         *  after the group first, if zero iteration is allowed.
         */
         uint32_t start_idx, iter_idx, offset;
-        lit_utf8_byte_t *old_start_p = NULL;
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *old_start_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
         uint8_t *old_bc_p;
 
         old_bc_p = bc_p; /* save the bytecode start position of the group start */
@@ -814,7 +814,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START:
       {
         uint32_t start_idx, iter_idx, old_iteration_cnt, offset;
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
         uint8_t *old_bc_p;
         uint8_t *end_bc_p = NULL;
         start_idx = re_get_value (&bc_p);
@@ -839,7 +839,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           start_idx += re_ctx_p->num_of_captures;
         }
 
-        lit_utf8_byte_t *old_start_p = re_ctx_p->saved_p[start_idx];
+        const lit_utf8_byte_t *old_start_p = re_ctx_p->saved_p[start_idx];
         old_iteration_cnt = re_ctx_p->num_of_iterations_p[iter_idx];
         re_ctx_p->saved_p[start_idx] = str_curr_p;
         re_ctx_p->num_of_iterations_p[iter_idx] = 0;
@@ -921,10 +921,10 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         if (re_ctx_p->num_of_iterations_p[iter_idx] >= min
             && re_ctx_p->num_of_iterations_p[iter_idx] <= max)
         {
-          lit_utf8_byte_t *old_end_p = re_ctx_p->saved_p[end_idx];
+          const lit_utf8_byte_t *old_end_p = re_ctx_p->saved_p[end_idx];
           re_ctx_p->saved_p[end_idx] = str_curr_p;
 
-          lit_utf8_byte_t *sub_str_p = NULL;
+          const lit_utf8_byte_t *sub_str_p = NULL;
           ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
 
           if (ecma_is_value_true (match_value))
@@ -949,9 +949,9 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_NON_CAPTURE_GREEDY_GROUP_END:
       {
         uint32_t start_idx, end_idx, iter_idx, min, max, offset;
-        lit_utf8_byte_t *old_start_p = NULL;
-        lit_utf8_byte_t *old_end_p = NULL;
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *old_start_p = NULL;
+        const lit_utf8_byte_t *old_end_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
         uint8_t *old_bc_p;
 
         end_idx = re_get_value (&bc_p);
@@ -1060,7 +1060,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_NON_GREEDY_ITERATOR:
       {
         uint32_t min, max, offset, num_of_iter;
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
 
         min = re_get_value (&bc_p);
         max = re_get_value (&bc_p);
@@ -1107,7 +1107,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_GREEDY_ITERATOR:
       {
         uint32_t min, max, offset, num_of_iter;
-        lit_utf8_byte_t *sub_str_p = NULL;
+        const lit_utf8_byte_t *sub_str_p = NULL;
 
         min = re_get_value (&bc_p);
         max = re_get_value (&bc_p);
@@ -1271,18 +1271,18 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   }
 
   re_matcher_ctx_t re_ctx;
-  lit_utf8_byte_t *input_curr_p = NULL;
+  const lit_utf8_byte_t *input_curr_p = NULL;
 
   ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
   ECMA_STRING_TO_UTF8_STRING (input_string_p, input_buffer_p, input_buffer_size);
 
   if (input_buffer_size == 0u)
   {
-    input_curr_p = (lit_utf8_byte_t *) lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
+    input_curr_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
-    input_curr_p = (lit_utf8_byte_t *) input_buffer_p;
+    input_curr_p = input_buffer_p;
   }
 
   re_ctx.input_start_p = input_curr_p;
@@ -1306,7 +1306,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = bc_p->num_of_non_captures;
 
-  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, lit_utf8_byte_t *);
+  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, const lit_utf8_byte_t *);
 
   for (uint32_t i = 0; i < re_ctx.num_of_captures + re_ctx.num_of_non_captures; i++)
   {
@@ -1356,7 +1356,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   }
 
   /* 2. Try to match */
-  lit_utf8_byte_t *sub_str_p = NULL;
+  const lit_utf8_byte_t *sub_str_p = NULL;
   uint8_t *bc_start_p = (uint8_t *) (bc_p + 1);
 
   while (ecma_is_value_empty (ret_value))

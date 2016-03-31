@@ -1,4 +1,5 @@
 /* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -591,10 +592,8 @@ lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer wit
 {
   JERRY_ASSERT (buf_p);
 
-  lit_utf8_byte_t *current_p = (lit_utf8_byte_t *) buf_p;
-
-  lit_utf8_decr (&current_p);
-  return lit_read_code_unit_from_utf8 (current_p, code_point);
+  lit_utf8_decr (&buf_p);
+  return lit_read_code_unit_from_utf8 (buf_p, code_point);
 } /* lit_read_prev_code_unit_from_utf8 */
 
 /**
@@ -603,7 +602,7 @@ lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer wit
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_read_next (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_utf8_read_next (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
   ecma_char_t ch;
@@ -619,7 +618,7 @@ lit_utf8_read_next (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with character
  * @return previous code unit
  */
 ecma_char_t
-lit_utf8_read_prev (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_utf8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
   ecma_char_t ch;
@@ -666,7 +665,7 @@ lit_utf8_peek_prev (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with char
  * Increase cesu-8 encoded string pointer by one code unit.
  */
 void
-lit_utf8_incr (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_utf8_incr (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
 
@@ -677,15 +676,17 @@ lit_utf8_incr (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
  * Decrease cesu-8 encoded string pointer by one code unit.
  */
 void
-lit_utf8_decr (lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_utf8_decr (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
-  lit_utf8_byte_t *current_p = *buf_p;
+  const lit_utf8_byte_t *current_p = *buf_p;
+
   do
   {
     current_p--;
   }
   while ((*(current_p) & LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_EXTRA_BYTE_MARKER);
+
   *buf_p = current_p;
 } /* lit_utf8_decr */
 

@@ -88,7 +88,7 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
     lit_utf8_size_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, utf8_str_size);
     JERRY_ASSERT (actual_sz == utf8_str_size);
 
-    lit_utf8_byte_t *utf8_str_curr_p = utf8_str_p;
+    const lit_utf8_byte_t *utf8_str_curr_p = utf8_str_p;
     const lit_utf8_byte_t *utf8_str_end_p = utf8_str_p + utf8_str_size;
 
     while (utf8_str_curr_p < utf8_str_end_p)
@@ -207,13 +207,13 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
 
   if (string_buff_size > 0)
   {
-    lit_utf8_byte_t *string_curr_p = (lit_utf8_byte_t *) string_buff;
+    const lit_utf8_byte_t *string_curr_p = (lit_utf8_byte_t *) string_buff;
     const lit_utf8_byte_t *string_end_p = string_buff + string_buff_size;
 
     /* 2. Remove leading whitespace. */
 
-    lit_utf8_byte_t *start_p = (lit_utf8_byte_t *) string_end_p;
-    lit_utf8_byte_t *end_p = start_p;
+    const lit_utf8_byte_t *start_p = string_end_p;
+    const lit_utf8_byte_t *end_p = start_p;
 
     while (string_curr_p < string_end_p)
     {
@@ -426,11 +426,11 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
 
   if (string_buff_size > 0)
   {
-    lit_utf8_byte_t *str_curr_p = (lit_utf8_byte_t *) string_buff;
+    const lit_utf8_byte_t *str_curr_p = string_buff;
     const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
 
-    lit_utf8_byte_t *start_p = (lit_utf8_byte_t *) str_end_p;
-    lit_utf8_byte_t *end_p = (lit_utf8_byte_t *) str_end_p;
+    const lit_utf8_byte_t *start_p = str_end_p;
+    const lit_utf8_byte_t *end_p = str_end_p;
 
     /* 2. Find first non whitespace char and set starting position. */
     while (str_curr_p < str_end_p)
@@ -1263,8 +1263,8 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
    * The escape routine has two major phases: first we compute
    * the length of the output, then we encode the input.
    */
-  lit_utf8_byte_t *input_curr_p = input_start_p;
-  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  const lit_utf8_byte_t *input_curr_p = input_start_p;
+  const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
   lit_utf8_size_t output_length = 0;
 
   while (input_curr_p < input_end_p)
@@ -1377,8 +1377,8 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**
   lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p, input_start_p, input_size);
   JERRY_ASSERT (sz == input_size);
 
-  lit_utf8_byte_t *input_curr_p = input_start_p;
-  lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  const lit_utf8_byte_t *input_curr_p = input_start_p;
+  const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
   /* 4. */
   /* The length of input string is always greater than output string
    * so we re-use the input string buffer.

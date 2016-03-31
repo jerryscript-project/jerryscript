@@ -53,7 +53,7 @@
  * @return NaN if cannot read from string, ToNumber() otherwise
  */
 static ecma_number_t
-ecma_date_parse_date_chars (lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
+ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
                             const lit_utf8_byte_t *str_end_p, /**< pointer to the end of the string */
                             uint32_t num_of_chars) /**< number of characters to read and convert */
 {
@@ -207,7 +207,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
 
   ECMA_STRING_TO_UTF8_STRING (date_str_p, date_start_p, date_start_size);
 
-  lit_utf8_byte_t *date_str_curr_p = (lit_utf8_byte_t *) date_start_p;
+  const lit_utf8_byte_t *date_str_curr_p = date_start_p;
   const lit_utf8_byte_t *date_str_end_p = date_start_p + date_start_size;
 
   /* 1. read year */

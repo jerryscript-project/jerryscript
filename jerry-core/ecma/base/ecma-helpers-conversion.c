@@ -355,7 +355,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return ECMA_NUMBER_ZERO;
   }
 
-  lit_utf8_byte_t *str_curr_p = (lit_utf8_byte_t *) str_p;
+  const lit_utf8_byte_t *str_curr_p = str_p;
   const lit_utf8_byte_t *str_end_p = str_p + str_size;
   ecma_char_t code_unit;
 

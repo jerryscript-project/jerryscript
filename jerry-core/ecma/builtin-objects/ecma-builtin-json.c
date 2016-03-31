@@ -1059,7 +1059,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
 
   ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);
 
-  lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) string_buff;
+  const lit_utf8_byte_t *str_p = string_buff;
   const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
 
   while (str_p < str_end_p)

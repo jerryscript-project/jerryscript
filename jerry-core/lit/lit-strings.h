@@ -1,4 +1,5 @@
 /* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -181,12 +182,12 @@ lit_utf8_size_t lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *,
 lit_utf8_size_t lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *,
                                                    ecma_char_t *);
 
-ecma_char_t lit_utf8_read_next (lit_utf8_byte_t **);
-ecma_char_t lit_utf8_read_prev (lit_utf8_byte_t **);
+ecma_char_t lit_utf8_read_next (const lit_utf8_byte_t **);
+ecma_char_t lit_utf8_read_prev (const lit_utf8_byte_t **);
 ecma_char_t lit_utf8_peek_next (const lit_utf8_byte_t *);
 ecma_char_t lit_utf8_peek_prev (const lit_utf8_byte_t *);
-void lit_utf8_incr (lit_utf8_byte_t **);
-void lit_utf8_decr (lit_utf8_byte_t **);
+void lit_utf8_incr (const lit_utf8_byte_t **);
+void lit_utf8_decr (const lit_utf8_byte_t **);
 
 /* print */
 void lit_put_ecma_char (ecma_char_t);

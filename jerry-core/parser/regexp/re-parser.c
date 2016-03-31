@@ -45,7 +45,7 @@ re_hex_lookup (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                uint32_t lookup) /**< size of lookup */
 {
   bool is_digit = true;
-  lit_utf8_byte_t *curr_p = parser_ctx_p->input_curr_p;
+  const lit_utf8_byte_t *curr_p = parser_ctx_p->input_curr_p;
 
   for (uint32_t i = 0; is_digit && i < lookup; i++)
   {
@@ -259,7 +259,7 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
 {
   int char_class_in = 0;
   parser_ctx_p->num_of_groups = 0;
-  lit_utf8_byte_t *curr_p = (lit_utf8_byte_t *) parser_ctx_p->input_start_p;
+  const lit_utf8_byte_t *curr_p = parser_ctx_p->input_start_p;
 
   while (curr_p < parser_ctx_p->input_end_p)
   {

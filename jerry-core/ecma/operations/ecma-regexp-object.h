@@ -44,7 +44,7 @@ typedef enum
  */
 typedef struct
 {
-  lit_utf8_byte_t **saved_p;            /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
+  const lit_utf8_byte_t **saved_p;      /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
   const lit_utf8_byte_t *input_start_p; /**< start of input pattern string */
   const lit_utf8_byte_t *input_end_p;   /**< end of input pattern string */
   uint32_t num_of_captures;             /**< number of capture groups */

@@ -582,7 +582,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
 
       ecma_length_t index = start_pos;
 
-      lit_utf8_byte_t *original_str_curr_p = (lit_utf8_byte_t *) original_str_utf8_p;
+      const lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p;
       for (ecma_length_t idx = 0; idx < index; idx++)
       {
         lit_utf8_incr (&original_str_curr_p);
@@ -591,7 +591,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
       /* create utf8 string from search string */
       ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
 
-      lit_utf8_byte_t *search_str_curr_p = (lit_utf8_byte_t *) search_str_utf8_p;
+      const lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
 
       /* iterate original string and try to match at each position */
       bool searching = true;
@@ -600,13 +600,13 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
       {
         /* match as long as possible */
         ecma_length_t match_len = 0;
-        lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
+        const lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
 
         if (match_len < search_len &&
             index + match_len < original_len &&
             lit_utf8_read_next (&original_str_curr_p) == first_char)
         {
-          lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
+          const lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
           match_len++;
 
           while (match_len < search_len &&

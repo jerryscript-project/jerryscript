@@ -22,7 +22,8 @@
 
 #include "jerry_targetjs.h"
 
-static int jerry_init(void) {
+static int jerry_init(void) 
+{
   int retcode;
   int src;
 
@@ -36,7 +37,8 @@ static int jerry_init(void) {
     return -1;
   }
   /* run rest of the js files */
-  for (src=1; js_codes[src].source; src++) {
+  for (src=1; js_codes[src].source; src++) 
+  {
     retcode = js_eval(js_codes[src].source, js_codes[src].length);
     if (retcode != 0) {
       printf("js_eval failed code(%d) [%s]\r\n", retcode, js_codes[src].name);
@@ -47,14 +49,15 @@ static int jerry_init(void) {
   return 0;
 }
 
-static void jerry_loop(void) {
+static void jerry_loop(void) 
+{
   static uint32_t _jcount = 0;
 
   js_loop(_jcount++);
 }
 
-
-void app_start(int, char**){
+void app_start(int, char**)
+{
   // set 115200 baud rate for stdout
   static Serial pc(USBTX, USBRX);
   pc.baud(115200);
@@ -64,7 +67,8 @@ void app_start(int, char**){
   printf ("   hash   %s\r\n", jerry_commit_hash);
   printf ("   branch %s\r\n", jerry_branch_name);
 
-  if (jerry_init() == 0) {
+  if (jerry_init() == 0) 
+  {
     minar::Scheduler::postCallback(jerry_loop)
                         .period(minar::milliseconds(100))
                         ;

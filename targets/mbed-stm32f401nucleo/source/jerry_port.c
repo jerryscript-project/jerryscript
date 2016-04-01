@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#include "mbed-drivers/mbed.h"
-
+#include <stdarg.h>
+ 
 #include "jerry-core/jerry.h"
-
 
 /**
  * Provide log message to filestream implementation for the engine.

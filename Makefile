@@ -229,7 +229,7 @@ $(BUILD_DIR)/$(NATIVE_SYSTEM)/unittests/toolchain.config:
 # $(1) - mcu system name
 define GEN_MCU_TOOLCHAIN_CONFIG_RULE
 .PHONY: $$(BUILD_DIR)/$(1)/toolchain.config
-$$(BUILD_DIR)/$(1)/toolchain.config:
+$$(BUILD_DIR)/$(1)/toolchain.config: prerequisites
 	$$(Q) TOOLCHAIN="build/configs/toolchain_mcu_$(1).cmake"; \
           $$(call WRITE_TOOLCHAIN_CONFIG,$$(BUILD_DIR)/$(1))
 endef

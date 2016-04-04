@@ -1,0 +1,6 @@
+{
+  "build": {
+    "target": "stm32f4-disco-gcc,*",
+    "targetSetExplicitly": true
+  }
+}

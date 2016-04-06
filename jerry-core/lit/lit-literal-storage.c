@@ -205,7 +205,7 @@ lit_dump_literals ()
         char *str = (char *) (record_p + 1);
         for (i = 0; i < record_p->size; ++i, ++str)
         {
-          FIXME ("Support proper printing of characters which occupy more than one byte.")
+          /* TODO: Support proper printing of characters which occupy more than one byte. */
 
           JERRY_DLOG ("%c", *str);
         }

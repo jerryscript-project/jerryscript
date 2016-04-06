@@ -339,7 +339,7 @@ ecma_number_t
 ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
                             lit_utf8_size_t str_size) /**< string size */
 {
-  TODO (Check license issues);
+  /* TODO: Check license issues */
 
   const lit_utf8_byte_t dec_digits_range[10] = { '0', '9' };
   const lit_utf8_byte_t hex_lower_digits_range[10] = { 'a', 'f' };

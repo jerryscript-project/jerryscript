@@ -68,10 +68,7 @@ static bool jerry_api_available;
  */
 
 #ifdef JERRY_ENABLE_LOG
-/**
- * TODO:
- *      Move logging-related functionality to separate module, like jerry-log.c
- */
+/* TODO: Move logging-related functionality to separate module, like jerry-log.c */
 
 /**
  * Verbosity level of logging

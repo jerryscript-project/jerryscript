@@ -340,10 +340,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       const lit_utf8_byte_t *magic_str_p = lit_get_magic_string_utf8 (id);
       lit_utf8_size_t magic_str_sz = lit_get_magic_string_size (id);
 
-      /*
-       * TODO:
-       *      Consider searching literal storage by magic string identifier instead of by its value
-       */
+      /* TODO: Consider searching literal storage by magic string identifier instead of by its value */
       lit = (lit_literal_t) lit_find_or_create_literal_from_utf8_string (magic_str_p, magic_str_sz);
     }
     else if (type == LIT_RECORD_TYPE_MAGIC_STR_EX)
@@ -362,10 +359,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
       const lit_utf8_byte_t *magic_str_ex_p = lit_get_magic_string_ex_utf8 (id);
       lit_utf8_size_t magic_str_ex_sz = lit_get_magic_string_ex_size (id);
 
-      /*
-       * TODO:
-       *      Consider searching literal storage by magic string identifier instead of by its value
-       */
+      /* TODO: Consider searching literal storage by magic string identifier instead of by its value */
       lit = (lit_literal_t) lit_find_or_create_literal_from_utf8_string (magic_str_ex_p, magic_str_ex_sz);
     }
     else if (type == LIT_RECORD_TYPE_NUMBER)

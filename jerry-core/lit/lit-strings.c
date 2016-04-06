@@ -1013,7 +1013,7 @@ lit_put_ecma_char (ecma_char_t ecma_char) /**< code unit */
   }
   else
   {
-    FIXME ("Support unicode characters printing.");
+    /* TODO: Support unicode characters printing. */
     jerry_port_putchar ('_');
   }
 } /* lit_put_ecma_char */

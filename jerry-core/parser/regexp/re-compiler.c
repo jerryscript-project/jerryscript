@@ -65,7 +65,7 @@ re_insert_simple_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler con
   qmax = re_ctx_p->current_token.qmax;
   JERRY_ASSERT (qmin <= qmax);
 
-  /* FIXME: optimize bytecode length. Store 0 rather than INF */
+  /* TODO: optimize bytecode length. Store 0 rather than INF */
 
   re_append_opcode (re_ctx_p->bytecode_ctx_p, RE_OP_MATCH);   /* complete 'sub atom' */
   uint32_t bytecode_length = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);

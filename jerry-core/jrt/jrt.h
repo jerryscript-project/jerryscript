@@ -66,20 +66,6 @@
   typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) \
   [ (x) ? 1 : -1 ] __attr_unused___
 
-#define CALL_PRAGMA(x) _Pragma (#x)
-
-#ifdef JERRY_PRINT_TODO
-#define TODO(x) CALL_PRAGMA (message ("TODO - " #x))
-#else /* !JERRY_PRINT_TODO */
-#define TODO(X)
-#endif /* !JERRY_PRINT_TODO */
-
-#ifdef JERRY_PRINT_FIXME
-#define FIXME(x) CALL_PRAGMA (message ("FIXME - " #x))
-#else /* !JERRY_PRINT_FIXME */
-#define FIXME(X)
-#endif /* !JERRY_PRINT_FIXME */
-
 /**
  * Variable that must not be referenced.
  *

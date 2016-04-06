@@ -162,7 +162,7 @@ lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
                           lit_utf8_size_t string_size, /**< string size in bytes */
                           lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
 {
-  TODO (Improve performance of search);
+  /* TODO: Improve performance of search */
 
   for (lit_magic_string_id_t id = (lit_magic_string_id_t) 0;
        id < LIT_MAGIC_STRING__COUNT;
@@ -192,7 +192,7 @@ bool lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 st
                                   lit_utf8_size_t string_size, /**< string size in bytes */
                                   lit_magic_string_ex_id_t *out_id_p) /**< [out] magic string's id */
 {
-  TODO (Improve performance of search);
+  /* TODO: Improve performance of search */
 
   for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
        id < lit_magic_string_ex_count;

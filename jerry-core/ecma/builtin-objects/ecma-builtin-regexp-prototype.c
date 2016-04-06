@@ -129,9 +129,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ecma_property_t *bc_prop_p = ecma_get_internal_property (this_obj_p,
                                                                  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
 
-        /* FIXME: "We currently have to re-compile the bytecode, because
-         * we can't copy it without knowing its length."
-         */
+        /* TODO: We currently have to re-compile the bytecode, because
+         * we can't copy it without knowing its length. */
         const re_compiled_code_t *new_bc_p = NULL;
         ecma_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */

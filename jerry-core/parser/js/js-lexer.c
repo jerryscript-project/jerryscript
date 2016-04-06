@@ -1740,7 +1740,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     }
   }
 
-  /* FIXME: This is duplicate of 're_parse_regexp_flags'. Move this to a helper function. */
+  /* TODO: This is duplicate of 're_parse_regexp_flags'. Move this to a helper function. */
   current_flags = 0;
   while (source_p < source_end_p)
   {

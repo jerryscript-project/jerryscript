@@ -359,7 +359,7 @@ lit_char_to_lower_case (ecma_char_t character, /**< input character value */
                         ecma_char_t *output_buffer_p, /**< [out] buffer for the result characters */
                         ecma_length_t buffer_size) /**< buffer size */
 {
-  TODO ("Needs a proper lower case implementation. See issue #323.");
+  /* TODO: Needs a proper lower case implementation. See issue #323. */
 
   JERRY_ASSERT (buffer_size >= LIT_MAXIMUM_OTHER_CASE_LENGTH);
 
@@ -393,7 +393,7 @@ lit_char_to_upper_case (ecma_char_t character, /**< input character value */
                         ecma_char_t *output_buffer_p, /**< buffer for the result characters */
                         ecma_length_t buffer_size) /**< buffer size */
 {
-  TODO ("Needs a proper upper case implementation. See issue #323.");
+  /* TODO: Needs a proper upper case implementation. See issue #323. */
 
   JERRY_ASSERT (buffer_size >= LIT_MAXIMUM_OTHER_CASE_LENGTH);
 

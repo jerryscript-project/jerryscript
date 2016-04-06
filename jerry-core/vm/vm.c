@@ -287,7 +287,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
     if (ecma_is_value_error (ret_value))
     {
-      // FIXME: throw exception instead of define an 'undefined' value.
+      /* TODO: throw exception instead of define an 'undefined' value. */
       return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
 
@@ -466,7 +466,7 @@ enum
   } \
   while (0)
 
-/* FIXME: For performance reasons, we define this as a macro.
+/* TODO: For performance reasons, we define this as a macro.
  * When we are able to construct a function with similar speed,
  * we can remove this macro. */
 #define READ_LITERAL(literal_index, target_value, target_free_op) \
@@ -649,7 +649,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      literal_start_p[value_index]);
           }
 
-          // FIXME: check the return value
+          /* TODO: check the return value */
           ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
                                           name_p,
                                           is_strict,

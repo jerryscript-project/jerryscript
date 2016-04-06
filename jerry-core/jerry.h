@@ -42,7 +42,7 @@ typedef enum
   JERRY_FLAG_MEM_STATS          = (1u << 1), /**< dump memory statistics */
   JERRY_FLAG_MEM_STATS_SEPARATE = (1u << 2), /**< dump memory statistics and reset peak values after parse */
   JERRY_FLAG_PARSE_ONLY         = (1u << 3), /**< parse only, prevents script execution (only for testing)
-                                              *   FIXME: Remove. */
+                                              *   TODO: Remove. */
   JERRY_FLAG_ENABLE_LOG         = (1u << 4), /**< enable logging */
   JERRY_FLAG_ABORT_ON_FAIL      = (1u << 5), /**< abort instead of exit in case of failure */
 } jerry_flag_t;

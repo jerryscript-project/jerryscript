@@ -39,10 +39,7 @@
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
 
-/**
- * TODO:
- *      Extract GC to a separate component
- */
+/* TODO: Extract GC to a separate component */
 
 /**
  * An object's GC color

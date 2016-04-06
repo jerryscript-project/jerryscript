@@ -67,10 +67,7 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  /*
-   * TODO:
-   *      Move the 'print' routine out of engine core.
-   */
+  /* TODO: Move the 'print' routine out of engine core. */
 
   for (ecma_length_t arg_index = 0;
        ecma_is_value_empty (ret_value) && arg_index < args_number;

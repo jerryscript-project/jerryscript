@@ -17,7 +17,7 @@
      defined (i486) || defined (__i486) || defined (__i486__) || \
      defined (intel) || defined (x86) || defined (i86pc) || \
      defined (__alpha) || defined (__osf__) || \
-     defined (__x86_64__) || defined (__arm__))
+     defined (__x86_64__) || defined (__arm__) || defined (__aarch64__))
 #define __LITTLE_ENDIAN
 #endif
 

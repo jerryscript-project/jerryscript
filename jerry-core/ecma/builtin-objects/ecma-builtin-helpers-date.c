@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
@@ -21,7 +23,6 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
-#include "fdlibm-math.h"
 #include "lit-char-helpers.h"
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN

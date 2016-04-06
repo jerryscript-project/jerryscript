@@ -83,7 +83,7 @@ Make will copy three library files to `nuttx/nuttx/lib` folder
 ```
 libjerryentry.a
 libjerrycore.a
-libfdlibm.a
+libjerrylibm.a
 ```
 
 In NuttX, if you run `make clean`, above library files are also removed so you

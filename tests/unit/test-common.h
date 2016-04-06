@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include "jrt.h"
 
-#include "fdlibm-math.h"
+#include <math.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>

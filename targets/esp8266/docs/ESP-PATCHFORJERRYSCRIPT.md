@@ -23,7 +23,7 @@ index caf8e32..dadaceb 100644
 +    _jerry_text_start = ABSOLUTE(.);
 +    *\libjerryentry.a:*(.text*)
 +    *\libjerrycore.a:*(.text*)
-+    *\libfdlibm.a:*(.text*)
++    *\libjerrylibm.a:*(.text*)
 +    _jerry_text_end = ABSOLUTE(.);
 +
 +  } >irom0_0_seg :irom0_0_phdr

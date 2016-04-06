@@ -16,5 +16,5 @@
 # limitations under the License.
 
 make -C tools/unit-tests build
-tools/unit-tests/gen-test-fdlibm >tests/unit/test-fdlibm.inc.h
+tools/unit-tests/gen-test-libm >tests/unit/test-libm.inc.h
 make -C tools/unit-tests clean

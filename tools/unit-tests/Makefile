@@ -16,7 +16,7 @@
 CC=gcc
 LDFLAGS=-lm
 
-GENS=gen-test-fdlibm
+GENS=gen-test-libm
 
 .PHONY: build
 build: $(GENS)
@@ -25,5 +25,5 @@ build: $(GENS)
 clean:
 	rm -f $(GENS)
 
-gen-test-fdlibm: gen-test-fdlibm.c
+gen-test-libm: gen-test-libm.c
 	$(CC) $< -o $@ $(LDFLAGS)

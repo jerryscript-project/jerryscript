@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -24,7 +26,6 @@
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
-#include "fdlibm-math.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 

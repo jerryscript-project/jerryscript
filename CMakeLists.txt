@@ -37,9 +37,8 @@ project (Jerry C ASM)
  endif()
 
 
-# Imported and third-party targets prefix
+# Imported targets prefix
  set(PREFIX_IMPORTED_LIB imported_)
- set(SUFFIX_THIRD_PARTY_LIB .third_party.lib)
 
 # Architecture-specific compile/link flags
  foreach(FLAG ${FLAGS_COMMON_ARCH})
@@ -372,8 +371,8 @@ endif()
    add_subdirectory(jerry-libc)
   endif()
 
- # Jerry's fdlibm
-  add_subdirectory(third-party/fdlibm)
+ # Jerry's libm
+  add_subdirectory(jerry-libm)
 
  # Jerry's Core
   add_subdirectory(jerry-core)
@@ -394,7 +393,7 @@ endif()
 
     set(CORE_TARGET_NAME ${CORE_TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
    endforeach()
-   set(FDLIBM_TARGET_NAME ${CORE_TARGET_NAME}.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
+   set(LIBM_TARGET_NAME ${CORE_TARGET_NAME}.jerry-libm.lib)
    set(CORE_TARGET_NAME ${CORE_TARGET_NAME}.jerry-core)
 
    set(DEFINES_JERRY )
@@ -425,10 +424,10 @@ endif()
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
     if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC)))
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
+                           ${LIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
     else()
      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME}
-                           ${FDLIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
+                           ${LIBM_TARGET_NAME} ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 
     if("${PLATFORM}" STREQUAL "MCU")
@@ -454,7 +453,7 @@ endif()
     add_custom_command(TARGET ${TARGET_NAME}
                        POST_BUILD
                        COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${TARGET_NAME}
-                       COMMAND echo $<TARGET_FILE:${FDLIBM_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list
+                       COMMAND echo $<TARGET_FILE:${LIBM_TARGET_NAME}> > ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list
                        COMMAND echo $<TARGET_FILE:${CORE_TARGET_NAME}> >> ${CMAKE_BINARY_DIR}/${TARGET_NAME}/list)
 
     if(DEFINED EXTERNAL_BUILD_ENTRY_FILE)
@@ -499,7 +498,7 @@ endif()
     if (${USE_JERRY_LIBC})
      set(LIBC_TARGET_NAME unittests.jerry-libc.${PLATFORM_L}.lib)
     endif ()
-    set(FDLIBM_TARGET_NAME unittests.jerry-fdlibm${SUFFIX_THIRD_PARTY_LIB})
+    set(LIBM_TARGET_NAME unittests.jerry-libm.lib)
 
     add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_MAIN})
     set_property(TARGET ${TARGET_NAME}
@@ -510,10 +509,10 @@ endif()
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
 
     if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC)))
-      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
+      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${LIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libclang_rt.osx)
     else()
-      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${FDLIBM_TARGET_NAME}
+      target_link_libraries(${TARGET_NAME} ${CORE_TARGET_NAME} ${LIBC_TARGET_NAME} ${LIBM_TARGET_NAME}
                             ${PREFIX_IMPORTED_LIB}libgcc)
     endif()
 

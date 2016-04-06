@@ -1,14 +1,31 @@
-
-/* @(#)e_pow.c 1.5 04/04/22 */
-/*
- * ====================================================
- * Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
+/* Copyright 2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This file is based on work under the following copyright and permission
+ * notice:
+ *
+ *     Copyright (C) 2004 by Sun Microsystems, Inc. All rights reserved.
+ *
+ *     Permission to use, copy, modify, and distribute this
+ *     software is freely granted, provided that this notice
+ *     is preserved.
+ *
+ *     @(#)e_pow.c 1.5 04/04/22
  */
+
+#include "jerry-libm-internal.h"
 
 /* pow(x,y) return x**y
  *
@@ -54,8 +71,6 @@
  * compiler will convert from decimal to binary accurately enough
  * to produce the hexadecimal values shown.
  */
-
-#include "fdlibm.h"
 
 static const double one = 1.0;
 static const double bp[] =

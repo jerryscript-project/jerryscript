@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_FDLIBM_MATH_H
-#define JERRY_FDLIBM_MATH_H
+#ifndef JERRY_LIBM_MATH_H
+#define JERRY_LIBM_MATH_H
 
 #ifdef __cplusplus
 extern "C"
@@ -79,4 +79,4 @@ double fmod (double, double);
 #ifdef __cplusplus
 }
 #endif /* !__cplusplus */
-#endif /* !JERRY_FDLIBM_MATH_H */
+#endif /* !JERRY_LIBM_MATH_H */

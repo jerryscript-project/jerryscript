@@ -1,24 +1,39 @@
-
-/* @(#)k_rem_pio2.c 1.3 95/01/18 */
-/* @(#)e_rem_pio2.c 1.4 95/01/18 */
-/* @(#)k_sin.c 1.3 95/01/18 */
-/* @(#)k_cos.c 1.3 95/01/18 */
-/* @(#)k_tan.c 1.5 04/04/22 */
-/* @(#)s_sin.c 1.3 95/01/18 */
-/* @(#)s_cos.c 1.3 95/01/18 */
-/* @(#)s_tan.c 1.3 95/01/18 */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+/* Copyright 2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
- * Developed at SunSoft, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This file is based on work under the following copyright and permission
+ * notice:
+ *
+ *     Copyright (C) 1993, 2004 by Sun Microsystems, Inc. All rights reserved.
+ *
+ *     Developed at SunSoft, a Sun Microsystems, Inc. business.
+ *     Permission to use, copy, modify, and distribute this
+ *     software is freely granted, provided that this notice
+ *     is preserved.
+ *
+ *     @(#)k_rem_pio2.c 1.3 95/01/18
+ *     @(#)e_rem_pio2.c 1.4 95/01/18
+ *     @(#)k_sin.c 1.3 95/01/18
+ *     @(#)k_cos.c 1.3 95/01/18
+ *     @(#)k_tan.c 1.5 04/04/22
+ *     @(#)s_sin.c 1.3 95/01/18
+ *     @(#)s_cos.c 1.3 95/01/18
+ *     @(#)s_tan.c 1.3 95/01/18
  */
 
-#include "fdlibm.h"
+#include "jerry-libm-internal.h"
 
 #define zero    0.00000000000000000000e+00 /* 0x00000000, 0x00000000 */
 #define half    5.00000000000000000000e-01 /* 0x3FE00000, 0x00000000 */

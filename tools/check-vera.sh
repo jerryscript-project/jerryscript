@@ -17,9 +17,10 @@
 
 JERRY_CORE_FILES=`find ./jerry-core -name "*.c" -or -name "*.h"`
 JERRY_LIBC_FILES=`find ./jerry-libc -name "*.c" -or -name "*.h"`
+JERRY_LIBM_FILES=`find ./jerry-libm -name "*.c" -or -name "*.h"`
 JERRY_MAIN_FILES=`find . -maxdepth 1 -name "*.c" -or -name "*.h"`
 UNIT_TEST_FILES=`find ./tests/unit -name "*.c" -or -name "*.h"`
 
 vera++ -r tools/vera++ -p jerry \
  -e --no-duplicate \
- $JERRY_CORE_FILES $JERRY_LIBC_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES
+ $JERRY_CORE_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES

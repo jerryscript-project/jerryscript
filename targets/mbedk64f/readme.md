@@ -24,7 +24,7 @@ make -f targets/mbedk64f/Makefile.mbedk64f jerry
 
 Two files will be generated at `targets/mbedk64f/libjerry`
 * libjerrycore.a
-* libfdlibm.a
+* libjerrylibm.a
 
 #### Building mbed binary
 

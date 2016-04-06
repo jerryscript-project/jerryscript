@@ -1,4 +1,4 @@
-# Copyright 2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,6 @@ set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS}
 # link jerryscript
 set(LJPATH ${CMAKE_CURRENT_LIST_DIR}/../libjerry)
 set(LJFILES "")
-set(LJFILES ${LJFILES} ${LJPATH}/libfdlibm.a)
+set(LJFILES ${LJFILES} ${LJPATH}/libjerrylibm.a)
 set(LJFILES ${LJFILES} ${LJPATH}/libjerrycore.a)
 target_link_libraries(${MBEDMODULE} ${LJFILES})

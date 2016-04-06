@@ -15,7 +15,7 @@
  */
 
 /**
- * Unit test for fdlibm
+ * Unit test for jerry-libm
  */
 
 #include "test-common.h"
@@ -77,7 +77,7 @@ main (int __attr_unused___ argc,
       char __attr_unused___ **argv)
 {
 #define INF INFINITY
-#include "test-fdlibm.inc.h"
+#include "test-libm.inc.h"
 
   return passed ? 0 : 1;
 } /* main */

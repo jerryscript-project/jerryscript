@@ -225,7 +225,7 @@ project (JerryCore C ASM)
                 PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
    target_compile_definitions(${TARGET_NAME}.jerry-core PRIVATE ${DEFINES_JERRY})
    target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_CORE})
-   target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_FDLIBM})
+   target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_LIBM})
    target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
    target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
 

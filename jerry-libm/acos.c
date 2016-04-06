@@ -1,15 +1,32 @@
-
-/* @(#)e_acos.c 1.3 95/01/18 */
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+/* Copyright 2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
- * Developed at SunSoft, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This file is based on work under the following copyright and permission
+ * notice:
+ *
+ *     Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ *     Developed at SunSoft, a Sun Microsystems, Inc. business.
+ *     Permission to use, copy, modify, and distribute this
+ *     software is freely granted, provided that this notice
+ *     is preserved.
+ *
+ *     @(#)e_acos.c 1.3 95/01/18
  */
+
+#include "jerry-libm-internal.h"
 
 /* acos(x)
  *
@@ -35,8 +52,6 @@
  *
  * Function needed: sqrt
  */
-
-#include "fdlibm.h"
 
 #define one      1.00000000000000000000e+00 /* 0x3FF00000, 0x00000000 */
 #define pi       3.14159265358979311600e+00 /* 0x400921FB, 0x54442D18 */

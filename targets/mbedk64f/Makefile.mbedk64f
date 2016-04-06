@@ -51,7 +51,7 @@ jerry:
 	make -C $(INTERM) $(TYPE).external
 	cp `cat $(INTERM)/$(TYPE).external/list` $(OUTPUT)/.
 	cp $(OUTPUT)/lib$(TYPE).jerry-core.a $(COPYTARGET)/libjerrycore.a
-	cp $(OUTPUT)/lib$(TYPE).jerry-fdlibm.third_party.lib.a $(COPYTARGET)/libfdlibm.a
+	cp $(OUTPUT)/lib$(TYPE).jerry-libm.lib.a $(COPYTARGET)/libjerrylibm.a
 
 
 js2c:

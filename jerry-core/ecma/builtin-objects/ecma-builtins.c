@@ -113,7 +113,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                                                                        ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
   built_in_id_prop_p->v.internal_property.value = obj_builtin_id;
 
-  ecma_set_object_is_builtin (object_obj_p, true);
+  ecma_set_object_is_builtin (object_obj_p);
 
   /** Initializing [[PrimitiveValue]] properties of built-in prototype objects */
   switch (obj_builtin_id)
@@ -474,7 +474,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 
   ecma_deref_object (prototype_obj_p);
 
-  ecma_set_object_is_builtin (func_obj_p, true);
+  ecma_set_object_is_builtin (func_obj_p);
 
   uint64_t packed_value = JRT_SET_BIT_FIELD_VALUE (uint64_t, 0ull,
                                                    builtin_id,

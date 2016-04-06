@@ -88,108 +88,64 @@ static void ecma_gc_mark (ecma_object_t *object_p);
 static void ecma_gc_sweep (ecma_object_t *object_p);
 
 /**
- * Get GC reference counter of the object.
- */
-static uint32_t
-ecma_gc_get_object_refs (ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  return (uint32_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
-                                           ECMA_OBJECT_GC_REFS_POS,
-                                           ECMA_OBJECT_GC_REFS_WIDTH);
-} /* ecma_gc_get_object_refs */
-
-/**
- * Set GC reference counter of the object.
- */
-static void
-ecma_gc_set_object_refs (ecma_object_t *object_p, /**< object */
-                         uint32_t refs) /**< new reference counter */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
-                                                 refs,
-                                                 ECMA_OBJECT_GC_REFS_POS,
-                                                 ECMA_OBJECT_GC_REFS_WIDTH);
-} /* ecma_gc_set_object_refs */
-
-/**
  * Get next object in list of objects with same generation.
  */
-static ecma_object_t *
+static inline ecma_object_t *
 ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-  uintptr_t next_cp = (uintptr_t) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
-                                                         ECMA_OBJECT_GC_NEXT_CP_POS,
-                                                         ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-
-  return ECMA_GET_POINTER (ecma_object_t,
-                           next_cp);
+  return ECMA_GET_POINTER (ecma_object_t, object_p->gc_next_cp);
 } /* ecma_gc_get_object_next */
 
 /**
  * Set next object in list of objects with same generation.
  */
-static void
+static inline void
 ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
                          ecma_object_t *next_object_p) /**< next object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  uintptr_t next_cp;
-  ECMA_SET_POINTER (next_cp, next_object_p);
-
-  JERRY_ASSERT (sizeof (uintptr_t) * JERRY_BITSINBYTE >= ECMA_OBJECT_GC_NEXT_CP_WIDTH);
-  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
-                                                 next_cp,
-                                                 ECMA_OBJECT_GC_NEXT_CP_POS,
-                                                 ECMA_OBJECT_GC_NEXT_CP_WIDTH);
+  ECMA_SET_POINTER (object_p->gc_next_cp, next_object_p);
 } /* ecma_gc_set_object_next */
 
 /**
  * Get visited flag of the object.
  */
-static bool
+static inline bool
 ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  bool flag_value = (bool) JRT_EXTRACT_BIT_FIELD (uint64_t, object_p->container,
-                                                  ECMA_OBJECT_GC_VISITED_POS,
-                                                  ECMA_OBJECT_GC_VISITED_WIDTH);
+  bool flag_value = (object_p->type_flags_refs & ECMA_OBJECT_FLAG_GC_VISITED) != 0;
 
-  return (flag_value != ecma_gc_visited_flip_flag);
+  return flag_value != ecma_gc_visited_flip_flag;
 } /* ecma_gc_is_object_visited */
 
 /**
  * Set visited flag of the object.
  */
-static void
+static inline void
 ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
                             bool is_visited) /**< flag value */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  if (ecma_gc_visited_flip_flag)
+  if (is_visited != ecma_gc_visited_flip_flag)
   {
-    is_visited = !is_visited;
+    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_GC_VISITED);
   }
-
-  object_p->container = JRT_SET_BIT_FIELD_VALUE (uint64_t, object_p->container,
-                                                 is_visited,
-                                                 ECMA_OBJECT_GC_VISITED_POS,
-                                                 ECMA_OBJECT_GC_VISITED_WIDTH);
+  else
+  {
+    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ~ECMA_OBJECT_FLAG_GC_VISITED);
+  }
 } /* ecma_gc_set_object_visited */
 
 /**
  * Initialize GC information for the object
  */
-void
+inline void
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
   ecma_gc_objects_number++;
@@ -197,7 +153,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 
   JERRY_ASSERT (ecma_gc_new_objects_since_last_gc <= ecma_gc_objects_number);
 
-  ecma_gc_set_object_refs (object_p, 1);
+  JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
+  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
 
   ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY]);
   ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = object_p;
@@ -212,11 +169,9 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 void
 ecma_ref_object (ecma_object_t *object_p) /**< object */
 {
-  uint32_t ref_cnt = ecma_gc_get_object_refs (object_p);
-
-  if (ref_cnt < (uint32_t) CONFIG_ECMA_REFERENCE_COUNTER_LIMIT)
+  if (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF)
   {
-    ecma_gc_set_object_refs (object_p, ref_cnt + 1);
+    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs + ECMA_OBJECT_REF_ONE);
   }
   else
   {
@@ -230,8 +185,8 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 void
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
-  JERRY_ASSERT (ecma_gc_get_object_refs (object_p) > 0);
-  ecma_gc_set_object_refs (object_p, ecma_gc_get_object_refs (object_p) - 1);
+  JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
+  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs - ECMA_OBJECT_REF_ONE);
 } /* ecma_deref_object */
 
 /**
@@ -266,7 +221,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       ecma_gc_set_object_visited (lex_env_p, true);
     }
 
-    if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
+    if (ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
     {
       ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
       ecma_gc_set_object_visited (binding_object_p, true);
@@ -421,7 +376,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 {
   JERRY_ASSERT (object_p != NULL
                 && !ecma_gc_is_object_visited (object_p)
-                && ecma_gc_get_object_refs (object_p) == 0);
+                && object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
 
   if (!ecma_is_lexical_environment (object_p))
   {
@@ -444,8 +399,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     }
   }
 
-  if (!ecma_is_lexical_environment (object_p) ||
-      ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND)
+  if (!ecma_is_lexical_environment (object_p)
+      || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     for (ecma_property_t *property = ecma_get_property_list (object_p), *next_property_p;
          property != NULL;
@@ -481,7 +436,7 @@ ecma_gc_run (void)
   {
     JERRY_ASSERT (!ecma_gc_is_object_visited (obj_iter_p));
 
-    if (ecma_gc_get_object_refs (obj_iter_p) > 0)
+    if (obj_iter_p->type_flags_refs >= ECMA_OBJECT_REF_ONE)
     {
       ecma_gc_set_object_visited (obj_iter_p, true);
     }

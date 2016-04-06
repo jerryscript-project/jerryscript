@@ -279,35 +279,75 @@ typedef struct ecma_property_t
 } ecma_property_t;
 
 /**
+ * Internal object types
+ */
+typedef enum
+{
+  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5), Function (15.3),
+                                 Arguments (10.6), Array (15.4) specification-defined objects */
+  ECMA_OBJECT_TYPE_FUNCTION = 1, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION = 2, /** One of built-in functions described in section 15
+                                           *  of ECMA-262 v5 specification */
+  ECMA_OBJECT_TYPE_ARRAY = 3, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_STRING = 4, /**< String objects (15.5) */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 5, /**< External (host) function object */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_ARGUMENTS = 7, /**< Arguments object (10.6) */
+
+  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_ARGUMENTS /**< maximum value */
+} ecma_object_type_t;
+
+/**
  * Types of lexical environments
  */
 typedef enum
 {
-  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< declarative lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_OBJECTBOUND /**< object-bound lexical environment */
+  /* ECMA_OBJECT_TYPE_GENERAL (0) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_FUNCTION (1) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION (2) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_ARRAY (3) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_STRING (4) with built-in flag. */
+  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 5, /**< declarative lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 6, /**< object-bound lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 7, /**< object-bound lexical environment
+                                                   *   with provideThis flag */
+
+  ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
+                                                                               *    environment type */
+  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
 /**
- * Internal object types
- *
- * Warning:
- *         definition order is significant (see also dispatch tables in libecmaobjects/ecma-objects.c)
+ * Ecma object type mask for getting the object type.
  */
-typedef enum
-{
-  ECMA_OBJECT_TYPE_GENERAL, /**< all objects that are not String (15.5), Function (15.3),
-                                 Arguments (10.6), Array (15.4) specification-defined objects
-                                 and not host objects */
-  ECMA_OBJECT_TYPE_STRING, /**< String objects (15.5) */
-  ECMA_OBJECT_TYPE_FUNCTION, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION, /**< External (host) function object */
-  ECMA_OBJECT_TYPE_BOUND_FUNCTION, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION, /** One of built-in functions described in section 15
-                                          of ECMA-262 v5 specification */
-  ECMA_OBJECT_TYPE_ARGUMENTS, /**< Arguments object (10.6) */
-  ECMA_OBJECT_TYPE_ARRAY /**< Array object (15.4) */
-  // ECMA_OBJECT_TYPE_HOST /**< Host object */
-} ecma_object_type_t;
+#define ECMA_OBJECT_TYPE_MASK 0x07u
+
+/**
+ * Ecma object is built-in or lexical environment.
+ *   - built-in, if object type is less than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
+ *   - lexical environment, if object type is greater or equal than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
+ */
+#define ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV 0x08
+
+/**
+ * This object is visited by the garbage collector.
+ */
+#define ECMA_OBJECT_FLAG_GC_VISITED 0x10
+
+/**
+ * Extensible object.
+ */
+#define ECMA_OBJECT_FLAG_EXTENSIBLE 0x20
+
+/**
+ * Value for increasing or decreasing the object reference counter.
+ */
+#define ECMA_OBJECT_REF_ONE (1u << 6)
+
+/**
+ * Maximum value of the object reference counter (1023).
+ */
+#define ECMA_OBJECT_MAX_REF (0x3ffu << 6)
 
 /**
  * Description of ECMA-object or lexical environment
@@ -315,114 +355,23 @@ typedef enum
  */
 typedef struct ecma_object_t
 {
-/* Common part for objects and lexical environments */
+  /** type : 3 bit : ecma_object_type_t or ecma_lexical_environment_type_t
+                     depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
+      flags : 3 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
+                      ECMA_OBJECT_FLAG_GC_VISITED,
+                      ECMA_OBJECT_FLAG_EXTENSIBLE
+      refs : 10 bit (max 1023) */
+  uint16_t type_flags_refs;
 
-/**
- * Compressed pointer to property list
- */
-#define ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS   (0)
-#define ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+  /** next in the object chain maintained by the garbage collector */
+  mem_cpointer_t gc_next_cp;
 
-/**
- * Flag indicating whether it is a general object (false)
- * or a lexical environment (true)
- */
-#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS (ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_POS + \
-                                                ECMA_OBJECT_PROPERTIES_OR_BOUND_OBJECT_CP_WIDTH)
-#define ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH (1)
+  /** compressed pointer to property list or bound object */
+  mem_cpointer_t property_list_or_bound_object_cp;
 
-/**
- * Reference counter of the object, i.e. number of references
- * to the object from stack variables.
- */
-#define ECMA_OBJECT_GC_REFS_POS (ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_POS + \
-                                 ECMA_OBJECT_IS_LEXICAL_ENVIRONMENT_WIDTH)
-#define ECMA_OBJECT_GC_REFS_WIDTH (CONFIG_ECMA_REFERENCE_COUNTER_WIDTH)
-
-/**
- * Compressed pointer to next object in the global list of objects with same generation.
- */
-#define ECMA_OBJECT_GC_NEXT_CP_POS (ECMA_OBJECT_GC_REFS_POS + \
-                                    ECMA_OBJECT_GC_REFS_WIDTH)
-#define ECMA_OBJECT_GC_NEXT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
-
-/**
- * Marker that is set if the object was visited during graph traverse.
- */
-#define ECMA_OBJECT_GC_VISITED_POS (ECMA_OBJECT_GC_NEXT_CP_POS + \
-                                    ECMA_OBJECT_GC_NEXT_CP_WIDTH)
-#define ECMA_OBJECT_GC_VISITED_WIDTH (1)
-
-
-/* Objects' only part */
-
-/**
- * Attribute 'Extensible'
- */
-#define ECMA_OBJECT_OBJ_EXTENSIBLE_POS (ECMA_OBJECT_GC_VISITED_POS + \
-                                        ECMA_OBJECT_GC_VISITED_WIDTH)
-#define ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH (1)
-
-/**
- * Implementation internal object type (ecma_object_type_t)
- */
-#define ECMA_OBJECT_OBJ_TYPE_POS (ECMA_OBJECT_OBJ_EXTENSIBLE_POS + \
-                                  ECMA_OBJECT_OBJ_EXTENSIBLE_WIDTH)
-#define ECMA_OBJECT_OBJ_TYPE_WIDTH (3)
-
-/**
- * Compressed pointer to prototype object (ecma_object_t)
- */
-#define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS (ECMA_OBJECT_OBJ_TYPE_POS + \
-                                                 ECMA_OBJECT_OBJ_TYPE_WIDTH)
-#define ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
-
-/**
- * Flag indicating whether the object is a built-in object
- */
-#define ECMA_OBJECT_OBJ_IS_BUILTIN_POS (ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_POS + \
-                                        ECMA_OBJECT_OBJ_PROTOTYPE_OBJECT_CP_WIDTH)
-#define ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH (1)
-
-/**
- * Size of structure for objects
- */
-#define ECMA_OBJECT_OBJ_TYPE_SIZE (ECMA_OBJECT_OBJ_IS_BUILTIN_POS + \
-                                   ECMA_OBJECT_OBJ_IS_BUILTIN_WIDTH)
-
-
-/* Lexical environments' only part */
-
-/**
- * Type of lexical environment (ecma_lexical_environment_type_t).
- */
-#define ECMA_OBJECT_LEX_ENV_TYPE_POS (ECMA_OBJECT_GC_VISITED_POS + \
-                                        ECMA_OBJECT_GC_VISITED_WIDTH)
-#define ECMA_OBJECT_LEX_ENV_TYPE_WIDTH (1)
-
-/**
- * Compressed pointer to outer lexical environment
- */
-#define ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS (ECMA_OBJECT_LEX_ENV_TYPE_POS + \
-                                                    ECMA_OBJECT_LEX_ENV_TYPE_WIDTH)
-#define ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH (ECMA_POINTER_FIELD_WIDTH)
-
-/**
- * 'provideThis' property of object-bound lexical environments
- */
-#define ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS (ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_POS + \
-                                              ECMA_OBJECT_LEX_ENV_OUTER_REFERENCE_CP_WIDTH)
-#define ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH (1)
-
-/**
- * Size of structure for lexical environments
- */
-#define ECMA_OBJECT_LEX_ENV_TYPE_SIZE (ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_POS + \
-                                       ECMA_OBJECT_LEX_ENV_PROVIDE_THIS_WIDTH)
-
-  uint64_t container; /**< container for fields described above */
+  /** object prototype or outer reference */
+  mem_cpointer_t prototype_or_outer_reference_cp;
 } ecma_object_t;
-
 
 /**
  * Description of ECMA property descriptor

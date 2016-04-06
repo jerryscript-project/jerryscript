@@ -180,7 +180,7 @@ extern ecma_object_type_t ecma_get_object_type (const ecma_object_t *) __attr_pu
 extern void ecma_set_object_type (ecma_object_t *, ecma_object_type_t);
 extern ecma_object_t *ecma_get_object_prototype (const ecma_object_t *) __attr_pure___;
 extern bool ecma_get_object_is_builtin (const ecma_object_t *) __attr_pure___;
-extern void ecma_set_object_is_builtin (ecma_object_t *, bool);
+extern void ecma_set_object_is_builtin (ecma_object_t *);
 extern ecma_lexical_environment_type_t ecma_get_lex_env_type (const ecma_object_t *) __attr_pure___;
 extern ecma_object_t *ecma_get_lex_env_outer_reference (const ecma_object_t *) __attr_pure___;
 extern ecma_property_t *ecma_get_property_list (const ecma_object_t *) __attr_pure___;

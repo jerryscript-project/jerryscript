@@ -9,7 +9,7 @@ url: "http://samsung.github.io" # the base hostname & protocol for your site
 #github_username:  samsung
 
 # Build settings
-highlighter: pygments
+highlighter: rouge
 
 markdown: kramdown
 kramdown:

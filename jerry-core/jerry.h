@@ -79,17 +79,10 @@ extern int jerry_debug_level;
 extern FILE *jerry_log_file;
 #endif /* JERRY_ENABLE_LOG */
 
-/**
- * Jerry error callback type
- */
-typedef void (*jerry_error_callback_t) (jerry_fatal_code_t);
-
-
 void jerry_init (jerry_flag_t);
 void jerry_cleanup (void);
 
 void jerry_get_memory_limits (size_t *, size_t *);
-void jerry_reg_err_callback (jerry_error_callback_t);
 
 bool jerry_parse (const jerry_api_char_t *, size_t, jerry_api_object_t **);
 jerry_completion_code_t jerry_run (jerry_api_object_t **);

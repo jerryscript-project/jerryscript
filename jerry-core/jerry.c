@@ -1713,17 +1713,6 @@ jerry_is_abort_on_fail (void)
 } /* jerry_is_abort_on_fail */
 
 /**
- * Register Jerry's fatal error callback
- */
-void
-jerry_reg_err_callback (jerry_error_callback_t callback) /**< pointer to callback function */
-{
-  jerry_assert_api_available ();
-
-  JERRY_UNIMPLEMENTED_REF_UNUSED_VARS ("Error callback is not implemented", callback);
-} /* jerry_reg_err_callback */
-
-/**
  * Parse script for specified context
  *
  * @return true - if script was parsed successfully,

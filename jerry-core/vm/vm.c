@@ -171,10 +171,14 @@ static const uint32_t vm_ext_decode_table[] =
 /**
  * Run global code
  *
+ * Note:
+ *      returned error value should be freed with jerry_api_release_value
+ *      just when the value becomes unnecessary.
+ *
  * @return completion code
  */
 jerry_completion_code_t
-vm_run_global (ecma_object_t **error_obj_p)
+vm_run_global (ecma_value_t *error_value_p) /**< [out] error value */
 {
   jerry_completion_code_t ret_code;
 
@@ -192,12 +196,13 @@ vm_run_global (ecma_object_t **error_obj_p)
 
   if (ecma_is_value_error (ret_value))
   {
-    *error_obj_p = ecma_get_object_from_value (ret_value);
+    *error_value_p = ret_value;
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
   else
   {
     ecma_free_value (ret_value);
+    *error_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
     ret_code = JERRY_COMPLETION_CODE_OK;
   }
 

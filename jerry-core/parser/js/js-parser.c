@@ -2238,6 +2238,9 @@ parser_set_show_instrs (int show_instrs) /**< flag indicating whether to dump by
 
 /**
  * Parse EcamScript source code
+ *
+ * Note:
+ *      returned error object should be freed with jerry_api_release_object
  */
 jsp_status_t
 parser_parse_script (const jerry_api_char_t *source_p, /**< source code */
@@ -2260,6 +2263,9 @@ parser_parse_script (const jerry_api_char_t *source_p, /**< source code */
 
 /**
  * Parse EcamScript eval source code
+ *
+ * Note:
+ *      returned error object should be freed with jerry_api_release_object
  */
 jsp_status_t
 parser_parse_eval (const jerry_api_char_t *source_p, /**< source code */

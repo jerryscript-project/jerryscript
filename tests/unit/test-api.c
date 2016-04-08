@@ -339,8 +339,9 @@ main (void)
   is_ok = jerry_parse ((jerry_api_char_t *) test_source, strlen (test_source), &err_obj_p);
   JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
-  is_ok = (jerry_run (&err_obj_p) == JERRY_COMPLETION_CODE_OK);
-  JERRY_ASSERT (is_ok && err_obj_p == NULL);
+  is_ok = (jerry_run (&res) == JERRY_COMPLETION_CODE_OK);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_api_value_is_void (&res));
 
   global_obj_p = jerry_api_get_global ();
 
@@ -688,8 +689,9 @@ main (void)
   is_ok = jerry_parse ((jerry_api_char_t *) ms_code_src_p, strlen (ms_code_src_p), &err_obj_p);
   JERRY_ASSERT (is_ok && err_obj_p == NULL);
 
-  is_ok = (jerry_run (&err_obj_p) == JERRY_COMPLETION_CODE_OK);
-  JERRY_ASSERT (is_ok && err_obj_p == NULL);
+  is_ok = (jerry_run (&res) == JERRY_COMPLETION_CODE_OK);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_api_value_is_void (&res));
 
   jerry_cleanup ();
 

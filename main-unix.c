@@ -408,6 +408,7 @@ main (int argc,
   }
 
   jerry_api_object_t *err_obj_p = NULL;
+  jerry_api_value_t err_value = jerry_api_create_void_value ();
 
   if (is_ok)
   {
@@ -455,7 +456,7 @@ main (int argc,
         }
         else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
         {
-          ret_code = jerry_run (&err_obj_p);
+          ret_code = jerry_run (&err_value);
         }
       }
     }
@@ -547,12 +548,23 @@ main (int argc,
   }
   else if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
   {
+    jerry_api_string_t *err_str_p = NULL;
+
     if (err_obj_p != NULL)
     {
-      jerry_api_char_t err_str_buf[256];
-
       jerry_api_value_t err_value = jerry_api_create_object_value (err_obj_p);
-      jerry_api_string_t *err_str_p = jerry_api_value_to_string (&err_value);
+      err_str_p = jerry_api_value_to_string (&err_value);
+      jerry_api_release_object (err_obj_p);
+    }
+    else if (!jerry_api_value_is_void (&err_value))
+    {
+      err_str_p = jerry_api_value_to_string (&err_value);
+      jerry_api_release_value (&err_value);
+    }
+
+    if (likely (err_str_p != NULL))
+    {
+      jerry_api_char_t err_str_buf[256];
 
       jerry_api_size_t err_str_size = jerry_api_get_string_size (err_str_p);
       JERRY_ASSERT (err_str_size < 256);
@@ -560,10 +572,9 @@ main (int argc,
       JERRY_ASSERT (sz == err_str_size);
       err_str_buf[err_str_size] = 0;
 
-      JERRY_ERROR_MSG ("%s\n", err_str_buf);
+      JERRY_ERROR_MSG ("Unhandled exception! %s\n", err_str_buf);
 
       jerry_api_release_string (err_str_p);
-      jerry_api_release_object (err_obj_p);
     }
 
     jerry_cleanup ();

@@ -378,7 +378,11 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
 
   JERRY_ASSERT (out_value_p != NULL);
 
-  if (ecma_is_value_undefined (value))
+  if (ecma_is_value_empty (value))
+  {
+    out_value_p->type = JERRY_API_DATA_TYPE_VOID;
+  }
+  else if (ecma_is_value_undefined (value))
   {
     out_value_p->type = JERRY_API_DATA_TYPE_UNDEFINED;
   }
@@ -1715,6 +1719,9 @@ jerry_is_abort_on_fail (void)
 /**
  * Parse script for specified context
  *
+ * Note:
+ *      returned error object should be freed with jerry_api_release_object
+ *
  * @return true - if script was parsed successfully,
  *         false - otherwise (SyntaxError was raised).
  */
@@ -1760,14 +1767,25 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
 /**
  * Run Jerry in specified run context
  *
+ * Note:
+ *      returned error value should be freed with jerry_api_release_value
+ *      just when the value becomes unnecessary.
+ *
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run (jerry_api_object_t **error_obj_p)
+jerry_run (jerry_api_value_t *error_value_p) /**< [out] error value */
 {
   jerry_assert_api_available ();
 
-  return vm_run_global (error_obj_p);
+  ecma_value_t error_value;
+  jerry_completion_code_t ret_code = vm_run_global (&error_value);
+
+  error_value &= ~(1u << ECMA_VALUE_ERROR_POS);
+  jerry_api_convert_ecma_value_to_api_value (error_value_p, error_value);
+  ecma_free_value (error_value);
+
+  return ret_code;
 } /* jerry_run */
 
 /**
@@ -1790,12 +1808,13 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
     /* unhandled SyntaxError */
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
   }
-  else
+  else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
   {
-    if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
-    {
-      ret_code = jerry_run (&error_obj_p);
-    }
+    jerry_api_value_t error_value;
+
+    ret_code = jerry_run (&error_value);
+
+    jerry_api_release_value (&error_value);
   }
 
   jerry_cleanup ();
@@ -2375,20 +2394,20 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   {
     vm_init (bytecode_p);
 
-    ecma_object_t *error_obj_p = NULL;
+    ecma_value_t error_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-    ret_code = vm_run_global (&error_obj_p);
+    ret_code = vm_run_global (&error_value);
 
     if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
     {
-      JERRY_ASSERT (error_obj_p != NULL);
-
-      ecma_deref_object (error_obj_p);
+      JERRY_ASSERT (ecma_is_value_error (error_value));
+      error_value = error_value & ~(1u << ECMA_VALUE_ERROR_POS);
+      ecma_free_value (error_value);
     }
     else
     {
       JERRY_ASSERT (ret_code == JERRY_COMPLETION_CODE_OK);
-      JERRY_ASSERT (error_obj_p == NULL);
+      JERRY_ASSERT (ecma_is_value_empty (error_value));
     }
 
     vm_finalize ();

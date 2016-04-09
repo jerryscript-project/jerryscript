@@ -35,27 +35,27 @@
 typedef enum
 {
   RE_TOK_EOF,                        /**< EOF */
-  RE_TOK_BACKREFERENCE,              /**< \[0..9] */
+  RE_TOK_BACKREFERENCE,              /**< "\[0..9]" */
   RE_TOK_CHAR,                       /**< any character */
-  RE_TOK_ALTERNATIVE,                /**< | */
-  RE_TOK_ASSERT_START,               /**< ^ */
-  RE_TOK_ASSERT_END,                 /**< $ */
-  RE_TOK_PERIOD,                     /**< . */
-  RE_TOK_START_CAPTURE_GROUP,        /**< ( */
-  RE_TOK_START_NON_CAPTURE_GROUP,    /**< (?: */
-  RE_TOK_END_GROUP,                  /**< ')' */
-  RE_TOK_ASSERT_START_POS_LOOKAHEAD, /**< (?= */
-  RE_TOK_ASSERT_START_NEG_LOOKAHEAD, /**< (?! */
-  RE_TOK_ASSERT_WORD_BOUNDARY,       /**< \b */
-  RE_TOK_ASSERT_NOT_WORD_BOUNDARY,   /**< \B */
-  RE_TOK_DIGIT,                      /**< \d */
-  RE_TOK_NOT_DIGIT,                  /**< \D */
-  RE_TOK_WHITE,                      /**< \s */
-  RE_TOK_NOT_WHITE,                  /**< \S */
-  RE_TOK_WORD_CHAR,                  /**< \w */
-  RE_TOK_NOT_WORD_CHAR,              /**< \W */
-  RE_TOK_START_CHAR_CLASS,           /**< [ ] */
-  RE_TOK_START_INV_CHAR_CLASS,       /**< [^ ] */
+  RE_TOK_ALTERNATIVE,                /**< "|" */
+  RE_TOK_ASSERT_START,               /**< "^" */
+  RE_TOK_ASSERT_END,                 /**< "$" */
+  RE_TOK_PERIOD,                     /**< "." */
+  RE_TOK_START_CAPTURE_GROUP,        /**< "(" */
+  RE_TOK_START_NON_CAPTURE_GROUP,    /**< "(?:" */
+  RE_TOK_END_GROUP,                  /**< ")" */
+  RE_TOK_ASSERT_START_POS_LOOKAHEAD, /**< "(?=" */
+  RE_TOK_ASSERT_START_NEG_LOOKAHEAD, /**< "(?!" */
+  RE_TOK_ASSERT_WORD_BOUNDARY,       /**< "\b" */
+  RE_TOK_ASSERT_NOT_WORD_BOUNDARY,   /**< "\B" */
+  RE_TOK_DIGIT,                      /**< "\d" */
+  RE_TOK_NOT_DIGIT,                  /**< "\D" */
+  RE_TOK_WHITE,                      /**< "\s" */
+  RE_TOK_NOT_WHITE,                  /**< "\S" */
+  RE_TOK_WORD_CHAR,                  /**< "\w" */
+  RE_TOK_NOT_WORD_CHAR,              /**< "\W" */
+  RE_TOK_START_CHAR_CLASS,           /**< "[ ]" */
+  RE_TOK_START_INV_CHAR_CLASS,       /**< "[^ ]" */
 } re_token_type_t;
 
 /**

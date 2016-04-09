@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup mem Memory allocation
- * @{
- */
-
-/** \addtogroup poolman Memory pool manager
- * @{
- */
-
 /**
  * Pool manager interface
  */
@@ -29,6 +21,13 @@
 #define MEM_POOLMAN_H
 
 #include "jrt.h"
+
+/** \addtogroup mem Memory allocation
+ * @{
+ *
+ * \addtogroup poolman Memory pool manager
+ * @{
+ */
 
 extern void mem_pools_init (void);
 extern void mem_pools_finalize (void);
@@ -66,12 +65,9 @@ extern void mem_pools_stats_reset_peak (void);
 extern void mem_pools_stats_print (void);
 #endif /* MEM_STATS */
 
+/**
+ * @}
+ * @}
+ */
+
 #endif /* !MEM_POOLMAN_H */
-
-/**
- * @}
- */
-
-/**
- * @}
- */

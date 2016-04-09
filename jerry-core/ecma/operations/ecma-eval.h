@@ -22,6 +22,7 @@
  * @{
  *
  * \addtogroup eval eval
+ * @{
  */
 
 extern ecma_value_t

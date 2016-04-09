@@ -13,13 +13,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmagc Garbage collector
- * @{
- */
-
 /**
  * Garbage collector implementation
  */
@@ -40,6 +33,13 @@
 #include "jerry-internal.h"
 
 /* TODO: Extract GC to a separate component */
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmagc Garbage collector
+ * @{
+ */
 
 /**
  * An object's GC color

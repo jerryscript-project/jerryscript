@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup mem Memory allocation
- * @{
- *
- * \addtogroup poolman Memory pool manager
- * @{
- */
-
 /**
  * Memory pool manager implementation
  */
@@ -33,6 +26,13 @@
 
 #define MEM_ALLOCATOR_INTERNAL
 #include "mem-allocator-internal.h"
+
+/** \addtogroup mem Memory allocation
+ * @{
+ *
+ * \addtogroup poolman Memory pool manager
+ * @{
+ */
 
 /**
  * Node for free chunk list
@@ -308,7 +308,5 @@ mem_pools_stat_dealloc (void)
 
 /**
  * @}
- */
-/**
  * @}
  */

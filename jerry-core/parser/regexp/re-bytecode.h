@@ -75,9 +75,9 @@ typedef enum
   RE_OP_ASSERT_NOT_WORD_BOUNDARY,                 /**< "\B" */
   RE_OP_LOOKAHEAD_POS,                            /**< lookahead pos */
   RE_OP_LOOKAHEAD_NEG,                            /**< lookahead neg */
-  RE_OP_BACKREFERENCE,                            /**< \[0..9] */
-  RE_OP_CHAR_CLASS,                               /**< [ ] */
-  RE_OP_INV_CHAR_CLASS                            /**< [^ ] */
+  RE_OP_BACKREFERENCE,                            /**< "\[0..9]" */
+  RE_OP_CHAR_CLASS,                               /**< "[ ]" */
+  RE_OP_INV_CHAR_CLASS                            /**< "[^ ]" */
 } re_opcode_t;
 
 /**

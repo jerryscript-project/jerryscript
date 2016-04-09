@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 
-/*
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ *
  * \addtogroup ecmahelpersbigintegers Helpers for operations intermediate 128-bit integers
  * @{
  */

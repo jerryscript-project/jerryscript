@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */
-
-#include "ecma-alloc.h"
-#include "ecma-globals.h"
-#include "ecma-helpers.h"
 
 /**
  * Create internal property with specified identifier and store external pointer in the property.

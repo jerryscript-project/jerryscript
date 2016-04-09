@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup mem Memory allocation
- * @{
- *
- * \addtogroup heap Heap
- * @{
- */
-
 /**
  * Heap allocator interface
  */
@@ -29,6 +22,12 @@
 
 #include "jrt.h"
 
+/** \addtogroup mem Memory allocation
+ * @{
+ *
+ * \addtogroup heap Heap
+ * @{
+ */
 
 extern void mem_heap_init (void);
 extern void mem_heap_finalize (void);

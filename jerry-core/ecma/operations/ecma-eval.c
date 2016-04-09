@@ -28,6 +28,7 @@
  * @{
  *
  * \addtogroup eval eval
+ * @{
  */
 
 /**

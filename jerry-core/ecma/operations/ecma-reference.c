@@ -23,9 +23,7 @@
 
 /** \addtogroup ecma ECMA
  * @{
- */
-
-/**
+ *
  * \addtogroup references ECMA-Reference
  * @{
  */

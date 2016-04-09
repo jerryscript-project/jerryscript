@@ -25,7 +25,6 @@
 #include "mem-poolman.h"
 
 #define MEM_ALLOCATOR_INTERNAL
-
 #include "mem-allocator-internal.h"
 
 /**

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */
-
-#include "ecma-globals.h"
-#include "ecma-helpers.h"
 
 #define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
                               ECMA_NUMBER_BIASED_EXP_WIDTH)

@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
+#ifndef ECMA_GC_H
+#define ECMA_GC_H
+
+#include "ecma-globals.h"
+#include "mem-allocator.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmagc Garbage collector
  * @{
  */
-
-#ifndef ECMA_GC_H
-#define ECMA_GC_H
-
-#include "ecma-globals.h"
-#include "mem-allocator.h"
 
 extern void ecma_gc_init (void);
 extern void ecma_init_gc_info (ecma_object_t *);
@@ -33,9 +33,9 @@ extern void ecma_deref_object (ecma_object_t *);
 extern void ecma_gc_run (void);
 extern void ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t);
 
-#endif /* !ECMA_GC_H */
-
 /**
  * @}
  * @}
  */
+
+#endif /* !ECMA_GC_H */

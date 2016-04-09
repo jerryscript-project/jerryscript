@@ -26,14 +26,10 @@
 
 /** \addtogroup ecma ECMA
  * @{
- */
-
-/**
+ *
  * \addtogroup lexicalenvironment Lexical environment
  * @{
- */
-
-/**
+ *
  * \addtogroup globallexicalenvironment Global lexical environment
  * @{
  */

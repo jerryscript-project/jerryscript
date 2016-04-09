@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 #include "ecma-alloc.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -29,6 +22,13 @@
 #include "jrt-bit-fields.h"
 #include "byte-code.h"
 #include "re-compiler.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ */
 
 /**
  * The ecma object types must be lower than the container mask.

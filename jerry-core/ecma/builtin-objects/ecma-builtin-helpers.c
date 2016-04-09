@@ -123,7 +123,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
  */
 ecma_value_t
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< this object */
-                                                   uint32_t index) /** <array index */
+                                                   uint32_t index) /**< array index */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);

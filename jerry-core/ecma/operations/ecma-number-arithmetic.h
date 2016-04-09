@@ -20,9 +20,7 @@
 
 /** \addtogroup ecma ECMA
  * @{
- */
-
-/**
+ *
  * \addtogroup numberarithmetic ECMA number arithmetic operations
  * @{
  */

@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 #include "ecma-alloc.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -33,6 +26,13 @@
 #include "lit-magic-strings.h"
 #include "lit-literal-storage.h"
 #include "vm.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ */
 
 /**
  * Maximum length of strings' concatenation
@@ -745,11 +745,11 @@ ecma_string_get_heap_number_size (mem_cpointer_t number_cp) /**< Compressed poin
  *         NULL - otherwise
  */
 const lit_utf8_byte_t *
-ecma_string_raw_chars (const ecma_string_t *string_p, /* ecma-string */
-                       lit_utf8_size_t *size_p, /* [out] size of the ecma string */
-                       bool *is_ascii_p) /* [out] true, if the string is an ascii
-                                          *             character sequence (size == length)
-                                          *       false, otherwise */
+ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
+                       lit_utf8_size_t *size_p, /**< [out] size of the ecma string */
+                       bool *is_ascii_p) /**< [out] true, if the string is an ascii
+                                          *               character sequence (size == length)
+                                          *         false, otherwise */
 {
   ecma_length_t length;
   lit_utf8_size_t size;

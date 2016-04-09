@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 #ifndef ECMA_HELPERS_H
 #define ECMA_HELPERS_H
 
@@ -28,6 +21,13 @@
 #include "lit-cpointer.h"
 #include "lit-strings.h"
 #include "mem-allocator.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ */
 
 /**
  * Get value of pointer from specified non-null compressed pointer.
@@ -276,9 +276,9 @@ extern uint32_t ecma_number_to_uint32 (ecma_number_t);
 extern int32_t ecma_number_to_int32 (ecma_number_t);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
-#endif /* !ECMA_HELPERS_H */
-
 /**
  * @}
  * @}
  */
+
+#endif /* !ECMA_HELPERS_H */

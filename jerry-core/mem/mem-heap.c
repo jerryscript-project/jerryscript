@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup mem Memory allocation
- * @{
- *
- * \addtogroup heap Heap
- * @{
- */
-
 /**
  * Heap implementation
  */
@@ -33,8 +26,14 @@
 #include "mem-heap.h"
 
 #define MEM_ALLOCATOR_INTERNAL
-
 #include "mem-allocator-internal.h"
+
+/** \addtogroup mem Memory allocation
+ * @{
+ *
+ * \addtogroup heap Heap
+ * @{
+ */
 
 /*
  * Valgrind-related options and headers

@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmafunctionobject ECMA Function object related routines
- * @{
- */
-
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
@@ -34,6 +27,13 @@
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmafunctionobject ECMA Function object related routines
+ * @{
+ */
 
 /**
  * Arguments object creation operation.

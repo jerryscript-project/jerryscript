@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
+#include "ecma-helpers.h"
+#include "ecma-builtin-helpers.h"
+#include "lit-char-helpers.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
  */
-
-#include "ecma-alloc.h"
-#include "ecma-helpers.h"
-#include "ecma-builtin-helpers.h"
-#include "lit-char-helpers.h"
 
 /**
  * Check the object value existance in the collection.

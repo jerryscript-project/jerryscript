@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup mem Memory allocation
- * @{
- */
-
 /**
  * Allocator interface
  */
@@ -27,6 +23,10 @@
 #include "mem-config.h"
 #include "mem-heap.h"
 #include "mem-poolman.h"
+
+/** \addtogroup mem Memory allocation
+ * @{
+ */
 
 /**
  * Compressed pointer
@@ -125,8 +125,8 @@ extern void mem_stats_reset_peak (void);
 extern void mem_stats_print (void);
 #endif /* MEM_STATS */
 
-#endif /* !MEM_ALLOCATOR_H */
-
 /**
  * @}
  */
+
+#endif /* !MEM_ALLOCATOR_H */

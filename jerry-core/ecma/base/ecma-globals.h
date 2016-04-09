@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmatypes ECMA types
- * @{
- */
-
 #ifndef ECMA_GLOBALS_H
 #define ECMA_GLOBALS_H
 
@@ -29,7 +22,13 @@
 #include "lit-magic-strings.h"
 #include "mem-allocator.h"
 
-/** \addtogroup compressedpointer Compressed pointer
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmatypes ECMA types
+ * @{
+ *
+ * \addtogroup compressedpointer Compressed pointer
  * @{
  */
 
@@ -728,11 +727,7 @@ typedef struct
 
 /**
  * @}
+ * @}
  */
 
 #endif  /* !ECMA_GLOBALS_H */
-
-/**
- * @}
- * @}
- */

@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
+#ifndef ECMA_ALLOC_H
+#define ECMA_ALLOC_H
+
+#include "ecma-globals.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmaalloc Routines for allocation/freeing memory for ECMA data types
  * @{
  */
-
-#ifndef ECMA_ALLOC_H
-#define ECMA_ALLOC_H
-
-#include "ecma-globals.h"
 
 /**
  * Allocate memory for ecma-object
@@ -121,10 +121,9 @@ extern ecma_external_pointer_t *ecma_alloc_external_pointer (void);
 */
 extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *);
 
-
-#endif /* !ECMA_ALLOC_H */
-
 /**
  * @}
  * @}
  */
+
+#endif /* !ECMA_ALLOC_H */

@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 #include "ecma-alloc.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -31,6 +24,13 @@
 
 JERRY_STATIC_ASSERT (sizeof (ecma_value_t) * JERRY_BITSINBYTE >= ECMA_VALUE_SIZE,
                      bits_in_ecma_value_t_must_be_greater_than_or_equal_to_ECMA_VALUE_SIZE);
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ */
 
 /**
  * Get type field of ecma value

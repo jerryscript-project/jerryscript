@@ -14,29 +14,29 @@ _start:
   _START
 .size _start, . - _start
 
-.global syscall_0_asm
-.type syscall_0_asm, %function
-syscall_0_asm:
+.global syscall_0
+.type syscall_0, %function
+syscall_0:
   SYSCALL_0
-.size syscall_0_asm, . - syscall_0_asm
+.size syscall_0, . - syscall_0
 
-.global syscall_1_asm
-.type syscall_1_asm, %function
-syscall_1_asm:
+.global syscall_1
+.type syscall_1, %function
+syscall_1:
   SYSCALL_1
-.size syscall_1_asm, . - syscall_1_asm
+.size syscall_1, . - syscall_1
 
-.global syscall_2_asm
-.type syscall_2_asm, %function
-syscall_2_asm:
+.global syscall_2
+.type syscall_2, %function
+syscall_2:
   SYSCALL_2
-.size syscall_2_asm, . - syscall_2_asm
+.size syscall_2, . - syscall_2
 
-.global syscall_3_asm
-.type syscall_3_asm, %function
-syscall_3_asm:
+.global syscall_3
+.type syscall_3, %function
+syscall_3:
   SYSCALL_3
-.size syscall_3_asm, . - syscall_3_asm
+.size syscall_3, . - syscall_3
 
 /**
  * setjmp (jmp_buf env)

@@ -12,20 +12,20 @@
 _start:
   _START
 
-.global syscall_0_asm
-syscall_0_asm:
+.global syscall_0
+syscall_0:
   SYSCALL_0
 
-.global syscall_1_asm
-syscall_1_asm:
+.global syscall_1
+syscall_1:
   SYSCALL_1
 
-.global syscall_2_asm
-syscall_2_asm:
+.global syscall_2
+syscall_2:
   SYSCALL_2
 
-.global syscall_3_asm
-syscall_3_asm:
+.global syscall_3
+syscall_3:
   SYSCALL_3
 
 /**

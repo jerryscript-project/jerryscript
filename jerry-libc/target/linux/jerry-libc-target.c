@@ -33,65 +33,10 @@
 
 LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
 
-static long int syscall_0 (long int syscall_no);
-static long int syscall_1 (long int syscall_no, long int arg1);
-static long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
-static long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
-
-extern long int syscall_0_asm (long int syscall_no);
-extern long int syscall_1_asm (long int syscall_no, long int arg1);
-extern long int syscall_2_asm (long int syscall_no, long int arg1, long int arg2);
-extern long int syscall_3_asm (long int syscall_no, long int arg1, long int arg2, long int arg3);
-
-/**
- * System call with no argument.
- *
- * @return syscall's return value
- */
-static __attr_noinline___ long int
-syscall_0 (long int syscall_no) /**< syscall number */
-{
-  return syscall_0_asm (syscall_no);
-} /* syscall_0 */
-
-/**
- * System call with one argument.
- *
- * @return syscall's return value
- */
-static __attr_noinline___ long int
-syscall_1 (long int syscall_no, /**< syscall number */
-           long int arg1) /**< argument */
-{
-  return syscall_1_asm (syscall_no, arg1);
-} /* syscall_1 */
-
-/**
- * System call with two arguments.
- *
- * @return syscall's return value
- */
-static __attr_noinline___ long int
-syscall_2 (long int syscall_no, /**< syscall number */
-           long int arg1, /**< first argument */
-           long int arg2) /**< second argument */
-{
-  return syscall_2_asm (syscall_no, arg1, arg2);
-} /* syscall_2 */
-
-/**
- * System call with three arguments.
- *
- * @return syscall's return value
- */
-static __attr_noinline___ long int
-syscall_3 (long int syscall_no, /**< syscall number */
-           long int arg1, /**< first argument */
-           long int arg2, /**< second argument */
-           long int arg3) /**< third argument */
-{
-  return syscall_3_asm (syscall_no, arg1, arg2, arg3);
-} /* syscall_3 */
+extern long int syscall_0 (long int syscall_no);
+extern long int syscall_1 (long int syscall_no, long int arg1);
+extern long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
+extern long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
 /** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
 int

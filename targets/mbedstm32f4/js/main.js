@@ -1,5 +1,6 @@
-function sysloop(ticknow) {
-  blink();
+function sysloop (ticknow)
+{
+  blink ();
 }
 
-print("main js OK");
+print ("main js OK");

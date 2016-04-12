@@ -54,19 +54,4 @@ libc_fatal (const char *msg,
    } while (0)
 #endif /* !LIBC_NDEBUG */
 
-/**
- * Stubs declaration
- */
-
-/**
- * Unreachable stubs for routines that are never called,
- * but referenced from third-party libraries.
- */
-#define LIBC_UNREACHABLE_STUB_FOR(...) \
-extern __VA_ARGS__; \
-__attr_used___ __VA_ARGS__ \
-{ \
-  LIBC_UNREACHABLE (); \
-}
-
 #endif /* !DEFS_H */

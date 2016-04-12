@@ -31,8 +31,6 @@
 
 #include "jerry-libc-defs.h"
 
-LIBC_UNREACHABLE_STUB_FOR (int raise (int sig_no __attr_unused___))
-
 extern long int syscall_0 (long int syscall_no);
 extern long int syscall_1 (long int syscall_no, long int arg1);
 extern long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
@@ -92,13 +90,22 @@ abort (void)
   syscall_1 (__NR_close, (long int) stdout);
   syscall_1 (__NR_close, (long int) stderr);
 
-  syscall_2 (__NR_kill, syscall_0 (__NR_getpid), SIGABRT);
+  raise (SIGABRT);
 
   while (true)
   {
     /* unreachable */
   }
 } /* abort */
+
+/**
+ * Send a signal to the current process.
+ */
+int __attr_used___
+raise (int sig)
+{
+  return (int) syscall_2 (__NR_kill, syscall_0 (__NR_getpid), sig);
+} /* raise */
 
 /**
  * fopen

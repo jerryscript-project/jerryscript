@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,31 +27,5 @@
 #define __attr_used___     __attribute__((used))
 #define __attr_noreturn___ __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
-
-/**
- * Assertions
- */
-extern void __attr_noreturn___
-libc_fatal (const char *msg,
-            const char *file_name,
-            const char *function_name,
-            const unsigned int line_number);
-
-#ifndef LIBC_NDEBUG
-# define LIBC_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
-     libc_fatal (#x, __FILE__, __func__, __LINE__); } } while (0)
-# define LIBC_UNREACHABLE() \
-   do \
-   { \
-     libc_fatal ("Code is unreachable", __FILE__, __func__, __LINE__); \
-   } while (0)
-#else /* !LIBC_NDEBUG */
-# define LIBC_ASSERT(x) do { if (false) { (void) (x); } } while (0)
-# define LIBC_UNREACHABLE() \
-   do \
-   { \
-     libc_fatal (NULL, NULL, NULL, 0); \
-   } while (0)
-#endif /* !LIBC_NDEBUG */
 
 #endif /* !DEFS_H */

@@ -18,6 +18,7 @@
  * Jerry libc platform-specific functions linux implementation
  */
 
+#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -123,8 +124,8 @@ fopen (const char *path, /**< file path */
   bool create_if_not_exist = false;
   bool position_at_end = false;
 
-  LIBC_ASSERT (path != NULL && mode != NULL);
-  LIBC_ASSERT (mode[1] == '+' || mode[1] == '\0');
+  assert (path != NULL && mode != NULL);
+  assert (mode[1] == '+' || mode[1] == '\0');
 
   switch (mode[0])
   {
@@ -149,14 +150,13 @@ fopen (const char *path, /**< file path */
       create_if_not_exist = true;
       if (mode[1] == '+')
       {
-        /* Not supported */
-        LIBC_UNREACHABLE ();
+        assert (!"unsupported mode a+");
       }
       break;
     }
     default:
     {
-      LIBC_UNREACHABLE ();
+      assert (!"unsupported mode");
     }
   }
 
@@ -172,7 +172,7 @@ fopen (const char *path, /**< file path */
   }
   else
   {
-    LIBC_ASSERT (may_read && may_write);
+    assert (may_read && may_write);
 
     flags = O_RDWR;
   }
@@ -348,16 +348,16 @@ jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
 
 #ifdef __TARGET_HOST_x64
   ret = syscall_2 (__NR_setrlimit, RLIMIT_DATA, (intptr_t) &data_limit);
-  LIBC_ASSERT (ret == 0);
+  assert (ret == 0);
 
   ret = syscall_2 (__NR_setrlimit, RLIMIT_STACK, (intptr_t) &stack_limit);
-  LIBC_ASSERT (ret == 0);
+  assert (ret == 0);
 #elif defined (__TARGET_HOST_ARMv7)
   ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_DATA, (intptr_t) &data_limit);
-  LIBC_ASSERT (ret == 0);
+  assert (ret == 0);
 
   ret = syscall_3 (__NR_prlimit64, 0, RLIMIT_STACK, (intptr_t) &stack_limit);
-  LIBC_ASSERT (ret == 0);
+  assert (ret == 0);
 #elif defined (__TARGET_HOST_x86)
 # error "__TARGET_HOST_x86 case is not implemented"
 #else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */

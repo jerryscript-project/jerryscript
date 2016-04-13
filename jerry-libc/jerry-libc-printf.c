@@ -18,6 +18,7 @@
  * Jerry printf implementation
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -132,20 +133,20 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
   char *str_p = str_buffer_end;
   *--str_p = '\0';
 
-  LIBC_ASSERT (radix >= 2);
+  assert (radix >= 2);
 
   if ((radix & (radix - 1)) != 0)
   {
     /*
      * Radix is not power of 2. Only 32-bit numbers are supported in this mode.
      */
-    LIBC_ASSERT ((value >> 32) == 0);
+    assert ((value >> 32) == 0);
 
     uint32_t value_lo = (uint32_t) value;
 
     while (value_lo != 0)
     {
-      LIBC_ASSERT (str_p != buffer_p);
+      assert (str_p != buffer_p);
 
       *--str_p = alphabet[ value_lo % radix ];
       value_lo /= radix;
@@ -158,7 +159,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     {
       shift++;
 
-      LIBC_ASSERT (shift <= 32);
+      assert (shift <= 32);
     }
 
     uint32_t value_lo = (uint32_t) value;
@@ -167,7 +168,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     while (value_lo != 0
            || value_hi != 0)
     {
-      LIBC_ASSERT (str_p != buffer_p);
+      assert (str_p != buffer_p);
 
       *--str_p = alphabet[ value_lo & (radix - 1) ];
       value_lo >>= shift;
@@ -181,7 +182,7 @@ libc_printf_uint_to_string (uintmax_t value, /**< integer value */
     *--str_p = '0';
   }
 
-  LIBC_ASSERT (str_p >= buffer_p && str_p < str_buffer_end);
+  assert (str_p >= buffer_p && str_p < str_buffer_end);
 
   return str_p;
 } /* libc_printf_uint_to_string */
@@ -198,7 +199,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
                        libc_printf_arg_length_type_t length, /**< field's length type */
                        uint32_t width) /**< minimum field width to output */
 {
-  LIBC_ASSERT ((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
+  assert ((flags & LIBC_PRINTF_ARG_FLAG_SHARP) == 0);
 
   bool is_signed = true;
   uintmax_t value = 0;
@@ -252,7 +253,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      LIBC_UNREACHABLE ();
+      assert (!"unsupported length field L");
     }
   }
 
@@ -276,7 +277,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
   if (!sign
       || (flags & LIBC_PRINTF_ARG_FLAG_PRINT_SIGN))
   {
-    LIBC_ASSERT (string_p > str_buffer);
+    assert (string_p > str_buffer);
     *--string_p = (sign ? '+' : '-');
   }
   else if (flags & LIBC_PRINTF_ARG_FLAG_SPACE)
@@ -310,7 +311,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
                            libc_printf_arg_length_type_t length, /**< field's length type */
                            uint32_t width) /**< minimum field width to output */
 {
-  uintmax_t value = 0;
+  uintmax_t value;
 
   switch (length)
   {
@@ -354,7 +355,14 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      LIBC_UNREACHABLE ();
+      assert (!"unsupported length field L");
+      return;
+    }
+
+    default:
+    {
+      assert (!"unexpected length field");
+      return;
     }
   }
 
@@ -374,7 +382,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
       }
       else
       {
-        LIBC_ASSERT (specifier == 'o');
+        assert (specifier == 'o');
       }
     }
   }
@@ -414,7 +422,8 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
 
     default:
     {
-      LIBC_UNREACHABLE ();
+      assert (!"unexpected type field");
+      return;
     }
   }
 
@@ -513,8 +522,7 @@ vfprintf (FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '*')
       {
-        /* Not supported */
-        LIBC_UNREACHABLE ();
+        assert (!"unsupported width field *");
       }
 
       // If there is a number, recognize it as field width
@@ -527,8 +535,7 @@ vfprintf (FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '.')
       {
-        /* Not supported */
-        LIBC_UNREACHABLE ();
+        assert (!"unsupported precision field");
       }
 
       switch (*format_iter_p)
@@ -621,8 +628,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         case 'a':
         case 'A':
         {
-          /* Not supported */
-          LIBC_UNREACHABLE ();
+          assert (!"unsupported double type field");
           break;
         }
 
@@ -630,8 +636,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            /* Not supported */
-            LIBC_UNREACHABLE ();
+            assert (!"unsupported length field L");
           }
           else
           {
@@ -654,8 +659,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            /* Not supported */
-            LIBC_UNREACHABLE ();
+            assert (!"unsupported length field L");
           }
           else
           {
@@ -695,9 +699,7 @@ vfprintf (FILE *stream, /**< stream pointer */
 
         case 'n':
         {
-          /* Not supported */
-          LIBC_UNREACHABLE ();
-          break;
+          assert (!"unsupported type field n");
         }
       }
     }

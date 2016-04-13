@@ -18,6 +18,7 @@
  * Jerry libc platform-specific functions darwin implementation
  */
 
+#include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -123,8 +124,8 @@ fopen (const char *path, /**< file path */
   bool create_if_not_exist = false;
   bool position_at_end = false;
 
-  LIBC_ASSERT (path != NULL && mode != NULL);
-  LIBC_ASSERT (mode[1] == '+' || mode[1] == '\0');
+  assert (path != NULL && mode != NULL);
+  assert (mode[1] == '+' || mode[1] == '\0');
 
   switch (mode[0])
   {
@@ -149,14 +150,13 @@ fopen (const char *path, /**< file path */
       create_if_not_exist = true;
       if (mode[1] == '+')
       {
-        /* Not supported */
-        LIBC_UNREACHABLE ();
+        assert (!"unsupported mode a+");
       }
       break;
     }
     default:
     {
-      LIBC_UNREACHABLE ();
+      assert (!"unsupported mode");
     }
   }
 
@@ -172,7 +172,7 @@ fopen (const char *path, /**< file path */
   }
   else
   {
-    LIBC_ASSERT (may_read && may_write);
+    assert (may_read && may_write);
 
     flags = O_RDWR;
   }

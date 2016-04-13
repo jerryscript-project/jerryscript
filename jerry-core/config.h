@@ -38,9 +38,9 @@
  * Size of heap
  */
 #ifndef CONFIG_MEM_HEAP_AREA_SIZE
-# define CONFIG_MEM_HEAP_AREA_SIZE (256 * 1024)
-#elif CONFIG_MEM_HEAP_AREA_SIZE > (256 * 1024)
-# error "Currently, maximum 256 kilobytes heap size is supported"
+# define CONFIG_MEM_HEAP_AREA_SIZE (512 * 1024)
+#elif CONFIG_MEM_HEAP_AREA_SIZE > (512 * 1024)
+# error "Currently, maximum 512 kilobytes heap size is supported"
 #endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
@@ -63,7 +63,7 @@
  *
  * On the other hand, value 2 ^ CONFIG_MEM_HEAP_OFFSET_LOG should not be less than CONFIG_MEM_HEAP_AREA_SIZE.
  */
-#define CONFIG_MEM_HEAP_OFFSET_LOG (18)
+#define CONFIG_MEM_HEAP_OFFSET_LOG (19)
 
 /**
  * Number of lower bits in key of literal hash table.

@@ -202,6 +202,9 @@ mem_heap_init (void)
   JERRY_STATIC_ASSERT ((uintptr_t) mem_heap.area % MEM_ALIGNMENT == 0,
                        mem_heap_area_must_be_multiple_of_MEM_ALIGNMENT);
 
+  JERRY_STATIC_ASSERT ((1u << MEM_HEAP_OFFSET_LOG) >= MEM_HEAP_SIZE,
+                       two_pow_mem_heap_offset_should_not_be_less_than_mem_heap_size);
+
   mem_heap_allocated_size = 0;
   mem_heap_limit = CONFIG_MEM_HEAP_DESIRED_LIMIT;
   mem_heap.first.size = 0;

@@ -133,9 +133,4 @@ typedef uint8_t lit_string_hash_t;
  */
 #define LIT_STRING_HASH_BITS (sizeof (lit_string_hash_t) * JERRY_BITSINBYTE)
 
-/**
- * Number of string's last characters to use for hash calculation
- */
-#define LIT_STRING_HASH_LAST_BYTES_COUNT (2)
-
 #endif /* !LIT_GLOBALS_H */

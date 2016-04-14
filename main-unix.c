@@ -537,7 +537,7 @@ main (int argc,
 
       printf ("%s", prompt);
 
-      // input a line
+      /* Read a line */
       while (true)
       {
         if (fread (source_buffer_tail, 1, 1, stdin) != 1 && len == 0)
@@ -556,23 +556,16 @@ main (int argc,
 
       if (len > 0)
       {
-        // evaluate the line
+        /* Evaluate the line */
         jerry_api_value_t ret_val;
         ret_code = jerry_api_eval (buffer, len, false, false, &ret_val);
 
-        if (ret_code == JERRY_COMPLETION_CODE_OK)
+        /* Print return value */
+        const jerry_api_value_t args[] = { ret_val };
+        jerry_api_value_t ret_val_print;
+        if (jerry_api_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
         {
-          // print return value
-          const jerry_api_value_t args[] = {ret_val};
-          jerry_api_value_t ret_val_print;
-          if (jerry_api_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
-          {
-            jerry_api_release_value (&ret_val_print);
-          }
-        }
-        else
-        {
-          printf ("JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION\n");
+          jerry_api_release_value (&ret_val_print);
         }
 
         jerry_api_release_value (&ret_val);

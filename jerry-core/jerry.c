@@ -515,9 +515,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out]
  * Convert completion of 'eval' to API value and completion code
  *
  * Note:
- *      if the output value contains string / object, it should be freed
- *      with jerry_api_release_string / jerry_api_release_object,
- *      just when it becomes unnecessary.
+ *      The value returned in 'retval_p' should be freed with jerry_api_release_value
  *
  * @return completion code
  */
@@ -526,22 +524,9 @@ jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< [
                                              ecma_value_t completion) /**< completion of 'eval'-mode
                                                                        *   code execution */
 {
-  jerry_completion_code_t ret_code;
+  jerry_api_convert_ecma_value_to_api_value (retval_p, completion);
 
-  if (!ecma_is_value_error (completion))
-  {
-    jerry_api_convert_ecma_value_to_api_value (retval_p, completion);
-
-    ret_code = JERRY_COMPLETION_CODE_OK;
-  }
-  else
-  {
-    jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
-
-    ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
-  }
-
-  return ret_code;
+  return (ecma_is_value_error (completion)) ? JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION : JERRY_COMPLETION_CODE_OK;
 } /* jerry_api_convert_eval_completion_to_retval */
 
 /**

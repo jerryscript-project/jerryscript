@@ -21,8 +21,12 @@
 #include "jrt.h"
 #include "mem-poolman.h"
 
-JERRY_STATIC_ASSERT (sizeof (ecma_property_t) <= sizeof (uint64_t),
-                     size_of_ecma_property_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
+                     size_of_ecma_property_value_t_must_be_equal_to_size_of_ecma_value_t);
+JERRY_STATIC_ASSERT (((sizeof (ecma_property_value_t) - 1) & sizeof (ecma_property_value_t)) == 0,
+                     size_of_ecma_property_value_t_must_be_power_of_2);
+JERRY_STATIC_ASSERT (sizeof (ecma_property_pair_t) == sizeof (uint64_t) * 2,
+                     size_of_ecma_property_pair_t_must_be_equal_to_16_bytes);
 
 JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t),
                      size_of_ecma_object_t_must_be_less_than_or_equal_to_8_bytes);
@@ -85,13 +89,32 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
   DEALLOC (ecma_type)
 
 DECLARE_ROUTINES_FOR (object)
-DECLARE_ROUTINES_FOR (property)
 DECLARE_ROUTINES_FOR (number)
 DECLARE_ROUTINES_FOR (collection_header)
 DECLARE_ROUTINES_FOR (collection_chunk)
 DECLARE_ROUTINES_FOR (string)
 DECLARE_ROUTINES_FOR (getter_setter_pointers)
 DECLARE_ROUTINES_FOR (external_pointer)
+
+/**
+ * Allocate memory for ecma-property pair
+ *
+ * @return pointer to allocated memory
+ */
+ecma_property_pair_t *
+ecma_alloc_property_pair (void)
+{
+  return mem_heap_alloc_block (sizeof (ecma_property_pair_t));
+} /* ecma_alloc_property_pair */
+
+/**
+ * Dealloc memory from an ecma-property
+ */
+extern void
+ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */
+{
+  mem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));
+} /* ecma_dealloc_property_pair */
 
 /**
  * @}

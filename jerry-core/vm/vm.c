@@ -1013,7 +1013,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             property_p = ecma_find_named_property (object_p, prop_name_p);
           }
 
-          if (property_p != NULL && !(property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA))
+          if (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
           {
             ecma_delete_property (object_p, property_p);
             property_p = NULL;

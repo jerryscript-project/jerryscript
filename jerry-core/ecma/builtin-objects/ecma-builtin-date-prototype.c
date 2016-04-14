@@ -105,10 +105,10 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
                     ret_value);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *prim_value_prop_p;
-    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
     ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                                 prim_value_prop_p->v.internal_property.value);
+                                                                 ecma_get_internal_property_value (prim_prop_p));
 
     if (ecma_number_is_nan (*prim_value_num_p))
     {
@@ -152,10 +152,10 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
                     ret_value);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *prim_value_prop_p;
-    prim_value_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
     ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                                 prim_value_prop_p->v.internal_property.value);
+                                                                 ecma_get_internal_property_value (prim_prop_p));
 
     if (ecma_number_is_nan (*prim_value_num_p))
     {
@@ -250,11 +250,11 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
     {
-      ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+      ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
+                                                                 ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
       ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                                   prim_value_prop_p->v.internal_property.value);
+                                                                   ecma_get_internal_property_value (prim_prop_p));
 
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;
@@ -363,11 +363,11 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
     /* 2. */
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-    ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                     ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
     ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                               prim_value_prop_p->v.internal_property.value);
+                                                                 ecma_get_internal_property_value (prim_prop_p));
     *prim_value_num_p = *value_p;
 
     /* 3. */

@@ -624,80 +624,77 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    for (ecma_property_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
-         prop_iter_p != NULL;
-         prop_iter_p = ECMA_GET_POINTER (ecma_property_t, prop_iter_p->next_property_p))
+    ecma_property_header_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
+
+    while (prop_iter_p != NULL)
     {
-      if (prop_iter_p->flags & (ECMA_PROPERTY_FLAG_NAMEDDATA | ECMA_PROPERTY_FLAG_NAMEDACCESSOR))
+      JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+      for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
       {
-        ecma_string_t *name_p;
+        ecma_property_t *property_p = prop_iter_p->types + i;
 
-        if (prop_iter_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
+        if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+            || ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
         {
-          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->v.named_data_property.name_p);
-        }
-        else
-        {
-          JERRY_ASSERT (prop_iter_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR);
+          ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+          ecma_string_t *name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_pair_p->names_cp[i]);
 
-          name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_iter_p->v.named_accessor_property.name_p);
-        }
-
-        if (!(is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p)))
-        {
-          lit_string_hash_t hash = name_p->hash;
-          uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-          uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
-
-          bool is_add = true;
-
-          if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
+          if (!(is_enumerable_only && !ecma_is_property_enumerable (property_p)))
           {
-            ecma_collection_iterator_init (&iter, prop_names_p);
+            lit_string_hash_t hash = name_p->hash;
+            uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
+            uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
-            while (ecma_collection_iterator_next (&iter))
+            bool is_add = true;
+
+            if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
             {
-              ecma_string_t *name2_p = ecma_get_string_from_value (*iter.current_value_p);
+              ecma_collection_iterator_init (&iter, prop_names_p);
 
-              if (ecma_compare_ecma_strings (name_p, name2_p))
+              while (ecma_collection_iterator_next (&iter))
               {
-                is_add = false;
-                break;
+                ecma_string_t *name2_p = ecma_get_string_from_value (*iter.current_value_p);
+
+                if (ecma_compare_ecma_strings (name_p, name2_p))
+                {
+                  is_add = false;
+                  break;
+                }
               }
             }
+
+            if (is_add)
+            {
+              own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+
+              ecma_append_to_values_collection (prop_names_p,
+                                                ecma_make_string_value (name_p),
+                                                true);
+            }
           }
-
-          if (is_add)
+          else
           {
-            own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+            JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (property_p));
 
-            ecma_append_to_values_collection (prop_names_p,
+            ecma_append_to_values_collection (skipped_non_enumerable_p,
                                               ecma_make_string_value (name_p),
                                               true);
-          }
-        }
-        else
-        {
-          JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (prop_iter_p));
 
-          ecma_append_to_values_collection (skipped_non_enumerable_p,
-                                            ecma_make_string_value (name_p),
-                                            true);
+            lit_string_hash_t hash = name_p->hash;
+            uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
+            uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
-          lit_string_hash_t hash = name_p->hash;
-          uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-          uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
-
-          if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
-          {
-            names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+            if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
+            {
+              names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+            }
           }
         }
       }
-      else
-      {
-        JERRY_ASSERT (prop_iter_p->flags & ECMA_PROPERTY_FLAG_INTERNAL);
-      }
+
+      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                      prop_iter_p->next_property_cp);
     }
 
     ecma_collection_iterator_init (&iter, prop_names_p);
@@ -902,7 +899,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       {
         ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
                                                                           ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
-        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_id_prop_p->v.internal_property.value;
+        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ECMA_PROPERTY_VALUE_PTR (built_in_id_prop_p)->value;
 
         switch (builtin_id)
         {
@@ -983,7 +980,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         }
         else
         {
-          return (lit_magic_string_id_t) class_name_prop_p->v.internal_property.value;
+          return ECMA_PROPERTY_VALUE_PTR (class_name_prop_p)->value;
         }
       }
     }

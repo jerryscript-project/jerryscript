@@ -194,10 +194,10 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
   if (mask_prop_p == NULL)
   {
     mask_prop_p = ecma_create_internal_property (obj_p, mask_prop_id);
-    mask_prop_p->v.internal_property.value = 0;
+    ecma_set_internal_property_value (mask_prop_p, 0);
   }
 
-  uint32_t bit_mask = mask_prop_p->v.internal_property.value;
+  uint32_t bit_mask = ecma_get_internal_property_value (mask_prop_p);
 
   if (bit_mask & bit)
   {
@@ -206,7 +206,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
 
   bit_mask |= bit;
 
-  mask_prop_p->v.internal_property.value = bit_mask;
+  ecma_set_internal_property_value (mask_prop_p, bit_mask);
 
   ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_property_writable_value_t writable;
@@ -379,7 +379,7 @@ LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME (ecma_object_t *object_p, /**< a built-in 
     }
     else
     {
-      uint32_t bit_mask = mask_prop_p->v.internal_property.value;
+      uint32_t bit_mask = ecma_get_internal_property_value (mask_prop_p);
 
       if (bit_mask & bit)
       {

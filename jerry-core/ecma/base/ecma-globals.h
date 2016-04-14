@@ -203,18 +203,100 @@ typedef enum
 } ecma_property_configurable_value_t;
 
 /**
- * Property's flag list.
+ * Property list:
+ *   The property list of an object is a chain list of various items.
+ *   The type of each item is stored in the first byte of the item.
+ *
+ *   The most common item is the property pair, which contains two
+ *   ecmascript properties. It is also important, that after the
+ *   first property pair, only property pair items are allowed.
+ *
+ *   Example for other items is property name hash map, or array of items.
+ */
+
+/**
+ * Property type list.
  */
 typedef enum
 {
-  ECMA_PROPERTY_FLAG_NAMEDDATA = 1u << 0, /**< property is named data */
-  ECMA_PROPERTY_FLAG_NAMEDACCESSOR = 1u << 1, /**< property is named accessor */
-  ECMA_PROPERTY_FLAG_INTERNAL = 1u << 2, /**< property is internal property */
-  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << 3, /**< property is configurable */
-  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << 4, /**< property is enumerable */
-  ECMA_PROPERTY_FLAG_WRITABLE = 1u << 5, /**< property is writable */
-  ECMA_PROPERTY_FLAG_LCACHED = 1u << 6, /**< property is lcached */
+  ECMA_PROPERTY_TYPE_DELETED, /**< deleted property */
+  ECMA_PROPERTY_TYPE_INTERNAL, /**< internal property */
+  ECMA_PROPERTY_TYPE_NAMEDDATA, /**< property is named data */
+  ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< property is named accessor */
+
+  ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for
+                                                                             *   property pair types. */
+  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for property types. */
+} ecma_property_types_t;
+
+/**
+ * Property type mask.
+ */
+#define ECMA_PROPERTY_TYPE_MASK 0x7
+
+/**
+ * Property flags base shift.
+ */
+#define ECMA_PROPERTY_FLAG_SHIFT 3
+
+/**
+ * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
+ * and ECMA_PROPERTY_TYPE_NAMEDACCESSOR).
+ */
+typedef enum
+{
+  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 0), /**< property is configurable */
+  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 1), /**< property is enumerable */
+  ECMA_PROPERTY_FLAG_WRITABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 2), /**< property is writable */
+  ECMA_PROPERTY_FLAG_LCACHED = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 3), /**< property is lcached */
 } ecma_property_flags_t;
+
+/**
+ * Abstract property representation.
+ *
+ * A property is a type_and_flags byte and an ecma_value_t value pair.
+ * This pair is represented by a single pointer in JerryScript. Although
+ * a packed struct would only consume sizeof(ecma_value_t)+1 memory
+ * bytes, accessing such structure is inefficient from the CPU viewpoint
+ * because the value is not naturally aligned. To improve performance,
+ * multiple type bytes and values are packed together. The maximum
+ * number of packed items is sizeof(ecma_value_t). The memory layout is
+ * the following when the maximum number of items is present:
+ *
+ *  [type 1, type 2, type 3, type 4][value 1][value 2][value 3][value 4]
+ *
+ * This way no memory is wasted and values are naturally aligned.
+ *
+ * For property pairs, only two values are used:
+ *
+ *  [type 1, type 2, unused 1, unused 2][value 1][value 2]
+ *
+ * The unused two bytes are used to store a compressed pointer for the
+ * next property pair.
+ *
+ * The advantage of this layout is that the value reference can be computed
+ * from the property address. However, property pointers cannot be compressed
+ * anymore.
+ */
+typedef struct
+{
+  uint8_t type_and_flags; /**< ecma_property_types_t (3 bit) and ecma_property_flags_t */
+} ecma_property_t;
+
+/**
+ * Number of items in a property pair.
+ */
+#define ECMA_PROPERTY_PAIR_ITEM_COUNT 2
+
+/**
+ * Property header for all items in a property list.
+ */
+typedef struct
+{
+  ecma_property_t types[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< two property type slot. The first represent
+                                                         *   the type of this property (e.g. property pair) */
+  mem_cpointer_t next_property_cp; /**< next cpointer */
+} ecma_property_header_t;
 
 /**
  * Pair of pointers - to property's getter and setter
@@ -226,56 +308,59 @@ typedef struct
 } ecma_getter_setter_pointers_t;
 
 /**
- * Description of ecma-property
+ * Property data.
  */
-typedef struct ecma_property_t
+typedef union
 {
-  /** Compressed pointer to next property */
-  mem_cpointer_t next_property_p;
+  ecma_value_t value; /**< value of a property */
+  ecma_getter_setter_pointers_t getter_setter_pair; /**< getter setter pair */
+} ecma_property_value_t;
 
-  /** Property's flags (ecma_property_flags_t) */
-  uint8_t flags;
+/**
+ * Property pair.
+ */
+typedef struct
+{
+  ecma_property_header_t header; /**< header of the property */
+  ecma_property_value_t values[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< property value slots */
+  mem_cpointer_t names_cp[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< property name slots */
+} ecma_property_pair_t;
 
-  /** Property's header part (depending on Type) */
-  union
-  {
-    /** Named data property value upper bits */
-    uint8_t named_data_property_value_high;
-    /** Internal property type */
-    uint8_t internal_property_type;
-  } h;
+/**
+ * Get property type.
+ */
+#define ECMA_PROPERTY_GET_TYPE(property_p) \
+  ((ecma_property_types_t) ((property_p)->type_and_flags & ECMA_PROPERTY_TYPE_MASK))
 
-  /** Property's value part (depending on Type) */
-  union
-  {
-    /** Description of named data property (second part) */
-    struct
-    {
-      /** Compressed pointer to property's name (pointer to String) */
-      mem_cpointer_t name_p;
+/**
+ * Returns true if the property pointer is a property pair.
+ */
+#define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
+  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types + 0) <= ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX)
 
-      /** Lower 16 bits of value */
-      uint16_t value_low;
-    } named_data_property;
+/**
+ * Returns the internal property type
+ */
+#define ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE(property_p) \
+  ((ecma_internal_property_id_t) ((property_p)->type_and_flags >> ECMA_PROPERTY_FLAG_SHIFT))
 
-    /** Description of named accessor property (second part) */
-    struct
-    {
-      /** Compressed pointer to property's name (pointer to String) */
-      mem_cpointer_t name_p;
+/**
+ * Computing the data offset of a property.
+ */
+#define ECMA_PROPERTY_VALUE_OFFSET(property_p) \
+  ((((uintptr_t) (property_p)) & (sizeof (ecma_property_value_t) - 1)) + 1)
 
-      /** Compressed pointer to pair of pointers - to property's getter and setter */
-      mem_cpointer_t getter_setter_pair_cp;
-    } named_accessor_property;
+/**
+ * Computing the base address of property data list.
+ */
+#define ECMA_PROPERTY_VALUE_BASE_PTR(property_p) \
+  ((ecma_property_value_t *) (((uintptr_t) (property_p)) & ~(sizeof (ecma_property_value_t) - 1)))
 
-    /** Description of internal property (second part) */
-    struct
-    {
-      /** Value (may be a compressed pointer) */
-      uint32_t value;
-    } internal_property;
-  } v;
-} ecma_property_t;
+/**
+ * Pointer to property data.
+ */
+#define ECMA_PROPERTY_VALUE_PTR(property_p) \
+  (ECMA_PROPERTY_VALUE_BASE_PTR (property_p) + ECMA_PROPERTY_VALUE_OFFSET (property_p))
 
 /**
  * Internal object types
@@ -395,11 +480,20 @@ typedef struct
   /** Is [[Writable]] defined? */
   unsigned int is_writable_defined : 1;
 
+  /** [[Writable]] */
+  unsigned int is_writable : 1;
+
   /** Is [[Enumerable]] defined? */
   unsigned int is_enumerable_defined : 1;
 
+  /** [[Enumerable]] */
+  unsigned int is_enumerable : 1;
+
   /** Is [[Configurable]] defined? */
   unsigned int is_configurable_defined : 1;
+
+  /** [[Configurable]] */
+  unsigned int is_configurable : 1;
 
   /** [[Value]] */
   ecma_value_t value;
@@ -409,15 +503,6 @@ typedef struct
 
   /** [[Set]] */
   ecma_object_t *set_p;
-
-  /** [[Writable]] */
-  bool is_writable;
-
-  /** [[Enumerable]] */
-  bool is_enumerable;
-
-  /** [[Configurable]] */
-  bool is_configurable;
 } ecma_property_descriptor_t;
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32

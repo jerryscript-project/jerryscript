@@ -358,8 +358,9 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-      ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                                   prim_value_prop_p->v.internal_property.value);
+      ecma_number_t *prim_value_num_p;
+      prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
+                                                    ecma_get_internal_property_value (prim_value_prop_p));
 
       ecma_number_t *ret_num_p = ecma_alloc_number ();
       *ret_num_p = *prim_value_num_p;

@@ -213,7 +213,7 @@ extern bool ecma_get_object_is_builtin (const ecma_object_t *) __attr_pure___;
 extern void ecma_set_object_is_builtin (ecma_object_t *);
 extern ecma_lexical_environment_type_t ecma_get_lex_env_type (const ecma_object_t *) __attr_pure___;
 extern ecma_object_t *ecma_get_lex_env_outer_reference (const ecma_object_t *) __attr_pure___;
-extern ecma_property_t *ecma_get_property_list (const ecma_object_t *) __attr_pure___;
+extern ecma_property_header_t *ecma_get_property_list (const ecma_object_t *) __attr_pure___;
 extern ecma_object_t *ecma_get_lex_env_binding_object (const ecma_object_t *) __attr_pure___;
 extern bool ecma_get_lex_env_provide_this (const ecma_object_t *) __attr_pure___;
 
@@ -232,13 +232,16 @@ ecma_get_named_property (ecma_object_t *, ecma_string_t *);
 extern ecma_property_t *
 ecma_get_named_data_property (ecma_object_t *, ecma_string_t *);
 
-extern void ecma_free_property (ecma_object_t *, ecma_property_t *);
+extern void ecma_free_property (ecma_object_t *, ecma_string_t *, ecma_property_t *);
 
 extern void ecma_delete_property (ecma_object_t *, ecma_property_t *);
 
 extern ecma_value_t ecma_get_named_data_property_value (const ecma_property_t *);
 extern void ecma_set_named_data_property_value (ecma_property_t *, ecma_value_t);
 extern void ecma_named_data_property_assign_value (ecma_object_t *, ecma_property_t *, ecma_value_t);
+
+extern ecma_value_t ecma_get_internal_property_value (const ecma_property_t *);
+extern void ecma_set_internal_property_value (ecma_property_t *, ecma_value_t);
 
 extern ecma_object_t *ecma_get_named_accessor_property_getter (const ecma_property_t *);
 extern ecma_object_t *ecma_get_named_accessor_property_setter (const ecma_property_t *);
@@ -257,6 +260,8 @@ extern void ecma_set_property_lcached (ecma_property_t *, bool);
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *);
 extern ecma_property_descriptor_t ecma_get_property_descriptor_from_property (ecma_property_t *);
+
+extern ecma_property_t *ecma_get_next_property_pair (ecma_property_pair_t *);
 
 extern void ecma_bytecode_ref (ecma_compiled_code_t *);
 extern void ecma_bytecode_deref (ecma_compiled_code_t *);

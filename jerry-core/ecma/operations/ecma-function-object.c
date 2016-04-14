@@ -168,11 +168,11 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ECMA_SET_POINTER (scope_prop_p->v.internal_property.value, scope_p);
+  ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value, scope_p);
 
   // 10., 11., 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-  MEM_CP_SET_NON_NULL_POINTER (bytecode_prop_p->v.internal_property.value, bytecode_data_p);
+  MEM_CP_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
 
   // 14., 15., 16., 17., 18.
@@ -294,7 +294,8 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     ecma_property_t *bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
 
     const ecma_compiled_code_t *bytecode_data_p;
-    bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t, bytecode_prop_p->v.internal_property.value);
+    bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t,
+                                          ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
 
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
@@ -527,8 +528,9 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                                  target_function_prop_p->v.internal_property.value);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 3. */
     ret_value = ecma_op_object_has_instance (target_func_obj_p, value);
@@ -575,7 +577,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_property_t *bytecode_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
 
       ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                          scope_prop_p->v.internal_property.value);
+                                                          ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
 
       // 8.
       ecma_value_t this_binding;
@@ -583,7 +585,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       bool is_no_lex_env;
 
       const ecma_compiled_code_t *bytecode_data_p;
-      bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t, bytecode_prop_p->v.internal_property.value);
+      bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t,
+                                            ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
 
       is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
       is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
@@ -681,19 +684,20 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                                  target_function_prop_p->v.internal_property.value);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 4. */
     ecma_property_t *bound_args_prop_p;
-    ecma_value_t bound_this_value = bound_this_prop_p->v.internal_property.value;
+    ecma_value_t bound_this_value = ECMA_PROPERTY_VALUE_PTR (bound_this_prop_p)->value;
     bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
 
     if (bound_args_prop_p != NULL)
     {
       ecma_collection_header_t *bound_arg_list_p;
       bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                    bound_args_prop_p->v.internal_property.value);
+                                                    ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
 
       JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 
@@ -865,8 +869,9 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                                  target_function_prop_p->v.internal_property.value);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
@@ -883,8 +888,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       {
         ecma_collection_header_t *bound_arg_list_p;
         bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                      bound_args_prop_p->v.internal_property.value);
-
+                                                      ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
 
         JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 
@@ -973,13 +977,13 @@ ecma_op_function_declaration (ecma_object_t *lex_env_p, /**< lexical environment
 
       JERRY_ASSERT (ecma_is_value_true (completion));
     }
-    else if (existing_prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
+    else if (ECMA_PROPERTY_GET_TYPE (existing_prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
     }
     else
     {
-      JERRY_ASSERT (existing_prop_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA);
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (existing_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
       if (!ecma_is_property_writable (existing_prop_p)
           || !ecma_is_property_enumerable (existing_prop_p))

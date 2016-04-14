@@ -200,6 +200,139 @@ ecma_gc_init (void)
 } /* ecma_gc_init */
 
 /**
+ * Mark referenced object from property
+ */
+static void
+ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
+{
+  switch (ECMA_PROPERTY_GET_TYPE (property_p))
+  {
+    case ECMA_PROPERTY_TYPE_NAMEDDATA:
+    {
+      ecma_value_t value = ecma_get_named_data_property_value (property_p);
+
+      if (ecma_is_value_object (value))
+      {
+        ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
+
+        ecma_gc_set_object_visited (value_obj_p, true);
+      }
+      break;
+    }
+    case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
+    {
+      ecma_object_t *getter_obj_p = ecma_get_named_accessor_property_getter (property_p);
+      ecma_object_t *setter_obj_p = ecma_get_named_accessor_property_setter (property_p);
+
+      if (getter_obj_p != NULL)
+      {
+        ecma_gc_set_object_visited (getter_obj_p, true);
+      }
+
+      if (setter_obj_p != NULL)
+      {
+        ecma_gc_set_object_visited (setter_obj_p, true);
+      }
+      break;
+    }
+    case ECMA_PROPERTY_TYPE_INTERNAL:
+    {
+      uint32_t property_value = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
+
+      switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
+      {
+        case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
+        case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
+        {
+          JERRY_UNIMPLEMENTED ("Indexed array storage is not implemented yet.");
+        }
+
+        case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
+                                                * (see above in the routine) */
+        case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
+                                                 * (see above in the routine) */
+        case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
+                                             * but number of the real internal property types */
+        {
+          JERRY_UNREACHABLE ();
+        }
+
+        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
+        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
+        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
+        case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
+        case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
+        case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
+        case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
+        case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
+        case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
+        case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
+        case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
+        case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
+        case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
+        case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
+        {
+          break;
+        }
+
+        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma value */
+        {
+          if (ecma_is_value_object (property_value))
+          {
+            ecma_object_t *obj_p = ecma_get_object_from_value (property_value);
+
+            ecma_gc_set_object_visited (obj_p, true);
+          }
+
+          break;
+        }
+
+        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma values */
+        {
+          ecma_collection_header_t *bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
+                                                                                  property_value);
+
+          ecma_collection_iterator_t bound_args_iterator;
+          ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
+
+          for (ecma_length_t i = 0; i < bound_arg_list_p->unit_number; i++)
+          {
+            bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
+            JERRY_ASSERT (is_moved);
+
+            if (ecma_is_value_object (*bound_args_iterator.current_value_p))
+            {
+              ecma_object_t *obj_p = ecma_get_object_from_value (*bound_args_iterator.current_value_p);
+
+              ecma_gc_set_object_visited (obj_p, true);
+            }
+          }
+
+          break;
+        }
+
+        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION: /* an object */
+        case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
+        case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
+        {
+          ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, property_value);
+
+          ecma_gc_set_object_visited (obj_p, true);
+
+          break;
+        }
+      }
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
+  }
+} /* ecma_gc_mark_property */
+
+/**
  * Mark objects as visited starting from specified object as root
  */
 void
@@ -237,130 +370,24 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
   if (traverse_properties)
   {
-    for (ecma_property_t *property_p = ecma_get_property_list (object_p), *next_property_p;
-         property_p != NULL;
-         property_p = next_property_p)
+    ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+    while (prop_iter_p != NULL)
     {
-      next_property_p = ECMA_GET_POINTER (ecma_property_t,
-                                          property_p->next_property_p);
+      JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
-      if (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDDATA)
+      if (prop_iter_p->types[0].type_and_flags != ECMA_PROPERTY_TYPE_DELETED)
       {
-        ecma_value_t value = ecma_get_named_data_property_value (property_p);
-
-        if (ecma_is_value_object (value))
-        {
-          ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
-
-          ecma_gc_set_object_visited (value_obj_p, true);
-        }
+        ecma_gc_mark_property (prop_iter_p->types + 0);
       }
-      else if (property_p->flags & ECMA_PROPERTY_FLAG_NAMEDACCESSOR)
+
+      if (prop_iter_p->types[1].type_and_flags != ECMA_PROPERTY_TYPE_DELETED)
       {
-        ecma_object_t *getter_obj_p = ecma_get_named_accessor_property_getter (property_p);
-        ecma_object_t *setter_obj_p = ecma_get_named_accessor_property_setter (property_p);
-
-        if (getter_obj_p != NULL)
-        {
-          ecma_gc_set_object_visited (getter_obj_p, true);
-        }
-
-        if (setter_obj_p != NULL)
-        {
-          ecma_gc_set_object_visited (setter_obj_p, true);
-        }
+        ecma_gc_mark_property (prop_iter_p->types + 1);
       }
-      else
-      {
-        JERRY_ASSERT (property_p->flags & ECMA_PROPERTY_FLAG_INTERNAL);
 
-        ecma_internal_property_id_t property_id = (ecma_internal_property_id_t) property_p->h.internal_property_type;
-        uint32_t property_value = property_p->v.internal_property.value;
-
-        switch (property_id)
-        {
-          case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
-          case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
-          {
-            JERRY_UNIMPLEMENTED ("Indexed array storage is not implemented yet.");
-          }
-
-          case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
-                                                      (see above in the routine) */
-          case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
-                                                       (see above in the routine) */
-          case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
-                                               * but number of the real internal property types */
-          {
-            JERRY_UNREACHABLE ();
-          }
-
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
-          case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
-          case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-          case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
-          case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
-          case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
-          case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
-          case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
-          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
-          case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
-          case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
-          {
-            break;
-          }
-
-          case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma value */
-          {
-            if (ecma_is_value_object (property_value))
-            {
-              ecma_object_t *obj_p = ecma_get_object_from_value (property_value);
-
-              ecma_gc_set_object_visited (obj_p, true);
-            }
-
-            break;
-          }
-
-          case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma values */
-          {
-            ecma_collection_header_t *bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                                                    property_value);
-
-            ecma_collection_iterator_t bound_args_iterator;
-            ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
-
-            for (ecma_length_t i = 0; i < bound_arg_list_p->unit_number; i++)
-            {
-              bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
-              JERRY_ASSERT (is_moved);
-
-              if (ecma_is_value_object (*bound_args_iterator.current_value_p))
-              {
-                ecma_object_t *obj_p = ecma_get_object_from_value (*bound_args_iterator.current_value_p);
-
-                ecma_gc_set_object_visited (obj_p, true);
-              }
-            }
-
-            break;
-          }
-
-          case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION: /* an object */
-          case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
-          case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
-          {
-            ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, property_value);
-
-            ecma_gc_set_object_visited (obj_p, true);
-
-            break;
-          }
-        }
-      }
+      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                      prop_iter_p->next_property_cp);
     }
   }
 } /* ecma_gc_mark */
@@ -399,14 +426,41 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
   if (!ecma_is_lexical_environment (object_p)
       || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
-    for (ecma_property_t *property = ecma_get_property_list (object_p), *next_property_p;
-         property != NULL;
-         property = next_property_p)
-    {
-      next_property_p = ECMA_GET_POINTER (ecma_property_t,
-                                          property->next_property_p);
+    ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
 
-      ecma_free_property (object_p, property);
+    while (prop_iter_p != NULL)
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+      /* Both cannot be deleted. */
+      JERRY_ASSERT (prop_iter_p->types[0].type_and_flags != ECMA_PROPERTY_TYPE_DELETED
+                    || prop_iter_p->types[1].type_and_flags != ECMA_PROPERTY_TYPE_DELETED);
+
+      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+      for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+      {
+        if (prop_iter_p->types[i].type_and_flags != ECMA_PROPERTY_TYPE_DELETED)
+        {
+          ecma_string_t *name_p = ECMA_GET_POINTER (ecma_string_t, prop_pair_p->names_cp[i]);
+
+          ecma_free_property (object_p, name_p, prop_iter_p->types + i);
+
+          if (name_p != NULL)
+          {
+            ecma_deref_ecma_string (name_p);
+          }
+        }
+      }
+
+      /* Both must be deleted. */
+      JERRY_ASSERT (prop_iter_p->types[0].type_and_flags == ECMA_PROPERTY_TYPE_DELETED
+                    && prop_iter_p->types[1].type_and_flags == ECMA_PROPERTY_TYPE_DELETED);
+
+      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                      prop_iter_p->next_property_cp);
+
+      ecma_dealloc_property_pair (prop_pair_p);
     }
   }
 

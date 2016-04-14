@@ -38,18 +38,6 @@ extern ecma_object_t *ecma_alloc_object (void);
 extern void ecma_dealloc_object (ecma_object_t *);
 
 /**
- * Allocate memory for ecma-property
- *
- * @return pointer to allocated memory
- */
-extern ecma_property_t *ecma_alloc_property (void);
-
-/**
- * Dealloc memory from an ecma-property
- */
-extern void ecma_dealloc_property (ecma_property_t *);
-
-/**
  * Allocate memory for ecma-number
  *
  * @return pointer to allocated memory
@@ -120,6 +108,18 @@ extern ecma_external_pointer_t *ecma_alloc_external_pointer (void);
 * Dealloc memory from external pointer
 */
 extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *);
+
+/**
+ * Allocate memory for ecma-property pair
+ *
+ * @return pointer to allocated memory
+ */
+extern ecma_property_pair_t *ecma_alloc_property_pair (void);
+
+/**
+ * Dealloc memory from an ecma-property pair
+ */
+extern void ecma_dealloc_property_pair (ecma_property_pair_t *);
 
 /**
  * @}

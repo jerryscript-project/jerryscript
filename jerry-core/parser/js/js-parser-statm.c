@@ -1327,7 +1327,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
         parser_stack_iterator_skip (&iterator, 1);
         parser_stack_iterator_read (&iterator, &label_statement, sizeof (parser_label_statement_t));
 
-        if (lexer_same_identifiers (&context_p->token.lit_location, &label_statement.label_ident))
+        if (lexer_compare_identifier_to_current (context_p, &label_statement.label_ident))
         {
           label_statement.break_list_p = parser_emit_cbc_forward_branch_item (context_p,
                                                                               opcode,
@@ -1422,7 +1422,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
         parser_stack_iterator_skip (&iterator, 1);
         parser_stack_iterator_read (&iterator, &label_statement, sizeof (parser_label_statement_t));
 
-        if (lexer_same_identifiers (&context_p->token.lit_location, &label_statement.label_ident))
+        if (lexer_compare_identifier_to_current (context_p, &label_statement.label_ident))
         {
           parser_loop_statement_t loop;
 
@@ -1529,7 +1529,7 @@ parser_parse_label (parser_context_t *context_p, /**< context */
       parser_stack_iterator_read (&iterator, &label_statement, sizeof (parser_label_statement_t));
       parser_stack_iterator_skip (&iterator, sizeof (parser_label_statement_t));
 
-      if (lexer_same_identifiers (label_literal_p, &label_statement.label_ident))
+      if (lexer_compare_identifier_to_current (context_p, &label_statement.label_ident))
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_LABEL);
       }

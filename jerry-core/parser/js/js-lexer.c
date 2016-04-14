@@ -31,7 +31,7 @@
  * @{
  */
 
-#define IS_UTF8_INTERMEDIATE_OCTET(byte) (((byte) & 0xc0) == 0x80)
+#define IS_UTF8_INTERMEDIATE_OCTET(byte) (((byte) & LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_2_BYTE_CODE_POINT_MIN)
 
 /**
  * Align column to the next tab position.
@@ -42,7 +42,7 @@ static parser_line_counter_t
 align_column_to_tab (parser_line_counter_t column) /**< current column */
 {
   /* Tab aligns to zero column start position. */
-  return (parser_line_counter_t) (((column + (8u - 1u)) & ~0x7u) + 1u);
+  return (parser_line_counter_t) (((column + (8u - 1u)) & ~ECMA_STRING_CONTAINER_MASK) + 1u);
 } /* align_column_to_tab */
 
 /**
@@ -50,7 +50,7 @@ align_column_to_tab (parser_line_counter_t column) /**< current column */
  *
  * @return character value
  */
-static ecma_char_t
+ecma_char_t
 lexer_hex_to_character (parser_context_t *context_p, /**< context */
                         const uint8_t *source_p, /**< current source position */
                         int length) /**< source length */
@@ -63,16 +63,16 @@ lexer_hex_to_character (parser_context_t *context_p, /**< context */
 
     result <<= 4;
 
-    if (byte >= '0' && byte <= '9')
+    if (byte >= LIT_CHAR_0 && byte <= LIT_CHAR_9)
     {
-      result += byte - '0';
+      result += byte - LIT_CHAR_0;
     }
     else
     {
-      byte |= 0x20;
-      if (byte >= 'a' && byte <= 'f')
+      byte = LEXER_TO_ASCII_LOWERCASE (byte);
+      if (byte >= LIT_CHAR_LOWERCASE_A && byte <= LIT_CHAR_LOWERCASE_F)
       {
-        result += byte - ('a' - 10);
+        result += byte - (LIT_CHAR_LOWERCASE_A - 10);
       }
       else
       {
@@ -142,9 +142,9 @@ skip_spaces (parser_context_t *context_p) /**< context */
         /* FALLTHRU */
       }
 
-      case 0x0b:
-      case 0x0c:
-      case 0x20:
+      case LIT_CHAR_VTAB:
+      case LIT_CHAR_FF:
+      case LIT_CHAR_SP:
       {
         context_p->source_p++;
         context_p->column++;
@@ -158,16 +158,16 @@ skip_spaces (parser_context_t *context_p) /**< context */
         continue;
       }
 
-      case '/':
+      case LIT_CHAR_SLASH:
       {
         if (mode == LEXER_SKIP_SPACES
             && context_p->source_p + 1 < source_end_p)
         {
-          if (context_p->source_p[1] == '/')
+          if (context_p->source_p[1] == LIT_CHAR_SLASH)
           {
             mode = LEXER_SKIP_SINGLE_LINE_COMMENT;
           }
-          else if (context_p->source_p[1] == '*')
+          else if (context_p->source_p[1] == LIT_CHAR_ASTERISK)
           {
             mode = LEXER_SKIP_MULTI_LINE_COMMENT;
             context_p->token.line = context_p->line;
@@ -184,11 +184,11 @@ skip_spaces (parser_context_t *context_p) /**< context */
         break;
       }
 
-      case '*':
+      case LIT_CHAR_ASTERISK:
       {
         if (mode == LEXER_SKIP_MULTI_LINE_COMMENT
             && context_p->source_p + 1 < source_end_p
-            && context_p->source_p[1] == '/')
+            && context_p->source_p[1] == LIT_CHAR_SLASH)
         {
           mode = LEXER_SKIP_SPACES;
           context_p->source_p += 2;
@@ -436,7 +436,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
   do
   {
-    if (*source_p == '\\')
+    if (*source_p == LIT_CHAR_BACKSLASH)
     {
       uint16_t character;
 
@@ -444,7 +444,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
       context_p->source_p = source_p;
       context_p->token.column = column;
 
-      if ((source_p + 6 > source_end_p) || (source_p[1] != 'u'))
+      if ((source_p + 6 > source_end_p) || (source_p[1] != LIT_CHAR_LOWERCASE_U))
       {
         parser_raise_error (context_p, PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE);
       }
@@ -453,20 +453,20 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
       if (length == 0)
       {
-        if (!util_is_identifier_start_character (character))
+        if (!lit_char_is_identifier_start_character (character))
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_IDENTIFIER_START);
         }
       }
       else
       {
-        if (!util_is_identifier_part_character (character))
+        if (!lit_char_is_identifier_part_character (character))
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_IDENTIFIER_PART);
         }
       }
 
-      length += util_get_utf8_length (character);
+      length += lit_char_get_utf8_length (character);
       source_p += 6;
       PARSER_PLUS_EQUAL_LC (column, 6);
       continue;
@@ -490,7 +490,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
     }
   }
   while (source_p < source_end_p
-         && (util_is_identifier_part (source_p) || *source_p == '\\'));
+         && (lit_char_is_identifier_part (source_p) || *source_p == LIT_CHAR_BACKSLASH));
 
   context_p->source_p = ident_start_p;
   context_p->token.column = context_p->column;
@@ -574,7 +574,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
       break;
     }
 
-    if (*source_p == '\\')
+    if (*source_p == LIT_CHAR_BACKSLASH)
     {
       source_p++;
       column++;
@@ -616,7 +616,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
 
       /* Except \x, \u, and octal numbers, everything is
        * converted to a character which has the same byte length. */
-      if (*source_p >= '0' && *source_p <= '3')
+      if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_3)
       {
         if (context_p->status_flags & PARSER_IS_STRICT)
         {
@@ -626,16 +626,16 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         source_p++;
         column++;
 
-        if (source_p < source_end_p && *source_p >= '0' && *source_p <= '7')
+        if (source_p < source_end_p && *source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
         {
           source_p++;
           column++;
 
-          if (source_p < source_end_p && *source_p >= '0' && *source_p <= '7')
+          if (source_p < source_end_p && *source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
           {
             /* Numbers >= 0x200 (0x80) requires
              * two bytes for encoding in UTF-8. */
-            if (source_p[-2] >= '2')
+            if (source_p[-2] >= LIT_CHAR_2)
             {
               length++;
             }
@@ -649,7 +649,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
 
-      if (*source_p >= '4' && *source_p <= '7')
+      if (*source_p >= LIT_CHAR_4 && *source_p <= LIT_CHAR_7)
       {
         if (context_p->status_flags & PARSER_IS_STRICT)
         {
@@ -659,7 +659,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         source_p++;
         column++;
 
-        if (source_p < source_end_p && *source_p >= '0' && *source_p <= '7')
+        if (source_p < source_end_p && *source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
         {
           source_p++;
           column++;
@@ -671,9 +671,9 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
 
-      if (*source_p == 'x' || *source_p == 'u')
+      if (*source_p == LIT_CHAR_LOWERCASE_X || *source_p == LIT_CHAR_LOWERCASE_U)
       {
-        uint8_t hex_part_length = (*source_p == 'x') ? 2 : 4;
+        uint8_t hex_part_length = (*source_p == LIT_CHAR_LOWERCASE_X) ? 2 : 4;
 
         context_p->token.line = line;
         context_p->token.column = (parser_line_counter_t) (column - 1);
@@ -682,9 +682,9 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
           parser_raise_error (context_p, PARSER_ERR_INVALID_ESCAPE_SEQUENCE);
         }
 
-        length += util_get_utf8_length (lexer_hex_to_character (context_p,
-                                                                source_p + 1,
-                                                                hex_part_length));
+        length += lit_char_get_utf8_length (lexer_hex_to_character (context_p,
+                                                                    source_p + 1,
+                                                                    hex_part_length));
         source_p += hex_part_length + 1;
         PARSER_PLUS_EQUAL_LC (column, hex_part_length + 1u);
         continue;
@@ -748,17 +748,6 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
 } /* lexer_parse_string */
 
 /**
- * Checks whether the character is hex digit.
- *
- * @return non-zero if the character is hex digit.
- */
-static int
-lexer_is_hex_digit (uint8_t character) /**< input character */
-{
-  return (character >= '0' && character <= '9') || ((character | 0x20) >= 'a' && (character | 0x20) <= 'f');
-} /* lexer_is_hex_digit */
-
-/**
  * Parse number.
  */
 static void
@@ -776,16 +765,16 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   context_p->token.lit_location.type = LEXER_NUMBER_LITERAL;
   context_p->token.lit_location.has_escape = PARSER_FALSE;
 
-  if (source_p[0] == '0'
+  if (source_p[0] == LIT_CHAR_0
       && source_p + 1 < source_end_p)
   {
-    if ((source_p[1] | 0x20) == 'x')
+    if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_X)
     {
       context_p->token.extra_value = LEXER_NUMBER_HEXADECIMAL;
       source_p += 2;
 
       if (source_p >= source_end_p
-          || !lexer_is_hex_digit (source_p[0]))
+          || !lit_char_is_hex_digit (source_p[0]))
       {
         parser_raise_error (context_p, PARSER_ERR_INVALID_HEX_DIGIT);
       }
@@ -795,10 +784,10 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         source_p++;
       }
       while (source_p < source_end_p
-             && lexer_is_hex_digit (source_p[0]));
+             && lit_char_is_hex_digit (source_p[0]));
     }
-    else if (source_p[1] >= '0'
-             && source_p[1] <= '7')
+    else if (source_p[1] >= LIT_CHAR_0
+             && source_p[1] <= LIT_CHAR_7)
     {
       context_p->token.extra_value = LEXER_NUMBER_OCTAL;
 
@@ -812,18 +801,18 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         source_p++;
       }
       while (source_p < source_end_p
-             && source_p[0] >= '0'
-             && source_p[0] <= '7');
+             && source_p[0] >= LIT_CHAR_0
+             && source_p[0] <= LIT_CHAR_7);
 
       if (source_p < source_end_p
-          && source_p[0] >= '8'
-          && source_p[0] <= '9')
+          && source_p[0] >= LIT_CHAR_8
+          && source_p[0] <= LIT_CHAR_9)
       {
         parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
       }
     }
-    else if (source_p[1] >= '8'
-             && source_p[1] <= '9')
+    else if (source_p[1] >= LIT_CHAR_8
+             && source_p[1] <= LIT_CHAR_9)
     {
       parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
     }
@@ -840,8 +829,8 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       source_p++;
     }
     while (source_p < source_end_p
-           && source_p[0] >= '0'
-           && source_p[0] <= '9');
+           && source_p[0] >= LIT_CHAR_0
+           && source_p[0] <= LIT_CHAR_9);
 
     can_be_float = PARSER_TRUE;
   }
@@ -849,31 +838,31 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   if (can_be_float)
   {
     if (source_p < source_end_p
-        && source_p[0] == '.')
+        && source_p[0] == LIT_CHAR_DOT)
     {
       source_p++;
       while (source_p < source_end_p
-             && source_p[0] >= '0'
-             && source_p[0] <= '9')
+             && source_p[0] >= LIT_CHAR_0
+             && source_p[0] <= LIT_CHAR_9)
       {
         source_p++;
       }
     }
 
     if (source_p < source_end_p
-        && (source_p[0] | 0x20) == 'e')
+        && LEXER_TO_ASCII_LOWERCASE (source_p[0]) == LIT_CHAR_LOWERCASE_E)
     {
       source_p++;
 
       if (source_p < source_end_p
-          && (source_p[0] == '+' || source_p[0] == '-'))
+          && (source_p[0] == LIT_CHAR_PLUS || source_p[0] == LIT_CHAR_MINUS))
       {
         source_p++;
       }
 
       if (source_p >= source_end_p
-          || source_p[0] < '0'
-          || source_p[0] > '9')
+          || source_p[0] < LIT_CHAR_0
+          || source_p[0] > LIT_CHAR_9)
       {
         parser_raise_error (context_p, PARSER_ERR_MISSING_EXPONENT);
       }
@@ -883,13 +872,13 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         source_p++;
       }
       while (source_p < source_end_p
-             && source_p[0] >= '0'
-             && source_p[0] <= '9');
+             && source_p[0] >= LIT_CHAR_0
+             && source_p[0] <= LIT_CHAR_9);
     }
   }
 
   if (source_p < source_end_p
-      && (util_is_identifier_start (source_p) || source_p[0] == '\\'))
+      && (lit_char_is_identifier_start (source_p) || source_p[0] == LIT_CHAR_BACKSLASH))
   {
     parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_AFTER_NUMBER);
   }
@@ -995,14 +984,14 @@ lexer_next_token (parser_context_t *context_p) /**< context */
     return;
   }
 
-  if (util_is_identifier_start (context_p->source_p)
-      || context_p->source_p[0] == '\\')
+  if (lit_char_is_identifier_start (context_p->source_p)
+      || context_p->source_p[0] == LIT_CHAR_BACKSLASH)
   {
     lexer_parse_identifier (context_p, PARSER_TRUE);
     return;
   }
 
-  if (context_p->source_p[0] >= '0' && context_p->source_p[0] <= '9')
+  if (context_p->source_p[0] >= LIT_CHAR_0 && context_p->source_p[0] <= LIT_CHAR_9)
   {
     lexer_parse_number (context_p);
     return;
@@ -1010,19 +999,19 @@ lexer_next_token (parser_context_t *context_p) /**< context */
 
   switch (context_p->source_p[0])
   {
-    LEXER_TYPE_A_TOKEN ('{', LEXER_LEFT_BRACE);
-    LEXER_TYPE_A_TOKEN ('(', LEXER_LEFT_PAREN);
-    LEXER_TYPE_A_TOKEN ('[', LEXER_LEFT_SQUARE);
-    LEXER_TYPE_A_TOKEN ('}', LEXER_RIGHT_BRACE);
-    LEXER_TYPE_A_TOKEN (')', LEXER_RIGHT_PAREN);
-    LEXER_TYPE_A_TOKEN (']', LEXER_RIGHT_SQUARE);
-    LEXER_TYPE_A_TOKEN (';', LEXER_SEMICOLON);
-    LEXER_TYPE_A_TOKEN (',', LEXER_COMMA);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_LEFT_BRACE, LEXER_LEFT_BRACE);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_LEFT_PAREN, LEXER_LEFT_PAREN);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_LEFT_SQUARE, LEXER_LEFT_SQUARE);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_RIGHT_BRACE, LEXER_RIGHT_BRACE);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_RIGHT_PAREN, LEXER_RIGHT_PAREN);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_RIGHT_SQUARE, LEXER_RIGHT_SQUARE);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_SEMICOLON, LEXER_SEMICOLON);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_COMMA, LEXER_COMMA);
 
-    case (uint8_t) '.' :
+    case (uint8_t) LIT_CHAR_DOT :
     {
       if (length >= 2
-          && (context_p->source_p[1] >= '0' && context_p->source_p[1] <= '9'))
+          && (context_p->source_p[1] >= LIT_CHAR_0 && context_p->source_p[1] <= LIT_CHAR_9))
       {
         lexer_parse_number (context_p);
         return;
@@ -1033,20 +1022,20 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       break;
     }
 
-    case (uint8_t) '<':
+    case (uint8_t) LIT_CHAR_LESS_THAN:
     {
       if (length >= 2)
       {
-        if (context_p->source_p[1] == (uint8_t) '=')
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_EQUALS)
         {
           context_p->token.type = LEXER_LESS_EQUAL;
           length = 2;
           break;
         }
 
-        if (context_p->source_p[1] == (uint8_t) '<')
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_LESS_THAN)
         {
-          if (length >= 3 && context_p->source_p[2] == (uint8_t) '=')
+          if (length >= 3 && context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
           {
             context_p->token.type = LEXER_ASSIGN_LEFT_SHIFT;
             length = 3;
@@ -1064,31 +1053,31 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       break;
     }
 
-    case '>':
+    case LIT_CHAR_GREATER_THAN:
     {
       if (length >= 2)
       {
-        if (context_p->source_p[1] == (uint8_t) '=')
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_EQUALS)
         {
           context_p->token.type = LEXER_GREATER_EQUAL;
           length = 2;
           break;
         }
 
-        if (context_p->source_p[1] == (uint8_t) '>')
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN)
         {
           if (length >= 3)
           {
-            if (context_p->source_p[2] == (uint8_t) '=')
+            if (context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
             {
               context_p->token.type = LEXER_ASSIGN_RIGHT_SHIFT;
               length = 3;
               break;
             }
 
-            if (context_p->source_p[2] == (uint8_t) '>')
+            if (context_p->source_p[2] == (uint8_t) LIT_CHAR_GREATER_THAN)
             {
-              if (length >= 4 && context_p->source_p[3] == (uint8_t) '=')
+              if (length >= 4 && context_p->source_p[3] == (uint8_t) LIT_CHAR_EQUALS)
               {
                 context_p->token.type = LEXER_ASSIGN_UNS_RIGHT_SHIFT;
                 length = 4;
@@ -1112,27 +1101,37 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       break;
     }
 
-    LEXER_TYPE_D_TOKEN ('=', LEXER_ASSIGN, '=', LEXER_EQUAL, '=', LEXER_STRICT_EQUAL)
-    LEXER_TYPE_D_TOKEN ('!', LEXER_LOGICAL_NOT, '=', LEXER_NOT_EQUAL, '=', LEXER_STRICT_NOT_EQUAL)
+    LEXER_TYPE_D_TOKEN (LIT_CHAR_EQUALS, LEXER_ASSIGN, LIT_CHAR_EQUALS,
+                        LEXER_EQUAL, LIT_CHAR_EQUALS, LEXER_STRICT_EQUAL)
+    LEXER_TYPE_D_TOKEN (LIT_CHAR_EXCLAMATION, LEXER_LOGICAL_NOT, LIT_CHAR_EQUALS,
+                        LEXER_NOT_EQUAL, LIT_CHAR_EQUALS, LEXER_STRICT_NOT_EQUAL)
 
-    LEXER_TYPE_C_TOKEN ('+', LEXER_ADD, '=', LEXER_ASSIGN_ADD, '+', LEXER_INCREASE)
-    LEXER_TYPE_C_TOKEN ('-', LEXER_SUBTRACT, '=', LEXER_ASSIGN_SUBTRACT, '-', LEXER_DECREASE)
+    LEXER_TYPE_C_TOKEN (LIT_CHAR_PLUS, LEXER_ADD, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_ADD, LIT_CHAR_PLUS, LEXER_INCREASE)
+    LEXER_TYPE_C_TOKEN (LIT_CHAR_MINUS, LEXER_SUBTRACT, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_SUBTRACT, LIT_CHAR_MINUS, LEXER_DECREASE)
 
-    LEXER_TYPE_B_TOKEN ('*', LEXER_MULTIPLY, '=', LEXER_ASSIGN_MULTIPLY)
-    LEXER_TYPE_B_TOKEN ('/', LEXER_DIVIDE, '=', LEXER_ASSIGN_DIVIDE)
-    LEXER_TYPE_B_TOKEN ('%', LEXER_MODULO, '=', LEXER_ASSIGN_MODULO)
+    LEXER_TYPE_B_TOKEN (LIT_CHAR_ASTERISK, LEXER_MULTIPLY, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_MULTIPLY)
+    LEXER_TYPE_B_TOKEN (LIT_CHAR_SLASH, LEXER_DIVIDE, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_DIVIDE)
+    LEXER_TYPE_B_TOKEN (LIT_CHAR_PERCENT, LEXER_MODULO, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_MODULO)
 
-    LEXER_TYPE_C_TOKEN ('&', LEXER_BIT_AND, '=', LEXER_ASSIGN_BIT_AND, '&', LEXER_LOGICAL_AND)
-    LEXER_TYPE_C_TOKEN ('|', LEXER_BIT_OR, '=', LEXER_ASSIGN_BIT_OR, '|', LEXER_LOGICAL_OR)
+    LEXER_TYPE_C_TOKEN (LIT_CHAR_AMPERSAND, LEXER_BIT_AND, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_BIT_AND, LIT_CHAR_AMPERSAND, LEXER_LOGICAL_AND)
+    LEXER_TYPE_C_TOKEN (LIT_CHAR_VLINE, LEXER_BIT_OR, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_BIT_OR, LIT_CHAR_VLINE, LEXER_LOGICAL_OR)
 
-    LEXER_TYPE_B_TOKEN ('^', LEXER_BIT_XOR, '=', LEXER_ASSIGN_BIT_XOR)
+    LEXER_TYPE_B_TOKEN (LIT_CHAR_CIRCUMFLEX, LEXER_BIT_XOR, LIT_CHAR_EQUALS,
+                        LEXER_ASSIGN_BIT_XOR)
 
-    LEXER_TYPE_A_TOKEN ('~', LEXER_BIT_NOT);
-    LEXER_TYPE_A_TOKEN ('?', LEXER_QUESTION_MARK);
-    LEXER_TYPE_A_TOKEN (':', LEXER_COLON);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_TILDE, LEXER_BIT_NOT);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_QUESTION, LEXER_QUESTION_MARK);
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_COLON, LEXER_COLON);
 
-    case '\'':
-    case '"':
+    case LIT_CHAR_SINGLE_QUOTE:
+    case LIT_CHAR_DOUBLE_QUOTE:
     {
       lexer_parse_string (context_p);
       return;
@@ -1258,10 +1257,10 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
       do
       {
-        if (*source_p == '\\')
+        if (*source_p == LIT_CHAR_BACKSLASH)
         {
-          destination_p += util_to_utf8_bytes (destination_p,
-                                               lexer_hex_to_character (context_p, source_p + 2, 4));
+          destination_p += lit_char_to_utf8_bytes (destination_p,
+                                                   lexer_hex_to_character (context_p, source_p + 2, 4));
           source_p += 6;
           continue;
         }
@@ -1275,7 +1274,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
         }
       }
       while (source_p < source_end_p
-             && (util_is_identifier_part (source_p) || *source_p == '\\'));
+             && (lit_char_is_identifier_part (source_p) || *source_p == LIT_CHAR_BACKSLASH));
 
       JERRY_ASSERT (destination_p == destination_start_p + literal_p->length);
     }
@@ -1290,7 +1289,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
           break;
         }
 
-        if (*source_p == '\\')
+        if (*source_p == LIT_CHAR_BACKSLASH)
         {
           uint8_t conv_character;
 
@@ -1323,41 +1322,41 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
             continue;
           }
 
-          if (*source_p >= '0' && *source_p <= '3')
+          if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_3)
           {
-            uint32_t octal_number = (uint32_t) (*source_p - '0');
+            uint32_t octal_number = (uint32_t) (*source_p - LIT_CHAR_0);
 
             source_p++;
             JERRY_ASSERT (source_p < context_p->source_end_p);
 
-            if (*source_p >= '0' && *source_p <= '7')
+            if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
             {
-              octal_number = octal_number * 8 + (uint32_t) (*source_p - '0');
+              octal_number = octal_number * 8 + (uint32_t) (*source_p - LIT_CHAR_0);
               source_p++;
               JERRY_ASSERT (source_p < context_p->source_end_p);
 
-              if (*source_p >= '0' && *source_p <= '7')
+              if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
               {
-                octal_number = octal_number * 8 + (uint32_t) (*source_p - '0');
+                octal_number = octal_number * 8 + (uint32_t) (*source_p - LIT_CHAR_0);
                 source_p++;
                 JERRY_ASSERT (source_p < context_p->source_end_p);
               }
             }
 
-            destination_p += util_to_utf8_bytes (destination_p, (uint16_t) octal_number);
+            destination_p += lit_char_to_utf8_bytes (destination_p, (uint16_t) octal_number);
             continue;
           }
 
-          if (*source_p >= '4' && *source_p <= '7')
+          if (*source_p >= LIT_CHAR_4 && *source_p <= LIT_CHAR_7)
           {
-            uint32_t octal_number = (uint32_t) (*source_p - '0');
+            uint32_t octal_number = (uint32_t) (*source_p - LIT_CHAR_0);
 
             source_p++;
             JERRY_ASSERT (source_p < context_p->source_end_p);
 
-            if (*source_p >= '0' && *source_p <= '7')
+            if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_7)
             {
-              octal_number = octal_number * 8 + (uint32_t) (*source_p - '0');
+              octal_number = octal_number * 8 + (uint32_t) (*source_p - LIT_CHAR_0);
               source_p++;
               JERRY_ASSERT (source_p < context_p->source_end_p);
             }
@@ -1366,15 +1365,15 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
             continue;
           }
 
-          if (*source_p == 'x' || *source_p == 'u')
+          if (*source_p == LIT_CHAR_LOWERCASE_X || *source_p == LIT_CHAR_LOWERCASE_U)
           {
-            int hex_part_length = (*source_p == 'x') ? 2 : 4;
+            int hex_part_length = (*source_p == LIT_CHAR_LOWERCASE_X) ? 2 : 4;
             JERRY_ASSERT (source_p + 1 + hex_part_length <= context_p->source_end_p);
 
-            destination_p += util_to_utf8_bytes (destination_p,
-                                                 lexer_hex_to_character (context_p,
-                                                                         source_p + 1,
-                                                                         hex_part_length));
+            destination_p += lit_char_to_utf8_bytes (destination_p,
+                                                     lexer_hex_to_character (context_p,
+                                                                             source_p + 1,
+                                                                             hex_part_length));
             source_p += hex_part_length + 1;
             continue;
           }
@@ -1382,32 +1381,32 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
           conv_character = *source_p;
           switch (*source_p)
           {
-            case 'b':
+            case LIT_CHAR_LOWERCASE_B:
             {
               conv_character = 0x08;
               break;
             }
-            case 't':
+            case LIT_CHAR_LOWERCASE_T:
             {
               conv_character = 0x09;
               break;
             }
-            case 'n':
+            case LIT_CHAR_LOWERCASE_N:
             {
               conv_character = 0x0a;
               break;
             }
-            case 'v':
+            case LIT_CHAR_LOWERCASE_V:
             {
               conv_character = 0x0b;
               break;
             }
-            case 'f':
+            case LIT_CHAR_LOWERCASE_F:
             {
               conv_character = 0x0c;
               break;
             }
-            case 'r':
+            case LIT_CHAR_LOWERCASE_R:
             {
               conv_character = 0x0d;
               break;
@@ -1429,16 +1428,16 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
            * long sequence. */
 
           uint32_t character = ((((uint32_t) source_p[0]) & 0x7) << 18);
-          character |= ((((uint32_t) source_p[1]) & 0x3f) << 12);
-          character |= ((((uint32_t) source_p[2]) & 0x3f) << 6);
-          character |= (((uint32_t) source_p[3]) & 0x3f);
+          character |= ((((uint32_t) source_p[1]) & LIT_UTF8_LAST_6_BITS_MASK) << 12);
+          character |= ((((uint32_t) source_p[2]) & LIT_UTF8_LAST_6_BITS_MASK) << 6);
+          character |= (((uint32_t) source_p[3]) & LIT_UTF8_LAST_6_BITS_MASK);
 
           JERRY_ASSERT (character >= 0x10000);
           character -= 0x10000;
-          destination_p += util_to_utf8_bytes (destination_p,
+          destination_p += lit_char_to_utf8_bytes (destination_p,
                                                (ecma_char_t) (0xd800 | (character >> 10)));
-          destination_p += util_to_utf8_bytes (destination_p,
-                                               (ecma_char_t) (0xdc00 | (character & 0x3ff)));
+          destination_p += lit_char_to_utf8_bytes (destination_p,
+                                               (ecma_char_t) (0xdc00 | (character & LIT_UTF16_LAST_10_BITS_MASK)));
           source_p += 4;
           continue;
         }
@@ -1476,17 +1475,17 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
     }
 
     if (literal_p->length == 4
-        && source_p[0] == 'e'
-        && source_p[3] == 'l'
-        && source_p[1] == 'v'
-        && source_p[2] == 'a')
+        && source_p[0] == LIT_CHAR_LOWERCASE_E
+        && source_p[3] == LIT_CHAR_LOWERCASE_L
+        && source_p[1] == LIT_CHAR_LOWERCASE_V
+        && source_p[2] == LIT_CHAR_LOWERCASE_A)
     {
       context_p->lit_object.type = LEXER_LITERAL_OBJECT_EVAL;
     }
 
     if (literal_p->length == 9
-        && source_p[0] == 'a'
-        && source_p[8] == 's'
+        && source_p[0] == LIT_CHAR_LOWERCASE_A
+        && source_p[8] == LIT_CHAR_LOWERCASE_S
         && memcmp (source_p + 1, "rgument", 7) == 0)
     {
       context_p->lit_object.type = LEXER_LITERAL_OBJECT_ARGUMENTS;
@@ -1543,7 +1542,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     do
     {
       src_p++;
-      num = num * 8 + (ecma_number_t) (*src_p - '0');
+      num = num * 8 + (ecma_number_t) (*src_p - LIT_CHAR_0);
     }
     while (src_p < src_end_p);
   }
@@ -1677,7 +1676,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_UNTERMINATED_REGEXP);
     }
 
-    if (!in_class && source_p[0] == '/')
+    if (!in_class && source_p[0] == LIT_CHAR_SLASH)
     {
       regex_end_p = source_p;
       source_p++;
@@ -1705,24 +1704,24 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
         column--;
         break;
       }
-      case '[':
+      case LIT_CHAR_LEFT_SQUARE:
       {
         in_class = PARSER_TRUE;
         break;
       }
-      case ']':
+      case LIT_CHAR_RIGHT_SQUARE:
       {
         in_class = PARSER_FALSE;
         break;
       }
-      case '\\':
+      case LIT_CHAR_BACKSLASH:
       {
         if (source_p + 1 >= source_end_p)
         {
           parser_raise_error (context_p, PARSER_ERR_UNTERMINATED_REGEXP);
         }
 
-        if (source_p[1] >= 0x20 && source_p[1] <= 0x7f)
+        if (source_p[1] >= 0x20 && source_p[1] <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
         {
           source_p++;
           column++;
@@ -1740,21 +1739,20 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     }
   }
 
-  /* TODO: This is duplicate of 're_parse_regexp_flags'. Move this to a helper function. */
   current_flags = 0;
   while (source_p < source_end_p)
   {
     uint32_t flag = 0;
 
-    if (source_p[0] == 'g')
+    if (source_p[0] == LIT_CHAR_LOWERCASE_G)
     {
       flag = RE_FLAG_GLOBAL;
     }
-    else if (source_p[0] == 'i')
+    else if (source_p[0] == LIT_CHAR_LOWERCASE_I)
     {
       flag = RE_FLAG_IGNORE_CASE;
     }
-    else if (source_p[0] == 'm')
+    else if (source_p[0] == LIT_CHAR_LOWERCASE_M)
     {
       flag = RE_FLAG_MULTILINE;
     }
@@ -1775,7 +1773,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   }
 
   if (source_p < source_end_p
-      && util_is_identifier_part (source_p))
+      && lit_char_is_identifier_part (source_p))
   {
     parser_raise_error (context_p, PARSER_ERR_UNKNOWN_REGEXP_FLAG);
   }
@@ -1859,7 +1857,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   context_p->token.column = context_p->column;
 
   if (context_p->source_p < context_p->source_end_p
-      && (util_is_identifier_start (context_p->source_p) || context_p->source_p[0] == '\\'))
+      && (lit_char_is_identifier_start (context_p->source_p) || context_p->source_p[0] == LIT_CHAR_BACKSLASH))
   {
     lexer_parse_identifier (context_p, literal_type != LEXER_STRING_LITERAL);
 
@@ -1922,7 +1920,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
   {
     int create_literal_object = PARSER_FALSE;
 
-    if (util_is_identifier_start (context_p->source_p) || context_p->source_p[0] == '\\')
+    if (lit_char_is_identifier_start (context_p->source_p) || context_p->source_p[0] == LIT_CHAR_BACKSLASH)
     {
       lexer_parse_identifier (context_p, PARSER_FALSE);
 
@@ -1932,14 +1930,14 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         skip_spaces (context_p);
 
         if (context_p->source_p < context_p->source_end_p
-            && context_p->source_p[0] != ':')
+            && context_p->source_p[0] != LIT_CHAR_COLON)
         {
-          if (lexer_same_identifiers (&context_p->token.lit_location, &lexer_get_literal))
+          if (lexer_compare_identifier_to_current (context_p, &lexer_get_literal))
           {
             context_p->token.type = LEXER_PROPERTY_GETTER;
             return;
           }
-          else if (lexer_same_identifiers (&context_p->token.lit_location, &lexer_set_literal))
+          else if (lexer_compare_identifier_to_current (context_p, &lexer_set_literal))
           {
             context_p->token.type = LEXER_PROPERTY_SETTER;
             return;
@@ -1949,13 +1947,13 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
       create_literal_object = PARSER_TRUE;
     }
-    else if (context_p->source_p[0] == '"'
-             || context_p->source_p[0] == '\'')
+    else if (context_p->source_p[0] == LIT_CHAR_DOUBLE_QUOTE
+             || context_p->source_p[0] == LIT_CHAR_SINGLE_QUOTE)
     {
       lexer_parse_string (context_p);
       create_literal_object = PARSER_TRUE;
     }
-    else if (!must_be_identifier && context_p->source_p[0] == '}')
+    else if (!must_be_identifier && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
     {
       context_p->token.type = LEXER_RIGHT_BRACE;
       context_p->source_p += 1;
@@ -1966,14 +1964,14 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     {
       const uint8_t *char_p = context_p->source_p;
 
-      if (char_p[0] == '.')
+      if (char_p[0] == LIT_CHAR_DOT)
       {
         char_p++;
       }
 
       if (char_p < context_p->source_end_p
-          && char_p[0] >= '0'
-          && char_p[0] <= '9')
+          && char_p[0] >= LIT_CHAR_0
+          && char_p[0] <= LIT_CHAR_9)
       {
         lexer_parse_number (context_p);
         lexer_construct_number_object (context_p, PARSER_FALSE, PARSER_FALSE);
@@ -2005,7 +2003,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
   context_p->token.column = context_p->column;
 
   if (context_p->source_p < context_p->source_end_p
-      && (util_is_identifier_start (context_p->source_p) || context_p->source_p[0] == '\\'))
+      && (lit_char_is_identifier_start (context_p->source_p) || context_p->source_p[0] == LIT_CHAR_BACKSLASH))
   {
     lexer_parse_identifier (context_p, PARSER_FALSE);
 
@@ -2014,13 +2012,13 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
       skip_spaces (context_p);
 
       if (context_p->source_p < context_p->source_end_p
-          && context_p->source_p[0] != ':')
+          && context_p->source_p[0] != LIT_CHAR_COLON)
       {
-        if (lexer_same_identifiers (&context_p->token.lit_location, &lexer_get_literal))
+        if (lexer_compare_identifier_to_current (context_p, &lexer_get_literal))
         {
           context_p->token.type = LEXER_PROPERTY_GETTER;
         }
-        else if (lexer_same_identifiers (&context_p->token.lit_location, &lexer_set_literal))
+        else if (lexer_compare_identifier_to_current (context_p, &lexer_set_literal))
         {
           context_p->token.type = LEXER_PROPERTY_SETTER;
         }
@@ -2044,44 +2042,16 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
 } /* lexer_scan_identifier */
 
 /**
- * Converts a "\uxxxx" sequence into a unicode character
- *
- * @return the decoded 16 bit unicode character
- */
-static ecma_char_t
-lexer_decode_unicode_sequence (const uint8_t *source_p) /**< source pointer */
-{
-  ecma_char_t chr = 0;
-  const uint8_t *source_end_p = source_p + 6;
-
-  source_p += 2;
-  do
-  {
-    uint8_t byte = *source_p++;
-    chr = (ecma_char_t) (chr << 4);
-    if (byte <= '9')
-    {
-      chr = (ecma_char_t) (chr + byte - '0');
-    }
-    else
-    {
-      chr = (ecma_char_t) (chr + LEXER_TO_ASCII_LOWERCASE (byte) - ('a' - 10));
-    }
-  }
-  while (source_p < source_end_p);
-
-  return chr;
-} /* lexer_decode_unicode_sequence */
-
-/**
- * Compares two identifiers.
+ * Compares the given identifier to that which is the current token
+ * in the parser context.
  *
  * @return non-zero if the input identifiers are the same
  */
 int
-lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
-                        const lexer_lit_location_t *right) /**< right identifier */
+lexer_compare_identifier_to_current (parser_context_t *context_p,        /**< context */
+                                     const lexer_lit_location_t *right)  /**< identifier */
 {
+  lexer_lit_location_t *left = &context_p->token.lit_location;
   const uint8_t *left_p;
   const uint8_t *right_p;
   size_t count;
@@ -2108,7 +2078,7 @@ lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
     size_t utf8_len, offset;
 
     /* Backslash cannot be part of a multibyte UTF-8 character. */
-    if (*left_p != '\\' && *right_p != '\\')
+    if (*left_p != LIT_CHAR_BACKSLASH && *right_p != LIT_CHAR_BACKSLASH)
     {
       if (*left_p++ != *right_p++)
       {
@@ -2118,23 +2088,23 @@ lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
       continue;
     }
 
-    if (*left_p == '\\' && *right_p == '\\')
+    if (*left_p == LIT_CHAR_BACKSLASH && *right_p == LIT_CHAR_BACKSLASH)
     {
-      uint16_t left_chr = lexer_decode_unicode_sequence (left_p);
+      uint16_t left_chr = lexer_hex_to_character (context_p, left_p, 6);
 
-      if (left_chr != lexer_decode_unicode_sequence (right_p))
+      if (left_chr != lexer_hex_to_character (context_p, right_p, 6))
       {
         return PARSER_FALSE;
       }
 
       left_p += 6;
       right_p += 6;
-      count += util_get_utf8_length (left_chr);
+      count += lit_char_get_utf8_length (left_chr);
       continue;
     }
 
     /* One character is encoded as unicode sequence. */
-    if (*right_p == '\\')
+    if (*right_p == LIT_CHAR_BACKSLASH)
     {
       /* The pointers can be swapped. */
       const uint8_t *swap_p = left_p;
@@ -2142,7 +2112,7 @@ lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
       right_p = swap_p;
     }
 
-    utf8_len = util_to_utf8_bytes (utf8_buf, lexer_decode_unicode_sequence (left_p));
+    utf8_len = lit_char_to_utf8_bytes (utf8_buf, lexer_hex_to_character (context_p, left_p, 6));
     JERRY_ASSERT (utf8_len > 0);
     count -= utf8_len;
     offset = 0;
@@ -2162,7 +2132,7 @@ lexer_same_identifiers (lexer_lit_location_t *left, /**< left identifier */
   while (count > 0);
 
   return PARSER_TRUE;
-} /* lexer_same_identifiers */
+} /* lexer_compare_identifier_to_current */
 
 /**
  * @}

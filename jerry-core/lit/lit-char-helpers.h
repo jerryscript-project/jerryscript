@@ -78,8 +78,10 @@ extern bool lit_char_is_line_terminator (ecma_char_t);
 #define LIT_CHAR_UNDERSCORE  ((ecma_char_t) '_')  /* low line (underscore) */
 /* LIT_CHAR_BACKSLASH defined above */
 
-extern bool lit_char_is_unicode_letter (ecma_char_t);
-extern bool lit_char_is_unicode_non_letter_ident_part (ecma_char_t);
+extern bool lit_char_is_identifier_start (const uint8_t *);
+extern bool lit_char_is_identifier_part (const uint8_t *);
+extern bool lit_char_is_identifier_start_character (ecma_char_t);
+extern bool lit_char_is_identifier_part_character (ecma_char_t);
 
 /*
  * Punctuator characters (ECMA-262 v5, 7.7)
@@ -210,10 +212,14 @@ extern bool lit_char_is_unicode_non_letter_ident_part (ecma_char_t);
 #define LIT_CHAR_ASCII_DIGITS_BEGIN                 LIT_CHAR_0           /* decimal digits range */
 #define LIT_CHAR_ASCII_DIGITS_END                   LIT_CHAR_9
 
+#define LEXER_TO_ASCII_LOWERCASE(character) ((character) | LIT_CHAR_SP)
+
 extern bool lit_char_is_octal_digit (ecma_char_t);
 extern bool lit_char_is_decimal_digit (ecma_char_t);
 extern bool lit_char_is_hex_digit (ecma_char_t);
 extern uint32_t lit_char_hex_to_int (ecma_char_t);
+extern size_t lit_char_to_utf8_bytes (uint8_t *, ecma_char_t);
+extern size_t lit_char_get_utf8_length (ecma_char_t);
 
 /* read a hex encoded code point from a zero terminated buffer */
 bool lit_read_code_unit_from_hex (const lit_utf8_byte_t *, lit_utf8_size_t, ecma_char_ptr_t);

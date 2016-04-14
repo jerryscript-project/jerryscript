@@ -122,7 +122,7 @@ lit_char_is_format_control (ecma_char_t c) /**< code unit */
 bool
 lit_char_is_white_space (ecma_char_t c) /**< code unit */
 {
-  if (c <= 127)
+  if (c <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
     return (c == LIT_CHAR_TAB
             || c == LIT_CHAR_VTAB
@@ -172,20 +172,9 @@ lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
  * @return true - if specified character falls into one of the listed categories,
  *         false - otherwise.
  */
-bool
+static bool
 lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
 {
-  /* Fast path for ASCII-defined letters */
-  if ((c >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && c <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END)
-      || (c >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && c <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END))
-  {
-    return true;
-  }
-  else if (c <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-  {
-    return false;
-  }
-
   return (search_char_in_interval_array (c, unicode_letter_interv_sps, unicode_letter_interv_lens,
                                          NUM_OF_ELEMENTS (unicode_letter_interv_sps))
           || search_char_in_char_array (c, unicode_letter_chars, NUM_OF_ELEMENTS (unicode_letter_chars)));
@@ -205,22 +194,89 @@ lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
  * @return true - if specified character falls into one of the listed categories,
  *         false - otherwise.
  */
-bool
+static bool
 lit_char_is_unicode_non_letter_ident_part (ecma_char_t c) /**< code unit */
 {
-  if (c <= 127)
-  {
-    return LIT_CHAR_ASCII_DIGITS_BEGIN <= c && c <= LIT_CHAR_ASCII_DIGITS_END;
-  }
-  else
-  {
-    return (search_char_in_interval_array (c, unicode_non_letter_ident_part_interv_sps,
-                                           unicode_non_letter_ident_part_interv_lens,
-                                           NUM_OF_ELEMENTS (unicode_non_letter_ident_part_interv_sps))
-            || search_char_in_char_array (c, unicode_non_letter_ident_part_chars,
-                                          NUM_OF_ELEMENTS (unicode_non_letter_ident_part_chars)));
-  }
+  return (search_char_in_interval_array (c, unicode_non_letter_ident_part_interv_sps,
+                                         unicode_non_letter_ident_part_interv_lens,
+                                         NUM_OF_ELEMENTS (unicode_non_letter_ident_part_interv_sps))
+          || search_char_in_char_array (c, unicode_non_letter_ident_part_chars,
+                                        NUM_OF_ELEMENTS (unicode_non_letter_ident_part_chars)));
 } /* lit_char_is_unicode_non_letter_ident_part */
+
+/**
+ * Checks whether the next UTF8 character is a valid identifier start.
+ *
+ * @return true if it is.
+ */
+bool
+lit_char_is_identifier_start (const uint8_t *src_p) /**< pointer to a vaild UTF8 character */
+{
+  if (*src_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    return lit_char_is_identifier_start_character (*src_p);
+  }
+
+  return lit_char_is_identifier_start_character (lit_utf8_peek_next (src_p));
+} /* lit_char_is_identifier_start */
+
+/**
+ * Checks whether the character is a valid identifier start.
+ *
+ * @return true if it is.
+ */
+bool
+lit_char_is_identifier_start_character (uint16_t chr) /**< EcmaScript character */
+{
+  // Fast path for ASCII-defined letters
+  if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    return ((LEXER_TO_ASCII_LOWERCASE (chr) >= LIT_CHAR_LOWERCASE_A
+             && LEXER_TO_ASCII_LOWERCASE (chr) <= LIT_CHAR_LOWERCASE_Z)
+            || chr == LIT_CHAR_DOLLAR_SIGN
+            || chr == LIT_CHAR_UNDERSCORE);
+  }
+
+  return lit_char_is_unicode_letter (chr);
+} /* lit_char_is_identifier_start_character */
+
+/**
+ * Checks whether the next UTF8 character is a valid identifier part.
+ *
+ * @return true if it is.
+ */
+bool
+lit_char_is_identifier_part (const uint8_t *src_p) /**< pointer to a vaild UTF8 character */
+{
+  if (*src_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    return lit_char_is_identifier_part_character (*src_p);
+  }
+
+  return lit_char_is_identifier_part_character (lit_utf8_peek_next (src_p));
+} /* lit_char_is_identifier_part */
+
+/**
+ * Checks whether the character is a valid identifier part.
+ *
+ * @return true if it is.
+ */
+bool
+lit_char_is_identifier_part_character (uint16_t chr) /**< EcmaScript character */
+{
+  // Fast path for ASCII-defined letters
+  if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+  {
+    return ((LEXER_TO_ASCII_LOWERCASE (chr) >= LIT_CHAR_LOWERCASE_A
+             && LEXER_TO_ASCII_LOWERCASE (chr) <= LIT_CHAR_LOWERCASE_Z)
+            || (chr >= LIT_CHAR_0 && chr <= LIT_CHAR_9)
+            || chr == LIT_CHAR_DOLLAR_SIGN
+            || chr == LIT_CHAR_UNDERSCORE);
+  }
+
+  return (lit_char_is_unicode_letter (chr)
+          || lit_char_is_unicode_non_letter_ident_part (chr));
+} /* lit_char_is_identifier_part_character */
 
 /**
  * Check if specified character is one of OctalDigit characters (ECMA-262 v5, B.1.2)
@@ -253,8 +309,8 @@ bool
 lit_char_is_hex_digit (ecma_char_t c) /**< code unit */
 {
   return ((c >= LIT_CHAR_ASCII_DIGITS_BEGIN && c <= LIT_CHAR_ASCII_DIGITS_END)
-          || (c >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN && c <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END)
-          || (c >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN && c <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_END));
+          || (LEXER_TO_ASCII_LOWERCASE (c) >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN
+              && LEXER_TO_ASCII_LOWERCASE (c) <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END));
 } /* lit_char_is_hex_digit */
 
 /**
@@ -281,6 +337,63 @@ lit_char_hex_to_int (ecma_char_t c) /**< code unit, corresponding to
     return (uint32_t) (c - LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN + 10);
   }
 } /* lit_char_hex_to_int */
+
+/**
+ * Converts a character to UTF8 bytes.
+ *
+ * @return length of the UTF8 representation.
+ */
+size_t
+lit_char_to_utf8_bytes (uint8_t *dst_p, /**< destination buffer */
+                        ecma_char_t chr) /**< EcmaScript character */
+{
+  if (!(chr & ~LIT_UTF8_1_BYTE_CODE_POINT_MAX))
+  {
+    /* 00000000 0xxxxxxx -> 0xxxxxxx */
+    *dst_p = (uint8_t) chr;
+    return 1;
+  }
+
+  if (!(chr & ~LIT_UTF8_2_BYTE_CODE_POINT_MAX))
+  {
+    /* 00000yyy yyxxxxxx -> 110yyyyy 10xxxxxx */
+    *(dst_p++) = (uint8_t) (LIT_UTF8_2_BYTE_MARKER | ((chr >> 6) & LIT_UTF8_LAST_5_BITS_MASK));
+    *dst_p = (uint8_t) (LIT_UTF8_EXTRA_BYTE_MARKER | (chr & LIT_UTF8_LAST_6_BITS_MASK));
+    return 2;
+  }
+
+  JERRY_ASSERT (!(chr & ~LIT_UTF8_3_BYTE_CODE_POINT_MAX));
+  /* zzzzyyyy yyxxxxxx -> 1110zzzz 10yyyyyy 10xxxxxx */
+  *(dst_p++) = (uint8_t) (LIT_UTF8_3_BYTE_MARKER | ((chr >> 12) & LIT_UTF8_LAST_4_BITS_MASK));
+  *(dst_p++) = (uint8_t) (LIT_UTF8_EXTRA_BYTE_MARKER | ((chr >> 6) & LIT_UTF8_LAST_6_BITS_MASK));
+  *dst_p = (uint8_t) (LIT_UTF8_EXTRA_BYTE_MARKER | (chr & LIT_UTF8_LAST_6_BITS_MASK));
+  return 3;
+} /* lit_char_to_utf8_bytes */
+
+/**
+ * Returns the length of the UTF8 representation of a character.
+ *
+ * @return length of the UTF8 representation.
+ */
+size_t
+lit_char_get_utf8_length (ecma_char_t chr) /**< EcmaScript character */
+{
+  if (!(chr & ~LIT_UTF8_1_BYTE_CODE_POINT_MAX))
+  {
+    /* 00000000 0xxxxxxx */
+    return 1;
+  }
+
+  if (!(chr & ~LIT_UTF8_2_BYTE_CODE_POINT_MAX))
+  {
+    /* 00000yyy yyxxxxxx */
+    return 2;
+  }
+
+  /* zzzzyyyy yyxxxxxx */
+  JERRY_ASSERT (!(chr & ~LIT_UTF8_3_BYTE_CODE_POINT_MAX));
+  return 3;
+} /* lit_char_get_utf8_length */
 
 /**
  * Parse the next number_of_characters hexadecimal character,

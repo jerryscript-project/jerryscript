@@ -15,7 +15,7 @@
  */
 
 /**
- * Jerry libc platform-specific functions darwin implementation
+ * Jerry libc platform-specific functions posix implementation
  */
 
 #include <assert.h>
@@ -29,6 +29,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+
+#if defined (__linux__)
+#define SYSCALL_NO(NAME) __NR_ ## NAME
+#elif defined (__APPLE__) && defined (__MACH__)
+#define SYS_exit_group SYS_exit
+#define SYSCALL_NO(NAME) SYS_ ## NAME
+#else
+#error "Unsupported OS"
+#endif /* !__linux && !(__APPLE__ && __MACH__) */
 
 #include "jerry-libc-defs.h"
 
@@ -68,11 +77,11 @@ puts (const char *s) /**< string to print */
 void __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
-  syscall_1 (SYS_close, (long int) stdin);
-  syscall_1 (SYS_close, (long int) stdout);
-  syscall_1 (SYS_close, (long int) stderr);
+  syscall_1 (SYSCALL_NO (close), (long int) stdin);
+  syscall_1 (SYSCALL_NO (close), (long int) stdout);
+  syscall_1 (SYSCALL_NO (close), (long int) stderr);
 
-  syscall_1 (SYS_exit, status);
+  syscall_1 (SYSCALL_NO (exit_group), status);
 
   while (true)
   {
@@ -87,9 +96,9 @@ exit (int status) /**< status code */
 void __attr_noreturn___ __attr_used___
 abort (void)
 {
-  syscall_1 (SYS_close, (long int) stdin);
-  syscall_1 (SYS_close, (long int) stdout);
-  syscall_1 (SYS_close, (long int) stderr);
+  syscall_1 (SYSCALL_NO (close), (long int) stdin);
+  syscall_1 (SYSCALL_NO (close), (long int) stdout);
+  syscall_1 (SYSCALL_NO (close), (long int) stderr);
 
   raise (SIGABRT);
 
@@ -105,7 +114,7 @@ abort (void)
 int __attr_used___
 raise (int sig)
 {
-  return (int) syscall_2 (SYS_kill, syscall_0 (SYS_getpid), sig);
+  return (int) syscall_2 (SYSCALL_NO (kill), syscall_0 (SYSCALL_NO (getpid)), sig);
 } /* raise */
 
 /**
@@ -192,7 +201,7 @@ fopen (const char *path, /**< file path */
     flags |= O_APPEND;
   }
 
-  long int ret = syscall_3 (SYS_open, (long int) path, flags, access);
+  long int ret = syscall_3 (SYSCALL_NO (open), (long int) path, flags, access);
 
   return (void *) (uintptr_t) (ret);
 } /* fopen */
@@ -204,7 +213,7 @@ fopen (const char *path, /**< file path */
 void
 rewind (FILE *stream) /**< stream pointer */
 {
-  syscall_3 (SYS_lseek, (long int) stream, 0, SEEK_SET);
+  syscall_3 (SYSCALL_NO (lseek), (long int) stream, 0, SEEK_SET);
 } /* rewind */
 
 /**
@@ -216,7 +225,7 @@ rewind (FILE *stream) /**< stream pointer */
 int
 fclose (FILE *fp) /**< stream pointer */
 {
-  syscall_2 (SYS_close, (long int) fp, 0);
+  syscall_2 (SYSCALL_NO (close), (long int) fp, 0);
 
   return 0;
 } /* fclose */
@@ -230,7 +239,7 @@ fseek (FILE * fp, /**< stream pointer */
        int whence) /**< specifies position type
                     *   to add offset to */
 {
-  syscall_3 (SYS_lseek, (long int) fp, offset, whence);
+  syscall_3 (SYSCALL_NO (lseek), (long int) fp, offset, whence);
 
   return 0;
 } /* fseek */
@@ -241,7 +250,7 @@ fseek (FILE * fp, /**< stream pointer */
 long
 ftell (FILE * fp) /**< stream pointer */
 {
-  long int ret = syscall_3 (SYS_lseek, (long int) fp, 0, SEEK_CUR);
+  long int ret = syscall_3 (SYSCALL_NO (lseek), (long int) fp, 0, SEEK_CUR);
 
   return ret;
 } /* ftell */
@@ -267,7 +276,7 @@ fread (void *ptr, /**< address of buffer to read to */
 
   do
   {
-    ret = syscall_3 (SYS_read,
+    ret = syscall_3 (SYSCALL_NO (read),
                      (long int) stream,
                      (long int) ((uint8_t *) ptr + bytes_read),
                      (long int) (size * nmemb - bytes_read));
@@ -299,7 +308,7 @@ fwrite (const void *ptr, /**< data to write */
 
   do
   {
-    long int ret = syscall_3 (SYS_write,
+    long int ret = syscall_3 (SYSCALL_NO (write),
                               (long int) stream,
                               (long int) ((uint8_t *) ptr + bytes_written),
                               (long int) (size * nmemb - bytes_written));
@@ -320,5 +329,48 @@ int
 gettimeofday (void *tp,  /**< struct timeval */
               void *tzp) /**< struct timezone */
 {
-  return (int) syscall_2 (gettimeofday, (long int) tp, (long int) tzp);
+  return (int) syscall_2 (SYSCALL_NO (gettimeofday), (long int) tp, (long int) tzp);
 } /* gettimeofday */
+
+// FIXME
+#if 0
+/**
+ * Setup new memory limits
+ */
+void
+jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
+                    size_t stack_size) /**< limit for stack */
+{
+  struct
+  {
+    unsigned long long rlim_cur;
+    unsigned long long rlim_max;
+  } data_limit = { data_size, data_size };
+
+  struct
+  {
+    unsigned long long rlim_cur;
+    unsigned long long rlim_max;
+  } stack_limit = { stack_size, stack_size };
+
+  long int ret;
+
+#ifdef __TARGET_HOST_x64
+  ret = syscall_2 (SYSCALL_NO (setrlimit), RLIMIT_DATA, (intptr_t) &data_limit);
+  assert (ret == 0);
+
+  ret = syscall_2 (SYSCALL_NO (setrlimit), RLIMIT_STACK, (intptr_t) &stack_limit);
+  assert (ret == 0);
+#elif defined (__TARGET_HOST_ARMv7)
+  ret = syscall_3 (SYSCALL_NO (prlimit64), 0, RLIMIT_DATA, (intptr_t) &data_limit);
+  assert (ret == 0);
+
+  ret = syscall_3 (SYSCALL_NO (prlimit64), 0, RLIMIT_STACK, (intptr_t) &stack_limit);
+  assert (ret == 0);
+#elif defined (__TARGET_HOST_x86)
+# error "__TARGET_HOST_x86 case is not implemented"
+#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
+# error "!__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86"
+#endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
+} /* jrt_set_mem_limits */
+#endif // FIXME

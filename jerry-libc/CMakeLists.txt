@@ -77,10 +77,10 @@ set(COMPILE_FLAGS_LIBC "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
 
  # Platform-specific
   # Linux
-   file(GLOB SOURCE_LIBC_LINUX target/linux/*.c target/linux/*.S)
+   file(GLOB SOURCE_LIBC_LINUX target/posix/*.c target/posix/*.S)
 
   # Darwin
-   file(GLOB SOURCE_LIBC_DARWIN target/darwin/*.c target/darwin/*.S)
+   file(GLOB SOURCE_LIBC_DARWIN target/posix/*.c target/posix/*.S)
 
   # MCU
    # stm32f3

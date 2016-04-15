@@ -58,7 +58,8 @@ typedef enum
   ECMA_TYPE_SIMPLE, /**< simple value */
   ECMA_TYPE_NUMBER, /**< 64-bit integer */
   ECMA_TYPE_STRING, /**< pointer to description of a string */
-  ECMA_TYPE_OBJECT /**< pointer to description of an object */
+  ECMA_TYPE_OBJECT, /**< pointer to description of an object */
+  ECMA_TYPE___MAX = ECMA_TYPE_OBJECT /** highest value for ecma types */
 } ecma_type_t;
 
 /**
@@ -85,34 +86,33 @@ typedef enum
 /**
  * Description of an ecma value
  *
- * Bit-field structure: type (2) | error (1) | value (ECMA_POINTER_FIELD_WIDTH)
+ * Bit-field structure: type (2) | error (1) | value (29)
  */
 typedef uint32_t ecma_value_t;
 
-/**
- * Value type (ecma_type_t)
- */
-#define ECMA_VALUE_TYPE_POS (0)
-#define ECMA_VALUE_TYPE_WIDTH (2)
+#if UINTPTR_MAX <= UINT32_MAX
 
 /**
- * Value is error (boolean)
+ * MEM_ALIGNMENT_LOG aligned pointers can be stored directly in ecma_value_t
  */
-#define ECMA_VALUE_ERROR_POS (ECMA_VALUE_TYPE_POS + \
-                              ECMA_VALUE_TYPE_WIDTH)
-#define ECMA_VALUE_ERROR_WIDTH (1)
+#define ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
+
+#endif /* UINTPTR_MAX <= UINT32_MAX */
 
 /**
- * Simple value (ecma_simple_value_t) or compressed pointer to value (depending on value_type)
+ * Mask for ecma types in ecma_type_t
  */
-#define ECMA_VALUE_VALUE_POS (ECMA_VALUE_ERROR_POS + \
-                              ECMA_VALUE_ERROR_WIDTH)
-#define ECMA_VALUE_VALUE_WIDTH (ECMA_POINTER_FIELD_WIDTH)
+#define ECMA_VALUE_TYPE_MASK 0x3u
 
 /**
- * Size of ecma value description, in bits
+ * Error flag in ecma_type_t
  */
-#define ECMA_VALUE_SIZE (ECMA_VALUE_VALUE_POS + ECMA_VALUE_VALUE_WIDTH)
+#define ECMA_VALUE_ERROR_FLAG 0x4u
+
+/**
+ * Shift for value part in ecma_type_t
+ */
+#define ECMA_VALUE_SHIFT 3
 
 /**
  * Internal properties' identifiers.

@@ -1766,7 +1766,7 @@ jerry_run (jerry_api_value_t *error_value_p) /**< [out] error value */
   ecma_value_t error_value;
   jerry_completion_code_t ret_code = vm_run_global (&error_value);
 
-  error_value &= ~(1u << ECMA_VALUE_ERROR_POS);
+  error_value &= ~ECMA_VALUE_ERROR_FLAG;
   jerry_api_convert_ecma_value_to_api_value (error_value_p, error_value);
   ecma_free_value (error_value);
 
@@ -2385,7 +2385,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
     if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
     {
       JERRY_ASSERT (ecma_is_value_error (error_value));
-      error_value = error_value & ~(1u << ECMA_VALUE_ERROR_POS);
+      error_value = error_value & ~ECMA_VALUE_ERROR_FLAG;
       ecma_free_value (error_value);
     }
     else

@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "jerry.h"
-#include "jrt/jrt.h"
+#include "jerry-port.h"
 
 /**
  * Maximum command line arguments number
@@ -96,7 +97,7 @@ read_sources (const char *script_file_names[],
 
   if (i < files_count)
   {
-    JERRY_ERROR_MSG ("Failed to open file: %s\n", script_file_names[i]);
+    jerry_port_errormsg ("Failed to open file: %s\n", script_file_names[i]);
 
     return NULL;
   }
@@ -114,8 +115,8 @@ static bool
 read_snapshot (const char *snapshot_file_name_p,
                size_t *out_snapshot_size_p)
 {
-  JERRY_ASSERT (snapshot_file_name_p != NULL);
-  JERRY_ASSERT (out_snapshot_size_p != NULL);
+  assert (snapshot_file_name_p != NULL);
+  assert (out_snapshot_size_p != NULL);
 
   *out_snapshot_size_p = 0;
 
@@ -169,11 +170,11 @@ read_snapshot (const char *snapshot_file_name_p,
  * @return true - if only one argument was passed and the argument is a boolean true.
  */
 static bool
-assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** < function object */
-                const jerry_api_value_t *this_p __attr_unused___, /** < this arg */
-                jerry_api_value_t *ret_val_p __attr_unused___, /** < return argument */
-                const jerry_api_value_t args_p[], /** < function arguments */
-                const jerry_api_length_t args_cnt) /** < number of function arguments */
+assert_handler (const jerry_api_object_t *function_obj_p __attribute__((unused)), /**< function object */
+                const jerry_api_value_t *this_p __attribute__((unused)), /**< this arg */
+                jerry_api_value_t *ret_val_p __attribute__((unused)), /**< return argument */
+                const jerry_api_value_t args_p[], /**< function arguments */
+                const jerry_api_length_t args_cnt) /**< number of function arguments */
 {
   if (args_cnt == 1
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
@@ -183,7 +184,7 @@ assert_handler (const jerry_api_object_t *function_obj_p __attr_unused___, /** <
   }
   else
   {
-    JERRY_ERROR_MSG ("Script assertion failed\n");
+    jerry_port_errormsg ("Script assertion failed\n");
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
 } /* assert_handler */
@@ -224,8 +225,8 @@ main (int argc,
 {
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    JERRY_ERROR_MSG ("Too many command line arguments : %d. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n",
-                      argc, JERRY_MAX_COMMAND_LINE_ARGS);
+    jerry_port_errormsg ("Too many command line arguments : %d. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n",
+                         argc, JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -293,14 +294,14 @@ main (int argc,
 
       if (save_snapshot_file_name_p != NULL)
       {
-        JERRY_ERROR_MSG ("Error: snapshot file name already specified\n");
+        jerry_port_errormsg ("Error: snapshot file name already specified\n");
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
       if (++i >= argc)
       {
-        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -312,26 +313,26 @@ main (int argc,
     {
       if (++i >= argc)
       {
-        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      JERRY_ASSERT (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
+      assert (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
       exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
       if (++i >= argc)
       {
-        JERRY_ERROR_MSG ("Error: no level specified for %s\n", argv[i - 1]);
+        jerry_port_errormsg ("Error: no level specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
       if (strlen (argv[i]) != 1 || argv[i][0] < '0' || argv[i][0] > '3')
       {
-        JERRY_ERROR_MSG ("Error: wrong format for %s\n", argv[i - 1]);
+        jerry_port_errormsg ("Error: wrong format for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -345,7 +346,7 @@ main (int argc,
     {
       if (++i >= argc)
       {
-        JERRY_ERROR_MSG ("Error: no file specified for %s\n", argv[i - 1]);
+        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -361,7 +362,7 @@ main (int argc,
     }
     else if (!strncmp ("-", argv[i], 1))
     {
-      JERRY_ERROR_MSG ("Error: unrecognized option: %s\n", argv[i]);
+      jerry_port_errormsg ("Error: unrecognized option: %s\n", argv[i]);
       print_usage (argv[0]);
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -375,13 +376,13 @@ main (int argc,
   {
     if (files_counter == 0)
     {
-      JERRY_ERROR_MSG ("--save-snapshot argument is passed, but no script was specified on command line\n");
+      jerry_port_errormsg ("--save-snapshot argument is passed, but no script was specified on command line\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
     if (exec_snapshots_count != 0)
     {
-      JERRY_ERROR_MSG ("--save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      jerry_port_errormsg ("--save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -398,7 +399,7 @@ main (int argc,
     jerry_log_file = fopen (log_file_name, "w");
     if (jerry_log_file == NULL)
     {
-      JERRY_ERROR_MSG ("Failed to open log file: %s\n", log_file_name);
+      jerry_port_errormsg ("Failed to open log file: %s\n", log_file_name);
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -425,7 +426,7 @@ main (int argc,
 
   if (!is_assert_added)
   {
-    JERRY_ERROR_MSG ("Failed to register 'assert' method.");
+    jerry_port_errormsg ("Failed to register 'assert' method.");
   }
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
@@ -446,7 +447,7 @@ main (int argc,
                                       snapshot_size,
                                       true,
                                       &ret_value);
-      JERRY_ASSERT (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
+      assert (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
     }
 
     if (ret_code != JERRY_COMPLETION_CODE_OK)
@@ -605,17 +606,17 @@ main (int argc,
       jerry_api_release_value (&err_value);
     }
 
-    if (likely (err_str_p != NULL))
+    if (__builtin_expect (!!(err_str_p != NULL), 1))
     {
       jerry_api_char_t err_str_buf[256];
 
       jerry_api_size_t err_str_size = jerry_api_get_string_size (err_str_p);
-      JERRY_ASSERT (err_str_size < 256);
+      assert (err_str_size < 256);
       jerry_api_size_t sz = jerry_api_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
-      JERRY_ASSERT (sz == err_str_size);
+      assert (sz == err_str_size);
       err_str_buf[err_str_size] = 0;
 
-      JERRY_ERROR_MSG ("Unhandled exception! %s\n", err_str_buf);
+      jerry_port_errormsg ("Unhandled exception! %s\n", err_str_buf);
 
       jerry_api_release_string (err_str_p);
     }
@@ -624,8 +625,8 @@ main (int argc,
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  JERRY_ASSERT (ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT
-                || ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION);
+  assert (ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT
+          || ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION);
   jerry_cleanup ();
   return JERRY_STANDALONE_EXIT_CODE_FAIL;
 } /* main */

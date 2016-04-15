@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include "jerry.h"
-#include "jrt/jrt.h"
+#include "jerry-port.h"
 
 /**
  * The module interface routine
@@ -53,14 +53,14 @@ static char* read_sources (const char *script_file_names[],
     file = fopen (script_file_name, "r");
     if (file == NULL)
     {
-      JERRY_ERROR_MSG ("Failed to fopen [%s]\n", script_file_name);
+      jerry_port_errormsg ("Failed to fopen [%s]\n", script_file_name);
       return NULL;
     }
 
     int fseek_status = fseek (file, 0, SEEK_END);
     if (fseek_status != 0)
     {
-      JERRY_ERROR_MSG ("Failed to fseek fseek_status(%d)\n", fseek_status);
+      jerry_port_errormsg ("Failed to fseek fseek_status(%d)\n", fseek_status);
       fclose (file);
       return NULL;
     }
@@ -68,7 +68,7 @@ static char* read_sources (const char *script_file_names[],
     long script_len = ftell (file);
     if (script_len < 0)
     {
-      JERRY_ERROR_MSG ("Failed to ftell script_len(%ld)\n", script_len);
+      jerry_port_errormsg ("Failed to ftell script_len(%ld)\n", script_len);
       fclose (file);
       break;
     }
@@ -81,14 +81,14 @@ static char* read_sources (const char *script_file_names[],
 
   if (total_length <= 0)
   {
-    JERRY_ERROR_MSG ("Theres noting to read\n");
+    jerry_port_errormsg ("Theres noting to read\n");
     return NULL;
   }
 
   source_buffer = (char*)malloc(total_length);
   if (source_buffer == NULL)
   {
-    JERRY_ERROR_MSG ("Out of memory error\n");
+    jerry_port_errormsg ("Out of memory error\n");
     return NULL;
   }
   memset(source_buffer, 0, sizeof(char)*total_length);
@@ -101,21 +101,21 @@ static char* read_sources (const char *script_file_names[],
 
     if (file == NULL)
     {
-      JERRY_ERROR_MSG ("Failed to fopen [%s]\n", script_file_name);
+      jerry_port_errormsg ("Failed to fopen [%s]\n", script_file_name);
       break;
     }
 
     int fseek_status = fseek (file, 0, SEEK_END);
     if (fseek_status != 0)
     {
-      JERRY_ERROR_MSG ("Failed to fseek fseek_status(%d)\n", fseek_status);
+      jerry_port_errormsg ("Failed to fseek fseek_status(%d)\n", fseek_status);
       break;
     }
 
     long script_len = ftell (file);
     if (script_len < 0)
     {
-      JERRY_ERROR_MSG ("Failed to ftell script_len(%ld)\n", script_len);
+      jerry_port_errormsg ("Failed to ftell script_len(%ld)\n", script_len);
       break;
     }
 
@@ -125,7 +125,7 @@ static char* read_sources (const char *script_file_names[],
     size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
-      JERRY_ERROR_MSG ("Failed to fread bytes_read(%d)\n", bytes_read);
+      jerry_port_errormsg ("Failed to fread bytes_read(%d)\n", bytes_read);
       break;
     }
 
@@ -142,7 +142,7 @@ static char* read_sources (const char *script_file_names[],
 
   if (i < files_count)
   {
-    JERRY_ERROR_MSG ("Failed to read script N%d\n", i + 1);
+    jerry_port_errormsg ("Failed to read script N%d\n", i + 1);
     free(source_buffer);
     return NULL;
   }
@@ -156,8 +156,8 @@ int jerryscript_entry (int argc, char *argv[])
 {
   if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    JERRY_ERROR_MSG ("Too many command line arguments. Current maximum is %d\n",
-             JERRY_MAX_COMMAND_LINE_ARGS);
+    jerry_port_errormsg ("Too many command line arguments. Current maximum is %d\n",
+                         JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -212,7 +212,7 @@ int jerryscript_entry (int argc, char *argv[])
       }
       else
       {
-        JERRY_ERROR_MSG ("Error: wrong format or invalid argument\n");
+        jerry_port_errormsg ("Error: wrong format or invalid argument\n");
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
     }
@@ -233,7 +233,7 @@ int jerryscript_entry (int argc, char *argv[])
 
   if (source_p == NULL)
   {
-    JERRY_ERROR_MSG ("JERRY_STANDALONE_EXIT_CODE_FAIL\n");
+    jerry_port_errormsg ("JERRY_STANDALONE_EXIT_CODE_FAIL\n");
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 

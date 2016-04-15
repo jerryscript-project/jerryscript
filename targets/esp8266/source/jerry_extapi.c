@@ -17,7 +17,6 @@
 #include <stdio.h>
 
 #include "jerry-core/jerry.h"
-#include "jerry-core/jrt/jrt.h"  /* for JERRY_ERROR_MSG */
 #include "jerry_extapi.h"
 
 #include "native_esp8266.h"
@@ -52,7 +51,7 @@ DELCARE_HANDLER(assert) {
     printf (">> Jerry assert true\r\n");
     return true;
   }
-  JERRY_ERROR_MSG ("Script assertion failed\n");
+  printf ("Script assertion failed\n");
   exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   return false;
 }

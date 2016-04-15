@@ -22,7 +22,6 @@
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 #include JERRY_MCU_SCRIPT_HEADER
-#include "jerry-core/jerry-api.h"
 
 static const char generated_source[] = JERRY_MCU_SCRIPT;
 

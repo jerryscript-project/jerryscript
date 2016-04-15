@@ -697,8 +697,8 @@ typedef struct
 typedef enum
 {
   ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
-  ECMA_STRING_CONTAINER_HEAP_CHUNKS, /**< actual data is on the heap
-                                          in a ecma_collection_chunk_t chain */
+  ECMA_STRING_CONTAINER_HEAP_ASCII_STRING, /**< actual data is on the heap as an ascii string */
+  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 string */
   ECMA_STRING_CONTAINER_HEAP_NUMBER, /**< actual data is on the heap as a ecma_number_t */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
@@ -755,7 +755,18 @@ typedef struct ecma_string_t
     mem_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
-    mem_cpointer_t collection_cp;
+    mem_cpointer_t utf8_collection_cp;
+
+    /**
+    * Actual data of an ascii string type
+    */
+    struct
+    {
+      /** Compressed pointer to a raw character array */
+      mem_cpointer_t ascii_collection_cp;
+      /** Size of ascii string in bytes */
+      uint16_t size;
+    } ascii_string;
 
     /** Compressed pointer to an ecma_number_t */
     mem_cpointer_t number_cp;

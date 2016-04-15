@@ -422,7 +422,7 @@ ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
       ecma_string_heap_header_t *new_data_p = (ecma_string_heap_header_t *) mem_heap_alloc_block (data_size);
       memcpy (new_data_p, data_p, data_p->size + sizeof (ecma_string_heap_header_t));
 
-      ECMA_SET_NON_NULL_POINTER (new_str_p->u.collection_cp, data_p);
+      ECMA_SET_NON_NULL_POINTER (new_str_p->u.collection_cp, new_data_p);
 
       break;
     }

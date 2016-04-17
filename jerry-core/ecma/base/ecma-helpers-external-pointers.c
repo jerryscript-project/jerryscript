@@ -64,28 +64,29 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
   JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (ECMA_PROPERTY_VALUE_PTR (prop_p)->value),
                        size_of_internal_property_value_must_be_greater_than_or_equal_to_4_bytes);
 
-  if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
+#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
+
+  ECMA_PROPERTY_VALUE_PTR (prop_p)->value = (ecma_value_t) ptr_value;
+
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
+  ecma_external_pointer_t *handler_p;
+
+  if (is_new)
   {
-    ECMA_PROPERTY_VALUE_PTR (prop_p)->value = (uint32_t) ptr_value;
+    handler_p = ecma_alloc_external_pointer ();
+
+    ECMA_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (prop_p)->value, handler_p);
   }
   else
   {
-    ecma_external_pointer_t *handler_p;
-
-    if (is_new)
-    {
-      handler_p = ecma_alloc_external_pointer ();
-
-      ECMA_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (prop_p)->value, handler_p);
-    }
-    else
-    {
-      handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                             ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-    }
-
-    *handler_p = ptr_value;
+    handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
+                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
   }
+
+  *handler_p = ptr_value;
+
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
   return is_new;
 } /* ecma_create_external_pointer_property */
@@ -121,16 +122,17 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
     return false;
   }
 
-  if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
-  {
-    *out_pointer_p = ECMA_PROPERTY_VALUE_PTR (prop_p)->value;
-  }
-  else
-  {
-    ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                                                    ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-    *out_pointer_p = *handler_p;
-  }
+#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
+
+  *out_pointer_p = ECMA_PROPERTY_VALUE_PTR (prop_p)->value;
+
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
+  ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
+                                                                  ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  *out_pointer_p = *handler_p;
+
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
   return true;
 } /* ecma_get_external_pointer_value */
@@ -151,17 +153,19 @@ ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal p
                 || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
-  if (sizeof (ecma_external_pointer_t) == sizeof (uint32_t))
-  {
-    /* no additional memory was allocated for the pointer storage */
-  }
-  else
-  {
-    ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                                                    ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-    ecma_dealloc_external_pointer (handler_p);
-  }
+  /* no additional memory was allocated for the pointer storage */
+
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
+  ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
+                                                                  ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+
+  ecma_dealloc_external_pointer (handler_p);
+
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
 } /* ecma_free_external_pointer_in_property */
 
 /**

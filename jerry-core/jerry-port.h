@@ -17,6 +17,8 @@
 #ifndef JERRY_PORT_H
 #define JERRY_PORT_H
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -70,6 +72,34 @@ typedef enum
  * Example: a libc-based port may implement this with exit() or abort(), or both.
  */
 void jerry_port_fatal (jerry_fatal_code_t code);
+
+/*
+ * Date Port API
+ */
+
+/**
+ * Jerry time zone structure
+ */
+typedef struct
+{
+  int offset;                /**< minutes from west */
+  int daylight_saving_time;  /**< daylight saving time (1 - DST applies, 0 - not on DST) */
+} jerry_time_zone_t;
+
+/**
+ * Get timezone and daylight saving data
+ *
+ * @return true  - if success
+ *         false - otherwise
+ */
+bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
+
+/**
+ * Get system time
+ *
+ * @return milliseconds since Unix epoch
+ */
+uint64_t jerry_port_get_current_time (void);
 
 /**
  * @}

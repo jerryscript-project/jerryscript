@@ -213,7 +213,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_p = prop_p;
 #else /* CONFIG_ECMA_LCACHE_DISABLE */
   (void) prop_p;
-#endif /* CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_insert */
 
 /**
@@ -267,7 +267,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
   (void) object_p;
   (void) prop_name_p;
   (void) prop_p_p;
-#endif /* CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   return false;
 } /* ecma_lcache_lookup */

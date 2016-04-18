@@ -31,31 +31,31 @@
  * Limit: LEXER_MAX_STRING_LENGTH. */
 #ifndef PARSER_MAXIMUM_IDENT_LENGTH
 #define PARSER_MAXIMUM_IDENT_LENGTH 255
-#endif /* PARSER_MAXIMUM_IDENT_LENGTH */
+#endif /* !PARSER_MAXIMUM_IDENT_LENGTH */
 
 /* Maximum string length.
  * Limit: 65535. */
 #ifndef PARSER_MAXIMUM_STRING_LENGTH
 #define PARSER_MAXIMUM_STRING_LENGTH 65535
-#endif /* PARSER_MAXIMUM_STRING_LENGTH */
+#endif /* !PARSER_MAXIMUM_STRING_LENGTH */
 
 /* Maximum number of literals.
  * Limit: 32767. Recommended: 510, 32767 */
 #ifndef PARSER_MAXIMUM_NUMBER_OF_LITERALS
 #define PARSER_MAXIMUM_NUMBER_OF_LITERALS 32767
-#endif /* PARSER_MAXIMUM_NUMBER_OF_LITERALS */
+#endif /* !PARSER_MAXIMUM_NUMBER_OF_LITERALS */
 
 /* Maximum number of registers.
  * Limit: PARSER_MAXIMUM_NUMBER_OF_LITERALS */
 #ifndef PARSER_MAXIMUM_NUMBER_OF_REGISTERS
 #define PARSER_MAXIMUM_NUMBER_OF_REGISTERS 256
-#endif
+#endif /* !PARSER_MAXIMUM_NUMBER_OF_REGISTERS */
 
 /* Maximum code size.
  * Limit: 16777215. Recommended: 65535, 16777215. */
 #ifndef PARSER_MAXIMUM_CODE_SIZE
 #define PARSER_MAXIMUM_CODE_SIZE (65535 << (MEM_ALIGNMENT_LOG))
-#endif
+#endif /* !PARSER_MAXIMUM_CODE_SIZE */
 
 /* Maximum number of values pushed onto the stack by a function.
  * Limit: 65500. Recommended: 1024. */

@@ -20,9 +20,9 @@
 #include "arch/x86-32.h"
 #elif defined (__TARGET_HOST_ARMv7)
 #include "arch/arm-v7.h"
-#else
+#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
 #error "Unsupported architecture"
-#endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
+#endif /* __TARGET_HOST_x64 */
 
 #if defined (__linux__)
 .macro func _name
@@ -40,9 +40,9 @@
 .endm
 .macro endfunc _name
 .endm
-#else
+#else /* !__linux && !(__APPLE__ && __MACH__) */
 #error "Unsupported OS"
-#endif /* !__linux && !(__APPLE__ && __MACH__) */
+#endif /* __linux__ */
 
 func _start
   _START

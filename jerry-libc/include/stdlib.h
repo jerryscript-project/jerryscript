@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /**
  * Maximum integer that could be returned by random number generator
@@ -37,5 +37,5 @@ void srand (unsigned int);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_LIBC_STDLIB_H */

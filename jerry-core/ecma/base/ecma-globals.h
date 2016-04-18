@@ -575,7 +575,7 @@ typedef double ecma_number_t;
  *          IEEE-754 2008, 3.6, Table 3.5
  */
 #define ECMA_NUMBER_FRACTION_WIDTH   (52)
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**
  * Value '0' of ecma_number_t
@@ -621,7 +621,7 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.3
  */
 # define ECMA_NUMBER_MIN_VALUE ((ecma_number_t) 5e-324)
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**
  * Euler number

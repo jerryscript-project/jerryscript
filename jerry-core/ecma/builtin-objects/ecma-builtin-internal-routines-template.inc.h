@@ -289,7 +289,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
       \
       return compact_profile_thrower_property_p; \
     }
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
 #define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable) case name: \
       { \
         JERRY_UNIMPLEMENTED ("The built-in is not implemented."); \

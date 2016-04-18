@@ -75,13 +75,13 @@ extern void mem_heap_stats_print (void);
 
 #ifdef JERRY_VALGRIND
 #error Valgrind and valgrind-freya modes are not compatible.
-#endif
+#endif /* JERRY_VALGRIND */
 
 extern void mem_heap_valgrind_freya_mempool_request (void);
 
 #define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST() mem_heap_valgrind_freya_mempool_request ()
 
-#else /* JERRY_VALGRIND_FREYA */
+#else /* !JERRY_VALGRIND_FREYA */
 
 #define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST()
 

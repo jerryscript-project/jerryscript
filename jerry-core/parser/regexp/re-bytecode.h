@@ -117,7 +117,7 @@ void re_bytecode_list_insert (re_bytecode_ctx_t *, size_t, uint8_t *, size_t);
 
 #ifdef JERRY_ENABLE_LOG
 void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
-#endif
+#endif /* JERRY_ENABLE_LOG */
 
 /**
  * @}

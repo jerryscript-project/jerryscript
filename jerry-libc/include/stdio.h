@@ -23,7 +23,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /**
  * File descriptor type
@@ -62,5 +62,5 @@ int putchar (int c);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_LIBC_STDIO_H */

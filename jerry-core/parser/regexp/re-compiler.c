@@ -604,7 +604,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   {
 #ifdef JERRY_ENABLE_LOG
     re_dump_bytecode (&bc_ctx);
-#endif
+#endif /* JERRY_ENABLE_LOG */
 
     /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
     JERRY_ASSERT (bc_ctx.block_start_p != NULL);

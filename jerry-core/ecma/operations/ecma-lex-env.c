@@ -55,7 +55,7 @@ ecma_init_environment (void)
   ecma_global_lex_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
 
   ecma_deref_object (glob_obj_p);
-#endif /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
+#endif /* CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
 } /* ecma_init_environment */
 
 /**

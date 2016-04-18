@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,12 +94,12 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
 #if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
   printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
           assertion, file, function, (unsigned long) line);
-#else /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG */
+#else /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_DEBUG */
   (void) assertion;
   (void) file;
   (void) function;
   (void) line;
-#endif /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_DEBUG */
+#endif /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG */
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
@@ -116,11 +116,11 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
 {
 #ifndef JERRY_NDEBUG
   printf ("ICE: Unreachable control path at %s(%s):%lu was executed", file, function, (unsigned long) line);
-#else /* !JERRY_NDEBUG */
+#else /* JERRY_NDEBUG */
   (void) file;
   (void) function;
   (void) line;
-#endif /* JERRY_NDEBUG */
+#endif /* !JERRY_NDEBUG */
 
   if (comment != NULL)
   {
@@ -143,11 +143,11 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
 {
 #ifndef JERRY_NDEBUG
   printf ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
-#else /* !JERRY_NDEBUG */
+#else /* JERRY_NDEBUG */
   (void) file;
   (void) function;
   (void) line;
-#endif /* JERRY_NDEBUG */
+#endif /* !JERRY_NDEBUG */
 
   if (comment != NULL)
   {

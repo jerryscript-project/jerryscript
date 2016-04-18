@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@
 #else /* !__TARGET_HOST_ARMv7_HARD_FLOAT */
 # define _STORE_VFP_S16_S31_IF_HARD_FLOAT
 # define _LOAD_VFP_S16_S31_IF_HARD_FLOAT
-#endif /* !__TARGET_HOST_ARMv7_HARD_FLOAT */
+#endif /* __TARGET_HOST_ARMv7_HARD_FLOAT */
 
 /*
  * setjmp

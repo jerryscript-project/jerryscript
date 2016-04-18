@@ -405,7 +405,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
     out_value_p->type = JERRY_API_DATA_TYPE_FLOAT64;
     out_value_p->u.v_float64 = *num;
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
   }
   else if (ecma_is_value_string (value))
   {
@@ -1644,12 +1644,12 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
     flags &= (jerry_flag_t) ~(JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_SEPARATE);
 
     JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
-#else /* !MEM_STATS */
+#else /* MEM_STATS */
     if (flags & JERRY_FLAG_MEM_STATS_SEPARATE)
     {
       flags |= JERRY_FLAG_MEM_STATS;
     }
-#endif /* MEM_STATS */
+#endif /* !MEM_STATS */
   }
 
   jerry_flags = flags;
@@ -1898,7 +1898,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
 
     copied_compiled_code_p->status_flags = compiled_code_p->status_flags;
 
-#else
+#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
     JERRY_UNIMPLEMENTED ("RegExp is not supported in compact profile.");
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
     return start_offset;
@@ -2151,7 +2151,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   ecma_bytecode_deref (bytecode_data_p);
 
   return snapshot_buffer_write_offset;
-#else /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
   (void) source_p;
   (void) source_size;
   (void) is_for_global;
@@ -2159,7 +2159,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   (void) buffer_size;
 
   return 0;
-#endif /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_snapshot */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
@@ -2203,7 +2203,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
     ecma_deref_ecma_string (pattern_str_p);
 
     return (ecma_compiled_code_t *) re_bytecode_p;
-#else
+#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
     JERRY_UNIMPLEMENTED ("RegExp is not supported in compact profile.");
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
   }
@@ -2407,14 +2407,14 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   }
 
   return ret_code;
-#else /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   (void) snapshot_p;
   (void) snapshot_size;
   (void) copy_bytecode;
   (void) retval_p;
 
   return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
-#endif /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
 
 /**

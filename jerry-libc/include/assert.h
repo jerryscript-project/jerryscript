@@ -23,7 +23,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 #ifndef NDEBUG
 #define assert(x) \
@@ -35,11 +35,11 @@ extern "C"
       abort (); \
     } \
   } while (0)
-#else
+#else /* NDEBUG */
 #define assert(x) ((void) 0)
 #endif /* !NDEBUG */
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_LIBC_ASSERT_H */

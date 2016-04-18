@@ -80,9 +80,9 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
 #if !defined (JERRY_NDEBUG) || !defined (JERRY_DISABLE_HEAVY_DEBUG)
 #define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
     jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
-#else /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG*/
+#else /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_DEBUG */
 #define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
-#endif /* JERRY_NDEBUG && JERRY_DISABLE_HEAVY_NEBUG */
+#endif /* !JERRY_NDEBUG || !JERRY_DISABLE_HEAVY_DEBUG */
 
 #ifdef JERRY_ENABLE_LOG
 #define JERRY_LOG(lvl, ...) \
@@ -109,7 +109,7 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
   } while (0)
 #define JERRY_DDLOG(...) JERRY_DLOG (__VA_ARGS__)
 #define JERRY_DDDLOG(...) JERRY_DLOG (__VA_ARGS__)
-#endif /* !JERRY_ENABLE_LOG */
+#endif /* JERRY_ENABLE_LOG */
 
 #define JERRY_ERROR_MSG(...) jerry_port_errormsg (__VA_ARGS__)
 #define JERRY_WARNING_MSG(...) JERRY_ERROR_MSG (__VA_ARGS__)
@@ -141,7 +141,7 @@ extern void jerry_ref_unused_variables (void *, ...);
     } \
     jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
   } while (0)
-#else /* !JERRY_NDEBUG */
+#else /* JERRY_NDEBUG */
 #define JERRY_UNREACHABLE() \
   do \
   { \
@@ -163,7 +163,7 @@ extern void jerry_ref_unused_variables (void *, ...);
     } \
     jerry_unimplemented (comment, NULL, NULL, 0); \
   } while (0)
-#endif /* JERRY_NDEBUG */
+#endif /* !JERRY_NDEBUG */
 
 /**
  * Conditions' likeliness, unlikeliness.

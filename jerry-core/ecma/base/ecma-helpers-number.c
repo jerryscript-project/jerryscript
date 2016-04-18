@@ -176,7 +176,7 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 1023;
 
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**
  * Get fraction of number

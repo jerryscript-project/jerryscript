@@ -56,9 +56,9 @@ mem_finalize (bool is_show_mem_stats) /**< show heap memory stats
   {
     mem_stats_print ();
   }
-#else /* MEM_STATS */
+#else /* !MEM_STATS */
   (void) is_show_mem_stats;
-#endif /* !MEM_STATS */
+#endif /* MEM_STATS */
 
   mem_heap_finalize ();
 } /* mem_finalize */

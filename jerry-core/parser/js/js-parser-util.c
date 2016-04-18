@@ -407,7 +407,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
   opcode++;
-#else /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
   PARSER_PLUS_EQUAL_U16 (opcode, 2);
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
@@ -420,7 +420,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
   PARSER_APPEND_TO_BYTE_CODE (context_p, 0);
   context_p->byte_code_size += 3;
-#else /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
   parser_emit_two_bytes (context_p, 0, 0);
   context_p->byte_code_size += 4;
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
@@ -522,7 +522,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
     opcode++;
     context_p->byte_code_size++;
   }
-#else /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
   if (offset > 65535)
   {
     PARSER_PLUS_EQUAL_U16 (opcode, 2);
@@ -587,7 +587,7 @@ parser_set_branch_to_current_position (parser_context_t *context_p, /**< context
     page_p = page_p->next_p;
     offset = 0;
   }
-#else
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
   page_p->bytes[offset++] = (uint8_t) (delta >> 16);
   if (offset >= PARSER_CBC_STREAM_PAGE_SIZE)
   {
@@ -600,7 +600,7 @@ parser_set_branch_to_current_position (parser_context_t *context_p, /**< context
     page_p = page_p->next_p;
     offset = 0;
   }
-#endif
+#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
   page_p->bytes[offset++] = delta & 0xff;
 } /* parser_set_branch_to_current_position */
 

@@ -42,10 +42,10 @@
 #ifdef __LITTLE_ENDIAN
 #define __HI(x) *(1 + (int *) &x)
 #define __LO(x) *(int *) &x
-#else
+#else /* !__LITTLE_ENDIAN */
 #define __HI(x) *(int *) &x
 #define __LO(x) *(1 + (int *) &x)
-#endif
+#endif /* __LITTLE_ENDIAN */
 
 /*
  * ANSI/POSIX

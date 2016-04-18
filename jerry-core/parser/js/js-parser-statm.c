@@ -496,7 +496,7 @@ parser_parse_with_statement_start (parser_context_t *context_p) /**< context */
 
 #ifdef PARSER_DEBUG
   PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
   context_p->status_flags |= PARSER_INSIDE_WITH | PARSER_LEXICAL_ENV_NEEDED;
   parser_emit_cbc_ext_forward_branch (context_p,
@@ -527,7 +527,7 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
   PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
 #ifdef PARSER_DEBUG
   PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
   parser_emit_cbc (context_p, CBC_CONTEXT_END);
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
@@ -722,7 +722,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
 #ifdef PARSER_DEBUG
     PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
     parser_emit_cbc_ext_forward_branch (context_p,
                                         CBC_EXT_FOR_IN_CREATE_CONTEXT,
@@ -1122,7 +1122,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
     PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
 #ifdef PARSER_DEBUG
     PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
     parser_emit_cbc (context_p, CBC_CONTEXT_END);
     parser_set_branch_to_current_position (context_p, &try_statement.branch);
@@ -1139,7 +1139,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
         PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
 #ifdef PARSER_DEBUG
         PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
         parser_emit_cbc (context_p, CBC_CONTEXT_END);
         parser_flush_cbc (context_p);
@@ -1565,7 +1565,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     uint32_t status_flags = context_p->status_flags;
 #ifdef PARSER_DUMP_BYTE_CODE
     int switch_to_strict_mode = PARSER_FALSE;
-#endif
+#endif /* PARSER_DUMP_BYTE_CODE */
 
     JERRY_ASSERT (context_p->stack_depth == 0);
 
@@ -1579,7 +1579,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #ifdef PARSER_DUMP_BYTE_CODE
       switch_to_strict_mode = PARSER_TRUE;
-#endif
+#endif /* PARSER_DUMP_BYTE_CODE */
     }
 
     lexer_next_token (context_p);
@@ -1643,7 +1643,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   {
 #ifdef PARSER_DEBUG
     JERRY_ASSERT (context_p->stack_depth == context_p->context_stack_depth);
-#endif
+#endif /* PARSER_DEBUG */
 
     switch (context_p->token.type)
     {
@@ -1749,7 +1749,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #ifdef PARSER_DEBUG
         PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
         try_statement.type = parser_try_block;
         parser_emit_cbc_ext_forward_branch (context_p,
@@ -1924,7 +1924,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           JERRY_ASSERT (context_p->stack_depth == 0);
 #ifdef PARSER_DEBUG
           JERRY_ASSERT (context_p->context_stack_depth == 0);
-#endif
+#endif /* PARSER_DEBUG */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
           return;
@@ -2017,7 +2017,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
 #ifdef PARSER_DEBUG
           PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-#endif
+#endif /* PARSER_DEBUG */
 
           parser_emit_cbc_ext_backward_branch (context_p,
                                                CBC_EXT_BRANCH_IF_FOR_IN_HAS_NEXT,
@@ -2046,7 +2046,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->stack_depth == 0);
 #ifdef PARSER_DEBUG
   JERRY_ASSERT (context_p->context_stack_depth == 0);
-#endif
+#endif /* PARSER_DEBUG */
 
   parser_stack_pop_uint8 (context_p);
   context_p->last_statement.current_p = NULL;

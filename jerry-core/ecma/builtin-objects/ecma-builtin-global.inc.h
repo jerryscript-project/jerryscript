@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_DATE_UL,
               ECMA_PROPERTY_WRITABLE,
               ECMA_PROPERTY_NOT_ENUMERABLE,
               ECMA_PROPERTY_CONFIGURABLE)
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
 // ECMA-262 v5, 15.1.4.8
@@ -238,7 +238,7 @@ ROUTINE (LIT_MAGIC_STRING_PARSE_INT, ecma_builtin_global_object_parse_int, 2, 2)
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_ESCAPE, ecma_builtin_global_object_escape, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UNESCAPE, ecma_builtin_global_object_unescape, 1, 1)
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

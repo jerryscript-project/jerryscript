@@ -45,7 +45,7 @@
 # define VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
 # define VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
 
-#else /* JERRY_VALGRIND */
+#else /* !JERRY_VALGRIND */
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
@@ -83,7 +83,7 @@ void mem_heap_valgrind_freya_mempool_request (void)
     VALGRIND_FREELIKE_BLOCK((p), 0); \
   }
 
-#else /* JERRY_VALGRIND_FREYA */
+#else /* !JERRY_VALGRIND_FREYA */
 # define VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST
 # define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
@@ -105,11 +105,11 @@ typedef struct
 #if UINTPTR_MAX > UINT32_MAX
 #define MEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) ((uint8_t *) (p) - (uint8_t *) mem_heap.area))
 #define MEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((mem_heap_free_t *) &mem_heap.area[u])
-#else
+#else /* UINTPTR_MAX <= UINT32_MAX */
 /* In this case we simply store the pointer, since it fits anyway. */
 #define MEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) (p))
 #define MEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((mem_heap_free_t *)(u))
-#endif
+#endif /* UINTPTR_MAX > UINT32_MAX */
 
 /**
  * Get end of region
@@ -139,9 +139,9 @@ typedef struct
  */
 #ifndef JERRY_HEAP_SECTION_ATTR
 mem_heap_t mem_heap;
-#else
+#else /* JERRY_HEAP_SECTION_ATTR */
 mem_heap_t mem_heap __attribute__ ((section (JERRY_HEAP_SECTION_ATTR)));
-#endif
+#endif /* !JERRY_HEAP_SECTION_ATTR */
 
 /**
  * Check size of heap is corresponding to configuration
@@ -191,7 +191,7 @@ static void mem_heap_stat_free_iter ();
 #  define MEM_HEAP_STAT_NONSKIP()
 #  define MEM_HEAP_STAT_ALLOC_ITER()
 #  define MEM_HEAP_STAT_FREE_ITER()
-#endif /* !MEM_STATS */
+#endif /* MEM_STATS */
 
 /**
  * Startup initialization of heap

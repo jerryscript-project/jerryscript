@@ -765,7 +765,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
 
   return num;
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 } /* ecma_utf8_string_to_number */
 
 /**
@@ -1258,7 +1258,7 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
   *out_digits_p = s;
   *out_digits_num_p = k;
   *out_decimal_exp_p = n;
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 } /* ecma_number_to_decimal */
 
 /**

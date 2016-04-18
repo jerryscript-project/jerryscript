@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LASTINDEX_UL,
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_COMPILE, ecma_builtin_regexp_prototype_compile, 2, 1)
-#endif
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 ROUTINE (LIT_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)

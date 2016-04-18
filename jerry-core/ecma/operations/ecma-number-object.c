@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,9 +52,9 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
-#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              true,

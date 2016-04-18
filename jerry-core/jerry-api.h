@@ -25,7 +25,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /** \addtogroup jerry Jerry engine interface
  * @{
@@ -331,5 +331,5 @@ jerry_api_string_t *jerry_api_value_to_string (const jerry_api_value_t *);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_API_H */

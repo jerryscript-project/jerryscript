@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,13 +98,13 @@
 
 #ifndef CONFIG_ECMA_NUMBER_TYPE
 # define CONFIG_ECMA_NUMBER_TYPE CONFIG_ECMA_NUMBER_FLOAT32
-#else /* !CONFIG_ECMA_NUMBER_TYPE */
+#else /* CONFIG_ECMA_NUMBER_TYPE */
 # if (CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 \
       && CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT64)
 #  error "ECMA-number storage is configured incorrectly"
 # endif /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32
            && CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT64 */
-#endif /* CONFIG_ECMA_NUMBER_TYPE */
+#endif /* !CONFIG_ECMA_NUMBER_TYPE */
 
 /**
  * Representation for ecma-characters
@@ -114,13 +114,13 @@
 
 #ifndef CONFIG_ECMA_CHAR_ENCODING
 # define CONFIG_ECMA_CHAR_ENCODING CONFIG_ECMA_CHAR_ASCII
-#else /* !CONFIG_ECMA_CHAR_ENCODING */
+#else /* CONFIG_ECMA_CHAR_ENCODING */
 # if (CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII \
       && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16)
 #  error "ECMA-char encoding is configured incorrectly"
 # endif /* CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII
            && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16 */
-#endif /* CONFIG_ECMA_CHAR_ENCODING */
+#endif /* !CONFIG_ECMA_CHAR_ENCODING */
 
 /**
  * Disable ECMA lookup cache

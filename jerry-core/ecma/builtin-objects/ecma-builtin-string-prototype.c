@@ -2322,7 +2322,7 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_substr */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

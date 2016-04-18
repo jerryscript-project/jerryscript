@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /** \addtogroup jerry_port Jerry engine port
  * @{
@@ -41,5 +41,5 @@ int jerry_port_putchar (int c);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_PORT_H */

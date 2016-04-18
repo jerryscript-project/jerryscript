@@ -52,7 +52,7 @@ JERRY_STATIC_ASSERT ((sizeof (ecma_value_t) * JERRY_BITSINBYTE)
 JERRY_STATIC_ASSERT (sizeof (uintptr_t) <= sizeof (ecma_value_t),
                      uintptr_t_must_fit_in_ecma_value_t);
 
-#else /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
 JERRY_STATIC_ASSERT (sizeof (uintptr_t) > sizeof (ecma_value_t),
                      uintptr_t_must_not_fit_in_ecma_value_t);
@@ -84,7 +84,7 @@ ecma_pointer_to_ecma_value (const void *ptr) /**< pointer */
   JERRY_ASSERT ((uint_ptr & ECMA_VALUE_FULL_MASK) == 0);
   return (ecma_value_t) uint_ptr;
 
-#else /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
   mem_cpointer_t ptr_cp;
   ECMA_SET_NON_NULL_POINTER (ptr_cp, ptr);
@@ -103,7 +103,7 @@ ecma_get_pointer_from_ecma_value (ecma_value_t value) /**< value */
 {
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
   return (void *) (uintptr_t) ((value) & ~ECMA_VALUE_FULL_MASK);
-#else /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
   return ECMA_GET_NON_NULL_POINTER (ecma_number_t,
                                     value >> ECMA_VALUE_SHIFT);
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */

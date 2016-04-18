@@ -1448,7 +1448,7 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**
   return ret_value;
 } /* ecma_builtin_global_object_unescape */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

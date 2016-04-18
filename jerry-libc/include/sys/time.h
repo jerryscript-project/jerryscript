@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /**
  * Time value structure
@@ -44,5 +44,5 @@ int gettimeofday (void *tp, void *tzp);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_LIBC_TIME_H */

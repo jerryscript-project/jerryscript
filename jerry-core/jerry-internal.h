@@ -15,7 +15,7 @@
 
 #ifndef JERRY_INTERNAL
  # error "The header is for Jerry's internal interfaces"
-#endif
+#endif /* !JERRY_INTERNAL */
 
 #ifndef JERRY_INTERNAL_H
 #define JERRY_INTERNAL_H

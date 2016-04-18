@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /**
  * Storage for context, used for nonlocal goto
@@ -61,5 +61,5 @@ void longjmp (jmp_buf env, int val);
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_LIBC_SETJMP_H */

@@ -98,11 +98,11 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
-#else /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
   (void) error_type;
 
   return ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 } /* ecma_new_standard_error */
 
 /**

@@ -35,12 +35,12 @@
 
 #ifndef JERRY_NDEBUG
 #define PARSER_DEBUG
-#endif
+#endif /* !JERRY_NDEBUG */
 
 #ifndef JERRY_NDEBUG
 /* Note: This flag is independent from debug mode. */
 #define PARSER_DUMP_BYTE_CODE
-#endif
+#endif /* !JERRY_NDEBUG */
 
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
@@ -98,9 +98,9 @@ typedef struct
 
 #ifdef PARSER_DUMP_BYTE_CODE
   struct
-#else
+#else /* !PARSER_DUMP_BYTE_CODE */
   union
-#endif
+#endif /* PARSER_DUMP_BYTE_CODE */
   {
     uint16_t length;                     /**< length of ident / string literal */
     uint16_t index;                      /**< real index during post processing */

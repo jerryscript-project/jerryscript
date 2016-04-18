@@ -35,9 +35,9 @@
 #elif defined (__APPLE__) && defined (__MACH__)
 #define SYS_exit_group SYS_exit
 #define SYSCALL_NO(NAME) SYS_ ## NAME
-#else
+#else /* !__linux && !(__APPLE__ && __MACH__) */
 #error "Unsupported OS"
-#endif /* !__linux && !(__APPLE__ && __MACH__) */
+#endif /* __linux__ */
 
 #include "jerry-libc-defs.h"
 
@@ -355,7 +355,7 @@ jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
 
   long int ret;
 
-#ifdef __TARGET_HOST_x64
+#if defined (__TARGET_HOST_x64)
   ret = syscall_2 (SYSCALL_NO (setrlimit), RLIMIT_DATA, (intptr_t) &data_limit);
   assert (ret == 0);
 
@@ -371,6 +371,6 @@ jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
 # error "__TARGET_HOST_x86 case is not implemented"
 #else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
 # error "!__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86"
-#endif /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
+#endif /* __TARGET_HOST_x64 */
 } /* jrt_set_mem_limits */
-#endif // FIXME
+#endif /* 0 */

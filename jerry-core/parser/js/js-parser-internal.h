@@ -224,7 +224,7 @@ typedef struct parser_saved_context_t
 
 #ifdef PARSER_DEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
-#endif
+#endif /* PARSER_DEBUG */
 } parser_saved_context_t;
 
 /**

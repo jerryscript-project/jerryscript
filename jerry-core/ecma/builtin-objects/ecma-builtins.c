@@ -365,9 +365,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
         JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
         JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
       }
     }
 
@@ -442,9 +442,9 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
       {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
         JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
         JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
       }
     }
 
@@ -576,9 +576,9 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
       {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
         JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
         JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
       }
     }
   }
@@ -638,7 +638,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
     {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
       JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
       JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE */
     }
@@ -690,9 +690,9 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
     {
 #ifdef CONFIG_ECMA_COMPACT_PROFILE
       JERRY_UNREACHABLE ();
-#else /* CONFIG_ECMA_COMPACT_PROFILE */
+#else /* !CONFIG_ECMA_COMPACT_PROFILE */
       JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
+#endif /* CONFIG_ECMA_COMPACT_PROFILE */
     }
   }
 

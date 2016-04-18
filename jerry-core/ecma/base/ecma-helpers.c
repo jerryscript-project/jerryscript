@@ -970,7 +970,7 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
 #else /* JERRY_NDEBUG */
   (void) object_p;
   (void) prop_p;
-#endif /* JERRY_NDEBUG */
+#endif /* !JERRY_NDEBUG */
 } /* ecma_assert_object_contains_the_property */
 
 /**

@@ -26,7 +26,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 
 /** \addtogroup jerry Jerry engine interface
  * @{
@@ -94,5 +94,5 @@ jerry_completion_code_t jerry_run_simple (const jerry_api_char_t *, size_t, jerr
 
 #ifdef __cplusplus
 }
-#endif /* !__cplusplus */
+#endif /* __cplusplus */
 #endif /* !JERRY_H */

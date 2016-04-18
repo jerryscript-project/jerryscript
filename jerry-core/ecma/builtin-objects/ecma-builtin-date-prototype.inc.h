@@ -1,5 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2015-2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ ROUTINE (LIT_MAGIC_STRING_GET_YEAR_UL, ecma_builtin_date_prototype_get_year, 0, 
 ROUTINE (LIT_MAGIC_STRING_SET_YEAR_UL, ecma_builtin_date_prototype_set_year, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_GMT_STRING_UL, ecma_builtin_date_prototype_to_utc_string, 0, 0)
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

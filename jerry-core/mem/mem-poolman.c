@@ -71,7 +71,7 @@ static void mem_pools_stat_dealloc (void);
 #  define MEM_POOLS_STAT_NEW_ALLOC()
 #  define MEM_POOLS_STAT_REUSE()
 #  define MEM_POOLS_STAT_DEALLOC()
-#endif /* !MEM_STATS */
+#endif /* MEM_STATS */
 
 /*
  * Valgrind-related options and headers
@@ -82,7 +82,7 @@ static void mem_pools_stat_dealloc (void);
 # define VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
 # define VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
 # define VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
-#else /* JERRY_VALGRIND */
+#else /* !JERRY_VALGRIND */
 # define VALGRIND_NOACCESS_SPACE(p, s)
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
@@ -93,7 +93,7 @@ static void mem_pools_stat_dealloc (void);
 
 # define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s) VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)      VALGRIND_FREELIKE_BLOCK((p), 0)
-#else /* JERRY_VALGRIND_FREYA */
+#else /* !JERRY_VALGRIND_FREYA */
 # define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */

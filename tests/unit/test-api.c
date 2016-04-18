@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -250,7 +250,7 @@ static bool foreach (const jerry_api_string_t *name,
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT64);
     JERRY_ASSERT (value->u.v_float64 == 32.0);
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
   }
   else if (!strncmp (str_buf_p, "bravo", (size_t) sz))
   {
@@ -269,7 +269,7 @@ static bool foreach (const jerry_api_string_t *name,
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
     JERRY_ASSERT (value->type == JERRY_API_DATA_TYPE_FLOAT64);
     JERRY_ASSERT (value->u.v_float64 == 123.45);
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
   }
   else if (!strncmp (str_buf_p, "echo", (size_t) sz))
   {

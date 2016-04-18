@@ -526,9 +526,9 @@ ecma_builtin_math_object_random (ecma_value_t this_arg __attr_unused___) /**< 't
   reps_count = 4;
 #elif RAND_MAX < 0x10000
   reps_count = 2;
-#else /* RAND_MAX < 0x10000 */
+#else /* RAND_MAX >= 0x10000 */
   reps_count = 1;
-#endif /* RAND_MAX >= 0x10000 */
+#endif /* RAND_MAX < 0x100 */
 
   for (uint32_t i = 0; i < reps_count; i++)
   {

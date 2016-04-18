@@ -1467,7 +1467,7 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
   const ecma_length_t string_length = ecma_string_get_length (string_p);
   JERRY_ASSERT (start_pos <= string_length);
   JERRY_ASSERT (end_pos <= string_length);
-#endif
+#endif /* !JERRY_NDEBUG */
 
   if (start_pos < end_pos)
   {

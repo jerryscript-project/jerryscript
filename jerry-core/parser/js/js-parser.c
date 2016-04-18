@@ -529,7 +529,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         {
           mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
         }
-#else /* PARSER_DUMP_BYTE_CODE */
+#else /* !PARSER_DUMP_BYTE_CODE */
         literal_pool_p[literal_p->prop.index] = literal_p->u.value;
 #endif /* PARSER_DUMP_BYTE_CODE */
       }
@@ -1395,7 +1395,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       int prefix_zero = PARSER_TRUE;
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
       cbc_opcode_t jump_forward = CBC_JUMP_FORWARD_2;
-#else /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
       cbc_opcode_t jump_forward = CBC_JUMP_FORWARD_3;
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
@@ -1554,7 +1554,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       /* These opcodes are deleted from the stream. */
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
       size_t length = 3;
-#else /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
       size_t length = 4;
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
@@ -1699,7 +1699,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       }
     }
   }
-#else
+#else /* !PARSER_DUMP_BYTE_CODE */
   if (context_p->status_flags & PARSER_HAS_LATE_LIT_INIT)
   {
     parser_list_iterator_t literal_iterator;
@@ -1966,7 +1966,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 
 #ifdef PARSER_DEBUG
   saved_context.context_stack_depth = context_p->context_stack_depth;
-#endif
+#endif /* PARSER_DEBUG */
 
   /* Reset private part of the context. */
 
@@ -2183,7 +2183,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 
 #ifdef PARSER_DEBUG
   context_p->context_stack_depth = saved_context.context_stack_depth;
-#endif
+#endif /* PARSER_DEBUG */
 
   return compiled_code_p;
 } /* parser_parse_function */
@@ -2231,7 +2231,7 @@ parser_set_show_instrs (int show_instrs) /**< flag indicating whether to dump by
 {
 #ifdef PARSER_DUMP_BYTE_CODE
   parser_show_instrs = show_instrs;
-#else
+#else /* !PARSER_DUMP_BYTE_CODE */
   (void) show_instrs;
 #endif /* PARSER_DUMP_BYTE_CODE */
 } /* parser_set_show_instrs */

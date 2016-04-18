@@ -1325,7 +1325,7 @@ ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument 
   return ret_value;
 } /* ecma_builtin_date_prototype_set_year */
 
-#endif /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

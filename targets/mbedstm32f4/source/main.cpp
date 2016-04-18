@@ -22,6 +22,8 @@
 
 #include "jerry_targetjs.h"
 
+static Serial pc (USBTX, USBRX); //TR, RX
+
 static int jerry_init (void)
 {
   int retcode;
@@ -61,7 +63,6 @@ static void jerry_loop (void)
 void app_start (int, char**)
 {
   // set 9600 baud rate for stdout
-  static Serial pc (USBTX, USBRX);
   pc.baud (9600);
 
   pc.printf ("\r\nJerryScript in mbed K64F\r\n");

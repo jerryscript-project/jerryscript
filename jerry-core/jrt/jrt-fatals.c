@@ -65,16 +65,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 #endif /* !JERRY_NDEBUG */
 
-  if (code != 0
-      && code != ERR_OUT_OF_MEMORY
-      && jerry_is_abort_on_fail ())
-  {
-    abort ();
-  }
-  else
-  {
-    exit (code);
-  }
+  jerry_port_fatal (code);
 
   /* to make compiler happy for some RTOS: 'control reaches end of non-void function' */
   while (true)

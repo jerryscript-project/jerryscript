@@ -35,6 +35,42 @@ int jerry_port_logmsg (FILE *stream, const char *format, ...);
 int jerry_port_errormsg (const char *format, ...);
 int jerry_port_putchar (int c);
 
+/*
+ * Termination Port API
+ *
+ * Note:
+ *      It is questionable whether a library should be able to terminate an
+ *      application. However, as of now, we only have the concept of completion
+ *      code around jerry_parse and jerry_run. Most of the other API functions
+ *      have no way of signaling an error. So, we keep the termination approach
+ *      with this port function.
+ */
+
+/**
+ * Error codes
+ */
+typedef enum
+{
+  ERR_OUT_OF_MEMORY = 10,
+  ERR_SYSCALL = 11,
+  ERR_REF_COUNT_LIMIT = 12,
+  ERR_UNIMPLEMENTED_CASE = 118,
+  ERR_FAILED_INTERNAL_ASSERTION = 120
+} jerry_fatal_code_t;
+
+/**
+ * Signal the port that jerry experienced a fatal failure from which it cannot
+ * recover.
+ *
+ * @param code gives the cause of the error.
+ *
+ * Note:
+ *      Jerry expects the function not to return.
+ *
+ * Example: a libc-based port may implement this with exit() or abort(), or both.
+ */
+void jerry_port_fatal (jerry_fatal_code_t code);
+
 /**
  * @}
  */

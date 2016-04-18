@@ -20,6 +20,7 @@
 
 #include "jerry.h"
 #include "jerry-port.h"
+#include "jerry-port-default.h"
 
 /**
  * Maximum command line arguments number
@@ -358,7 +359,7 @@ main (int argc,
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {
-      flags |= JERRY_FLAG_ABORT_ON_FAIL;
+      jerry_port_default_set_abort_on_fail (true);
     }
     else if (!strncmp ("-", argv[i], 1))
     {

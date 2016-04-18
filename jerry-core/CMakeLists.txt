@@ -148,11 +148,7 @@ project (JerryCore C ASM)
       ${SOURCE_CORE_JRT})
 
  # Jerry port
- if(USE_DEFAULT_PORT)
-   file(GLOB SOURCE_PORT_FILES ${CMAKE_SOURCE_DIR}/targets/default/*.c)
- else()
-   set(SOURCE_PORT_FILES ${SOURCE_PORT_IMPLEMENTATION})
- endif()
+ file(GLOB SOURCE_PORT_FILES ${PORT_DIR}/*.c)
 
  # All-in-one build
  if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")

@@ -19,6 +19,7 @@
 
 #include "jerry.h"
 #include "jerry-port.h"
+#include "jerry-port-default.h"
 
 /**
  * The module interface routine
@@ -199,7 +200,7 @@ int jerryscript_entry (int argc, char *argv[])
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {
-      flags |= JERRY_FLAG_ABORT_ON_FAIL;
+      jerry_port_default_set_abort_on_fail (true);
     }
     else if (!strcmp ("--log-level", argv[i]))
     {

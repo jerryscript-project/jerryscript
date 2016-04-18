@@ -1690,18 +1690,6 @@ jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< [out] Jerry's ma
 } /* jerry_get_memory_limits */
 
 /**
- * Check whether 'abort' should be called instead of 'exit' upon exiting with non-zero exit code.
- *
- * @return true - if 'abort on fail' flag is set,
- *         false - otherwise.
- */
-bool
-jerry_is_abort_on_fail (void)
-{
-  return ((jerry_flags & JERRY_FLAG_ABORT_ON_FAIL) != 0);
-} /* jerry_is_abort_on_fail */
-
-/**
  * Parse script for specified context
  *
  * Note:

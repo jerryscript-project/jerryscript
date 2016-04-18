@@ -29,7 +29,4 @@ jerry_dispatch_external_function (ecma_object_t *, ecma_external_pointer_t, ecma
 extern void
 jerry_dispatch_object_free_callback (ecma_external_pointer_t, ecma_external_pointer_t);
 
-extern bool
-jerry_is_abort_on_fail (void);
-
 #endif /* !JERRY_INTERNAL_H */

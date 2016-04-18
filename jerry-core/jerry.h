@@ -44,20 +44,7 @@ typedef enum
   JERRY_FLAG_PARSE_ONLY         = (1u << 3), /**< parse only, prevents script execution (only for testing)
                                               *   TODO: Remove. */
   JERRY_FLAG_ENABLE_LOG         = (1u << 4), /**< enable logging */
-  JERRY_FLAG_ABORT_ON_FAIL      = (1u << 5), /**< abort instead of exit in case of failure */
 } jerry_flag_t;
-
-/**
- * Error codes
- */
-typedef enum
-{
-  ERR_OUT_OF_MEMORY = 10,
-  ERR_SYSCALL = 11,
-  ERR_REF_COUNT_LIMIT = 12,
-  ERR_UNIMPLEMENTED_CASE = 118,
-  ERR_FAILED_INTERNAL_ASSERTION = 120
-} jerry_fatal_code_t;
 
 /**
  * Jerry engine build date

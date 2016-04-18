@@ -132,12 +132,11 @@ project (Jerry C ASM)
  endif()
 
 
- # Should we use external jerry-port.c?
- if(DEFINED EXTERNAL_PORT_FILE AND NOT EXTERNAL_PORT_FILE STREQUAL "UNDEFINED")
-   set(SOURCE_PORT_IMPLEMENTATION ${EXTERNAL_PORT_FILE})
-   set(USE_DEFAULT_PORT FALSE)
+ # Should we use external port?
+ if(DEFINED EXTERNAL_PORT_DIR AND NOT EXTERNAL_PORT_DIR STREQUAL "UNDEFINED")
+   set(PORT_DIR ${EXTERNAL_PORT_DIR})
  else()
-   set(USE_DEFAULT_PORT TRUE)
+   set(PORT_DIR ${CMAKE_SOURCE_DIR}/targets/default)
  endif()
 
 # Are there any interfaces for external libraries, other than libc, that should be registered?
@@ -420,6 +419,7 @@ endif()
                  PROPERTY LINK_FLAGS "${COMPILE_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}} ${LINKER_FLAGS_COMMON} ${LINKER_FLAGS_STATIC}")
     target_compile_definitions(${TARGET_NAME} PRIVATE ${DEFINES_JERRY})
     target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_INTERFACE})
+    target_include_directories(${TARGET_NAME} PRIVATE ${PORT_DIR})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
     target_include_directories(${TARGET_NAME} SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
     if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT (CMAKE_COMPILER_IS_GNUCC)))

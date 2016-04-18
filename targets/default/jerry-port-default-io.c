@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "jerry-port.h"
 #include <stdarg.h>
+
+#include "jerry-port.h"
 
 /**
  * Provide log message to filestream implementation for the engine.

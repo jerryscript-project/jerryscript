@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
@@ -917,70 +919,484 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 } /* ecma_number_to_int32 */
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+
+#define GRISU3_SIGN_BIT                 0x8000000000000000ULL
+#define GRISU3_EXPONENT_MASK            0x7FF0000000000000ULL
+#define GRISU3_FRACTION_MASK            0x000FFFFFFFFFFFFFULL
+#define GRISU3_IMPLICIT_ONE             0x0010000000000000ULL
+#define GRISU3_EXPONENT_POSITION        52
+#define GRISU3_EXPONENT_BIAS            1075
+#define GRISU3_1_LOG2_10                0.30102999566398114 /* 1 / lg(10) */
+#define GRISU3_MIN_TARGET_EXP           -60
+#define GRISU3_32_BIT_MASK              0xFFFFFFFFULL
+#define GRISU3_ENCODED_FLOAT_FRACT_SIZE 64
+#define GRISU3_MIN_CACHED_EXP           -348
+#define GRISU3_CACHED_EXP_STEP          8
+
 /**
-  * Perform conversion of 128-bit binary representation of number
-  * to decimal representation with decimal exponent.
-  */
-static void
-ecma_number_helper_binary_to_decimal (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARG (fraction_uint128), /**< mantissa */
-                                      int32_t binary_exponent, /**< binary exponent */
-                                      int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
+ * Encoded floating point type
+ *
+ * Note:
+ *      Florian Loitsch: Printing Floating-point Numbers Quickly and Accurately with Integers.
+ *      In Proceedings of the 31st ACM SIGPLAN Conference on Programming Language Design and
+ *      Implementation (PLDI '10), pages 233-243.
+ *      Toronto, Ontario, Canada, June 5-10, 2010.
+ *      ACM (ISBN:978-1-4503-0019-3).
+ *      (Henceforth: Florian Loitsh)
+ *
+ *      Florian Loitsh, Section 3.
+ */
+typedef struct
 {
-  int32_t decimal_exp = 0;
+  uint64_t fract; /**< fraction */
+  int exp; /**< exponent */
+} encoded_float_t;
 
-  if (binary_exponent > 0)
+/**
+ * Power type
+ *
+ * Note:
+ *      Florian Loitsh, Section 4.
+ */
+typedef struct
+{
+  uint64_t fract; /**< fraction */
+  int16_t bin_exp; /**< binary exponent */
+  int16_t dec_exp; /**< decimal exponent */
+} power_t;
+
+#define POWER_CACHE_ITEM(fract, bin_exp, dec_exp) \
+{ \
+  fract, \
+  bin_exp, \
+  dec_exp \
+}
+
+static const power_t power_cache[] =
+{
+  POWER_CACHE_ITEM (0xfa8fd5a0081c0288ULL, -1220, -348),
+  POWER_CACHE_ITEM (0xbaaee17fa23ebf76ULL, -1193, -340),
+  POWER_CACHE_ITEM (0x8b16fb203055ac76ULL, -1166, -332),
+  POWER_CACHE_ITEM (0xcf42894a5dce35eaULL, -1140, -324),
+  POWER_CACHE_ITEM (0x9a6bb0aa55653b2dULL, -1113, -316),
+  POWER_CACHE_ITEM (0xe61acf033d1a45dfULL, -1087, -308),
+  POWER_CACHE_ITEM (0xab70fe17c79ac6caULL, -1060, -300),
+  POWER_CACHE_ITEM (0xff77b1fcbebcdc4fULL, -1034, -292),
+  POWER_CACHE_ITEM (0xbe5691ef416bd60cULL, -1007, -284),
+  POWER_CACHE_ITEM (0x8dd01fad907ffc3cULL,  -980, -276),
+  POWER_CACHE_ITEM (0xd3515c2831559a83ULL,  -954, -268),
+  POWER_CACHE_ITEM (0x9d71ac8fada6c9b5ULL,  -927, -260),
+  POWER_CACHE_ITEM (0xea9c227723ee8bcbULL,  -901, -252),
+  POWER_CACHE_ITEM (0xaecc49914078536dULL,  -874, -244),
+  POWER_CACHE_ITEM (0x823c12795db6ce57ULL,  -847, -236),
+  POWER_CACHE_ITEM (0xc21094364dfb5637ULL,  -821, -228),
+  POWER_CACHE_ITEM (0x9096ea6f3848984fULL,  -794, -220),
+  POWER_CACHE_ITEM (0xd77485cb25823ac7ULL,  -768, -212),
+  POWER_CACHE_ITEM (0xa086cfcd97bf97f4ULL,  -741, -204),
+  POWER_CACHE_ITEM (0xef340a98172aace5ULL,  -715, -196),
+  POWER_CACHE_ITEM (0xb23867fb2a35b28eULL,  -688, -188),
+  POWER_CACHE_ITEM (0x84c8d4dfd2c63f3bULL,  -661, -180),
+  POWER_CACHE_ITEM (0xc5dd44271ad3cdbaULL,  -635, -172),
+  POWER_CACHE_ITEM (0x936b9fcebb25c996ULL,  -608, -164),
+  POWER_CACHE_ITEM (0xdbac6c247d62a584ULL,  -582, -156),
+  POWER_CACHE_ITEM (0xa3ab66580d5fdaf6ULL,  -555, -148),
+  POWER_CACHE_ITEM (0xf3e2f893dec3f126ULL,  -529, -140),
+  POWER_CACHE_ITEM (0xb5b5ada8aaff80b8ULL,  -502, -132),
+  POWER_CACHE_ITEM (0x87625f056c7c4a8bULL,  -475, -124),
+  POWER_CACHE_ITEM (0xc9bcff6034c13053ULL,  -449, -116),
+  POWER_CACHE_ITEM (0x964e858c91ba2655ULL,  -422, -108),
+  POWER_CACHE_ITEM (0xdff9772470297ebdULL,  -396, -100),
+  POWER_CACHE_ITEM (0xa6dfbd9fb8e5b88fULL,  -369,  -92),
+  POWER_CACHE_ITEM (0xf8a95fcf88747d94ULL,  -343,  -84),
+  POWER_CACHE_ITEM (0xb94470938fa89bcfULL,  -316,  -76),
+  POWER_CACHE_ITEM (0x8a08f0f8bf0f156bULL,  -289,  -68),
+  POWER_CACHE_ITEM (0xcdb02555653131b6ULL,  -263,  -60),
+  POWER_CACHE_ITEM (0x993fe2c6d07b7facULL,  -236,  -52),
+  POWER_CACHE_ITEM (0xe45c10c42a2b3b06ULL,  -210,  -44),
+  POWER_CACHE_ITEM (0xaa242499697392d3ULL,  -183,  -36),
+  POWER_CACHE_ITEM (0xfd87b5f28300ca0eULL,  -157,  -28),
+  POWER_CACHE_ITEM (0xbce5086492111aebULL,  -130,  -20),
+  POWER_CACHE_ITEM (0x8cbccc096f5088ccULL,  -103,  -12),
+  POWER_CACHE_ITEM (0xd1b71758e219652cULL,   -77,   -4),
+  POWER_CACHE_ITEM (0x9c40000000000000ULL,   -50,    4),
+  POWER_CACHE_ITEM (0xe8d4a51000000000ULL,   -24,   12),
+  POWER_CACHE_ITEM (0xad78ebc5ac620000ULL,     3,   20),
+  POWER_CACHE_ITEM (0x813f3978f8940984ULL,    30,   28),
+  POWER_CACHE_ITEM (0xc097ce7bc90715b3ULL,    56,   36),
+  POWER_CACHE_ITEM (0x8f7e32ce7bea5c70ULL,    83,   44),
+  POWER_CACHE_ITEM (0xd5d238a4abe98068ULL,   109,   52),
+  POWER_CACHE_ITEM (0x9f4f2726179a2245ULL,   136,   60),
+  POWER_CACHE_ITEM (0xed63a231d4c4fb27ULL,   162,   68),
+  POWER_CACHE_ITEM (0xb0de65388cc8ada8ULL,   189,   76),
+  POWER_CACHE_ITEM (0x83c7088e1aab65dbULL,   216,   84),
+  POWER_CACHE_ITEM (0xc45d1df942711d9aULL,   242,   92),
+  POWER_CACHE_ITEM (0x924d692ca61be758ULL,   269,  100),
+  POWER_CACHE_ITEM (0xda01ee641a708deaULL,   295,  108),
+  POWER_CACHE_ITEM (0xa26da3999aef774aULL,   322,  116),
+  POWER_CACHE_ITEM (0xf209787bb47d6b85ULL,   348,  124),
+  POWER_CACHE_ITEM (0xb454e4a179dd1877ULL,   375,  132),
+  POWER_CACHE_ITEM (0x865b86925b9bc5c2ULL,   402,  140),
+  POWER_CACHE_ITEM (0xc83553c5c8965d3dULL,   428,  148),
+  POWER_CACHE_ITEM (0x952ab45cfa97a0b3ULL,   455,  156),
+  POWER_CACHE_ITEM (0xde469fbd99a05fe3ULL,   481,  164),
+  POWER_CACHE_ITEM (0xa59bc234db398c25ULL,   508,  172),
+  POWER_CACHE_ITEM (0xf6c69a72a3989f5cULL,   534,  180),
+  POWER_CACHE_ITEM (0xb7dcbf5354e9beceULL,   561,  188),
+  POWER_CACHE_ITEM (0x88fcf317f22241e2ULL,   588,  196),
+  POWER_CACHE_ITEM (0xcc20ce9bd35c78a5ULL,   614,  204),
+  POWER_CACHE_ITEM (0x98165af37b2153dfULL,   641,  212),
+  POWER_CACHE_ITEM (0xe2a0b5dc971f303aULL,   667,  220),
+  POWER_CACHE_ITEM (0xa8d9d1535ce3b396ULL,   694,  228),
+  POWER_CACHE_ITEM (0xfb9b7cd9a4a7443cULL,   720,  236),
+  POWER_CACHE_ITEM (0xbb764c4ca7a44410ULL,   747,  244),
+  POWER_CACHE_ITEM (0x8bab8eefb6409c1aULL,   774,  252),
+  POWER_CACHE_ITEM (0xd01fef10a657842cULL,   800,  260),
+  POWER_CACHE_ITEM (0x9b10a4e5e9913129ULL,   827,  268),
+  POWER_CACHE_ITEM (0xe7109bfba19c0c9dULL,   853,  276),
+  POWER_CACHE_ITEM (0xac2820d9623bf429ULL,   880,  284),
+  POWER_CACHE_ITEM (0x80444b5e7aa7cf85ULL,   907,  292),
+  POWER_CACHE_ITEM (0xbf21e44003acdd2dULL,   933,  300),
+  POWER_CACHE_ITEM (0x8e679c2f5e44ff8fULL,   960,  308),
+  POWER_CACHE_ITEM (0xd433179d9c8cb841ULL,   986,  316),
+  POWER_CACHE_ITEM (0x9e19db92b4e31ba9ULL,  1013,  324),
+  POWER_CACHE_ITEM (0xeb96bf6ebadf77d9ULL,  1039,  332),
+  POWER_CACHE_ITEM (0xaf87023b9bf0ee6bULL,  1066,  340)
+};
+
+/**
+ * Get power from the chache
+ *
+ * Note:
+ *      Florian Loitsh, Section 4.
+ *
+ * @return chached power
+ */
+static int
+ecma_find_power_in_cache (int exp, /**< exponent */
+                          encoded_float_t *fp_value) /**< float value */
+{
+  int k = (int) ceil ((exp + GRISU3_ENCODED_FLOAT_FRACT_SIZE - 1) * GRISU3_1_LOG2_10); /* k_computation */
+  int i = (k - GRISU3_MIN_CACHED_EXP - 1) / GRISU3_CACHED_EXP_STEP + 1;
+  fp_value->fract = power_cache[i].fract;
+  fp_value->exp = power_cache[i].bin_exp;
+  return power_cache[i].dec_exp;
+} /* ecma_find_power_in_cache */
+
+/**
+ * Subtract two floating point values
+ *
+ * Note:
+ *      Florian Loitsh, Figure 2/a.
+ *
+ * @return result of subtraction
+ */
+static encoded_float_t
+ecma_subtract_encoded_fp (encoded_float_t fp_value_1, /**< first float value */
+                          encoded_float_t fp_value_2) /**< second float value */
+{
+  JERRY_ASSERT (fp_value_1.exp == fp_value_2.exp && fp_value_1.fract >= fp_value_2.fract);
+
+  encoded_float_t result;
+
+  result.fract = fp_value_1.fract - fp_value_2.fract;
+  result.exp = fp_value_1.exp;
+
+  return result;
+} /* ecma_subtract_encoded_fp */
+
+/**
+ * Multiply two floating point numbers
+ *
+ * Note:
+ *      Florian Loitsh, Figure 2/b.
+ *
+ * @return product arithmetical
+ */
+static encoded_float_t
+ecma_multiply_encoded_fp (encoded_float_t fp_value_1, /**< first float value */
+                          encoded_float_t fp_value_2) /**< second float value */
+{
+  uint64_t a = fp_value_1.fract >> 32;
+  uint64_t b = fp_value_1.fract & GRISU3_32_BIT_MASK;
+  uint64_t c = fp_value_2.fract >> 32;
+  uint64_t d = fp_value_2.fract & GRISU3_32_BIT_MASK;
+
+  uint64_t ac = a * c;
+  uint64_t bc = b * c;
+  uint64_t ad = a * d;
+  uint64_t bd = b * d;
+
+  uint64_t tmp = (bd >> 32) + (ad & GRISU3_32_BIT_MASK) + (bc & GRISU3_32_BIT_MASK);
+
+  tmp += 1U << 31; /* round */
+
+  encoded_float_t result;
+
+  result.fract = ac + (ad >> 32) + (bc >> 32) + (tmp >> 32);
+  result.exp = fp_value_1.exp + fp_value_2.exp + 64;
+
+  return result;
+} /* ecma_multiply_encoded_fp */
+
+/**
+ * Normalize a floating point value
+ *
+ * @return normalized encoded_fp
+ */
+static encoded_float_t
+ecma_normalize_encoded_fp (encoded_float_t fp_value) /**< float value */
+{
+  JERRY_ASSERT (fp_value.fract != 0);
+
+  while (!(fp_value.fract & 0xFFC0000000000000ULL))
   {
-    while (binary_exponent > 0)
-    {
-      if (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INC (fraction_uint128);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
-        binary_exponent++;
-      }
-      else
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_tmp);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_COPY (fraction_uint128_tmp, fraction_uint128);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_tmp);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_tmp);
+    fp_value.fract <<= 10;
+    fp_value.exp -= 10;
+  }
 
-        if (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARE_EQUAL (fraction_uint128, fraction_uint128_tmp)
-            && ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 123))
-        {
-          ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
-          binary_exponent--;
-        }
-        else
-        {
-          ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128);
-          decimal_exp++;
-        }
-      }
+  while (!(fp_value.fract & GRISU3_SIGN_BIT))
+  {
+    fp_value.fract <<= 1;
+    --fp_value.exp;
+  }
+
+  return fp_value;
+} /* ecma_normalize_encoded_fp */
+
+/**
+ * Convert ecma number to encoded_fp
+ *
+ * @return encoded_fp
+ */
+static inline encoded_float_t __attr_always_inline___
+ecma_number_to_encoded_fp (ecma_number_t value) /**< ecma number */
+{
+  encoded_float_t fp;
+  uint64_t *tmp = (uint64_t *) &value;
+  uint64_t u64 = *tmp;
+
+  if (!(u64 & GRISU3_EXPONENT_MASK))
+  {
+    fp.fract = u64 & GRISU3_FRACTION_MASK;
+    fp.exp = 1 - GRISU3_EXPONENT_BIAS;
+  }
+  else
+  {
+    fp.fract = (u64 & GRISU3_FRACTION_MASK) + GRISU3_IMPLICIT_ONE;
+    fp.exp = (int) ((u64 & GRISU3_EXPONENT_MASK) >> GRISU3_EXPONENT_POSITION) - GRISU3_EXPONENT_BIAS;
+  }
+
+  return fp;
+} /* ecma_number_to_encoded_fp */
+
+/**
+ * Powers of 10
+ */
+static const uint32_t power_10[] =
+{
+  0u,
+  1u,
+  10u,
+  100u,
+  1000u,
+  10000u,
+  100000u,
+  1000000u,
+  10000000u,
+  100000000u,
+  1000000000u
+};
+
+/**
+ * Get the largest possoble power
+ *
+ * @return power of 10
+ */
+static inline int __attr_always_inline___
+ecma_largest_power (uint32_t n, /**< number */
+                    int n_bits, /**< n_bits */
+                    uint32_t *power) /**< [out] power of 10 */
+{
+  int guess = (((n_bits + 1) * 1233) >> 12) + 1;
+
+  if (n < power_10[guess])
+  {
+    --guess; /* We don't have any guarantees that 2^n_bits <= n. */
+  }
+
+  *power = power_10[guess];
+
+  return guess;
+} /* ecma_largest_power */
+
+/**
+ * Try all possible numbers with the same leading length
+ * and pick the one that is the closest.
+ *
+ * Note:
+ *      Florian Loitsh, Figure 8.
+ *
+ * @return true - if success
+ *         false - otherwise
+ */
+static inline bool __attr_always_inline___
+ecma_grisu_round_weed (char *buffer, /**< [in, out] digits buffer */
+                       int len, /**< number of digits */
+                       uint64_t wp_w, /**< difference from positive neighbor */
+                       uint64_t delta, /**< delta */
+                       uint64_t rest, /**< positive neighbor minus one ulp */
+                       uint64_t ten_kappa, /**< 10^K */
+                       uint64_t ulp) /**< unit in the last place */
+{
+  uint64_t wp_w_up = wp_w - ulp;
+  uint64_t wp_w_down = wp_w + ulp;
+
+  while (rest < wp_w_up && delta - rest >= ten_kappa
+         && (rest + ten_kappa < wp_w_up || wp_w_up - rest >= rest + ten_kappa - wp_w_up))
+  {
+    buffer[len - 1]--;
+    rest += ten_kappa;
+  }
+
+  if (rest < wp_w_down && delta - rest >= ten_kappa
+      && (rest + ten_kappa < wp_w_down || wp_w_down - rest > rest + ten_kappa - wp_w_down))
+  {
+    return false; /* failure */
+  }
+
+  return 2 * ulp <= rest && rest <= delta - 4 * ulp;
+} /* ecma_grisu_round_weed */
+
+/**
+ * Digit generation routine of Grisu3
+ *
+ * @return true - if success
+ *         false - otherwise
+ */
+static inline bool __attr_always_inline___
+ecma_generate_digits (encoded_float_t low, /**< lower neighbor*/
+                      encoded_float_t w, /**< number */
+                      encoded_float_t high, /**< higher neighbor*/
+                      char *buffer, /**< [out] digits buffer */
+                      int *length, /**< [out] number of digits */
+                      int *kappa) /**< [out] kappa */
+{
+  uint64_t unit = 1;
+  encoded_float_t too_low = { low.fract - unit, low.exp };
+  encoded_float_t too_high = { high.fract + unit, high.exp };
+  encoded_float_t unsafe_interval = ecma_subtract_encoded_fp (too_high, too_low);
+  encoded_float_t one = { 1ULL << -w.exp, w.exp };
+  uint32_t part1 = (uint32_t) (too_high.fract >> -one.exp);
+  uint64_t part2 = too_high.fract & (one.fract - 1);
+  uint32_t div;
+  *kappa = ecma_largest_power (part1, GRISU3_ENCODED_FLOAT_FRACT_SIZE + one.exp, &div);
+  *length = 0;
+
+  while (*kappa > 0)
+  {
+    uint64_t rest;
+    uint8_t digit = (uint8_t) (part1 / div);
+    buffer[(*length)++] = (char) ('0' + digit);
+    part1 %= div;
+    (*kappa)--;
+    rest = ((uint64_t) part1 << -one.exp) + part2;
+
+    if (rest < unsafe_interval.fract)
+    {
+      return ecma_grisu_round_weed (buffer,
+                                    *length,
+                                    ecma_subtract_encoded_fp (too_high, w).fract,
+                                    unsafe_interval.fract,
+                                    rest,
+                                    (uint64_t) div << -one.exp,
+                                    unit);
+    }
+
+    div /= 10;
+  }
+
+  while (true)
+  {
+    uint8_t digit;
+    part2 *= 10;
+    unit *= 10;
+    unsafe_interval.fract *= 10;
+    digit = (uint8_t) (part2 >> -one.exp); /* Integer division by one. */
+    buffer[(*length)++] = (char) ('0' + digit);
+    part2 &= one.fract - 1; /* Modulo by one. */
+    (*kappa)--;
+
+    if (part2 < unsafe_interval.fract)
+    {
+      return ecma_grisu_round_weed (buffer,
+                                    *length,
+                                    ecma_subtract_encoded_fp (too_high, w).fract * unit,
+                                    unsafe_interval.fract,
+                                    part2,
+                                    one.fract,
+                                    unit);
     }
   }
-  else if (binary_exponent < 0)
+} /* ecma_generate_digits */
+
+/**
+ * Implementation of the "grisu3" double to string
+ * conversion algorithm described in the research paper
+ *
+ * "Printing Floating-Point Numbers Quickly And Accurately with Integers"
+ * by Florian Loitsch, available at
+ * http://www.cs.tufts.edu/~nr/cs257/archive/florian-loitsch/printf.pdf
+ *
+ * @return true - if success
+ *         false - otherwise
+ */
+static bool
+ecma_grisu3 (ecma_number_t num, /**< input ecma number */
+             char *buffer, /**< [out] digits buffer */
+             int *length, /**< [out] number of digits */
+             int *exp) /**< [out] exponent */
+{
+  int mk, kappa, success;
+  encoded_float_t dfp = ecma_number_to_encoded_fp (num);
+  encoded_float_t w = ecma_normalize_encoded_fp (dfp);
+
+  /* normalize boundaries */
+  encoded_float_t t = { (dfp.fract << 1) + 1, dfp.exp - 1 };
+  encoded_float_t b_plus = ecma_normalize_encoded_fp (t);
+  encoded_float_t b_minus;
+  encoded_float_t c_mk; /* Cached power of ten: 10^-k */
+  uint64_t *tmp_u64_p = (uint64_t *) &num;
+  uint64_t u64 = *tmp_u64_p;
+
+  /* Grisu only handles strictly positive finite numbers. */
+  JERRY_ASSERT (num > 0 && num <= 1.7976931348623157e308);
+
+  /* Is lower boundary closer? */
+  if (!(u64 & GRISU3_FRACTION_MASK) && (u64 & GRISU3_EXPONENT_MASK) != 0)
   {
-    while (binary_exponent < 0)
-    {
-      if (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_LOW_BIT_MASK_ZERO (fraction_uint128, 0)
-          || !ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
-
-        binary_exponent++;
-      }
-      else
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128);
-
-        decimal_exp--;
-      }
-    }
+    b_minus.fract = (dfp.fract << 2) - 1;
+    b_minus.exp =  dfp.exp - 2;
+  }
+  else
+  {
+    b_minus.fract = (dfp.fract << 1) - 1;
+    b_minus.exp = dfp.exp - 1;
   }
 
-  *out_decimal_exp_p = decimal_exp;
-} /* ecma_number_helper_binary_to_decimal */
+  b_minus.fract = b_minus.fract << (b_minus.exp - b_plus.exp);
+  b_minus.exp = b_plus.exp;
+
+  mk = ecma_find_power_in_cache (GRISU3_MIN_TARGET_EXP - GRISU3_ENCODED_FLOAT_FRACT_SIZE - w.exp, &c_mk);
+
+  w = ecma_multiply_encoded_fp (w, c_mk);
+  b_minus = ecma_multiply_encoded_fp (b_minus, c_mk);
+  b_plus = ecma_multiply_encoded_fp (b_plus,  c_mk);
+
+  success = ecma_generate_digits (b_minus, w, b_plus, buffer, length, &kappa);
+  *exp = kappa - mk;
+
+  return success;
+} /* ecma_grisu3 */
 
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
@@ -1002,142 +1418,35 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
   JERRY_ASSERT (!ecma_number_is_nan (num));
   JERRY_ASSERT (!ecma_number_is_zero (num));
   JERRY_ASSERT (!ecma_number_is_infinity (num));
+  JERRY_ASSERT (!ecma_number_is_negative (num));
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-  ecma_number_t num_m1 = ecma_number_get_prev (num);
-  ecma_number_t num_p1 = ecma_number_get_next (num);
+  char str[32];
+  int len;
+  int exp;
 
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_m1);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_p1);
+  /*
+   * TODO:
+   *      Add fallback mechanism, when grisu3 fails. There is no more accurate algorithm
+   *      in JerryScript yet.
+   */
+  ecma_grisu3 (num, str, &len, &exp);
 
-  uint64_t fraction_uint64, fraction_uint64_m1, fraction_uint64_p1;
-  int32_t binary_exponent, binary_exponent_m1, binary_exponent_p1;
-  int32_t decimal_exp, decimal_exp_m1, decimal_exp_p1;
-  int32_t dot_shift, dot_shift_m1, dot_shift_p1;
+  *out_digits_p = 0;
 
-  dot_shift_m1 = ecma_number_get_fraction_and_exponent (num_m1, &fraction_uint64_m1, &binary_exponent_m1);
-  dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &binary_exponent);
-  dot_shift_p1 = ecma_number_get_fraction_and_exponent (num_p1, &fraction_uint64_p1, &binary_exponent_p1);
-
-  binary_exponent_m1 -= dot_shift_m1;
-  binary_exponent -= dot_shift;
-  binary_exponent_p1 -= dot_shift_p1;
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64) >> 32u,
-                                              ((fraction_uint64) << 32u) >> 32u);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128_m1,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64_m1) >> 32u,
-                                              ((fraction_uint64_m1) << 32u) >> 32u);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128_p1,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64_p1) >> 32u,
-                                              ((fraction_uint64_p1) << 32u) >> 32u);
-
-  ecma_number_helper_binary_to_decimal (fraction_uint128, binary_exponent, &decimal_exp);
-  ecma_number_helper_binary_to_decimal (fraction_uint128_m1, binary_exponent_m1, &decimal_exp_m1);
-  ecma_number_helper_binary_to_decimal (fraction_uint128_p1, binary_exponent_p1, &decimal_exp_p1);
-
-  if (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128_m1))
+  /*
+   * TODO:
+   *      Change return value to 'const char*' and update the call sites. (Number.prototype.toString,
+   *      Number.prototype.toFixed, Number.prototype.toExponential, and Number.prototype.toPrecision).
+   */
+  for (int i = 0; i < len; i++)
   {
-    decimal_exp_m1 = decimal_exp;
+    *out_digits_p *= 10;
+    *out_digits_p += (uint64_t) (str[i] - '0');
   }
 
-  while (decimal_exp != decimal_exp_m1
-         || decimal_exp != decimal_exp_p1)
-  {
-    while (decimal_exp > decimal_exp_m1
-           || decimal_exp > decimal_exp_p1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128);
-      decimal_exp--;
-    }
-    while (decimal_exp_m1 > decimal_exp
-           || decimal_exp_m1 > decimal_exp_p1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_m1);
-      decimal_exp_m1--;
-    }
-    while (decimal_exp_p1 > decimal_exp
-           || decimal_exp_p1 > decimal_exp_m1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_p1);
-      decimal_exp_p1--;
-    }
-  }
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD (fraction_uint128_m1, fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128_m1);
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD (fraction_uint128_p1, fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128_p1);
-
-  /* While fraction doesn't fit to integer, divide it by 10
-       and simultaneously increment decimal exponent */
-  uint64_t digits_min, digits_max;
-
-  while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128_m1, 63))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_m1);
-    decimal_exp_m1++;
-  }
-  while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128_p1, 63))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_p1);
-    decimal_exp_p1++;
-  }
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64 (fraction_uint128_m1, digits_min);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64 (fraction_uint128_p1, digits_max);
-
-  digits_min++;
-
-  if (decimal_exp_m1 < decimal_exp_p1)
-  {
-    JERRY_ASSERT (decimal_exp_m1 == decimal_exp_p1 - 1);
-
-    digits_min /= 10;
-    decimal_exp_m1++;
-  }
-  else if (decimal_exp_m1 > decimal_exp_p1)
-  {
-    JERRY_ASSERT (decimal_exp_m1 == decimal_exp_p1 + 1);
-
-    digits_max /= 10;
-    decimal_exp_p1++;
-  }
-
-  JERRY_ASSERT (digits_max >= digits_min);
-
-  while (digits_min / 10 != digits_max / 10)
-  {
-    digits_min /= 10;
-    digits_max /= 10;
-    decimal_exp_m1++;
-    decimal_exp_p1++;
-  }
-
-  uint64_t digits = (digits_min + digits_max + 1) / 2;
-  int32_t digits_num = 0;
-  uint64_t t = digits;
-
-  while (t != 0)
-  {
-    t /= 10;
-    digits_num++;
-  }
-
-  JERRY_ASSERT (digits_num > 0);
-
-  *out_digits_p = digits;
-  *out_digits_num_p = digits_num;
-  *out_decimal_exp_p = decimal_exp_p1 + digits_num;
+  *out_digits_num_p = len;
+  *out_decimal_exp_p = len + exp;
 
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
   /* Less precise conversion */

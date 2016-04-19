@@ -148,7 +148,9 @@ project (JerryCore C ASM)
       ${SOURCE_CORE_JRT})
 
  # Jerry port
- file(GLOB SOURCE_PORT_FILES ${PORT_DIR}/*.c)
+ if(NOT ("${PORT_DIR}" STREQUAL ""))
+  file(GLOB SOURCE_PORT_FILES ${PORT_DIR}/*.c)
+ endif()
 
  # All-in-one build
  if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")

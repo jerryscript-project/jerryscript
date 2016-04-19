@@ -13,25 +13,23 @@
  * limitations under the License.
  */
 
-#include "jerry-core/jerry.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "jerry-core/jerry.h"
 #include "jerry_extapi.h"
-#include "native_mbedk64f.h"
-
+ 
+#include "native_mbed.h"
 
 #ifndef MIN
 #define MIN(A,B) ((A)<(B)?(A):(B))
 #endif
 
-
 //-----------------------------------------------------------------------------
 
 #define __UNSED__ __attribute__((unused))
 
-#define DELCARE_HANDLER(NAME) \
+#define DECLARE_HANDLER(NAME) \
 static bool \
 NAME ## _handler (const jerry_api_object_t * function_obj_p __UNSED__, \
                   const jerry_api_value_t *  this_p __UNSED__, \
@@ -42,14 +40,13 @@ NAME ## _handler (const jerry_api_object_t * function_obj_p __UNSED__, \
 #define REGISTER_HANDLER(NAME) \
   register_native_function ( # NAME, NAME ## _handler)
 
-
 //-----------------------------------------------------------------------------
 
-DELCARE_HANDLER(assert)
+DECLARE_HANDLER(assert)
 {
   if (args_cnt == 1
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
-      && args_p[0].v_bool == true)
+      && args_p[0].u.v_bool == true)
   {
     printf (">> Jerry assert true\r\n");
     return true;
@@ -59,40 +56,7 @@ DELCARE_HANDLER(assert)
   return false;
 }
 
-
-DELCARE_HANDLER(print)
-{
-  jerry_api_length_t cc;
-
-  if (args_cnt)
-  {
-    printf(">> print(%d) :", (int)args_cnt);
-    for (cc=0; cc<args_cnt; cc++)
-    {
-      if (args_p[cc].type == JERRY_API_DATA_TYPE_STRING && args_p[cc].v_string)
-      {
-        static char buffer[128];
-        int length, maxlength;
-        length = -jerry_api_string_to_char_buffer (args_p[0].v_string, NULL, 0);
-        maxlength  = MIN(length, 126);
-        jerry_api_string_to_char_buffer (args_p[cc].v_string,
-                                         (jerry_api_char_t *) buffer,
-                                         maxlength);
-        *(buffer + length) = 0;
-        printf("[%s] ", buffer);
-      }
-      else
-      {
-        printf ("(%d) ", args_p[cc].type);
-      }
-    }
-    printf ("\r\n");
-  }
-  return true;
-}
-
-
-DELCARE_HANDLER(led)
+DECLARE_HANDLER(led)
 {
   if (args_cnt < 2)
   {
@@ -104,16 +68,17 @@ DELCARE_HANDLER(led)
   value = (int)JS_VALUE_TO_NUMBER (&args_p[1]);
 
   ret_val_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
-  if (port >=0 && port <= 3) {
+  if (port >=0 && port <= 3)
+  {
     native_led(port, value);
-    ret_val_p->v_bool = true;
+    ret_val_p->u.v_bool = true;
   }
-  else {
-    ret_val_p->v_bool = false;
+  else
+  {
+    ret_val_p->u.v_bool = false;
   }
   return true;
 }
-
 
 //-----------------------------------------------------------------------------
 
@@ -130,8 +95,8 @@ register_native_function (const char* name,
   reg_func_p = jerry_api_create_external_function (handler);
 
   if (!(reg_func_p != NULL
-                && jerry_api_is_function (reg_func_p)
-                && jerry_api_is_constructor (reg_func_p)))
+      && jerry_api_is_function (reg_func_p)
+      && jerry_api_is_constructor (reg_func_p)))
   {
     printf ("Error: create_external_function failed !!!\r\n");
     jerry_api_release_object (global_obj_p);
@@ -140,10 +105,10 @@ register_native_function (const char* name,
 
   jerry_api_acquire_object (reg_func_p);
   reg_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  reg_value.v_object = reg_func_p;
+  reg_value.u.v_object = reg_func_p;
 
   bok = jerry_api_set_object_field_value (global_obj_p,
-                                          (jerry_api_char_t *)name,
+                                          (jerry_api_char_t *) name,
                                           &reg_value);
 
   jerry_api_release_value (&reg_value);
@@ -158,10 +123,8 @@ register_native_function (const char* name,
   return bok;
 }
 
-
 void js_register_functions (void)
 {
   REGISTER_HANDLER (assert);
-  REGISTER_HANDLER (print);
   REGISTER_HANDLER (led);
 }

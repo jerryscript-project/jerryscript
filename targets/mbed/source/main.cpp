@@ -18,55 +18,58 @@
 #include "jerry-core/jerry.h"
 #include "jerry_run.h"
 
-//-----------------------------------------------------------------------------
-
 #include "jerry_targetjs.h"
 
-static int jerry_init(void) {
+static Serial pc (USBTX, USBRX); //tx, rx
+
+static int jerry_init (void)
+{
   int retcode;
   int src;
 
   DECLARE_JS_CODES;
 
   /* run main.js */
-  retcode = js_entry(js_codes[0].source, js_codes[0].length);
-  if (retcode != 0) {
-    printf("js_entry failed code(%d) [%s]\r\n", retcode, js_codes[0].name);
-    js_exit();
+  retcode = js_entry (js_codes[0].source, js_codes[0].length);
+  if (retcode != 0)
+  {
+    printf ("js_entry failed code(%d) [%s]\r\n", retcode, js_codes[0].name);
+    js_exit ();
     return -1;
   }
   /* run rest of the js files */
-  for (src=1; js_codes[src].source; src++) {
-    retcode = js_eval(js_codes[src].source, js_codes[src].length);
-    if (retcode != 0) {
-      printf("js_eval failed code(%d) [%s]\r\n", retcode, js_codes[src].name);
-      js_exit();
+  for (src = 1; js_codes[src].source; src++)
+  {
+    retcode = js_eval (js_codes[src].source, js_codes[src].length);
+    if (retcode != 0)
+    {
+      printf ("js_eval failed code(%d) [%s]\r\n", retcode, js_codes[src].name);
+      js_exit ();
       return -2;
     }
   }
   return 0;
 }
 
-static void jerry_loop(void) {
+static void jerry_loop (void)
+{
   static uint32_t _jcount = 0;
 
-  js_loop(_jcount++);
+  js_loop (_jcount++);
 }
 
+void app_start (int, char**)
+{
+  // set 9600 baud rate for stdout
+  pc.baud (9600);
 
-void app_start(int, char**){
-  // set 115200 baud rate for stdout
-  static Serial pc(USBTX, USBRX);
-  pc.baud(115200);
-
-  printf ("\r\nJerryScript in mbed K64F\r\n");
+  printf ("\r\nJerryScript in mbed\r\n");
   printf ("   build  %s\r\n", jerry_build_date);
   printf ("   hash   %s\r\n", jerry_commit_hash);
   printf ("   branch %s\r\n", jerry_branch_name);
-
-  if (jerry_init() == 0) {
-    minar::Scheduler::postCallback(jerry_loop)
-                        .period(minar::milliseconds(100))
-                        ;
+  
+  if (jerry_init () == 0)
+  {
+    minar::Scheduler::postCallback(jerry_loop).period(minar::milliseconds(100));
   }
 }

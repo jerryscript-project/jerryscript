@@ -13,13 +13,9 @@
  * limitations under the License.
  */
 
-#include "mbed-drivers/mbed.h"
+#ifndef __NATIVE_MBED_H__
+#define __NATIVE_MBED_H__
 
-#include "native_mbedk64f.h"
+void native_led (int port, int val);
 
-
-void native_led(int port, int val) {
-  static const PinName portmap[] = { LED1, LED2, LED3, LED4 };
-  DigitalOut led(portmap[port]);
-  led = val;
-}
+#endif /* !__NATIVE_MBED_H__ */

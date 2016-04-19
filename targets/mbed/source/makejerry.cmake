@@ -20,11 +20,7 @@ set(LJCORE ${CMAKE_CURRENT_LIST_DIR}/../../../)
 include_directories(${LJCORE})
 
 # compile flags
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS}
-                  -mlittle-endian
-                  -mthumb
-                  -mcpu=cortex-m4
-                  )
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mlittle-endian -mthumb -mcpu=cortex-m4" )
 
 # link jerryscript
 set(LJPATH ${CMAKE_CURRENT_LIST_DIR}/../libjerry)

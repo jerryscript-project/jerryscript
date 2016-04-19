@@ -1,5 +1,0 @@
-{
-  "build": {
-    "target": "frdm-k64f-gcc,*"
-  }
-}

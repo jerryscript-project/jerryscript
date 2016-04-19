@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef __NATIVE_MBEDK64F_H__
-#define __NATIVE_MBEDK64F_H__
+#ifndef __JERRY_RUN_H__
+#define __JERRY_RUN_H__
 
-
-void native_led(int port, int val);
-
+int js_entry (const char *source_p, const size_t source_size);
+int js_eval (const char *source_p, const size_t source_size);
+int js_loop (uint32_t ticknow);
+void js_exit (void);
 
 #endif

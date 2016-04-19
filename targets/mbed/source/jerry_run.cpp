@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,38 +14,44 @@
  * limitations under the License.
  */
 
-#include "jerry-core/jerry.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "jerry_run.h"
+#include "jerry-core/jerry.h"
 #include "jerry_extapi.h"
-
+#include "jerry_run.h"
 
 static const char* fn_sys_loop_name = "sysloop";
-
 
 int js_entry (const char *source_p, const size_t source_size)
 {
   const jerry_api_char_t *jerry_src = (const jerry_api_char_t *) source_p;
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
+  jerry_api_object_t *err_obj_p = NULL;
+  jerry_api_value_t err_value = jerry_api_create_void_value ();
 
   jerry_init (flags);
 
   js_register_functions ();
 
-  if (!jerry_parse (jerry_src, source_size))
+  if (!jerry_parse (jerry_src, source_size, &err_obj_p))
   {
     printf ("Error: jerry_parse failed\r\n");
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+    jerry_api_release_object (err_obj_p);
   }
   else
   {
     if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
     {
-      ret_code = jerry_run ();
+      ret_code = jerry_run (&err_value);
+      jerry_api_string_t *err_str_p = NULL;
+
+      if (err_str_p != NULL)
+      {
+        jerry_api_release_string (err_str_p);
+      }
     }
   }
 
@@ -75,7 +82,7 @@ int js_loop (uint32_t ticknow)
 
   global_obj_p = jerry_api_get_global ();
   is_ok = jerry_api_get_object_field_value (global_obj_p,
-                          (const jerry_api_char_t*)fn_sys_loop_name,
+                          (const jerry_api_char_t*) fn_sys_loop_name,
                           &sysloop_func);
   if (!is_ok)
   {
@@ -96,12 +103,12 @@ int js_loop (uint32_t ticknow)
   uint16_t val_argv;
 
   val_argv = 1;
-  val_args = (jerry_api_value_t*)malloc (sizeof (jerry_api_value_t) * val_argv);
+  val_args = (jerry_api_value_t*) malloc (sizeof (jerry_api_value_t) * val_argv);
   val_args[0].type = JERRY_API_DATA_TYPE_UINT32;
-  val_args[0].v_uint32 = ticknow;
+  val_args[0].u.v_uint32 = ticknow;
 
   jerry_api_value_t res;
-  is_ok = jerry_api_call_function (sysloop_func.v_object,
+  is_ok = jerry_api_call_function (sysloop_func.u.v_object,
                                    global_obj_p,
                                    &res,
                                    val_args,
@@ -119,4 +126,3 @@ void js_exit (void)
 {
   jerry_cleanup ();
 }
-

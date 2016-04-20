@@ -168,7 +168,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   // 9.
   ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value, scope_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value, scope_p);
 
   // 10., 11., 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
@@ -529,8 +529,8 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 3. */
     ret_value = ecma_op_object_has_instance (target_func_obj_p, value);
@@ -576,8 +576,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
       ecma_property_t *bytecode_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
 
-      ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                          ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
+      ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
 
       // 8.
       ecma_value_t this_binding;
@@ -685,8 +685,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 4. */
     ecma_property_t *bound_args_prop_p;
@@ -870,8 +870,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                   ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
 
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))

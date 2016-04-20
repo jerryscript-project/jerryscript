@@ -316,7 +316,7 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
         case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
         case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
         {
-          ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, property_value);
+          ecma_object_t *obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, property_value);
 
           ecma_gc_set_object_visited (obj_p, true);
 

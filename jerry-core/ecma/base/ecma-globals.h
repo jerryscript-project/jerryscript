@@ -226,7 +226,10 @@ typedef enum
 
   ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for
                                                                              *   property pair types. */
-  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for property types. */
+
+  ECMA_PROPERTY_TYPE_HASHMAP, /**< hash map for fast property access */
+
+  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_HASHMAP, /**< highest value for property types. */
 } ecma_property_types_t;
 
 /**

@@ -128,6 +128,11 @@
 // #define CONFIG_ECMA_LCACHE_DISABLE
 
 /**
+ * Disable ECMA property hashmap
+ */
+// #define CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+
+/**
  * Share of newly allocated since last GC objects among all currently allocated objects,
  * after achieving which, GC is started upon low severity try-give-memory-back requests.
  *

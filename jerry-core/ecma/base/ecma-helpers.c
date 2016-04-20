@@ -19,6 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
+#include "ecma-property-hashmap.h"
 #include "jrt-bit-fields.h"
 #include "byte-code.h"
 #include "re-compiler.h"
@@ -392,15 +393,32 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 static ecma_property_t *
 ecma_create_property (ecma_object_t *object_p, /**< the object */
                       ecma_string_t *name_p, /**< property name */
-                      uint8_t type_and_flags) /**< type and flags, see ecma_property_info_t */
+                      uint8_t type_and_flags, /**< type and flags, see ecma_property_info_t */
+                      ecma_property_value_t value) /**< property value */
 {
   JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
-  if (object_p->property_list_or_bound_object_cp != ECMA_NULL_POINTER)
+  mem_cpointer_t *property_list_head_p = &object_p->property_list_or_bound_object_cp;
+  bool has_hashmap = false;
+
+  if (*property_list_head_p != ECMA_NULL_POINTER)
   {
-    /* If the first entry is free (deleted), we simply use its value. */
+    /* If the first entry is a hashmap, it is skipped. */
     ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
-                                                                          object_p->property_list_or_bound_object_cp);
+                                                                          *property_list_head_p);
+
+    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      property_list_head_p = &first_property_p->next_property_cp;
+      has_hashmap = true;
+    }
+  }
+
+  if (*property_list_head_p != ECMA_NULL_POINTER)
+  {
+    /* If the first entry is free (deleted), it is reused. */
+    ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                          *property_list_head_p);
 
     JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (first_property_p));
 
@@ -415,6 +433,21 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
 
       JERRY_ASSERT (ECMA_PROPERTY_VALUE_PTR (property_p) == first_property_pair_p->values + 0);
 
+      first_property_pair_p->values[0] = value;
+
+      /* The property must be fully initialized before ecma_property_hashmap_insert
+       * is called, because the insert operation may reallocate the hashmap, and
+       * that triggers garbage collection which scans all properties of all objects.
+       * A not fully initialized but queued property may cause a crash. */
+
+      if (has_hashmap && name_p != NULL)
+      {
+        ecma_property_hashmap_insert (object_p,
+                                      name_p,
+                                      first_property_pair_p,
+                                      0);
+      }
+
       return property_p;
     }
   }
@@ -423,17 +456,29 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   ecma_property_pair_t *first_property_pair_p = ecma_alloc_property_pair ();
 
   /* Just copy the previous value (no need to decompress, compress). */
-  first_property_pair_p->header.next_property_cp = object_p->property_list_or_bound_object_cp;
+  first_property_pair_p->header.next_property_cp = *property_list_head_p;
   first_property_pair_p->header.types[0].type_and_flags = ECMA_PROPERTY_TYPE_DELETED;
   first_property_pair_p->header.types[1].type_and_flags = type_and_flags;
   first_property_pair_p->names_cp[0] = ECMA_NULL_POINTER;
   ECMA_SET_POINTER (first_property_pair_p->names_cp[1], name_p);
 
-  ecma_set_property_list (object_p, &first_property_pair_p->header);
+  ECMA_SET_NON_NULL_POINTER (*property_list_head_p, &first_property_pair_p->header);
 
   ecma_property_t *property_p = first_property_pair_p->header.types + 1;
 
   JERRY_ASSERT (ECMA_PROPERTY_VALUE_PTR (property_p) == first_property_pair_p->values + 1);
+
+  first_property_pair_p->values[1] = value;
+
+  /* See the comment before the other ecma_property_hashmap_insert above. */
+
+  if (has_hashmap && name_p != NULL)
+  {
+    ecma_property_hashmap_insert (object_p,
+                                  name_p,
+                                  first_property_pair_p,
+                                  1);
+  }
 
   return property_p;
 } /* ecma_create_property */
@@ -453,11 +498,10 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
   uint8_t id_byte = (uint8_t) (property_id << ECMA_PROPERTY_FLAG_SHIFT);
   uint8_t type_and_flags = (uint8_t) (ECMA_PROPERTY_TYPE_INTERNAL | id_byte);
 
-  ecma_property_t *property_p = ecma_create_property (object_p, NULL, type_and_flags);
+  ecma_property_value_t value;
+  value.value = ECMA_NULL_POINTER;
 
-  ECMA_PROPERTY_VALUE_PTR (property_p)->value = ECMA_NULL_POINTER;
-
-  return property_p;
+  return ecma_create_property (object_p, NULL, type_and_flags, value);
 } /* ecma_create_internal_property */
 
 /**
@@ -476,6 +520,13 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
                 && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE);
 
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+  if (prop_iter_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
 
   while (prop_iter_p != NULL)
   {
@@ -551,13 +602,12 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  ecma_property_t *property_p = ecma_create_property (object_p, name_p, type_and_flags);
-
-  ecma_set_named_data_property_value (property_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
-
   ecma_lcache_invalidate (object_p, name_p, NULL);
 
-  return property_p;
+  ecma_property_value_t value;
+  value.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  return ecma_create_property (object_p, name_p, type_and_flags, value);
 } /* ecma_create_named_data_property */
 
 /**
@@ -588,17 +638,13 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  ecma_property_t *property_p = ecma_create_property (object_p, name_p, type_and_flags);
-
-  /*
-   * Should be performed after linking the property into object's property list, because the setters assert that.
-   */
-  ecma_set_named_accessor_property_getter (object_p, property_p, get_p);
-  ecma_set_named_accessor_property_setter (object_p, property_p, set_p);
-
   ecma_lcache_invalidate (object_p, name_p, NULL);
 
-  return property_p;
+  ecma_property_value_t value;
+  ECMA_SET_POINTER (value.getter_setter_pair.getter_p, get_p);
+  ECMA_SET_POINTER (value.getter_setter_pair.setter_p, set_p);
+
+  return ecma_create_property (object_p, name_p, type_and_flags, value);
 } /* ecma_create_named_accessor_property */
 
 /**
@@ -621,9 +667,22 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     return property_p;
   }
 
+  ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_p);
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  if (prop_iter_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    property_p = ecma_property_hashmap_find ((ecma_property_hashmap_t *) prop_iter_p, name_p);
+    ecma_lcache_insert (obj_p, name_p, property_p);
+
+    return property_p;
+  }
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
   property_p = NULL;
 
-  ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_p);
+  uint32_t steps = 0;
 
   while (prop_iter_p != NULL)
   {
@@ -657,8 +716,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
       }
     }
 
+    steps++;
+
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                     prop_iter_p->next_property_cp);
+  }
+
+  if (steps > (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 4))
+  {
+    ecma_property_hashmap_create (obj_p);
   }
 
   ecma_lcache_insert (obj_p, name_p, property_p);
@@ -884,6 +950,16 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 {
   ecma_property_header_t *cur_prop_p = ecma_get_property_list (object_p);
   ecma_property_header_t *prev_prop_p = NULL;
+  bool has_hashmap = false;
+
+  if (cur_prop_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (cur_prop_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prev_prop_p = cur_prop_p;
+    cur_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                   cur_prop_p->next_property_cp);
+    has_hashmap = true;
+  }
 
   while (true)
   {
@@ -900,12 +976,19 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 
         ecma_free_property (object_p, name_p, cur_prop_p->types + i);
 
-        prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
-
         if (name_p != NULL)
         {
+          if (has_hashmap)
+          {
+            ecma_property_hashmap_delete (object_p,
+                                          name_p,
+                                          prop_p);
+          }
+
           ecma_deref_ecma_string (name_p);
         }
+
+        prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
 
         JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
@@ -938,7 +1021,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 } /* ecma_delete_property */
 
 /**
- * Check that
+ * Check whether the object contains a property
  */
 static void
 ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ecma-object */
@@ -946,6 +1029,14 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
 {
 #ifndef JERRY_NDEBUG
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+  JERRY_ASSERT (prop_iter_p != NULL);
+
+  if (ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
 
   while (prop_iter_p != NULL)
   {

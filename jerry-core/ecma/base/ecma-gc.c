@@ -22,6 +22,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
+#include "ecma-property-hashmap.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
@@ -372,6 +373,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
   {
     ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
 
+    if (prop_iter_p != NULL
+        && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                      prop_iter_p->next_property_cp);
+    }
+
     while (prop_iter_p != NULL)
     {
       JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
@@ -427,6 +435,13 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+    if (prop_iter_p != NULL
+        && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      ecma_property_hashmap_free (object_p);
+      prop_iter_p = ecma_get_property_list (object_p);
+    }
 
     while (prop_iter_p != NULL)
     {

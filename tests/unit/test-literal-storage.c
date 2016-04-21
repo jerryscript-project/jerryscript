@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +54,31 @@ generate_number ()
   }
   return num;
 } /* generate_number */
+
+static bool
+compare_utf8_string_and_string_literal (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size, lit_literal_t lit)
+{
+  if (LIT_RECORD_IS_CHARSET (lit))
+  {
+    lit_utf8_byte_t *lit_str_p = lit_charset_literal_get_charset (lit);
+    lit_utf8_size_t lit_str_size = lit_charset_literal_get_size (lit);
+    return lit_compare_utf8_strings (str_p, str_size, lit_str_p, lit_str_size);
+  }
+  else if (LIT_RECORD_IS_MAGIC_STR (lit))
+  {
+    lit_magic_string_id_t magic_id = lit_magic_literal_get_magic_str_id (lit);
+    return lit_compare_utf8_string_and_magic_string (str_p, str_size, magic_id);
+
+  }
+  else if (LIT_RECORD_IS_MAGIC_STR_EX (lit))
+  {
+    lit_magic_string_ex_id_t magic_id = lit_magic_literal_get_magic_str_ex_id (lit);
+    return lit_compare_utf8_string_and_magic_string_ex (str_p, str_size, magic_id);
+
+  }
+
+  return false;
+} /* compare_utf8_string_and_string_literal */
 
 int
 main (int __attr_unused___ argc,
@@ -113,20 +139,19 @@ main (int __attr_unused___ argc,
       {
         lit1 = lit_find_or_create_literal_from_utf8_string (ptrs[j], lengths[j]);
         lit2 = lit_find_literal_by_utf8_string (ptrs[j], lengths[j]);
-        JERRY_ASSERT (lit_literal_equal_utf8 (lit1, ptrs[j], lengths[j]));
-        JERRY_ASSERT (lit_literal_equal_type_utf8 (lit2, ptrs[j], lengths[j]));
+        JERRY_ASSERT (compare_utf8_string_and_string_literal (ptrs[j], lengths[j], lit1));
+        JERRY_ASSERT (compare_utf8_string_and_string_literal (ptrs[j], lengths[j], lit2));
       }
       else
       {
         lit1 = lit_find_or_create_literal_from_num (numbers[j]);
         lit2 = lit_find_literal_by_num (numbers[j]);
-        JERRY_ASSERT (lit_literal_equal_num (lit1, numbers[j]));
-        JERRY_ASSERT (lit_literal_equal_type_num (lit2, numbers[j]));
+        JERRY_ASSERT (numbers[j] == lit_number_literal_get_number (lit1));
+        JERRY_ASSERT (numbers[j] == lit_number_literal_get_number (lit2));
       }
       JERRY_ASSERT (lit1);
       JERRY_ASSERT (lit2);
       JERRY_ASSERT (lit1 == lit2);
-      JERRY_ASSERT (lit_literal_equal (lit1, lit2));
     }
 
     // Check empty string exists

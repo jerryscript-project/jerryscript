@@ -18,41 +18,6 @@
 
 #include "jrt-libc-includes.h"
 
-JERRY_STATIC_ASSERT (sizeof (lit_utf8_iterator_pos_t) == sizeof (lit_utf8_size_t),
-                     size_of_lit_utf8_iterator_pos_t_must_be_equal_to_size_of_lit_utf8_size_t);
-
-/**
- * Compare two iterator positions
- *
- * @return +1, if pos1 > pos2
- *          0, if pos1 == pos2
- *         -1, otherwise
- */
-int32_t
-lit_utf8_iterator_pos_cmp (lit_utf8_iterator_pos_t pos1, /**< first position of the iterator */
-                           lit_utf8_iterator_pos_t pos2) /**< second position of the iterator */
-{
-  if (pos1.offset < pos2.offset)
-  {
-    return -1;
-  }
-  else if (pos1.offset > pos2.offset)
-  {
-    return 1;
-  }
-
-  if (pos1.is_non_bmp_middle == false && pos2.is_non_bmp_middle == true)
-  {
-    return -1;
-  }
-  else if (pos1.is_non_bmp_middle == true && pos2.is_non_bmp_middle == false)
-  {
-    return 1;
-  }
-
-  return 0;
-} /* lit_utf8_iterator_pos_cmp */
-
 /**
  * Validate utf-8 string
  *
@@ -247,69 +212,6 @@ lit_is_code_point_utf16_high_surrogate (lit_code_point_t code_point) /**< code p
 } /* lit_is_code_point_utf16_high_surrogate */
 
 /**
- * Initialize iterator for traversing utf-8 string as a string of code units
- *
- * @return iterator
- */
-lit_utf8_iterator_t
-lit_utf8_iterator_create (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
-                          lit_utf8_size_t buf_size) /**< string size */
-{
-  JERRY_ASSERT (utf8_buf_p || !buf_size);
-  JERRY_ASSERT (lit_is_utf8_string_valid (utf8_buf_p, buf_size));
-
-  lit_utf8_iterator_t buf_iter =
-  {
-    utf8_buf_p,
-    buf_size,
-    LIT_ITERATOR_POS_ZERO
-  };
-
-  return buf_iter;
-} /* lit_utf8_iterator_create */
-
-/**
- * Reset iterator to point to the beginning of a string
- */
-void
-lit_utf8_iterator_seek_bos (lit_utf8_iterator_t *iter_p) /**< iterator to reset */
-{
-  iter_p->buf_pos.offset = 0;
-  iter_p->buf_pos.is_non_bmp_middle = false;
-} /* lit_utf8_iterator_seek_bos */
-
-/**
- * Get iterator's position
- *
- * @return current position of the iterator
- */
-lit_utf8_iterator_pos_t
-lit_utf8_iterator_get_pos (const lit_utf8_iterator_t *iter_p) /**< iterator */
-{
-  return iter_p->buf_pos;
-} /* lit_utf8_iterator_get_pos */
-
-/**
- * Restore previously saved position of the iterator
- */
-void
-lit_utf8_iterator_seek (lit_utf8_iterator_t *iter_p, /**< utf-8 string iterator */
-                        lit_utf8_iterator_pos_t iter_pos) /**< position to restore */
-{
-  JERRY_ASSERT (iter_pos.offset <= iter_p->buf_size);
-#ifndef JERRY_NDEBUG
-  if (iter_pos.offset < iter_p->buf_size)
-  {
-    lit_utf8_byte_t byte = *(iter_p->buf_p + iter_pos.offset);
-    JERRY_ASSERT ((byte & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER);
-    JERRY_ASSERT (!iter_pos.is_non_bmp_middle || ((byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER));
-  }
-#endif /* !JERRY_NDEBUG */
-
-  iter_p->buf_pos = iter_pos;
-} /* lit_utf8_iterator_seek */
-
-/**
  * Represents code point (>0xFFFF) as surrogate pair and returns its lower part
  *
  * @return lower code_unit of the surrogate pair
@@ -341,112 +243,6 @@ convert_code_point_to_high_surrogate (lit_code_point_t code_point) /**< code poi
 
   return (LIT_UTF16_HIGH_SURROGATE_MARKER | code_unit_bits);
 } /* convert_code_point_to_high_surrogate */
-
-/**
- * Get next code unit form the iterated string
- *
- * @return next code unit
- */
-ecma_char_t
-lit_utf8_iterator_peek_next (const lit_utf8_iterator_t *iter_p) /**< [in] utf-8 string iterator */
-{
-  JERRY_ASSERT (!lit_utf8_iterator_is_eos (iter_p));
-
-  lit_code_point_t code_point;
-  lit_read_code_point_from_utf8 (iter_p->buf_p + iter_p->buf_pos.offset,
-                                 iter_p->buf_size - iter_p->buf_pos.offset,
-                                 &code_point);
-
-  if (code_point <= LIT_UTF16_CODE_UNIT_MAX)
-  {
-    JERRY_ASSERT (!iter_p->buf_pos.is_non_bmp_middle);
-    return (ecma_char_t) code_point;
-  }
-  else
-  {
-    if (iter_p->buf_pos.is_non_bmp_middle)
-    {
-      return convert_code_point_to_low_surrogate (code_point);
-    }
-    else
-    {
-      return convert_code_point_to_high_surrogate (code_point);
-    }
-  }
-} /* lit_utf8_iterator_peek_next */
-
-/**
- * Increment iterator to point to next code unit
- */
-void
-lit_utf8_iterator_incr (lit_utf8_iterator_t *iter_p) /**< [in,out] utf-8 string iterator */
-{
-  lit_utf8_iterator_read_next (iter_p);
-} /* lit_utf8_iterator_incr */
-
-/**
- * Skip specified number of code units
- */
-void
-lit_utf8_iterator_advance (lit_utf8_iterator_t *iter_p, /**< [in,out] iterator */
-                           ecma_length_t chars_count) /**< number of code units to skip */
-{
-  while (chars_count--)
-  {
-    lit_utf8_iterator_incr (iter_p);
-  }
-} /* lit_utf8_iterator_advance */
-
-/**
- * Get next code unit form the iterated string and increment iterator to point to next code unit
- *
- * @return next code unit
- */
-ecma_char_t
-lit_utf8_iterator_read_next (lit_utf8_iterator_t *iter_p) /**< [in,out] utf-8 string iterator */
-{
-  JERRY_ASSERT (!lit_utf8_iterator_is_eos (iter_p));
-
-  lit_code_point_t code_point;
-  lit_utf8_size_t utf8_char_size = lit_read_code_point_from_utf8 (iter_p->buf_p + iter_p->buf_pos.offset,
-                                                                  iter_p->buf_size - iter_p->buf_pos.offset,
-                                                                  &code_point);
-
-  if (code_point <= LIT_UTF16_CODE_UNIT_MAX)
-  {
-    JERRY_ASSERT (!iter_p->buf_pos.is_non_bmp_middle);
-    iter_p->buf_pos.offset = (iter_p->buf_pos.offset + utf8_char_size) & LIT_ITERATOR_OFFSET_MASK;
-    return (ecma_char_t) code_point;
-  }
-  else
-  {
-    if (iter_p->buf_pos.is_non_bmp_middle)
-    {
-      iter_p->buf_pos.offset = (iter_p->buf_pos.offset + utf8_char_size) & LIT_ITERATOR_OFFSET_MASK;
-      iter_p->buf_pos.is_non_bmp_middle = false;
-      return convert_code_point_to_low_surrogate (code_point);
-    }
-    else
-    {
-      iter_p->buf_pos.is_non_bmp_middle = true;
-      return convert_code_point_to_high_surrogate (code_point);
-    }
-  }
-} /* lit_utf8_iterator_read_next */
-
-/**
- * Checks iterator reached end of the string
- *
- * @return true - iterator is at the end of string
- *         false - otherwise
- */
-bool
-lit_utf8_iterator_is_eos (const lit_utf8_iterator_t *iter_p) /**< utf-8 string iterator */
-{
-  JERRY_ASSERT (iter_p->buf_pos.offset <= iter_p->buf_size);
-
-  return (iter_p->buf_pos.offset == iter_p->buf_size);
-} /* lit_utf8_iterator_is_eos */
 
 /**
  * Calculate size of a zero-terminated utf-8 string
@@ -1001,20 +797,3 @@ bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, /**<
 
   return (string1_pos >= string1_end_p && string2_pos < string2_end_p);
 } /* lit_compare_utf8_strings_relational */
-
-/**
- * Print code unit to standard output
- */
-void
-lit_put_ecma_char (ecma_char_t ecma_char) /**< code unit */
-{
-  if (ecma_char <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-  {
-    jerry_port_putchar (ecma_char);
-  }
-  else
-  {
-    /* TODO: Support unicode characters printing. */
-    jerry_port_putchar ('_');
-  }
-} /* lit_put_ecma_char */

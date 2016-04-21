@@ -33,7 +33,6 @@
 extern void ecma_init_environment (void);
 extern void ecma_finalize_environment (void);
 extern ecma_object_t *ecma_get_global_environment (void);
-extern bool ecma_is_lexical_environment_global (ecma_object_t *);
 
 /**
  * @}
@@ -43,7 +42,6 @@ extern bool ecma_is_lexical_environment_global (ecma_object_t *);
 extern ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool);
 extern ecma_value_t ecma_op_get_value_object_base (ecma_reference_t);
 extern ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool, ecma_value_t);
-extern ecma_value_t ecma_op_put_value_object_base (ecma_reference_t, ecma_value_t);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
 extern bool ecma_op_has_binding (ecma_object_t *, ecma_string_t *);

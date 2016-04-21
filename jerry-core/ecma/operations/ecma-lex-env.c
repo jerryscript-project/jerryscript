@@ -82,21 +82,6 @@ ecma_get_global_environment (void)
 } /* ecma_get_global_environment */
 
 /**
- * Figure out whether the lexical environment is global.
- *
- * @return true - if lexical environment is object-bound and corresponding object is global object,
- *         false - otherwise.
- */
-bool
-ecma_is_lexical_environment_global (ecma_object_t *lex_env_p) /**< lexical environment */
-{
-  JERRY_ASSERT (lex_env_p != NULL
-                && ecma_is_lexical_environment (lex_env_p));
-
-  return (lex_env_p == ecma_global_lex_env_p);
-} /* ecma_is_lexical_environment_global */
-
-/**
  * @}
  */
 

@@ -53,10 +53,6 @@ ecma_op_function_construct (ecma_object_t *, const ecma_value_t *, ecma_length_t
 extern ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *, ecma_value_t);
 
-extern ecma_value_t
-ecma_op_function_declaration (ecma_object_t *, ecma_string_t *,
-                              const ecma_compiled_code_t *, bool, bool);
-
 /**
  * @}
  * @}

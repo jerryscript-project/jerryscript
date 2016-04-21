@@ -38,16 +38,6 @@ extern lit_literal_t lit_create_literal_from_num (ecma_number_t);
 extern lit_literal_t lit_find_literal_by_num (ecma_number_t);
 extern lit_literal_t lit_find_or_create_literal_from_num (ecma_number_t);
 
-extern bool lit_literal_equal_utf8 (lit_literal_t, const lit_utf8_byte_t *, lit_utf8_size_t);
-extern bool lit_literal_equal_num (lit_literal_t, ecma_number_t);
-extern bool lit_literal_equal (lit_literal_t, lit_literal_t);
-
-extern bool lit_literal_equal_type_utf8 (lit_literal_t, const lit_utf8_byte_t *, lit_utf8_size_t);
-extern bool lit_literal_equal_type_cstr (lit_literal_t, const char *);
-extern bool lit_literal_equal_type_num (lit_literal_t, ecma_number_t);
-extern bool lit_literal_equal_type (lit_literal_t, lit_literal_t);
-extern bool lit_literal_equal_charset (lit_literal_t, const lit_utf8_byte_t *, lit_utf8_size_t);
-
 extern lit_literal_t lit_get_literal_by_cp (lit_cpointer_t);
 
 extern ecma_number_t lit_number_literal_get_number (lit_literal_t);
@@ -55,7 +45,6 @@ extern lit_string_hash_t lit_charset_literal_get_hash (lit_literal_t);
 extern lit_utf8_size_t lit_charset_literal_get_size (lit_literal_t);
 extern ecma_length_t lit_charset_literal_get_length (lit_literal_t);
 extern lit_utf8_byte_t *lit_charset_literal_get_charset (lit_literal_t);
-extern lit_literal_t lit_literal_get_next (lit_literal_t);
 
 extern lit_magic_string_id_t lit_magic_literal_get_magic_str_id (lit_literal_t);
 extern lit_magic_string_ex_id_t lit_magic_literal_get_magic_str_ex_id (lit_literal_t);

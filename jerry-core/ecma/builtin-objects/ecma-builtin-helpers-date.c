@@ -910,29 +910,6 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
 } /* ecma_date_set_internal_property */
 
 /**
- * Insert leading zeros to a string of a number if needed.
- */
-void
-ecma_date_insert_leading_zeros (ecma_string_t **str_p, /**< [in,out] ecma string */
-                                ecma_number_t num, /**< input number */
-                                uint32_t length) /**< length of string of number */
-{
-  JERRY_ASSERT (length >= 1);
-
-  /* If the length is bigger than the number of digits in num, then insert leding zeros. */
-  uint32_t first_index = length - 1u;
-  ecma_number_t power_i = (ecma_number_t) pow (10, first_index);
-  for (uint32_t i = first_index; i > 0 && num < power_i; i--, power_i /= 10)
-  {
-    ecma_string_t *zero_str_p = ecma_new_ecma_string_from_uint32 (0);
-    ecma_string_t *concat_p = ecma_concat_ecma_strings (zero_str_p, *str_p);
-    ecma_deref_ecma_string (zero_str_p);
-    ecma_deref_ecma_string (*str_p);
-    *str_p = concat_p;
-  }
-} /* ecma_date_insert_leading_zeros */
-
-/**
  * Common function to copy utf8 characters.
  *
  * @return next destination buffer position

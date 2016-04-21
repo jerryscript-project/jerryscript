@@ -1271,39 +1271,6 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 } /* ecma_string_get_char_at_pos */
 
 /**
- * Get byte from specified position in the ecma-string.
- *
- * @return byte value
- */
-lit_utf8_byte_t
-ecma_string_get_byte_at_pos (const ecma_string_t *string_p, /**< ecma-string */
-                             lit_utf8_size_t index) /**< byte index */
-{
-  lit_utf8_size_t buffer_size;
-  bool is_ascii;
-  const lit_utf8_byte_t *chars_p = ecma_string_raw_chars (string_p, &buffer_size, &is_ascii);
-  JERRY_ASSERT (index < buffer_size);
-
-  if (chars_p != NULL)
-  {
-    return chars_p[index];
-  }
-
-  lit_utf8_byte_t byte;
-
-  MEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, buffer_size);
-  JERRY_ASSERT (sz == buffer_size);
-
-  byte = utf8_str_p[index];
-
-  MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
-
-  return byte;
-} /* ecma_string_get_byte_at_pos */
-
-/**
  * Get specified magic string
  *
  * @return ecma-string containing specified magic string
@@ -1351,31 +1318,6 @@ ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string *
 } /* ecma_is_string_magic_longpath */
 
 /**
- * Long path part of ecma_is_ex_string_magic
- *
- * Converts passed ecma-string to zt-string and
- * checks if it is equal to one of magic string
- *
- * @return true - if magic string equal to passed string was found,
- *         false - otherwise.
- */
-static bool
-ecma_is_ex_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string */
-                                  lit_magic_string_ex_id_t *out_id_p) /**< [out] external magic string's id */
-{
-  lit_utf8_size_t utf8_str_size;
-  bool is_ascii;
-  const lit_utf8_byte_t *utf8_str_p = ecma_string_raw_chars (string_p, &utf8_str_size, &is_ascii);
-
-  if (utf8_str_p == NULL || !is_ascii)
-  {
-    return false;
-  }
-
-  return lit_is_ex_utf8_string_magic (utf8_str_p, utf8_str_size, out_id_p);
-} /* ecma_is_ex_string_magic_longpath */
-
-/**
  * Check if passed string equals to one of magic strings
  * and if equal magic string was found, return it's id in 'out_id_p' argument.
  *
@@ -1407,39 +1349,6 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
     return false;
   }
 } /* ecma_is_string_magic */
-
-/**
- * Check if passed string equals to one of external magic strings
- * and if equal external magic string was found, return it's id in 'out_id_p' argument.
- *
- * @return true - if external magic string equal to passed string was found,
- *         false - otherwise.
- */
-bool
-ecma_is_ex_string_magic (const ecma_string_t *string_p, /**< ecma-string */
-                         lit_magic_string_ex_id_t *out_id_p) /**< [out] external magic string's id */
-{
-  if (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX)
-  {
-    JERRY_ASSERT (string_p->u.magic_string_ex_id < lit_get_magic_string_ex_count ());
-
-    *out_id_p = (lit_magic_string_ex_id_t) string_p->u.magic_string_ex_id;
-
-    return true;
-  }
-  else
-  {
-    /*
-     * Any ecma-string constructor except ecma_concat_ecma_strings
-     * should return ecma-string with ECMA_STRING_CONTAINER_MAGIC_STRING_EX
-     * container type if new ecma-string's content is equal to one of external magic strings.
-     */
-    JERRY_ASSERT (ecma_string_get_length (string_p) > LIT_MAGIC_STRING_LENGTH_LIMIT
-                  || !ecma_is_ex_string_magic_longpath (string_p, out_id_p));
-
-    return false;
-  }
-} /* ecma_is_ex_string_magic */
 
 /**
  * Try to calculate hash of the ecma-string

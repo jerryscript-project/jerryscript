@@ -18,6 +18,7 @@
 #define ECMA_BUILTIN_HELPERS_H
 
 #include "ecma-globals.h"
+#include "ecma-exceptions.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -164,6 +165,15 @@ ecma_builtin_helper_json_create_formatted_json (ecma_string_t *, ecma_string_t *
                                                 ecma_collection_header_t *, ecma_json_stringify_context_t *);
 extern ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *, ecma_string_t *, ecma_collection_header_t *);
+
+/* ecma-builtin-helper-error.c */
+
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+
+extern ecma_value_t
+ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t, const ecma_value_t *, ecma_length_t);
+
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 
 /**
  * @}

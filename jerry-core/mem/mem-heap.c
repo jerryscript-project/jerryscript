@@ -252,6 +252,8 @@ void *mem_heap_alloc_block_internal (const size_t size)
       && likely (mem_heap.first.next_offset != MEM_HEAP_GET_OFFSET_FROM_ADDR (MEM_HEAP_END_OF_LIST)))
   {
     data_space_p = MEM_HEAP_GET_ADDR_FROM_OFFSET (mem_heap.first.next_offset);
+    JERRY_ASSERT (mem_is_heap_pointer (data_space_p));
+
     VALGRIND_DEFINED_SPACE (data_space_p, sizeof (mem_heap_free_t));
     mem_heap_allocated_size += MEM_ALIGNMENT;
     MEM_HEAP_STAT_ALLOC_ITER ();
@@ -287,9 +289,13 @@ void *mem_heap_alloc_block_internal (const size_t size)
     mem_heap_free_t *prev_p = &mem_heap.first;
     while (current_p != MEM_HEAP_END_OF_LIST)
     {
+      JERRY_ASSERT (mem_is_heap_pointer (current_p));
       VALGRIND_DEFINED_SPACE (current_p, sizeof (mem_heap_free_t));
       MEM_HEAP_STAT_ALLOC_ITER ();
+
       const uint32_t next_offset = current_p->next_offset;
+      JERRY_ASSERT (mem_is_heap_pointer (MEM_HEAP_GET_ADDR_FROM_OFFSET (next_offset))
+                    || next_offset == MEM_HEAP_GET_OFFSET_FROM_ADDR (MEM_HEAP_END_OF_LIST));
 
       if (current_p->size >= required_size)
       {
@@ -440,7 +446,7 @@ mem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the b
   VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
 
   /* checking that ptr points to the heap */
-  JERRY_ASSERT ((uint8_t *) ptr >= mem_heap.area && (uint8_t *) ptr <= mem_heap.area + MEM_HEAP_AREA_SIZE);
+  JERRY_ASSERT (mem_is_heap_pointer (ptr));
   JERRY_ASSERT (size > 0);
   JERRY_ASSERT (mem_heap_limit >= mem_heap_allocated_size);
 
@@ -465,17 +471,23 @@ mem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the b
     MEM_HEAP_STAT_NONSKIP ();
   }
 
+  JERRY_ASSERT (mem_is_heap_pointer (block_p));
   const uint32_t block_offset = MEM_HEAP_GET_OFFSET_FROM_ADDR (block_p);
+
   VALGRIND_DEFINED_SPACE (prev_p, sizeof (mem_heap_free_t));
   // Find position of region in the list
   while (prev_p->next_offset < block_offset)
   {
     mem_heap_free_t *const next_p = MEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
+    JERRY_ASSERT (mem_is_heap_pointer (next_p));
+
     VALGRIND_DEFINED_SPACE (next_p, sizeof (mem_heap_free_t));
     VALGRIND_NOACCESS_SPACE (prev_p, sizeof (mem_heap_free_t));
     prev_p = next_p;
+
     MEM_HEAP_STAT_FREE_ITER ();
   }
+
   next_p = MEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
   VALGRIND_DEFINED_SPACE (next_p, sizeof (mem_heap_free_t));
 
@@ -556,6 +568,7 @@ uintptr_t __attr_pure___ __attribute__((hot))
 mem_heap_compress_pointer (const void *pointer_p) /**< pointer to compress */
 {
   JERRY_ASSERT (pointer_p != NULL);
+  JERRY_ASSERT (mem_is_heap_pointer (pointer_p));
 
   uintptr_t int_ptr = (uintptr_t) pointer_p;
   const uintptr_t heap_start = (uintptr_t) &mem_heap;
@@ -588,6 +601,7 @@ mem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decom
   int_ptr <<= MEM_ALIGNMENT_LOG;
   int_ptr += heap_start;
 
+  JERRY_ASSERT (mem_is_heap_pointer ((void *) int_ptr));
   return (void *) int_ptr;
 } /* mem_heap_decompress_pointer */
 

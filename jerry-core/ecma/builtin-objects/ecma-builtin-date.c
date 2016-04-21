@@ -447,7 +447,7 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
 {
   ecma_number_t *now_num_p = ecma_alloc_number ();
 
-  *now_num_p = (ecma_number_t) jerry_port_get_current_time ();
+  *now_num_p = DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ());
 
   return ecma_make_number_value (now_num_p);
 } /* ecma_builtin_date_now */

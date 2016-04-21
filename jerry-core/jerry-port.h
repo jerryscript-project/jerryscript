@@ -18,7 +18,6 @@
 #define JERRY_PORT_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -99,7 +98,7 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
  *
  * @return milliseconds since Unix epoch
  */
-uint64_t jerry_port_get_current_time (void);
+double jerry_port_get_current_time (void);
 
 /**
  * @}

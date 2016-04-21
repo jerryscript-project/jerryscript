@@ -43,11 +43,11 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 /**
  * Default implementation of jerry_port_get_current_time.
  */
-uint64_t jerry_port_get_current_time ()
+double jerry_port_get_current_time ()
 {
   struct timeval tv;
 
   gettimeofday (&tv, NULL);
 
-  return ((uint64_t) tv.tv_sec) * 1000 + ((uint64_t) tv.tv_usec) / 1000;
+  return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
 } /* jerry_port_get_current_time */

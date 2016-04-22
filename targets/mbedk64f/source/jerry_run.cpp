@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-#include "jerry-core/jerry.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "jerry-core/jerry.h"
 #include "jerry_run.h"
 #include "jerry_extapi.h"
 
@@ -27,6 +26,7 @@ static const char* fn_sys_loop_name = "sysloop";
 
 int js_entry (const char *source_p, const size_t source_size)
 {
+  jerry_api_object_t *err_obj_p = NULL;
   const jerry_api_char_t *jerry_src = (const jerry_api_char_t *) source_p;
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
   jerry_flag_t flags = JERRY_FLAG_EMPTY;
@@ -35,19 +35,23 @@ int js_entry (const char *source_p, const size_t source_size)
 
   js_register_functions ();
 
-  if (!jerry_parse (jerry_src, source_size))
+  if (!jerry_parse (jerry_src, source_size, &err_obj_p))
   {
     printf ("Error: jerry_parse failed\r\n");
     ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+    jerry_api_release_object (err_obj_p);
   }
   else
   {
     if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
     {
-      ret_code = jerry_run ();
+      ret_code = jerry_run (&err_obj_p);
+      if (err_obj_p != NULL)
+      {
+        jerry_api_release_object (err_obj_p);
+      }
     }
   }
-
   return ret_code;
 }
 
@@ -98,10 +102,10 @@ int js_loop (uint32_t ticknow)
   val_argv = 1;
   val_args = (jerry_api_value_t*)malloc (sizeof (jerry_api_value_t) * val_argv);
   val_args[0].type = JERRY_API_DATA_TYPE_UINT32;
-  val_args[0].v_uint32 = ticknow;
+  val_args[0].u.v_uint32 = ticknow;
 
   jerry_api_value_t res;
-  is_ok = jerry_api_call_function (sysloop_func.v_object,
+  is_ok = jerry_api_call_function (sysloop_func.u.v_object,
                                    global_obj_p,
                                    &res,
                                    val_args,
@@ -119,4 +123,3 @@ void js_exit (void)
 {
   jerry_cleanup ();
 }
-

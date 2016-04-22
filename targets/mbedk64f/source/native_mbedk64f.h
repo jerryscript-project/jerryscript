@@ -16,8 +16,6 @@
 #ifndef __NATIVE_MBEDK64F_H__
 #define __NATIVE_MBEDK64F_H__
 
-
 void native_led(int port, int val);
-
 
 #endif

@@ -247,7 +247,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
                                                             ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
-    ECMA_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value, this_arg_obj_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value, this_arg_obj_p);
 
     /* 8. */
     ecma_property_t *bound_this_prop_p;

@@ -71,6 +71,37 @@
     utf8_ptr ## must_be_freed = true; \
   }
 
+#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
+
+/**
+ * Set an internal property value of pointer
+ */
+#define ECMA_SET_INTERNAL_VALUE_POINTER(field, pointer) \
+  (field) = ((ecma_value_t) pointer)
+
+/**
+ * Get an internal property value of pointer
+ */
+#define ECMA_GET_INTERNAL_VALUE_POINTER(type, field) \
+  ((type *) field)
+
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
+/**
+ * Set an internal property value of non-null pointer so that it will correspond
+ * to specified non_compressed_pointer.
+ */
+#define ECMA_SET_INTERNAL_VALUE_POINTER(field, non_compressed_pointer) \
+  ECMA_SET_NON_NULL_POINTER (field, non_compressed_pointer)
+
+/**
+ * Get an internal property value of pointer from specified non-null compressed pointer.
+ */
+#define ECMA_GET_INTERNAL_VALUE_POINTER(type, field) \
+  ECMA_GET_NON_NULL_POINTER (type, field)
+
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+
 /**
  * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
  */

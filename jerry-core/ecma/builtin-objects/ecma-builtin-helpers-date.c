@@ -902,8 +902,9 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
   ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
 
-  ecma_number_t *prim_value_num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                               ecma_get_internal_property_value (prim_value_prop_p));
+  ecma_number_t *prim_value_num_p;
+  prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                      ecma_get_internal_property_value (prim_value_prop_p));
   *prim_value_num_p = *value_p;
 
   return ecma_make_number_value (value_p);
@@ -1306,8 +1307,8 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
     JERRY_ASSERT (prim_value_prop_p != NULL);
 
     ecma_number_t *prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = *ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                    ecma_get_internal_property_value (prim_value_prop_p));
+    *prim_value_num_p = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                          ecma_get_internal_property_value (prim_value_prop_p));
     ret_value = ecma_make_number_value (prim_value_num_p);
   }
 

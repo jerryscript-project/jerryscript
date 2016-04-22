@@ -816,8 +816,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
     {
-      ecma_string_t *str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                        property_value);
+      ecma_string_t *str_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_string_t, property_value);
       ecma_deref_ecma_string (str_p);
 
       break;
@@ -825,8 +824,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* pointer to a ecma_number_t */
     {
-      ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t,
-                                                        property_value);
+      ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, property_value);
       ecma_dealloc_number (num_p);
 
       break;

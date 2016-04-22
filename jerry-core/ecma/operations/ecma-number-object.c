@@ -66,7 +66,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-  ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_p);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_number_object */

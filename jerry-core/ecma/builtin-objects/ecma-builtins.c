@@ -126,7 +126,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_property_t *prim_value_prop_p;
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
-      ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_str_value_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_str_value_p);
       break;
     }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
@@ -140,7 +140,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_property_t *prim_value_prop_p;
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-      ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_num_value_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_num_value_p);
       break;
     }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
@@ -165,7 +165,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_property_t *prim_value_prop_p;
       prim_value_prop_p = ecma_create_internal_property (object_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-      ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_num_value_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_num_value_p);
       break;
     }
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */

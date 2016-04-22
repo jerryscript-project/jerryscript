@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef __NATIVE_MBEDK64F_H__
-#define __NATIVE_MBEDK64F_H__
+#include "mbed-drivers/mbed.h"
+#include "native_stm32f401nucleo.h"
 
-
-void native_led(int port, int val);
-
-
-#endif
+void native_led(int port, int val) 
+{
+  static const PinName portmap[] = { LED1, LED2 };
+  DigitalOut led(portmap[port]);
+  led = val;
+}

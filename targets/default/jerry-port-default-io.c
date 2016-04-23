@@ -45,11 +45,3 @@ int jerry_port_errormsg (const char *format, /**< format string */
   va_end (args);
   return count;
 } /* jerry_port_errormsg */
-
-/**
- * Provide output character to console implementation for the engine.
- */
-int jerry_port_putchar (int c) /**< character to put */
-{
-  return putchar ((unsigned char) c);
-} /* jerry_port_putchar */

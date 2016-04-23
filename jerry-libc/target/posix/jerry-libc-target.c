@@ -46,31 +46,6 @@ extern long int syscall_1 (long int syscall_no, long int arg1);
 extern long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
 extern long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
-/** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
-int
-putchar (int c)
-{
-  fwrite (&c, 1, sizeof (char), stdout);
-
-  return c;
-} /* putchar */
-
-/**
- * Output specified string
- */
-int
-puts (const char *s) /**< string to print */
-{
-  while (*s)
-  {
-    putchar (*s);
-
-    s++;
-  }
-
-  return 0;
-} /* puts */
-
 /**
  * Exit - cause normal process termination with specified status code
  */

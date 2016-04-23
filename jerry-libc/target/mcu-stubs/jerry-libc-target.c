@@ -24,13 +24,6 @@
 
 #include "jerry-libc-defs.h"
 
-/** Output of character. Writes the character c, cast to an unsigned char, to stdout.  */
-int
-putchar (int c __attr_unused___)
-{
-  return 1;
-} /* putchar */
-
 /** exit - cause normal process termination  */
 void __attr_noreturn___ __attr_used___
 exit (int status __attr_unused___)

@@ -46,16 +46,6 @@ int jerry_port_errormsg (const char* format, ...)
   return count;
 }
 
-/**
- * Provide output character to console implementation for the engine.
- */
-int jerry_port_putchar (int c)
-{
-  printf ("%c", (char)c);
-  return c;
-}
-
-
 void exit (int status)
 {
   printf ("!!!! EXIT: %d\n", status);

@@ -48,7 +48,6 @@ extern FILE *stderr;
  * I/O routines
  */
 int vfprintf (FILE *stream, const char *format, va_list ap);
-int puts (const char *s);
 FILE *fopen (const char *path, const char *mode);
 int fclose (FILE *fp);
 size_t fread (void *ptr, size_t size, size_t nmemb, FILE *stream);
@@ -58,7 +57,6 @@ long ftell (FILE *stream);
 int printf (const char *format, ...);
 void rewind (FILE *stream);
 int fprintf (FILE *stream, const char *format, ...);
-int putchar (int c);
 
 #ifdef __cplusplus
 }

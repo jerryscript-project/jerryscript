@@ -30,7 +30,8 @@ typedef enum
   LIT_RECORD_TYPE_CHARSET = 1, /**< Charset record that holds characters. */
   LIT_RECORD_TYPE_MAGIC_STR = 2, /**< Magic string record that holds a magic string id. */
   LIT_RECORD_TYPE_MAGIC_STR_EX = 3, /**< External magic string record that holds an extrernal magic string id. */
-  LIT_RECORD_TYPE_NUMBER = 4 /**< Number record that holds a numeric value. */
+  LIT_RECORD_TYPE_NUMBER = 4, /**< Number record that holds a numeric value. */
+  LIT_RECORD_TYPE__FORCE_LARGE = INT32_MAX,
 } lit_record_type_t;
 
 /**

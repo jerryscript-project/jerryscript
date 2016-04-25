@@ -2403,6 +2403,29 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
 
+/*
+ * Check if a given region in memory contains a jerry snapshot
+ * @return true if the memory region is a snapshot
+ */
+bool
+jerry_is_snapshot (const void *snapshot_p, /**< pointer to the memory region */
+                   size_t snapshot_size) /**< size of the memory region */
+{
+  if (snapshot_p == NULL || snapshot_size < sizeof (uint64_t))
+  {
+    return false;
+  }
+
+  // relative strong heuristic as we're currenlty at a one-digit version which would result in
+  // a false positive only, if the passed string contains 7 consecutive \0 right at the beginning
+  if ((*(uint64_t *) snapshot_p != JERRY_SNAPSHOT_VERSION))
+  {
+    return false;
+  }
+
+  return true;
+} /* jerry_is_snapshot */
+
 /**
  * Call the ToString ecma builtin operation on the api value.
  *

@@ -319,6 +319,7 @@ void jerry_register_external_magic_strings (const jerry_api_char_ptr_t *, uint32
 
 size_t jerry_parse_and_save_snapshot (const jerry_api_char_t *, size_t, bool, uint8_t *, size_t);
 jerry_completion_code_t jerry_exec_snapshot (const void *, size_t, bool, jerry_api_value_t *);
+bool jerry_is_snapshot (const void *, size_t);
 
 jerry_api_size_t jerry_api_get_string_size (const jerry_api_string_t *);
 jerry_api_length_t jerry_api_get_string_length (const jerry_api_string_t *);

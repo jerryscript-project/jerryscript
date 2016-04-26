@@ -272,7 +272,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
       ecma_property_t *bound_args_prop_p;
       bound_args_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-      ECMA_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value, bound_args_collection_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value, bound_args_collection_p);
     }
 
     /*

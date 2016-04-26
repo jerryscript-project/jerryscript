@@ -807,8 +807,8 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
     case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
     {
-      ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                              property_value),
+      ecma_free_values_collection (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
+                                                                    property_value),
                                    true);
 
       break;
@@ -865,7 +865,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     {
       if (property_value != ECMA_NULL_POINTER)
       {
-        ecma_free_values_collection (ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t, property_value),
+        ecma_free_values_collection (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, property_value),
                                      false);
       }
 
@@ -881,13 +881,13 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
     {
-      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t, property_value));
+      ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, property_value));
       break;
     }
 
     case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* compressed pointer to a regexp bytecode array */
     {
-      ecma_compiled_code_t *bytecode_p = ECMA_GET_POINTER (ecma_compiled_code_t, property_value);
+      ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, property_value);
 
       if (bytecode_p != NULL)
       {

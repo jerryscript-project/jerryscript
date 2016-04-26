@@ -172,7 +172,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   // 10., 11., 12.
   ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-  MEM_CP_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value, bytecode_data_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
 
   // 14., 15., 16., 17., 18.
@@ -294,8 +294,8 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     ecma_property_t *bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
 
     const ecma_compiled_code_t *bytecode_data_p;
-    bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t,
-                                          ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
+    bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                       ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
 
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
@@ -585,8 +585,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       bool is_no_lex_env;
 
       const ecma_compiled_code_t *bytecode_data_p;
-      bytecode_data_p = MEM_CP_GET_POINTER (const ecma_compiled_code_t,
-                                            ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
+      bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                         ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
 
       is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
       is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
@@ -696,8 +696,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     if (bound_args_prop_p != NULL)
     {
       ecma_collection_header_t *bound_arg_list_p;
-      bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                    ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
+      bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
+                                                          ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
 
       JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 
@@ -887,8 +887,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       if (bound_args_prop_p != NULL)
       {
         ecma_collection_header_t *bound_arg_list_p;
-        bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                      ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
+        bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
+                                                            ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
 
         JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 

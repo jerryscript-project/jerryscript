@@ -290,8 +290,8 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
 
         case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma values */
         {
-          ecma_collection_header_t *bound_arg_list_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_header_t,
-                                                                                  property_value);
+          ecma_collection_header_t *bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
+                                                                                        property_value);
 
           ecma_collection_iterator_t bound_args_iterator;
           ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);

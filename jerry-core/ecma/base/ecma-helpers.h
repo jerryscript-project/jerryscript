@@ -95,10 +95,10 @@
   ECMA_SET_NON_NULL_POINTER (field, non_compressed_pointer)
 
 /**
- * Get an internal property value of pointer from specified non-null compressed pointer.
+ * Get an internal property value of pointer from specified compressed pointer.
  */
 #define ECMA_GET_INTERNAL_VALUE_POINTER(type, field) \
-  ECMA_GET_NON_NULL_POINTER (type, field)
+  ECMA_GET_POINTER (type, field)
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 

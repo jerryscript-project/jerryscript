@@ -1051,7 +1051,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
     const ecma_string_heap_header_t *const data_p = ECMA_GET_NON_NULL_POINTER (ecma_string_heap_header_t,
-                                                                         string1_p->u.collection_cp);
+                                                                               string1_p->u.collection_cp);
 
     utf8_string1_p = (lit_utf8_byte_t *) (data_p + 1);
     utf8_string1_size = (lit_utf8_size_t) data_p->size;
@@ -1085,7 +1085,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
   if (ECMA_STRING_GET_CONTAINER (string2_p) == ECMA_STRING_CONTAINER_HEAP_CHUNKS)
   {
     const ecma_string_heap_header_t *const data_p = ECMA_GET_NON_NULL_POINTER (ecma_string_heap_header_t,
-                                                                         string2_p->u.collection_cp);
+                                                                               string2_p->u.collection_cp);
 
     utf8_string2_p = (lit_utf8_byte_t *) (data_p + 1);
     utf8_string2_size = (lit_utf8_size_t) data_p->size;

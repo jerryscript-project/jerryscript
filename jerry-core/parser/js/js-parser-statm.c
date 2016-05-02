@@ -266,7 +266,7 @@ parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
   parser_mem_page_t *page_p = context_p->stack.first_p;
 
   JERRY_ASSERT (page_p != NULL
-                 && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+                && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
 
   page_p->bytes[context_p->stack.last_position - 1] = new_value;
   context_p->stack_top_uint8 = new_value;
@@ -307,7 +307,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
   {
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+                  && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
@@ -323,7 +323,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     else
     {
       JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
-                     && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
+                    && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
       /* We don't need to assign anything to this variable. */
       context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
     }
@@ -350,7 +350,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                 && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+                && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
   if (context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS)
   {
@@ -364,7 +364,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
   {
     JERRY_ASSERT (context_p->lit_object.type == LEXER_LITERAL_OBJECT_EVAL
-                   || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
+                  || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
 
@@ -378,7 +378,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
       literal_p = PARSER_GET_LITERAL ((size_t) (context_p->lit_object.index + 1));
 
       JERRY_ASSERT (literal_p->type == LEXER_FUNCTION_LITERAL
-                     && literal_p->status_flags == 0);
+                    && literal_p->status_flags == 0);
 
       compiled_code_p = parser_parse_function (context_p, status_flags);
       util_free_literal (literal_p);
@@ -741,7 +741,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
       lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
       JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                     && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+                    && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
       context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
@@ -774,7 +774,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
       /* The CBC_EXT_FOR_IN_CREATE_CONTEXT flushed the opcode combiner. */
       JERRY_ASSERT (opcode != CBC_PUSH_TWO_LITERALS
-                     && opcode != CBC_PUSH_THREE_LITERALS);
+                    && opcode != CBC_PUSH_THREE_LITERALS);
 
       if (opcode == CBC_PUSH_LITERAL
           && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
@@ -1176,7 +1176,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
 
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+                  && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;

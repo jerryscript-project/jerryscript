@@ -1105,7 +1105,7 @@ ecma_get_internal_property_value (const ecma_property_t *prop_p) /**< property *
  */
 inline void __attr_always_inline___
 ecma_set_internal_property_value (ecma_property_t *prop_p, /**< property */
-                                    ecma_value_t value) /**< value to set */
+                                  ecma_value_t value) /**< value to set */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 

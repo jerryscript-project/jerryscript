@@ -127,7 +127,7 @@ lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
  */
 bool
 lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
-                          lit_utf8_size_t buf_size) /**< string size */
+                           lit_utf8_size_t buf_size) /**< string size */
 {
   lit_utf8_size_t idx = 0;
 
@@ -341,7 +341,7 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
  */
 lit_utf8_size_t
 lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
-                               ecma_char_t *code_point) /**< [out] code point */
+                              ecma_char_t *code_point) /**< [out] code point */
 {
   JERRY_ASSERT (buf_p);
 

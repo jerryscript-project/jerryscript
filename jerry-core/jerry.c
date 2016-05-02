@@ -1154,8 +1154,8 @@ bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object
  */
 bool
 jerry_api_foreach_object_field (jerry_api_object_t *object_p, /**< object */
-                               jerry_object_field_foreach_t foreach_p, /**< foreach function */
-                               void *user_data_p) /**< user data for foreach function */
+                                jerry_object_field_foreach_t foreach_p, /**< foreach function */
+                                void *user_data_p) /**< user data for foreach function */
 {
   jerry_assert_api_available ();
 

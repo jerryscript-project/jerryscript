@@ -119,7 +119,7 @@ extern ecma_number_t ecma_date_make_date (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_date_time_clip (ecma_number_t);
 extern ecma_number_t ecma_date_timezone_offset (ecma_number_t);
 extern ecma_value_t ecma_date_set_internal_property (ecma_value_t, ecma_number_t,
-                                                                ecma_number_t, ecma_date_timezone_t);
+                                                     ecma_number_t, ecma_date_timezone_t);
 
 extern ecma_value_t ecma_date_value_to_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_utc_string (ecma_number_t);

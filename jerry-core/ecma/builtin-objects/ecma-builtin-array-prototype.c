@@ -826,8 +826,8 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg1, /**< start */
-                              ecma_value_t arg2) /**< end */
+                                           ecma_value_t arg1, /**< start */
+                                           ecma_value_t arg2) /**< end */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -1352,8 +1352,8 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this argument */
-                                          const ecma_value_t args[], /**< arguments list */
-                                          ecma_length_t args_number) /**< number of arguments */
+                                            const ecma_value_t args[], /**< arguments list */
+                                            ecma_length_t args_number) /**< number of arguments */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 

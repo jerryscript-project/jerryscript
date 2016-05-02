@@ -1189,7 +1189,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           else
           {
             JERRY_ASSERT (opcode == CBC_PUSH_PROP_LITERAL_LITERAL_REFERENCE
-                           || opcode == CBC_PUSH_PROP_THIS_LITERAL_REFERENCE);
+                          || opcode == CBC_PUSH_PROP_THIS_LITERAL_REFERENCE);
             *stack_top_p++ = ecma_copy_value (left_value);
             *stack_top_p++ = ecma_copy_value (right_value);
           }
@@ -1256,7 +1256,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               if (base & 0x1)
               {
                 JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
-                               || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
+                              || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
 
                 *stack_top_p++ = ecma_copy_value (result);
               }
@@ -1266,7 +1266,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                  * extra value on the stack. See js-parser-expr.c. */
 
                 JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT
-                               || opcode == CBC_POST_DECR_PUSH_RESULT);
+                              || opcode == CBC_POST_DECR_PUSH_RESULT);
 
                 stack_top_p++;
                 stack_top_p[-1] = stack_top_p[-2];

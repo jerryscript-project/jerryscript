@@ -1167,7 +1167,7 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
   uint32_t literal_index = 0;
 
   JERRY_ASSERT (literal_type == LEXER_IDENT_LITERAL
-                 || literal_type == LEXER_STRING_LITERAL);
+                || literal_type == LEXER_STRING_LITERAL);
 
   JERRY_ASSERT (literal_type != LEXER_IDENT_LITERAL || length <= PARSER_MAXIMUM_IDENT_LENGTH);
   JERRY_ASSERT (literal_type != LEXER_STRING_LITERAL || length <= PARSER_MAXIMUM_STRING_LENGTH);
@@ -1232,7 +1232,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
   uint8_t local_byte_array[LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE];
 
   JERRY_ASSERT (literal_p->type == LEXER_IDENT_LITERAL
-                 || literal_p->type == LEXER_STRING_LITERAL);
+                || literal_p->type == LEXER_STRING_LITERAL);
   JERRY_ASSERT (context_p->allocated_buffer_p == NULL);
 
   destination_start_p = local_byte_array;
@@ -1435,9 +1435,9 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
           JERRY_ASSERT (character >= 0x10000);
           character -= 0x10000;
           destination_p += lit_char_to_utf8_bytes (destination_p,
-                                               (ecma_char_t) (0xd800 | (character >> 10)));
+                                                   (ecma_char_t) (0xd800 | (character >> 10)));
           destination_p += lit_char_to_utf8_bytes (destination_p,
-                                               (ecma_char_t) (0xdc00 | (character & LIT_UTF16_LAST_10_BITS_MASK)));
+                                                   (ecma_char_t) (0xdc00 | (character & LIT_UTF16_LAST_10_BITS_MASK)));
           source_p += 4;
           continue;
         }
@@ -1662,7 +1662,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   lit_utf8_size_t length;
 
   JERRY_ASSERT (context_p->token.type == LEXER_DIVIDE
-                 || context_p->token.type == LEXER_ASSIGN_DIVIDE);
+                || context_p->token.type == LEXER_ASSIGN_DIVIDE);
 
   if (context_p->token.type == LEXER_ASSIGN_DIVIDE)
   {
@@ -1850,7 +1850,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
                          uint8_t literal_type) /**< literal type */
 {
   JERRY_ASSERT (literal_type == LEXER_STRING_LITERAL
-                 || literal_type == LEXER_IDENT_LITERAL);
+                || literal_type == LEXER_IDENT_LITERAL);
 
   skip_spaces (context_p);
   context_p->token.line = context_p->line;

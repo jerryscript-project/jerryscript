@@ -263,7 +263,7 @@ parser_list_get (parser_list_t *list_p, /**< parser list */
 
   JERRY_ASSERT (page_p != NULL);
   JERRY_ASSERT (page_p != list_p->data.last_p
-                 || (index * list_p->item_size < list_p->data.last_position));
+                || (index * list_p->item_size < list_p->data.last_position));
   return page_p->bytes + (index * list_p->item_size);
 } /* parser_list_get */
 
@@ -358,7 +358,7 @@ parser_stack_push_uint8 (parser_context_t *context_p, /**< context */
    * parser_stack_push() pushes not fully initialized structures.
    * More precisely when the last byte of the structure is uninitialized. */
   JERRY_ASSERT (page_p == NULL
-                 || context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+                || context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
 
   if (context_p->stack.last_position >= PARSER_STACK_PAGE_SIZE)
   {
@@ -391,7 +391,7 @@ parser_stack_pop_uint8 (parser_context_t *context_p) /**< context */
   parser_mem_page_t *page_p = context_p->stack.first_p;
 
   JERRY_ASSERT (page_p != NULL
-                 && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+                && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
 
   context_p->stack.last_position--;
 
@@ -430,7 +430,7 @@ parser_stack_push_uint16 (parser_context_t *context_p, /**< context */
     parser_mem_page_t *page_p = context_p->stack.first_p;
 
     JERRY_ASSERT (page_p != NULL
-                   && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+                  && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
 
     page_p->bytes[context_p->stack.last_position++] = (uint8_t) (uint16_value >> 8);
     page_p->bytes[context_p->stack.last_position++] = (uint8_t) uint16_value;
@@ -458,7 +458,7 @@ parser_stack_pop_uint16 (parser_context_t *context_p) /**< context */
     parser_mem_page_t *page_p = context_p->stack.first_p;
 
     JERRY_ASSERT (page_p != NULL
-                   && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+                  && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
 
     value |= ((uint32_t) page_p->bytes[context_p->stack.last_position - 2]) << 8;
     context_p->stack_top_uint8 = page_p->bytes[context_p->stack.last_position - 3];

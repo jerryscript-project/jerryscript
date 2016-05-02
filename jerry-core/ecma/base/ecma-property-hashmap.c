@@ -411,7 +411,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
    * chain, and sets the property_found variable. */
   bool property_found = false;
   ecma_property_header_t *prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                        hashmap_p->header.next_property_cp);
+                                                          hashmap_p->header.next_property_cp);
 
   while (prop_iter_p != NULL && !property_found)
   {

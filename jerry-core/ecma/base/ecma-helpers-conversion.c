@@ -632,10 +632,10 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
    */
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128);
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128,
-                                             0ull,
-                                             fraction_uint64 >> 32u,
-                                             (uint32_t) fraction_uint64,
-                                             0ull);
+                                              0ull,
+                                              fraction_uint64 >> 32u,
+                                              (uint32_t) fraction_uint64,
+                                              0ull);
 
   /* Normalizing mantissa */
   JERRY_ASSERT (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124));

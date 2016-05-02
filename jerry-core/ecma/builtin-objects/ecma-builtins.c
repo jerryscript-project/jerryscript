@@ -308,7 +308,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
        */
 
       ecma_property_t *desc_prop_p = ecma_get_internal_property (object_p,
-                                                               ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
+                                                                 ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
       uint64_t builtin_routine_desc = ecma_get_internal_property_value (desc_prop_p);
 
       JERRY_STATIC_ASSERT (sizeof (uint8_t) * JERRY_BITSINBYTE == ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH,

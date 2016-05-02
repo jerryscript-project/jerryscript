@@ -443,7 +443,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
         /* emulating execution of function described by MakeArgSetter */
         ecma_property_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
         ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                   ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
+                                                                    ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
 
         ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
         ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (mapped_prop_p);

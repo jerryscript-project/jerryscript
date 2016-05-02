@@ -693,12 +693,12 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
         lexer_expect_identifier (context_p, LEXER_STRING_LITERAL);
         JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                       && context_p->token.lit_location.type == LEXER_STRING_LITERAL);
+                      && context_p->token.lit_location.type == LEXER_STRING_LITERAL);
 
         if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
         {
           JERRY_ASSERT (CBC_ARGS_EQ (CBC_PUSH_PROP_LITERAL_LITERAL,
-                                      CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
+                                     CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
           context_p->last_cbc_opcode = CBC_PUSH_PROP_LITERAL_LITERAL;
           context_p->last_cbc.value = context_p->lit_object.index;
         }
@@ -1162,19 +1162,19 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
     else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL)
     {
       JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_LITERAL,
-                                    CBC_PUSH_PROP_LITERAL_REFERENCE));
+                                   CBC_PUSH_PROP_LITERAL_REFERENCE));
       context_p->last_cbc_opcode = CBC_PUSH_PROP_LITERAL_REFERENCE;
     }
     else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL_LITERAL)
     {
       JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_LITERAL_LITERAL,
-                                    CBC_PUSH_PROP_LITERAL_LITERAL_REFERENCE));
+                                   CBC_PUSH_PROP_LITERAL_LITERAL_REFERENCE));
       context_p->last_cbc_opcode = CBC_PUSH_PROP_LITERAL_LITERAL_REFERENCE;
     }
     else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_THIS_LITERAL)
     {
       JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_THIS_LITERAL,
-                                    CBC_PUSH_PROP_THIS_LITERAL_REFERENCE));
+                                   CBC_PUSH_PROP_THIS_LITERAL_REFERENCE));
       context_p->last_cbc_opcode = CBC_PUSH_PROP_THIS_LITERAL_REFERENCE;
     }
     else
@@ -1239,7 +1239,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         if (opcode == CBC_ASSIGN_SET_IDENT)
         {
           JERRY_ASSERT (CBC_ARGS_EQ (CBC_ASSIGN_LITERAL_SET_IDENT,
-                                      CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
+                                     CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
           context_p->last_cbc.value = parser_stack_pop_uint16 (context_p);
           context_p->last_cbc_opcode = CBC_ASSIGN_LITERAL_SET_IDENT;
           continue;
@@ -1274,7 +1274,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {
         JERRY_ASSERT (CBC_ARGS_EQ (opcode + CBC_BINARY_LVALUE_WITH_LITERAL,
-                                    CBC_HAS_LITERAL_ARG));
+                                   CBC_HAS_LITERAL_ARG));
         context_p->last_cbc_opcode = (uint16_t) (opcode + CBC_BINARY_LVALUE_WITH_LITERAL);
         continue;
       }
@@ -1299,7 +1299,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       else if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
       {
         JERRY_ASSERT (CBC_ARGS_EQ (opcode + CBC_BINARY_WITH_TWO_LITERALS,
-                                    CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
+                                   CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
         context_p->last_cbc_opcode = (uint16_t) (opcode + CBC_BINARY_WITH_TWO_LITERALS);
         continue;
       }

@@ -586,8 +586,8 @@ parser_scan_until (parser_context_t *context_p, /**< context */
       case SCAN_MODE_FUNCTION_ARGUMENTS:
       {
         JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
-                       || stack_top == SCAN_STACK_BLOCK_EXPRESSION
-                       || stack_top == SCAN_STACK_BLOCK_PROPERTY);
+                      || stack_top == SCAN_STACK_BLOCK_EXPRESSION
+                      || stack_top == SCAN_STACK_BLOCK_PROPERTY);
 
         if (context_p->token.type == LEXER_LITERAL
             && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)

@@ -76,6 +76,8 @@ double floor (double);
 double fabs (double);
 double fmod (double, double);
 
+double nextafter (double, double);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

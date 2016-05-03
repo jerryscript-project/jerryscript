@@ -72,6 +72,8 @@ extern double fmod (double, double);
 extern int isnan (double);
 extern int finite (double);
 
+double nextafter (double, double);
+
 /*
  * Functions callable from C, intended to support IEEE arithmetic.
  */

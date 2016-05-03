@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt-libc-includes.h"
@@ -916,74 +918,6 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
   return ret;
 } /* ecma_number_to_int32 */
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-/**
-  * Perform conversion of 128-bit binary representation of number
-  * to decimal representation with decimal exponent.
-  */
-static void
-ecma_number_helper_binary_to_decimal (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARG (fraction_uint128), /**< mantissa */
-                                      int32_t binary_exponent, /**< binary exponent */
-                                      int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
-{
-  int32_t decimal_exp = 0;
-
-  if (binary_exponent > 0)
-  {
-    while (binary_exponent > 0)
-    {
-      if (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INC (fraction_uint128);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
-        binary_exponent++;
-      }
-      else
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_tmp);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_COPY (fraction_uint128_tmp, fraction_uint128);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_tmp);
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_tmp);
-
-        if (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARE_EQUAL (fraction_uint128, fraction_uint128_tmp)
-            && ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 123))
-        {
-          ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
-          binary_exponent--;
-        }
-        else
-        {
-          ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128);
-          decimal_exp++;
-        }
-      }
-    }
-  }
-  else if (binary_exponent < 0)
-  {
-    while (binary_exponent < 0)
-    {
-      if (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_LOW_BIT_MASK_ZERO (fraction_uint128, 0)
-          || !ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
-
-        binary_exponent++;
-      }
-      else
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128);
-
-        decimal_exp--;
-      }
-    }
-  }
-
-  *out_decimal_exp_p = decimal_exp;
-} /* ecma_number_helper_binary_to_decimal */
-
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
-
 /**
   * Perform conversion of ecma-number to decimal representation with decimal exponent
   *
@@ -1002,142 +936,11 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
   JERRY_ASSERT (!ecma_number_is_nan (num));
   JERRY_ASSERT (!ecma_number_is_zero (num));
   JERRY_ASSERT (!ecma_number_is_infinity (num));
+  JERRY_ASSERT (!ecma_number_is_negative (num));
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-  ecma_number_t num_m1 = ecma_number_get_prev (num);
-  ecma_number_t num_p1 = ecma_number_get_next (num);
 
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_m1);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128_p1);
-
-  uint64_t fraction_uint64, fraction_uint64_m1, fraction_uint64_p1;
-  int32_t binary_exponent, binary_exponent_m1, binary_exponent_p1;
-  int32_t decimal_exp, decimal_exp_m1, decimal_exp_p1;
-  int32_t dot_shift, dot_shift_m1, dot_shift_p1;
-
-  dot_shift_m1 = ecma_number_get_fraction_and_exponent (num_m1, &fraction_uint64_m1, &binary_exponent_m1);
-  dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &binary_exponent);
-  dot_shift_p1 = ecma_number_get_fraction_and_exponent (num_p1, &fraction_uint64_p1, &binary_exponent_p1);
-
-  binary_exponent_m1 -= dot_shift_m1;
-  binary_exponent -= dot_shift;
-  binary_exponent_p1 -= dot_shift_p1;
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64) >> 32u,
-                                              ((fraction_uint64) << 32u) >> 32u);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128_m1,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64_m1) >> 32u,
-                                              ((fraction_uint64_m1) << 32u) >> 32u);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128_p1,
-                                              0ull,
-                                              0ull,
-                                              (fraction_uint64_p1) >> 32u,
-                                              ((fraction_uint64_p1) << 32u) >> 32u);
-
-  ecma_number_helper_binary_to_decimal (fraction_uint128, binary_exponent, &decimal_exp);
-  ecma_number_helper_binary_to_decimal (fraction_uint128_m1, binary_exponent_m1, &decimal_exp_m1);
-  ecma_number_helper_binary_to_decimal (fraction_uint128_p1, binary_exponent_p1, &decimal_exp_p1);
-
-  if (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128_m1))
-  {
-    decimal_exp_m1 = decimal_exp;
-  }
-
-  while (decimal_exp != decimal_exp_m1
-         || decimal_exp != decimal_exp_p1)
-  {
-    while (decimal_exp > decimal_exp_m1
-           || decimal_exp > decimal_exp_p1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128);
-      decimal_exp--;
-    }
-    while (decimal_exp_m1 > decimal_exp
-           || decimal_exp_m1 > decimal_exp_p1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_m1);
-      decimal_exp_m1--;
-    }
-    while (decimal_exp_p1 > decimal_exp
-           || decimal_exp_p1 > decimal_exp_m1)
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128_p1);
-      decimal_exp_p1--;
-    }
-  }
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD (fraction_uint128_m1, fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128_m1);
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD (fraction_uint128_p1, fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128_p1);
-
-  /* While fraction doesn't fit to integer, divide it by 10
-       and simultaneously increment decimal exponent */
-  uint64_t digits_min, digits_max;
-
-  while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128_m1, 63))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_m1);
-    decimal_exp_m1++;
-  }
-  while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128_p1, 63))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128_p1);
-    decimal_exp_p1++;
-  }
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64 (fraction_uint128_m1, digits_min);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64 (fraction_uint128_p1, digits_max);
-
-  digits_min++;
-
-  if (decimal_exp_m1 < decimal_exp_p1)
-  {
-    JERRY_ASSERT (decimal_exp_m1 == decimal_exp_p1 - 1);
-
-    digits_min /= 10;
-    decimal_exp_m1++;
-  }
-  else if (decimal_exp_m1 > decimal_exp_p1)
-  {
-    JERRY_ASSERT (decimal_exp_m1 == decimal_exp_p1 + 1);
-
-    digits_max /= 10;
-    decimal_exp_p1++;
-  }
-
-  JERRY_ASSERT (digits_max >= digits_min);
-
-  while (digits_min / 10 != digits_max / 10)
-  {
-    digits_min /= 10;
-    digits_max /= 10;
-    decimal_exp_m1++;
-    decimal_exp_p1++;
-  }
-
-  uint64_t digits = (digits_min + digits_max + 1) / 2;
-  int32_t digits_num = 0;
-  uint64_t t = digits;
-
-  while (t != 0)
-  {
-    t /= 10;
-    digits_num++;
-  }
-
-  JERRY_ASSERT (digits_num > 0);
-
-  *out_digits_p = digits;
-  *out_digits_num_p = digits_num;
-  *out_decimal_exp_p = decimal_exp_p1 + digits_num;
+  *out_digits_p = ecma_errol0_dtoa (num, out_digits_num_p, out_decimal_exp_p);
 
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
   /* Less precise conversion */

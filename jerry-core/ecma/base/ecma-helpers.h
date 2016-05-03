@@ -308,6 +308,11 @@ extern uint32_t ecma_number_to_uint32 (ecma_number_t);
 extern int32_t ecma_number_to_int32 (ecma_number_t);
 extern lit_utf8_size_t ecma_number_to_utf8_string (ecma_number_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
+/* ecma-helpers-errol.c */
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+extern uint64_t ecma_errol0_dtoa (ecma_number_t, int32_t *, int32_t *);
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+
 /**
  * @}
  * @}

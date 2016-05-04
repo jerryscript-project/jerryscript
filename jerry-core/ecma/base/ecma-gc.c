@@ -242,22 +242,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
 
       switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
       {
-        case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
-        case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection of ecma values */
-        {
-          JERRY_UNIMPLEMENTED ("Indexed array storage is not implemented yet.");
-        }
-
-        case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t
-                                                * (see above in the routine) */
-        case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t
-                                                 * (see above in the routine) */
-        case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
-                                             * but number of the real internal property types */
-        {
-          JERRY_UNREACHABLE ();
-        }
-
         case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
         case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
         case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
@@ -268,7 +252,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
         case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
         case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
         case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
-        case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
         case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
         case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
         case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
@@ -320,6 +303,12 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
 
           ecma_gc_set_object_visited (obj_p, true);
 
+          break;
+        }
+        case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
+                                             * but number of the real internal property types */
+        {
+          JERRY_UNREACHABLE ();
           break;
         }
       }

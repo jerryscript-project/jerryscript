@@ -120,11 +120,11 @@ typedef uint32_t ecma_value_t;
 typedef enum
 {
   ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
-  ECMA_INTERNAL_PROPERTY_PROTOTYPE, /**< [[Prototype]] */
-  ECMA_INTERNAL_PROPERTY_EXTENSIBLE, /**< [[Extensible]] */
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-  ECMA_INTERNAL_PROPERTY_CODE_BYTECODE, /**< first part of [[Code]] - compressed pointer to bytecode array */
+  ECMA_INTERNAL_PROPERTY_CODE_BYTECODE, /**< pointer to compact bytecode array */
+  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE, /**< pointer to RegExp bytecode array */
+
   ECMA_INTERNAL_PROPERTY_NATIVE_CODE, /**< native handler location descriptor */
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
@@ -132,47 +132,27 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE, /**< [[Primitive value]] for Number objects */
   ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE, /**< [[Primitive value]] for Boolean objects */
 
-  /** Part of an array, that is indexed by numbers */
-  ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES,
-
-  /** Part of an array, that is indexed by strings */
-  ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES,
-
-  /** Implementation-defined identifier of built-in object */
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ID,
-
-  /** Implementation-defined identifier of built-in routine
-      that corresponds to a built-in function object
-      ([[Built-in routine's description]]) */
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC,
-
-  /** Identifier of implementation-defined extension object */
-  ECMA_INTERNAL_PROPERTY_EXTENSION_ID,
-
   /** Bound function internal properties **/
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION,
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS,
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS,
 
-  /**
-   * Bit-mask of non-instantiated built-in's properties (bits 0-31)
-   */
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31,
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ID, /**< Implementation-defined identifier of built-in object */
 
-  /**
-   * Bit-mask of non-instantiated built-in's properties (bits 32-63)
-   */
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63,
+  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC,   /**< Implementation-defined identifier of built-in routine
+                                                   * that corresponds to a built-in function object
+                                                   * ([[Built-in routine's description]])
+                                                   */
 
-  /**
-   * RegExp bytecode array
-   */
-  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE,
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31, /**< Bit-mask of non-instantiated
+                                                               * built-in's properties (bits 0-31)
+                                                               */
 
-  /**
-   * Number of internal properties' types
-   */
-  ECMA_INTERNAL_PROPERTY__COUNT
+  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63, /**< Bit-mask of non-instantiated
+                                                                * built-in's properties (bits 32-63)
+                                                                */
+
+  ECMA_INTERNAL_PROPERTY__COUNT /**< Number of internal properties' types */
 } ecma_internal_property_id_t;
 
 /**

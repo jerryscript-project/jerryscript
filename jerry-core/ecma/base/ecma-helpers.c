@@ -516,9 +516,6 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  JERRY_ASSERT (property_id != ECMA_INTERNAL_PROPERTY_PROTOTYPE
-                && property_id != ECMA_INTERNAL_PROPERTY_EXTENSIBLE);
-
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
 
   if (prop_iter_p != NULL
@@ -804,16 +801,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
   switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
   {
-    case ECMA_INTERNAL_PROPERTY_NUMBER_INDEXED_ARRAY_VALUES: /* a collection */
-    case ECMA_INTERNAL_PROPERTY_STRING_INDEXED_ARRAY_VALUES: /* a collection */
-    {
-      ecma_free_values_collection (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
-                                                                    property_value),
-                                   true);
-
-      break;
-    }
-
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
     {
       ecma_string_t *str_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_string_t, property_value);
@@ -842,12 +829,9 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
-    case ECMA_INTERNAL_PROPERTY_PROTOTYPE: /* the property's value is located in ecma_object_t */
-    case ECMA_INTERNAL_PROPERTY_EXTENSIBLE: /* the property's value is located in ecma_object_t */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
-    case ECMA_INTERNAL_PROPERTY_EXTENSION_ID: /* an integer */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:

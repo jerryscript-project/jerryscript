@@ -15,7 +15,7 @@ For cross-compilation the GCC 5.2.1 is suggested to be used. All the supported t
 Navigate to your JerryScript root folder (after you cloned this repository into the targets folder) and use the following command:
 
 ```
-make -f targets/target-mbed/Makefile.mbed board=$(TARGET)
+make -f targets/mbed/Makefile.mbed board=$(TARGET)
 ```
 Where the `$(TARGET)` is one of the following options: `k64f`, `stm32f4`, `stm32f429i` or `nucleo`.
 This command will create a new folder for your target and build the jerryscript and mbed OS into that folder.
@@ -36,30 +36,30 @@ else ifeq ($(TARGET), stm32f4)
 Basically, you can create a new target in this way (If the mbed OS support your board).
 
 #####Let's get into the details!
-1. The next rule is the `jerry` rule. This rule builds the JerryScript and copy the output files into the target libjerry folder. Two files will be generated at `targets/mbed$(TARGET)/libjerry`:
+1. The next rule is the `jerry` rule. This rule builds the JerryScript and copy the output files into the target libjerry folder. Two files will be generated at `targets/mbed/libjerry`:
   * libjerrycore.a
   * libfdlibm.a
 
   You can run this rule with the following command: 
-  - `make -f targets/target-mbed/Makefile.mbed board=$(TARGET) jerry`
+  - `make -f targets/mbed/Makefile.mbed board=$(TARGET) jerry`
 
-2. The next rule is the `js2c`. This rule calls a `js2c.py` python script from the `jerryscript/targets/tools` and creates the JavaScript builtin file into the `targets/mbed$(TARGET)/source/` folder. This file is the `jerry_targetjs.h`. You can run this rule with the follwoing command:
+2. The next rule is the `js2c`. This rule calls a `js2c.py` python script from the `jerryscript/targets/tools` and creates the JavaScript builtin file into the `targets/mbed/source/` folder. This file is the `jerry_targetjs.h`. You can run this rule with the follwoing command:
 
-  - `make -f targets/target-mbed/Makefile.mbed board=$(TARGET) js2c`
+  - `make -f targets/mbed/Makefile.mbed board=$(TARGET) js2c`
 
-3. The last rule is the `yotta`. This rule sets the yotta target and install the mbed-drivers module, install the dependencies for the mbed OS and finaly creates the mbed binary file. The binary file will be genrated at `targets/mbed$(TARGET)/build/$(YOTTA_TARGET)/source/jerry.bin`. You can run this rule with the following command: 
+3. The last rule is the `yotta`. This rule sets the yotta target and install the mbed-drivers module, install the dependencies for the mbed OS and finaly creates the mbed binary file. The binary file will be genrated at `targets/mbed/build/$(YOTTA_TARGET)/source/jerry.bin`. You can run this rule with the following command: 
 
-  - `make -f targets/target-mbed/Makefile.mbed board=$(TARGET) yotta`
+  - `make -f targets/mbed/Makefile.mbed board=$(TARGET) yotta`
 
-4. Optional rule: `clean`. It removes the build folder from the target-mbed and jerry. You can run this rule with this command:
+4. Optional rule: `clean`. It removes the build folder from the mbed and jerry. You can run this rule with this command:
 
-  - `make -f targets/target-mbed/Makefile.mbed board=$(TARGET) clean`
+  - `make -f targets/mbed/Makefile.mbed board=$(TARGET) clean`
 
 #####Flashing
 When the build is finished you can flash the binary into your board if you want. In case of ST boards you have to install the `st-link` software. Please visit [this page](https://github.com/texane/stlink) to install STLink-v2.
 You can flash your binary into your board with the following command:
 ```
-make -f targets/target-mbed/Makefile.mbed board=$(TARGET) flash
+make -f targets/mbed/Makefile.mbed board=$(TARGET) flash
 ```
 The flash rule grabs the binary and copies it to the mounted board or use the STLink-v2 to flash.
 When the status LED of the board stops blinking, press RESET button on the board to execute JerryScript led flashing sample program in js folder.

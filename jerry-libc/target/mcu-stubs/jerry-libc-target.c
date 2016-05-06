@@ -65,5 +65,5 @@ int
 gettimeofday (void *tp __attr_unused___,  /**< struct timeval */
               void *tzp __attr_unused___) /**< struct timezone */
 {
-  return 0;
+  return -1;
 } /* gettimeofday */

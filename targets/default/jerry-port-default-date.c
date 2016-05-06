@@ -32,7 +32,10 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
   tz.tz_minuteswest = 0;
   tz.tz_dsttime = 0;
 
-  gettimeofday (&tv, &tz);
+  if (gettimeofday (&tv, &tz) != 0)
+  {
+    return false;
+  }
 
   tz_p->offset = tz.tz_minuteswest;
   tz_p->daylight_saving_time = tz.tz_dsttime > 0 ? 1 : 0;
@@ -47,7 +50,10 @@ double jerry_port_get_current_time ()
 {
   struct timeval tv;
 
-  gettimeofday (&tv, NULL);
+  if (gettimeofday (&tv, NULL) != 0)
+  {
+    return 0;
+  }
 
   return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
 } /* jerry_port_get_current_time */

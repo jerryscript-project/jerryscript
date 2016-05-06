@@ -351,6 +351,11 @@ main (void)
   JERRY_ASSERT (sz == 0);
   jerry_api_release_value (&args[0]);
 
+  // Get global.boo (non-existing field)
+  is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "boo", &val_t);
+  JERRY_ASSERT (!is_ok);
+  JERRY_ASSERT (val_t.type == JERRY_API_DATA_TYPE_UNDEFINED);
+
   // Get global.t
   is_ok = jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *)"t", &val_t);
   JERRY_ASSERT (is_ok

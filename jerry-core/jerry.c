@@ -1225,19 +1225,23 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
   ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                     (lit_utf8_size_t) field_name_size);
 
-  ecma_value_t get_completion = ecma_op_object_get (object_p,
-                                                    field_name_str_p);
+  ecma_value_t field_value = ecma_op_object_get (object_p, field_name_str_p);
 
-  if (!ecma_is_value_error (get_completion))
+  if (!ecma_is_value_error (field_value))
   {
-    jerry_api_convert_ecma_value_to_api_value (field_value_p, get_completion);
+    jerry_api_convert_ecma_value_to_api_value (field_value_p, field_value);
+
+    if (ecma_is_value_undefined (field_value))
+    {
+      is_successful = false;
+    }
   }
   else
   {
     is_successful = false;
   }
 
-  ecma_free_value (get_completion);
+  ecma_free_value (field_value);
 
   ecma_deref_ecma_string (field_name_str_p);
 

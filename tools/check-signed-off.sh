@@ -31,7 +31,7 @@ fi
 author_name=`git show -s --format=%an $commit_hash`
 author_email=`git show -s --format=%ae $commit_hash`
 required_signed_off_by_line="JerryScript-DCO-1.0-Signed-off-by: $author_name $author_email"
-actual_signed_off_by_line=`git show -s --format=%B $commit_hash | sed '/^$/d' | tail -n 1`
+actual_signed_off_by_line=`git show -s --format=%B $commit_hash | sed '/^$/d' | tr -d '\015' | tail -n 1`
 
 if [ "$actual_signed_off_by_line" != "$required_signed_off_by_line" ]
 then

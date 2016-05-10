@@ -104,7 +104,7 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
  *         false - otherwise (value returned through out_pointer_p is NULL).
  */
 bool
-ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
+ecma_get_external_pointer_value (const ecma_object_t *obj_p, /**< object to get property value from */
                                  ecma_internal_property_id_t id, /**< identifier of internal property
                                                                   *   to get value from */
                                  ecma_external_pointer_t *out_pointer_p) /**< [out] value of the external pointer */

@@ -307,7 +307,7 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
+ecma_op_arguments_object_get (const ecma_object_t *obj_p, /**< the object */
                               ecma_string_t *property_name_p) /**< property name */
 {
   // 1.
@@ -344,7 +344,7 @@ ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_property_t *
-ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_arguments_object_get_own_property (const ecma_object_t *obj_p, /**< the object */
                                            ecma_string_t *property_name_p) /**< property name */
 {
   // 1.

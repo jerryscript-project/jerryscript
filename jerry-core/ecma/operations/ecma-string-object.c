@@ -120,7 +120,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
  *         Returned value must be freed with ecma_free_value
  */
 ecma_property_t *
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String object */
+ecma_op_string_object_get_own_property (const ecma_object_t *obj_p, /**< a String object */
                                         ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
@@ -190,7 +190,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
     // 9.
     ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string_from_code_unit (c);
 
-    new_prop_p = ecma_create_named_data_property (obj_p,
+    new_prop_p = ecma_create_named_data_property ((ecma_object_t *) obj_p,
                                                   new_prop_name_p,
                                                   ECMA_PROPERTY_FLAG_ENUMERABLE);
 

@@ -511,7 +511,7 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
  *         NULL - otherwise.
  */
 ecma_property_t *
-ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
+ecma_find_internal_property (const ecma_object_t *object_p, /**< object descriptor */
                              ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -557,7 +557,7 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
  * @return pointer to the property
  */
 ecma_property_t *
-ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
+ecma_get_internal_property (const ecma_object_t *object_p, /**< object descriptor */
                             ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
   ecma_property_t *property_p = ecma_find_internal_property (object_p, property_id);
@@ -1096,7 +1096,7 @@ ecma_set_internal_property_value (ecma_property_t *prop_p, /**< property */
  *      value previously stored in the property is freed
  */
 void
-ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
+ecma_named_data_property_assign_value (const ecma_object_t *obj_p, /**< object */
                                        ecma_property_t *prop_p, /**< property */
                                        ecma_value_t value) /**< value to assign */
 {

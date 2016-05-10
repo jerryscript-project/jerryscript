@@ -59,7 +59,7 @@
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
+ecma_op_object_get (const ecma_object_t *obj_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL
@@ -101,11 +101,10 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 static ecma_property_t * __attr_noinline___
-ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object */
+ecma_op_object_get_own_property_longpath (const ecma_object_t *obj_p, /**< the object */
                                           ecma_string_t *property_name_p) /**< property name */
 {
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  const bool is_builtin = ecma_get_object_is_builtin (obj_p);
 
   ecma_property_t *prop_p = NULL;
 
@@ -151,9 +150,9 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
   if (unlikely (prop_p == NULL))
   {
-    if (is_builtin)
+    if (ecma_get_object_is_builtin (obj_p))
     {
-      prop_p = ecma_builtin_try_to_instantiate_property (obj_p, property_name_p);
+      prop_p = ecma_builtin_try_to_instantiate_property ((ecma_object_t *) obj_p, property_name_p);
     }
   }
 
@@ -170,7 +169,7 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_object_get_own_property (const ecma_object_t *obj_p, /**< the object */
                                  ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL
@@ -199,7 +198,7 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_object_get_property (const ecma_object_t *obj_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL

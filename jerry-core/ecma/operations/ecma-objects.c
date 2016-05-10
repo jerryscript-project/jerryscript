@@ -33,20 +33,22 @@
 
 /**
  * Assert that specified object type value is valid
+ *
+ * @param object's implementation-defined type
  */
-static void
-ecma_assert_object_type_is_valid (ecma_object_type_t type) /**< object's implementation-defined type */
-{
-  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL
-                || type == ECMA_OBJECT_TYPE_ARRAY
-                || type == ECMA_OBJECT_TYPE_FUNCTION
-                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION
-                || type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
-                || type == ECMA_OBJECT_TYPE_STRING
-                || type == ECMA_OBJECT_TYPE_ARGUMENTS
+#ifndef JERRY_NDEBUG
+#define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type) \
+  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL \
+                || type == ECMA_OBJECT_TYPE_ARRAY \
+                || type == ECMA_OBJECT_TYPE_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_STRING \
+                || type == ECMA_OBJECT_TYPE_ARGUMENTS \
                 || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-} /* ecma_assert_object_type_is_valid */
-
+#else /* JERRY_NDEBUG */
+#define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type)
+#endif /* !JERRY_NDEBUG */
 /**
  * [[Get]] ecma object's operation
  *
@@ -65,7 +67,6 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (property_name_p != NULL);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
 
   switch (type)
   {
@@ -84,11 +85,13 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
     {
       return ecma_op_arguments_object_get (obj_p, property_name_p);
     }
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    }
   }
-
-  JERRY_ASSERT (false);
-
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_get */
 
 /**
@@ -102,8 +105,6 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
                                           ecma_string_t *property_name_p) /**< property name */
 {
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
-
   const bool is_builtin = ecma_get_object_is_builtin (obj_p);
 
   ecma_property_t *prop_p = NULL;
@@ -139,6 +140,11 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
     {
       prop_p = ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
 
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
       break;
     }
   }
@@ -200,8 +206,7 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
+  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
 
   /*
    * typedef ecma_property_t * (*get_property_ptr_t) (ecma_object_t *, ecma_string_t *);
@@ -242,8 +247,7 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
+  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
 
   /*
    * typedef ecma_property_t * (*put_ptr_t) (ecma_object_t *, ecma_string_t *);
@@ -282,8 +286,7 @@ ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
+  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
 
   /*
    * typedef ecma_property_t * (*can_put_ptr_t) (ecma_object_t *, ecma_string_t *);
@@ -324,7 +327,6 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (property_name_p != NULL);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
 
   switch (type)
   {
@@ -347,11 +349,13 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
                                               property_name_p,
                                               is_throw);
     }
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    }
   }
-
-  JERRY_ASSERT (false);
-
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_delete */
 
 /**
@@ -370,8 +374,7 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
+  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
 
   /*
    * typedef ecma_property_t * (*default_value_ptr_t) (ecma_object_t *, ecma_string_t *);
@@ -414,7 +417,6 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (property_name_p != NULL);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
 
   switch (type)
   {
@@ -446,11 +448,13 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                            property_desc_p,
                                                            is_throw);
     }
+    default:
+    {
+      JERRY_ASSERT (false);
+
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    }
   }
-
-  JERRY_ASSERT (false);
-
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* ecma_op_object_define_own_property */
 
 /**
@@ -467,7 +471,6 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
 
   switch (type)
   {
@@ -486,9 +489,12 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     {
       return ecma_op_function_has_instance (obj_p, value);
     }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
   }
-
-  JERRY_UNREACHABLE ();
 } /* ecma_op_object_has_instance */
 
 /**
@@ -547,7 +553,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_strings_collection (NULL, 0);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  ecma_assert_object_type_is_valid (type);
+  const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
   uint32_t names_hashes_bitmap[(1u << LIT_STRING_HASH_BITS) / bitmap_row_size];
@@ -564,7 +570,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     ecma_collection_header_t *prop_names_p = ecma_new_strings_collection (NULL, 0);
 
-    if (ecma_get_object_is_builtin (obj_p))
+    if (obj_is_builtin)
     {
       ecma_builtin_list_lazy_property_names (obj_p,
                                              is_enumerable_only,
@@ -599,6 +605,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
         case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
         {
+          break;
+        }
+        default:
+        {
+          JERRY_UNREACHABLE ();
           break;
         }
       }

@@ -7,7 +7,7 @@ The simplest way to run JavaScript.
 
 ```c
 jerry_completion_code_t
-jerry_run_simple (const char * script_source,
+jerry_run_simple (const jerry_api_char_t *script_source,
                   size_t script_source_size,
                   jerry_flag_t flags);
 ```
@@ -20,18 +20,18 @@ jerry_run_simple (const char * script_source,
 
 ```c
 {
-  const char * script = "print ('Hello, World!');";
+  const jerry_api_char_t *script = "print ('Hello, World!');";
 
-  jerry_run_simple (script, strlen (script), JERRY_FLAG_EMPTY);
+  jerry_run_simple (script, strlen ((const char *) script), JERRY_FLAG_EMPTY);
 }
 ```
 
 **See also**
 
-- [jerry_init](#jerryinit)
-- [jerry_cleanup](#jerrycleanup)
-- [jerry_parse](#jerryparse)
-- [jerry_run](#jerryrun)
+- [jerry_init](#jerry_init)
+- [jerry_cleanup](#jerry_cleanup)
+- [jerry_parse](#jerry_parse)
+- [jerry_run](#jerry_run)
 
 # jerry_init
 
@@ -48,10 +48,11 @@ jerry_init (jerry_flag_t flags);
 
 `flags` - combination of various engine configuration flags:
 
-- `JERRY_FLAG_MEM_STATS` - dump memory statistics;
-- `JERRY_FLAG_ENABLE_LOG` - enable logging;
+- `JERRY_FLAG_EMPTY` - no flags, just initialize in default configuration;
 - `JERRY_FLAG_SHOW_OPCODES` - print compiled byte-code;
-- `JERRY_FLAG_EMPTY` - no flags, just initialize in default configuration.
+- `JERRY_FLAG_MEM_STATS` - dump memory statistics;
+- `JERRY_FLAG_MEM_STATS_SEPARATE` - dump memory statistics and reset peak values after parse;
+- `JERRY_FLAG_ENABLE_LOG` - enable logging;
 
 **Example**
 
@@ -67,7 +68,7 @@ jerry_init (jerry_flag_t flags);
 
 **See also**
 
-- [jerry_cleanup](#jerrycleanup)
+- [jerry_cleanup](#jerry_cleanup)
 
 # jerry_cleanup
 
@@ -86,7 +87,7 @@ jerry_cleanup (void);
 
 **See also**
 
-- [jerry_init](#jerryinit)
+- [jerry_init](#jerry_init)
 
 # jerry_parse
 
@@ -100,21 +101,29 @@ so `jerry_parse` could be invoked only once between `jerry_init` and `jerry_clea
 
 ```c
 bool
-jerry_parse (const char* source_p, size_t source_size);
+jerry_parse (const jerry_api_char_t *source_p,
+             size_t source_size,
+             jerry_api_object_t **error_obj_p);
 ```
 - `source_p` - string, containing source code to parse;
 - `source_size` - size of the string, in bytes.
+- `error_obj_p` - error object (output parameter)
 
 **Example**
 
 ```c
 {
-  jerry_init (JERRY_FLAG_ENABLE_LOG);
+  jerry_init (JERRY_FLAG_EMPTY);
 
   char script [] = "print ('Hello, World!');";
-  jerry_parse (script, strlen (script));
+  size_t script_size = strlen ((const char *) script);
 
-  jerry_run ();
+  jerry_api_object_t *error_object_p = NULL;
+  if (!jerry_parse (script, script_size, &error_object_p))
+  {
+    /* Error object must be freed, if parsing failed */
+    jerry_api_release_object (error_object_p);
+  }
 
   jerry_cleanup ();
 }
@@ -122,7 +131,7 @@ jerry_parse (const char* source_p, size_t source_size);
 
 **See also**
 
-- [jerry_run](#jerryrun)
+- [jerry_run](#jerry_run)
 
 # jerry_run
 
@@ -135,21 +144,48 @@ The code should be previously registered through `jerry_parse`.
 
 ```c
 jerry_completion_code_t
-jerry_run (void);
+jerry_run (jerry_api_value_t *error_value_p);
 ```
-
-- returned value - completion code that indicates whether run performed successfully (`JERRY_COMPLETION_CODE_OK`), or an unhandled JavaScript exception occurred (`JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION`).
+- `error_value_p` - error value (output parameter)
+- returned value - completion code that indicates whether run performed successfully
+  - `JERRY_COMPLETION_CODE_OK` - successful completion
+  - `JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION` - an unhandled JavaScript exception occurred
+  - `JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION` - snapshot version mismatch
+  - `JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT` - snapshot format is not valid
 
 **Example**
 
 ```c
 {
-  jerry_init (JERRY_FLAG_ENABLE_LOG);
+  const jerry_api_char_t script[] = "print ('Hello, World!');";
+  size_t script_size = strlen ((const char *) script);
 
-  char script [] = "print ('Hello, World!');";
-  jerry_parse (script, strlen (script));
+  /* Initialize engine */
+  jerry_init (JERRY_FLAG_EMPTY);
 
-  jerry_run ();
+  /* Setup Global scope code */
+  jerry_api_object_t *error_object_p = NULL;
+  if (!jerry_parse (script, script_size, &error_object_p))
+  {
+    /* Error object must be freed, if parsing failed */
+    jerry_api_release_object (error_object_p);
+  }
+  else
+  {
+    /* Execute Global scope code
+     *
+     * Note:
+     *      Initialization of 'error_value' is not mandatory here.
+     */
+    jerry_api_value_t error_value = jerry_api_create_void_value ();
+    jerry_completion_code_t return_code = jerry_run (&error_value);
+
+    if (return_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
+    {
+      /* Error value must be freed, if 'jerry_run' returns with an unhandled exception */
+      jerry_api_release_value (&error_value);
+    }
+  }
 
   jerry_cleanup ();
 }
@@ -157,7 +193,7 @@ jerry_run (void);
 
 **See also**
 
-- [jerry_parse](#jerryparse)
+- [jerry_parse](#jerry_parse)
 
 # jerry_api_value_t
 
@@ -166,10 +202,13 @@ The data type represents any JavaScript value that can be sent to or received fr
 
 Type of value is identified by `jerry_api_value_t::type`, and can be one of the following:
 
+- `JERRY_API_DATA_TYPE_VOID` - no return value
 - `JERRY_API_DATA_TYPE_UNDEFINED` - JavaScript undefined;
 - `JERRY_API_DATA_TYPE_NULL` - JavaScript null;
 - `JERRY_API_DATA_TYPE_BOOLEAN` - boolean;
+- `JERRY_API_DATA_TYPE_FLOAT32` - number;
 - `JERRY_API_DATA_TYPE_FLOAT64` - number;
+- `JERRY_API_DATA_TYPE_UINT32` - number;
 - `JERRY_API_DATA_TYPE_STRING` - string;
 - `JERRY_API_DATA_TYPE_OBJECT` - reference to JavaScript object.
 
@@ -189,21 +228,17 @@ typedef struct jerry_api_value_t
 
     uint32_t v_uint32;
 
-    union
-    {
-      jerry_api_string_t * v_string;
-      jerry_api_object_t * v_object;
-    };
-  };
+    jerry_api_string_t v_string;
+    jerry_api_object_t v_object;
+  } u;
 } jerry_api_value_t;
 ```
 
 **See also**
 
-- [jerry_api_eval](#jerryapieval)
-- [jerry_api_call_function](#jerryapicallfunction)
-- [jerry_api_construct_object](#jerryapiconstructobject)
-
+- [jerry_api_eval](#jerry_api_eval)
+- [jerry_api_call_function](#jerry_api_call_function)
+- [jerry_api_construct_object](#jerry_api_construct_object)
 
 # jerry_api_eval
 
@@ -214,11 +249,11 @@ Perform JavaScript `eval`.
 
 ```c
 jerry_completion_code_t
-jerry_api_eval (const char * source_p,
+jerry_api_eval (const jerry_api_char_t *source_p,
                 size_t source_size,
                 bool is_direct,
                 bool is_strict,
-                jerry_api_value_t * retval_p);
+                jerry_api_value_t *retval_p);
 ```
 
 - `source_p` - source code to evaluate;
@@ -243,22 +278,22 @@ jerry_api_eval (const char * source_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_external_function](#jerryapicreateexternalfunction)
-- [jerry_external_handler_t](#jerryexternalhandlert)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_external_function](#jerry_api_create_external_function)
+- [jerry_external_handler_t](#jerry_external_handler_t)
 
 # jerry_api_create_string
 
 **Summary**
 Create new JavaScript string.
 
-Upon the JavaScript string becomes unused, all pointers to it should be released using [jerry_api_release_string](#jerryapireleasestring).
+Upon the JavaScript string becomes unused, all pointers to it should be released using [jerry_api_release_string](#jerry_api_release_string).
 
 **Prototype**
 
 ```c
-jerry_api_string_t*
-jerry_api_create_string (const char * v);
+jerry_api_string_t *
+jerry_api_create_string (const jerry_api_char_t *v);
 ```
 
 - `v` - value of string to create;
@@ -268,7 +303,7 @@ jerry_api_create_string (const char * v);
 
 ```c
 {
-  jerry_api_string_t * string_p = jerry_api_create_string ("abc");
+  jerry_api_string_t *string_p = jerry_api_create_string ("abc");
 
   ...
 
@@ -278,9 +313,9 @@ jerry_api_create_string (const char * v);
 
 **See also**
 
-- [jerry_api_acquire_string](#jerryapiacquirestring)
-- [jerry_api_release_string](#jerryapireleasestring)
-- [jerry_api_string_to_char_buffer](#jerryapistringtocharbuffer)
+- [jerry_api_acquire_string](#jerry_api_acquire_string)
+- [jerry_api_release_string](#jerry_api_release_string)
+- [jerry_api_string_to_char_buffer](#jerry_api_string_to_char_buffer)
 
 # jerry_api_string_to_char_buffer
 
@@ -291,8 +326,8 @@ Copy string characters to specified buffer, append zero character at end of the 
 
 ```c
 jerry_api_size_t
-jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
-                                 char * buffer_p,
+jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p,
+                                 jerry_api_char_t *buffer_p,
                                  jerry_api_size_t buffer_size);
 ```
 
@@ -307,20 +342,22 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
 
 ```c
 {
-  jerry_api_object_t * obj_p = jerry_api_get_global ();
+  jerry_api_object_t *obj_p = jerry_api_get_global ();
   jerry_api_value_t val;
 
   bool is_ok = jerry_api_get_object_field_value (obj_p,
                                                  "field_with_string_value",
                                                  &val);
 
-  if (is_ok) {
+  if (is_ok)
+  {
     bool is_string = (val.type == JERRY_API_DATA_TYPE_STRING);
 
-    if (is_string) {
+    if (is_string)
+    {
       // neg_req_sz would be negative, as zero-size buffer is insufficient for any string
       jerry_api_size_t req_sz = jerry_api_get_string_size (val.string_p);
-      char * str_buf_p = (char*) malloc (req_sz);
+      jerry_api_char_t *str_buf_p = (jerry_api_char_t *) malloc (req_sz);
 
       // sz would be -neg_req_sz
       jerry_api_size_t sz = jerry_api_string_to_char_buffer (val.string_p,
@@ -341,21 +378,21 @@ jerry_api_string_to_char_buffer (const jerry_api_string_t * string_p,
 
 **See also**
 
-- [jerry_api_create_string](#jerryapicreatestring)
-- [jerry_api_value_t](#jerryapivaluet)
+- [jerry_api_create_string](#jerry_api_create_string)
+- [jerry_api_value_t](#jerry_api_value_t)
 
 # jerry_api_acquire_string
 
 **Summary**
 Acquire new pointer to the string for usage outside of the engine.
 
-The acquired pointer should be released with [jerry_api_release_string](#jerryapireleasestring).
+The acquired pointer should be released with [jerry_api_release_string](#jerry_api_release_string).
 
 **Prototype**
 
 ```c
-jerry_api_string_t*
-jerry_api_acquire_string (jerry_api_string_t * string_p);
+jerry_api_string_t *
+jerry_api_acquire_string (jerry_api_string_t *string_p);
 ```
 
 - `string_p` - pointer to the string;
@@ -365,8 +402,8 @@ jerry_api_acquire_string (jerry_api_string_t * string_p);
 
 ```c
 {
-  jerry_api_string_t * str_ptr1_p = jerry_api_create_string ("abc");
-  jerry_api_string_t * str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
+  jerry_api_string_t *str_ptr1_p = jerry_api_create_string ("abc");
+  jerry_api_string_t *str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
 
   ... // usage of both pointers
 
@@ -380,8 +417,8 @@ jerry_api_acquire_string (jerry_api_string_t * string_p);
 
 **See also**
 
-- [jerry_api_release_string](#jerryapireleasestring)
-- [jerry_api_create_string](#jerryapicreatestring)
+- [jerry_api_release_string](#jerry_api_release_string)
+- [jerry_api_create_string](#jerry_api_create_string)
 
 # jerry_api_release_string
 
@@ -392,7 +429,7 @@ Release specified pointer to the string.
 
 ```c
 void
-jerry_api_release_string (jerry_api_string_t * string_p);
+jerry_api_release_string (jerry_api_string_t *string_p);
 ```
 
 - `string_p` - pointer to the string.
@@ -401,8 +438,8 @@ jerry_api_release_string (jerry_api_string_t * string_p);
 
 ```c
 {
-  jerry_api_string_t * str_ptr1_p = jerry_api_create_string ("abc");
-  jerry_api_string_t * str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
+  jerry_api_string_t *str_ptr1_p = jerry_api_create_string ("abc");
+  jerry_api_string_t *str_ptr2_p = jerry_api_acquire_string (str_ptr1_p);
 
   ... // usage of both pointers
 
@@ -416,20 +453,20 @@ jerry_api_release_string (jerry_api_string_t * string_p);
 
 **See also**
 
-- [jerry_api_acquire_string](#jerryapiacquirestring)
-- [jerry_api_create_string](#jerryapicreatestring)
+- [jerry_api_acquire_string](#jerry_api_acquire_string)
+- [jerry_api_create_string](#jerry_api_create_string)
 
 # jerry_api_create_object
 
 **Summary**
 Create new JavaScript object, like with `new Object()`.
 
-Upon the JavaScript object becomes unused, all pointers to it should be released using [jerry_api_release_object](#jerryapireleaseobject).
+Upon the JavaScript object becomes unused, all pointers to it should be released using [jerry_api_release_object](#jerry_api_release_object).
 
 **Prototype**
 
 ```c
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_object ();
 ```
 
@@ -439,7 +476,7 @@ jerry_api_create_object ();
 
 ```c
 {
-  jerry_api_object_t * object_p = jerry_api_create_object ();
+  jerry_api_object_t *object_p = jerry_api_create_object ();
 
   ...
 
@@ -449,27 +486,27 @@ jerry_api_create_object ();
 
 **See also**
 
-- [jerry_api_acquire_object](#jerryapiacquireobject)
-- [jerry_api_release_object](#jerryapireleaseobject)
-- [jerry_api_add_object_field](#jerryapiaddobjectfield)
-- [jerry_api_delete_object_field](#jerryapideleteobjectfield)
-- [jerry_api_get_object_field_value](#jerryapigetobjectfieldvalue)
-- [jerry_api_set_object_field_value](#jerryapisetobjectfieldvalue)
-- [jerry_api_get_object_native_handle](#jerryapigetobjectnativehandle)
-- [jerry_api_set_object_native_handle](#jerryapisetobjectnativehandle)
+- [jerry_api_acquire_object](#jerry_api_acquire_object)
+- [jerry_api_release_object](#jerry_api_release_object)
+- [jerry_api_add_object_field](#jerry_api_add_object_field)
+- [jerry_api_delete_object_field](#jerry_api_delete_object_field)
+- [jerry_api_get_object_field_value](#jerry_api_get_object_field_value)
+- [jerry_api_set_object_field_value](#jerry_api_set_object_field_value)
+- [jerry_api_get_object_native_handle](#jerry_api_get_object_native_handle)
+- [jerry_api_set_object_native_handle](#jerry_api_set_object_native_handle)
 
 # jerry_api_acquire_object
 
 **Summary**
 Acquire new pointer to the object for usage outside of the engine.
 
-The acquired pointer should be released with [jerry_api_release_object](#jerryapireleaseobject).
+The acquired pointer should be released with [jerry_api_release_object](#jerry_api_release_object).
 
 **Prototype**
 
 ```c
-jerry_api_object_t*
-jerry_api_acquire_object (jerry_api_object_t * object_p);
+jerry_api_object_t *
+jerry_api_acquire_object (jerry_api_object_t *object_p);
 ```
 
 - `object_p` - pointer to the object;
@@ -479,8 +516,8 @@ jerry_api_acquire_object (jerry_api_object_t * object_p);
 
 ```c
 {
-  jerry_api_object_t * obj_ptr1_p = jerry_api_create_object ();
-  jerry_api_object_t * obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
+  jerry_api_object_t *obj_ptr1_p = jerry_api_create_object ();
+  jerry_api_object_t *obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
 
   ... // usage of both pointers
 
@@ -494,8 +531,8 @@ jerry_api_acquire_object (jerry_api_object_t * object_p);
 
 **See also**
 
-- [jerry_api_release_object](#jerryapireleaseobject)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_release_object](#jerry_api_release_object)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_release_object
 
@@ -506,7 +543,7 @@ Release specified pointer to the object.
 
 ```c
 void
-jerry_api_release_object (jerry_api_object_t * object_p);
+jerry_api_release_object (jerry_api_object_t *object_p);
 ```
 
 - `object_p` - pointer to the object.
@@ -515,8 +552,8 @@ jerry_api_release_object (jerry_api_object_t * object_p);
 
 ```c
 {
-  jerry_api_object_t * obj_ptr1_p = jerry_api_create_object ();
-  jerry_api_object_t * obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
+  jerry_api_object_t *obj_ptr1_p = jerry_api_create_object ();
+  jerry_api_object_t *obj_ptr2_p = jerry_api_acquire_object (obj_ptr1_p);
 
   ... // usage of both pointers
 
@@ -530,8 +567,8 @@ jerry_api_release_object (jerry_api_object_t * object_p);
 
 **See also**
 
-- [jerry_api_acquire_object](#jerryapiacquireobject)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_acquire_object](#jerry_api_acquire_object)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_get_global
 
@@ -541,19 +578,19 @@ Get the Global object.
 **Prototype**
 
 ```c
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_get_global (void);
 ```
 
 - returned value - pointer to the Global object.
 
-Received pointer should be released with [jerry_api_release_object](#jerryapireleaseobject), just when the value becomes unnecessary.
+Received pointer should be released with [jerry_api_release_object](#jerry_api_release_object), just when the value becomes unnecessary.
 
 **Example**
 
 ```c
 {
-  jerry_api_object_t * glob_obj_p = jerry_api_get_global ();
+  jerry_api_object_t *glob_obj_p = jerry_api_get_global ();
 
   jerry_api_value_t val;
   bool is_ok = jerry_api_get_object_field_value (glob_obj_p, "some_field_name", &val);
@@ -570,11 +607,11 @@ Received pointer should be released with [jerry_api_release_object](#jerryapirel
 
 **See also**
 
-- [jerry_api_release_object](#jerryapireleaseobject)
-- [jerry_api_add_object_field](#jerryapiaddobjectfield)
-- [jerry_api_delete_object_field](#jerryapideleteobjectfield)
-- [jerry_api_get_object_field_value](#jerryapigetobjectfieldvalue)
-- [jerry_api_set_object_field_value](#jerryapisetobjectfieldvalue)
+- [jerry_api_release_object](#jerry_api_release_object)
+- [jerry_api_add_object_field](#jerry_api_add_object_field)
+- [jerry_api_delete_object_field](#jerry_api_delete_object_field)
+- [jerry_api_get_object_field_value](#jerry_api_get_object_field_value)
+- [jerry_api_set_object_field_value](#jerry_api_set_object_field_value)
 
 # jerry_api_add_object_field
 
@@ -585,9 +622,9 @@ Create field (named data property) in an object
 
 ```c
 bool
-jerry_api_add_object_field (jerry_api_object_t * object_p,
-                            const char * field_name_p,
-                            const jerry_api_value_t * field_value_p,
+jerry_api_add_object_field (jerry_api_object_t *object_p,
+                            const jerry_api_char_t *field_name_p,
+                            const jerry_api_value_t *field_value_p,
                             bool is_writable);
 ```
 
@@ -603,7 +640,7 @@ jerry_api_add_object_field (jerry_api_object_t * object_p,
 
 ```c
 {
-  jerry_api_object_t * obj_p = jerry_api_create_object ();
+  jerry_api_object_t *obj_p = jerry_api_create_object ();
 
   jerry_api_value_t val;
 
@@ -617,8 +654,8 @@ jerry_api_add_object_field (jerry_api_object_t * object_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_delete_object_field
 
@@ -629,8 +666,8 @@ Delete field (property) in the specified object
 
 ```c
 bool
-jerry_api_delete_object_field (jerry_api_object_t * object_p,
-                               const char * field_name_p);
+jerry_api_delete_object_field (jerry_api_object_t *object_p,
+                               const jerry_api_char_t *field_name_p);
 ```
 
 - `object_p` - object to delete field at;
@@ -642,7 +679,7 @@ jerry_api_delete_object_field (jerry_api_object_t * object_p,
 
 ```c
 {
-  jerry_api_object_t* obj_p;
+  jerry_api_object_t *obj_p;
   ... // receive or construct obj_p
 
   jerry_api_delete_object_field (obj_p, "some_field_name");
@@ -651,8 +688,8 @@ jerry_api_delete_object_field (jerry_api_object_t * object_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_get_object_field_value
 
@@ -663,9 +700,9 @@ Get value of field (property) in the specified object, i.e. perform [[Get]] oper
 
 ```c
 bool
-jerry_api_get_object_field_value (jerry_api_object_t * object_p,
-                                  const char * field_name_p,
-                                  jerry_api_value_t * field_value_p);
+jerry_api_get_object_field_value (jerry_api_object_t *object_p,
+                                  const jerry_api_char_t *field_name_p,
+                                  jerry_api_value_t *field_value_p);
 ```
 
 - `object_p` - object;
@@ -674,13 +711,13 @@ jerry_api_get_object_field_value (jerry_api_object_t * object_p,
 - returned value - true, if field value was retrieved successfully, i.e. upon the call:
   - there is field with specified name in the object.
 
-If value was retrieved successfully, it should be freed with [jerry_api_release_object](#jerryapireleaseobject) just when it becomes unnecessary.
+If value was retrieved successfully, it should be freed with [jerry_api_release_object](#jerry_api_release_object) just when it becomes unnecessary.
 
 **Example**
 
 ```c
 {
-  jerry_api_object_t* obj_p;
+  jerry_api_object_t *obj_p;
   ... // receive or construct obj_p
 
   jerry_api_value_t val;
@@ -696,8 +733,8 @@ If value was retrieved successfully, it should be freed with [jerry_api_release_
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_set_object_field_value
 
@@ -708,9 +745,9 @@ Set value of a field (property) in the specified object, i.e. perform [[Put]] op
 
 ```c
 bool
-jerry_api_set_object_field_value (jerry_api_object_t * object_p,
-                                  const char * field_name_p,
-                                  jerry_api_value_t * field_value_p);
+jerry_api_set_object_field_value (jerry_api_object_t *object_p,
+                                  const jerry_api_char_t *field_name_p,
+                                  jerry_api_value_t *field_value_p);
 ```
 
 - `object_p` - object;
@@ -723,7 +760,7 @@ jerry_api_set_object_field_value (jerry_api_object_t * object_p,
 
 ```c
 {
-  jerry_api_object_t* obj_p;
+  jerry_api_object_t *obj_p;
   jerry_api_value_t val;
 
   ... // receive or construct obj_p and val
@@ -734,8 +771,8 @@ jerry_api_set_object_field_value (jerry_api_object_t * object_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_object](#jerryapicreateobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_object](#jerry_api_create_object)
 
 # jerry_api_get_object_native_handle
 
@@ -747,8 +784,8 @@ Get native handle, previously associated with specified object.
 
 ```c
 bool
-jerry_api_get_object_native_handle (jerry_api_object_t * object_p,
-                                    uintptr_t* out_handle_p);
+jerry_api_get_object_native_handle (jerry_api_object_t *object_p,
+                                    uintptr_t *out_handle_p);
 ```
 
 - `object_p` - object to get handle from;
@@ -759,7 +796,7 @@ jerry_api_get_object_native_handle (jerry_api_object_t * object_p,
 
 ```c
 {
-  jerry_api_object_t* obj_p;
+  jerry_api_object_t *obj_p;
   uintptr_t handle_set;
 
   ... // receive or construct obj_p and handle_set value
@@ -776,8 +813,8 @@ jerry_api_get_object_native_handle (jerry_api_object_t * object_p,
 
 **See also**
 
-- [jerry_api_create_object](#jerryapicreateobject)
-- [jerry_api_set_object_native_handle](#jerryapisetobjectnativehandle)
+- [jerry_api_create_object](#jerry_api_create_object)
+- [jerry_api_set_object_native_handle](#jerry_api_set_object_native_handle)
 
 # jerry_api_set_object_native_handle
 
@@ -791,7 +828,7 @@ If native handle or "free" callback were already set for the object, correspondi
 
 ```c
 void
-jerry_api_set_object_native_handle (jerry_api_object_t * object_p,
+jerry_api_set_object_native_handle (jerry_api_object_t *object_p,
                                     uintptr_t handle,
                                     jerry_object_free_callback_t freecb_p);
 ```
@@ -804,7 +841,7 @@ jerry_api_set_object_native_handle (jerry_api_object_t * object_p,
 
 ```c
 {
-  jerry_api_object_t* obj_p;
+  jerry_api_object_t *obj_p;
   uintptr_t handle_set;
 
   ... // receive or construct obj_p and handle_set value
@@ -821,8 +858,8 @@ jerry_api_set_object_native_handle (jerry_api_object_t * object_p,
 
 **See also**
 
-- [jerry_api_create_object](#jerryapicreateobject)
-- [jerry_api_get_object_native_handle](#jerryapigetobjectnativehandle)
+- [jerry_api_create_object](#jerry_api_create_object)
+- [jerry_api_get_object_native_handle](#jerry_api_get_object_native_handle)
 
 # jerry_api_is_function
 
@@ -833,7 +870,7 @@ Check whether the specified object is a function object.
 
 ```c
 bool
-jerry_api_is_function (const jerry_api_object_t* object_p);
+jerry_api_is_function (const jerry_api_object_t *object_p);
 ```
 
 - `object_p` - object to check;
@@ -847,8 +884,10 @@ jerry_api_is_function (const jerry_api_object_t* object_p);
 
   ... // receiving val
 
-  if (val.type == JERRY_API_DATA_TYPE_OBJECT) {
-    if (jerry_api_is_function (val.v_object)) {
+  if (val.type == JERRY_API_DATA_TYPE_OBJECT)
+  {
+    if (jerry_api_is_function (val.u.v_object))
+    {
       // the object is function object
     }
   }
@@ -857,9 +896,9 @@ jerry_api_is_function (const jerry_api_object_t* object_p);
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_is_constructor](#jerryapiisconstructor)
-- [jerry_api_call_function](#jerryapicallfunction)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_is_constructor](#jerry_api_is_constructor)
+- [jerry_api_call_function](#jerry_api_call_function)
 
 # jerry_api_is_constructor
 
@@ -870,7 +909,7 @@ Check whether the specified object is a constructor function object.
 
 ```c
 bool
-jerry_api_is_constructor (const jerry_api_object_t* object_p);
+jerry_api_is_constructor (const jerry_api_object_t *object_p);
 ```
 
 - `object_p` - object to check;
@@ -884,8 +923,10 @@ jerry_api_is_constructor (const jerry_api_object_t* object_p);
 
   ... // receiving val
 
-  if (val.type == JERRY_API_DATA_TYPE_OBJECT) {
-    if (jerry_api_is_constructor (val.v_object)) {
+  if (val.type == JERRY_API_DATA_TYPE_OBJECT)
+  {
+    if (jerry_api_is_constructor (val.u.v_object))
+    {
       // the object is constructor function object
     }
   }
@@ -894,9 +935,9 @@ jerry_api_is_constructor (const jerry_api_object_t* object_p);
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_is_function](#jerryapiisfunction)
-- [jerry_api_construct_object](#jerryapiconstructobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_is_function](#jerry_api_is_function)
+- [jerry_api_construct_object](#jerry_api_construct_object)
 
 # jerry_api_call_function
 
@@ -907,9 +948,9 @@ Call function object.
 
 ```c
 bool
-jerry_api_call_function (jerry_api_object_t * function_object_p,
-                         jerry_api_object_t * this_arg_p,
-                         jerry_api_value_t * retval_p,
+jerry_api_call_function (jerry_api_object_t *function_object_p,
+                         jerry_api_object_t *this_arg_p,
+                         jerry_api_value_t *retval_p,
                          const jerry_api_value_t args_p[],
                          uint16_t args_count);
 ```
@@ -922,7 +963,7 @@ jerry_api_call_function (jerry_api_object_t * function_object_p,
   - specified object is a function object (see also jerry_api_is_function);
   - no unhandled exceptions were thrown in connection with the call.
 
- If call was performed successfully, returned value should be freed with [jerry_api_release_object](#jerryapireleaseobject) just when it becomes unnecessary.
+ If call was performed successfully, returned value should be freed with [jerry_api_release_object](#jerry_api_release_object) just when it becomes unnecessary.
 
 **Example**
 
@@ -932,16 +973,19 @@ jerry_api_call_function (jerry_api_object_t * function_object_p,
 
   ... // receiving val
 
-  if (val.type == JERRY_API_DATA_TYPE_OBJECT) {
-    if (jerry_api_is_function (val.v_object)) {
+  if (val.type == JERRY_API_DATA_TYPE_OBJECT)
+  {
+    if (jerry_api_is_function (val.u.v_object))
+    {
       jerry_api_value_t ret_val;
 
-      bool is_ok = jerry_api_call_function (val.v_object,
+      bool is_ok = jerry_api_call_function (val.u.v_object,
                                             NULL,
                                             &ret_val,
                                             NULL, 0);
 
-      if (is_ok) {
+      if (is_ok)
+      {
         ... // handle return value
 
         jerry_api_release_value (&ret_val);
@@ -953,9 +997,9 @@ jerry_api_call_function (jerry_api_object_t * function_object_p,
 
 **See also**
 
-- [jerry_api_is_function](#jerryapiisfunction)
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_external_function](#jerryapicreateexternalfunction)
+- [jerry_api_is_function](#jerry_api_is_function)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_external_function](#jerry_api_create_external_function)
 
 # jerry_api_construct_object
 
@@ -966,8 +1010,8 @@ Construct object invoking specified function object as constructor.
 
 ```c
 bool
-jerry_api_construct_object (jerry_api_object_t * function_object_p,
-                            jerry_api_value_t * retval_p,
+jerry_api_construct_object (jerry_api_object_t *function_object_p,
+                            jerry_api_value_t *retval_p,
                             const jerry_api_value_t args_p[],
                             uint16_t args_count);
 ```
@@ -979,7 +1023,7 @@ jerry_api_construct_object (jerry_api_object_t * function_object_p,
   - specified object is a constructor function object;
   - no unhandled exceptions were thrown in connection with the call.
 
-If call was performed successfully, returned value should be freed with [jerry_api_release_object](#jerryapireleaseobject) just when it becomes unnecessary.
+If call was performed successfully, returned value should be freed with [jerry_api_release_object](#jerry_api_release_object) just when it becomes unnecessary.
 
 **Example**
 
@@ -989,15 +1033,18 @@ If call was performed successfully, returned value should be freed with [jerry_a
 
   ... // receiving val
 
-  if (val.type == JERRY_API_DATA_TYPE_OBJECT) {
-    if (jerry_api_is_constructor (val.v_object)) {
+  if (val.type == JERRY_API_DATA_TYPE_OBJECT)
+  {
+    if (jerry_api_is_constructor (val.u.v_object))
+    {
       jerry_api_value_t ret_val;
 
-      bool is_ok = jerry_api_construct_object (val.v_object,
+      bool is_ok = jerry_api_construct_object (val.u.v_object,
                                                &ret_val,
                                                NULL, 0);
 
-      if (is_ok) {
+      if (is_ok)
+      {
         ... // handle return value
 
         jerry_api_release_value (&ret_val);
@@ -1009,8 +1056,8 @@ If call was performed successfully, returned value should be freed with [jerry_a
 
 **See also**
 
- - [jerry_api_is_constructor](#jerryapiisconstructor)
- - [jerry_api_value_t](#jerryapivaluet)
+ - [jerry_api_is_constructor](#jerry_api_is_constructor)
+ - [jerry_api_value_t](#jerry_api_value_t)
 
 # jerry_external_handler_t
 
@@ -1021,16 +1068,16 @@ The data type represents pointer to call handler of a native function object.
 **Structure**
 
 ```c
-typedef bool (* jerry_external_handler_t) (const jerry_api_object_t * function_obj_p,
-                                          const jerry_api_value_t * this_p,
-                                          jerry_api_value_t * ret_val_p,
-                                          const jerry_api_value_t args_p[],
-                                          const uint16_t args_count);
+typedef bool (* jerry_external_handler_t) (const jerry_api_object_t *function_obj_p,
+                                           const jerry_api_value_t *this_p,
+                                           jerry_api_value_t *ret_val_p,
+                                           const jerry_api_value_t args_p[],
+                                           const uint16_t args_count);
 ```
 
 **See also**
 
-- [jerry_api_create_external_function](#jerryapicreateexternalfunction)
+- [jerry_api_create_external_function](#jerry_api_create_external_function)
 
 # jerry_api_create_external_function
 
@@ -1040,38 +1087,38 @@ Create an external function object.
 **Prototype**
 
 ```c
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_external_function (jerry_external_handler_t handler_p);
 ```
 
 - `handler_p` - pointer to native handler of the function object;
 - returned value - pointer to constructed external function object.
 
-Received pointer should be released with [jerry_api_release_object](#jerryapireleaseobject), just when the value becomes unnecessary.
+Received pointer should be released with [jerry_api_release_object](#jerry_api_release_object), just when the value becomes unnecessary.
 
 **Example**
 
 ```c
 static bool
-handler (const jerry_api_object_t * function_obj_p,
-         const jerry_api_value_t * this_p,
-         jerry_api_value_t * ret_val_p,
+handler (const jerry_api_object_t *function_obj_p,
+         const jerry_api_value_t *this_p,
+         jerry_api_value_t *ret_val_p,
          const jerry_api_value_t args_p[],
          const uint16_t args_cnt)
 {
   printf ("native handler called!\n");
 
   ret_val_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
-  ret_val_p->v_bool = true;
+  ret_val_p->u.v_bool = true;
 }
 
 {
-  jerry_api_object_t * obj_p = jerry_api_create_external_function (handler);
-  jerry_api_object_t * glob_obj_p = jerry_api_get_global ();
+  jerry_api_object_t *obj_p = jerry_api_create_external_function (handler);
+  jerry_api_object_t *glob_obj_p = jerry_api_get_global ();
 
   jerry_api_value_t val;
   val.type = JERRY_API_DATA_TYPE_OBJECT;
-  val.v_object = obj_p;
+  val.u.v_object = obj_p;
 
   // after this, script can invoke the native handler through "handler_field (1, 2, 3);"
   jerry_api_set_object_field_value (glob_obj_p, "handler_field", &val);
@@ -1083,22 +1130,22 @@ handler (const jerry_api_object_t * function_obj_p,
 
 **See also**
 
-- [jerry_external_handler_t](#jerryexternalhandlert)
-- [jerry_api_is_function](#jerryapiisfunction)
-- [jerry_api_call_function](#jerryapicallfunction)
-- [jerry_api_release_object](#jerryapireleaseobject)
+- [jerry_external_handler_t](#jerry_external_handler_t)
+- [jerry_api_is_function](#jerry_api_is_function)
+- [jerry_api_call_function](#jerry_api_call_function)
+- [jerry_api_release_object](#jerry_api_release_object)
 
 # jerry_api_create_array_object
 
 **Summary**
 Create new JavaScript array object.
 
-Upon the JavaScript array object becomes unused, all pointers to it should be released using [jerry_api_release_object](#jerryapireleaseobject).
+Upon the JavaScript array object becomes unused, all pointers to it should be released using [jerry_api_release_object](#jerry_api_release_object).
 
 **Prototype**
 
 ```c
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_array_object (jerry_api_size_t array_size);
 ```
 
@@ -1109,7 +1156,7 @@ jerry_api_create_array_object (jerry_api_size_t array_size);
 
 ```c
 {
-    jerry_api_object_t * array_object_p = jerry_api_create_array_object (10);
+    jerry_api_object_t *array_object_p = jerry_api_create_array_object (10);
 
     ...
 
@@ -1119,16 +1166,16 @@ jerry_api_create_array_object (jerry_api_size_t array_size);
 
 **See also**
 
-- [jerry_api_acquire_object](#jerryapiacquireobject)
-- [jerry_api_release_object](#jerryapireleaseobject)
-- [jerry_api_set_array_index_value](#jerryapisetarrayindexvalue)
-- [jerry_api_get_array_index_value](#jerryapigetarrayindexvalue)
-- [jerry_api_add_object_field](#jerryapiaddobjectfield)
-- [jerry_api_delete_object_field](#jerryapideleteobjectfield)
-- [jerry_api_get_object_field_value](#jerryapigetobjectfieldvalue)
-- [jerry_api_set_object_field_value](#jerryapisetobjectfieldvalue)
-- [jerry_api_get_object_native_handle](#jerryapigetobjectnativehandle)
-- [jerry_api_set_object_native_handle](#jerryapisetobjectnativehandle)
+- [jerry_api_acquire_object](#jerry_api_acquire_object)
+- [jerry_api_release_object](#jerry_api_release_object)
+- [jerry_api_set_array_index_value](#jerry_api_set_array_index_value)
+- [jerry_api_get_array_index_value](#jerry_api_get_array_index_value)
+- [jerry_api_add_object_field](#jerry_api_add_object_field)
+- [jerry_api_delete_object_field](#jerry_api_delete_object_field)
+- [jerry_api_get_object_field_value](#jerry_api_get_object_field_value)
+- [jerry_api_set_object_field_value](#jerry_api_set_object_field_value)
+- [jerry_api_get_object_native_handle](#jerry_api_get_object_native_handle)
+- [jerry_api_set_object_native_handle](#jerry_api_set_object_native_handle)
 
 # jerry_api_set_array_index_value
 
@@ -1139,9 +1186,9 @@ Set value of an indexed element in the specified array object.
 
 ```c
 bool
-jerry_api_set_array_index_value (jerry_api_object_t * array_object_p,
+jerry_api_set_array_index_value (jerry_api_object_t *array_object_p,
                                  jerry_api_length_t index,
-                                 jerry_api_value_t * value_p);
+                                 jerry_api_value_t *value_p);
 ```
 
 - `array_object_p` - pointer to the array object;
@@ -1153,7 +1200,7 @@ jerry_api_set_array_index_value (jerry_api_object_t * array_object_p,
 
 ```c
 {
-    jerry_api_object_t * array_object_p = jerry_api_create_array_object (10);
+    jerry_api_object_t *array_object_p = jerry_api_create_array_object (10);
     jerry_api_value_t val;
 
     ... // receive or construct val
@@ -1166,8 +1213,8 @@ jerry_api_set_array_index_value (jerry_api_object_t * array_object_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_array_object](#jerryapicreatearrayobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_array_object](#jerry_api_create_array_object)
 
 # jerry_api_get_array_index_value
 
@@ -1178,9 +1225,9 @@ Get value of an indexed element in the specified array object.
 
 ```c
 bool
-jerry_api_get_array_index_value (jerry_api_object_t * array_object_p,
+jerry_api_get_array_index_value (jerry_api_object_t *array_object_p,
                                  jerry_api_length_t index,
-                                 jerry_api_value_t * value_p);
+                                 jerry_api_value_t *value_p);
 ```
 
 - `array_object_p` - pointer to the array object;
@@ -1192,7 +1239,7 @@ jerry_api_get_array_index_value (jerry_api_object_t * array_object_p,
 
 ```c
 {
-    jerry_api_object_t* array_object_p;
+    jerry_api_object_t *array_object_p;
     ... // receive or construct array_object_p
 
     jerry_api_value_t val;
@@ -1206,8 +1253,8 @@ jerry_api_get_array_index_value (jerry_api_object_t * array_object_p,
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
-- [jerry_api_create_array_object](#jerryapicreatearrayobject)
+- [jerry_api_value_t](#jerry_api_value_t)
+- [jerry_api_create_array_object](#jerry_api_create_array_object)
 
 # jerry_api_release_value
 
@@ -1218,7 +1265,7 @@ Release specified pointer to the value.
 
 ```c
 void
-jerry_api_release_value (jerry_api_value_t * value_p);
+jerry_api_release_value (jerry_api_value_t *value_p);
 ```
 
 - `value_p` - pointer to the value.
@@ -1230,10 +1277,10 @@ jerry_api_release_value (jerry_api_value_t * value_p);
     jerry_api_value_t val2;
 
     val1.type = JERRY_API_DATA_TYPE_OBJECT;
-    val1.v_object = jerry_api_create_object ();
+    val1.u.v_object = jerry_api_create_object ();
 
     val2.type = JERRY_API_DATA_TYPE_STRING;
-    val2.v_string = jerry_api_create_string ("abc");
+    val2.u.v_string = jerry_api_create_string ("abc");
 
     ... // usage of val1
 
@@ -1247,7 +1294,7 @@ jerry_api_release_value (jerry_api_value_t * value_p);
 
 **See also**
 
-- [jerry_api_value_t](#jerryapivaluet)
+- [jerry_api_value_t](#jerry_api_value_t)
 
 # jerry_api_create_error
 
@@ -1258,9 +1305,9 @@ it should be throwed inside of handle attached to external function object.
 **Prototype**
 
 ```c
-jerry_api_object_t*
+jerry_api_object_t *
 jerry_api_create_error (jerry_api_error_t error_type,
-                        const jerry_api_char_t * message_p);
+                        const jerry_api_char_t *message_p);
 ```
 
 - `error_type` - error type of object;
@@ -1271,18 +1318,18 @@ jerry_api_create_error (jerry_api_error_t error_type,
 
 ```c
 static bool
-handler (const jerry_api_object_t * function_obj_p,
-         const jerry_api_value_t * this_p,
-         jerry_api_value_t * ret_val_p,
+handler (const jerry_api_object_t *function_obj_p,
+         const jerry_api_value_t *this_p,
+         jerry_api_value_t *ret_val_p,
          const jerry_api_value_t args_p[],
          const uint16_t args_cnt)
 {
-  jerry_api_object_t * error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE,
-                                                         (jerry_api_char_t * ) "error");
+  jerry_api_object_t *error_p = jerry_api_create_error (JERRY_API_ERROR_TYPE,
+                                                        (jerry_api_char_t * ) "error");
 
   jerry_api_acquire_object (error_p);
   ret_val_p->type = JERRY_API_DATA_TYPE_OBJECT;
-  ret_val_p->v_object = error_p;
+  ret_val_p->u.v_object = error_p;
 
   jerry_api_release_object (error_p);
 
@@ -1290,12 +1337,12 @@ handler (const jerry_api_object_t * function_obj_p,
 }
 
 {
-  jerry_api_object_t * throw_obj_p = jerry_api_create_external_function (handler);
-  jerry_api_object_t * glob_obj_p = jerry_api_get_global ();
+  jerry_api_object_t *throw_obj_p = jerry_api_create_external_function (handler);
+  jerry_api_object_t *glob_obj_p = jerry_api_get_global ();
 
   jerry_api_value_t val;
   val.type = JERRY_API_DATA_TYPE_OBJECT;
-  val.v_object = throw_obj_p;
+  val.u.v_object = throw_obj_p;
 
   // after this, script can invoke the native handler through "error_func ();"
   // and "error_func" throw a error on called
@@ -1307,8 +1354,8 @@ handler (const jerry_api_object_t * function_obj_p,
 ```
 
 **See also**
-- [jerry_external_handler_t](#jerryexternalhandlert)
-- [jerry_api_is_function](#jerryapiisfunction)
-- [jerry_api_call_function](#jerryapicallfunction)
-- [jerry_api_release_object](#jerryapireleaseobject)
-- [jerry_api_create_external_function](#jerryapicreateexternalfunction)
+- [jerry_external_handler_t](#jerry_external_handler_t)
+- [jerry_api_is_function](#jerry_api_is_function)
+- [jerry_api_call_function](#jerry_api_call_function)
+- [jerry_api_release_object](#jerry_api_release_object)
+- [jerry_api_create_external_function](#jerry_api_create_external_function)

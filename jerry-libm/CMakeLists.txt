@@ -19,23 +19,10 @@ project (Jerry_LibM C)
 # Compiler / linker flags
 # TODO: Reduce the below list of warning/error disablings as much as possible
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY}")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=parentheses")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=sign-compare")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=sign-conversion")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=strict-aliasing")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=unknown-pragmas")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=missing-declarations")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=maybe-uninitialized")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=unused-but-set-variable")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=unused-variable")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=conversion")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-sign-conversion")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-sign-compare")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-parentheses")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-maybe-uninitialized")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-unknown-pragmas")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-unused-but-set-variable")
-set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-unused-variable")
 
 # Include directories
 set(INCLUDE_LIBM ${CMAKE_SOURCE_DIR}/jerry-libm/include)

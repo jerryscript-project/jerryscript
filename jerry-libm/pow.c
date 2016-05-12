@@ -122,12 +122,10 @@ pow (double x, double y)
 {
   double z, ax, z_h, z_l, p_h, p_l;
   double y1, t1, t2, r, s, t, u, v, w;
-  int i0, i1, i, j, k, yisint, n;
+  int i, j, k, yisint, n;
   int hx, hy, ix, iy;
   unsigned lx, ly;
 
-  i0 = ((*(int *) &one) >> 29) ^ 1;
-  i1 = 1 - i0;
   hx = __HI (x);
   lx = __LO (x);
   hy = __HI (y);

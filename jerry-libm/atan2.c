@@ -79,7 +79,7 @@ atan2 (double y, double x)
   {
     return x + y;
   }
-  if ((hx - 0x3ff00000 | lx) == 0) /* x = 1.0 */
+  if (((hx - 0x3ff00000) | lx) == 0) /* x = 1.0 */
   {
     return atan (y);
   }

@@ -369,7 +369,229 @@ main (int argc, char * argv[])
 
 The application inputs commands and evaluates them, one after another.
 
+## Step 6. Creating JS object in global context
+
+In this example we demonstrate how to use native function and structures in JavaScript.
+
+```c
+#include <string.h>
+#include "jerry.h"
+
+struct my_struct
+{
+  const char *msg;
+} my_struct;
+
+/**
+ * Get a string from a native object
+ */
+static bool
+get_msg_handler (const jerry_api_object_t *function_obj_p, /**< function object */
+                 const jerry_api_value_t *this_p, /**< this arg */
+                 jerry_api_value_t *ret_val_p, /**< return argument */
+                 const jerry_api_value_t *args_p, /**< function arguments */
+                 const jerry_api_length_t args_cnt) /**< number of function arguments */
+{
+  jerry_api_string_t *msg_str_p = jerry_api_create_string ((const jerry_api_char_t *) my_struct.msg);
+  *ret_val_p = jerry_api_create_string_value (msg_str_p);
+
+  return true;
+} /* get_msg_handler */
+
+int
+main (int argc, char * argv[])
+{
+  jerry_completion_code_t status = JERRY_COMPLETION_CODE_OK;
+
+  /* Initialize engine */
+  jerry_init (JERRY_FLAG_EMPTY);
+
+  /* Do something with the native object */
+  my_struct.msg = "Hello World";
+
+  /* Create an empty JS object */
+  jerry_api_object_t *object_p = jerry_api_create_object ();
+
+  /* Create a JS function object and wrap into a jerry value */
+  jerry_api_value_t object_value;
+  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
+  object_value.u.v_object = jerry_api_create_external_function (get_msg_handler);
+
+  /* Set the native function as a property of the empty JS object */
+  jerry_api_set_object_field_value (object_p,
+                                    (const jerry_api_char_t *) "myFunc",
+                                    &object_value);
+  jerry_api_release_value (&object_value);
+
+  /* Wrap the JS object (not empty anymore) into a jerry api value */
+  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
+  object_value.u.v_object = object_p;
+  jerry_api_object_t *global_obj_p = jerry_api_get_global ();
+
+  /* Add the JS object to the global context */
+  jerry_api_set_object_field_value (global_obj_p,
+                                    (const jerry_api_char_t *) "MyObject",
+                                    &object_value);
+  jerry_api_release_value (&object_value);
+  jerry_api_release_object (global_obj_p);
+
+  /* Now we have a "builtin" object called MyObject with a function called myFunc()
+   *
+   * Equivalent JS code:
+   *                    var MyObject = { myFunc : function () { return "some string value"; } }
+   */
+  const jerry_api_char_t script[] = " \
+    var str = MyObject.myFunc (); \
+    print (str); \
+  ";
+  size_t script_size = strlen ((const char *) script);
+
+  jerry_api_value_t eval_ret;
+
+  /* Evaluate script */
+  status = jerry_api_eval (script,
+                           script_size,
+                           false,
+                           false,
+                           &eval_ret);
+
+  /* Free JavaScript value, returned by eval */
+  jerry_api_release_value (&eval_ret);
+
+  /* Cleanup engine */
+  jerry_cleanup ();
+
+  return (int) status;
+}
+```
+
+The application will generate the following output:
+
+```bash
+Hello World
+```
+
+## Step 7. Extending JS Objects with native functions
+
+Here we create a JS Object with `jerry_api_eval`, then extend it with a native function. This function shows how to get a property value from the object and how to manipulate it.
+
+```c
+#include <string.h>
+#include "jerry.h"
+
+/**
+ * Add param to 'this.x'
+ */
+static bool
+add_handler (const jerry_api_object_t *function_obj_p, /**< function object */
+             const jerry_api_value_t *this_p, /**< this arg */
+             jerry_api_value_t *ret_val_p, /**< return argument */
+             const jerry_api_value_t *args_p, /**< function arguments */
+             const jerry_api_length_t args_cnt) /**< number of function arguments */
+{
+  jerry_api_value_t x_val;
+
+  /* Get 'this.x' */
+  if (jerry_api_get_object_field_value (jerry_api_get_object_value (this_p),
+                                        (const jerry_api_char_t *) "x",
+                                        &x_val))
+  {
+    /* Convert Jerry API values to double */
+    double x = jerry_api_get_number_value (&x_val);
+    double d = jerry_api_get_number_value (args_p);
+
+    /* Add the parameter to 'x' */
+    jerry_api_value_t res_val = jerry_api_create_number_value (x + d);
+
+    /* Set the new value of 'this.x' */
+    jerry_api_set_object_field_value (jerry_api_get_object_value (this_p),
+                                      (const jerry_api_char_t *) "x",
+                                      &res_val);
+
+  }
+
+  return true;
+} /* add_handler */
+
+int
+main (int argc, char * argv[])
+{
+  jerry_completion_code_t status = JERRY_COMPLETION_CODE_OK;
+
+  /* Initialize engine */
+  jerry_init (JERRY_FLAG_EMPTY);
+
+  /* Create a JS object */
+  const jerry_api_char_t my_js_object[] = " \
+    MyObject = \
+    { x : 12, \
+      y : 'Value of x is ', \
+      foo: function () \
+      { \
+        return this.y + this.x; \
+      } \
+    } \
+  ";
+
+  jerry_api_value_t my_js_obj_val;
+
+  /* Evaluate script */
+  status = jerry_api_eval (my_js_object,
+                           strlen ((const char *) my_js_object),
+                           false,
+                           false,
+                           &my_js_obj_val);
+
+  jerry_api_object_t *object_p = jerry_api_get_object_value (&my_js_obj_val);
+
+  /* Create a JS function object and wrap into a jerry value */
+  jerry_api_value_t object_value;
+  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
+  object_value.u.v_object = jerry_api_create_external_function (add_handler);
+
+  /* Set the native function as a property of previously created MyObject */
+  jerry_api_set_object_field_value (object_p,
+                                    (const jerry_api_char_t *) "add2x",
+                                    &object_value);
+  jerry_api_release_value (&object_value);
+
+  /* Free JavaScript value, returned by eval (my_js_object) */
+  jerry_api_release_value (&my_js_obj_val);
+
+  const jerry_api_char_t script[] = " \
+    var str = MyObject.foo (); \
+    print (str); \
+    MyObject.add2x (5); \
+    print (MyObject.foo ()); \
+  ";
+  size_t script_size = strlen ((const char *) script);
+
+  jerry_api_value_t eval_ret;
+
+  /* Evaluate script */
+  status = jerry_api_eval (script,
+                           script_size,
+                           false,
+                           false,
+                           &eval_ret);
+
+  /* Free JavaScript value, returned by eval */
+  jerry_api_release_value (&eval_ret);
+
+  /* Cleanup engine */
+  jerry_cleanup ();
+
+  return (int) status;
+}
+```
+
+The application will generate the following output:
+
+```bash
+Value of x is 12
+Value of x is 17
+```
 
 ## Further steps
 
-For further API description, please look at [Embedding API](/API).
+For further API description, please look at [API Reference](/docs/API-REFERENCE.md).

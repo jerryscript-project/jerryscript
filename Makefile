@@ -304,6 +304,11 @@ test-js.$(1).$(2): build.$$(NATIVE_SYSTEM)
 	$$(Q) $$(call SHLOG,cd $$(OUT_DIR)/$(1)/check/$(2) && $$(ROOT_DIR)/tools/runners/run-test-suite.sh \
           $$(OUT_DIR)/$(1)/jerry \
           $(3),$$(OUT_DIR)/$(1)/check/$(2)/test.log,Testing)
+test-js.$(1).$(2).snapshot: build.$$(NATIVE_SYSTEM)
+	$$(Q) mkdir -p $$(OUT_DIR)/$(1)/check/$(2)
+	$$(Q) $$(call SHLOG,cd $$(OUT_DIR)/$(1)/check/$(2) && $$(ROOT_DIR)/tools/runners/run-test-suite.sh \
+          $$(OUT_DIR)/$(1)/jerry \
+          $(3) --snapshot,$$(OUT_DIR)/$(1)/check/$(2)/snapshot.test.log,Testing)
 endef
 
 $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
@@ -358,10 +363,12 @@ test-unit: unittests
 test-js: \
         $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
           $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS), \
-            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))))) \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))) \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))).snapshot)) \
         $(foreach __TARGET,$(JERRY_TEST_TARGETS_CP), \
           $(foreach __SUITE,$(JERRY_TEST_SUITE_JTS_CP), \
-            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))) \
+            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE))).snapshot))
 
 .PHONY: test-buildoptions
 test-buildoptions: \

@@ -15,13 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Usage:
+#       ./tools/runners/run-test-suite.sh ENGINE TESTS [--snapshot] ENGINE_ARGS....
+
 TIMEOUT=${TIMEOUT:=5}
+
+TEST_FILES=test.files
+TEST_FAILED=test.failed
+TEST_PASSED=test.passed
 
 ENGINE="$1"
 shift
 
 TESTS="$1"
 shift
+
+if [ "$1" == "--snapshot" ]
+then
+    TEST_FILES="snapshot.$TEST_FILES"
+    TEST_FAILED="snapshot.$TEST_FAILED"
+    TEST_PASSED="snapshot.$TEST_PASSED"
+    IS_SNAPSHOT=true;
+    shift
+fi
 
 ENGINE_ARGS="$@"
 
@@ -30,10 +46,6 @@ then
     echo "$0: $ENGINE: not an executable"
     exit 1
 fi
-
-TEST_FILES=test.files
-TEST_FAILED=test.failed
-TEST_PASSED=test.passed
 
 if [ -d $TESTS ]
 then
@@ -97,10 +109,34 @@ do
 
     full_test=$TESTS_DIR/${test#./}
 
-    echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}: "
+    if [ "$IS_SNAPSHOT" == true ]
+    then
+        # Testing snapshot
 
-    ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &>$ENGINE_TEMP )
-    status_code=$?
+        SNAPSHOT_TEMP=`mktemp snapshot-out.XXXXXXXXXX`
+
+        echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS "
+        echo -n "--save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}: "
+
+        ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP )
+        status_code=$?
+
+        if [ $status_code -eq 0 ]
+        then
+            echo "$PASS"
+            echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP: "
+
+            ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP )
+            status_code=$?
+        fi
+
+        rm -f $SNAPSHOT_TEMP
+    else
+        echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}: "
+
+        ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &> $ENGINE_TEMP )
+        status_code=$?
+    fi
 
     if [ $status_code -ne $error_code ]
     then

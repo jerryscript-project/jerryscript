@@ -13,21 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef MEM_ALLOCATOR_INTERNAL_H
-#define MEM_ALLOCATOR_INTERNAL_H
+#ifndef JMEM_CONFIG_H
+#define JMEM_CONFIG_H
 
-#ifndef MEM_ALLOCATOR_INTERNAL
-# error "The header is for internal routines of memory allocator component. Please, don't use the routines directly."
-#endif /* !MEM_ALLOCATOR_INTERNAL */
-
-/** \addtogroup mem Memory allocation
- * @{
- */
-
-extern void mem_run_try_to_give_memory_back_callbacks (mem_try_give_memory_back_severity_t);
+#include "config.h"
 
 /**
- * @}
+ * Log2 of maximum possible offset in the heap
  */
+#define JMEM_HEAP_OFFSET_LOG (CONFIG_MEM_HEAP_OFFSET_LOG)
 
-#endif /* !MEM_ALLOCATOR_INTERNAL_H */
+/**
+ * Size of heap
+ */
+#define JMEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
+
+/**
+ * Size of pool chunk
+ */
+#define JMEM_POOL_CHUNK_SIZE ((size_t) (CONFIG_MEM_POOL_CHUNK_SIZE))
+
+/**
+ * Logarithm of required alignment for allocated units/blocks
+ */
+#define JMEM_ALIGNMENT_LOG   3
+
+#endif /* !JMEM_CONFIG_H */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "mem-allocator.h"
+#include "jmem-allocator.h"
 
 #include "test-common.h"
 
@@ -35,17 +35,17 @@ size_t sizes[test_sub_iters];
 bool is_one_chunked[test_sub_iters];
 
 static void
-test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
+test_heap_give_some_memory_back (jmem_try_give_memory_back_severity_t severity)
 {
   int p;
 
-  if (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
+  if (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
   {
     p = 8;
   }
   else
   {
-    JERRY_ASSERT (severity == MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
+    JERRY_ASSERT (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 
     p = 1;
   }
@@ -61,7 +61,7 @@ test_heap_give_some_memory_back (mem_try_give_memory_back_severity_t severity)
           JERRY_ASSERT (ptrs[i][k] == 0);
         }
 
-        mem_heap_free_block_size_stored (ptrs[i]);
+        jmem_heap_free_block_size_stored (ptrs[i]);
         ptrs[i] = NULL;
       }
     }
@@ -74,27 +74,27 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  mem_heap_init ();
+  jmem_heap_init ();
 
-  mem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
+  jmem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
 
-#ifdef MEM_STATS
-  mem_heap_stats_print ();
-#endif /* MEM_STATS */
+#ifdef JMEM_STATS
+  jmem_heap_stats_print ();
+#endif /* JMEM_STATS */
 
   for (uint32_t i = 0; i < test_iters; i++)
   {
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
       size_t size = (size_t) rand () % test_threshold_block_size;
-      ptrs[j] = (uint8_t *) mem_heap_alloc_block_store_size (size);
+      ptrs[j] = (uint8_t *) jmem_heap_alloc_block_store_size (size);
       sizes[j] = size;
 
       JERRY_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
       memset (ptrs[j], 0, sizes[j]);
     }
 
-    // mem_heap_print (true);
+    /* jmem_heap_print (true); */
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
@@ -105,16 +105,16 @@ main (int __attr_unused___ argc,
           JERRY_ASSERT (ptrs[j][k] == 0);
         }
 
-        mem_heap_free_block_size_stored (ptrs[j]);
+        jmem_heap_free_block_size_stored (ptrs[j]);
 
         ptrs[j] = NULL;
       }
     }
   }
 
-#ifdef MEM_STATS
-  mem_heap_stats_print ();
-#endif /* MEM_STATS */
+#ifdef JMEM_STATS
+  jmem_heap_stats_print ();
+#endif /* JMEM_STATS */
 
   return 0;
 } /* main */

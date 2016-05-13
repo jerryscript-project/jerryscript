@@ -35,7 +35,7 @@ typedef struct
   ecma_value_t base;
 
   /** referenced name */
-  __extension__ mem_cpointer_t referenced_name_cp : ECMA_POINTER_FIELD_WIDTH;
+  __extension__ jmem_cpointer_t referenced_name_cp : ECMA_POINTER_FIELD_WIDTH;
 
   /** strict reference flag */
   unsigned int is_strict : 1;

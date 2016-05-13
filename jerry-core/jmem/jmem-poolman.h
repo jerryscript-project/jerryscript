@@ -17,8 +17,8 @@
 /**
  * Pool manager interface
  */
-#ifndef MEM_POOLMAN_H
-#define MEM_POOLMAN_H
+#ifndef JMEM_POOLMAN_H
+#define JMEM_POOLMAN_H
 
 #include "jrt.h"
 
@@ -29,13 +29,13 @@
  * @{
  */
 
-extern void mem_pools_init (void);
-extern void mem_pools_finalize (void);
-extern void *mem_pools_alloc (void);
-extern void mem_pools_free (void *);
-extern void mem_pools_collect_empty (void);
+extern void jmem_pools_init (void);
+extern void jmem_pools_finalize (void);
+extern void *jmem_pools_alloc (void);
+extern void jmem_pools_free (void *);
+extern void jmem_pools_collect_empty (void);
 
-#ifdef MEM_STATS
+#ifdef JMEM_STATS
 /**
  * Pools' memory usage statistics
  */
@@ -58,16 +58,16 @@ typedef struct
 
   /* Number of reused pool chunks */
   size_t reused_count;
-} mem_pools_stats_t;
+} jmem_pools_stats_t;
 
-extern void mem_pools_get_stats (mem_pools_stats_t *);
-extern void mem_pools_stats_reset_peak (void);
-extern void mem_pools_stats_print (void);
-#endif /* MEM_STATS */
+extern void jmem_pools_get_stats (jmem_pools_stats_t *);
+extern void jmem_pools_stats_reset_peak (void);
+extern void jmem_pools_stats_print (void);
+#endif /* JMEM_STATS */
 
 /**
  * @}
  * @}
  */
 
-#endif /* !MEM_POOLMAN_H */
+#endif /* !JMEM_POOLMAN_H */

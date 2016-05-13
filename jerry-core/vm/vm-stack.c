@@ -68,12 +68,12 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
     case VM_CONTEXT_FOR_IN:
     {
-      mem_cpointer_t current = (uint16_t) vm_stack_top_p[-2];
+      jmem_cpointer_t current = (uint16_t) vm_stack_top_p[-2];
 
-      while (current != MEM_CP_NULL)
+      while (current != JMEM_CP_NULL)
       {
-        ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
-                                                                        current);
+        ecma_collection_chunk_t *chunk_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                                                         current);
 
         lit_utf8_byte_t *data_ptr = chunk_p->data;
         ecma_free_value (*(ecma_value_t *) data_ptr);

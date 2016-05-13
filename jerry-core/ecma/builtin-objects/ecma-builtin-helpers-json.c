@@ -272,7 +272,7 @@ ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t value) /**< value
   /* 2.c.iii */
   ecma_string_t *hex_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-  MEM_DEFINE_LOCAL_ARRAY (hex_buff, 4, lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (hex_buff, 4, lit_utf8_byte_t);
 
   for (uint32_t i = 0; i < 4; i++)
   {
@@ -297,7 +297,7 @@ ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t value) /**< value
   ecma_deref_ecma_string (hex_str_p);
   hex_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) hex_buff, 4);
 
-  MEM_FINALIZE_LOCAL_ARRAY (hex_buff);
+  JMEM_FINALIZE_LOCAL_ARRAY (hex_buff);
 
   JERRY_ASSERT (ecma_string_get_length (hex_str_p));
 

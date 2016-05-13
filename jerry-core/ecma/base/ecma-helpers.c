@@ -106,7 +106,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
 
   ecma_init_gc_info (new_object_p);
 
-  new_object_p->property_list_or_bound_object_cp = MEM_CP_NULL;
+  new_object_p->property_list_or_bound_object_cp = JMEM_CP_NULL;
 
   ECMA_SET_POINTER (new_object_p->prototype_or_outer_reference_cp,
                     prototype_object_p);
@@ -134,7 +134,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
   ecma_init_gc_info (new_lexical_environment_p);
 
-  new_lexical_environment_p->property_list_or_bound_object_cp = MEM_CP_NULL;
+  new_lexical_environment_p->property_list_or_bound_object_cp = JMEM_CP_NULL;
 
   ECMA_SET_POINTER (new_lexical_environment_p->prototype_or_outer_reference_cp,
                     outer_lexical_environment_p);
@@ -398,7 +398,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
 {
   JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
-  mem_cpointer_t *property_list_head_p = &object_p->property_list_or_bound_object_cp;
+  jmem_cpointer_t *property_list_head_p = &object_p->property_list_or_bound_object_cp;
   bool has_hashmap = false;
 
   if (*property_list_head_p != ECMA_NULL_POINTER)
@@ -1468,7 +1468,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
     for (uint32_t i = const_literal_end; i < literal_end; i++)
     {
-      mem_cpointer_t bytecode_cpointer = literal_start_p[i];
+      jmem_cpointer_t bytecode_cpointer = literal_start_p[i];
       ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
                                                                             bytecode_cpointer);
 
@@ -1488,8 +1488,8 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
   }
 
-  mem_heap_free_block (bytecode_p,
-                       ((size_t) bytecode_p->size) << MEM_ALIGNMENT_LOG);
+  jmem_heap_free_block (bytecode_p,
+                        ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
 
 /**

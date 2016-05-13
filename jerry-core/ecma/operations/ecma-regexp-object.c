@@ -540,7 +540,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         const lit_utf8_byte_t *sub_str_p = NULL;
 
         uint32_t array_size = re_ctx_p->num_of_captures + re_ctx_p->num_of_non_captures;
-        MEM_DEFINE_LOCAL_ARRAY (saved_bck_p, array_size, lit_utf8_byte_t *);
+        JMEM_DEFINE_LOCAL_ARRAY (saved_bck_p, array_size, lit_utf8_byte_t *);
 
         size_t size = (size_t) (array_size) * sizeof (lit_utf8_byte_t *);
         memcpy (saved_bck_p, re_ctx_p->saved_p, size);
@@ -592,7 +592,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           }
         }
 
-        MEM_FINALIZE_LOCAL_ARRAY (saved_bck_p);
+        JMEM_FINALIZE_LOCAL_ARRAY (saved_bck_p);
         return match_value;
       }
       case RE_OP_CHAR_CLASS:
@@ -1292,7 +1292,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);
   re_ctx.num_of_non_captures = bc_p->num_of_non_captures;
 
-  MEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, const lit_utf8_byte_t *);
+  JMEM_DEFINE_LOCAL_ARRAY (saved_p, re_ctx.num_of_captures + re_ctx.num_of_non_captures, const lit_utf8_byte_t *);
 
   for (uint32_t i = 0; i < re_ctx.num_of_captures + re_ctx.num_of_non_captures; i++)
   {
@@ -1301,7 +1301,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   re_ctx.saved_p = saved_p;
 
   uint32_t num_of_iter_length = (re_ctx.num_of_captures / 2) + (re_ctx.num_of_non_captures - 1);
-  MEM_DEFINE_LOCAL_ARRAY (num_of_iter_p, num_of_iter_length, uint32_t);
+  JMEM_DEFINE_LOCAL_ARRAY (num_of_iter_p, num_of_iter_length, uint32_t);
 
   for (uint32_t i = 0; i < num_of_iter_length; i++)
   {
@@ -1466,8 +1466,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     }
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (num_of_iter_p);
-  MEM_FINALIZE_LOCAL_ARRAY (saved_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (num_of_iter_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (saved_p);
   ECMA_FINALIZE_UTF8_STRING (input_buffer_p, input_buffer_size);
 
   return ret_value;

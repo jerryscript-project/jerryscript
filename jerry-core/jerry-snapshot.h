@@ -25,7 +25,7 @@
 typedef struct
 {
   /* The size of this structure is recommended to be divisible by
-   * MEM_ALIGNMENT. Otherwise some bytes after the header are wasted. */
+   * JMEM_ALIGNMENT. Otherwise some bytes after the header are wasted. */
   uint32_t version; /**< version number */
   uint32_t lit_table_offset; /**< offset of the literal table */
   uint32_t lit_table_size; /**< size of literal table */

@@ -81,9 +81,9 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
 
     lit_utf8_size_t utf8_str_size = ecma_string_get_size (str_p);
 
-    MEM_DEFINE_LOCAL_ARRAY (utf8_str_p,
-                            utf8_str_size,
-                            lit_utf8_byte_t);
+    JMEM_DEFINE_LOCAL_ARRAY (utf8_str_p,
+                             utf8_str_size,
+                             lit_utf8_byte_t);
 
     lit_utf8_size_t actual_sz = ecma_string_to_utf8_string (str_p, utf8_str_p, utf8_str_size);
     JERRY_ASSERT (actual_sz == utf8_str_size);
@@ -124,7 +124,7 @@ ecma_builtin_global_object_print (ecma_value_t this_arg __attr_unused___, /**< t
       printf (" ");
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
 
     ECMA_FINALIZE (str_value);
   }
@@ -735,9 +735,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
   ecma_string_t *input_string_p = ecma_get_string_from_value (string);
   lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_size + 1,
-                          lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (input_start_p,
+                           input_size + 1,
+                           lit_utf8_byte_t);
 
   lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
                                                    input_start_p,
@@ -807,7 +807,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
 
   if (ecma_is_value_empty (ret_value))
   {
-    MEM_DEFINE_LOCAL_ARRAY (output_start_p,
+    JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
                             output_size,
                             lit_utf8_byte_t);
 
@@ -934,10 +934,10 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri __attr_unused___,
       }
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (input_start_p);
 
   ECMA_FINALIZE (string);
   return ret_value;
@@ -1013,9 +1013,9 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
   ecma_string_t *input_string_p = ecma_get_string_from_value (string);
   lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_size,
-                          lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (input_start_p,
+                           input_size,
+                           lit_utf8_byte_t);
 
   lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
                                                    input_start_p,
@@ -1092,9 +1092,9 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
   if (ecma_is_value_empty (ret_value))
   {
-    MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                            output_length,
-                            lit_utf8_byte_t);
+    JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
+                             output_length,
+                             lit_utf8_byte_t);
 
     lit_utf8_byte_t *output_char_p = output_start_p;
     input_char_p = input_start_p;
@@ -1147,10 +1147,10 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     ret_value = ecma_make_string_value (output_string_p);
 
-    MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (input_start_p);
 
   ECMA_FINALIZE (string);
   return ret_value;
@@ -1234,9 +1234,9 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
   ecma_string_t *input_string_p = ecma_get_string_from_value (string);
   lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
-  MEM_DEFINE_LOCAL_ARRAY (input_start_p,
-                          input_size,
-                          lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (input_start_p,
+                           input_size,
+                           lit_utf8_byte_t);
 
   lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p,
                                                    input_start_p,
@@ -1276,9 +1276,9 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
     }
   }
 
-  MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                          output_length,
-                          lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
+                           output_length,
+                           lit_utf8_byte_t);
 
   lit_utf8_byte_t *output_char_p = output_start_p;
 
@@ -1327,9 +1327,9 @@ ecma_builtin_global_object_escape (ecma_value_t this_arg __attr_unused___, /**< 
 
   ret_value = ecma_make_string_value (output_string_p);
 
-  MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
 
-  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (input_start_p);
 
   ECMA_FINALIZE (string);
   return ret_value;
@@ -1357,7 +1357,7 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**
   lit_utf8_size_t input_size = ecma_string_get_size (input_string_p);
 
   /* 3. */
-  MEM_DEFINE_LOCAL_ARRAY (input_start_p, input_size, lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (input_start_p, input_size, lit_utf8_byte_t);
   lit_utf8_size_t sz = ecma_string_to_utf8_string (input_string_p, input_start_p, input_size);
   JERRY_ASSERT (sz == input_size);
 
@@ -1426,7 +1426,7 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg __attr_unused___, /**
   ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (input_start_p, output_length);
   ret_value = ecma_make_string_value (output_string_p);
 
-  MEM_FINALIZE_LOCAL_ARRAY (input_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (input_start_p);
 
   ECMA_FINALIZE (string);
   return ret_value;

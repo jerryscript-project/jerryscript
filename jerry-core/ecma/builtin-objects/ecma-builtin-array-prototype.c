@@ -1237,7 +1237,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     }
   }
 
-  MEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
+  JMEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
 
   ecma_collection_iterator_init (&iter, array_index_props_p);
 
@@ -1296,7 +1296,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     ecma_free_value (values_buffer[index]);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (values_buffer);
+  JMEM_FINALIZE_LOCAL_ARRAY (values_buffer);
 
   /* Undefined properties should be in the back of the array. */
 

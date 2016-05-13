@@ -37,10 +37,10 @@ typedef struct
   ecma_property_t *prop_p;
 
   /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
-  mem_cpointer_t object_cp;
+  jmem_cpointer_t object_cp;
 
   /** Compressed pointer to property's name */
-  mem_cpointer_t prop_name_cp;
+  jmem_cpointer_t prop_name_cp;
 } ecma_lcache_hash_entry_t;
 
 /**

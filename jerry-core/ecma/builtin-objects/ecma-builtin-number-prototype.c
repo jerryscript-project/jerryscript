@@ -196,7 +196,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
         should_round = true;
       }
 
-      MEM_DEFINE_LOCAL_ARRAY (buff, buff_size, lit_utf8_byte_t);
+      JMEM_DEFINE_LOCAL_ARRAY (buff, buff_size, lit_utf8_byte_t);
       int buff_index = 0;
 
       /* Calculate digits for whole part. */
@@ -310,7 +310,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       JERRY_ASSERT (buff_index <= buff_size);
       ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) buff_index);
       ret_value = ecma_make_string_value (str_p);
-      MEM_FINALIZE_LOCAL_ARRAY (buff);
+      JMEM_FINALIZE_LOCAL_ARRAY (buff);
     }
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   }
@@ -463,7 +463,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           }
 
           JERRY_ASSERT (buffer_size > 0);
-          MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
+          JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
 
           lit_utf8_byte_t *p = buff;
 
@@ -559,7 +559,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
 
           ret_value = ecma_make_string_value (str);
-          MEM_FINALIZE_LOCAL_ARRAY (buff);
+          JMEM_FINALIZE_LOCAL_ARRAY (buff);
         }
       }
     }
@@ -666,7 +666,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
           buffer_size++;
         }
 
-        MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
+        JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
 
         int digit = 0;
         uint64_t scale = 1;
@@ -745,7 +745,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
         *actual_char_p = '\0';
         ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
         ret_value = ecma_make_string_value (str);
-        MEM_FINALIZE_LOCAL_ARRAY (buff);
+        JMEM_FINALIZE_LOCAL_ARRAY (buff);
       }
     }
   }
@@ -862,7 +862,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
           buffer_size++;
         }
 
-        MEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
+        JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
         lit_utf8_byte_t *actual_char_p = buff;
 
         uint64_t scale = 1;
@@ -978,7 +978,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
         ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
 
         ret_value = ecma_make_string_value (str_p);
-        MEM_FINALIZE_LOCAL_ARRAY (buff);
+        JMEM_FINALIZE_LOCAL_ARRAY (buff);
       }
     }
     ECMA_OP_TO_NUMBER_FINALIZE (arg_num);

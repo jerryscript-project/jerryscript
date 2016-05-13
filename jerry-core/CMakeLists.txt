@@ -107,7 +107,7 @@ project (JerryCore C ASM)
      ${CMAKE_SOURCE_DIR}/jerry-core
      ${CMAKE_SOURCE_DIR}/jerry-core/lit
      ${CMAKE_SOURCE_DIR}/jerry-core/rcs
-     ${CMAKE_SOURCE_DIR}/jerry-core/mem
+     ${CMAKE_SOURCE_DIR}/jerry-core/jmem
      ${CMAKE_SOURCE_DIR}/jerry-core/vm
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/base
@@ -125,7 +125,7 @@ project (JerryCore C ASM)
   file(GLOB SOURCE_CORE_API                   *.c)
   file(GLOB SOURCE_CORE_LIT                   lit/*.c)
   file(GLOB SOURCE_CORE_RCS                   rcs/*.c)
-  file(GLOB SOURCE_CORE_MEM                   mem/*.c)
+  file(GLOB SOURCE_CORE_MEM                   jmem/*.c)
   file(GLOB SOURCE_CORE_VM                    vm/*.c)
   file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
   file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)

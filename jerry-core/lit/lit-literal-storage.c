@@ -30,7 +30,7 @@ lit_record_t *
 lit_create_charset_literal (const lit_utf8_byte_t *str_p, /**< string to be placed into the record */
                             const lit_utf8_size_t buf_size) /**< size in bytes of the buffer which holds the string */
 {
-  lit_charset_record_t *rec_p = (lit_charset_record_t *) mem_heap_alloc_block (buf_size + LIT_CHARSET_HEADER_SIZE);
+  lit_charset_record_t *rec_p = (lit_charset_record_t *) jmem_heap_alloc_block (buf_size + LIT_CHARSET_HEADER_SIZE);
 
   rec_p->type = LIT_RECORD_TYPE_CHARSET;
   rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
@@ -52,7 +52,7 @@ lit_create_charset_literal (const lit_utf8_byte_t *str_p, /**< string to be plac
 lit_record_t *
 lit_create_magic_literal (const lit_magic_string_id_t id) /**< id of magic string */
 {
-  lit_magic_record_t *rec_p = (lit_magic_record_t *) mem_heap_alloc_block (sizeof (lit_magic_record_t));
+  lit_magic_record_t *rec_p = (lit_magic_record_t *) jmem_heap_alloc_block (sizeof (lit_magic_record_t));
   rec_p->type = LIT_RECORD_TYPE_MAGIC_STR;
   rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
   lit_storage = (lit_record_t *) rec_p;
@@ -70,7 +70,7 @@ lit_create_magic_literal (const lit_magic_string_id_t id) /**< id of magic strin
 lit_record_t *
 lit_create_magic_literal_ex (const lit_magic_string_ex_id_t id) /**< id of magic string */
 {
-  lit_magic_record_t *rec_p = (lit_magic_record_t *) mem_heap_alloc_block (sizeof (lit_magic_record_t));
+  lit_magic_record_t *rec_p = (lit_magic_record_t *) jmem_heap_alloc_block (sizeof (lit_magic_record_t));
   rec_p->type = LIT_RECORD_TYPE_MAGIC_STR_EX;
   rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
   lit_storage = (lit_record_t *) rec_p;
@@ -88,7 +88,7 @@ lit_create_magic_literal_ex (const lit_magic_string_ex_id_t id) /**< id of magic
 lit_record_t *
 lit_create_number_literal (const ecma_number_t num) /**< numeric value */
 {
-  lit_number_record_t *rec_p = (lit_number_record_t *) mem_heap_alloc_block (sizeof (lit_number_record_t));
+  lit_number_record_t *rec_p = (lit_number_record_t *) jmem_heap_alloc_block (sizeof (lit_number_record_t));
 
   rec_p->type = (uint8_t) LIT_RECORD_TYPE_NUMBER;
   rec_p->next = (uint16_t) lit_cpointer_compress (lit_storage);
@@ -150,7 +150,7 @@ lit_record_t *
 lit_free_literal (lit_record_t *lit_p) /**< literal record */
 {
   lit_record_t *const ret_p = lit_cpointer_decompress (lit_p->next);
-  mem_heap_free_block (lit_p, lit_get_literal_size (lit_p));
+  jmem_heap_free_block (lit_p, lit_get_literal_size (lit_p));
   return ret_p;
 } /* lit_free_literal */
 

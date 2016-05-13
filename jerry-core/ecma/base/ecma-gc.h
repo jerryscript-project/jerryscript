@@ -17,7 +17,7 @@
 #define ECMA_GC_H
 
 #include "ecma-globals.h"
-#include "mem-allocator.h"
+#include "jmem-allocator.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -31,7 +31,7 @@ extern void ecma_init_gc_info (ecma_object_t *);
 extern void ecma_ref_object (ecma_object_t *);
 extern void ecma_deref_object (ecma_object_t *);
 extern void ecma_gc_run (void);
-extern void ecma_try_to_give_back_some_memory (mem_try_give_memory_back_severity_t);
+extern void ecma_try_to_give_back_some_memory (jmem_try_give_memory_back_severity_t);
 
 /**
  * @}

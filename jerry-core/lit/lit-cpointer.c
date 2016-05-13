@@ -27,10 +27,10 @@ lit_cpointer_compress (lit_record_t *pointer) /**< pointer to compress */
 {
   if (pointer == NULL)
   {
-    return MEM_CP_NULL;
+    return JMEM_CP_NULL;
   }
 
-  return (lit_cpointer_t) mem_compress_pointer (pointer);
+  return (lit_cpointer_t) jmem_compress_pointer (pointer);
 } /* lit_cpointer_compress */
 
 /**
@@ -41,12 +41,12 @@ lit_cpointer_compress (lit_record_t *pointer) /**< pointer to compress */
 inline lit_record_t * __attr_pure___ __attr_always_inline___
 lit_cpointer_decompress (lit_cpointer_t compressed_pointer) /**< recordset-specific compressed pointer */
 {
-  if (compressed_pointer == MEM_CP_NULL)
+  if (compressed_pointer == JMEM_CP_NULL)
   {
     return NULL;
   }
 
-  return (lit_record_t *) mem_decompress_pointer (compressed_pointer);
+  return (lit_record_t *) jmem_decompress_pointer (compressed_pointer);
 } /* lit_cpointer_decompress */
 
 /**
@@ -57,5 +57,5 @@ lit_cpointer_decompress (lit_cpointer_t compressed_pointer) /**< recordset-speci
 inline lit_cpointer_t __attr_pure___ __attr_always_inline___
 lit_cpointer_null_cp (void)
 {
-  return MEM_CP_NULL;
+  return JMEM_CP_NULL;
 } /* lit_cpointer_null_cp */

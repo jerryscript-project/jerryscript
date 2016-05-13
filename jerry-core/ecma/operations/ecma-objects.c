@@ -734,10 +734,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     }
 
     /* Second pass: collecting properties names into arrays */
-    MEM_DEFINE_LOCAL_ARRAY (names_p,
-                            array_index_named_properties_count + string_named_properties_count,
-                            ecma_string_t *);
-    MEM_DEFINE_LOCAL_ARRAY (array_index_names_p, array_index_named_properties_count, uint32_t);
+    JMEM_DEFINE_LOCAL_ARRAY (names_p,
+                             array_index_named_properties_count + string_named_properties_count,
+                             ecma_string_t *);
+    JMEM_DEFINE_LOCAL_ARRAY (array_index_names_p, array_index_named_properties_count, uint32_t);
 
     uint32_t name_pos = array_index_named_properties_count + string_named_properties_count;
     uint32_t array_index_name_pos = 0;
@@ -803,7 +803,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     JERRY_ASSERT (name_pos == 0);
 
-    MEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
 
     ecma_free_values_collection (prop_names_p, true);
 
@@ -870,7 +870,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       ecma_deref_ecma_string (name_p);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (names_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (names_p);
   }
 
   ecma_free_values_collection (skipped_non_enumerable_p, true);

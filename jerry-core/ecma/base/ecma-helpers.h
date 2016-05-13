@@ -18,9 +18,9 @@
 #define ECMA_HELPERS_H
 
 #include "ecma-globals.h"
+#include "jmem-allocator.h"
 #include "lit-cpointer.h"
 #include "lit-strings.h"
-#include "mem-allocator.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -32,25 +32,25 @@
 /**
  * Get value of pointer from specified non-null compressed pointer.
  */
-#define ECMA_GET_NON_NULL_POINTER(type, field) MEM_CP_GET_NON_NULL_POINTER (type, field)
+#define ECMA_GET_NON_NULL_POINTER(type, field) JMEM_CP_GET_NON_NULL_POINTER (type, field)
 
 /**
  * Get value of pointer from specified compressed pointer.
  */
-#define ECMA_GET_POINTER(type, field) MEM_CP_GET_POINTER (type, field)
+#define ECMA_GET_POINTER(type, field) JMEM_CP_GET_POINTER (type, field)
 
 /**
  * Set value of non-null compressed pointer so that it will correspond
  * to specified non_compressed_pointer.
  */
-#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) MEM_CP_SET_NON_NULL_POINTER (field, \
-                                                                                              non_compressed_pointer)
+#define ECMA_SET_NON_NULL_POINTER(field, non_compressed_pointer) JMEM_CP_SET_NON_NULL_POINTER (field, \
+                                                                                               non_compressed_pointer)
 
 /**
  * Set value of compressed pointer so that it will correspond
  * to specified non_compressed_pointer.
  */
-#define ECMA_SET_POINTER(field, non_compressed_pointer) MEM_CP_SET_POINTER (field, non_compressed_pointer)
+#define ECMA_SET_POINTER(field, non_compressed_pointer) JMEM_CP_SET_POINTER (field, non_compressed_pointer)
 
 /**
  * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
@@ -65,7 +65,7 @@
   \
   if (utf8_ptr == NULL) \
   { \
-    utf8_ptr = (const lit_utf8_byte_t *) (mem_heap_alloc_block (utf8_str_size)); \
+    utf8_ptr = (const lit_utf8_byte_t *) jmem_heap_alloc_block (utf8_str_size); \
     lit_utf8_size_t sz = ecma_string_to_utf8_string (ecma_str_ptr, (lit_utf8_byte_t *) utf8_ptr, utf8_str_size); \
     JERRY_ASSERT (sz == utf8_str_size); \
     utf8_ptr ## must_be_freed = true; \
@@ -110,7 +110,7 @@
   if (utf8_ptr ## must_be_freed) \
   { \
     JERRY_ASSERT (utf8_ptr != NULL); \
-    mem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
+    jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
   }
 
 /* ecma-helpers-value.c */
@@ -226,7 +226,7 @@ extern ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t *[],
 typedef struct
 {
   ecma_collection_header_t *header_p; /**< collection header */
-  mem_cpointer_t next_chunk_cp; /**< compressed pointer to next chunk */
+  jmem_cpointer_t next_chunk_cp; /**< compressed pointer to next chunk */
   ecma_length_t current_index; /**< index of current element */
   const ecma_value_t *current_value_p; /**< pointer to current element */
   const ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */

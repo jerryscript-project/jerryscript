@@ -17,8 +17,8 @@
 /**
  * Heap allocator interface
  */
-#ifndef MEM_HEAP_H
-#define MEM_HEAP_H
+#ifndef JMEM_HEAP_H
+#define JMEM_HEAP_H
 
 #include "jrt.h"
 
@@ -29,17 +29,17 @@
  * @{
  */
 
-extern void mem_heap_init (void);
-extern void mem_heap_finalize (void);
-extern void *mem_heap_alloc_block (const size_t);
-extern void mem_heap_free_block (void *, const size_t);
-extern void *mem_heap_alloc_block_store_size (size_t);
-extern void mem_heap_free_block_size_stored (void *);
-extern uintptr_t mem_heap_compress_pointer (const void *);
-extern void *mem_heap_decompress_pointer (uintptr_t);
-extern bool mem_is_heap_pointer (const void *);
+extern void jmem_heap_init (void);
+extern void jmem_heap_finalize (void);
+extern void *jmem_heap_alloc_block (const size_t);
+extern void jmem_heap_free_block (void *, const size_t);
+extern void *jmem_heap_alloc_block_store_size (size_t);
+extern void jmem_heap_free_block_size_stored (void *);
+extern uintptr_t jmem_heap_compress_pointer (const void *);
+extern void *jmem_heap_decompress_pointer (uintptr_t);
+extern bool jmem_is_heap_pointer (const void *);
 
-#ifdef MEM_STATS
+#ifdef JMEM_STATS
 /**
  * Heap memory usage statistics
  */
@@ -64,12 +64,12 @@ typedef struct
 
   size_t free_count;
   size_t free_iter_count;
-} mem_heap_stats_t;
+} jmem_heap_stats_t;
 
-extern void mem_heap_get_stats (mem_heap_stats_t *);
-extern void mem_heap_stats_reset_peak (void);
-extern void mem_heap_stats_print (void);
-#endif /* MEM_STATS */
+extern void jmem_heap_get_stats (jmem_heap_stats_t *);
+extern void jmem_heap_stats_reset_peak (void);
+extern void jmem_heap_stats_print (void);
+#endif /* JMEM_STATS */
 
 #ifdef JERRY_VALGRIND_FREYA
 
@@ -77,13 +77,13 @@ extern void mem_heap_stats_print (void);
 #error Valgrind and valgrind-freya modes are not compatible.
 #endif /* JERRY_VALGRIND */
 
-extern void mem_heap_valgrind_freya_mempool_request (void);
+extern void jmem_heap_valgrind_freya_mempool_request (void);
 
-#define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST() mem_heap_valgrind_freya_mempool_request ()
+#define JMEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST() jmem_heap_valgrind_freya_mempool_request ()
 
 #else /* !JERRY_VALGRIND_FREYA */
 
-#define MEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST()
+#define JMEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST()
 
 #endif /* JERRY_VALGRIND_FREYA */
 
@@ -95,21 +95,21 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
  * Warning:
  *         if there is not enough memory on the heap, shutdown engine with ERR_OUT_OF_MEMORY.
  */
-#define MEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
+#define JMEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \
   size_t var_name ## ___size = (size_t) (number) * sizeof (type); \
-  type *var_name = (type *) (mem_heap_alloc_block (var_name ## ___size));
+  type *var_name = (type *) (jmem_heap_alloc_block (var_name ## ___size));
 
 /**
  * Free the previously defined local array variable, freeing corresponding block on the heap,
  * if it was allocated (i.e. if the array's size was non-zero).
  */
-#define MEM_FINALIZE_LOCAL_ARRAY(var_name) \
+#define JMEM_FINALIZE_LOCAL_ARRAY(var_name) \
   if (var_name != NULL) \
   { \
     JERRY_ASSERT (var_name ## ___size != 0); \
     \
-    mem_heap_free_block (var_name, var_name ## ___size); \
+    jmem_heap_free_block (var_name, var_name ## ___size); \
   } \
   else \
   { \
@@ -122,4 +122,4 @@ extern void mem_heap_valgrind_freya_mempool_request (void);
  * @}
  */
 
-#endif /* !MEM_HEAP_H */
+#endif /* !JMEM_HEAP_H */

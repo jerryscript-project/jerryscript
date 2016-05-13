@@ -705,7 +705,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
     ecma_collection_iterator_init (&iter, prop_names_p);
 
     // 4.
-    MEM_DEFINE_LOCAL_ARRAY (property_descriptors, property_number, ecma_property_descriptor_t);
+    JMEM_DEFINE_LOCAL_ARRAY (property_descriptors, property_number, ecma_property_descriptor_t);
 
     uint32_t property_descriptor_number = 0;
 
@@ -756,7 +756,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
       ecma_free_property_descriptor (&property_descriptors[index]);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (property_descriptors);
+    JMEM_FINALIZE_LOCAL_ARRAY (property_descriptors);
 
     ecma_free_values_collection (prop_names_p, true);
 

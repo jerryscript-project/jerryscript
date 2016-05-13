@@ -19,7 +19,7 @@
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
-#include "mem-heap.h"
+#include "jmem-heap.h"
 #include "re-bytecode.h"
 #include "re-compiler.h"
 #include "re-parser.h"
@@ -597,7 +597,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   {
     /* Compilation failed, free bytecode. */
     JERRY_DDLOG ("RegExp compilation failed!\n");
-    mem_heap_free_block (bc_ctx.block_start_p, byte_code_size);
+    jmem_heap_free_block (bc_ctx.block_start_p, byte_code_size);
     *out_bytecode_p = NULL;
   }
   else
@@ -610,7 +610,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
     JERRY_ASSERT (bc_ctx.block_start_p != NULL);
     *out_bytecode_p = (re_compiled_code_t *) bc_ctx.block_start_p;
 
-    ((re_compiled_code_t *) bc_ctx.block_start_p)->header.size = (uint16_t) (byte_code_size >> MEM_ALIGNMENT_LOG);
+    ((re_compiled_code_t *) bc_ctx.block_start_p)->header.size = (uint16_t) (byte_code_size >> JMEM_ALIGNMENT_LOG);
 
     if (cache_idx == RE_CACHE_SIZE)
     {

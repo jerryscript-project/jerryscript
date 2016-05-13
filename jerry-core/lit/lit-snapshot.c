@@ -160,7 +160,7 @@ lit_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
 
     size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
     lit_mem_to_snapshot_id_map_entry_t *id_map_p;
-    id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block_store_size (id_map_size);
+    id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) jmem_heap_alloc_block_store_size (id_map_size);
 
     uint32_t literal_index = 0;
     lit_literal_t lit;
@@ -207,7 +207,7 @@ lit_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
 
     if (!is_ok)
     {
-      mem_heap_free_block_size_stored (id_map_p);
+      jmem_heap_free_block_size_stored (id_map_p);
       return false;
     }
 
@@ -215,7 +215,7 @@ lit_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot bu
     *out_map_p = id_map_p;
   }
 
-  uint32_t aligned_size = JERRY_ALIGNUP (lit_table_size, MEM_ALIGNMENT);
+  uint32_t aligned_size = JERRY_ALIGNUP (lit_table_size, JMEM_ALIGNMENT);
 
   if (aligned_size != lit_table_size)
   {
@@ -284,7 +284,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
 
   size_t id_map_size = sizeof (lit_mem_to_snapshot_id_map_entry_t) * literals_num;
   lit_mem_to_snapshot_id_map_entry_t *id_map_p;
-  id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) mem_heap_alloc_block_store_size (id_map_size);
+  id_map_p = (lit_mem_to_snapshot_id_map_entry_t *) jmem_heap_alloc_block_store_size (id_map_size);
 
   bool is_ok = true;
   uint32_t lit_index;
@@ -395,7 +395,7 @@ lit_load_literals_from_snapshot (const uint8_t *lit_table_p, /**< buffer with li
     return true;
   }
 
-  mem_heap_free_block_size_stored (id_map_p);
+  jmem_heap_free_block_size_stored (id_map_p);
   return false;
 } /* lit_load_literals_from_snapshot */
 

@@ -19,7 +19,7 @@
 #include "ecma-gc.h"
 #include "ecma-lcache.h"
 #include "jrt.h"
-#include "mem-poolman.h"
+#include "jmem-poolman.h"
 
 JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
                      size_of_ecma_property_value_t_must_be_equal_to_size_of_ecma_value_t);
@@ -65,7 +65,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
 #define ALLOC(ecma_type) ecma_ ## ecma_type ## _t * \
   ecma_alloc_ ## ecma_type (void) \
 { \
-  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) mem_pools_alloc (); \
+  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) jmem_pools_alloc (); \
   \
   JERRY_ASSERT (p ## ecma_type != NULL); \
   \
@@ -78,7 +78,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
 #define DEALLOC(ecma_type) void \
   ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *p ## ecma_type) \
 { \
-  mem_pools_free ((uint8_t *) p ## ecma_type); \
+  jmem_pools_free ((uint8_t *) p ## ecma_type); \
 }
 
 /**
@@ -104,7 +104,7 @@ DECLARE_ROUTINES_FOR (external_pointer)
 ecma_property_pair_t *
 ecma_alloc_property_pair (void)
 {
-  return mem_heap_alloc_block (sizeof (ecma_property_pair_t));
+  return jmem_heap_alloc_block (sizeof (ecma_property_pair_t));
 } /* ecma_alloc_property_pair */
 
 /**
@@ -113,7 +113,7 @@ ecma_alloc_property_pair (void)
 extern void
 ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */
 {
-  mem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));
+  jmem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));
 } /* ecma_dealloc_property_pair */
 
 /**

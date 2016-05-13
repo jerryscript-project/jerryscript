@@ -45,7 +45,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma values
 
   header_p->unit_number = values_number;
 
-  mem_cpointer_t *next_chunk_cp_p = &header_p->first_chunk_cp;
+  jmem_cpointer_t *next_chunk_cp_p = &header_p->first_chunk_cp;
   ecma_collection_chunk_t *last_chunk_p = NULL;
   ecma_value_t *cur_value_buf_iter_p = NULL;
   ecma_value_t *cur_value_buf_end_p = NULL;
@@ -303,7 +303,7 @@ ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, /**< cont
                                ecma_collection_header_t *collection_p) /**< header of collection */
 {
   iterator_p->header_p = collection_p;
-  iterator_p->next_chunk_cp = (collection_p != NULL ? collection_p->first_chunk_cp : MEM_CP_NULL);
+  iterator_p->next_chunk_cp = (collection_p != NULL ? collection_p->first_chunk_cp : JMEM_CP_NULL);
   iterator_p->current_index = 0;
   iterator_p->current_value_p = NULL;
   iterator_p->current_chunk_end_p = NULL;

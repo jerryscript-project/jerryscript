@@ -16,13 +16,13 @@
 /**
  * Allocator interface
  */
-#ifndef MEM_ALLOCATOR_H
-#define MEM_ALLOCATOR_H
+#ifndef JMEM_ALLOCATOR_H
+#define JMEM_ALLOCATOR_H
 
 #include "jrt.h"
-#include "mem-config.h"
-#include "mem-heap.h"
-#include "mem-poolman.h"
+#include "jmem-config.h"
+#include "jmem-heap.h"
+#include "jmem-poolman.h"
 
 /** \addtogroup mem Memory allocation
  * @{
@@ -31,27 +31,27 @@
 /**
  * Compressed pointer
  */
-typedef uint16_t mem_cpointer_t;
+typedef uint16_t jmem_cpointer_t;
 
 /**
  * Representation of NULL value for compressed pointers
  */
-#define MEM_CP_NULL ((mem_cpointer_t) 0)
+#define JMEM_CP_NULL ((jmem_cpointer_t) 0)
 
 /**
  * Required alignment for allocated units/blocks
  */
-#define MEM_ALIGNMENT       (1u << MEM_ALIGNMENT_LOG)
+#define JMEM_ALIGNMENT (1u << JMEM_ALIGNMENT_LOG)
 
 /**
  * Width of compressed memory pointer
  */
-#define MEM_CP_WIDTH (MEM_HEAP_OFFSET_LOG - MEM_ALIGNMENT_LOG)
+#define JMEM_CP_WIDTH (JMEM_HEAP_OFFSET_LOG - JMEM_ALIGNMENT_LOG)
 
 /**
  * Compressed pointer value mask
  */
-#define MEM_CP_MASK ((1ull << MEM_CP_WIDTH) - 1)
+#define JMEM_CP_MASK ((1ull << JMEM_CP_WIDTH) - 1)
 
 /**
  * Severity of a 'try give memory back' request
@@ -64,69 +64,69 @@ typedef uint16_t mem_cpointer_t;
  */
 typedef enum
 {
-  MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW, /* 'low' severity */
-  MEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH, /* 'high' severity */
-} mem_try_give_memory_back_severity_t;
+  JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW, /* 'low' severity */
+  JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH, /* 'high' severity */
+} jmem_try_give_memory_back_severity_t;
 
 /**
  * A 'try give memory back' callback routine type.
  */
-typedef void (*mem_try_give_memory_back_callback_t) (mem_try_give_memory_back_severity_t);
+typedef void (*jmem_try_give_memory_back_callback_t) (jmem_try_give_memory_back_severity_t);
 
 /**
  * Get value of pointer from specified non-null compressed pointer value
  */
-#define MEM_CP_GET_NON_NULL_POINTER(type, cp_value) \
-  ((type *) (mem_decompress_pointer (cp_value)))
+#define JMEM_CP_GET_NON_NULL_POINTER(type, cp_value) \
+  ((type *) (jmem_decompress_pointer (cp_value)))
 
 /**
  * Get value of pointer from specified compressed pointer value
  */
-#define MEM_CP_GET_POINTER(type, cp_value) \
-  (((unlikely ((cp_value) == MEM_CP_NULL)) ? NULL : MEM_CP_GET_NON_NULL_POINTER (type, cp_value)))
+#define JMEM_CP_GET_POINTER(type, cp_value) \
+  (((unlikely ((cp_value) == JMEM_CP_NULL)) ? NULL : JMEM_CP_GET_NON_NULL_POINTER (type, cp_value)))
 
 /**
  * Set value of non-null compressed pointer so that it will correspond
  * to specified non_compressed_pointer
  */
-#define MEM_CP_SET_NON_NULL_POINTER(cp_value, non_compressed_pointer) \
-  (cp_value) = (mem_compress_pointer (non_compressed_pointer) & MEM_CP_MASK)
+#define JMEM_CP_SET_NON_NULL_POINTER(cp_value, non_compressed_pointer) \
+  (cp_value) = (jmem_compress_pointer (non_compressed_pointer) & JMEM_CP_MASK)
 
 /**
  * Set value of compressed pointer so that it will correspond
  * to specified non_compressed_pointer
  */
-#define MEM_CP_SET_POINTER(cp_value, non_compressed_pointer) \
+#define JMEM_CP_SET_POINTER(cp_value, non_compressed_pointer) \
   do \
   { \
     void *ptr_value = (void *) non_compressed_pointer; \
     \
     if (unlikely ((ptr_value) == NULL)) \
     { \
-      (cp_value) = MEM_CP_NULL; \
+      (cp_value) = JMEM_CP_NULL; \
     } \
     else \
     { \
-      MEM_CP_SET_NON_NULL_POINTER (cp_value, ptr_value); \
+      JMEM_CP_SET_NON_NULL_POINTER (cp_value, ptr_value); \
     } \
   } while (false);
 
-extern void mem_init (void);
-extern void mem_finalize (bool);
+extern void jmem_init (void);
+extern void jmem_finalize (bool);
 
-extern uintptr_t mem_compress_pointer (const void *);
-extern void *mem_decompress_pointer (uintptr_t);
+extern uintptr_t jmem_compress_pointer (const void *);
+extern void *jmem_decompress_pointer (uintptr_t);
 
-extern void mem_register_a_try_give_memory_back_callback (mem_try_give_memory_back_callback_t);
-extern void mem_unregister_a_try_give_memory_back_callback (mem_try_give_memory_back_callback_t);
+extern void jmem_register_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t);
+extern void jmem_unregister_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t);
 
-#ifdef MEM_STATS
-extern void mem_stats_reset_peak (void);
-extern void mem_stats_print (void);
-#endif /* MEM_STATS */
+#ifdef JMEM_STATS
+extern void jmem_stats_reset_peak (void);
+extern void jmem_stats_print (void);
+#endif /* JMEM_STATS */
 
 /**
  * @}
  */
 
-#endif /* !MEM_ALLOCATOR_H */
+#endif /* !JMEM_ALLOCATOR_H */

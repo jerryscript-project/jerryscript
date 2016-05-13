@@ -28,7 +28,7 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  mem_init ();
+  jmem_init ();
   lit_init ();
   ecma_init ();
 
@@ -78,7 +78,7 @@ main (int __attr_unused___ argc,
 
   ecma_finalize ();
   lit_finalize ();
-  mem_finalize (true);
+  jmem_finalize (true);
 
   return 0;
 } /* main */

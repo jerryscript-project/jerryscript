@@ -20,7 +20,7 @@
 #include "config.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
-#include "mem-allocator.h"
+#include "jmem-allocator.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -36,15 +36,15 @@
  * Ecma-pointer field is used to calculate ecma value's address.
  *
  * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
- * The offset is shifted right by MEM_ALIGNMENT_LOG.
- * Least significant MEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
+ * The offset is shifted right by JMEM_ALIGNMENT_LOG.
+ * Least significant JMEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
  */
-#define ECMA_POINTER_FIELD_WIDTH MEM_CP_WIDTH
+#define ECMA_POINTER_FIELD_WIDTH JMEM_CP_WIDTH
 
 /**
  * The NULL value for compressed pointers
  */
-#define ECMA_NULL_POINTER MEM_CP_NULL
+#define ECMA_NULL_POINTER JMEM_CP_NULL
 
 /**
  * @}
@@ -98,7 +98,7 @@ typedef int32_t ecma_integer_value_t;
 #if UINTPTR_MAX <= UINT32_MAX
 
 /**
- * MEM_ALIGNMENT_LOG aligned pointers can be stored directly in ecma_value_t
+ * JMEM_ALIGNMENT_LOG aligned pointers can be stored directly in ecma_value_t
  */
 #define ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
@@ -335,7 +335,7 @@ typedef struct
 {
   ecma_property_t types[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< two property type slot. The first represent
                                                          *   the type of this property (e.g. property pair) */
-  mem_cpointer_t next_property_cp; /**< next cpointer */
+  jmem_cpointer_t next_property_cp; /**< next cpointer */
 } ecma_property_header_t;
 
 /**
@@ -343,8 +343,8 @@ typedef struct
  */
 typedef struct
 {
-  mem_cpointer_t getter_p; /**< pointer to getter object */
-  mem_cpointer_t setter_p; /**< pointer to setter object */
+  jmem_cpointer_t getter_p; /**< pointer to getter object */
+  jmem_cpointer_t setter_p; /**< pointer to setter object */
 } ecma_getter_setter_pointers_t;
 
 /**
@@ -363,7 +363,7 @@ typedef struct
 {
   ecma_property_header_t header; /**< header of the property */
   ecma_property_value_t values[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< property value slots */
-  mem_cpointer_t names_cp[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< property name slots */
+  jmem_cpointer_t names_cp[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< property name slots */
 } ecma_property_pair_t;
 
 /**
@@ -488,13 +488,13 @@ typedef struct ecma_object_t
   uint16_t type_flags_refs;
 
   /** next in the object chain maintained by the garbage collector */
-  mem_cpointer_t gc_next_cp;
+  jmem_cpointer_t gc_next_cp;
 
   /** compressed pointer to property list or bound object */
-  mem_cpointer_t property_list_or_bound_object_cp;
+  jmem_cpointer_t property_list_or_bound_object_cp;
 
   /** object prototype or outer reference */
-  mem_cpointer_t prototype_or_outer_reference_cp;
+  jmem_cpointer_t prototype_or_outer_reference_cp;
 } ecma_object_t;
 
 /**
@@ -730,10 +730,10 @@ typedef struct
   ecma_length_t unit_number;
 
   /** Compressed pointer to first chunk with collection's data */
-  mem_cpointer_t first_chunk_cp;
+  jmem_cpointer_t first_chunk_cp;
 
   /** Compressed pointer to last chunk with collection's data */
-  mem_cpointer_t last_chunk_cp;
+  jmem_cpointer_t last_chunk_cp;
 } ecma_collection_header_t;
 
 /**
@@ -742,10 +742,10 @@ typedef struct
 typedef struct
 {
   /** Characters */
-  lit_utf8_byte_t data[ sizeof (uint64_t) - sizeof (mem_cpointer_t) ];
+  lit_utf8_byte_t data[ sizeof (uint64_t) - sizeof (jmem_cpointer_t) ];
 
   /** Compressed pointer to next chunk */
-  mem_cpointer_t next_chunk_cp;
+  jmem_cpointer_t next_chunk_cp;
 } ecma_collection_chunk_t;
 
 /**
@@ -809,10 +809,10 @@ typedef struct ecma_string_t
   union
   {
     /** Index of string in literal table */
-    mem_cpointer_t lit_cp;
+    jmem_cpointer_t lit_cp;
 
     /** Compressed pointer to an ecma_collection_header_t */
-    mem_cpointer_t utf8_collection_cp;
+    jmem_cpointer_t utf8_collection_cp;
 
     /**
     * Actual data of an ascii string type
@@ -820,13 +820,13 @@ typedef struct ecma_string_t
     struct
     {
       /** Compressed pointer to a raw character array */
-      mem_cpointer_t ascii_collection_cp;
+      jmem_cpointer_t ascii_collection_cp;
       /** Size of ascii string in bytes */
       uint16_t size;
     } ascii_string;
 
     /** Compressed pointer to an ecma_number_t */
-    mem_cpointer_t number_cp;
+    jmem_cpointer_t number_cp;
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;
@@ -852,7 +852,7 @@ typedef uintptr_t ecma_external_pointer_t;
   */
 typedef struct
 {
-  uint16_t size;                    /**< real size >> MEM_ALIGNMENT_LOG */
+  uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */
   uint16_t refs;                    /**< reference counter for the byte code */
   uint16_t status_flags;            /**< various status flags:
                                       *    CBC_CODE_FLAGS_FUNCTION flag tells whether

@@ -794,9 +794,9 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
   if (context_p->is_replace_callable)
   {
-    MEM_DEFINE_LOCAL_ARRAY (arguments_list,
-                            match_length + 2,
-                            ecma_value_t);
+    JMEM_DEFINE_LOCAL_ARRAY (arguments_list,
+                             match_length + 2,
+                             ecma_value_t);
 
     /* An error might occure during the array copy and
      * uninitalized elements must not be freed. */
@@ -847,7 +847,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       ecma_free_value (arguments_list[i]);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (arguments_list);
+    JMEM_FINALIZE_LOCAL_ARRAY (arguments_list);
   }
   else
   {
@@ -2078,9 +2078,9 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
   /* Second phase. */
 
-  MEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                          output_length,
-                          lit_utf8_byte_t);
+  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
+                           output_length,
+                           lit_utf8_byte_t);
 
   lit_utf8_byte_t *output_char_p = output_start_p;
 
@@ -2120,7 +2120,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_value_t this_arg, /
 
   ret_value = ecma_make_string_value (output_string_p);
 
-  MEM_FINALIZE_LOCAL_ARRAY (output_start_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
   ECMA_FINALIZE_UTF8_STRING (input_start_p, input_start_size);
 
   ECMA_FINALIZE (to_string_val);

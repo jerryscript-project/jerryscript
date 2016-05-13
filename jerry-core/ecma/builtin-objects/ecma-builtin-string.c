@@ -69,9 +69,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
   {
     lit_utf8_size_t utf8_buf_size = args_number * LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
 
-    MEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
-                            utf8_buf_size,
-                            lit_utf8_byte_t);
+    JMEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
+                             utf8_buf_size,
+                             lit_utf8_byte_t);
 
     lit_utf8_size_t utf8_buf_used = 0;
 
@@ -96,7 +96,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg __attr_unused__
       ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_buf_p, utf8_buf_used);
     }
 
-    MEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
   }
 
   if (ecma_is_value_empty (ret_value))

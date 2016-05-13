@@ -701,7 +701,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
 
-      MEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+      JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
 
       ecma_function_bind_merge_arg_lists (merged_args_list_p,
                                           bound_arg_list_p,
@@ -714,7 +714,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                          merged_args_list_p,
                                          merged_args_list_len);
 
-      MEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
+      JMEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
     }
     else
     {
@@ -892,7 +892,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
         ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
 
-        MEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+        JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
 
         ecma_function_bind_merge_arg_lists (merged_args_list_p,
                                             bound_arg_list_p,
@@ -904,7 +904,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                                                 merged_args_list_p,
                                                 merged_args_list_len);
 
-        MEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
+        JMEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
       }
       else
       {

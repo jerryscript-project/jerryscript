@@ -125,7 +125,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
         const uint32_t length = ecma_number_to_uint32 (length_number);
 
         /* 6. */
-        MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
+        JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
         uint32_t last_index = 0;
 
         /* 7. */
@@ -160,7 +160,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
           ecma_free_value (arguments_list_p[index]);
         }
 
-        MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
+        JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
         ECMA_OP_TO_NUMBER_FINALIZE (length_number);
         ECMA_FINALIZE (length_value);

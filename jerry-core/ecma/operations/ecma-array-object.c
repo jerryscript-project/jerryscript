@@ -276,7 +276,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
             ecma_length_t array_index_props_num = array_index_props_p->unit_number;
 
-            MEM_DEFINE_LOCAL_ARRAY (array_index_values_p, array_index_props_num, uint32_t);
+            JMEM_DEFINE_LOCAL_ARRAY (array_index_values_p, array_index_props_num, uint32_t);
 
             ecma_collection_iterator_t iter;
             ecma_collection_iterator_init (&iter, array_index_props_p);
@@ -339,7 +339,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
               }
             }
 
-            MEM_FINALIZE_LOCAL_ARRAY (array_index_values_p);
+            JMEM_FINALIZE_LOCAL_ARRAY (array_index_values_p);
 
             ecma_free_values_collection (array_index_props_p, true);
 

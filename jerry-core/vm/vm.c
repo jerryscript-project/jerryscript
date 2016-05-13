@@ -1998,7 +1998,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_FOR_IN_GET_NEXT:
         {
           ecma_value_t *context_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
-          ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t, context_top_p[-2]);
+          ecma_collection_chunk_t *chunk_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t, context_top_p[-2]);
 
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_IN);
 
@@ -2015,7 +2015,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           while (true)
           {
-            if (stack_top_p[-2] == MEM_CP_NULL)
+            if (stack_top_p[-2] == JMEM_CP_NULL)
             {
               ecma_free_value (stack_top_p[-3]);
 
@@ -2024,7 +2024,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               break;
             }
 
-            ecma_collection_chunk_t *chunk_p = MEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t, stack_top_p[-2]);
+            ecma_collection_chunk_t *chunk_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t, stack_top_p[-2]);
 
             lit_utf8_byte_t *data_ptr = chunk_p->data;
             ecma_string_t *prop_name_p = ecma_get_string_from_value (*(ecma_value_t *) data_ptr);

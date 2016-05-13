@@ -18,16 +18,16 @@
 #define LIT_CPOINTER_H
 
 #include "lit-literal-storage.h"
-#include "mem-allocator.h"
+#include "jmem-allocator.h"
 
-#define LIT_CPOINTER_WIDTH (MEM_CP_WIDTH + MEM_ALIGNMENT_LOG - MEM_ALIGNMENT_LOG)
+#define LIT_CPOINTER_WIDTH (JMEM_CP_WIDTH + JMEM_ALIGNMENT_LOG - JMEM_ALIGNMENT_LOG)
 
 /**
  * Dynamic storage-specific extended compressed pointer
  *
  * Note:
  *      the pointer can represent addresses aligned by lit_DYN_STORAGE_LENGTH_UNIT,
- *      while mem_cpointer_t can only represent addresses aligned by MEM_ALIGNMENT.
+ *      while jmem_cpointer_t can only represent addresses aligned by JMEM_ALIGNMENT.
  */
 typedef uint16_t lit_cpointer_t;
 

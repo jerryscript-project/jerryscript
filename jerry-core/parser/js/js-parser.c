@@ -105,7 +105,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
         if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          mem_heap_free_block_size_stored ((void *) char_p);
+          jmem_heap_free_block_size_stored ((void *) char_p);
         }
       }
     }
@@ -527,7 +527,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         if (!context_p->is_show_opcodes
             && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
-          mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
+          jmem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
         }
 #else /* !PARSER_DUMP_BYTE_CODE */
         literal_pool_p[literal_p->prop.index] = literal_p->u.value;
@@ -1460,12 +1460,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
   total_size += length + context_p->literal_count * sizeof (lit_cpointer_t);
-  total_size = JERRY_ALIGNUP (total_size, MEM_ALIGNMENT);
+  total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
 
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
 
   byte_code_p = (uint8_t *) compiled_code_p;
-  compiled_code_p->size = (uint16_t) (total_size >> MEM_ALIGNMENT_LOG);
+  compiled_code_p->size = (uint16_t) (total_size >> JMEM_ALIGNMENT_LOG);
   compiled_code_p->refs = 1;
   compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION;
 
@@ -1695,7 +1695,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       if ((literal_p->type == LEXER_IDENT_LITERAL || literal_p->type == LEXER_STRING_LITERAL)
           && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
       {
-        mem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
+        jmem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
       }
     }
   }

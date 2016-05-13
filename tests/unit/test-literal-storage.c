@@ -91,7 +91,7 @@ main (int __attr_unused___ argc,
   lit_utf8_byte_t strings[test_sub_iters][max_characters_in_string + 1];
   lit_utf8_size_t lengths[test_sub_iters];
 
-  mem_init ();
+  jmem_init ();
   lit_init ();
 
   for (uint32_t i = 0; i < test_iters; i++)
@@ -159,6 +159,6 @@ main (int __attr_unused___ argc,
   }
 
   lit_finalize ();
-  mem_finalize (true);
+  jmem_finalize (true);
   return 0;
 } /* main */

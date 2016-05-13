@@ -45,7 +45,7 @@
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
 #include "lit-literal.h"
-#include "mem-heap.h"
+#include "jmem-heap.h"
 
 /* Immediate management. */
 

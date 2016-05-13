@@ -922,7 +922,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 
   ecma_value_t completion_value;
 
-  MEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_api_value_t);
+  JMEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_api_value_t);
 
   ecma_collection_iterator_t args_iterator;
   ecma_collection_iterator_init (&args_iterator, arg_collection_p);
@@ -967,7 +967,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
     jerry_api_release_value (&api_arg_values[i]);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (api_arg_values);
+  JMEM_FINALIZE_LOCAL_ARRAY (api_arg_values);
 
   return completion_value;
 } /* jerry_dispatch_external_function */
@@ -1399,7 +1399,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   bool is_successful = true;
 
-  MEM_DEFINE_LOCAL_ARRAY (arguments_list_p, args_count, ecma_value_t);
+  JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, args_count, ecma_value_t);
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
@@ -1456,7 +1456,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
     ecma_free_value (arguments_list_p[i]);
   }
 
-  MEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
+  JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
   return is_successful;
 } /* jerry_api_invoke_function */
@@ -1633,23 +1633,23 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
 
   if (flags & (JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_SEPARATE))
   {
-#ifndef MEM_STATS
+#ifndef JMEM_STATS
     flags &= (jerry_flag_t) ~(JERRY_FLAG_MEM_STATS | JERRY_FLAG_MEM_STATS_SEPARATE);
 
-    JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!MEM_STATS' build configuration.\n");
-#else /* MEM_STATS */
+    JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!JMEM_STATS' build configuration.\n");
+#else /* JMEM_STATS */
     if (flags & JERRY_FLAG_MEM_STATS_SEPARATE)
     {
       flags |= JERRY_FLAG_MEM_STATS;
     }
-#endif /* !MEM_STATS */
+#endif /* !JMEM_STATS */
   }
 
   jerry_flags = flags;
 
   jerry_make_api_available ();
 
-  mem_init ();
+  jmem_init ();
   lit_init ();
   ecma_init ();
 } /* jerry_init */
@@ -1667,7 +1667,7 @@ jerry_cleanup (void)
   vm_finalize ();
   ecma_finalize ();
   lit_finalize ();
-  mem_finalize (is_show_mem_stats);
+  jmem_finalize (is_show_mem_stats);
 } /* jerry_cleanup */
 
 /**
@@ -1719,13 +1719,13 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
     return false;
   }
 
-#ifdef MEM_STATS
+#ifdef JMEM_STATS
   if (jerry_flags & JERRY_FLAG_MEM_STATS_SEPARATE)
   {
-    mem_stats_print ();
-    mem_stats_reset_peak ();
+    jmem_stats_print ();
+    jmem_stats_reset_peak ();
   }
-#endif /* MEM_STATS */
+#endif /* JMEM_STATS */
 
   vm_init (bytecode_data_p);
 
@@ -1824,15 +1824,15 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
     return 0;
   }
 
-  JERRY_ASSERT ((snapshot_buffer_write_offset & (MEM_ALIGNMENT - 1)) == 0);
+  JERRY_ASSERT ((snapshot_buffer_write_offset & (JMEM_ALIGNMENT - 1)) == 0);
 
-  if ((snapshot_buffer_write_offset >> MEM_ALIGNMENT_LOG) > 0xffffu)
+  if ((snapshot_buffer_write_offset >> JMEM_ALIGNMENT_LOG) > 0xffffu)
   {
     snapshot_error_occured = true;
     return 0;
   }
 
-  uint16_t start_offset = (uint16_t) (snapshot_buffer_write_offset >> MEM_ALIGNMENT_LOG);
+  uint16_t start_offset = (uint16_t) (snapshot_buffer_write_offset >> JMEM_ALIGNMENT_LOG);
   ecma_compiled_code_t *copied_compiled_code_p;
 
   copied_compiled_code_p = (ecma_compiled_code_t *) (snapshot_buffer_p + snapshot_buffer_write_offset);
@@ -1849,7 +1849,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
 
     snapshot_buffer_write_offset += sizeof (ecma_compiled_code_t);
 
-    mem_cpointer_t pattern_cp = ((re_compiled_code_t *) compiled_code_p)->pattern_cp;
+    jmem_cpointer_t pattern_cp = ((re_compiled_code_t *) compiled_code_p)->pattern_cp;
     ecma_string_t *pattern_string_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                  pattern_cp);
 
@@ -1870,13 +1870,13 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
 
     ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 
-    snapshot_buffer_write_offset = JERRY_ALIGNUP (snapshot_buffer_write_offset, MEM_ALIGNMENT);
+    snapshot_buffer_write_offset = JERRY_ALIGNUP (snapshot_buffer_write_offset, JMEM_ALIGNMENT);
 
     /* Regexp character size is stored in refs. */
     copied_compiled_code_p->refs = (uint16_t) pattern_size;
 
     pattern_size += (ecma_length_t) sizeof (ecma_compiled_code_t);
-    copied_compiled_code_p->size = (uint16_t) ((pattern_size + MEM_ALIGNMENT - 1) >> MEM_ALIGNMENT_LOG);
+    copied_compiled_code_p->size = (uint16_t) ((pattern_size + JMEM_ALIGNMENT - 1) >> JMEM_ALIGNMENT_LOG);
 
     copied_compiled_code_p->status_flags = compiled_code_p->status_flags;
 
@@ -1890,7 +1890,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
                                       snapshot_buffer_size,
                                       &snapshot_buffer_write_offset,
                                       compiled_code_p,
-                                      ((size_t) compiled_code_p->size) << MEM_ALIGNMENT_LOG))
+                                      ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
     snapshot_error_occured = true;
     return 0;
@@ -1954,7 +1954,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
   do
   {
     ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
-    uint32_t code_size = ((uint32_t) bytecode_p->size) << MEM_ALIGNMENT_LOG;
+    uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
     {
@@ -1991,7 +1991,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
         {
           lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-          if (literal_start_p[i] != MEM_CP_NULL)
+          if (literal_start_p[i] != JMEM_CP_NULL)
           {
             while (current_p->literal_id != literal_start_p[i])
             {
@@ -2007,14 +2007,14 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
 
       for (uint32_t i = register_clear_start; i < register_end; i++)
       {
-        literal_start_p[i] = MEM_CP_NULL;
+        literal_start_p[i] = JMEM_CP_NULL;
       }
 
       for (uint32_t i = register_end; i < const_literal_end; i++)
       {
         lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-        if (literal_start_p[i] != MEM_CP_NULL)
+        if (literal_start_p[i] != JMEM_CP_NULL)
         {
           while (current_p->literal_id != literal_start_p[i])
           {
@@ -2058,7 +2058,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   ecma_compiled_code_t *bytecode_data_p;
 
   snapshot_buffer_write_offset = JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t),
-                                                MEM_ALIGNMENT);
+                                                JMEM_ALIGNMENT);
   snapshot_error_occured = false;
   snapshot_buffer_p = buffer_p;
   snapshot_buffer_size = buffer_size;
@@ -2117,7 +2117,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
     return 0;
   }
 
-  jerry_snapshot_set_offsets (buffer_p + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), MEM_ALIGNMENT),
+  jerry_snapshot_set_offsets (buffer_p + JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t), JMEM_ALIGNMENT),
                               (uint32_t) (header.lit_table_offset - sizeof (jerry_snapshot_header_t)),
                               lit_map_p);
 
@@ -2131,7 +2131,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
 
   if (lit_map_p != NULL)
   {
-    mem_heap_free_block_size_stored (lit_map_p);
+    jmem_heap_free_block_size_stored (lit_map_p);
   }
 
   ecma_bytecode_deref (bytecode_data_p);
@@ -2169,7 +2169,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
                              bool copy_bytecode) /**< byte code should be copied to memory */
 {
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) (snapshot_data_p + offset);
-  uint32_t code_size = ((uint32_t) bytecode_p->size) << MEM_ALIGNMENT_LOG;
+  uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
@@ -2218,7 +2218,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   if (copy_bytecode
       || (header_size + (literal_end * sizeof (uint16_t)) + BYTECODE_NO_COPY_TRESHOLD > code_size))
   {
-    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (code_size);
+    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (code_size);
 
     memcpy (bytecode_p, snapshot_data_p + offset, code_size);
   }
@@ -2227,13 +2227,13 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
     code_size = (uint32_t) (header_size + literal_end * sizeof (lit_cpointer_t));
 
     uint8_t *real_bytecode_p = ((uint8_t *) bytecode_p) + code_size;
-    uint32_t total_size = JERRY_ALIGNUP (code_size + 1 + sizeof (uint8_t *), MEM_ALIGNMENT);
+    uint32_t total_size = JERRY_ALIGNUP (code_size + 1 + sizeof (uint8_t *), JMEM_ALIGNMENT);
 
-    bytecode_p = (ecma_compiled_code_t *) mem_heap_alloc_block (total_size);
+    bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (total_size);
 
     memcpy (bytecode_p, snapshot_data_p + offset, code_size);
 
-    bytecode_p->size = (uint16_t) (total_size >> MEM_ALIGNMENT_LOG);
+    bytecode_p->size = (uint16_t) (total_size >> JMEM_ALIGNMENT_LOG);
 
     uint8_t *instructions_p = ((uint8_t *) bytecode_p);
 
@@ -2262,7 +2262,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   for (uint32_t i = const_literal_end; i < literal_end; i++)
   {
-    size_t literal_offset = ((size_t) literal_start_p[i]) << MEM_ALIGNMENT_LOG;
+    size_t literal_offset = ((size_t) literal_start_p[i]) << JMEM_ALIGNMENT_LOG;
 
     if (literal_offset == offset)
     {
@@ -2350,7 +2350,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   if (lit_map_p != NULL)
   {
-    mem_heap_free_block_size_stored (lit_map_p);
+    jmem_heap_free_block_size_stored (lit_map_p);
   }
 
   if (bytecode_p == NULL)

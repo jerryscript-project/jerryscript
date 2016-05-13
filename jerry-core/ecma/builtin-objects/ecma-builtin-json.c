@@ -961,7 +961,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
         }
         else
         {
-          MEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
+          JMEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
 
           for (int32_t i = 0; i < space; i++)
           {
@@ -970,7 +970,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this'
 
           context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
 
-          MEM_FINALIZE_LOCAL_ARRAY (space_buff);
+          JMEM_FINALIZE_LOCAL_ARRAY (space_buff);
         }
 
         ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);

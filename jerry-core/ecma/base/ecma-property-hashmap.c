@@ -32,7 +32,7 @@
  * Compute the total size of the property hashmap.
  */
 #define ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE(max_property_count) \
-  (sizeof (ecma_property_hashmap_t) + (max_property_count * sizeof (mem_cpointer_t)) + (max_property_count >> 3))
+  (sizeof (ecma_property_hashmap_t) + (max_property_count * sizeof (jmem_cpointer_t)) + (max_property_count >> 3))
 
 /**
  * Number of items in the stepping table.
@@ -110,7 +110,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
   size_t total_size = ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (max_property_count);
 
-  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) mem_heap_alloc_block (total_size);
+  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) jmem_heap_alloc_block (total_size);
   memset (hashmap_p, 0, total_size);
 
   hashmap_p->header.types[0].type_and_flags = ECMA_PROPERTY_TYPE_HASHMAP;
@@ -118,7 +118,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
   hashmap_p->max_property_count = max_property_count;
   hashmap_p->null_count = max_property_count - named_property_count;
 
-  mem_cpointer_t *pair_list_p = (mem_cpointer_t *) (hashmap_p + 1);
+  jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + max_property_count);
   uint32_t mask = max_property_count - 1;
 
@@ -225,8 +225,8 @@ ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
 
   object_p->property_list_or_bound_object_cp = property_p->next_property_cp;
 
-  mem_heap_free_block (hashmap_p,
-                       ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (hashmap_p->max_property_count));
+  jmem_heap_free_block (hashmap_p,
+                        ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (hashmap_p->max_property_count));
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
   (void) object_p;
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
@@ -275,7 +275,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   uint32_t start_entry_index = entry_index;
 #endif /* !JERRY_NDEBUG */
 
-  mem_cpointer_t *pair_list_p = (mem_cpointer_t *) (hashmap_p + 1);
+  jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
 
   while (pair_list_p[entry_index] != ECMA_NULL_POINTER)
   {
@@ -333,7 +333,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   uint32_t entry_index = name_p->hash;
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
-  mem_cpointer_t *pair_list_p = (mem_cpointer_t *) (hashmap_p + 1);
+  jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
   if (mask < (1u << LIT_STRING_HASH_BITS))
@@ -442,7 +442,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
   uint32_t entry_index = name_p->hash;
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
-  mem_cpointer_t *pair_list_p = (mem_cpointer_t *) (hashmap_p + 1);
+  jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
   if (mask < (1u << LIT_STRING_HASH_BITS))

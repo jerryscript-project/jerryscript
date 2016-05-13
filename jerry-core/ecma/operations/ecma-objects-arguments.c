@@ -134,7 +134,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
            indx++)
       {
         // i.
-        if (literal_p[indx] == MEM_CP_NULL)
+        if (literal_p[indx] == JMEM_CP_NULL)
         {
           continue;
         }

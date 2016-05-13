@@ -139,7 +139,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
           const lit_utf8_size_t space_size = lit_get_magic_string_size (LIT_MAGIC_STRING_SPACE_CHAR);
           const lit_utf8_size_t size = name_size + msg_size + colon_size + space_size;
 
-          MEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
+          JMEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
           lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
 
           lit_utf8_size_t bytes = ecma_string_to_utf8_string (name_string_p, ret_str_buffer_p, name_size);
@@ -165,7 +165,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
           ret_str_p = ecma_new_ecma_string_from_utf8 (ret_str_buffer,
                                                       size);
 
-          MEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
+          JMEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
         }
 
         ret_value = ecma_make_string_value (ret_str_p);

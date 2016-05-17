@@ -62,16 +62,16 @@ ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument
                   ecma_date_get_primitive_value (this_arg),
                   ret_value);
 
-  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
 
-  if (ecma_number_is_nan (*prim_num_p))
+  if (ecma_number_is_nan (prim_num))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
     ret_value = ecma_make_string_value (magic_str_p);
   }
   else
   {
-    ret_value = ecma_date_value_to_string (*prim_num_p);
+    ret_value = ecma_date_value_to_string (prim_num);
   }
 
   ECMA_FINALIZE (prim_value);
@@ -257,10 +257,7 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
       prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                           ecma_get_internal_property_value (prim_prop_p));
 
-      ecma_number_t *ret_num_p = ecma_alloc_number ();
-      *ret_num_p = *prim_value_num_p;
-
-      return ecma_make_number_value (ret_num_p);
+      return ecma_make_number_value (*prim_value_num_p);
     }
   }
 
@@ -293,9 +290,9 @@ ecma_builtin_date_prototype_get_ ## _routine_name (ecma_value_t this_arg) /**< t
  \
   /* 1. */ \
   ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value); \
-  ecma_number_t *this_num_p = ecma_get_number_from_value (value); \
+  ecma_number_t this_num = ecma_get_number_from_value (value); \
   /* 2. */ \
-  if (ecma_number_is_nan (*this_num_p)) \
+  if (ecma_number_is_nan (this_num)) \
   { \
     ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN); \
     ret_value = ecma_make_string_value (nan_str_p); \
@@ -303,9 +300,8 @@ ecma_builtin_date_prototype_get_ ## _routine_name (ecma_value_t this_arg) /**< t
   else \
   { \
     /* 3. */ \
-    ecma_number_t *ret_num_p = ecma_alloc_number (); \
-    *ret_num_p = _getter_name (DEFINE_GETTER_ARGUMENT_ ## _timezone (*this_num_p)); \
-    ret_value = ecma_make_number_value (ret_num_p); \
+    ecma_number_t ret_num = _getter_name (DEFINE_GETTER_ARGUMENT_ ## _timezone (this_num)); \
+    ret_value = ecma_make_number_value (ret_num); \
   } \
   ECMA_FINALIZE (value); \
   \
@@ -358,8 +354,7 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
   {
     /* 1. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (t, time, ret_value);
-    ecma_number_t *value_p = ecma_alloc_number ();
-    *value_p = ecma_date_time_clip (t);
+    ecma_number_t value = ecma_date_time_clip (t);
 
     /* 2. */
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
@@ -369,10 +364,10 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
 
     ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                                        ecma_get_internal_property_value (prim_prop_p));
-    *prim_value_num_p = *value_p;
+    *prim_value_num_p = value;
 
     /* 3. */
-    ret_value = ecma_make_number_value (value_p);
+    ret_value = ecma_make_number_value (value);
     ECMA_OP_TO_NUMBER_FINALIZE (t);
   }
 
@@ -396,7 +391,7 @@ ecma_builtin_date_prototype_set_milliseconds (ecma_value_t this_arg, /**< this a
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
@@ -433,7 +428,7 @@ ecma_builtin_date_prototype_set_utc_milliseconds (ecma_value_t this_arg, /**< th
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
@@ -471,7 +466,7 @@ ecma_builtin_date_prototype_set_seconds (ecma_value_t this_arg, /**< this argume
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
@@ -516,7 +511,7 @@ ecma_builtin_date_prototype_set_utc_seconds (ecma_value_t this_arg, /**< this ar
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
@@ -561,7 +556,7 @@ ecma_builtin_date_prototype_set_minutes (ecma_value_t this_arg, /**< this argume
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ecma_number_t m = ecma_number_make_nan ();
@@ -622,7 +617,7 @@ ecma_builtin_date_prototype_set_utc_minutes (ecma_value_t this_arg, /**< this ar
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ecma_number_t m = ecma_number_make_nan ();
@@ -683,7 +678,7 @@ ecma_builtin_date_prototype_set_hours (ecma_value_t this_arg, /**< this argument
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ecma_number_t h = ecma_number_make_nan ();
@@ -752,7 +747,7 @@ ecma_builtin_date_prototype_set_utc_hours (ecma_value_t this_arg, /**< this argu
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ecma_number_t h = ecma_number_make_nan ();
@@ -820,7 +815,7 @@ ecma_builtin_date_prototype_set_date (ecma_value_t this_arg, /**< this argument 
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
@@ -856,7 +851,7 @@ ecma_builtin_date_prototype_set_utc_date (ecma_value_t this_arg, /**< this argum
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
@@ -893,7 +888,7 @@ ecma_builtin_date_prototype_set_month (ecma_value_t this_arg, /**< this argument
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
@@ -937,7 +932,7 @@ ecma_builtin_date_prototype_set_utc_month (ecma_value_t this_arg, /**< this argu
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
 
   /* 2. */
   ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
@@ -981,7 +976,7 @@ ecma_builtin_date_prototype_set_full_year (ecma_value_t this_arg, /**< this argu
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
   if (ecma_number_is_nan (t))
   {
     t = ECMA_NUMBER_ZERO;
@@ -1045,7 +1040,7 @@ ecma_builtin_date_prototype_set_utc_full_year (ecma_value_t this_arg, /**< this 
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = *ecma_get_number_from_value (this_time_value);
+  ecma_number_t t = ecma_get_number_from_value (this_time_value);
   if (ecma_number_is_nan (t))
   {
     t = ECMA_NUMBER_ZERO;
@@ -1109,16 +1104,16 @@ ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argu
                   ecma_date_get_primitive_value (this_arg),
                   ret_value);
 
-  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
 
-  if (ecma_number_is_nan (*prim_num_p))
+  if (ecma_number_is_nan (prim_num))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
     ret_value = ecma_make_string_value (magic_str_p);
   }
   else
   {
-    ret_value = ecma_date_value_to_utc_string (*prim_num_p);
+    ret_value = ecma_date_value_to_utc_string (prim_num);
   }
 
   ECMA_FINALIZE (prim_value);
@@ -1144,15 +1139,15 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
                   ecma_date_get_primitive_value (this_arg),
                   ret_value);
 
-  ecma_number_t *prim_num_p = ecma_get_number_from_value (prim_value);
+  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
 
-  if (ecma_number_is_nan (*prim_num_p) || ecma_number_is_infinity (*prim_num_p))
+  if (ecma_number_is_nan (prim_num) || ecma_number_is_infinity (prim_num))
   {
     ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
   }
   else
   {
-    ret_value = ecma_date_value_to_iso_string (*prim_num_p);
+    ret_value = ecma_date_value_to_iso_string (prim_num);
   }
 
   ECMA_FINALIZE (prim_value);
@@ -1188,9 +1183,9 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
   /* 3. */
   if (ecma_is_value_number (tv))
   {
-    ecma_number_t num_value_p = *ecma_get_number_from_value (tv);
+    ecma_number_t num_value = ecma_get_number_from_value (tv);
 
-    if (ecma_number_is_nan (num_value_p) || ecma_number_is_infinity (num_value_p))
+    if (ecma_number_is_nan (num_value) || ecma_number_is_infinity (num_value))
     {
       ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
     }
@@ -1247,9 +1242,9 @@ ecma_builtin_date_prototype_get_year (ecma_value_t this_arg) /**< this argument 
 
   /* 1. */
   ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t *this_num_p = ecma_get_number_from_value (value);
+  ecma_number_t this_num = ecma_get_number_from_value (value);
   /* 2. */
-  if (ecma_number_is_nan (*this_num_p))
+  if (ecma_number_is_nan (this_num))
   {
     ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
     ret_value = ecma_make_string_value (nan_str_p);
@@ -1257,9 +1252,8 @@ ecma_builtin_date_prototype_get_year (ecma_value_t this_arg) /**< this argument 
   else
   {
     /* 3. */
-    ecma_number_t *ret_num_p = ecma_alloc_number ();
-    *ret_num_p = ecma_date_year_from_time (ecma_date_local_time (*this_num_p)) - 1900;
-    ret_value = ecma_make_number_value (ret_num_p);
+    ecma_number_t ret_num = ecma_date_year_from_time (ecma_date_local_time (this_num)) - 1900;
+    ret_value = ecma_make_number_value (ret_num);
   }
   ECMA_FINALIZE (value);
 
@@ -1283,7 +1277,7 @@ ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument 
 
   /* 1. */
   ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (*ecma_get_number_from_value (this_time_value));
+  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
   if (ecma_number_is_nan (t))
   {
     t = ECMA_NUMBER_ZERO;

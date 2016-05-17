@@ -263,9 +263,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
         /* 8.a */
         if (rad < 2 || rad > 36)
         {
-          ecma_number_t *ret_num_p = ecma_alloc_number ();
-          *ret_num_p = ecma_number_make_nan ();
-          ret_value = ecma_make_number_value (ret_num_p);
+          ret_value = ecma_make_nan_value ();
         }
         /* 8.b */
         else if (rad != 16)
@@ -331,16 +329,13 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
         /* 12. */
         if (end_p == start_p)
         {
-          ecma_number_t *ret_num_p = ecma_alloc_number ();
-          *ret_num_p = ecma_number_make_nan ();
-          ret_value = ecma_make_number_value (ret_num_p);
+          ret_value = ecma_make_nan_value ();
         }
       }
 
       if (ecma_is_value_empty (ret_value))
       {
-        ecma_number_t *value_p = ecma_alloc_number ();
-        *value_p = 0;
+        ecma_number_t value = ECMA_NUMBER_ZERO;
         ecma_number_t multiplier = 1.0f;
 
         /* 13. and 14. */
@@ -368,34 +363,30 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg __attr_unused___, /*
             JERRY_UNREACHABLE ();
           }
 
-          *value_p += current_number * multiplier;
+          value += current_number * multiplier;
           multiplier *= (ecma_number_t) rad;
         }
 
         /* 15. */
         if (sign < 0)
         {
-          *value_p *= (ecma_number_t) sign;
+          value *= (ecma_number_t) sign;
         }
 
-        ret_value = ecma_make_number_value (value_p);
+        ret_value = ecma_make_number_value (value);
       }
 
       ECMA_OP_TO_NUMBER_FINALIZE (radix_num);
     }
     else
     {
-      ecma_number_t *ret_num_p = ecma_alloc_number ();
-      *ret_num_p = ecma_number_make_nan ();
-      ret_value = ecma_make_number_value (ret_num_p);
+      ret_value = ecma_make_nan_value ();
     }
 
   }
   else
   {
-    ecma_number_t *ret_num_p = ecma_alloc_number ();
-    *ret_num_p = ecma_number_make_nan ();
-    ret_value = ecma_make_number_value (ret_num_p);
+    ret_value = ecma_make_nan_value ();
   }
 
   ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
@@ -465,8 +456,6 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       }
     }
 
-    ecma_number_t *ret_num_p = ecma_alloc_number ();
-
     const lit_utf8_byte_t *infinity_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
     lit_utf8_byte_t *infinity_str_curr_p = (lit_utf8_byte_t *) infinity_str_p;
     lit_utf8_byte_t *infinity_str_end_p = infinity_str_curr_p + sizeof (*infinity_str_p);
@@ -478,8 +467,7 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       if (infinity_str_curr_p == infinity_str_end_p)
       {
         /* String matched Infinity. */
-        *ret_num_p = ecma_number_make_infinity (sign);
-        ret_value = ecma_make_number_value (ret_num_p);
+        ret_value = ecma_make_number_value (ecma_number_make_infinity (sign));
         break;
       }
     }
@@ -590,36 +578,32 @@ ecma_builtin_global_object_parse_float (ecma_value_t this_arg __attr_unused___, 
       /* String did not contain a valid number. */
       if (start_p == end_p)
       {
-        *ret_num_p = ecma_number_make_nan ();
-        ret_value = ecma_make_number_value (ret_num_p);
+        ret_value = ecma_make_nan_value ();
       }
       else
       {
         /* 5. */
-        *ret_num_p = ecma_utf8_string_to_number (start_p,
-                                                 (lit_utf8_size_t) (end_p - start_p));
+        ecma_number_t ret_num = ecma_utf8_string_to_number (start_p,
+                                                            (lit_utf8_size_t) (end_p - start_p));
 
         if (sign)
         {
-          *ret_num_p *= -1;
+          ret_num *= ECMA_NUMBER_MINUS_ONE;
         }
 
-        ret_value = ecma_make_number_value (ret_num_p);
+        ret_value = ecma_make_number_value (ret_num);
       }
     }
     /* String ended after sign character, or was empty after removing leading whitespace. */
     else if (ecma_is_value_empty (ret_value))
     {
-      *ret_num_p = ecma_number_make_nan ();
-      ret_value = ecma_make_number_value (ret_num_p);
+      ret_value = ecma_make_nan_value ();
     }
   }
   /* String length is zero. */
   else
   {
-    ecma_number_t *ret_num_p = ecma_alloc_number ();
-    *ret_num_p = ecma_number_make_nan ();
-    ret_value = ecma_make_number_value (ret_num_p);
+    ret_value = ecma_make_nan_value ();
   }
 
   ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);

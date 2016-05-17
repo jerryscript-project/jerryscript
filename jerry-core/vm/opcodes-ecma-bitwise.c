@@ -48,7 +48,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-  ecma_number_t *res_p = ecma_alloc_number ();
+  ecma_number_t result = ECMA_NUMBER_ZERO;
   uint32_t right_uint32 = ecma_number_to_uint32 (num_right);
 
   switch (op)
@@ -56,45 +56,45 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
     case NUMBER_BITWISE_LOGIC_AND:
     {
       uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
-      *res_p = (ecma_number_t) ((int32_t) (left_uint32 & right_uint32));
+      result = (ecma_number_t) ((int32_t) (left_uint32 & right_uint32));
       break;
     }
     case NUMBER_BITWISE_LOGIC_OR:
     {
       uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
-      *res_p = (ecma_number_t) ((int32_t) (left_uint32 | right_uint32));
+      result = (ecma_number_t) ((int32_t) (left_uint32 | right_uint32));
       break;
     }
     case NUMBER_BITWISE_LOGIC_XOR:
     {
       uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
-      *res_p = (ecma_number_t) ((int32_t) (left_uint32 ^ right_uint32));
+      result = (ecma_number_t) ((int32_t) (left_uint32 ^ right_uint32));
       break;
     }
     case NUMBER_BITWISE_SHIFT_LEFT:
     {
-      *res_p = (ecma_number_t) (ecma_number_to_int32 (num_left) << (right_uint32 & 0x1F));
+      result = (ecma_number_t) (ecma_number_to_int32 (num_left) << (right_uint32 & 0x1F));
       break;
     }
     case NUMBER_BITWISE_SHIFT_RIGHT:
     {
-      *res_p = (ecma_number_t) (ecma_number_to_int32 (num_left) >> (right_uint32 & 0x1F));
+      result = (ecma_number_t) (ecma_number_to_int32 (num_left) >> (right_uint32 & 0x1F));
       break;
     }
     case NUMBER_BITWISE_SHIFT_URIGHT:
     {
       uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
-      *res_p = (ecma_number_t) (left_uint32 >> (right_uint32 & 0x1F));
+      result = (ecma_number_t) (left_uint32 >> (right_uint32 & 0x1F));
       break;
     }
     case NUMBER_BITWISE_NOT:
     {
-      *res_p = (ecma_number_t) ((int32_t) ~right_uint32);
+      result = (ecma_number_t) ((int32_t) ~right_uint32);
       break;
     }
   }
 
-  ret_value = ecma_make_number_value (res_p);
+  ret_value = ecma_make_number_value (result);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);

@@ -397,14 +397,14 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
   }
   else if (ecma_is_value_number (value))
   {
-    ecma_number_t *num = ecma_get_number_from_value (value);
+    ecma_number_t num = ecma_get_number_from_value (value);
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
     out_value_p->type = JERRY_API_DATA_TYPE_FLOAT32;
-    out_value_p->u.v_float32 = *num;
+    out_value_p->u.v_float32 = num;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
     out_value_p->type = JERRY_API_DATA_TYPE_FLOAT64;
-    out_value_p->u.v_float64 = *num;
+    out_value_p->u.v_float64 = num;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
   }
   else if (ecma_is_value_string (value))
@@ -461,28 +461,19 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out]
     }
     case JERRY_API_DATA_TYPE_FLOAT32:
     {
-      ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->u.v_float32);
-
-      *out_value_p = ecma_make_number_value (num);
+      *out_value_p = ecma_make_number_value ((ecma_number_t) (api_value_p->u.v_float32));
 
       break;
     }
     case JERRY_API_DATA_TYPE_FLOAT64:
     {
-      ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->u.v_float64);
-
-      *out_value_p = ecma_make_number_value (num);
+      *out_value_p = ecma_make_number_value ((ecma_number_t) (api_value_p->u.v_float64));
 
       break;
     }
     case JERRY_API_DATA_TYPE_UINT32:
     {
-      ecma_number_t *num = ecma_alloc_number ();
-      *num = (ecma_number_t) (api_value_p->u.v_uint32);
-
-      *out_value_p = ecma_make_number_value (num);
+      *out_value_p = ecma_make_uint32_value ((uint32_t) (api_value_p->u.v_uint32));
 
       break;
     }
@@ -734,9 +725,7 @@ jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
 {
   JERRY_ASSERT (size > 0);
 
-  ecma_number_t *length_num_p = ecma_alloc_number ();
-  *length_num_p = ((ecma_number_t) size);
-  ecma_value_t array_length = ecma_make_number_value (length_num_p);
+  ecma_value_t array_length = ecma_make_uint32_value (size);
 
   jerry_api_length_t argument_size = 1;
   ecma_value_t new_array_completion = ecma_op_create_array_object (&array_length, argument_size, true);

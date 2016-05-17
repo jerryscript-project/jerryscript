@@ -321,11 +321,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                                                      string_p,
                                                                      false, false, false);
 
-
-      ecma_number_t *len_p = ecma_alloc_number ();
-      *len_p = length_prop_value;
-
-      ecma_set_named_data_property_value (len_prop_p, ecma_make_number_value (len_p));
+      ecma_set_named_data_property_value (len_prop_p, ecma_make_uint32_value (length_prop_value));
 
       JERRY_ASSERT (!ecma_is_property_configurable (len_prop_p));
       return len_prop_p;

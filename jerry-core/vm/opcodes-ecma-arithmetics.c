@@ -50,38 +50,38 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-  ecma_number_t *res_p = ecma_alloc_number ();
+  ecma_number_t result = ECMA_NUMBER_ZERO;
 
   switch (op)
   {
     case NUMBER_ARITHMETIC_ADDITION:
     {
-      *res_p = ecma_number_add (num_left, num_right);
+      result = ecma_number_add (num_left, num_right);
       break;
     }
     case NUMBER_ARITHMETIC_SUBSTRACTION:
     {
-      *res_p = ecma_number_substract (num_left, num_right);
+      result = ecma_number_substract (num_left, num_right);
       break;
     }
     case NUMBER_ARITHMETIC_MULTIPLICATION:
     {
-      *res_p = ecma_number_multiply (num_left, num_right);
+      result = ecma_number_multiply (num_left, num_right);
       break;
     }
     case NUMBER_ARITHMETIC_DIVISION:
     {
-      *res_p = ecma_number_divide (num_left, num_right);
+      result = ecma_number_divide (num_left, num_right);
       break;
     }
     case NUMBER_ARITHMETIC_REMAINDER:
     {
-      *res_p = ecma_op_number_remainder (num_left, num_right);
+      result = ecma_op_number_remainder (num_left, num_right);
       break;
     }
   }
 
-  ret_value = ecma_make_number_value (res_p);
+  ret_value = ecma_make_number_value (result);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_right);
   ECMA_OP_TO_NUMBER_FINALIZE (num_left);
@@ -158,10 +158,7 @@ opfunc_unary_plus (ecma_value_t left_value) /**< left value */
                                left_value,
                                ret_value);
 
-  ecma_number_t *tmp_p = ecma_alloc_number ();
-
-  *tmp_p = num_var_value;
-  ret_value = ecma_make_number_value (tmp_p);
+  ret_value = ecma_make_number_value (num_var_value);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 
@@ -185,10 +182,7 @@ opfunc_unary_minus (ecma_value_t left_value) /**< left value */
                                left_value,
                                ret_value);
 
-  ecma_number_t *tmp_p = ecma_alloc_number ();
-
-  *tmp_p = ecma_number_negate (num_var_value);
-  ret_value = ecma_make_number_value (tmp_p);
+  ret_value = ecma_make_number_value (ecma_number_negate (num_var_value));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 

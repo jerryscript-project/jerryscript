@@ -73,8 +73,8 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
     else if (is_x_number)
     { // c.
-      ecma_number_t x_num = *ecma_get_number_from_value (x);
-      ecma_number_t y_num = *ecma_get_number_from_value (y);
+      ecma_number_t x_num = ecma_get_number_from_value (x);
+      ecma_number_t y_num = ecma_get_number_from_value (y);
 
       bool is_x_equal_to_y = (x_num == y_num);
 
@@ -267,8 +267,8 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     // d. If x is +0 and y is -0, return true.
     // e. If x is -0 and y is +0, return true.
 
-    ecma_number_t x_num = *ecma_get_number_from_value (x);
-    ecma_number_t y_num = *ecma_get_number_from_value (y);
+    ecma_number_t x_num = ecma_get_number_from_value (x);
+    ecma_number_t y_num = ecma_get_number_from_value (y);
 
     bool is_x_equal_to_y = (x_num == y_num);
 

@@ -195,13 +195,11 @@ ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< t
   ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
   const ecma_length_t len = ecma_string_get_length (original_string_p);
 
-  ecma_number_t *ret_num_p = ecma_alloc_number ();
-
   /* 5 */
   // When index_num is NaN, then the first two comparisons are false
   if (index_num < 0 || index_num >= len || (ecma_number_is_nan (index_num) && !len))
   {
-    *ret_num_p = ecma_number_make_nan ();
+    ret_value = ecma_make_nan_value ();
   }
   else
   {
@@ -215,11 +213,8 @@ ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< t
     JERRY_ASSERT (ecma_number_is_nan (index_num) || ecma_number_to_uint32 (index_num) == ecma_number_trunc (index_num));
 
     ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
-    *ret_num_p = ((ecma_number_t) new_ecma_char);
+    ret_value = ecma_make_uint32_value (new_ecma_char);
   }
-
-  ecma_value_t new_value = ecma_make_number_value (ret_num_p);
-  ret_value = new_value;
 
   ECMA_OP_TO_NUMBER_FINALIZE (index_num);
 
@@ -364,22 +359,22 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**<
   ecma_string_t *this_string_p = ecma_get_string_from_value (this_to_string_val);
   ecma_string_t *arg_string_p = ecma_get_string_from_value (arg_to_string_val);
 
-  ecma_number_t *result_p = ecma_alloc_number ();
+  ecma_number_t result = ECMA_NUMBER_ZERO;
 
   if (ecma_compare_ecma_strings_relational (this_string_p, arg_string_p))
   {
-    *result_p = ECMA_NUMBER_MINUS_ONE;
+    result = ECMA_NUMBER_MINUS_ONE;
   }
   else if (!ecma_compare_ecma_strings (this_string_p, arg_string_p))
   {
-    *result_p = ECMA_NUMBER_ONE;
+    result = ECMA_NUMBER_ONE;
   }
   else
   {
-    *result_p = ECMA_NUMBER_ZERO;
+    result = ECMA_NUMBER_ZERO;
   }
 
-  ret_value = ecma_make_number_value (result_p);
+  ret_value = ecma_make_number_value (result);
 
   ECMA_FINALIZE (arg_to_string_val);
   ECMA_FINALIZE (this_to_string_val);
@@ -456,9 +451,6 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
     else
     {
       /* 8.a. */
-      ecma_number_t *zero_number_p = ecma_alloc_number ();
-      *zero_number_p = 0;
-
       ecma_string_t *index_zero_string_p = ecma_new_ecma_string_from_uint32 (0);
 
       ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
@@ -466,7 +458,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
       ECMA_TRY_CATCH (put_value,
                       ecma_op_object_put (regexp_obj_p,
                                           last_index_string_p,
-                                          ecma_make_number_value (zero_number_p),
+                                          ecma_make_integer_value (0),
                                           true),
                       ret_value);
 
@@ -508,18 +500,16 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
                           ecma_op_to_number (this_index_value),
                           ret_value);
 
-          ecma_number_t this_index = *ecma_get_number_from_value (this_index_number);
+          ecma_number_t this_index = ecma_get_number_from_value (this_index_number);
 
           /* 8.f.iii.2. */
           if (this_index == previous_last_index)
           {
-            ecma_number_t *new_last_index_p = ecma_alloc_number ();
-            *new_last_index_p = this_index + 1;
             /* 8.f.iii.2.a. */
             ECMA_TRY_CATCH (index_put_value,
                             ecma_op_object_put (regexp_obj_p,
                                                 last_index_string_p,
-                                                ecma_make_number_value (new_last_index_p),
+                                                ecma_make_number_value (this_index + 1),
                                                 true),
                             ret_value);
 
@@ -527,8 +517,6 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
             previous_last_index = this_index + 1;
 
             ECMA_FINALIZE (index_put_value);
-
-            ecma_dealloc_number (new_last_index_p);
           }
           else
           {
@@ -595,7 +583,6 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
 
       ecma_deref_ecma_string (last_index_string_p);
       ecma_deref_ecma_string (index_zero_string_p);
-      ecma_dealloc_number (zero_number_p);
     }
 
     ECMA_FINALIZE (global_value);
@@ -727,12 +714,12 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
       /* We use the length of the result string to determine the
        * match end. This works regardless the global flag is set. */
       ecma_string_t *result_string_p = ecma_get_string_from_value (result_string_value);
-      ecma_number_t *index_number_p = ecma_get_number_from_value (index_value);
+      ecma_number_t index_number = ecma_get_number_from_value (index_value);
 
-      context_p->match_start = (ecma_length_t) (*index_number_p);
+      context_p->match_start = (ecma_length_t) (index_number);
       context_p->match_end = context_p->match_start + (ecma_length_t) ecma_string_get_length (result_string_p);
 
-      JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (*index_number_p) == context_p->match_start);
+      JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (index_number) == context_p->match_start);
 
       ret_value = ecma_copy_value (match_value);
 
@@ -800,10 +787,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
   JERRY_ASSERT (ecma_is_value_number (match_length_value));
 
-  ecma_number_t *match_length_number_p = ecma_get_number_from_value (match_length_value);
-  ecma_length_t match_length = (ecma_length_t) (*match_length_number_p);
+  ecma_number_t match_length_number = ecma_get_number_from_value (match_length_value);
+  ecma_length_t match_length = (ecma_length_t) (match_length_number);
 
-  JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (*match_length_number_p) == match_length);
+  JERRY_ASSERT ((ecma_length_t) ecma_number_to_uint32 (match_length_number) == match_length);
   JERRY_ASSERT (match_length >= 1);
 
   if (context_p->is_replace_callable)
@@ -834,10 +821,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
     if (ecma_is_value_empty (ret_value))
     {
-      ecma_number_t *index_number_p = ecma_alloc_number ();
-
-      *index_number_p = context_p->match_start;
-      arguments_list[match_length] = ecma_make_number_value (index_number_p);
+      arguments_list[match_length] = ecma_make_number_value (context_p->match_start);
       arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string);
 
       ECMA_TRY_CATCH (result_value,
@@ -857,7 +841,6 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
       ECMA_FINALIZE (result_value);
 
       ecma_free_value (arguments_list[match_length + 1]);
-      ecma_dealloc_number (index_number_p);
     }
 
     for (ecma_length_t i = 0; i < values_copied; i++)
@@ -1122,19 +1105,15 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
         {
           ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
           ecma_object_t *regexp_obj_p = ecma_get_object_from_value (context_p->regexp_or_search_string);
-          ecma_number_t *zero_number_p = ecma_alloc_number ();
-
-          *zero_number_p = context_p->match_end + 1;
 
           ECMA_TRY_CATCH (put_value,
                           ecma_op_object_put (regexp_obj_p,
                                               last_index_string_p,
-                                              ecma_make_number_value (zero_number_p),
+                                              ecma_make_number_value (context_p->match_end + 1),
                                               true),
                           ret_value);
 
           ECMA_FINALIZE (put_value);
-          ecma_dealloc_number (zero_number_p);
           ecma_deref_ecma_string (last_index_string_p);
         }
       }
@@ -1286,18 +1265,15 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
     if (context.is_global)
     {
       ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-      ecma_number_t *zero_number_p = ecma_alloc_number ();
-      *zero_number_p = 0;
 
       ECMA_TRY_CATCH (put_value,
                       ecma_op_object_put (regexp_obj_p,
                                           last_index_string_p,
-                                          ecma_make_number_value (zero_number_p),
+                                          ecma_make_integer_value (0),
                                           true),
                       ret_value);
 
       ECMA_FINALIZE (put_value);
-      ecma_dealloc_number (zero_number_p);
       ecma_deref_ecma_string (last_index_string_p);
     }
 
@@ -1401,7 +1377,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
 
       JERRY_ASSERT (ecma_is_value_number (index_value));
 
-      offset = *ecma_get_number_from_value (index_value);
+      offset = ecma_get_number_from_value (index_value);
 
       ECMA_FINALIZE (index_value);
       ecma_deref_ecma_string (index_string_p);
@@ -1409,10 +1385,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
 
     if (ecma_is_value_empty (ret_value))
     {
-      ecma_number_t *offset_number_p = ecma_alloc_number ();
-      *offset_number_p = offset;
-
-      ret_value = ecma_make_number_value (offset_number_p);
+      ret_value = ecma_make_number_value (offset);
     }
 
     ECMA_FINALIZE (match_result);
@@ -1546,8 +1519,8 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
       ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
       ecma_property_t *index_prop_p = ecma_get_named_property (obj_p, magic_index_str_p);
 
-      ecma_number_t *index_num_p = ecma_get_number_from_value (ecma_get_named_data_property_value (index_prop_p));
-      *index_num_p += start_idx;
+      ecma_number_t index_num = ecma_get_number_from_value (ecma_get_named_data_property_value (index_prop_p));
+      ecma_value_assign_number (&ECMA_PROPERTY_VALUE_PTR (index_prop_p)->value, index_num + start_idx);
 
       ecma_deref_ecma_string (magic_index_str_p);
     }
@@ -1603,14 +1576,12 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
                                                                          true, false, false);
         ecma_deref_ecma_string (magic_index_str_p);
 
-        ecma_number_t *index_num_p = ecma_alloc_number ();
-        *index_num_p = ((ecma_number_t) start_idx);
-
-        ecma_named_data_property_assign_value (match_array_p, index_prop_p, ecma_make_number_value (index_num_p));
+        ecma_named_data_property_assign_value (match_array_p,
+                                               index_prop_p,
+                                               ecma_make_uint32_value (start_idx));
 
         ret_value = match_array;
 
-        ecma_dealloc_number (index_num_p);
         ecma_deref_ecma_string (zero_str_p);
       }
       else
@@ -1809,10 +1780,10 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
               ecma_property_t *index_prop_p = ecma_get_named_property (match_array_obj_p, magic_index_str_p);
 
               ecma_value_t index_value = ecma_get_named_data_property_value (index_prop_p);
-              ecma_number_t *index_num_p = ecma_get_number_from_value (index_value);
-              JERRY_ASSERT (*index_num_p >= 0);
+              ecma_number_t index_num = ecma_get_number_from_value (index_value);
+              JERRY_ASSERT (index_num >= 0);
 
-              uint32_t end_pos = ecma_number_to_uint32 (*index_num_p);
+              uint32_t end_pos = ecma_number_to_uint32 (index_num);
 
               if (separator_is_empty)
               {

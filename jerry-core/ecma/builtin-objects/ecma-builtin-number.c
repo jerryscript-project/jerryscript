@@ -59,10 +59,7 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 
   if (arguments_list_len == 0)
   {
-    ecma_number_t *zero_num_p = ecma_alloc_number ();
-    *zero_num_p = ECMA_NUMBER_ZERO;
-
-    ret_value = ecma_make_number_value (zero_num_p);
+    ret_value = ecma_make_integer_value (0);
   }
   else
   {
@@ -85,13 +82,7 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   if (arguments_list_len == 0)
   {
-    ecma_number_t *zero_num_p = ecma_alloc_number ();
-    *zero_num_p = ECMA_NUMBER_ZERO;
-
-    ecma_value_t completion = ecma_op_create_number_object (ecma_make_number_value (zero_num_p));
-
-    ecma_dealloc_number (zero_num_p);
-
+    ecma_value_t completion = ecma_op_create_number_object (ecma_make_integer_value (0));
     return completion;
   }
   else

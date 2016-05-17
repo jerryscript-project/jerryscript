@@ -122,6 +122,8 @@ extern bool ecma_is_value_true (ecma_value_t);
 extern bool ecma_is_value_false (ecma_value_t);
 extern bool ecma_is_value_array_hole (ecma_value_t);
 
+extern bool ecma_is_value_integer_number (ecma_value_t);
+extern bool ecma_is_value_float_number (ecma_value_t);
 extern bool ecma_is_value_number (ecma_value_t);
 extern bool ecma_is_value_string (ecma_value_t);
 extern bool ecma_is_value_object (ecma_value_t);
@@ -130,17 +132,25 @@ extern bool ecma_is_value_error (ecma_value_t);
 extern void ecma_check_value_type_is_spec_defined (ecma_value_t);
 
 extern ecma_value_t ecma_make_simple_value (const ecma_simple_value_t value);
-extern ecma_value_t ecma_make_number_value (const ecma_number_t *);
+extern ecma_value_t ecma_make_integer_value (ecma_integer_value_t);
+extern ecma_value_t ecma_make_nan_value (void);
+extern ecma_value_t ecma_make_number_value (ecma_number_t);
+extern ecma_value_t ecma_make_int32_value (int32_t);
+extern ecma_value_t ecma_make_uint32_value (uint32_t);
 extern ecma_value_t ecma_make_string_value (const ecma_string_t *);
 extern ecma_value_t ecma_make_object_value (const ecma_object_t *);
 extern ecma_value_t ecma_make_error_value (ecma_value_t);
 extern ecma_value_t ecma_make_error_obj_value (const ecma_object_t *);
-extern ecma_number_t *ecma_get_number_from_value (ecma_value_t) __attr_pure___;
+extern ecma_number_t ecma_get_number_from_value (ecma_value_t) __attr_pure___;
+extern uint32_t ecma_get_uint32_from_value (ecma_value_t) __attr_pure___;
 extern ecma_string_t *ecma_get_string_from_value (ecma_value_t) __attr_pure___;
 extern ecma_object_t *ecma_get_object_from_value (ecma_value_t) __attr_pure___;
 extern ecma_value_t ecma_get_value_from_error_value (ecma_value_t) __attr_pure___;
 extern ecma_value_t ecma_copy_value (ecma_value_t);
 extern ecma_value_t ecma_copy_value_if_not_object (ecma_value_t);
+extern void ecma_value_assign_value (ecma_value_t *, ecma_value_t);
+extern void ecma_value_assign_number (ecma_value_t *, ecma_number_t);
+extern void ecma_value_assign_uint32 (ecma_value_t *, uint32_t);
 extern void ecma_free_value (ecma_value_t);
 extern void ecma_free_value_if_not_object (ecma_value_t);
 

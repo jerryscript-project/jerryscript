@@ -55,8 +55,8 @@
  */
 typedef enum
 {
-  ECMA_TYPE_SIMPLE, /**< simple value */
-  ECMA_TYPE_NUMBER, /**< 64-bit integer */
+  ECMA_TYPE_DIRECT, /**< directly encoded value, a 28 bit signed integer or a simple value */
+  ECMA_TYPE_FLOAT, /**< pointer to a 64 or 32 bit floating point number */
   ECMA_TYPE_STRING, /**< pointer to description of a string */
   ECMA_TYPE_OBJECT, /**< pointer to description of an object */
   ECMA_TYPE___MAX = ECMA_TYPE_OBJECT /** highest value for ecma types */
@@ -68,10 +68,10 @@ typedef enum
 typedef enum
 {
   /**
-   * Empty value is implementation defined value, used for:
-   *   - representing empty value in completion values (see also: ECMA-262 v5, 8.9 Completion specification type);
-   *   - values of uninitialized immutable bindings;
-   *   - values of empty register variables.
+   * Empty value is implementation defined value, used for representing:
+   *   - empty (uninitialized) values
+   *   - immutable binding values
+   *   - special register or stack values for vm
    */
   ECMA_SIMPLE_VALUE_EMPTY,
   ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
@@ -89,6 +89,11 @@ typedef enum
  * Bit-field structure: type (2) | error (1) | value (29)
  */
 typedef uint32_t ecma_value_t;
+
+/**
+ * Type for directly encoded integer numbers in JerryScript.
+ */
+typedef int32_t ecma_integer_value_t;
 
 #if UINTPTR_MAX <= UINT32_MAX
 
@@ -113,6 +118,50 @@ typedef uint32_t ecma_value_t;
  * Shift for value part in ecma_type_t
  */
 #define ECMA_VALUE_SHIFT 3
+
+/**
+ * Mask for directly encoded values
+ */
+#define ECMA_DIRECT_TYPE_MASK ((1u << ECMA_VALUE_SHIFT) | ECMA_VALUE_TYPE_MASK)
+
+/**
+ * Ecma integer value type
+ */
+#define ECMA_DIRECT_TYPE_INTEGER_VALUE ((0u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
+
+/**
+ * Ecma simple value type
+ */
+#define ECMA_DIRECT_TYPE_SIMPLE_VALUE ((1u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
+
+/**
+ * Shift for directly encoded values in ecma_value_t
+ */
+#define ECMA_DIRECT_SHIFT 4
+
+/**
+ * Maximum integer number for an ecma value
+ */
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#define ECMA_INTEGER_NUMBER_MAX 0x7fffff
+#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#define ECMA_INTEGER_NUMBER_MAX 0x7ffffff
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+/**
+ * Minimum integer number for an ecma value
+ */
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#define ECMA_INTEGER_NUMBER_MIN -0x7fffff
+#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#define ECMA_INTEGER_NUMBER_MIN -0x8000000
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+/**
+ * Checks whether the integer number is in the integer number range.
+ */
+#define ECMA_IS_INTEGER_NUMBER(num) \
+  (ECMA_INTEGER_NUMBER_MIN <= (num) && (num) <= ECMA_INTEGER_NUMBER_MAX)
 
 /**
  * Internal properties' identifiers.

@@ -517,9 +517,8 @@ enum
       lit_literal_t lit = lit_cpointer_decompress (lit_cpointer); \
       if (unlikely (LIT_RECORD_IS_NUMBER (lit))) \
       { \
-        ecma_number_t *number_p = ecma_alloc_number (); \
-        *number_p = lit_number_literal_get_number (lit); \
-        (target_value) = ecma_make_number_value (number_p); \
+        ecma_number_t number = lit_number_literal_get_number (lit); \
+        (target_value) = ecma_make_number_value (number); \
       } \
       else \
       { \
@@ -957,26 +956,25 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_NUMBER:
         {
-          ecma_number_t *number_p = ecma_alloc_number ();
+          int32_t number;
 
           if (opcode == CBC_PUSH_NUMBER_0)
           {
-            *number_p = 0;
+            number = 0;
           }
           else
           {
-            int value = *byte_code_p++;
+            number = *byte_code_p++;
 
             JERRY_ASSERT (opcode == CBC_PUSH_NUMBER_1);
 
-            if (value >= CBC_PUSH_NUMBER_1_RANGE_END)
+            if (number >= CBC_PUSH_NUMBER_1_RANGE_END)
             {
-              value = -(value - CBC_PUSH_NUMBER_1_RANGE_END);
+              number = -(number - CBC_PUSH_NUMBER_1_RANGE_END);
             }
-            *number_p = (ecma_number_t) value;
           }
 
-          result = ecma_make_number_value (number_p);
+          result = ecma_make_int32_value (number);
           break;
         }
         case VM_OC_PUSH_OBJECT:
@@ -1066,7 +1064,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_object_t *array_obj_p;
           ecma_string_t *length_str_p;
           ecma_property_t *length_prop_p;
-          ecma_number_t *length_num_p;
+          uint32_t length_num;
           ecma_property_descriptor_t prop_desc;
 
           prop_desc = ecma_make_empty_property_descriptor ();
@@ -1090,7 +1088,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (length_prop_p != NULL);
 
           left_value = ecma_get_named_data_property_value (length_prop_p);
-          length_num_p = ecma_get_number_from_value (left_value);
+          length_num = ecma_get_uint32_from_value (left_value);
 
           ecma_deref_ecma_string (length_str_p);
 
@@ -1098,7 +1096,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             if (!ecma_is_value_array_hole (stack_top_p[i]))
             {
-              ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) *length_num_p);
+              ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
               prop_desc.value = stack_top_p[i];
 
@@ -1112,9 +1110,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               ecma_free_value (stack_top_p[i]);
             }
 
-            (*length_num_p)++;
+            length_num++;
           }
 
+          ecma_value_assign_uint32 (&ECMA_PROPERTY_VALUE_PTR (length_prop_p)->value,
+                                    length_num);
           break;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:
@@ -1228,8 +1228,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_POST_DECR:
         {
           uint32_t base = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_PROP_PRE_INCR;
-          ecma_number_t increase = ECMA_NUMBER_ONE;
-          ecma_number_t *result_p;
 
           last_completion_value = ecma_op_to_number (left_value);
 
@@ -1240,7 +1238,80 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           byte_code_p = byte_code_start_p + 1;
           result = last_completion_value;
-          result_p = ecma_get_number_from_value (result);
+
+          if (ecma_is_value_integer_number (result))
+          {
+            ecma_integer_value_t int_value = (ecma_integer_value_t) result;
+            ecma_integer_value_t int_increase;
+
+            if (base & 0x2)
+            {
+              /* For decrement operators */
+              if (int_value <= (ECMA_INTEGER_NUMBER_MIN << ECMA_DIRECT_SHIFT))
+              {
+                int_increase = 0;
+              }
+              else
+              {
+                int_increase = -(1 << ECMA_DIRECT_SHIFT);
+              }
+            }
+            else
+            {
+              if (int_value >= (ECMA_INTEGER_NUMBER_MAX << ECMA_DIRECT_SHIFT))
+              {
+                int_increase = 0;
+              }
+              else
+              {
+                int_increase = 1 << ECMA_DIRECT_SHIFT;
+              }
+            }
+
+            if (int_increase != 0)
+            {
+              /* Post operators require the unmodifed number value. */
+              if (base & 0x4)
+              {
+                if (opcode_data & VM_OC_PUT_STACK)
+                {
+                  if (base & 0x1)
+                  {
+                    JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
+                                  || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
+
+                    *stack_top_p++ = result;
+                  }
+                  else
+                  {
+                    /* The parser ensures there is enough space for the
+                     * extra value on the stack. See js-parser-expr.c. */
+
+                    JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT
+                                  || opcode == CBC_POST_DECR_PUSH_RESULT);
+
+                    stack_top_p++;
+                    stack_top_p[-1] = stack_top_p[-2];
+                    stack_top_p[-2] = stack_top_p[-3];
+                    stack_top_p[-3] = result;
+                  }
+                  opcode_data &= (uint32_t)~VM_OC_PUT_STACK;
+                }
+                else if (opcode_data & VM_OC_PUT_BLOCK)
+                {
+                  ecma_free_value (block_result);
+                  block_result = result;
+                  opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK;
+                }
+              }
+
+              result = (ecma_value_t) (int_value + int_increase);
+              break;
+            }
+          }
+
+          ecma_number_t increase = ECMA_NUMBER_ONE;
+          ecma_number_t result_number = ecma_get_number_from_value (result);
 
           if (base & 0x2)
           {
@@ -1283,7 +1354,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
           }
 
-          *result_p = ecma_number_add (*result_p, increase);
+          ecma_value_assign_number (&result, result_number + increase);
           break;
         }
         case VM_OC_ASSIGN:

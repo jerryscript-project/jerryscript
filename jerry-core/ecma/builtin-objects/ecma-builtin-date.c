@@ -81,14 +81,13 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
                             ecma_length_t args_len) /**< number of arguments */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_number_t *prim_value_p = ecma_alloc_number ();
-  *prim_value_p = ecma_number_make_nan ();
+  ecma_number_t prim_value = ecma_number_make_nan ();
 
   ECMA_TRY_CATCH (year_value, ecma_op_to_number (args[0]), ret_value);
   ECMA_TRY_CATCH (month_value, ecma_op_to_number (args[1]), ret_value);
 
-  ecma_number_t year = *ecma_get_number_from_value (year_value);
-  ecma_number_t month = *ecma_get_number_from_value (month_value);
+  ecma_number_t year = ecma_get_number_from_value (year_value);
+  ecma_number_t month = ecma_get_number_from_value (month_value);
   ecma_number_t date = ECMA_NUMBER_ONE;
   ecma_number_t hours = ECMA_NUMBER_ZERO;
   ecma_number_t minutes = ECMA_NUMBER_ZERO;
@@ -99,7 +98,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   if (args_len >= 3 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (date_value, ecma_op_to_number (args[2]), ret_value);
-    date = *ecma_get_number_from_value (date_value);
+    date = ecma_get_number_from_value (date_value);
     ECMA_FINALIZE (date_value);
   }
 
@@ -107,7 +106,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   if (args_len >= 4 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (hours_value, ecma_op_to_number (args[3]), ret_value);
-    hours = *ecma_get_number_from_value (hours_value);
+    hours = ecma_get_number_from_value (hours_value);
     ECMA_FINALIZE (hours_value);
   }
 
@@ -115,7 +114,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   if (args_len >= 5 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (minutes_value, ecma_op_to_number (args[4]), ret_value);
-    minutes = *ecma_get_number_from_value (minutes_value);
+    minutes = ecma_get_number_from_value (minutes_value);
     ECMA_FINALIZE (minutes_value);
   }
 
@@ -123,7 +122,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   if (args_len >= 6 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (seconds_value, ecma_op_to_number (args[5]), ret_value);
-    seconds = *ecma_get_number_from_value (seconds_value);
+    seconds = ecma_get_number_from_value (seconds_value);
     ECMA_FINALIZE (seconds_value);
   }
 
@@ -131,7 +130,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   if (args_len >= 7 && ecma_is_value_empty (ret_value))
   {
     ECMA_TRY_CATCH (milliseconds_value, ecma_op_to_number (args[6]), ret_value);
-    milliseconds = *ecma_get_number_from_value (milliseconds_value);
+    milliseconds = ecma_get_number_from_value (milliseconds_value);
     ECMA_FINALIZE (milliseconds_value);
   }
 
@@ -152,13 +151,13 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
       }
     }
 
-    *prim_value_p = ecma_date_make_date (ecma_date_make_day (year,
-                                                             month,
-                                                             date),
-                                         ecma_date_make_time (hours,
-                                                              minutes,
-                                                              seconds,
-                                                              milliseconds));
+    prim_value = ecma_date_make_date (ecma_date_make_day (year,
+                                                          month,
+                                                          date),
+                                      ecma_date_make_time (hours,
+                                                           minutes,
+                                                           seconds,
+                                                           milliseconds));
   }
 
   ECMA_FINALIZE (month_value);
@@ -166,11 +165,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
 
   if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_make_number_value (prim_value_p);
-  }
-  else
-  {
-    ecma_dealloc_number (prim_value_p);
+    ret_value = ecma_make_number_value (prim_value);
   }
 
   return ret_value;
@@ -191,8 +186,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
                          ecma_value_t arg) /**< string */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_number_t *date_num_p = ecma_alloc_number ();
-  *date_num_p = ecma_number_make_nan ();
+  ecma_number_t date_num = ecma_number_make_nan ();
 
   /* Date Time String fromat (ECMA-262 v5, 15.9.1.15) */
   ECMA_TRY_CATCH (date_str_value,
@@ -382,11 +376,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
     if (date_str_curr_p >= date_str_end_p)
     {
       ecma_number_t date = ecma_date_make_day (year, month - 1, day);
-      *date_num_p = ecma_date_make_date (date, time);
+      date_num = ecma_date_make_date (date, time);
     }
   }
 
-  ret_value = ecma_make_number_value (date_num_p);
+  ret_value = ecma_make_number_value (date_num);
 
   ECMA_FINALIZE_UTF8_STRING (date_start_p, date_start_size);
   ECMA_FINALIZE (date_str_value);
@@ -416,17 +410,13 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
      *      When the UTC function is called with fewer than two arguments,
      *      the behaviour is implementation-dependent, so just return NaN.
      */
-    ecma_number_t *nan_p = ecma_alloc_number ();
-    *nan_p = ecma_number_make_nan ();
-    return ecma_make_number_value (nan_p);
+    return ecma_make_number_value (ecma_number_make_nan ());
   }
 
   ECMA_TRY_CATCH (time_value, ecma_date_construct_helper (args, args_number), ret_value);
 
-  ecma_number_t *time_p = ecma_get_number_from_value (time_value);
-  ecma_number_t *time_clip_p = ecma_alloc_number ();
-  *time_clip_p = ecma_date_time_clip (*time_p);
-  ret_value = ecma_make_number_value (time_clip_p);
+  ecma_number_t time = ecma_get_number_from_value (time_value);
+  ret_value = ecma_make_number_value (ecma_date_time_clip (time));
 
   ECMA_FINALIZE (time_value);
 
@@ -445,11 +435,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
 static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
 {
-  ecma_number_t *now_num_p = ecma_alloc_number ();
-
-  *now_num_p = DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ());
-
-  return ecma_make_number_value (now_num_p);
+  return ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
 } /* ecma_builtin_date_now */
 
 /**
@@ -470,7 +456,7 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p __attr_unu
                   ecma_builtin_date_now (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED)),
                   ret_value);
 
-  ret_value = ecma_date_value_to_string (*ecma_get_number_from_value (now_val));
+  ret_value = ecma_date_value_to_string (ecma_get_number_from_value (now_val));
 
   ECMA_FINALIZE (now_val);
 
@@ -490,7 +476,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_number_t *prim_value_num_p = NULL;
+  ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
@@ -504,8 +490,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
                     ecma_builtin_date_now (ecma_make_object_value (obj_p)),
                     ret_value);
 
-    prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = *ecma_get_number_from_value (parse_res_value);
+    prim_value_num = ecma_get_number_from_value (parse_res_value);
 
     ECMA_FINALIZE (parse_res_value)
   }
@@ -521,8 +506,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
                       ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value),
                       ret_value);
 
-      prim_value_num_p = ecma_alloc_number ();
-      *prim_value_num_p = *ecma_get_number_from_value (parse_res_value);
+      prim_value_num = ecma_get_number_from_value (parse_res_value);
 
       ECMA_FINALIZE (parse_res_value);
     }
@@ -530,8 +514,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     {
       ECMA_TRY_CATCH (prim_value, ecma_op_to_number (arguments_list_p[0]), ret_value);
 
-      prim_value_num_p = ecma_alloc_number ();
-      *prim_value_num_p = ecma_date_time_clip (*ecma_get_number_from_value (prim_value));
+      prim_value_num = ecma_date_time_clip (ecma_get_number_from_value (prim_value));
 
       ECMA_FINALIZE (prim_value);
     }
@@ -544,23 +527,21 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
                     ecma_date_construct_helper (arguments_list_p, arguments_list_len),
                     ret_value);
 
-    ecma_number_t *time_p = ecma_get_number_from_value (time_value);
-    prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = ecma_date_time_clip (ecma_date_utc (*time_p));
+    ecma_number_t time = ecma_get_number_from_value (time_value);
+    prim_value_num = ecma_date_time_clip (ecma_date_utc (time));
 
     ECMA_FINALIZE (time_value);
   }
   else
   {
-    prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = ecma_number_make_nan ();
+    prim_value_num = ecma_number_make_nan ();
   }
 
   if (ecma_is_value_empty (ret_value))
   {
-    if (!ecma_number_is_nan (*prim_value_num_p) && ecma_number_is_infinity (*prim_value_num_p))
+    if (!ecma_number_is_nan (prim_value_num) && ecma_number_is_infinity (prim_value_num))
     {
-      *prim_value_num_p = ecma_number_make_nan ();
+      prim_value_num = ecma_number_make_nan ();
     }
 
     ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
@@ -569,6 +550,9 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                         ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+
+    ecma_number_t *prim_value_num_p = ecma_alloc_number ();
+    *prim_value_num_p = prim_value_num;
     ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_num_p);
 
     ret_value = ecma_make_object_value (obj_p);

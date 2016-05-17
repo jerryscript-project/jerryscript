@@ -102,9 +102,8 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
                                                                     false, false, false);
-  ecma_number_t *length_prop_value_p = ecma_alloc_number ();
-  *length_prop_value_p = length_value;
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_prop_value_p));
+
+  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_value));
   ecma_deref_ecma_string (length_magic_string_p);
 
   return ecma_make_object_value (obj_p);

@@ -93,7 +93,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
-  ecma_number_t this_arg_number = *ecma_get_number_from_value (this_value);
+  ecma_number_t this_arg_number = ecma_get_number_from_value (this_value);
 
   if (arguments_list_len == 0
       || ecma_number_is_nan (this_arg_number)
@@ -362,10 +362,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
       prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                           ecma_get_internal_property_value (prim_value_prop_p));
 
-      ecma_number_t *ret_num_p = ecma_alloc_number ();
-      *ret_num_p = *prim_value_num_p;
-
-      return ecma_make_number_value (ret_num_p);
+      return ecma_make_number_value (*prim_value_num_p);
     }
   }
 
@@ -388,7 +385,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
-  ecma_number_t this_num = *ecma_get_number_from_value (this_value);
+  ecma_number_t this_num = ecma_get_number_from_value (this_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
@@ -592,7 +589,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
 
   /* 1. */
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
-  ecma_number_t this_num = *ecma_get_number_from_value (this_value);
+  ecma_number_t this_num = ecma_get_number_from_value (this_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
@@ -777,7 +774,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
 
   /* 1. */
   ECMA_TRY_CATCH (this_value, ecma_builtin_number_prototype_object_value_of (this_arg), ret_value);
-  ecma_number_t this_num = *ecma_get_number_from_value (this_value);
+  ecma_number_t this_num = ecma_get_number_from_value (this_value);
 
   /* 2. */
   if (ecma_is_value_undefined (arg))

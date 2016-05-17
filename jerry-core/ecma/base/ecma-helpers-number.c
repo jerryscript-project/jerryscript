@@ -24,6 +24,15 @@
  * @{
  */
 
+JERRY_STATIC_ASSERT (sizeof (ecma_value_t) == sizeof (ecma_integer_value_t),
+                     size_of_ecma_value_t_must_be_equal_to_the_size_of_ecma_integer_value_t);
+
+JERRY_STATIC_ASSERT (ECMA_DIRECT_SHIFT == ECMA_VALUE_SHIFT + 1,
+                     currently_directly_encoded_values_has_one_extra_flag);
+
+JERRY_STATIC_ASSERT (((1 << (ECMA_DIRECT_SHIFT - 1)) | ECMA_TYPE_DIRECT) == ECMA_DIRECT_TYPE_SIMPLE_VALUE,
+                     currently_directly_encoded_values_start_after_direct_type_simple_value);
+
 #define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
                               ECMA_NUMBER_BIASED_EXP_WIDTH)
 

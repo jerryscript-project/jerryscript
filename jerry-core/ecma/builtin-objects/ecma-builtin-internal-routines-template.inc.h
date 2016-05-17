@@ -251,10 +251,7 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
    }
 #define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable) case name: \
     { \
-      ecma_number_t *num_p = ecma_alloc_number (); \
-      *num_p = number_value; \
-      \
-      value = ecma_make_number_value (num_p); \
+      value = ecma_make_number_value (number_value); \
       \
       writable = prop_writable; \
       enumerable = prop_enumerable; \

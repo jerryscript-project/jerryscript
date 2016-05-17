@@ -68,7 +68,7 @@
   ecma_number_t num_var = ecma_number_make_nan (); \
   if (ecma_is_value_number (value)) \
   { \
-    num_var = *ecma_get_number_from_value (value); \
+    num_var = ecma_get_number_from_value (value); \
   } \
   else \
   { \
@@ -76,7 +76,7 @@
                     ecma_op_to_number (value), \
                     return_value); \
     \
-    num_var = *ecma_get_number_from_value (to_number_value); \
+    num_var = ecma_get_number_from_value (to_number_value); \
     \
     ECMA_FINALIZE (to_number_value); \
   } \

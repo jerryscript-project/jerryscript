@@ -207,6 +207,30 @@ ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_array_hole */
 
 /**
+ * Check if the value is integer ecma-number.
+ *
+ * @return true - if the value contains an integer ecma-number value,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_is_value_integer_number (ecma_value_t value) /**< ecma value */
+{
+  return (value & ECMA_DIRECT_TYPE_MASK) == ECMA_DIRECT_TYPE_INTEGER_VALUE;
+} /* ecma_is_value_integer_number */
+
+/**
+ * Check if the value is floating-point ecma-number.
+ *
+ * @return true - if the value contains a floating-point ecma-number value,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_is_value_float_number (ecma_value_t value) /**< ecma value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
+} /* ecma_is_value_float_number */
+
+/**
  * Check if the value is ecma-number.
  *
  * @return true - if the value contains ecma-number value,
@@ -215,7 +239,8 @@ ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_number (ecma_value_t value) /**< ecma value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
+  return (ecma_is_value_integer_number (value)
+          || ecma_is_value_float_number (value));
 } /* ecma_is_value_number */
 
 /**
@@ -275,19 +300,133 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 inline ecma_value_t __attr_const___ __attr_always_inline___
 ecma_make_simple_value (const ecma_simple_value_t simple_value) /**< simple value */
 {
-  return (((ecma_value_t) (simple_value)) << ECMA_VALUE_SHIFT) | ECMA_TYPE_SIMPLE;
+  return (((ecma_value_t) (simple_value)) << ECMA_DIRECT_SHIFT) | ECMA_DIRECT_TYPE_SIMPLE_VALUE;
 } /* ecma_make_simple_value */
 
 /**
- * Number value constructor
+ * Encode an integer number into an ecma-value without allocating memory
+ *
+ * Note:
+ *   The value must fit into the range of allowed ecma integer values
+ *
+ * @return ecma-value
  */
-ecma_value_t __attr_const___
-ecma_make_number_value (const ecma_number_t *ecma_num_p) /**< number to reference in value */
+inline ecma_value_t __attr_const___ __attr_always_inline___
+ecma_make_integer_value (ecma_integer_value_t integer_value) /**< integer number to be encoded */
 {
-  JERRY_ASSERT (ecma_num_p != NULL);
+  JERRY_ASSERT (ECMA_IS_INTEGER_NUMBER (integer_value));
 
-  return ecma_pointer_to_ecma_value (ecma_num_p) | ECMA_TYPE_NUMBER;
+  return ((ecma_value_t) (integer_value << ECMA_DIRECT_SHIFT)) | ECMA_DIRECT_TYPE_INTEGER_VALUE;
+} /* ecma_make_integer_value */
+
+/**
+ * Allocate and initialize a new float number without checks.
+ *
+ * @return ecma-value
+ */
+static ecma_value_t __attr_const___
+ecma_create_float_number (ecma_number_t ecma_number) /**< value of the float number */
+{
+  ecma_number_t *ecma_num_p = ecma_alloc_number ();
+
+  *ecma_num_p = ecma_number;
+
+  return ecma_pointer_to_ecma_value (ecma_num_p) | ECMA_TYPE_FLOAT;
+} /* ecma_create_float_number */
+
+/**
+ * Create a new NaN value.
+ *
+ * @return ecma-value
+ */
+inline ecma_value_t __attr_always_inline___
+ecma_make_nan_value (void)
+{
+  return ecma_create_float_number (ecma_number_make_nan ());
+} /* ecma_make_nan_value */
+
+/**
+ * Checks whether the passed number is +0.0
+ *
+ * @return true, if it is +0.0, false otherwise
+ */
+static inline bool __attr_const___ __attr_always_inline___
+ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
+{
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+  union
+  {
+    uint32_t u32_value;
+    ecma_number_t float_value;
+  } u;
+
+  u.float_value = ecma_number;
+
+  return u.u32_value == 0;
+#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+  union
+  {
+    uint64_t u64_value;
+    ecma_number_t float_value;
+  } u;
+
+  u.float_value = ecma_number;
+
+  return u.u64_value == 0;
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+} /* ecma_is_number_equal_to_positive_zero */
+
+/**
+ * Encode a number into an ecma-value
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_make_number_value (ecma_number_t ecma_number) /**< number to be encoded */
+{
+  ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
+
+  if ((ecma_number_t) integer_value == ecma_number
+      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+                               : ECMA_IS_INTEGER_NUMBER (integer_value)))
+  {
+    return ecma_make_integer_value (integer_value);
+  }
+
+  return ecma_create_float_number (ecma_number);
 } /* ecma_make_number_value */
+
+/**
+ * Encode an int32 number into an ecma-value
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_make_int32_value (int32_t int32_number) /**< int32 number to be encoded */
+{
+  if (ECMA_IS_INTEGER_NUMBER (int32_number))
+  {
+    return ecma_make_integer_value ((ecma_integer_value_t) int32_number);
+  }
+
+  return ecma_create_float_number ((ecma_number_t) int32_number);
+} /* ecma_make_int32_value */
+
+/**
+ * Encode an unsigned int32 number into an ecma-value
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_make_uint32_value (uint32_t uint32_number) /**< uint32 number to be encoded */
+{
+  if (uint32_number <= ECMA_INTEGER_NUMBER_MAX)
+  {
+    return ecma_make_integer_value ((ecma_integer_value_t) uint32_number);
+  }
+
+  return ecma_create_float_number ((ecma_number_t) uint32_number);
+} /* ecma_make_uint32_value */
 
 /**
  * String value constructor
@@ -333,24 +472,48 @@ ecma_make_error_obj_value (const ecma_object_t *object_p) /**< object to referen
 } /* ecma_make_error_obj_value */
 
 /**
- * Get pointer to ecma-number from ecma value
+ * Get floating point value from an ecma value
  *
- * @return the pointer
+ * @return floating point value
  */
-ecma_number_t *__attr_pure___
+ecma_number_t __attr_pure___
 ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_NUMBER);
+  if (ecma_is_value_integer_number (value))
+  {
+    return (ecma_number_t) (((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT);
+  }
 
-  return (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
+
+  return *(ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_number_from_value */
+
+/**
+ * Get uint32 value from an ecma value
+ *
+ * @return floating point value
+ */
+uint32_t __attr_pure___
+ecma_get_uint32_from_value (ecma_value_t value) /**< ecma value */
+{
+  if (ecma_is_value_integer_number (value))
+  {
+    /* Works with negative numbers as well. */
+    return (uint32_t) (((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT);
+  }
+
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
+
+  return ecma_number_to_uint32 (*(ecma_number_t *) ecma_get_pointer_from_ecma_value (value));
+} /* ecma_get_uint32_from_value */
 
 /**
  * Get pointer to ecma-string from ecma value
  *
  * @return the pointer
  */
-ecma_string_t *__attr_pure___
+inline ecma_string_t *__attr_pure___ __attr_always_inline___
 ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
@@ -363,7 +526,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the pointer
  */
-ecma_object_t *__attr_pure___
+inline ecma_object_t *__attr_pure___ __attr_always_inline___
 ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
@@ -398,18 +561,15 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
 {
   switch (ecma_get_value_type_field (value))
   {
-    case ECMA_TYPE_SIMPLE:
+    case ECMA_TYPE_DIRECT:
     {
       return value;
     }
-    case ECMA_TYPE_NUMBER:
+    case ECMA_TYPE_FLOAT:
     {
-      ecma_number_t *num_p = ecma_get_number_from_value (value);
+      ecma_number_t *num_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
 
-      ecma_number_t *number_copy_p = ecma_alloc_number ();
-      *number_copy_p = *num_p;
-
-      return ecma_make_number_value (number_copy_p);
+      return ecma_create_float_number (*num_p);
     }
     case ECMA_TYPE_STRING:
     {
@@ -442,6 +602,118 @@ ecma_copy_value_if_not_object (ecma_value_t value) /**< value description */
 } /* ecma_copy_value_if_not_object */
 
 /**
+ * Assign a new value to an ecma-value
+ *
+ * Note:
+ *      value previously stored in the property is freed
+ */
+void
+ecma_value_assign_value (ecma_value_t *value_p, /**< [in, out] ecma value */
+                         ecma_value_t ecma_value) /**< value to assign */
+{
+  JERRY_STATIC_ASSERT (ECMA_TYPE_DIRECT == 0,
+                       ecma_type_direct_must_be_zero_for_the_next_check);
+
+  if (ecma_get_value_type_field (ecma_value || *value_p) == ECMA_TYPE_DIRECT)
+  {
+    *value_p = ecma_value;
+  }
+  else if (ecma_is_value_float_number (ecma_value)
+           && ecma_is_value_float_number (*value_p))
+  {
+    const ecma_number_t *num_src_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (ecma_value);
+    ecma_number_t *num_dst_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (*value_p);
+
+    *num_dst_p = *num_src_p;
+  }
+  else
+  {
+    ecma_free_value_if_not_object (*value_p);
+    *value_p = ecma_copy_value_if_not_object (ecma_value);
+  }
+} /* ecma_value_assign_value */
+
+/**
+ * Assign a float number to an ecma-value
+ *
+ * Note:
+ *      value previously stored in the property is freed
+ */
+static void
+ecma_value_assign_float_number (ecma_value_t *value_p, /**< [in, out] ecma value */
+                                ecma_number_t ecma_number) /**< number to assign */
+{
+  if (ecma_is_value_float_number (*value_p))
+  {
+    ecma_number_t *num_dst_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (*value_p);
+
+    *num_dst_p = ecma_number;
+    return;
+  }
+
+  if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
+      && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
+  {
+    ecma_free_value (*value_p);
+  }
+
+  *value_p = ecma_create_float_number (ecma_number);
+} /* ecma_value_assign_float_number */
+
+/**
+ * Assign a number to an ecma-value
+ *
+ * Note:
+ *      value previously stored in the property is freed
+ */
+void
+ecma_value_assign_number (ecma_value_t *value_p, /**< [in, out] ecma value */
+                          ecma_number_t ecma_number) /**< number to assign */
+{
+  ecma_integer_value_t integer_value = (ecma_integer_value_t) ecma_number;
+
+  if ((ecma_number_t) integer_value == ecma_number
+      && ((integer_value == 0) ? ecma_is_number_equal_to_positive_zero (ecma_number)
+                               : ECMA_IS_INTEGER_NUMBER (integer_value)))
+  {
+    if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
+        && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
+    {
+      ecma_free_value (*value_p);
+    }
+    *value_p = ecma_make_integer_value (integer_value);
+    return;
+  }
+
+  ecma_value_assign_float_number (value_p, ecma_number);
+} /* ecma_value_assign_number */
+
+/**
+ * Assign an uint32 value to an ecma-value
+ *
+ * Note:
+ *      value previously stored in the property is freed
+ */
+void
+ecma_value_assign_uint32 (ecma_value_t *value_p, /**< [in, out] ecma value */
+                          uint32_t uint32_number) /**< number to assign */
+{
+  if (uint32_number <= ECMA_INTEGER_NUMBER_MAX)
+  {
+    if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
+        && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
+    {
+      ecma_free_value (*value_p);
+    }
+
+    *value_p = ecma_make_integer_value ((ecma_integer_value_t) uint32_number);
+    return;
+  }
+
+  ecma_value_assign_float_number (value_p, (ecma_number_t) uint32_number);
+} /* ecma_value_assign_uint32 */
+
+/**
  * Free the ecma value
  */
 void
@@ -449,15 +721,15 @@ ecma_free_value (ecma_value_t value) /**< value description */
 {
   switch (ecma_get_value_type_field (value))
   {
-    case ECMA_TYPE_SIMPLE:
+    case ECMA_TYPE_DIRECT:
     {
-      /* doesn't hold additional memory */
+      /* no memory is allocated */
       break;
     }
 
-    case ECMA_TYPE_NUMBER:
+    case ECMA_TYPE_FLOAT:
     {
-      ecma_number_t *number_p = ecma_get_number_from_value (value);
+      ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
       ecma_dealloc_number (number_p);
       break;
     }

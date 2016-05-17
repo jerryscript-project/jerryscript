@@ -289,7 +289,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     /* ECMA-262 v5, 13.2, 14-15 */
 
     // 14
-    ecma_number_t *len_p = ecma_alloc_number ();
+    uint32_t len = 0;
 
     ecma_property_t *bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
 
@@ -300,12 +300,12 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
       cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
-      *len_p = args_p->argument_end;
+      len = args_p->argument_end;
     }
     else
     {
       cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
-      *len_p = args_p->argument_end;
+      len = args_p->argument_end;
     }
 
     // 15
@@ -315,9 +315,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
                                                                       false,
                                                                       false);
 
-    ecma_named_data_property_assign_value (obj_p, length_prop_p, ecma_make_number_value (len_p));
-
-    ecma_dealloc_number (len_p);
+    ecma_named_data_property_assign_value (obj_p, length_prop_p, ecma_make_uint32_value (len));
 
     JERRY_ASSERT (!ecma_is_property_configurable (length_prop_p));
     return length_prop_p;

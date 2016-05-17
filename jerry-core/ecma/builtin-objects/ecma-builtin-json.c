@@ -451,9 +451,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
   {
     case number_token:
     {
-      ecma_number_t *number_p = ecma_alloc_number ();
-      *number_p = token_p->u.number;
-      return ecma_make_number_value (number_p);
+      return ecma_make_number_value (token_p->u.number);
     }
     case string_token:
     {
@@ -1327,7 +1325,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
     /* 9. */
     else if (ecma_is_value_number (my_val))
     {
-      ecma_number_t num_value_p = *ecma_get_number_from_value (my_val);
+      ecma_number_t num_value_p = ecma_get_number_from_value (my_val);
 
       /* 9.a */
       if (!ecma_number_is_nan (num_value_p) && !ecma_number_is_infinity (num_value_p))

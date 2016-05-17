@@ -64,9 +64,9 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
       && arguments_list_len == 1
       && ecma_is_value_number (arguments_list_p[0]))
   {
-    ecma_number_t *num_p = ecma_get_number_from_value (arguments_list_p[0]);
-    uint32_t num_uint32 = ecma_number_to_uint32 (*num_p);
-    if (*num_p != ((ecma_number_t) num_uint32))
+    ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
+    uint32_t num_uint32 = ecma_number_to_uint32 (num);
+    if (num != ((ecma_number_t) num_uint32))
     {
       return ecma_raise_range_error (ECMA_ERR_MSG (""));
     }
@@ -100,13 +100,11 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
    */
 
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_number_t *length_num_p = ecma_alloc_number ();
-  *length_num_p = ((ecma_number_t) length);
 
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
                                                                     true, false, false);
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_num_p));
+  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value ((ecma_number_t) length));
 
   ecma_deref_ecma_string (length_magic_string_p);
 
@@ -153,7 +151,6 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
-
   // 1.
   ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
@@ -162,8 +159,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
   // 2.
   ecma_value_t old_len_value = ecma_get_named_data_property_value (len_prop_p);
 
-  ecma_number_t *num_p = ecma_get_number_from_value (old_len_value);
-  uint32_t old_len_uint32 = ecma_number_to_uint32 (*num_p);
+  uint32_t old_len_uint32 = ecma_get_uint32_from_value (old_len_value);
 
   // 3.
   bool is_property_name_equal_length = ecma_compare_ecma_strings (property_name_p,
@@ -190,7 +186,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     JERRY_ASSERT (!ecma_is_value_error (completion)
                   && ecma_is_value_number (completion));
 
-    ecma_number_t new_len_num = *ecma_get_number_from_value (completion);
+    ecma_number_t new_len_num = ecma_get_number_from_value (completion);
 
     ecma_free_value (completion);
 
@@ -204,11 +200,8 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     else
     {
       // b., e.
-      ecma_number_t *new_len_num_p = ecma_alloc_number ();
-      *new_len_num_p = new_len_num;
-
       ecma_property_descriptor_t new_len_property_desc = *property_desc_p;
-      new_len_property_desc.value = ecma_make_number_value (new_len_num_p);
+      new_len_property_desc.value = ecma_make_number_value (new_len_num);
 
       ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -319,10 +312,9 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
                 // iii.
                 new_len_uint32 = (index + 1u);
 
-                ecma_number_t *new_len_num_p = ecma_get_number_from_value (new_len_property_desc.value);
-
                 // 1.
-                *new_len_num_p = ((ecma_number_t) index + 1u);
+                ecma_number_t new_len_num = ((ecma_number_t) index + 1u);
+                ecma_value_assign_number (&new_len_property_desc.value, new_len_num);
 
                 // 2.
                 if (!new_writable)
@@ -381,7 +373,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
         }
       }
 
-      ecma_dealloc_number (new_len_num_p);
+      ecma_free_value (new_len_property_desc.value);
 
       return ret_value;
     }
@@ -427,13 +419,14 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     // e.
     if (index >= old_len_uint32)
     {
+      ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
+
       // i., ii.
-      ecma_number_t *num_p = ecma_alloc_number ();
-      *num_p = ecma_number_add (((ecma_number_t) index), ECMA_NUMBER_ONE);
-
-      ecma_named_data_property_assign_value (obj_p, len_prop_p, ecma_make_number_value (num_p));
-
-      ecma_dealloc_number (num_p);
+      if (index < UINT32_MAX)
+      {
+        /* Setting the length property is always successful. */
+        ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
+      }
     }
 
     // f.

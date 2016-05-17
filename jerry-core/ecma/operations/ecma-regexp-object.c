@@ -214,11 +214,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
 
   ecma_deref_ecma_string (magic_string_p);
 
-  ecma_number_t *lastindex_num_p = ecma_alloc_number ();
-  *lastindex_num_p = ECMA_NUMBER_ZERO;
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-  ecma_named_data_property_assign_value (re_obj_p, prop_p, ecma_make_number_value (lastindex_num_p));
-  ecma_dealloc_number (lastindex_num_p);
+  ecma_named_data_property_assign_value (re_obj_p, prop_p, ecma_make_integer_value (0));
 } /* re_initialize_props */
 
 /**
@@ -1184,18 +1180,13 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   /* Set index property of the result array */
   ecma_string_t *result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
   {
-    ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = (ecma_number_t) index;
-
     ecma_builtin_helper_def_prop (array_obj_p,
                                   result_prop_str_p,
-                                  ecma_make_number_value (num_p),
+                                  ecma_make_int32_value (index),
                                   true, /* Writable */
                                   true, /* Enumerable */
                                   true, /* Configurable */
                                   true); /* Failure handling */
-
-    ecma_dealloc_number (num_p);
   }
   ecma_deref_ecma_string (result_prop_str_p);
 
@@ -1215,20 +1206,15 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   /* Set length property of the result array */
   result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   {
-
     ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
     array_item_prop_desc.is_value_defined = true;
 
-    ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = (ecma_number_t) (num_of_elements);
-    array_item_prop_desc.value = ecma_make_number_value (num_p);
+    array_item_prop_desc.value = ecma_make_uint32_value (num_of_elements);
 
     ecma_op_object_define_own_property (array_obj_p,
                                         result_prop_str_p,
                                         &array_item_prop_desc,
                                         true);
-
-    ecma_dealloc_number (num_p);
   }
   ecma_deref_ecma_string (result_prop_str_p);
 } /* re_set_result_array_properties */
@@ -1366,10 +1352,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       if (re_ctx.flags & RE_FLAG_GLOBAL)
       {
         ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-        ecma_number_t *lastindex_num_p = ecma_alloc_number ();
-        *lastindex_num_p = ECMA_NUMBER_ZERO;
-        ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
-        ecma_dealloc_number (lastindex_num_p);
+        ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_integer_value (0), true);
         ecma_deref_ecma_string (magic_str_p);
       }
 
@@ -1403,21 +1386,20 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   if (input_curr_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-    ecma_number_t *lastindex_num_p = ecma_alloc_number ();
+    ecma_number_t lastindex_num;
 
     if (sub_str_p != NULL
         && input_buffer_p != NULL)
     {
-      *lastindex_num_p = lit_utf8_string_length (input_buffer_p,
-                                                 (lit_utf8_size_t) (sub_str_p - input_buffer_p));
+      lastindex_num = lit_utf8_string_length (input_buffer_p,
+                                              (lit_utf8_size_t) (sub_str_p - input_buffer_p));
     }
     else
     {
-      *lastindex_num_p = ECMA_NUMBER_ZERO;
+      lastindex_num = ECMA_NUMBER_ZERO;
     }
 
-    ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_number_value (lastindex_num_p), true);
-    ecma_dealloc_number (lastindex_num_p);
+    ecma_op_object_put (regexp_object_p, magic_str_p, ecma_make_number_value (lastindex_num), true);
     ecma_deref_ecma_string (magic_str_p);
   }
 

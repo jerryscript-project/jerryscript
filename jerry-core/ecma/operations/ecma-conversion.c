@@ -109,11 +109,11 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   }
   else if (is_x_number)
   {
-    ecma_number_t *x_num_p = ecma_get_number_from_value (x);
-    ecma_number_t *y_num_p = ecma_get_number_from_value (y);
+    ecma_number_t x_num = ecma_get_number_from_value (x);
+    ecma_number_t y_num = ecma_get_number_from_value (y);
 
-    bool is_x_nan = ecma_number_is_nan (*x_num_p);
-    bool is_y_nan = ecma_number_is_nan (*y_num_p);
+    bool is_x_nan = ecma_number_is_nan (x_num);
+    bool is_y_nan = ecma_number_is_nan (y_num);
 
     if (is_x_nan || is_y_nan)
     {
@@ -126,15 +126,15 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
        */
       return (is_x_nan && is_y_nan);
     }
-    else if (ecma_number_is_zero (*x_num_p)
-             && ecma_number_is_zero (*y_num_p)
-             && ecma_number_is_negative (*x_num_p) != ecma_number_is_negative (*y_num_p))
+    else if (ecma_number_is_zero (x_num)
+             && ecma_number_is_zero (y_num)
+             && ecma_number_is_negative (x_num) != ecma_number_is_negative (y_num))
     {
       return false;
     }
     else
     {
-      return (*x_num_p == *y_num_p);
+      return (x_num == y_num);
     }
   }
   else if (is_x_string)
@@ -212,10 +212,10 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
   }
   else if (ecma_is_value_number (value))
   {
-    ecma_number_t *num_p = ecma_get_number_from_value (value);
+    ecma_number_t num = ecma_get_number_from_value (value);
 
-    if (ecma_number_is_nan (*num_p)
-        || ecma_number_is_zero (*num_p))
+    if (ecma_number_is_nan (num)
+        || ecma_number_is_zero (num))
     {
       ret_value = ECMA_SIMPLE_VALUE_FALSE;
     }
@@ -261,18 +261,18 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  if (ecma_is_value_number (value))
+  if (ecma_is_value_integer_number (value))
+  {
+    return value;
+  }
+  else if (ecma_is_value_float_number (value))
   {
     return ecma_copy_value (value);
   }
   else if (ecma_is_value_string (value))
   {
     ecma_string_t *str_p = ecma_get_string_from_value (value);
-
-    ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = ecma_string_to_number (str_p);
-
-    return ecma_make_number_value (num_p);
+    return ecma_make_number_value (ecma_string_to_number (str_p));
   }
   else if (ecma_is_value_object (value))
   {
@@ -290,15 +290,15 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
   }
   else
   {
-    ecma_number_t *num_p = ecma_alloc_number ();
+    int16_t num = 0;
 
     if (ecma_is_value_undefined (value))
     {
-      *num_p = ecma_number_make_nan ();
+      return ecma_make_nan_value ();
     }
     else if (ecma_is_value_null (value))
     {
-      *num_p = ECMA_NUMBER_ZERO;
+      num = 0;
     }
     else
     {
@@ -306,15 +306,15 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
 
       if (ecma_is_value_true (value))
       {
-        *num_p = ECMA_NUMBER_ONE;
+        num = 1;
       }
       else
       {
-        *num_p = ECMA_NUMBER_ZERO;
+        num = 0;
       }
     }
 
-    return ecma_make_number_value (num_p);
+    return ecma_make_integer_value (num);
   }
 } /* ecma_op_to_number */
 
@@ -357,8 +357,8 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
     }
     else if (ecma_is_value_number (value))
     {
-      ecma_number_t *num_p = ecma_get_number_from_value (value);
-      res_p = ecma_new_ecma_string_from_number (*num_p);
+      ecma_number_t num = ecma_get_number_from_value (value);
+      res_p = ecma_new_ecma_string_from_number (num);
     }
     else if (ecma_is_value_undefined (value))
     {

@@ -79,8 +79,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
 
   // 1.
-  ecma_number_t *len_p = ecma_alloc_number ();
-  *len_p = ((ecma_number_t) arguments_number);
 
   // 4.
   ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
@@ -90,7 +88,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_value_t completion = ecma_builtin_helper_def_prop (obj_p,
                                                           length_magic_string_p,
-                                                          ecma_make_number_value (len_p),
+                                                          ecma_make_uint32_value (arguments_number),
                                                           true, /* Writable */
                                                           false, /* Enumerable */
                                                           true, /* Configurable */
@@ -98,8 +96,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   JERRY_ASSERT (ecma_is_value_true (completion));
   ecma_deref_ecma_string (length_magic_string_p);
-
-  ecma_dealloc_number (len_p);
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 

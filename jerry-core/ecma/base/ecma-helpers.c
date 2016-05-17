@@ -1110,21 +1110,9 @@ ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
   ecma_assert_object_contains_the_property (obj_p, prop_p);
 
-  if (ecma_is_value_number (value)
-      && ecma_is_value_number (ecma_get_named_data_property_value (prop_p)))
-  {
-    const ecma_number_t *num_src_p = ecma_get_number_from_value (value);
-    ecma_number_t *num_dst_p = ecma_get_number_from_value (ecma_get_named_data_property_value (prop_p));
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
 
-    *num_dst_p = *num_src_p;
-  }
-  else
-  {
-    ecma_value_t v = ecma_get_named_data_property_value (prop_p);
-    ecma_free_value_if_not_object (v);
-
-    ecma_set_named_data_property_value (prop_p, ecma_copy_value_if_not_object (value));
-  }
+  ecma_value_assign_value (&prop_value_p->value, value);
 } /* ecma_named_data_property_assign_value */
 
 /**

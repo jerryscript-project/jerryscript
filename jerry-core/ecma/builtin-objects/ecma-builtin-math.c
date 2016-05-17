@@ -66,11 +66,7 @@ ecma_builtin_math_object_abs (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (fabs (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (fabs (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -94,10 +90,7 @@ ecma_builtin_math_object_acos (ecma_value_t this_arg __attr_unused___, /**< 'thi
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (acos (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (acos (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -120,10 +113,7 @@ ecma_builtin_math_object_asin (ecma_value_t this_arg __attr_unused___, /**< 'thi
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (asin (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (asin (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -146,10 +136,7 @@ ecma_builtin_math_object_atan (ecma_value_t this_arg __attr_unused___, /**< 'thi
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (atan (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (atan (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -174,10 +161,7 @@ ecma_builtin_math_object_atan2 (ecma_value_t this_arg __attr_unused___, /**< 'th
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (atan2 (x, y));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (atan2 (x, y)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (y);
   ECMA_OP_TO_NUMBER_FINALIZE (x);
@@ -201,9 +185,7 @@ ecma_builtin_math_object_ceil (ecma_value_t this_arg __attr_unused___, /**< 'thi
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (ceil (arg_num));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (ceil (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -226,9 +208,7 @@ ecma_builtin_math_object_cos (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (cos (arg_num));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (cos (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -251,11 +231,7 @@ ecma_builtin_math_object_exp (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (exp (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (exp (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -279,9 +255,7 @@ ecma_builtin_math_object_floor (ecma_value_t this_arg __attr_unused___, /**< 'th
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (floor (arg_num));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (floor (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -304,11 +278,7 @@ ecma_builtin_math_object_log (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (log (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (log (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -389,9 +359,7 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = ret_num;
-    ret_value = ecma_make_number_value (num_p);
+    ret_value = ecma_make_number_value (ret_num);
   }
 
   return ret_value;
@@ -471,9 +439,7 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_number_t *num_p = ecma_alloc_number ();
-    *num_p = ret_num;
-    ret_value = ecma_make_number_value (num_p);
+    ret_value = ecma_make_number_value (ret_num);
   }
 
   return ret_value;
@@ -498,9 +464,7 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __attr_unused___, /**< 'this
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (pow (x, y));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (pow (x, y)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (y);
   ECMA_OP_TO_NUMBER_FINALIZE (x);
@@ -541,10 +505,7 @@ ecma_builtin_math_object_random (ecma_value_t this_arg __attr_unused___) /**< 't
   rand /= (ecma_number_t) max_uint32;
   rand *= (ecma_number_t) (max_uint32 - 1) / (ecma_number_t) max_uint32;
 
-  ecma_number_t *rand_p = ecma_alloc_number ();
-  *rand_p = rand;
-
-  return ecma_make_number_value (rand_p);
+  return ecma_make_number_value (rand);
 } /* ecma_builtin_math_object_random */
 
 /**
@@ -564,18 +525,18 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __attr_unused___, /**< 'th
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
+  ecma_number_t num = ECMA_NUMBER_ZERO;
 
   if (ecma_number_is_nan (arg_num)
       || ecma_number_is_zero (arg_num)
       || ecma_number_is_infinity (arg_num))
   {
-    *num_p = arg_num;
+    num = arg_num;
   }
   else if (ecma_number_is_negative (arg_num)
            && arg_num >= -ECMA_NUMBER_HALF)
   {
-    *num_p = ecma_number_negate (ECMA_NUMBER_ZERO);
+    num = ecma_number_negate (ECMA_NUMBER_ZERO);
   }
   else
   {
@@ -586,15 +547,15 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __attr_unused___, /**< 'th
 
     if (up_rounded - arg_num <= arg_num - down_rounded)
     {
-      *num_p = up_rounded;
+      num = up_rounded;
     }
     else
     {
-      *num_p = down_rounded;
+      num = down_rounded;
     }
   }
 
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (num);
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -618,9 +579,7 @@ ecma_builtin_math_object_sin (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (sin (arg_num));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (sin (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -643,9 +602,7 @@ ecma_builtin_math_object_sqrt (ecma_value_t this_arg __attr_unused___, /**< 'thi
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (sqrt (arg_num));
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (sqrt (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;
@@ -668,10 +625,7 @@ ecma_builtin_math_object_tan (ecma_value_t this_arg __attr_unused___, /**< 'this
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  ecma_number_t *num_p = ecma_alloc_number ();
-  *num_p = DOUBLE_TO_ECMA_NUMBER_T (tan (arg_num));
-
-  ret_value = ecma_make_number_value (num_p);
+  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (tan (arg_num)));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   return ret_value;

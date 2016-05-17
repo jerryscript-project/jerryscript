@@ -520,17 +520,16 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
   /* 7 (indexOf) -- 8 (lastIndexOf) */
   ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
 
-  ecma_number_t *ret_num_p = ecma_alloc_number ();
-  *ret_num_p = ECMA_NUMBER_MINUS_ONE;
+  ecma_number_t ret_num = ECMA_NUMBER_MINUS_ONE;
 
   /* 8 (indexOf) -- 9 (lastIndexOf) */
   ecma_length_t index_of = 0;
   if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, first_index, start, &index_of))
   {
-    *ret_num_p = ((ecma_number_t) index_of);
+    ret_num = ((ecma_number_t) index_of);
   }
 
-  ret_value = ecma_make_number_value (ret_num_p);
+  ret_value = ecma_make_number_value (ret_num);
 
   ECMA_OP_TO_NUMBER_FINALIZE (pos_num);
   ECMA_FINALIZE (search_str_val);

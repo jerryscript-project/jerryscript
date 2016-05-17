@@ -281,7 +281,8 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
      * See also: ecma_object_get_class_name
      */
 
-    ecma_number_t *length_p = ecma_alloc_number ();
+    /* 16. */
+    ecma_number_t length = ECMA_NUMBER_ZERO;
     ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
     /* 15. */
@@ -294,25 +295,20 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       const ecma_length_t bound_arg_count = arg_count > 1 ? arg_count - 1 : 0;
 
       /* 15.a */
-      *length_p = *ecma_get_number_from_value (get_len_value) - ((ecma_number_t) bound_arg_count);
+      length = ecma_get_number_from_value (get_len_value) - ((ecma_number_t) bound_arg_count);
       ecma_free_value (get_len_value);
 
       /* 15.b */
-      if (ecma_number_is_negative (*length_p))
+      if (ecma_number_is_negative (length))
       {
-        *length_p = ECMA_NUMBER_ZERO;
+        length = ECMA_NUMBER_ZERO;
       }
-    }
-    else
-    {
-      /* 16. */
-      *length_p = ECMA_NUMBER_ZERO;
     }
 
     /* 17. */
     ecma_value_t completion = ecma_builtin_helper_def_prop (function_p,
                                                             magic_string_length_p,
-                                                            ecma_make_number_value (length_p),
+                                                            ecma_make_number_value (length),
                                                             false, /* Writable */
                                                             false, /* Enumerable */
                                                             false, /* Configurable */
@@ -321,7 +317,6 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     JERRY_ASSERT (ecma_is_value_boolean (completion));
 
     ecma_deref_ecma_string (magic_string_length_p);
-    ecma_dealloc_number (length_p);
 
     /* 19-21. */
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);

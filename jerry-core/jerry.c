@@ -1991,10 +1991,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
         const_literal_end = args_p->const_literal_end;
       }
 
-      for (uint32_t i = 0; i < register_end; i++)
-      {
-        literal_start_p[i] = MEM_CP_NULL;
-      }
+      uint32_t register_clear_start = 0;
 
       if ((bytecode_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
           && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE))
@@ -2013,6 +2010,13 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
             literal_start_p[i] = (uint16_t) current_p->literal_offset;
           }
         }
+
+        register_clear_start = argument_end;
+      }
+
+      for (uint32_t i = register_clear_start; i < register_end; i++)
+      {
+        literal_start_p[i] = MEM_CP_NULL;
       }
 
       for (uint32_t i = register_end; i < const_literal_end; i++)

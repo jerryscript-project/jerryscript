@@ -59,6 +59,25 @@ fi
 
 rm -f $TEST_FAILED $TEST_PASSED
 
+ROOT_DIR=""
+CURRENT_DIR=`pwd`
+PATH_STEP=2
+while true
+do
+    TMP_ROOT_DIR=`(echo "$CURRENT_DIR"; echo "$0"; echo "$ENGINE"; echo "$TESTS") | cut -f1-$PATH_STEP -d/ | uniq -d`
+    if [ -z "$TMP_ROOT_DIR" ]
+    then
+        break
+    else
+        ROOT_DIR="$TMP_ROOT_DIR"
+    fi
+    PATH_STEP=$((PATH_STEP+1))
+done
+if [ -n "$ROOT_DIR" ]
+then
+    ROOT_DIR="$ROOT_DIR/"
+fi
+
 tested=1
 failed=0
 passed=0
@@ -78,7 +97,7 @@ do
 
     full_test=$TESTS_DIR/${test#./}
 
-    echo -n "[$tested/$total] $ENGINE $ENGINE_ARGS $full_test: "
+    echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}: "
 
     ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &>$ENGINE_TEMP )
     status_code=$?
@@ -111,7 +130,7 @@ rm -f $ENGINE_TEMP
 
 ratio=$(echo $passed*100/$total | bc)
 
-echo "[summary] $ENGINE $ENGINE_ARGS $TESTS: $passed PASS, $failed FAIL, $total total, $ratio% success"
+echo "[summary] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${TESTS#$ROOT_DIR}: $passed PASS, $failed FAIL, $total total, $ratio% success"
 
 if [ $failed -ne 0 ]
 then

@@ -32,6 +32,25 @@ then
     exit 1
 fi
 
+ROOT_DIR=""
+CURRENT_DIR=`pwd`
+PATH_STEP=2
+while true
+do
+    TMP_ROOT_DIR=`(echo "$CURRENT_DIR"; echo "$0"; echo "$DIR") | cut -f1-$PATH_STEP -d/ | uniq -d`
+    if [ -z "$TMP_ROOT_DIR" ]
+    then
+        break
+    else
+        ROOT_DIR="$TMP_ROOT_DIR"
+    fi
+    PATH_STEP=$((PATH_STEP+1))
+done
+if [ -n "$ROOT_DIR" ]
+then
+    ROOT_DIR="$ROOT_DIR/"
+fi
+
 tested=1
 failed=0
 passed=0
@@ -40,10 +59,10 @@ UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
 
 for unit_test in $UNITTESTS
 do
-  echo -n "[$tested/$total] $unit_test: "
+    echo -n "[$tested/$total] ${unit_test#$ROOT_DIR}: "
 
-  $unit_test &>$UNITTEST_TEMP
-  status_code=$?
+    $unit_test &>$UNITTEST_TEMP
+    status_code=$?
 
     if [ $status_code -ne 0 ]
     then
@@ -73,7 +92,7 @@ rm -f $UNITTEST_TEMP
 
 ratio=$(echo $passed*100/$total | bc)
 
-echo "[summary] $DIR/unit-*: $passed PASS, $failed FAIL, $total total, $ratio% success"
+echo "[summary] ${DIR#$ROOT_DIR}/unit-*: $passed PASS, $failed FAIL, $total total, $ratio% success"
 
 if [ $failed -ne 0 ]
 then

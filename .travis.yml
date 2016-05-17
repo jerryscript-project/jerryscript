@@ -15,15 +15,15 @@ script: "make -j VERBOSE=1 NINJA=1 $TARGET"
 
 env:
   - TARGET="check-signed-off check-vera check-cppcheck"
-  - TARGET="build.linux test-js-precommit"
-  - TARGET="build.linux test-js-precommit" TOOLCHAIN=build/configs/toolchain_linux_armv7l-hf.cmake TIMEOUT=300
+  - TARGET="build.linux test-js"
+  - TARGET="build.linux test-js" TOOLCHAIN=build/configs/toolchain_linux_armv7l-hf.cmake TIMEOUT=300
   - TARGET=test-buildoptions
   - TARGET=test-unit
 
 matrix:
   include:
     - os: osx
-      env: TARGET="build.darwin test-js-precommit"
+      env: TARGET="build.darwin test-js"
     - os: osx
       env: TARGET=test-unit
   allow_failures:

@@ -149,7 +149,6 @@ JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE += unittests
 # JS test suites (in the format of id:path)
 export JERRY_TEST_SUITE_J := j:$(ROOT_DIR)/tests/jerry
 export JERRY_TEST_SUITE_JTS := jts:$(ROOT_DIR)/tests/jerry-test-suite
-export JERRY_TEST_SUITE_JTS_PREC := jts-prec:$(ROOT_DIR)/tests/jerry-test-suite/precommit-test-list
 export JERRY_TEST_SUITE_JTS_CP := jts-cp:$(ROOT_DIR)/tests/jerry-test-suite/compact-profile-list
 
 # Default make target
@@ -308,7 +307,7 @@ test-js.$(1).$(2): build.$$(NATIVE_SYSTEM)
 endef
 
 $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
-  $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS_PREC) $(JERRY_TEST_SUITE_JTS), \
+  $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS), \
     $(eval $(call JSTEST_RULE,$(__TARGET),$(firstword $(subst :, ,$(__SUITE))),$(lastword $(subst :, ,$(__SUITE)))))))
 
 $(foreach __TARGET,$(JERRY_TEST_TARGETS_CP), \
@@ -364,12 +363,6 @@ test-js: \
           $(foreach __SUITE,$(JERRY_TEST_SUITE_JTS_CP), \
             test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
 
-.PHONY: test-js-precommit
-test-js-precommit: \
-        $(foreach __TARGET,$(JERRY_TEST_TARGETS), \
-          $(foreach __SUITE,$(JERRY_TEST_SUITE_J) $(JERRY_TEST_SUITE_JTS_PREC), \
-            test-js.$(__TARGET).$(firstword $(subst :, ,$(__SUITE)))))
-
 .PHONY: test-buildoptions
 test-buildoptions: \
         $(foreach __TARGET,$(JERRY_BUILD_OPTIONS_TEST_TARGETS_NATIVE), \
@@ -386,7 +379,7 @@ precommit: prerequisites
 	$(Q) echo "...building and running unit tests..."
 	$(Q)+$(MAKE) --no-print-directory test-unit
 	$(Q) echo "...running precommit JS tests..."
-	$(Q)+$(MAKE) --no-print-directory test-js-precommit
+	$(Q)+$(MAKE) --no-print-directory test-js
 	$(Q) echo "...SUCCESS"
 
 # Targets to install and clean prerequisites

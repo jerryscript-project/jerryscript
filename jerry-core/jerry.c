@@ -1698,6 +1698,8 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
 {
   jerry_assert_api_available ();
 
+  vm_finalize ();
+
   int is_show_instructions = ((jerry_flags & JERRY_FLAG_SHOW_OPCODES) != 0);
 
   parser_set_show_instrs (is_show_instructions);

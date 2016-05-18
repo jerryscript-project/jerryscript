@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,130 +41,30 @@
 
 static uint8_t buffer[ JERRY_BUFFER_SIZE ];
 
-static const jerry_api_char_t *
-read_sources (const char *script_file_names[],
-              int files_count,
-              size_t *out_source_size_p)
+static const uint8_t *
+read_file (const char *file_name,
+           size_t *out_size_p)
 {
-  int i;
-  uint8_t *source_buffer_tail = buffer;
-
-  for (i = 0; i < files_count; i++)
-  {
-    const char *script_file_name = script_file_names[i];
-
-    FILE *file = fopen (script_file_name, "r");
-
-    if (file == NULL)
-    {
-      break;
-    }
-
-    int fseek_status = fseek (file, 0, SEEK_END);
-
-    if (fseek_status != 0)
-    {
-      break;
-    }
-
-    long script_len = ftell (file);
-
-    if (script_len < 0)
-    {
-      fclose (file);
-      break;
-    }
-
-    rewind (file);
-
-    const size_t current_source_size = (size_t) script_len;
-
-    if (source_buffer_tail + current_source_size >= buffer + sizeof (buffer))
-    {
-      fclose (file);
-      break;
-    }
-
-    size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
-    if (bytes_read < current_source_size)
-    {
-      fclose (file);
-      break;
-    }
-
-    fclose (file);
-
-    source_buffer_tail += current_source_size;
-  }
-
-  if (i < files_count)
-  {
-    jerry_port_errormsg ("Failed to open file: %s\n", script_file_names[i]);
-
-    return NULL;
-  }
-  else
-  {
-    const size_t source_size = (size_t) (source_buffer_tail - buffer);
-
-    *out_source_size_p = source_size;
-
-    return (const jerry_api_char_t *) buffer;
-  }
-} /* read_sources */
-
-static bool
-read_snapshot (const char *snapshot_file_name_p,
-               size_t *out_snapshot_size_p)
-{
-  assert (snapshot_file_name_p != NULL);
-  assert (out_snapshot_size_p != NULL);
-
-  *out_snapshot_size_p = 0;
-
-  FILE *file = fopen (snapshot_file_name_p, "r");
-
+  FILE *file = fopen (file_name, "r");
   if (file == NULL)
   {
-    return false;
+    jerry_port_errormsg ("Error: failed to open file: %s\n", file_name);
+    return NULL;
   }
 
-  int fseek_status = fseek (file, 0, SEEK_END);
-
-  if (fseek_status != 0)
+  size_t bytes_read = fread (buffer, 1u, sizeof (buffer), file);
+  if (!bytes_read)
   {
+    jerry_port_errormsg ("Error: failed to read file: %s\n", file_name);
     fclose (file);
-    return false;
+    return NULL;
   }
-
-  long snapshot_len = ftell (file);
-
-  if (snapshot_len < 0)
-  {
-    fclose (file);
-    return false;
-  }
-
-  rewind (file);
-
-  if ((size_t) snapshot_len > sizeof (buffer))
-  {
-    fclose (file);
-    return false;
-  }
-
-  size_t bytes_read = fread (buffer, 1u, (size_t) snapshot_len, file);
-  if (bytes_read < (size_t) snapshot_len)
-  {
-    fclose (file);
-    return false;
-  }
-
-  *out_snapshot_size_p = (size_t) snapshot_len;
 
   fclose (file);
-  return true;
-} /* read_snapshot */
+
+  *out_size_p = bytes_read;
+  return (const uint8_t *) buffer;
+} /* read_file */
 
 /**
  * Provide the 'assert' implementation for the engine.
@@ -185,7 +86,7 @@ assert_handler (const jerry_api_object_t *function_obj_p __attribute__((unused))
   }
   else
   {
-    jerry_port_errormsg ("Script assertion failed\n");
+    jerry_port_errormsg ("Script error: assertion failed\n");
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
 } /* assert_handler */
@@ -226,7 +127,7 @@ main (int argc,
 {
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    jerry_port_errormsg ("Too many command line arguments : %d. Current maximum is %d (JERRY_MAX_COMMAND_LINE_ARGS)\n",
+    jerry_port_errormsg ("Error: too many command line arguments: %d (JERRY_MAX_COMMAND_LINE_ARGS=%d)\n",
                          argc, JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
@@ -375,15 +276,15 @@ main (int argc,
 
   if (is_save_snapshot_mode)
   {
-    if (files_counter == 0)
+    if (files_counter != 1)
     {
-      jerry_port_errormsg ("--save-snapshot argument is passed, but no script was specified on command line\n");
+      jerry_port_errormsg ("Error: --save-snapshot argument works with exactly one script\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
     if (exec_snapshots_count != 0)
     {
-      jerry_port_errormsg ("--save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      jerry_port_errormsg ("Error: --save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -400,7 +301,7 @@ main (int argc,
     jerry_log_file = fopen (log_file_name, "w");
     if (jerry_log_file == NULL)
     {
-      jerry_port_errormsg ("Failed to open log file: %s\n", log_file_name);
+      jerry_port_errormsg ("Error: failed to open log file: %s\n", log_file_name);
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -427,24 +328,24 @@ main (int argc,
 
   if (!is_assert_added)
   {
-    jerry_port_errormsg ("Failed to register 'assert' method.");
+    jerry_port_errormsg ("Warning: failed to register 'assert' method.");
   }
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
 
-  bool is_ok = true;
   for (int i = 0; i < exec_snapshots_count; i++)
   {
     size_t snapshot_size;
+    const uint8_t *snapshot_p = read_file (exec_snapshot_file_names[i], &snapshot_size);
 
-    if (!read_snapshot (exec_snapshot_file_names[i], &snapshot_size))
+    if (snapshot_p == NULL)
     {
       ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
     }
     else
     {
       jerry_api_value_t ret_value;
-      ret_code = jerry_exec_snapshot ((void *) buffer,
+      ret_code = jerry_exec_snapshot ((void *) snapshot_p,
                                       snapshot_size,
                                       true,
                                       &ret_value);
@@ -453,8 +354,6 @@ main (int argc,
 
     if (ret_code != JERRY_COMPLETION_CODE_OK)
     {
-      is_ok = false;
-
       break;
     }
   }
@@ -462,28 +361,23 @@ main (int argc,
   jerry_api_object_t *err_obj_p = NULL;
   jerry_api_value_t err_value = jerry_api_create_void_value ();
 
-  if (is_ok)
+  if (ret_code == JERRY_COMPLETION_CODE_OK)
   {
-    size_t source_size;
-    const jerry_api_char_t *source_p = NULL;
-
-    if (files_counter != 0)
+    for (int i = 0; i < files_counter; i++)
     {
-      source_p = read_sources (file_names, files_counter, &source_size);
+      size_t source_size;
+      const jerry_api_char_t *source_p = read_file (file_names[i], &source_size);
 
       if (source_p == NULL)
       {
-        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
       }
-    }
 
-    if (source_p != NULL)
-    {
       if (is_save_snapshot_mode)
       {
         static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
 
-        size_t snapshot_size = jerry_parse_and_save_snapshot (source_p,
+        size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) source_p,
                                                               source_size,
                                                               is_save_snapshot_mode_for_global_or_eval,
                                                               snapshot_save_buffer,
@@ -510,6 +404,11 @@ main (int argc,
         {
           ret_code = jerry_run (&err_value);
         }
+      }
+
+      if (ret_code != JERRY_COMPLETION_CODE_OK)
+      {
+        break;
       }
     }
   }
@@ -617,7 +516,7 @@ main (int argc,
       assert (sz == err_str_size);
       err_str_buf[err_str_size] = 0;
 
-      jerry_port_errormsg ("Unhandled exception! %s\n", err_str_buf);
+      jerry_port_errormsg ("Script Error: unhandled exception: %s\n", err_str_buf);
 
       jerry_api_release_string (err_str_p);
     }

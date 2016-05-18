@@ -182,16 +182,6 @@ fopen (const char *path, /**< file path */
 } /* fopen */
 
 /**
- * The rewind () function sets the file position indicator
- * for the stream pointed to by STREAM to the beginning of the file.
- */
-void
-rewind (FILE *stream) /**< stream pointer */
-{
-  syscall_3 (SYSCALL_NO (lseek), (long int) stream, 0, SEEK_SET);
-} /* rewind */
-
-/**
  * fclose
  *
  * @return 0 - upon successful completion,
@@ -204,31 +194,6 @@ fclose (FILE *fp) /**< stream pointer */
 
   return 0;
 } /* fclose */
-
-/**
- * fseek
- */
-int
-fseek (FILE * fp, /**< stream pointer */
-       long offset, /**< offset */
-       int whence) /**< specifies position type
-                    *   to add offset to */
-{
-  syscall_3 (SYSCALL_NO (lseek), (long int) fp, offset, whence);
-
-  return 0;
-} /* fseek */
-
-/**
- * ftell
- */
-long
-ftell (FILE * fp) /**< stream pointer */
-{
-  long int ret = syscall_3 (SYSCALL_NO (lseek), (long int) fp, 0, SEEK_CUR);
-
-  return ret;
-} /* ftell */
 
 /**
  * fread

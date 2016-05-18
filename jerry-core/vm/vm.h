@@ -29,33 +29,71 @@
  * @{
  */
 
-#define VM_OC_GET_DATA_SHIFT 24
-#define VM_OC_GET_DATA_MASK 0x1f
-#define VM_OC_GET_DATA_CREATE_ID(V) \
-  (((V) & VM_OC_GET_DATA_MASK) << VM_OC_GET_DATA_SHIFT)
-#define VM_OC_GET_DATA_GET_ID(O) \
-  (((O) >> VM_OC_GET_DATA_SHIFT) & VM_OC_GET_DATA_MASK)
+/**
+ * Each CBC opcode is transformed to three vm opcodes:
+ *
+ *  - first opcode is a "get arguments" opcode which specifies
+ *    the type (register, literal, stack, etc.) and number
+ *    (from 0 to 2) of input arguments
+ *  - second opcode is a "group" opcode which specifies
+ *    the actual operation (add, increment, call, etc.)
+ *  - third opcode is a "put result" opcode which specifies
+ *    the destination where the result is stored (register,
+ *    stack, etc.)
+ */
+
+/**
+ * Position of "get arguments" opcode.
+ */
+#define VM_OC_GET_ARGS_SHIFT 7
+
+/**
+ * Mask of "get arguments" opcode.
+ */
+#define VM_OC_GET_ARGS_MASK 0x1f
+
+/**
+ * Generate the binary representation of a "get arguments" opcode.
+ */
+#define VM_OC_GET_ARGS_CREATE_INDEX(V) (((V) & VM_OC_GET_ARGS_MASK) << VM_OC_GET_ARGS_SHIFT)
+
+/**
+ * Extract the "get arguments" opcode.
+ */
+#define VM_OC_GET_ARGS_GET_INDEX(O) (((O) >> VM_OC_GET_ARGS_SHIFT) & VM_OC_GET_ARGS_MASK)
+
+/**
+ * Checks whether the result is stored somewhere.
+ */
+#define VM_OC_HAS_GET_ARGS(V) ((V) & (VM_OC_GET_ARGS_MASK << VM_OC_GET_ARGS_SHIFT))
 
 /**
  * Argument getters that are part of the opcodes.
  */
 typedef enum
 {
-  VM_OC_GET_NONE = VM_OC_GET_DATA_CREATE_ID (0),             /**< do nothing */
-  VM_OC_GET_STACK = VM_OC_GET_DATA_CREATE_ID (1),            /**< pop one elemnet from the stack */
-  VM_OC_GET_STACK_STACK = VM_OC_GET_DATA_CREATE_ID (2),      /**< pop two elemnets from the stack */
-  VM_OC_GET_BYTE = VM_OC_GET_DATA_CREATE_ID (3),             /**< read a byte */
+  VM_OC_GET_NONE = VM_OC_GET_ARGS_CREATE_INDEX (0),             /**< do nothing */
+  VM_OC_GET_STACK = VM_OC_GET_ARGS_CREATE_INDEX (1),            /**< pop one elemnet from the stack */
+  VM_OC_GET_STACK_STACK = VM_OC_GET_ARGS_CREATE_INDEX (2),      /**< pop two elemnets from the stack */
+  VM_OC_GET_BYTE = VM_OC_GET_ARGS_CREATE_INDEX (3),             /**< read a byte */
 
-  VM_OC_GET_LITERAL = VM_OC_GET_DATA_CREATE_ID (4),          /**< resolve literal */
-  VM_OC_GET_STACK_LITERAL = VM_OC_GET_DATA_CREATE_ID (5),    /**< pop one elemnet from the stack and resolve a literal*/
-  VM_OC_GET_LITERAL_BYTE = VM_OC_GET_DATA_CREATE_ID (6),     /**< pop one elemnet from stack and read a byte */
-  VM_OC_GET_LITERAL_LITERAL = VM_OC_GET_DATA_CREATE_ID (7),  /**< resolve two literals */
-  VM_OC_GET_THIS_LITERAL = VM_OC_GET_DATA_CREATE_ID (8),     /**< get this and resolve a literal */
+  VM_OC_GET_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (4),          /**< resolve literal */
+  VM_OC_GET_STACK_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (5),    /**< pop one elemnet from the stack
+                                                                 *   and resolve a literal */
+  VM_OC_GET_LITERAL_BYTE = VM_OC_GET_ARGS_CREATE_INDEX (6),     /**< pop one elemnet from stack and read a byte */
+  VM_OC_GET_LITERAL_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (7),  /**< resolve two literals */
+  VM_OC_GET_THIS_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (8),     /**< get this and resolve a literal */
 } vm_oc_get_types;
 
-#define VM_OC_GROUP_MASK 0xff
-#define VM_OC_GROUP_GET_INDEX(O) \
-  ((O) & VM_OC_GROUP_MASK)
+/**
+ * Mask of "group" opcode.
+ */
+#define VM_OC_GROUP_MASK 0x7f
+
+/**
+ * Extract the "group" opcode.
+ */
+#define VM_OC_GROUP_GET_INDEX(O) ((O) & VM_OC_GROUP_MASK)
 
 /**
  * Opcodes.
@@ -88,12 +126,12 @@ typedef enum
 
   /* These eight opcodes must be in this order. */
   VM_OC_PROP_PRE_INCR,           /**< prefix increment of a property */
-  VM_OC_PRE_INCR,                /**< prefix increment  */
   VM_OC_PROP_PRE_DECR,           /**< prop prefix decrement of a property */
-  VM_OC_PRE_DECR,                /**< prefix decrement */
   VM_OC_PROP_POST_INCR,          /**< prop postfix increment of a property */
-  VM_OC_POST_INCR,               /**< postfix increment */
   VM_OC_PROP_POST_DECR,          /**< prop postfix decrement of a property */
+  VM_OC_PRE_INCR,                /**< prefix increment  */
+  VM_OC_PRE_DECR,                /**< prefix decrement */
+  VM_OC_POST_INCR,               /**< postfix increment */
   VM_OC_POST_DECR,               /**< postfix decrement */
 
   VM_OC_PROP_DELETE,             /**< delete property */
@@ -163,20 +201,60 @@ typedef enum
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
 } vm_oc_types;
 
-#define VM_OC_PUT_DATA_SHIFT 12
-#define VM_OC_PUT_DATA_MASK 0xf
-#define VM_OC_PUT_DATA_CREATE_FLAG(V) \
-  (((V) & VM_OC_PUT_DATA_MASK) << VM_OC_PUT_DATA_SHIFT)
+/**
+ * Decrement operator.
+ */
+#define VM_OC_DECREMENT_OPERATOR_FLAG 0x1
 
 /**
- * Result writers that are part of the opcodes.
+ * Postfix increment/decrement operator.
+ */
+#define VM_OC_POST_INCR_DECR_OPERATOR_FLAG 0x2
+
+/**
+ * An named variable is updated by the increment/decrement operator.
+ */
+#define VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG 0x4
+
+/**
+ * Jump to target offset if input value is logical false.
+ */
+#define VM_OC_BRANCH_IF_FALSE_FLAG 0x1
+
+/**
+ * Branch optimized for logical and/or opcodes.
+ */
+#define VM_OC_LOGICAL_BRANCH_FLAG 0x2
+
+/**
+ * Position of "put result" opcode.
+ */
+#define VM_OC_PUT_RESULT_SHIFT 12
+
+/**
+ * Mask of "put result" opcode.
+ */
+#define VM_OC_PUT_RESULT_MASK 0xf
+
+/**
+ * Generate a "put result" opcode flag bit.
+ */
+#define VM_OC_PUT_RESULT_CREATE_FLAG(V) (((V) & VM_OC_PUT_RESULT_MASK) << VM_OC_PUT_RESULT_SHIFT)
+
+/**
+ * Checks whether the result is stored somewhere.
+ */
+#define VM_OC_HAS_PUT_RESULT(V) ((V) & (VM_OC_PUT_RESULT_MASK << VM_OC_PUT_RESULT_SHIFT))
+
+/**
+ * Specify where the result is stored
  */
 typedef enum
 {
-  VM_OC_PUT_IDENT = VM_OC_PUT_DATA_CREATE_FLAG (0x1),
-  VM_OC_PUT_REFERENCE = VM_OC_PUT_DATA_CREATE_FLAG (0x2),
-  VM_OC_PUT_STACK = VM_OC_PUT_DATA_CREATE_FLAG (0x4),
-  VM_OC_PUT_BLOCK = VM_OC_PUT_DATA_CREATE_FLAG (0x8),
+  VM_OC_PUT_IDENT = VM_OC_PUT_RESULT_CREATE_FLAG (0x1),
+  VM_OC_PUT_REFERENCE = VM_OC_PUT_RESULT_CREATE_FLAG (0x2),
+  VM_OC_PUT_STACK = VM_OC_PUT_RESULT_CREATE_FLAG (0x4),
+  VM_OC_PUT_BLOCK = VM_OC_PUT_RESULT_CREATE_FLAG (0x8),
 } vm_oc_put_types;
 
 /**

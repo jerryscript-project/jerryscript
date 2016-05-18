@@ -153,7 +153,7 @@ vm_init (ecma_compiled_code_t *program_p) /**< pointer to byte-code data */
 /**
  * Decode table for opcodes.
  */
-static const uint32_t vm_decode_table[] =
+static const uint16_t vm_decode_table[] =
 {
   CBC_OPCODE_LIST
 };
@@ -161,7 +161,7 @@ static const uint32_t vm_decode_table[] =
 /**
  * Decode table for extended opcodes.
  */
-static const uint32_t vm_ext_decode_table[] =
+static const uint16_t vm_ext_decode_table[] =
 {
   CBC_EXT_OPCODE_LIST
 };
@@ -801,11 +801,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       }
 
       free_flags = 0;
-      if (opcode_data & (VM_OC_GET_DATA_MASK << VM_OC_GET_DATA_SHIFT))
+      if (VM_OC_HAS_GET_ARGS (opcode_data))
       {
-        uint32_t operands = VM_OC_GET_DATA_GET_ID (opcode_data);
+        uint32_t operands = VM_OC_GET_ARGS_GET_INDEX (opcode_data);
 
-        if (operands >= VM_OC_GET_DATA_GET_ID (VM_OC_GET_LITERAL))
+        if (operands >= VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_LITERAL))
         {
           uint16_t literal_index;
           READ_LITERAL_INDEX (literal_index);
@@ -815,7 +815,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           switch (operands)
           {
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_STACK_LITERAL):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_STACK_LITERAL):
             {
               JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end);
               right_value = left_value;
@@ -823,12 +823,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               free_flags = (uint8_t) ((free_flags << 1) | VM_FREE_LEFT_VALUE);
               break;
             }
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_LITERAL_BYTE):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_LITERAL_BYTE):
             {
               right_value = *(byte_code_p++);
               break;
             }
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_LITERAL_LITERAL):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_LITERAL_LITERAL):
             {
               uint16_t literal_index;
               READ_LITERAL_INDEX (literal_index);
@@ -837,7 +837,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                             free_flags |= VM_FREE_RIGHT_VALUE);
               break;
             }
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_THIS_LITERAL):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_THIS_LITERAL):
             {
               right_value = left_value;
               left_value = ecma_copy_value (frame_ctx_p->this_binding);
@@ -846,7 +846,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
             default:
             {
-              JERRY_ASSERT (operands == VM_OC_GET_DATA_GET_ID (VM_OC_GET_LITERAL));
+              JERRY_ASSERT (operands == VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_LITERAL));
               break;
             }
           }
@@ -855,14 +855,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           switch (operands)
           {
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_STACK):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_STACK):
             {
               JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end);
               left_value = *(--stack_top_p);
               free_flags = VM_FREE_LEFT_VALUE;
               break;
             }
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_STACK_STACK):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_STACK_STACK):
             {
               JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end + 1);
               right_value = *(--stack_top_p);
@@ -870,7 +870,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               free_flags = VM_FREE_LEFT_VALUE | VM_FREE_RIGHT_VALUE;
               break;
             }
-            case VM_OC_GET_DATA_GET_ID (VM_OC_GET_BYTE):
+            case VM_OC_GET_ARGS_GET_INDEX (VM_OC_GET_BYTE):
             {
               right_value = *(byte_code_p++);
               break;
@@ -1227,7 +1227,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_POST_INCR:
         case VM_OC_POST_DECR:
         {
-          uint32_t base = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_PROP_PRE_INCR;
+          uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_PROP_PRE_INCR;
 
           last_completion_value = ecma_op_to_number (left_value);
 
@@ -1244,9 +1244,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_integer_value_t int_value = (ecma_integer_value_t) result;
             ecma_integer_value_t int_increase;
 
-            if (base & 0x2)
+            if (opcode_flags & VM_OC_DECREMENT_OPERATOR_FLAG)
             {
-              /* For decrement operators */
               if (int_value <= (ECMA_INTEGER_NUMBER_MIN << ECMA_DIRECT_SHIFT))
               {
                 int_increase = 0;
@@ -1270,12 +1269,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (int_increase != 0)
             {
-              /* Post operators require the unmodifed number value. */
-              if (base & 0x4)
+              /* Postfix operators require the unmodifed number value. */
+              if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
               {
                 if (opcode_data & VM_OC_PUT_STACK)
                 {
-                  if (base & 0x1)
+                  if (opcode_flags & VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG)
                   {
                     JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
                                   || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
@@ -1313,18 +1312,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_number_t increase = ECMA_NUMBER_ONE;
           ecma_number_t result_number = ecma_get_number_from_value (result);
 
-          if (base & 0x2)
+          if (opcode_flags & VM_OC_DECREMENT_OPERATOR_FLAG)
           {
             /* For decrement operators */
             increase = ECMA_NUMBER_MINUS_ONE;
           }
 
           /* Post operators require the unmodifed number value. */
-          if (base & 0x4)
+          if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
           {
             if (opcode_data & VM_OC_PUT_STACK)
             {
-              if (base & 0x1)
+              if (opcode_flags & VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG)
               {
                 JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
                               || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
@@ -1433,7 +1432,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-          if (opcode_data & (VM_OC_PUT_DATA_MASK << VM_OC_PUT_DATA_SHIFT))
+          if (VM_OC_HAS_PUT_RESULT (opcode_data))
           {
             result = last_completion_value;
           }
@@ -1465,7 +1464,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-          JERRY_ASSERT (opcode_data & (VM_OC_PUT_DATA_MASK << VM_OC_PUT_DATA_SHIFT));
+          JERRY_ASSERT (VM_OC_HAS_PUT_RESULT (opcode_data));
           result = last_completion_value;
           break;
         }
@@ -1536,7 +1535,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_BRANCH_IF_LOGICAL_TRUE:
         case VM_OC_BRANCH_IF_LOGICAL_FALSE:
         {
-          uint32_t base = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
+          uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
 
           last_completion_value = ecma_op_to_boolean (left_value);
 
@@ -1546,11 +1545,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           JERRY_ASSERT (free_flags & VM_FREE_LEFT_VALUE);
-          if (last_completion_value == ecma_make_simple_value ((base & 0x1) ? ECMA_SIMPLE_VALUE_FALSE
-                                                                            : ECMA_SIMPLE_VALUE_TRUE))
+
+          bool branch_if_false = (opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG);
+
+          if (last_completion_value == ecma_make_simple_value (branch_if_false ? ECMA_SIMPLE_VALUE_FALSE
+                                                                               : ECMA_SIMPLE_VALUE_TRUE))
           {
             byte_code_p = byte_code_start_p + branch_offset;
-            if (base & 0x2)
+            if (opcode_flags & VM_OC_LOGICAL_BRANCH_FLAG)
             {
               free_flags = 0;
               ++stack_top_p;
@@ -2170,7 +2172,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
       }
 
-      if (opcode_data & (VM_OC_PUT_DATA_MASK << VM_OC_PUT_DATA_SHIFT))
+      if (VM_OC_HAS_PUT_RESULT (opcode_data))
       {
         if (opcode_data & VM_OC_PUT_IDENT)
         {

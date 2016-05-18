@@ -1,0 +1,34 @@
+img[alt="High-Level Design"] {
+  max-width:  60%;
+  display: block;
+}
+
+img[alt="Parser dependency"] {
+  max-width:  60%;
+  display: block;
+}
+
+img[alt="CBC layout"] {
+  max-width:  40%;
+  display: block;
+}
+
+img[alt="byte-code layout"] {
+  max-width:  40%;
+  display: block;
+}
+
+img[alt="ECMA value representation"] {
+  max-width:  40%;
+  display: block;
+}
+
+img[alt="Number"] {
+  max-width:  25%;
+  display: block;
+}
+
+img[alt="Compressed Pointer"] {
+  max-width:  25%;
+  display: block;
+}

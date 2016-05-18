@@ -123,6 +123,7 @@ extern bool ecma_is_value_false (ecma_value_t);
 extern bool ecma_is_value_array_hole (ecma_value_t);
 
 extern bool ecma_is_value_integer_number (ecma_value_t);
+extern bool ecma_are_values_integer_numbers (ecma_value_t, ecma_value_t);
 extern bool ecma_is_value_float_number (ecma_value_t);
 extern bool ecma_is_value_number (ecma_value_t);
 extern bool ecma_is_value_string (ecma_value_t);
@@ -141,6 +142,7 @@ extern ecma_value_t ecma_make_string_value (const ecma_string_t *);
 extern ecma_value_t ecma_make_object_value (const ecma_object_t *);
 extern ecma_value_t ecma_make_error_value (ecma_value_t);
 extern ecma_value_t ecma_make_error_obj_value (const ecma_object_t *);
+extern ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t);
 extern ecma_number_t ecma_get_number_from_value (ecma_value_t) __attr_pure___;
 extern uint32_t ecma_get_uint32_from_value (ecma_value_t) __attr_pure___;
 extern ecma_string_t *ecma_get_string_from_value (ecma_value_t) __attr_pure___;

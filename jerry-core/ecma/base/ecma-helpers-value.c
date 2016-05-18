@@ -219,6 +219,22 @@ ecma_is_value_integer_number (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_integer_number */
 
 /**
+ * Check if both values are integer ecma-numbers.
+ *
+ * @return true - if both values contain integer ecma-number values,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_are_values_integer_numbers (ecma_value_t first_value, /**< first ecma value */
+                                 ecma_value_t second_value) /**< second ecma value */
+{
+  JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_INTEGER_VALUE == 0,
+                       ecma_direct_type_integer_value_must_be_zero);
+
+  return ((first_value | second_value) & ECMA_DIRECT_TYPE_MASK) == ECMA_DIRECT_TYPE_INTEGER_VALUE;
+} /* ecma_are_values_integer_numbers */
+
+/**
  * Check if the value is floating-point ecma-number.
  *
  * @return true - if the value contains a floating-point ecma-number value,
@@ -472,6 +488,19 @@ ecma_make_error_obj_value (const ecma_object_t *object_p) /**< object to referen
 } /* ecma_make_error_obj_value */
 
 /**
+ * Get integer value from an integer ecma value
+ *
+ * @return floating point value
+ */
+inline ecma_integer_value_t __attr_pure___ __attr_always_inline___
+ecma_get_integer_from_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_is_value_integer_number (value));
+
+  return ((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT;
+} /* ecma_get_integer_from_value */
+
+/**
  * Get floating point value from an ecma value
  *
  * @return floating point value
@@ -481,7 +510,7 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
 {
   if (ecma_is_value_integer_number (value))
   {
-    return (ecma_number_t) (((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT);
+    return (ecma_number_t) ecma_get_integer_from_value (value);
   }
 
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);

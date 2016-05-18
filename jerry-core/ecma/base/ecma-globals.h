@@ -164,6 +164,15 @@ typedef int32_t ecma_integer_value_t;
   (ECMA_INTEGER_NUMBER_MIN <= (num) && (num) <= ECMA_INTEGER_NUMBER_MAX)
 
 /**
+ * Maximum integer number, which if squared, still fits in ecma_integer_value_t
+ */
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#define ECMA_INTEGER_MULTIPLY_MAX 0xb50
+#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#define ECMA_INTEGER_MULTIPLY_MAX 0x2d41
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+/**
  * Internal properties' identifiers.
  */
 typedef enum

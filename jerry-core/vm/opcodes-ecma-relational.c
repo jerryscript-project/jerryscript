@@ -41,6 +41,18 @@ ecma_value_t
 opfunc_less_than (ecma_value_t left_value, /**< left value */
                   ecma_value_t right_value) /**< right value */
 {
+  JERRY_ASSERT (!ecma_is_value_error (left_value)
+                && !ecma_is_value_error (right_value));
+
+  if (ecma_are_values_integer_numbers (left_value, right_value))
+  {
+    if ((ecma_integer_value_t) left_value < (ecma_integer_value_t) right_value)
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,
@@ -75,6 +87,18 @@ ecma_value_t
 opfunc_greater_than (ecma_value_t left_value, /**< left value */
                      ecma_value_t right_value) /**< right value */
 {
+  JERRY_ASSERT (!ecma_is_value_error (left_value)
+                && !ecma_is_value_error (right_value));
+
+  if (ecma_are_values_integer_numbers (left_value, right_value))
+  {
+    if ((ecma_integer_value_t) left_value > (ecma_integer_value_t) right_value)
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,
@@ -109,6 +133,18 @@ ecma_value_t
 opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
                            ecma_value_t right_value) /**< right value */
 {
+  JERRY_ASSERT (!ecma_is_value_error (left_value)
+                && !ecma_is_value_error (right_value));
+
+  if (ecma_are_values_integer_numbers (left_value, right_value))
+  {
+    if ((ecma_integer_value_t) left_value <= (ecma_integer_value_t) right_value)
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,
@@ -150,6 +186,18 @@ ecma_value_t
 opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
                               ecma_value_t right_value) /**< right value */
 {
+  JERRY_ASSERT (!ecma_is_value_error (left_value)
+                && !ecma_is_value_error (right_value));
+
+  if (ecma_are_values_integer_numbers (left_value, right_value))
+  {
+    if ((ecma_integer_value_t) left_value >= (ecma_integer_value_t) right_value)
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (compare_result,

@@ -42,8 +42,7 @@
 /**
  * The length should be representable with int32_t.
  */
-JERRY_STATIC_ASSERT ((int32_t) ECMA_STRING_MAX_CONCATENATION_LENGTH ==
-                     ECMA_STRING_MAX_CONCATENATION_LENGTH,
+JERRY_STATIC_ASSERT (ECMA_STRING_MAX_CONCATENATION_LENGTH <= INT32_MAX,
                      ECMA_STRING_MAX_CONCATENATION_LENGTH_should_be_representable_with_int32_t);
 
 /**

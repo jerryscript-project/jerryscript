@@ -37,10 +37,10 @@
  */
 #define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT(name) \
 { \
-  JERRY_ASSERT (name[0] == (uint32_t) name[0]); \
-  JERRY_ASSERT (name[1] == (uint32_t) name[1]); \
-  JERRY_ASSERT (name[2] == (uint32_t) name[2]); \
-  JERRY_ASSERT (name[3] == (uint32_t) name[3]); \
+  JERRY_ASSERT (name[0] <= UINT32_MAX); \
+  JERRY_ASSERT (name[1] <= UINT32_MAX); \
+  JERRY_ASSERT (name[2] <= UINT32_MAX); \
+  JERRY_ASSERT (name[3] <= UINT32_MAX); \
 }
 
 /**

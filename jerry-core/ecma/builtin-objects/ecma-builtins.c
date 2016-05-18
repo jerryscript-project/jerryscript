@@ -488,7 +488,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_property_t *routine_desc_prop_p = ecma_create_internal_property (func_obj_p,
                                                                         ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC);
 
-  JERRY_ASSERT ((uint32_t) packed_value == packed_value);
+  JERRY_ASSERT (packed_value <= UINT32_MAX);
   ecma_set_internal_property_value (routine_desc_prop_p, (uint32_t) packed_value);
 
   return func_obj_p;
@@ -523,7 +523,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
     uint64_t routine_id_field = JRT_EXTRACT_BIT_FIELD (uint64_t, builtin_routine_desc,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS,
                                                        ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH);
-    JERRY_ASSERT ((uint16_t) routine_id_field == routine_id_field);
+    JERRY_ASSERT (routine_id_field <= UINT16_MAX);
 
     ecma_builtin_id_t built_in_id = (ecma_builtin_id_t) built_in_id_field;
     uint16_t routine_id = (uint16_t) routine_id_field;

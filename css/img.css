@@ -32,3 +32,13 @@ img[alt="Compressed Pointer"] {
   max-width:  25%;
   display: block;
 }
+
+img[alt="Object properties"] {
+  max-width:  60%;
+  display: block;
+}
+
+img[alt="Object/Lexicat environment structures"] {
+  max-width:  50%;
+  display: block;
+}

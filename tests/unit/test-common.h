@@ -26,11 +26,11 @@
 #include <string.h>
 
 /**
- * Verify that unit tests are built with all debug checks enabled
+ * Verify that unit tests are built with enabled debug check
  */
-#if defined (JERRY_NDEBUG) || defined (JERRY_DISABLE_HEAVY_DEBUG)
-# error "defined (JERRY_NDEBUG) || defined (JERRY_DISABLE_HEAVY_DEBUG) in a unit test"
-#endif /* JERRY_NDEBUG || JERRY_DISABLE_HEAVY_DEBUG */
+#ifdef JERRY_NDEBUG
+# error "defined (JERRY_NDEBUG) in a unit test"
+#endif /* JERRY_NDEBUG */
 
 /**
  * Test initialization statement that should be included

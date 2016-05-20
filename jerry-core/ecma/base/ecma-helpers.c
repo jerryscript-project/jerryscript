@@ -801,15 +801,15 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
   switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
   {
-    case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
+    case ECMA_INTERNAL_PROPERTY_ECMA_VALUE: /* ecma-value property except object */
     {
-      ecma_string_t *str_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_string_t, property_value);
-      ecma_deref_ecma_string (str_p);
+      JERRY_ASSERT (!ecma_is_value_object (property_value));
+      ecma_free_value (property_value);
 
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* pointer to a ecma_number_t */
+    case ECMA_INTERNAL_PROPERTY_DATE_FLOAT: /* pointer to a ecma_number_t */
     {
       ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, property_value);
       ecma_dealloc_number (num_p);
@@ -826,7 +826,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */

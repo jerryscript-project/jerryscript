@@ -549,7 +549,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     ecma_set_internal_property_value (class_prop_p, LIT_MAGIC_STRING_DATE_UL);
 
     ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                        ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+                                                                        ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
     ecma_number_t *prim_value_num_p = ecma_alloc_number ();
     *prim_value_num_p = prim_value_num;

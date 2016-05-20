@@ -105,18 +105,11 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_BOOLEAN_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE);
+                                                                       ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-      JERRY_ASSERT (ecma_get_internal_property_value (prim_value_prop_p) < ECMA_SIMPLE_VALUE__COUNT);
+      JERRY_ASSERT (ecma_is_value_boolean (ecma_get_internal_property_value (prim_value_prop_p)));
 
-      ecma_simple_value_t prim_simple_value;
-      prim_simple_value = (ecma_simple_value_t) ecma_get_internal_property_value (prim_value_prop_p);
-
-      ecma_value_t ret_boolean_value = ecma_make_simple_value (prim_simple_value);
-
-      JERRY_ASSERT (ecma_is_value_boolean (ret_boolean_value));
-
-      return ret_boolean_value;
+      return ecma_get_internal_property_value (prim_value_prop_p);
     }
   }
 

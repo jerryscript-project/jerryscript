@@ -48,8 +48,6 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
     return conv_to_num_completion;
   }
 
-  ecma_number_t prim_value = ecma_get_number_from_value (conv_to_num_completion);
-
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
 #else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
@@ -65,12 +63,11 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
   ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_NUMBER_UL;
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
-  ecma_number_t *prim_value_p = ecma_alloc_number ();
-  *prim_value_p = prim_value;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_p);
+                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-  ecma_free_value (conv_to_num_completion);
+  /* Pass reference (no need to free conv_to_num_completion). */
+  ecma_set_internal_property_value (prim_value_prop_p, conv_to_num_completion);
+
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_number_object */
 

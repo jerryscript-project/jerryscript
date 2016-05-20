@@ -77,11 +77,10 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_STRING_UL)
     {
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE);
+                                                                       ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
       ecma_string_t *prim_value_str_p;
-      prim_value_str_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_string_t,
-                                                          ecma_get_internal_property_value (prim_value_prop_p));
+      prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
 
       prim_value_str_p = ecma_copy_or_ref_ecma_string (prim_value_str_p);
 

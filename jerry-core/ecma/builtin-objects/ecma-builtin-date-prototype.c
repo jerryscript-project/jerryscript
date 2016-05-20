@@ -106,7 +106,7 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
     ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
     ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                                        ecma_get_internal_property_value (prim_prop_p));
 
@@ -153,7 +153,7 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
     ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
     ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                                        ecma_get_internal_property_value (prim_prop_p));
 
@@ -251,7 +251,7 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
     {
       ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+                                                                 ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
       ecma_number_t *prim_value_num_p;
       prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
@@ -360,7 +360,7 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
     ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE);
+                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
     ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                                        ecma_get_internal_property_value (prim_prop_p));

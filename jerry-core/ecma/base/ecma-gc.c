@@ -242,11 +242,11 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
 
       switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
       {
-        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_STRING_VALUE: /* compressed pointer to a ecma_string_t */
-        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_NUMBER_VALUE: /* compressed pointer to a ecma_number_t */
-        case ECMA_INTERNAL_PROPERTY_PRIMITIVE_BOOLEAN_VALUE: /* a simple boolean value */
+        case ECMA_INTERNAL_PROPERTY_ECMA_VALUE: /* an ecma_value_t except object */
+        case ECMA_INTERNAL_PROPERTY_DATE_FLOAT: /* pointer to a ecma_number_t */
         case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-        case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
+        case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* pointer to a bytecode array */
+        case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* pointer to a regexp bytecode array */
         case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
         case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
         case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
@@ -254,7 +254,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
         case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
         case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
         case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
-        case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE:
         {
           break;
         }

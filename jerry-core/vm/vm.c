@@ -2405,7 +2405,7 @@ error:
  */
 static ecma_value_t __attr_noinline___
 vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-            const void *arg_p, /**< arguments list */
+            const ecma_value_t *arg_p, /**< arguments list */
             ecma_length_t arg_list_len) /**< length of arguments list */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
@@ -2431,42 +2431,14 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   frame_ctx_p->stack_top_p = frame_ctx_p->registers_p + register_end;
 
-  if (arg_list_len == 0)
+  if (arg_list_len > argument_end)
   {
-    ecma_collection_header_t *arg_collection_p = (ecma_collection_header_t *) arg_p;
-    ecma_collection_iterator_t arguments_iterator;
-
-    arg_list_len = arg_collection_p->unit_number;
-    if (arg_list_len > argument_end)
-    {
-      arg_list_len = argument_end;
-    }
-
-    ecma_collection_iterator_init (&arguments_iterator, arg_collection_p);
-
-    for (uint32_t i = 0; i < arg_list_len; i++)
-    {
-      ecma_value_t value;
-
-      ecma_collection_iterator_next (&arguments_iterator);
-      value = *arguments_iterator.current_value_p;
-      frame_ctx_p->registers_p[i] = ecma_copy_value (value);
-    }
+    arg_list_len = argument_end;
   }
-  else
+
+  for (uint32_t i = 0; i < arg_list_len; i++)
   {
-    ecma_value_t *src_p = (ecma_value_t *) arg_p;
-    arg_list_len--;
-
-    if (arg_list_len > argument_end)
-    {
-      arg_list_len = argument_end;
-    }
-
-    for (uint32_t i = 0; i < arg_list_len; i++)
-    {
-      frame_ctx_p->registers_p[i] = ecma_copy_value (src_p[i]);
-    }
+    frame_ctx_p->registers_p[i] = ecma_copy_value (arg_p[i]);
   }
 
   /* The arg_list_len contains the end of the copied arguments.
@@ -2488,7 +2460,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   completion_value = vm_init_loop (frame_ctx_p);
 
-  if (!ecma_is_value_error (completion_value))
+  if (likely (!ecma_is_value_error (completion_value)))
   {
     while (true)
     {
@@ -2530,7 +2502,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  */
 static ecma_value_t __attr_noinline___
 vm_run_with_inline_stack (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                          const void *arg_p, /**< arguments list */
+                          const ecma_value_t *arg_p, /**< arguments list */
                           ecma_length_t arg_list_len) /**< length of arguments list */
 {
   ecma_value_t inline_stack[INLINE_STACK_SIZE];
@@ -2547,7 +2519,7 @@ vm_run_with_inline_stack (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  */
 static ecma_value_t __attr_noinline___
 vm_run_with_alloca (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                    const void *arg_p, /**< arguments list */
+                    const ecma_value_t *arg_p, /**< arguments list */
                     ecma_length_t arg_list_len, /**< length of arguments list */
                     uint32_t call_stack_size) /**< call stack size */
 {
@@ -2606,8 +2578,6 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.context_depth = 0;
   frame_ctx.is_eval_code = is_eval_code;
   frame_ctx.call_operation = VM_NO_EXEC_OP;
-
-  arg_list_len++;
 
   if (call_stack_size <= INLINE_STACK_SIZE)
   {

@@ -615,6 +615,23 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
 } /* ecma_copy_value */
 
 /**
+ * Copy ecma value.
+ *
+ * Note:
+ *   this function is similar to ecma_copy_value, but it is
+ *   faster for direct values since no function call is performed.
+ *   It also increases the binary size so it is recommended for
+ *   critical code paths only.
+ *
+ * @return copy of the given value
+ */
+inline ecma_value_t __attr_always_inline___
+ecma_fast_copy_value (ecma_value_t value)  /**< value description */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT) ? value : ecma_copy_value (value);
+} /* ecma_fast_copy_value */
+
+/**
  * Copy the ecma value if not an object
  *
  * @return copy of the given value
@@ -777,6 +794,24 @@ ecma_free_value (ecma_value_t value) /**< value description */
     }
   }
 } /* ecma_free_value */
+
+/**
+ * Free the ecma value
+ *
+ * Note:
+ *   this function is similar to ecma_free_value, but it is
+ *   faster for direct values since no function call is performed.
+ *   It also increases the binary size so it is recommended for
+ *   critical code paths only.
+ */
+inline void __attr_always_inline___
+ecma_fast_free_value (ecma_value_t value) /**< value description */
+{
+  if (ecma_get_value_type_field (value) != ECMA_TYPE_DIRECT)
+  {
+    ecma_free_value (value);
+  }
+} /* ecma_fast_free_value */
 
 /**
  * Free the ecma value if not an object

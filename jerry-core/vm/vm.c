@@ -387,7 +387,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   /* Free registers. */
   for (uint32_t i = 0; i < arguments_list_len; i++)
   {
-    ecma_free_value (stack_top_p[i]);
+    ecma_fast_free_value (stack_top_p[i]);
   }
 
   if (is_call_prop)
@@ -442,7 +442,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   /* Free registers. */
   for (uint32_t i = 0; i < arguments_list_len; i++)
   {
-    ecma_free_value (stack_top_p[i]);
+    ecma_fast_free_value (stack_top_p[i]);
   }
 
   ecma_free_value (stack_top_p[-1]);
@@ -482,7 +482,7 @@ enum
       if ((literal_index) < register_end) \
       { \
         /* Note: There should be no specialization for arguments. */ \
-        (target_value) = ecma_copy_value (frame_ctx_p->registers_p[literal_index]); \
+        (target_value) = ecma_fast_copy_value (frame_ctx_p->registers_p[literal_index]); \
         target_free_op; \
       } \
       else \
@@ -2182,13 +2182,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (literal_index < register_end)
           {
-            ecma_free_value (frame_ctx_p->registers_p[literal_index]);
+            ecma_fast_free_value (frame_ctx_p->registers_p[literal_index]);
 
             frame_ctx_p->registers_p[literal_index] = result;
 
             if (opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK))
             {
-              result = ecma_copy_value (result);
+              result = ecma_fast_copy_value (result);
             }
           }
           else
@@ -2215,7 +2215,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
             {
-              ecma_free_value (result);
+              ecma_fast_free_value (result);
             }
           }
         }
@@ -2226,13 +2226,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (object == ecma_make_simple_value (ECMA_SIMPLE_VALUE_REGISTER_REF))
           {
-            ecma_free_value (frame_ctx_p->registers_p[property]);
+            ecma_fast_free_value (frame_ctx_p->registers_p[property]);
 
             frame_ctx_p->registers_p[property] = result;
 
             if (opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK))
             {
-              result = ecma_copy_value (result);
+              result = ecma_fast_copy_value (result);
             }
           }
           else
@@ -2253,7 +2253,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
             {
-              ecma_free_value (result);
+              ecma_fast_free_value (result);
             }
           }
         }
@@ -2264,31 +2264,31 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         else if (opcode_data & VM_OC_PUT_BLOCK)
         {
-          ecma_free_value (block_result);
+          ecma_fast_free_value (block_result);
           block_result = result;
         }
       }
 
       if (free_flags & VM_FREE_LEFT_VALUE)
       {
-        ecma_free_value (left_value);
+        ecma_fast_free_value (left_value);
       }
 
       if (free_flags & VM_FREE_RIGHT_VALUE)
       {
-        ecma_free_value (right_value);
+        ecma_fast_free_value (right_value);
       }
     }
 error:
 
     if (free_flags & VM_FREE_LEFT_VALUE)
     {
-      ecma_free_value (left_value);
+      ecma_fast_free_value (left_value);
     }
 
     if (free_flags & VM_FREE_RIGHT_VALUE)
     {
-      ecma_free_value (right_value);
+      ecma_fast_free_value (right_value);
     }
 
     if (unlikely (ecma_is_value_error (last_completion_value)))
@@ -2319,7 +2319,7 @@ error:
     {
       /* In most cases there is no context. */
 
-      ecma_free_value (block_result);
+      ecma_fast_free_value (block_result);
       return last_completion_value;
     }
 
@@ -2438,7 +2438,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   for (uint32_t i = 0; i < arg_list_len; i++)
   {
-    frame_ctx_p->registers_p[i] = ecma_copy_value (arg_p[i]);
+    frame_ctx_p->registers_p[i] = ecma_fast_copy_value (arg_p[i]);
   }
 
   /* The arg_list_len contains the end of the copied arguments.
@@ -2486,7 +2486,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   /* Free arguments and registers */
   for (uint32_t i = 0; i < register_end; i++)
   {
-    ecma_free_value (frame_ctx_p->registers_p[i]);
+    ecma_fast_free_value (frame_ctx_p->registers_p[i]);
   }
 
   vm_top_context_p = prev_context_p;

@@ -149,11 +149,13 @@ extern ecma_string_t *ecma_get_string_from_value (ecma_value_t) __attr_pure___;
 extern ecma_object_t *ecma_get_object_from_value (ecma_value_t) __attr_pure___;
 extern ecma_value_t ecma_get_value_from_error_value (ecma_value_t) __attr_pure___;
 extern ecma_value_t ecma_copy_value (ecma_value_t);
+extern ecma_value_t ecma_fast_copy_value (ecma_value_t);
 extern ecma_value_t ecma_copy_value_if_not_object (ecma_value_t);
 extern void ecma_value_assign_value (ecma_value_t *, ecma_value_t);
 extern void ecma_value_assign_number (ecma_value_t *, ecma_number_t);
 extern void ecma_value_assign_uint32 (ecma_value_t *, uint32_t);
 extern void ecma_free_value (ecma_value_t);
+extern void ecma_fast_free_value (ecma_value_t);
 extern void ecma_free_value_if_not_object (ecma_value_t);
 
 /* ecma-helpers-string.c */

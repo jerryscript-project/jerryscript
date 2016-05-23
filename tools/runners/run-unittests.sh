@@ -59,14 +59,13 @@ UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
 
 for unit_test in $UNITTESTS
 do
-    echo -n "[$tested/$total] ${unit_test#$ROOT_DIR}: "
-
+    cmd_line="${unit_test#$ROOT_DIR}"
     $unit_test &>$UNITTEST_TEMP
     status_code=$?
 
     if [ $status_code -ne 0 ]
     then
-        echo "FAIL ($status_code)"
+        echo "[$tested/$total] $cmd_line: FAIL ($status_code)"
         cat $UNITTEST_TEMP
 
         echo "$status_code: $unit_test" >> $UNITTEST_ERROR
@@ -78,7 +77,7 @@ do
 
         failed=$((failed+1))
     else
-        echo "PASS"
+        echo "[$tested/$total] $cmd_line: PASS"
 
         echo "$unit_test" >> $UNITTEST_OK
 

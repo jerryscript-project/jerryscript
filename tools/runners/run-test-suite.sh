@@ -112,35 +112,31 @@ do
     if [ "$IS_SNAPSHOT" == true ]
     then
         # Testing snapshot
-
         SNAPSHOT_TEMP=`mktemp snapshot-out.XXXXXXXXXX`
 
-        echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS "
-        echo -n "--save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}: "
-
+        cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
         ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP )
         status_code=$?
 
         if [ $status_code -eq 0 ]
         then
-            echo "$PASS"
-            echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP: "
+            echo "[$tested/$total] $cmd_line: PASS"
 
+            cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP"
             ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP )
             status_code=$?
         fi
 
         rm -f $SNAPSHOT_TEMP
     else
-        echo -n "[$tested/$total] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}: "
-
+        cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}"
         ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &> $ENGINE_TEMP )
         status_code=$?
     fi
 
     if [ $status_code -ne $error_code ]
     then
-        echo "FAIL ($status_code)"
+        echo "[$tested/$total] $cmd_line: FAIL ($status_code)"
         cat $ENGINE_TEMP
 
         echo "$status_code: $test" >> $TEST_FAILED
@@ -152,7 +148,7 @@ do
 
         failed=$((failed+1))
     else
-        echo "$PASS"
+        echo "[$tested/$total] $cmd_line: $PASS"
 
         echo "$test" >> $TEST_PASSED
 

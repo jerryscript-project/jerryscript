@@ -22,6 +22,11 @@ JERRY_LIBM_FILES=`find ./jerry-libm -name "*.c" -or -name "*.h"`
 JERRY_MAIN_FILES=`find . -maxdepth 1 -name "*.c" -or -name "*.h"`
 UNIT_TEST_FILES=`find ./tests/unit -name "*.c" -or -name "*.h"`
 
+if [ -n "$1" ]
+then
+MANUAL_CHECK_FILES=`find $1 -name "*.c" -or -name "*.h"`
+fi
+
 vera++ -r tools/vera++ -p jerry \
  -e --no-duplicate \
- $JERRY_CORE_FILES $JERRY_PORT_DEFAULT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES
+ $MANUAL_CHECK_FILES $JERRY_CORE_FILES $JERRY_PORT_DEFAULT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES

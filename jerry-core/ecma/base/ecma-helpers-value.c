@@ -660,6 +660,11 @@ ecma_value_assign_value (ecma_value_t *value_p, /**< [in, out] ecma value */
   JERRY_STATIC_ASSERT (ECMA_TYPE_DIRECT == 0,
                        ecma_type_direct_must_be_zero_for_the_next_check);
 
+  if (*value_p == ecma_value)
+  {
+    return;
+  }
+
   if (ecma_get_value_type_field (ecma_value || *value_p) == ECMA_TYPE_DIRECT)
   {
     *value_p = ecma_value;

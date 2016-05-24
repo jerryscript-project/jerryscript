@@ -43,6 +43,16 @@
  */
 
 /**
+ * Opcode has branch argument
+ */
+#define VM_OC_HAS_BRANCH_ARG 0x8000
+
+/**
+ * Branch argument is a backward branch
+ */
+#define VM_OC_BACKWARD_BRANCH 0x4000
+
+/**
  * Position of "get arguments" opcode.
  */
 #define VM_OC_GET_ARGS_SHIFT 7
@@ -50,7 +60,7 @@
 /**
  * Mask of "get arguments" opcode.
  */
-#define VM_OC_GET_ARGS_MASK 0x1f
+#define VM_OC_GET_ARGS_MASK 0x7
 
 /**
  * Generate the binary representation of a "get arguments" opcode.
@@ -60,7 +70,7 @@
 /**
  * Extract the "get arguments" opcode.
  */
-#define VM_OC_GET_ARGS_GET_INDEX(O) (((O) >> VM_OC_GET_ARGS_SHIFT) & VM_OC_GET_ARGS_MASK)
+#define VM_OC_GET_ARGS_INDEX(O) ((O) & (VM_OC_GET_ARGS_MASK << VM_OC_GET_ARGS_SHIFT))
 
 /**
  * Checks whether the result is stored somewhere.
@@ -73,16 +83,14 @@
 typedef enum
 {
   VM_OC_GET_NONE = VM_OC_GET_ARGS_CREATE_INDEX (0),             /**< do nothing */
-  VM_OC_GET_STACK = VM_OC_GET_ARGS_CREATE_INDEX (1),            /**< pop one elemnet from the stack */
-  VM_OC_GET_STACK_STACK = VM_OC_GET_ARGS_CREATE_INDEX (2),      /**< pop two elemnets from the stack */
-  VM_OC_GET_BYTE = VM_OC_GET_ARGS_CREATE_INDEX (3),             /**< read a byte */
+  VM_OC_GET_STACK = VM_OC_GET_ARGS_CREATE_INDEX (1),            /**< pop one element from the stack */
+  VM_OC_GET_STACK_STACK = VM_OC_GET_ARGS_CREATE_INDEX (2),      /**< pop two elements from the stack */
 
-  VM_OC_GET_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (4),          /**< resolve literal */
-  VM_OC_GET_STACK_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (5),    /**< pop one elemnet from the stack
+  VM_OC_GET_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (3),          /**< resolve literal */
+  VM_OC_GET_LITERAL_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (4),  /**< resolve two literals */
+  VM_OC_GET_STACK_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (5),    /**< pop one element from the stack
                                                                  *   and resolve a literal */
-  VM_OC_GET_LITERAL_BYTE = VM_OC_GET_ARGS_CREATE_INDEX (6),     /**< pop one elemnet from stack and read a byte */
-  VM_OC_GET_LITERAL_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (7),  /**< resolve two literals */
-  VM_OC_GET_THIS_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (8),     /**< get this and resolve a literal */
+  VM_OC_GET_THIS_LITERAL = VM_OC_GET_ARGS_CREATE_INDEX (6),     /**< get this and resolve a literal */
 } vm_oc_get_types;
 
 /**
@@ -229,7 +237,7 @@ typedef enum
 /**
  * Position of "put result" opcode.
  */
-#define VM_OC_PUT_RESULT_SHIFT 12
+#define VM_OC_PUT_RESULT_SHIFT 10
 
 /**
  * Mask of "put result" opcode.

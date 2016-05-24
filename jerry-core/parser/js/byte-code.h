@@ -173,19 +173,19 @@
 
 #define CBC_FORWARD_BRANCH(name, stack, vm_oc) \
   CBC_OPCODE (name, CBC_HAS_BRANCH_ARG | CBC_FORWARD_BRANCH_ARG, stack, \
-              (vm_oc)) \
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG) \
   CBC_OPCODE (name ## _2, CBC_HAS_BRANCH_ARG | CBC_FORWARD_BRANCH_ARG, stack, \
-              (vm_oc)) \
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG) \
   CBC_OPCODE (name ## _3, CBC_HAS_BRANCH_ARG | CBC_FORWARD_BRANCH_ARG, stack, \
-              (vm_oc))
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG)
 
 #define CBC_BACKWARD_BRANCH(name, stack, vm_oc) \
   CBC_OPCODE (name, CBC_HAS_BRANCH_ARG, stack, \
-              (vm_oc)) \
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG | VM_OC_BACKWARD_BRANCH) \
   CBC_OPCODE (name ## _2, CBC_HAS_BRANCH_ARG, stack, \
-              (vm_oc)) \
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG | VM_OC_BACKWARD_BRANCH) \
   CBC_OPCODE (name ## _3, CBC_HAS_BRANCH_ARG, stack, \
-              (vm_oc))
+              (vm_oc) | VM_OC_HAS_BRANCH_ARG | VM_OC_BACKWARD_BRANCH)
 
 #define CBC_BRANCH_OFFSET_LENGTH(opcode) \
   ((opcode) & 0x3)
@@ -243,7 +243,7 @@
   CBC_FORWARD_BRANCH (CBC_BRANCH_IF_LOGICAL_TRUE, -1, \
                       VM_OC_BRANCH_IF_LOGICAL_TRUE | VM_OC_GET_STACK) \
   CBC_OPCODE (CBC_ARRAY_APPEND, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
-              VM_OC_APPEND_ARRAY | VM_OC_GET_BYTE) \
+              VM_OC_APPEND_ARRAY) \
   CBC_FORWARD_BRANCH (CBC_BRANCH_IF_LOGICAL_FALSE, -1, \
                       VM_OC_BRANCH_IF_LOGICAL_FALSE | VM_OC_GET_STACK) \
   CBC_OPCODE (CBC_PUSH_ELISION, CBC_NO_FLAG, 1, \
@@ -293,7 +293,7 @@
   CBC_OPCODE (CBC_PUSH_PROP_THIS_LITERAL_REFERENCE, CBC_HAS_LITERAL_ARG, 3, \
               VM_OC_PROP_REFERENCE | VM_OC_GET_THIS_LITERAL | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_NEW, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
-              VM_OC_NEW | VM_OC_GET_BYTE | VM_OC_PUT_STACK) \
+              VM_OC_NEW | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_NEW0, CBC_NO_FLAG, 0, \
               VM_OC_NEW | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_NEW1, CBC_NO_FLAG, -1, \
@@ -399,17 +399,17 @@
   \
   /* Call opcodes. */ \
   CBC_OPCODE (CBC_CALL, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
-              VM_OC_CALL | VM_OC_GET_BYTE) \
+              VM_OC_CALL) \
   CBC_OPCODE (CBC_CALL_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
-              VM_OC_CALL | VM_OC_GET_BYTE | VM_OC_PUT_STACK) \
+              VM_OC_CALL | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
-              VM_OC_CALL | VM_OC_GET_BYTE | VM_OC_PUT_BLOCK) \
+              VM_OC_CALL | VM_OC_PUT_BLOCK) \
   CBC_OPCODE (CBC_CALL_PROP, CBC_HAS_POP_STACK_BYTE_ARG, -3, \
-              VM_OC_CALL | VM_OC_GET_BYTE) \
+              VM_OC_CALL) \
   CBC_OPCODE (CBC_CALL_PROP_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, -2, \
-              VM_OC_CALL | VM_OC_GET_BYTE | VM_OC_PUT_STACK) \
+              VM_OC_CALL | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_CALL_PROP_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -3, \
-              VM_OC_CALL | VM_OC_GET_BYTE | VM_OC_PUT_BLOCK) \
+              VM_OC_CALL | VM_OC_PUT_BLOCK) \
   CBC_OPCODE (CBC_CALL0, CBC_NO_FLAG, -1, \
               VM_OC_CALL) \
   CBC_OPCODE (CBC_CALL0_PUSH_RESULT, CBC_NO_FLAG, 0, \

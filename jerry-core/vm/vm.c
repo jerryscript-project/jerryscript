@@ -1018,19 +1018,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_property_t *length_prop_p;
           uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
-          ecma_property_descriptor_t prop_desc;
-
-          prop_desc = ecma_make_empty_property_descriptor ();
-          prop_desc.is_value_defined = true;
-
-          prop_desc.is_writable_defined = true;
-          prop_desc.is_writable = true;
-
-          prop_desc.is_enumerable_defined = true;
-          prop_desc.is_enumerable = true;
-
-          prop_desc.is_configurable_defined = true;
-          prop_desc.is_configurable = true;
 
           stack_top_p -= values_length;
 
@@ -1051,16 +1038,23 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
-              prop_desc.value = stack_top_p[i];
+              ecma_property_t *prop_p = ecma_create_named_data_property (array_obj_p,
+                                                                         index_str_p,
+                                                                         true, /* Writable */
+                                                                         true, /* Enumerable */
+                                                                         true); /* Configurable */
 
-              ecma_op_general_object_define_own_property (array_obj_p,
-                                                          index_str_p,
-                                                          &prop_desc,
-                                                          false);
+              JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
+
+              ecma_set_named_data_property_value (prop_p, stack_top_p[i]);
+
+              /* The reference is moved so no need to free stack_top_p[i] except for objects. */
+              if (ecma_is_value_object (stack_top_p[i]))
+              {
+                ecma_free_value (stack_top_p[i]);
+              }
 
               ecma_deref_ecma_string (index_str_p);
-
-              ecma_free_value (stack_top_p[i]);
             }
 
             length_num++;

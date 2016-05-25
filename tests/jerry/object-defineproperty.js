@@ -1,5 +1,5 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright 2015-2016 Samsung Electronics Co., Ltd.
+// Copyright 2015-2016 University of Szeged.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,3 +55,17 @@ Object.defineProperty(obj, "prop", {
 
 var desc2 = Object.getOwnPropertyDescriptor(obj, "prop");
 assert (desc1.set === setter && desc2.set === undefined);
+
+obj = {};
+
+/* This error is thrown even in non-strict mode. */
+Object.defineProperty(obj, 'f', {
+  set: function(value) { throw 234; },
+});
+
+try {
+  obj.f = 5;
+  assert (false);
+} catch (err) {
+  assert (err === 234);
+}

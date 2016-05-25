@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -268,45 +268,6 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
 
   return ecma_op_general_object_put (obj_p, property_name_p, value, is_throw);
 } /* ecma_op_object_put */
-
-/**
- * [[CanPut]] ecma object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *
- * @return true - if [[Put]] with the given property name can be performed;
- *         false - otherwise.
- */
-bool
-ecma_op_object_can_put (ecma_object_t *obj_p, /**< the object */
-                        ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT (property_name_p != NULL);
-
-  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
-
-  /*
-   * typedef ecma_property_t * (*can_put_ptr_t) (ecma_object_t *, ecma_string_t *);
-   * static const can_put_ptr_t can_put [ECMA_OBJECT_TYPE__COUNT] =
-   * {
-   *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_can_put,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_can_put
-   * };
-   *
-   * return can_put[type] (obj_p, property_name_p);
-   */
-
-  return ecma_op_general_object_can_put (obj_p, property_name_p);
-} /* ecma_op_object_can_put */
 
 /**
  * [[Delete]] ecma object's operation

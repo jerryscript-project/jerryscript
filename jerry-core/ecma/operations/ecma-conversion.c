@@ -355,7 +355,20 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
       res_p = ecma_get_string_from_value (value);
       res_p = ecma_copy_or_ref_ecma_string (res_p);
     }
-    else if (ecma_is_value_number (value))
+    else if (ecma_is_value_integer_number (value))
+    {
+      ecma_integer_value_t num = ecma_get_integer_from_value (value);
+
+      if (num < 0)
+      {
+        res_p = ecma_new_ecma_string_from_number ((ecma_number_t) num);
+      }
+      else
+      {
+        res_p = ecma_new_ecma_string_from_uint32 ((uint32_t) num);
+      }
+    }
+    else if (ecma_is_value_float_number (value))
     {
       ecma_number_t num = ecma_get_number_from_value (value);
       res_p = ecma_new_ecma_string_from_number (num);

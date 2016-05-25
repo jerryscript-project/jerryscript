@@ -594,4 +594,4 @@ Value of x is 17
 
 ## Further steps
 
-For further API description, please look at [API Reference](/docs/API-REFERENCE.md).
+For further API description, please visit [API Reference page](https://samsung.github.io/jerryscript/API/) on [JerryScript home page](https://samsung.github.io/jerryscript/).

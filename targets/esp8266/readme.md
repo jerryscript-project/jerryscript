@@ -1,8 +1,9 @@
 ### About
 
 Files in this folder (embedding/esp8266) are copied from
-examples/project_template of esp_iot_rtos_sdk and modified for JerryScript.
-You can view online from [this](https://github.com/espressif/esp_iot_rtos_sdk/tree/master/examples/project_template) page.
+`examples/project_template` of `esp_iot_rtos_sdk` and modified for JerryScript.
+You can view online from
+[this](https://github.com/espressif/esp_iot_rtos_sdk/tree/master/examples/project_template) page.
 
 
 ### How to build JerryScript for ESP8266
@@ -21,7 +22,9 @@ Below is a summary after SDK patch is applied.
 
 ```
 cd ~/harmony/jerryscript
+# clean build
 make -f ./targets/esp8266/Makefile.esp8266 clean
+# or just normal build
 make -f ./targets/esp8266/Makefile.esp8266
 ```
 
@@ -29,7 +32,7 @@ Output files should be placed at $BIN_PATH
 
 #### 4. Flashing for ESP8266 ESP-01 board (WiFi Module)
 
-Steps are for ESP8266 ESP-01(WiFi) board. Others may vary.
+Steps are for `ESP8266 ESP-01(WiFi)` board. Others may vary.
 Refer http://www.esp8266.com/wiki/doku.php?id=esp8266-module-family page.
 
 ##### 4.1 GPIO0 and GPIO2

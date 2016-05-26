@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,11 +46,45 @@ int jerry_port_errormsg (const char* format, ...)
   return count;
 }
 
+
+/** exit - cause normal process termination  */
 void exit (int status)
 {
-  printf ("!!!! EXIT: %d\n", status);
   while (true)
   {
-    ;
   }
 } /* exit */
+
+/** abort - cause abnormal process termination  */
+void abort (void)
+{
+  while (true)
+  {
+  }
+} /* abort */
+
+/**
+ * fwrite
+ *
+ * @return number of bytes written
+ */
+size_t
+fwrite (const void *ptr, /**< data to write */
+        size_t size, /**< size of elements to write */
+        size_t nmemb, /**< number of elements */
+        FILE *stream) /**< stream pointer */
+{
+  return size * nmemb;
+} /* fwrite */
+
+/**
+ * This function can get the time as well as a timezone.
+ *
+ * @return 0 if success, -1 otherwise
+ */
+int
+gettimeofday (void *tp,  /**< struct timeval */
+              void *tzp) /**< struct timezone */
+{
+  return -1;
+} /* gettimeofday */

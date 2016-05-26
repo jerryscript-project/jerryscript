@@ -41,12 +41,12 @@ NAME ## _handler (const jerry_api_object_t * function_obj_p __UNSED__, \
 #define REGISTER_HANDLER(NAME) \
   register_native_function ( # NAME, NAME ## _handler)
 
-//-----------------------------------------------------------------------------
+/*---------------------------------------------------------------------------*/
 
 DELCARE_HANDLER(assert) {
   if (args_cnt == 1
       && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
-      && args_p[0].v_bool == true)
+      && args_p[0].u.v_bool == true)
   {
     printf (">> Jerry assert true\r\n");
     return true;
@@ -65,13 +65,13 @@ DELCARE_HANDLER(print) {
     printf(">> print(%d) :", (int)args_cnt);
     for (cc=0; cc<args_cnt; cc++)
     {
-      if (args_p[cc].type == JERRY_API_DATA_TYPE_STRING && args_p[cc].v_string)
+      if (args_p[cc].type == JERRY_API_DATA_TYPE_STRING && args_p[cc].u.v_string)
       {
         static char buffer[128];
-        int length, maxlength;
-        length = -jerry_api_string_to_char_buffer (args_p[0].v_string, NULL, 0);
+        jerry_api_size_t length, maxlength;
+        length = -jerry_api_string_to_char_buffer (args_p[0].u.v_string, NULL, 0);
         maxlength  = MIN(length, 126);
-        jerry_api_string_to_char_buffer (args_p[cc].v_string,
+        jerry_api_string_to_char_buffer (args_p[cc].u.v_string,
                                          (jerry_api_char_t *) buffer,
                                          maxlength);
         *(buffer + length) = 0;
@@ -88,15 +88,15 @@ DELCARE_HANDLER(print) {
 }
 
 
-//-----------------------------------------------------------------------------
+/*---------------------------------------------------------------------------*/
 
 DELCARE_HANDLER(gpio_dir) {
+  int port, value;
   if (args_cnt < 2)
   {
     return false;
   }
 
-  int port, value;
   port = (int)JS_VALUE_TO_NUMBER (&args_p[0]);
   value = (int)JS_VALUE_TO_NUMBER (&args_p[1]);
 
@@ -106,12 +106,12 @@ DELCARE_HANDLER(gpio_dir) {
 } /* gpio_dir_handler */
 
 DELCARE_HANDLER(gpio_set) {
+  int port, value;
   if (args_cnt < 2)
   {
     return false;
   }
 
-  int port, value;
   port = (int)JS_VALUE_TO_NUMBER (&args_p[0]);
   value = (int)JS_VALUE_TO_NUMBER (&args_p[1]);
 
@@ -122,24 +122,25 @@ DELCARE_HANDLER(gpio_set) {
 
 
 DELCARE_HANDLER(gpio_get) {
+  int port, value;
   if (args_cnt < 1)
   {
     return false;
   }
 
-  int port, value;
   port = (int)JS_VALUE_TO_NUMBER (&args_p[0]);
 
   value = native_gpio_get (port) ? 1 : 0;
 
   ret_val_p->type = JERRY_API_DATA_TYPE_FLOAT64;
-  ret_val_p->v_float64 = (double)value;
+  ret_val_p->u.v_float64 = (double)value;
 
   return true;
 } /* gpio_dir_handler */
 
 
-//-----------------------------------------------------------------------------
+/*---------------------------------------------------------------------------*/
+
 static bool
 register_native_function (const char* name,
                           jerry_external_handler_t handler)
@@ -163,7 +164,7 @@ register_native_function (const char* name,
 
   jerry_api_acquire_object (reg_func_p);
   reg_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  reg_value.v_object = reg_func_p;
+  reg_value.u.v_object = reg_func_p;
 
   bok = jerry_api_set_object_field_value (global_obj_p,
                                           (jerry_api_char_t *)name,
@@ -182,7 +183,7 @@ register_native_function (const char* name,
 }
 
 
-//-----------------------------------------------------------------------------
+/*---------------------------------------------------------------------------*/
 
 void js_register_functions (void)
 {

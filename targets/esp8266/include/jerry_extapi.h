@@ -24,14 +24,14 @@
 
 #define API_DATA_IS_FUNCTION(val_p) \
     (API_DATA_IS_OBJECT(val_p) && \
-     jerry_api_is_function((val_p)->v_object))
+     jerry_api_is_function((val_p)->u.v_object))
 
 #define JS_VALUE_TO_NUMBER(val_p) \
     ((val_p)->type == JERRY_API_DATA_TYPE_FLOAT32 ? \
-     (double) ((val_p)->v_float32) : \
+     (double) ((val_p)->u.v_float32) : \
      (val_p)->type == JERRY_API_DATA_TYPE_FLOAT64 ? \
-       (double) ((val_p)->v_float64) : \
-       (double) ((val_p)->v_uint32))
+       (double) ((val_p)->u.v_float64) : \
+       (double) ((val_p)->u.v_uint32))
 
 
 #ifdef __cplusplus

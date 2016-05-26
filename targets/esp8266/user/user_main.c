@@ -98,7 +98,6 @@ void jerry_task(void *pvParameters) {
  */
 void ICACHE_FLASH_ATTR user_init(void)
 {
-  const portTickType onesec = 1000 / portTICK_RATE_MS;
   uart_div_modify(UART0, UART_CLK_FREQ / (BIT_RATE_115200));
 
   show_free_mem(0);

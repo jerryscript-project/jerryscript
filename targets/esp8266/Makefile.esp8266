@@ -48,10 +48,10 @@ JERRY_BUILD_FILES := $(SRCPATH)/jerry_extapi.c
 JERRY_BUILD_FILES := $(JERRY_BUILD_FILES);$(SRCPATH)/jerry_run.c
 
 
-.PHONY: jerry js2c mbed check-env flash clean
+.PHONY: jerry js2c mkbin check-env flash clean
 
 
-all: check-env jerry js2c mbed
+all: check-env jerry js2c mkbin
 
 
 jerry:
@@ -83,7 +83,7 @@ js2c:
 	cd targets/esp8266; ../tools/js2c.py
 
 
-mbed:
+mkbin:
 	cd targets/esp8266; \
 	 make clean; \
 	 BOOT=new APP=1 SPI_SPEED=40 SPI_MODE=QIO SPI_SIZE_MAP=3 make; \

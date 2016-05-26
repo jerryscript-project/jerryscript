@@ -62,7 +62,6 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
                                                 lit_utf8_byte_t *to_digits, /**< buffer to write */
                                                 lit_utf8_size_t to_num_digits) /**< requested number of digits */
 {
-  lit_utf8_byte_t *start = to_digits;
   lit_utf8_byte_t *p = to_digits;
 
   if (exponent <= 0)
@@ -95,21 +94,18 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
     num_digits -= to_copy;
     exponent -= (int32_t) to_copy;
 
+    /* Add zeros before decimal point. */
+    while (exponent > 0 && to_num_digits > 0)
+    {
+      JERRY_ASSERT (num_digits == 0);
+      *p++ = '0';
+      to_num_digits--;
+      exponent--;
+    }
+
     if (to_num_digits > 0)
     {
-      /* Add zeros before decimal point. */
-      while (exponent > 0 && to_num_digits > 0)
-      {
-        JERRY_ASSERT (num_digits == 0);
-        *p++ = '0';
-        to_num_digits--;
-        exponent--;
-      }
-
-      if (to_num_digits > 0)
-      {
-        *p++ = '.';
-      }
+      *p++ = '.';
     }
   }
 
@@ -129,7 +125,7 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
     }
   }
 
-  return (lit_utf8_size_t) (p - start);
+  return (lit_utf8_size_t) (p - to_digits);
 } /* ecma_builtin_number_prototype_helper_to_string */
 
 #undef min
@@ -216,26 +212,23 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
     }
     else
     {
-      lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-      lit_utf8_size_t num_digits;
-      int32_t exponent;
       bool is_negative = false;
-      bool should_round = false;
-
       if (ecma_number_is_negative (this_arg_number))
       {
         this_arg_number = -this_arg_number;
         is_negative = true;
       }
 
-      num_digits = ecma_number_to_decimal (this_arg_number, digits, &exponent);
+      lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
+      int32_t exponent;
+      lit_utf8_size_t num_digits = ecma_number_to_decimal (this_arg_number, digits, &exponent);
 
       exponent = exponent - (int32_t) num_digits;
-      bool is_scale_negative = false;
 
       /* Calculate the scale of the number in the specified radix. */
       int scale = (int) -floor ((log (10) / log (radix)) * exponent);
 
+      bool is_scale_negative = false;
       if (scale < 0)
       {
         is_scale_negative = true;
@@ -243,7 +236,6 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       }
 
       int buff_size;
-
       if (is_scale_negative)
       {
         buff_size = (int) floor (log (this_arg_number) / log (radix)) + 1;
@@ -259,13 +251,16 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       }
 
       /* Normalize the number, so that it is as close to 0 exponent as possible. */
-      for (int i = 0; i < scale; i++)
+      if (is_scale_negative)
       {
-        if (is_scale_negative)
+        for (int i = 0; i < scale; i++)
         {
           this_arg_number /= (ecma_number_t) radix;
         }
-        else
+      }
+      else
+      {
+        for (int i = 0; i < scale; i++)
         {
           this_arg_number *= (ecma_number_t) radix;
         }
@@ -274,6 +269,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       uint64_t whole = (uint64_t) this_arg_number;
       ecma_number_t fraction = this_arg_number - (ecma_number_t) whole;
 
+      bool should_round = false;
       if (!ecma_number_is_zero (fraction) && is_scale_negative)
       {
         /* Add one extra digit for rounding. */
@@ -487,9 +483,8 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
     }
     else
     {
-      bool is_negative = false;
-
       /* 6. */
+      bool is_negative = false;
       if (ecma_number_is_negative (this_num))
       {
         is_negative = true;
@@ -516,14 +511,11 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
       }
       else
       {
+        /* Get the parameters of the number if non-zero. */
         lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
         lit_utf8_size_t num_digits;
         int32_t exponent;
 
-        /* 1. */
-        int32_t frac_digits = ecma_number_to_int32 (arg_num);
-
-        /* Get the parameters of the number if non-zero. */
         if (!ecma_number_is_zero (this_num))
         {
           num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
@@ -543,6 +535,9 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         /* 8. */
         else
         {
+          /* 1. */
+          int32_t frac_digits = ecma_number_to_int32 (arg_num);
+
           num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, exponent + frac_digits);
 
           /* Buffer that is used to construct the string. */
@@ -621,9 +616,8 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
     }
     else
     {
-      bool is_negative = false;
-
       /* 5. */
+      bool is_negative = false;
       if (ecma_number_is_negative (this_num) && !ecma_number_is_zero (this_num))
       {
         is_negative = true;
@@ -650,13 +644,13 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
       }
       else
       {
+        /* Get the parameters of the number if non zero. */
         lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
         lit_utf8_size_t num_digits;
         int32_t exponent;
 
         if (!ecma_number_is_zero (this_num))
         {
-          /* Get the parameters of the number if non zero. */
           num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
         }
         else
@@ -766,9 +760,8 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
     }
     else
     {
-      bool is_negative = false;
-
       /* 6. */
+      bool is_negative = false;
       if (ecma_number_is_negative (this_num) && !ecma_number_is_zero (this_num))
       {
         is_negative = true;
@@ -800,13 +793,11 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
       }
       else
       {
+        /* Get the parameters of the number if non-zero. */
         lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
         lit_utf8_size_t num_digits;
         int32_t exponent;
 
-        int32_t precision = ecma_number_to_int32 (arg_num);
-
-        /* Get the parameters of the number if non-zero. */
         if (!ecma_number_is_zero (this_num))
         {
           num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
@@ -817,6 +808,8 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
           num_digits = 1;
           exponent = 1;
         }
+
+        int32_t precision = ecma_number_to_int32 (arg_num);
 
         num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision);
 

@@ -919,14 +919,13 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
   *
   * Note:
   *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
-  *         - s represents digits of the number;
-  *         - k is the number of digits;
-  *         - n is the decimal exponent.
+  *         - parameter out_digits_p corresponds to s, the digits of the number;
+  *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
+  *         - return value corresponds to k, the number of digits.
   */
-void
+lit_utf8_size_t
 ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
-                        uint64_t *out_digits_p, /**< [out] digits */
-                        int32_t *out_digits_num_p, /**< [out] number of digits */
+                        lit_utf8_byte_t *out_digits_p, /**< buffer to fill with digits */
                         int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
@@ -934,130 +933,7 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
   JERRY_ASSERT (!ecma_number_is_infinity (num));
   JERRY_ASSERT (!ecma_number_is_negative (num));
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-
-  *out_digits_p = ecma_errol0_dtoa (num, out_digits_num_p, out_decimal_exp_p);
-
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-  /* Less precise conversion */
-  uint64_t fraction_uint64;
-  uint32_t fraction;
-  int32_t exponent;
-  int32_t dot_shift;
-  int32_t decimal_exp = 0;
-
-  dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction_uint64, &exponent);
-
-  fraction = (uint32_t) fraction_uint64;
-  JERRY_ASSERT (fraction == fraction_uint64);
-
-  if (exponent != 0)
-  {
-    ecma_number_t t = 1.0f;
-    bool do_divide;
-
-    if (exponent < 0)
-    {
-      do_divide = true;
-
-      while (exponent <= 0)
-      {
-        t *= 2.0f;
-        exponent++;
-
-        if (t >= 10.0f)
-        {
-          t /= 10.0f;
-          decimal_exp--;
-        }
-
-        JERRY_ASSERT (t < 10.0f);
-      }
-
-      while (t > 1.0f)
-      {
-        exponent--;
-        t /= 2.0f;
-      }
-    }
-    else
-    {
-      do_divide = false;
-
-      while (exponent >= 0)
-      {
-        t *= 2.0f;
-        exponent--;
-
-        if (t >= 10.0f)
-        {
-          t /= 10.0f;
-          decimal_exp++;
-        }
-
-        JERRY_ASSERT (t < 10.0f);
-      }
-
-      while (t > 2.0f)
-      {
-        exponent++;
-        t /= 2.0f;
-      }
-    }
-
-    if (do_divide)
-    {
-      fraction = (uint32_t) ((ecma_number_t) fraction / t);
-    }
-    else
-    {
-      fraction = (uint32_t) ((ecma_number_t) fraction * t);
-    }
-  }
-
-  uint32_t s;
-  int32_t n;
-  int32_t k;
-
-  if (exponent > 0)
-  {
-    fraction <<= exponent;
-  }
-  else
-  {
-    fraction >>= -exponent;
-  }
-
-  const int32_t int_part_shift = dot_shift;
-  const uint32_t frac_part_mask = ((((uint32_t) 1) << int_part_shift) - 1);
-
-  uint32_t int_part = fraction >> int_part_shift;
-  uint32_t frac_part = fraction & frac_part_mask;
-
-  s = int_part;
-  k = 1;
-  n = decimal_exp + 1;
-
-  JERRY_ASSERT (int_part < 10);
-
-  while (k < ECMA_NUMBER_MAX_DIGITS
-         && frac_part != 0)
-  {
-    frac_part *= 10;
-
-    uint32_t new_frac_part = frac_part & frac_part_mask;
-    uint32_t digit = (frac_part - new_frac_part) >> int_part_shift;
-    s = s * 10 + digit;
-    k++;
-    frac_part = new_frac_part;
-  }
-
-  JERRY_ASSERT (k > 0);
-
-  *out_digits_p = s;
-  *out_digits_num_p = k;
-  *out_decimal_exp_p = n;
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+  return ecma_errol0_dtoa ((double) num, out_digits_p, out_decimal_exp_p);
 } /* ecma_number_to_decimal */
 
 /**
@@ -1074,12 +950,6 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
                             lit_utf8_byte_t *buffer_p, /**< buffer for utf-8 string */
                             lit_utf8_size_t buffer_size) /**< size of buffer */
 {
-  static const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-  static const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
-  static const lit_utf8_byte_t plus_char = '+';
-  static const lit_utf8_byte_t minus_char = '-';
-  static const lit_utf8_byte_t dot_char = '.';
-
   lit_utf8_byte_t *dst_p;
 
   if (ecma_number_is_nan (num))
@@ -1092,7 +962,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (ecma_number_is_zero (num))
   {
     // 2.
-    *buffer_p = digits[0];
+    *buffer_p = '0';
     JERRY_ASSERT (1 <= buffer_size);
     return 1;
   }
@@ -1102,7 +972,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (ecma_number_is_negative (num))
   {
     // 3.
-    *dst_p++ = minus_char;
+    *dst_p++ = '-';
     num = ecma_number_negate (num);
   }
 
@@ -1111,6 +981,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
     // 4.
     dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_INFINITY_UL, dst_p,
                                              (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
+    JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
@@ -1122,124 +993,69 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (((ecma_number_t) num_uint32) == num)
   {
     dst_p += ecma_uint32_to_utf8_string (num_uint32, dst_p, (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
+    JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
-  /* mantissa */
-  uint64_t s;
   /* decimal exponent */
   int32_t n;
-  /* number of digits in s */
+  /* number of digits in mantissa */
   int32_t k;
 
-  ecma_number_to_decimal (num, &s, &k, &n);
+  k = (int32_t) ecma_number_to_decimal (num, dst_p, &n);
 
-  lit_utf8_size_t size;
-
-  // 6.
   if (k <= n && n <= 21)
   {
-    dst_p += n;
+    // 6.
+    dst_p += k;
+
+    memset (dst_p, '0', (size_t) (n - k));
+    dst_p += n - k;
+
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
-
-    size = (lit_utf8_size_t) (dst_p - buffer_p);
-
-    for (int32_t i = 0; i < n - k; i++)
-    {
-      *--dst_p = digits[0];
-    }
-
-    for (int32_t i = 0; i < k; i++)
-    {
-      *--dst_p = digits[s % 10];
-      s /= 10;
-    }
-
-    return size;
+    return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
   if (0 < n && n <= 21)
   {
     // 7.
+    memmove (dst_p + n + 1, dst_p + n, (size_t) (k - n));
+    *(dst_p + n) = '.';
     dst_p += k + 1;
+
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
-
-    size = (lit_utf8_size_t) (dst_p - buffer_p);
-
-    for (int32_t i = 0; i < k - n; i++)
-    {
-      *--dst_p = digits[s % 10];
-      s /= 10;
-    }
-
-    *--dst_p = dot_char;
-
-    for (int32_t i = 0; i < n; i++)
-    {
-      *--dst_p = digits[s % 10];
-      s /= 10;
-    }
-
-    return size;
+    return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
   if (-6 < n && n <= 0)
   {
     // 8.
-    dst_p += k - n + 1 + 1;
+    memmove (dst_p + 2 - n, dst_p, (size_t) k);
+    memset (dst_p + 2, '0', (size_t) -n);
+    *dst_p = '0';
+    *(dst_p + 1) = '.';
+    dst_p += k - n + 2;
+
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
-
-    size = (lit_utf8_size_t) (dst_p - buffer_p);
-
-    for (int32_t i = 0; i < k; i++)
-    {
-      *--dst_p = digits[s % 10];
-      s /= 10;
-    }
-
-    for (int32_t i = 0; i < -n; i++)
-    {
-      *--dst_p = digits[0];
-    }
-
-    *--dst_p = dot_char;
-    *--dst_p = digits[0];
-
-    return size;
+    return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
   if (k == 1)
   {
     // 9.
-    JERRY_ASSERT (1 <= buffer_size);
-
-    *dst_p++ = digits[s % 10];
-    s /= 10;
+    dst_p++;
   }
   else
   {
     // 10.
-    dst_p += k + 1;
-    JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
-
-    for (int32_t i = 0; i < k - 1; i++)
-    {
-      *--dst_p = digits[s % 10];
-      s /= 10;
-    }
-
-    *--dst_p = dot_char;
-    *--dst_p = digits[s % 10];
-    s /= 10;
-
+    memmove (dst_p + 2, dst_p + 1, (size_t) (k - 1));
+    *(dst_p + 1) = '.';
     dst_p += k + 1;
   }
-  JERRY_ASSERT (s == 0);
 
   // 9., 10.
-  JERRY_ASSERT (dst_p + 2 <= buffer_p + buffer_size);
-  *dst_p++ = e_chars[0];
-  *dst_p++ = (n >= 1) ? plus_char : minus_char;
+  *dst_p++ = 'e';
+  *dst_p++ = (n >= 1) ? '+' : '-';
   uint32_t t = (uint32_t) (n >= 1 ? (n - 1) : -(n - 1));
 
   dst_p += ecma_uint32_to_utf8_string (t, dst_p, (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));

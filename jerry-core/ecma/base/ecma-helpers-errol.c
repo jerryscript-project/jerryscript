@@ -49,8 +49,6 @@
  * @{
  */
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-
 /**
  * Printing Floating-Point Numbers
  *
@@ -70,8 +68,8 @@
  */
 typedef struct
 {
-  ecma_number_t value; /**< value */
-  ecma_number_t offset; /**< offset */
+  double value; /**< value */
+  double offset; /**< offset */
 } ecma_high_prec_t;
 
 /**
@@ -80,7 +78,7 @@ typedef struct
 static inline void __attr_always_inline___
 ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float pair */
 {
-  ecma_number_t val = hp_data_p->value;
+  double val = hp_data_p->value;
 
   hp_data_p->value += hp_data_p->offset;
   hp_data_p->offset += val - hp_data_p->value;
@@ -92,12 +90,12 @@ ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float
 static inline void __attr_always_inline___
 ecma_multiply_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-precision number */
 {
-  ecma_number_t value = hp_data_p->value;
+  double value = hp_data_p->value;
 
   hp_data_p->value *= 10.0;
   hp_data_p->offset *= 10.0;
 
-  ecma_number_t offset = hp_data_p->value;
+  double offset = hp_data_p->value;
 
   offset -= value * 8.0;
   offset -= value * 2.0;
@@ -113,7 +111,7 @@ ecma_multiply_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-
 static void
 ecma_divide_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-precision number */
 {
-  ecma_number_t value = hp_data_p->value;
+  double value = hp_data_p->value;
 
   hp_data_p->value /= 10.0;
   hp_data_p->offset /= 10.0;
@@ -129,15 +127,13 @@ ecma_divide_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-pr
 /**
  * Errol0 double to ASCII conversion, guaranteed correct but possibly not optimal.
  *
- * @return digits
+ * @return number of generated digits
  */
-inline uint64_t __attr_always_inline___
-ecma_errol0_dtoa (ecma_number_t val, /**< ecma number */
-                  int32_t *num_of_digits_p, /**< [out] number of digits */
+inline lit_utf8_size_t __attr_always_inline___
+ecma_errol0_dtoa (double val, /**< ecma number */
+                  lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
                   int32_t *exp_p) /**< [out] exponent */
 {
-  uint64_t digits = 0u;
-  int32_t num_of_digits = 0;
   double power_of_10 = 1.0;
   int32_t exp = 1;
 
@@ -195,6 +191,8 @@ ecma_errol0_dtoa (ecma_number_t val, /**< ecma number */
 
   /* digit generation */
 
+  lit_utf8_byte_t *dst_p = buffer_p;
+
   while (high_bound.value != 0.0 || high_bound.offset != 0.0)
   {
     uint8_t high_digit = (uint8_t) high_bound.value;
@@ -216,9 +214,7 @@ ecma_errol0_dtoa (ecma_number_t val, /**< ecma number */
       break;
     }
 
-    digits *= 10;
-    digits += (uint64_t) high_digit;
-    num_of_digits++;
+    *dst_p++ = (lit_utf8_byte_t) ('0' + high_digit);
 
     high_bound.value -= high_digit;
     ecma_multiply_high_prec_by_10 (&high_bound);
@@ -228,15 +224,12 @@ ecma_errol0_dtoa (ecma_number_t val, /**< ecma number */
   }
 
   double mdig = (high_bound.value + low_bound.value) / 2.0 + 0.5;
+  *dst_p++ = (lit_utf8_byte_t) ('0' + (uint8_t) mdig);
 
-  *num_of_digits_p = num_of_digits + 1;
   *exp_p = exp;
-  digits *= 10;
 
-  return digits + (uint64_t) mdig;
+  return (lit_utf8_size_t) (dst_p - buffer_p);
 } /* ecma_errol0_dtoa */
-
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
  * @}

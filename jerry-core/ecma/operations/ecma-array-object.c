@@ -418,16 +418,14 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     }
 
     // e.
-    if (index >= old_len_uint32)
+    if (index < UINT32_MAX
+        && index >= old_len_uint32)
     {
       ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
 
       // i., ii.
-      if (index < UINT32_MAX)
-      {
-        /* Setting the length property is always successful. */
-        ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
-      }
+      /* Setting the length property is always successful. */
+      ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
     }
 
     // f.

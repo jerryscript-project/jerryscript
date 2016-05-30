@@ -53,24 +53,21 @@ opfunc_less_than (ecma_value_t left_value, /**< left value */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (left_value, right_value, true),
-                  ret_value);
+  if (ecma_is_value_error (ret_value))
+  {
+    return ret_value;
+  }
 
-  if (ecma_is_value_undefined (compare_result))
+  if (ecma_is_value_undefined (ret_value))
   {
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result));
-
-    ret_value = compare_result;
+    JERRY_ASSERT (ecma_is_value_boolean (ret_value));
   }
-
-  ECMA_FINALIZE (compare_result);
 
   return ret_value;
 } /* opfunc_less_than */
@@ -99,24 +96,21 @@ opfunc_greater_than (ecma_value_t left_value, /**< left value */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (right_value, left_value, false),
-                  ret_value);
+  if (ecma_is_value_error (ret_value))
+  {
+    return ret_value;
+  }
 
-  if (ecma_is_value_undefined (compare_result))
+  if (ecma_is_value_undefined (ret_value))
   {
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result));
-
-    ret_value = compare_result;
+    JERRY_ASSERT (ecma_is_value_boolean (ret_value));
   }
-
-  ECMA_FINALIZE (compare_result);
 
   return ret_value;
 } /* opfunc_greater_than */
@@ -145,31 +139,23 @@ opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (right_value, left_value, false),
-                  ret_value);
+  if (ecma_is_value_error (ret_value))
+  {
+    return ret_value;
+  }
 
-  if (ecma_is_value_undefined (compare_result))
+  if (ecma_is_value_undefined (ret_value))
   {
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result));
+    JERRY_ASSERT (ecma_is_value_boolean (ret_value));
 
-    if (ecma_is_value_true (compare_result))
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    else
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
+    ret_value = ecma_invert_boolean_value (ret_value);
   }
-
-  ECMA_FINALIZE (compare_result);
 
   return ret_value;
 } /* opfunc_less_or_equal_than */
@@ -198,31 +184,23 @@ opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_relational_compare (left_value, right_value, true),
-                  ret_value);
+  if (ecma_is_value_error (ret_value))
+  {
+    return ret_value;
+  }
 
-  if (ecma_is_value_undefined (compare_result))
+  if (ecma_is_value_undefined (ret_value))
   {
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_boolean (compare_result));
+    JERRY_ASSERT (ecma_is_value_boolean (ret_value));
 
-    if (ecma_is_value_true (compare_result))
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    else
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
+    ret_value = ecma_invert_boolean_value (ret_value);
   }
-
-  ECMA_FINALIZE (compare_result);
 
   return ret_value;
 } /* opfunc_greater_or_equal_than */

@@ -41,12 +41,7 @@
 ecma_value_t
 ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boolean constructor */
 {
-  ecma_value_t conv_to_boolean_completion = ecma_op_to_boolean (arg);
-
-  if (ecma_is_value_error (conv_to_boolean_completion))
-  {
-    return conv_to_boolean_completion;
-  }
+  bool boolean_value = ecma_op_to_boolean (arg);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE);
@@ -64,7 +59,11 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
 
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_set_internal_property_value (prim_value_prop_p, conv_to_boolean_completion);
+
+  ecma_value_t prim_value = ecma_make_simple_value (boolean_value ? ECMA_SIMPLE_VALUE_TRUE
+                                                                  : ECMA_SIMPLE_VALUE_FALSE);
+
+  ecma_set_internal_property_value (prim_value_prop_p, prim_value);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_boolean_object */

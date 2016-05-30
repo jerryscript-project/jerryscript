@@ -73,12 +73,12 @@ typedef enum
    *   - immutable binding values
    *   - special register or stack values for vm
    */
-  ECMA_SIMPLE_VALUE_EMPTY,
-  ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
-  ECMA_SIMPLE_VALUE_NULL, /**< null value */
+  ECMA_SIMPLE_VALUE_EMPTY, /**< uninitialized value */
+  ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
   ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-  ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
+  ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
+  ECMA_SIMPLE_VALUE_NULL, /**< null value */
   ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
   ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma values */
 } ecma_simple_value_t;

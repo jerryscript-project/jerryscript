@@ -1498,26 +1498,26 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
 
-          last_completion_value = ecma_op_to_boolean (left_value);
+          bool boolean_value = ecma_op_to_boolean (left_value);
 
-          if (ecma_is_value_error (last_completion_value))
+          if (opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG)
           {
-            goto error;
+            boolean_value = !boolean_value;
           }
 
-          bool branch_if_false = (opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG);
-
-          if (last_completion_value == ecma_make_simple_value (branch_if_false ? ECMA_SIMPLE_VALUE_FALSE
-                                                                               : ECMA_SIMPLE_VALUE_TRUE))
+          if (boolean_value)
           {
             byte_code_p = byte_code_start_p + branch_offset;
             if (opcode_flags & VM_OC_LOGICAL_BRANCH_FLAG)
             {
-              left_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+              /* "Push" the left_value back to the stack. */
               ++stack_top_p;
+              continue;
             }
           }
-          break;
+
+          ecma_fast_free_value (left_value);
+          continue;
         }
         case VM_OC_PLUS:
         {

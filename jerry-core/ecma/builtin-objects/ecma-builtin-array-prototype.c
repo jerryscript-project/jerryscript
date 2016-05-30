@@ -2027,8 +2027,8 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
         /* 7.c.ii */
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
-        /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_value_false (ecma_op_to_boolean (call_value)))
+        /* 7.c.iii */
+        if (!ecma_op_to_boolean (call_value))
         {
           ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
         }
@@ -2125,8 +2125,8 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
         /* 7.c.ii */
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
-        /* 7.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_value_true (ecma_op_to_boolean (call_value)))
+        /* 7.c.iii */
+        if (ecma_op_to_boolean (call_value))
         {
           ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
         }
@@ -2430,8 +2430,8 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
         /* 9.c.ii */
         ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, arg2, call_args, 3), ret_value);
 
-        /* 9.c.iii, ecma_op_to_boolean always returns a simple value, so no need to free. */
-        if (ecma_is_value_true (ecma_op_to_boolean (call_value)))
+        /* 9.c.iii */
+        if (ecma_op_to_boolean (call_value))
         {
           ecma_string_t *to_index_string_p = ecma_new_ecma_string_from_uint32 (new_array_index);
 

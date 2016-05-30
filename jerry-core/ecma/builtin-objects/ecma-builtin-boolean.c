@@ -66,7 +66,8 @@ ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
     arg_value = arguments_list_p[0];
   }
 
-  return ecma_op_to_boolean (arg_value);
+  return ecma_make_simple_value (ecma_op_to_boolean (arg_value) ? ECMA_SIMPLE_VALUE_TRUE
+                                                                : ECMA_SIMPLE_VALUE_FALSE);
 } /* ecma_builtin_boolean_dispatch_call */
 
 /**

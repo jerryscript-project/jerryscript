@@ -80,9 +80,8 @@ ecma_value_t
 opfunc_logical_not (ecma_value_t left_value) /**< left value */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-  ecma_value_t to_bool_value = ecma_op_to_boolean (left_value);
 
-  if (ecma_is_value_true (to_bool_value))
+  if (ecma_op_to_boolean (left_value))
   {
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }

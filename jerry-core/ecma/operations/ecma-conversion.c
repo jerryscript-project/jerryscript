@@ -184,67 +184,50 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma value */
 } /* ecma_op_to_primitive */
 
 /**
- * ToBoolean operation.
+ * ToBoolean operation. Cannot throw an exception.
  *
  * See also:
  *          ECMA-262 v5, 9.2
  *
- * @return ecma value
- *         Returned value is simple and so need not be freed.
- *         However, ecma_free_value may be called for it, but it is a no-op.
+ * @return true if the logical value is true
+ *         false otherwise
  */
-ecma_value_t
+bool
 ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  ecma_simple_value_t ret_value;
+  if (ecma_is_value_simple (value))
+  {
+    JERRY_ASSERT (ecma_is_value_boolean (value)
+                  || ecma_is_value_undefined (value)
+                  || ecma_is_value_null (value));
 
-  if (ecma_is_value_boolean (value))
-  {
-    ret_value = (ecma_is_value_true (value) ?
-                 ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_is_value_true (value);
   }
-  else if (ecma_is_value_undefined (value)
-           || ecma_is_value_null (value))
-  {
-    ret_value = ECMA_SIMPLE_VALUE_FALSE;
-  }
-  else if (ecma_is_value_number (value))
-  {
-    ecma_number_t num = ecma_get_number_from_value (value);
 
-    if (ecma_number_is_nan (num)
-        || ecma_number_is_zero (num))
-    {
-      ret_value = ECMA_SIMPLE_VALUE_FALSE;
-    }
-    else
-    {
-      ret_value = ECMA_SIMPLE_VALUE_TRUE;
-    }
+  if (ecma_is_value_integer_number (value))
+  {
+    return (value != ecma_make_integer_value (0));
   }
-  else if (ecma_is_value_string (value))
+
+  if (ecma_is_value_float_number (value))
+  {
+    ecma_number_t num = ecma_get_float_from_value (value);
+
+    return (!ecma_number_is_nan (num) && !ecma_number_is_zero (num));
+  }
+
+  if (ecma_is_value_string (value))
   {
     ecma_string_t *str_p = ecma_get_string_from_value (value);
 
-    if (ecma_string_get_length (str_p) == 0)
-    {
-      ret_value = ECMA_SIMPLE_VALUE_FALSE;
-    }
-    else
-    {
-      ret_value = ECMA_SIMPLE_VALUE_TRUE;
-    }
-  }
-  else
-  {
-    JERRY_ASSERT (ecma_is_value_object (value));
-
-    ret_value = ECMA_SIMPLE_VALUE_TRUE;
+    return ecma_string_get_length (str_p) != 0;
   }
 
-  return ecma_make_simple_value (ret_value);
+  JERRY_ASSERT (ecma_is_value_object (value));
+
+  return true;
 } /* ecma_op_to_boolean */
 
 /**
@@ -607,23 +590,10 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ECMA_TRY_CATCH (enumerable_prop_value,
                       ecma_op_object_get (obj_p, enumerable_magic_string_p),
                       ret_value);
-      ECMA_TRY_CATCH (boolean_enumerable_prop_value,
-                      ecma_op_to_boolean (enumerable_prop_value),
-                      ret_value);
 
       prop_desc.is_enumerable_defined = true;
-      if (ecma_is_value_true (boolean_enumerable_prop_value))
-      {
-        prop_desc.is_enumerable = true;
-      }
-      else
-      {
-        JERRY_ASSERT (ecma_is_value_boolean (boolean_enumerable_prop_value));
+      prop_desc.is_enumerable = ecma_op_to_boolean (enumerable_prop_value);
 
-        prop_desc.is_enumerable = false;
-      }
-
-      ECMA_FINALIZE (boolean_enumerable_prop_value);
       ECMA_FINALIZE (enumerable_prop_value);
     }
 
@@ -641,23 +611,10 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         ECMA_TRY_CATCH (configurable_prop_value,
                         ecma_op_object_get (obj_p, configurable_magic_string_p),
                         ret_value);
-        ECMA_TRY_CATCH (boolean_configurable_prop_value,
-                        ecma_op_to_boolean (configurable_prop_value),
-                        ret_value);
 
         prop_desc.is_configurable_defined = true;
-        if (ecma_is_value_true (boolean_configurable_prop_value))
-        {
-          prop_desc.is_configurable = true;
-        }
-        else
-        {
-          JERRY_ASSERT (ecma_is_value_boolean (boolean_configurable_prop_value));
+        prop_desc.is_configurable = ecma_op_to_boolean (configurable_prop_value);
 
-          prop_desc.is_configurable = false;
-        }
-
-        ECMA_FINALIZE (boolean_configurable_prop_value);
         ECMA_FINALIZE (configurable_prop_value);
       }
 
@@ -698,23 +655,10 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         ECMA_TRY_CATCH (writable_prop_value,
                         ecma_op_object_get (obj_p, writable_magic_string_p),
                         ret_value);
-        ECMA_TRY_CATCH (boolean_writable_prop_value,
-                        ecma_op_to_boolean (writable_prop_value),
-                        ret_value);
 
         prop_desc.is_writable_defined = true;
-        if (ecma_is_value_true (boolean_writable_prop_value))
-        {
-          prop_desc.is_writable = true;
-        }
-        else
-        {
-          JERRY_ASSERT (ecma_is_value_boolean (boolean_writable_prop_value));
+        prop_desc.is_writable = ecma_op_to_boolean (writable_prop_value);
 
-          prop_desc.is_writable = false;
-        }
-
-        ECMA_FINALIZE (boolean_writable_prop_value);
         ECMA_FINALIZE (writable_prop_value);
       }
 

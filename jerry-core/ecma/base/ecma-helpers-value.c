@@ -59,6 +59,10 @@ JERRY_STATIC_ASSERT (sizeof (uintptr_t) > sizeof (ecma_value_t),
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
+JERRY_STATIC_ASSERT ((ECMA_SIMPLE_VALUE_FALSE | 0x1) == ECMA_SIMPLE_VALUE_TRUE
+                     && ECMA_SIMPLE_VALUE_FALSE != ECMA_SIMPLE_VALUE_TRUE,
+                     only_the_lowest_bit_must_be_different_for_simple_value_true_and_false);
+
 /**
  * Get type field of ecma value
  *
@@ -108,6 +112,18 @@ ecma_get_pointer_from_ecma_value (ecma_value_t value) /**< value */
                                     value >> ECMA_VALUE_SHIFT);
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 } /* ecma_get_pointer_from_ecma_value */
+
+/**
+ * Check if the value is simple ecma-value.
+ *
+ * @return true - if the value is a simple value,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_is_value_simple (ecma_value_t value) /**< ecma value */
+{
+  return (value & ECMA_DIRECT_TYPE_MASK) == ECMA_DIRECT_TYPE_SIMPLE_VALUE;
+} /* ecma_is_value_simple */
 
 /**
  * Check whether the value is a given simple value.
@@ -167,7 +183,7 @@ ecma_is_value_null (ecma_value_t value) /**< ecma value */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_true (value) || ecma_is_value_false (value);
+  return ecma_is_value_true (value | (1 << ECMA_DIRECT_SHIFT));
 } /* ecma_is_value_boolean */
 
 /**
@@ -500,6 +516,14 @@ ecma_get_integer_from_value (ecma_value_t value) /**< ecma value */
   return ((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT;
 } /* ecma_get_integer_from_value */
 
+inline ecma_number_t __attr_pure___ __attr_always_inline___
+ecma_get_float_from_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
+
+  return *(ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+} /* ecma_get_float_from_value */
+
 /**
  * Get floating point value from an ecma value
  *
@@ -513,9 +537,7 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
     return (ecma_number_t) ecma_get_integer_from_value (value);
   }
 
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
-
-  return *(ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+  return ecma_get_float_from_value (value);
 } /* ecma_get_number_from_value */
 
 /**
@@ -562,6 +584,19 @@ ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
 
   return (ecma_object_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_object_from_value */
+
+/**
+ * Invert a boolean value
+ *
+ * @return ecma value
+ */
+inline ecma_value_t __attr_pure___ __attr_always_inline___
+ecma_invert_boolean_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_is_value_boolean (value));
+
+  return (value ^ (1 << ECMA_DIRECT_SHIFT));
+} /* ecma_invert_boolean_value */
 
 /**
  * Get the value from an error ecma value

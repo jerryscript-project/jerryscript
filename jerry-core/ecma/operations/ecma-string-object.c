@@ -101,7 +101,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
-                                                                    false, false, false);
+                                                                    ECMA_PROPERTY_FIXED);
 
   ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_value));
   ecma_deref_ecma_string (length_magic_string_p);
@@ -191,7 +191,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
 
     new_prop_p = ecma_create_named_data_property (obj_p,
                                                   new_prop_name_p,
-                                                  false, true, false);
+                                                  ECMA_PROPERTY_FLAG_ENUMERABLE);
 
     ecma_set_named_data_property_value (new_prop_p,
                                         ecma_make_string_value (new_prop_str_value_p));

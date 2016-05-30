@@ -576,26 +576,13 @@ ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
 ecma_property_t *
 ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
                                  ecma_string_t *name_p, /**< property name */
-                                 bool is_writable, /**< 'Writable' attribute */
-                                 bool is_enumerable, /**< 'Enumerable' attribute */
-                                 bool is_configurable) /**< 'Configurable' attribute */
+                                 uint8_t prop_attributes) /**< property attributes (See: ecma_property_flags_t) */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
+  JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE) == 0);
 
-  uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDDATA;
-  if (is_configurable)
-  {
-    type_and_flags = (uint8_t) (type_and_flags | ECMA_PROPERTY_FLAG_CONFIGURABLE);
-  }
-  if (is_enumerable)
-  {
-    type_and_flags = (uint8_t) (type_and_flags | ECMA_PROPERTY_FLAG_ENUMERABLE);
-  }
-  if (is_writable)
-  {
-    type_and_flags = (uint8_t) (type_and_flags | ECMA_PROPERTY_FLAG_WRITABLE);
-  }
+  uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDDATA | prop_attributes;
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
@@ -617,21 +604,13 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
                                      ecma_string_t *name_p, /**< property name */
                                      ecma_object_t *get_p, /**< getter */
                                      ecma_object_t *set_p, /**< setter */
-                                     bool is_enumerable, /**< 'enumerable' attribute */
-                                     bool is_configurable) /**< 'configurable' attribute */
+                                     uint8_t prop_attributes) /**< property attributes */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
+  JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE) == 0);
 
-  uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDACCESSOR;
-  if (is_configurable)
-  {
-    type_and_flags = (uint8_t) (type_and_flags | ECMA_PROPERTY_FLAG_CONFIGURABLE);
-  }
-  if (is_enumerable)
-  {
-    type_and_flags = (uint8_t) (type_and_flags | ECMA_PROPERTY_FLAG_ENUMERABLE);
-  }
+  uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDACCESSOR | prop_attributes;
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 

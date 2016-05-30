@@ -311,9 +311,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     // 15
     ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                       property_name_p,
-                                                                      false,
-                                                                      false,
-                                                                      false);
+                                                                      ECMA_PROPERTY_FIXED);
 
     ecma_named_data_property_assign_value (obj_p, length_prop_p, ecma_make_uint32_value (len));
 
@@ -349,9 +347,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
     // 18.
     ecma_property_t *prototype_prop_p = ecma_create_named_data_property (obj_p,
                                                                          property_name_p,
-                                                                         true,
-                                                                         false,
-                                                                         false);
+                                                                         ECMA_PROPERTY_FLAG_WRITABLE);
 
     ecma_named_data_property_assign_value (obj_p, prototype_prop_p, ecma_make_object_value (proto_p));
 

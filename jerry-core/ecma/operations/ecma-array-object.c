@@ -103,7 +103,8 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
-                                                                    true, false, false);
+                                                                    ECMA_PROPERTY_FLAG_WRITABLE);
+
   ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value ((ecma_number_t) length));
 
   ecma_deref_ecma_string (length_magic_string_p);

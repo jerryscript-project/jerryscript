@@ -135,9 +135,16 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
+    uint8_t prop_attributes = ECMA_PROPERTY_FLAG_WRITABLE;
+
+    if (is_deletable)
+    {
+      prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+    }
+
     ecma_create_named_data_property (lex_env_p,
                                      name_p,
-                                     true, false, is_deletable);
+                                     prop_attributes);
   }
   else
   {
@@ -399,7 +406,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
    */
   ecma_property_t *prop_p = ecma_create_named_data_property (lex_env_p,
                                                              name_p,
-                                                             false, false, false);
+                                                             ECMA_PROPERTY_FIXED);
 
   JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
 

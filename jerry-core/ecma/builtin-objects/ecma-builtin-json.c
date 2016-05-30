@@ -737,11 +737,11 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
     {
       ecma_object_t *object_p = ecma_op_create_object_object_noarg ();
       ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-      ecma_property_t *property_p = ecma_create_named_data_property (object_p,
-                                                                     name_p,
-                                                                     true,
-                                                                     true,
-                                                                     true);
+
+      ecma_property_t *property_p;
+      property_p = ecma_create_named_data_property (object_p,
+                                                    name_p,
+                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
       ecma_named_data_property_assign_value (object_p, property_p, final_result);
       ecma_free_value (final_result);

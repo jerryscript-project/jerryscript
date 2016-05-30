@@ -1060,11 +1060,16 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
       ecma_value_t value_to_put;
       jerry_api_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
 
+      uint8_t prop_attributes = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE;
+
+      if (is_writable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_WRITABLE);
+      }
+
       prop_p = ecma_create_named_data_property (object_p,
                                                 field_name_str_p,
-                                                is_writable,
-                                                true,
-                                                true);
+                                                prop_attributes);
       ecma_named_data_property_assign_value (object_p, prop_p, value_to_put);
 
       ecma_free_value (value_to_put);

@@ -1572,7 +1572,7 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
         ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
         ecma_property_t *index_prop_p = ecma_create_named_data_property (match_array_p,
                                                                          magic_index_str_p,
-                                                                         true, false, false);
+                                                                         ECMA_PROPERTY_FLAG_WRITABLE);
         ecma_deref_ecma_string (magic_index_str_p);
 
         ecma_named_data_property_assign_value (match_array_p,

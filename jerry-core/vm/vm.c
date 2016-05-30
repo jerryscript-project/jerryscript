@@ -973,9 +973,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             property_p = ecma_create_named_data_property (object_p,
                                                           prop_name_p,
-                                                          true,
-                                                          true,
-                                                          true);
+                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
           }
 
           ecma_named_data_property_assign_value (object_p, property_p, left_value);
@@ -1038,11 +1036,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
-              ecma_property_t *prop_p = ecma_create_named_data_property (array_obj_p,
-                                                                         index_str_p,
-                                                                         true, /* Writable */
-                                                                         true, /* Enumerable */
-                                                                         true); /* Configurable */
+              ecma_property_t *prop_p;
+              prop_p = ecma_create_named_data_property (array_obj_p,
+                                                        index_str_p,
+                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
               JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
 

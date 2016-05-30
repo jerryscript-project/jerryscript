@@ -181,8 +181,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                                          accessor_name_p,
                                          getter_func_p,
                                          setter_func_p,
-                                         true,
-                                         true);
+                                         ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE);
   }
   else if (is_getter)
   {

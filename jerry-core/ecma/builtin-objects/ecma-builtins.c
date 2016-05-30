@@ -316,7 +316,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
       ecma_property_t *len_prop_p = ecma_create_named_data_property (object_p,
                                                                      string_p,
-                                                                     false, false, false);
+                                                                     ECMA_PROPERTY_FIXED);
 
       ecma_set_named_data_property_value (len_prop_p, ecma_make_uint32_value (length_prop_value));
 

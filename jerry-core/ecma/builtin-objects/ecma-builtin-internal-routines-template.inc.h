@@ -300,11 +300,24 @@ TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
     }
   }
 
+  uint8_t prop_attributes = 0;
+
+  if (configurable)
+  {
+    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+  }
+  if (enumerable)
+  {
+    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
+  }
+  if (writable)
+  {
+    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_WRITABLE);
+  }
+
   ecma_property_t *prop_p = ecma_create_named_data_property (obj_p,
                                                              prop_name_p,
-                                                             writable,
-                                                             enumerable,
-                                                             configurable);
+                                                             prop_attributes);
 
   ecma_named_data_property_assign_value (obj_p, prop_p, value);
 

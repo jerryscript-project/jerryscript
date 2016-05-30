@@ -292,6 +292,29 @@ typedef enum
 } ecma_property_flags_t;
 
 /**
+ * Property flags configurable, enumerable, writable.
+ */
+#define ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
+ * Property flags configurable, enumerable.
+ */
+#define ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE \
+  (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_ENUMERABLE)
+
+/**
+ * Property flags configurable, enumerable.
+ */
+#define ECMA_PROPERTY_CONFIGURABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
+ * No attributes can be changed for this property.
+ */
+#define ECMA_PROPERTY_FIXED 0
+
+/**
  * Abstract property representation.
  *
  * A property is a type_and_flags byte and an ecma_value_t value pair.

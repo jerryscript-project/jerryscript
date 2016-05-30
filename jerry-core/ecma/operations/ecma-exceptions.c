@@ -120,7 +120,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
   ecma_string_t *message_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
   ecma_property_t *prop_p = ecma_create_named_data_property (new_error_obj_p,
                                                              message_magic_string_p,
-                                                             true, false, true);
+                                                             ECMA_PROPERTY_CONFIGURABLE_WRITABLE);
 
   ecma_set_named_data_property_value (prop_p,
                                       ecma_make_string_value (ecma_copy_or_ref_ecma_string (message_string_p)));

@@ -142,7 +142,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   {
     prop_p = ecma_create_named_data_property (re_obj_p,
                                               magic_string_p,
-                                              false, false, false);
+                                              ECMA_PROPERTY_FIXED);
   }
 
   ecma_deref_ecma_string (magic_string_p);
@@ -161,7 +161,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   {
     prop_p = ecma_create_named_data_property (re_obj_p,
                                               magic_string_p,
-                                              false, false, false);
+                                              ECMA_PROPERTY_FIXED);
   }
 
   ecma_deref_ecma_string (magic_string_p);
@@ -177,7 +177,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   {
     prop_p = ecma_create_named_data_property (re_obj_p,
                                               magic_string_p,
-                                              false, false, false);
+                                              ECMA_PROPERTY_FIXED);
   }
 
   ecma_deref_ecma_string (magic_string_p);
@@ -193,7 +193,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   {
     prop_p = ecma_create_named_data_property (re_obj_p,
                                               magic_string_p,
-                                              false, false, false);
+                                              ECMA_PROPERTY_FIXED);
   }
 
   ecma_deref_ecma_string (magic_string_p);
@@ -209,7 +209,7 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   {
     prop_p = ecma_create_named_data_property (re_obj_p,
                                               magic_string_p,
-                                              true, false, false);
+                                              ECMA_PROPERTY_FLAG_WRITABLE);
   }
 
   ecma_deref_ecma_string (magic_string_p);

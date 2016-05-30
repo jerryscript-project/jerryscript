@@ -403,11 +403,10 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
         }
       }
 
-      ecma_property_t *new_prop_p = ecma_create_named_data_property (obj_p,
-                                                                     property_name_p,
-                                                                     true, /* Writable */
-                                                                     true, /* Enumerable */
-                                                                     true); /* Configurable */
+      ecma_property_t *new_prop_p;
+      new_prop_p = ecma_create_named_data_property (obj_p,
+                                                    property_name_p,
+                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
       JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (new_prop_p)));
       ecma_set_named_data_property_value (new_prop_p, ecma_copy_value_if_not_object (value));
@@ -635,12 +634,24 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       JERRY_ASSERT (property_desc_type == ECMA_PROPERTY_TYPE_GENERIC
                     || property_desc_type == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
+      uint8_t prop_attributes = 0;
+
+      if (property_desc_p->is_configurable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+      }
+      if (property_desc_p->is_enumerable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
+      }
+      if (property_desc_p->is_writable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_WRITABLE);
+      }
+
       ecma_property_t *new_prop_p = ecma_create_named_data_property (obj_p,
                                                                      property_name_p,
-                                                                     property_desc_p->is_writable,
-                                                                     property_desc_p->is_enumerable,
-                                                                     property_desc_p->is_configurable);
-
+                                                                     prop_attributes);
 
       JERRY_ASSERT (property_desc_p->is_value_defined
                     || ecma_is_value_undefined (property_desc_p->value));
@@ -651,12 +662,22 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
     {
       // b.
 
+      uint8_t prop_attributes = 0;
+
+      if (property_desc_p->is_configurable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
+      }
+      if (property_desc_p->is_enumerable)
+      {
+        prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
+      }
+
       ecma_create_named_accessor_property (obj_p,
                                            property_name_p,
                                            property_desc_p->get_p,
                                            property_desc_p->set_p,
-                                           property_desc_p->is_enumerable,
-                                           property_desc_p->is_configurable);
+                                           prop_attributes);
     }
 
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
@@ -727,8 +748,12 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
     /* The following implementation can be optimized by directly overwriting
      * the fields of current_p if this code path is performance critical. */
+    uint8_t prop_attributes = ECMA_PROPERTY_FLAG_CONFIGURABLE;
 
-    bool was_enumerable = ecma_is_property_enumerable (current_p);
+    if (ecma_is_property_enumerable (current_p))
+    {
+      prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
+    }
 
     ecma_delete_property (obj_p, current_p);
 
@@ -740,8 +765,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
                                                        property_name_p,
                                                        NULL,
                                                        NULL,
-                                                       was_enumerable,
-                                                       true);
+                                                       prop_attributes);
     }
     else
     {
@@ -749,9 +773,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
       current_p = ecma_create_named_data_property (obj_p,
                                                    property_name_p,
-                                                   false,
-                                                   was_enumerable,
-                                                   true);
+                                                   prop_attributes);
     }
   }
 

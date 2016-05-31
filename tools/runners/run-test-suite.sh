@@ -112,7 +112,7 @@ do
     if [ "$IS_SNAPSHOT" == true ]
     then
         # Testing snapshot
-        SNAPSHOT_TEMP=`mktemp snapshot-out.XXXXXXXXXX`
+        SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).XXXXXXXXXX.snapshot`
 
         cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
         ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP )
@@ -161,6 +161,11 @@ done
 rm -f $ENGINE_TEMP
 
 ratio=$(echo $passed*100/$total | bc)
+
+if [ "$IS_SNAPSHOT" == true ]
+then
+    ENGINE_ARGS="--snapshot $ENGINE_ARGS"
+fi
 
 echo "[summary] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${TESTS#$ROOT_DIR}: $passed PASS, $failed FAIL, $total total, $ratio% success"
 

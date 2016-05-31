@@ -1495,9 +1495,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       member_str_p = tmp_str_p;
 
       /* 8.b.iii */
-      bool is_gap_empty = (ecma_string_get_length (context_p->gap_str_p) == 0);
-
-      if (!is_gap_empty)
+      if (!ecma_string_is_empty (context_p->gap_str_p))
       {
         ecma_string_t *space_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SPACE_CHAR);
 
@@ -1548,10 +1546,8 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   /* 10. */
   else
   {
-    bool is_gap_empty = (ecma_string_get_length (context_p->gap_str_p) == 0);
-
     /* 10.a */
-    if (is_gap_empty)
+    if (ecma_string_is_empty (context_p->gap_str_p))
     {
       ecma_string_t *left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
       ecma_string_t *right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
@@ -1688,9 +1684,8 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
     /* 10. */
     else
     {
-      bool is_gap_empty = (ecma_string_get_length (context_p->gap_str_p) == 0);
       /* 10.a */
-      if (is_gap_empty)
+      if (ecma_string_is_empty (context_p->gap_str_p))
       {
         ecma_string_t *left_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
         ecma_string_t *right_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);

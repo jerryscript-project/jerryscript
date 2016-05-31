@@ -1670,9 +1670,6 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
       }
       else /* if (!ecma_is_value_undefined (arg1)) */
       {
-        /* 6. */
-        const ecma_length_t string_length = ecma_string_get_length (ecma_get_string_from_value (this_to_string_val));
-
         /* 8. */
         ecma_value_t separator = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -1692,8 +1689,11 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           ECMA_FINALIZE (separator_to_string_val);
         }
 
+        const ecma_string_t *this_to_string_p = ecma_get_string_from_value (this_to_string_val);
+
         /* 11. */
-        if (string_length == 0 && ecma_is_value_empty (ret_value))
+        if (ecma_string_is_empty (this_to_string_p)
+            && ecma_is_value_empty (ret_value))
         {
           /* 11.a */
           ecma_value_t match_result = ecma_builtin_helper_split_match (this_to_string_val,
@@ -1740,6 +1740,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           ecma_length_t curr_pos = start_pos;
 
           bool separator_is_empty = false;
+
+          /* 6. */
+          const ecma_length_t string_length = ecma_string_get_length (this_to_string_p);
 
           /* 13. */
           while (curr_pos < string_length && !should_return && ecma_is_value_empty (ret_value))

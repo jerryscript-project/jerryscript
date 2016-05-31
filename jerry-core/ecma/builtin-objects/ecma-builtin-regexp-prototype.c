@@ -162,7 +162,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                         ecma_op_to_string (pattern_arg),
                         ret_value);
 
-        if (ecma_string_get_length (ecma_get_string_from_value (regexp_str_value)) == 0)
+        if (ecma_string_is_empty (ecma_get_string_from_value (regexp_str_value)))
         {
           pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
         }

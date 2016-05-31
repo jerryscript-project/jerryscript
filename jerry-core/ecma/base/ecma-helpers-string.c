@@ -832,6 +832,19 @@ ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
 } /* ecma_string_raw_chars */
 
 /**
+ * Checks whether ecma string is empty or not
+ *
+ * @return true  - if empty
+ *         false - otherwise
+ */
+bool
+ecma_string_is_empty (const ecma_string_t *str_p) /**< ecma-string */
+{
+  return (ECMA_STRING_GET_CONTAINER (str_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
+          && str_p->u.magic_string_id == LIT_MAGIC_STRING__EMPTY);
+} /* ecma_string_is_empty */
+
+/**
  * Long path part of ecma-string to ecma-string comparison routine
  *
  * See also:

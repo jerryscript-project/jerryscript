@@ -103,7 +103,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
                       ecma_op_to_string (pattern_value),
                       ret_value);
 
-      if (ecma_string_get_length (ecma_get_string_from_value (regexp_str_value)) == 0)
+      if (ecma_string_is_empty (ecma_get_string_from_value (regexp_str_value)))
       {
         pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
       }

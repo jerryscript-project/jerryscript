@@ -222,7 +222,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
   {
     ecma_string_t *str_p = ecma_get_string_from_value (value);
 
-    return ecma_string_get_length (str_p) != 0;
+    return !ecma_string_is_empty (str_p);
   }
 
   JERRY_ASSERT (ecma_is_value_object (value));

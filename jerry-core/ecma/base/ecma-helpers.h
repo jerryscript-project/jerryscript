@@ -179,6 +179,7 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *, lit_utf8_byte_t *, lit_u
 extern void ecma_string_to_utf8_bytes (const ecma_string_t *, lit_utf8_byte_t *, lit_utf8_size_t);
 extern const lit_utf8_byte_t *ecma_string_raw_chars (const ecma_string_t *, lit_utf8_size_t *, bool *);
 extern void ecma_init_ecma_string_from_uint32 (ecma_string_t *, uint32_t);
+extern bool ecma_string_is_empty (const ecma_string_t *);
 
 extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *, const ecma_string_t *);
 extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_t *);

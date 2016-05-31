@@ -706,13 +706,20 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
                   ecma_op_to_string (arg1),
                   ret_value);
 
-  ecma_string_t *string_p = ecma_get_string_from_value (string);
+  const ecma_string_t *string_p = ecma_get_string_from_value (string);
+  const ecma_length_t string_size = (ecma_length_t) ecma_string_get_size (string_p);
+  const lit_utf8_size_t buffer_size = sizeof (lit_utf8_byte_t) * (string_size + 1);
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, str_start_p, str_start_size);
+  JMEM_DEFINE_LOCAL_ARRAY (str_start_p, buffer_size, lit_utf8_byte_t);
+
+  const lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, str_start_p, buffer_size);
+  JERRY_ASSERT (sz == string_size);
+
+  str_start_p[string_size] = LIT_BYTE_NULL;
 
   ecma_json_token_t token;
-  token.current_p = (lit_utf8_byte_t *) str_start_p;
-  token.end_p = str_start_p + str_start_size;
+  token.current_p = str_start_p;
+  token.end_p = str_start_p + string_size;
 
   ecma_value_t final_result = ecma_builtin_json_parse_value (&token);
 
@@ -758,7 +765,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
     }
   }
 
-  ECMA_FINALIZE_UTF8_STRING (str_start_p, str_start_size);
+  JMEM_FINALIZE_LOCAL_ARRAY (str_start_p);
 
   ECMA_FINALIZE (string);
   return ret_value;

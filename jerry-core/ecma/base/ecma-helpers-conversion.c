@@ -783,29 +783,25 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
                             lit_utf8_byte_t *out_buffer_p, /**< buffer for string */
                             lit_utf8_size_t buffer_size) /**< size of buffer */
 {
-  const lit_utf8_byte_t digits[10] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-
-  lit_utf8_byte_t *p = out_buffer_p + buffer_size - 1;
-  lit_utf8_size_t bytes_copied = 0;
+  lit_utf8_byte_t *buf_p = out_buffer_p + buffer_size;
 
   do
   {
-    JERRY_ASSERT (p >= out_buffer_p);
+    JERRY_ASSERT (buf_p >= out_buffer_p);
 
-    *p-- = digits[value % 10];
+    buf_p--;
+    *buf_p = (lit_utf8_byte_t) ((value % 10) + LIT_CHAR_0);
     value /= 10;
-
-    bytes_copied++;
   }
   while (value != 0);
 
-  p++;
+  JERRY_ASSERT (buf_p >= out_buffer_p);
 
-  JERRY_ASSERT (p >= out_buffer_p);
+  lit_utf8_size_t bytes_copied = (lit_utf8_size_t) (out_buffer_p + buffer_size - buf_p);
 
-  if (likely (p != out_buffer_p))
+  if (likely (buf_p != out_buffer_p))
   {
-    memmove (out_buffer_p, p, bytes_copied);
+    memmove (out_buffer_p, buf_p, bytes_copied);
   }
 
   return bytes_copied;

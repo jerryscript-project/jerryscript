@@ -734,7 +734,7 @@ typedef double ecma_number_t;
 /**
  * Maximum number of characters in string representation of ecma-uint32
  */
-#define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 32
+#define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 10
 
 /**
  * Maximum value of valid array index

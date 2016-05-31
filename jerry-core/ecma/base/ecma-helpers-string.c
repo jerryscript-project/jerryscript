@@ -229,15 +229,25 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
 ecma_string_t *
 ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represented ecma-number */
 {
+  lit_utf8_byte_t byte_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  lit_utf8_byte_t *buf_p = byte_buf + ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32;
+
+  uint32_t value = uint32_number;
+  do
+  {
+    JERRY_ASSERT (buf_p >= byte_buf);
+
+    buf_p--;
+    *buf_p = (lit_utf8_byte_t) ((value % 10) + LIT_CHAR_0);
+    value /= 10;
+  }
+  while (value != 0);
+
+  lit_utf8_size_t size = (lit_utf8_size_t) (byte_buf + ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 - buf_p);
+
   ecma_string_t *string_desc_p = ecma_alloc_string ();
   string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_UINT32_IN_DESC | ECMA_STRING_REF_ONE;
-
-  lit_utf8_byte_t byte_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-  lit_utf8_size_t bytes_copied = ecma_uint32_to_utf8_string (uint32_number,
-                                                             byte_buf,
-                                                             ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
-
-  string_desc_p->hash = lit_utf8_string_calc_hash (byte_buf, bytes_copied);
+  string_desc_p->hash = lit_utf8_string_calc_hash (buf_p, size);
 
   string_desc_p->u.common_field = 0;
   string_desc_p->u.uint32_number = uint32_number;

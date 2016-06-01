@@ -395,10 +395,8 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_ASCII_STRING | ECMA_STRING_REF_ONE;
     const size_t data_size = new_size;
     lit_utf8_byte_t *data_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (data_size);
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string1_p, data_p, str1_size);
-    JERRY_ASSERT (bytes_copied == str1_size);
-    bytes_copied = ecma_string_to_utf8_string (string2_p, data_p + str1_size, str2_size);
-    JERRY_ASSERT (bytes_copied == str2_size);
+    ecma_string_to_utf8_bytes (string1_p, data_p, str1_size);
+    ecma_string_to_utf8_bytes (string2_p, data_p + str1_size, str2_size);
 
     string_desc_p->u.ascii_string.size = (uint16_t) new_size;
 
@@ -411,15 +409,14 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
     const size_t data_size = new_size + sizeof (ecma_string_heap_header_t);
     ecma_string_heap_header_t *data_p = (ecma_string_heap_header_t *) jmem_heap_alloc_block (data_size);
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string1_p,
-                                                               (lit_utf8_byte_t *) (data_p + 1),
-                                                               str1_size);
-    JERRY_ASSERT (bytes_copied == str1_size);
+    ecma_string_to_utf8_bytes (string1_p,
+                               (lit_utf8_byte_t *) (data_p + 1),
+                               str1_size);
 
-    bytes_copied = ecma_string_to_utf8_string (string2_p,
-                                               (lit_utf8_byte_t *) (data_p + 1) + str1_size,
-                                               str2_size);
-    JERRY_ASSERT (bytes_copied == str2_size);
+    ecma_string_to_utf8_bytes (string2_p,
+                               (lit_utf8_byte_t *) (data_p + 1) + str1_size,
+                               str2_size);
+
     JERRY_ASSERT (string_length <= UINT16_MAX);
 
     data_p->size = (uint16_t) new_size;
@@ -675,10 +672,10 @@ ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
  * @return number of bytes, actually copied to the buffer.
  */
 lit_utf8_size_t __attr_return_value_should_be_checked___
-ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
-                            lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
-                                                        * (can be NULL if buffer_size == 0) */
-                            lit_utf8_size_t buffer_size) /**< size of buffer */
+ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                                 lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                             * (can be NULL if buffer_size == 0) */
+                                 lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
@@ -741,7 +738,22 @@ ecma_string_to_utf8_string (const ecma_string_t *string_desc_p, /**< ecma-string
 
   JERRY_ASSERT (size <= buffer_size);
   return size;
-} /* ecma_string_to_utf8_string */
+} /* ecma_string_copy_to_utf8_buffer */
+
+/**
+ * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.
+ * It is the caller's responsibility to make sure that the string fits in the buffer.
+ * Check if the size of the string is equal with the size of the buffer.
+ */
+void __attr_always_inline___
+ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                           lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                       * (can be NULL if buffer_size == 0) */
+                           lit_utf8_size_t buffer_size) /**< size of buffer */
+{
+  const lit_utf8_size_t size = ecma_string_copy_to_utf8_buffer (string_desc_p, buffer_p, buffer_size);
+  JERRY_ASSERT (size == buffer_size);
+} /* ecma_string_to_utf8_bytes */
 
 /**
  * Lengths for numeric string values
@@ -1018,8 +1030,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   {
     utf8_string1_p = (lit_utf8_byte_t *) jmem_heap_alloc_block ((size_t) strings_size);
 
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string1_p, utf8_string1_p, strings_size);
-    JERRY_ASSERT (bytes_copied == strings_size);
+    ecma_string_to_utf8_bytes (string1_p, utf8_string1_p, strings_size);
 
     is_utf8_string1_on_heap = true;
   }
@@ -1049,11 +1060,11 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   {
     utf8_string2_p = (lit_utf8_byte_t *) jmem_heap_alloc_block ((size_t) strings_size);
 
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string2_p, utf8_string2_p, strings_size);
-    JERRY_ASSERT (bytes_copied == strings_size);
+    ecma_string_to_utf8_bytes (string2_p, utf8_string2_p, strings_size);
 
     is_utf8_string2_on_heap = true;
   }
+
   const bool is_equal = !strncmp ((char *) utf8_string1_p, (char *) utf8_string2_p, (size_t) strings_size);
 
   if (is_utf8_string1_on_heap)
@@ -1160,8 +1171,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       utf8_string1_p = utf8_string1_buffer;
     }
 
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string1_p, utf8_string1_p, utf8_string1_size);
-    JERRY_ASSERT (bytes_copied == utf8_string1_size);
+    ecma_string_to_utf8_bytes (string1_p, utf8_string1_p, utf8_string1_size);
   }
 
   if (ECMA_STRING_GET_CONTAINER (string2_p) == ECMA_STRING_CONTAINER_HEAP_UTF8_STRING)
@@ -1202,8 +1212,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
       utf8_string2_p = utf8_string2_buffer;
     }
 
-    lit_utf8_size_t bytes_copied = ecma_string_to_utf8_string (string2_p, utf8_string2_p, utf8_string2_size);
-    JERRY_ASSERT (bytes_copied == utf8_string2_size);
+    ecma_string_to_utf8_bytes (string2_p, utf8_string2_p, utf8_string2_size);
   }
 
   bool is_first_less_than_second = lit_compare_utf8_strings_relational (utf8_string1_p,
@@ -1345,8 +1354,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   JMEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
 
-  lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, buffer_size);
-  JERRY_ASSERT (sz == buffer_size);
+  ecma_string_to_utf8_bytes (string_p, utf8_str_p, buffer_size);
 
   JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC);
   /* Both above must be ascii strings. */
@@ -1504,8 +1512,7 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
 
     JMEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
 
-    lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, utf8_str_p, buffer_size);
-    JERRY_ASSERT (sz == buffer_size);
+    ecma_string_to_utf8_bytes (string_p, utf8_str_p, buffer_size);
 
     /**
      * II. Extract substring

@@ -540,7 +540,7 @@ jerry_string_to_char_buffer (const jerry_string_t *string_p, /**< string descrip
 {
   jerry_assert_api_available ();
 
-  return ecma_string_to_utf8_string (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
+  return ecma_string_copy_to_utf8_buffer (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
 } /* jerry_string_to_char_buffer */
 
 /**

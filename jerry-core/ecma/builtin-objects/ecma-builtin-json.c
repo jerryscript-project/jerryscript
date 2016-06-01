@@ -712,7 +712,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' arg
 
   JMEM_DEFINE_LOCAL_ARRAY (str_start_p, buffer_size, lit_utf8_byte_t);
 
-  const lit_utf8_size_t sz = ecma_string_to_utf8_string (string_p, str_start_p, buffer_size);
+  const lit_utf8_size_t sz = ecma_string_copy_to_utf8_buffer (string_p, str_start_p, buffer_size);
   JERRY_ASSERT (sz == string_size);
 
   str_start_p[string_size] = LIT_BYTE_NULL;

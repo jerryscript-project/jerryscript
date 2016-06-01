@@ -353,7 +353,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
     }
     else if (ecma_is_value_float_number (value))
     {
-      ecma_number_t num = ecma_get_number_from_value (value);
+      ecma_number_t num = ecma_get_float_from_value (value);
       res_p = ecma_new_ecma_string_from_number (num);
     }
     else if (ecma_is_value_undefined (value))

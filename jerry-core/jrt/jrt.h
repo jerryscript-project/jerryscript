@@ -195,8 +195,8 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 /**
  * min, max
  */
-#define JERRY_MIN(v1, v2) ((v1 < v2) ? v1 : v2)
-#define JERRY_MAX(v1, v2) ((v1 < v2) ? v2 : v1)
+#define JERRY_MIN(v1, v2) (((v1) < (v2)) ? (v1) : (v2))
+#define JERRY_MAX(v1, v2) (((v1) < (v2)) ? (v2) : (v1))
 
 
 extern bool jrt_read_from_buffer_by_offset (const uint8_t *, size_t, size_t *, void *, size_t);

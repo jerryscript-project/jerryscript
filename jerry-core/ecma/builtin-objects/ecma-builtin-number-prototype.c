@@ -54,13 +54,13 @@
  * @return the length of the generated string representation
  */
 static lit_utf8_size_t
-ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< number as string in decimal form */
+ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< number as string in decimal form */
                                                 lit_utf8_size_t num_digits, /**< length of the string representation */
                                                 int32_t exponent, /**< decimal exponent */
-                                                lit_utf8_byte_t *to_digits, /**< [out] buffer to write */
+                                                lit_utf8_byte_t *to_digits_p, /**< [out] buffer to write */
                                                 lit_utf8_size_t to_num_digits) /**< requested number of digits */
 {
-  lit_utf8_byte_t *p = to_digits;
+  lit_utf8_byte_t *p = to_digits_p;
 
   if (exponent <= 0)
   {
@@ -85,10 +85,10 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
     /* Add significant digits of the integer part. */
     lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
     to_copy = JERRY_MIN (to_copy, (lit_utf8_size_t) exponent);
-    memmove (p, digits, (size_t) to_copy);
+    memmove (p, digits_p, (size_t) to_copy);
     p += to_copy;
     to_num_digits -= to_copy;
-    digits += to_copy;
+    digits_p += to_copy;
     num_digits -= to_copy;
     exponent -= (int32_t) to_copy;
 
@@ -111,7 +111,7 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
   {
     /* Add significant digits of the fraction part. */
     lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
-    memmove (p, digits, (size_t) to_copy);
+    memmove (p, digits_p, (size_t) to_copy);
     p += to_copy;
     to_num_digits -= to_copy;
 
@@ -123,7 +123,7 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
     }
   }
 
-  return (lit_utf8_size_t) (p - to_digits);
+  return (lit_utf8_size_t) (p - to_digits_p);
 } /* ecma_builtin_number_prototype_helper_to_string */
 
 /**
@@ -132,7 +132,8 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
  * @return rounded number
  */
 static inline lit_utf8_size_t __attr_always_inline___
-ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits, /**< number as a string in decimal form */
+ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,out] number as a string in decimal
+                                                                        *   form */
                                             lit_utf8_size_t num_digits, /**< length of the string representation */
                                             int32_t round_num) /**< number of digits to keep */
 {
@@ -146,9 +147,9 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits, /**< number
     return num_digits;
   }
 
-  if (digits[round_num] >= '5')
+  if (digits_p[round_num] >= '5')
   {
-    digits[round_num - 1]++;
+    digits_p[round_num - 1]++;
   }
   return (lit_utf8_size_t) round_num;
 } /* ecma_builtin_number_prototype_helper_round */
@@ -554,13 +555,13 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
             *p++ = '-';
           }
 
+          lit_utf8_size_t to_num_digits = ((exponent > 0) ? (lit_utf8_size_t) (exponent + frac_digits)
+                                                          : (lit_utf8_size_t) (frac_digits + 1));
           p += ecma_builtin_number_prototype_helper_to_string (digits,
                                                                num_digits,
                                                                exponent,
                                                                p,
-                                                               (exponent > 0)
-                                                               ? (lit_utf8_size_t) (exponent + frac_digits)
-                                                               : (lit_utf8_size_t) (frac_digits + 1));
+                                                               to_num_digits);
 
           JERRY_ASSERT (p - buff < buffer_size);
           /* String terminator. */

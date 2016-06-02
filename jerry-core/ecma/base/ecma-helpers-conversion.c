@@ -925,7 +925,7 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
   */
 lit_utf8_size_t
 ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
-                        lit_utf8_byte_t *out_digits_p, /**< buffer to fill with digits */
+                        lit_utf8_byte_t *out_digits_p, /**< [out] buffer to fill with digits */
                         int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));

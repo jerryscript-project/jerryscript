@@ -40,7 +40,7 @@ extern ecma_object_t *ecma_get_global_environment (void);
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
 extern ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_get_value_object_base (ecma_reference_t);
+extern ecma_value_t ecma_op_get_value_object_base (ecma_value_t, ecma_string_t *);
 extern ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool, ecma_value_t);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */

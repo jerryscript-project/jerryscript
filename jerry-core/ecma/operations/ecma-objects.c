@@ -177,9 +177,9 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  ecma_property_t *prop_p = NULL;
+  ecma_property_t *prop_p = ecma_lcache_lookup (obj_p, property_name_p);
 
-  if (likely (ecma_lcache_lookup (obj_p, property_name_p, &prop_p)))
+  if (likely (prop_p != NULL))
   {
     return prop_p;
   }

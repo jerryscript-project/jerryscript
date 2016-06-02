@@ -44,19 +44,14 @@ typedef struct
 } ecma_lcache_hash_entry_t;
 
 /**
- * LCache hash value length, in bits
- */
-#define ECMA_LCACHE_HASH_BITS (sizeof (lit_string_hash_t) * JERRY_BITSINBYTE)
-
-/**
  * Number of rows in LCache's hash table
  */
-#define ECMA_LCACHE_HASH_ROWS_COUNT (1ull << ECMA_LCACHE_HASH_BITS)
+#define ECMA_LCACHE_HASH_ROWS_COUNT 256
 
 /**
  * Number of entries in a row of LCache's hash table
  */
-#define ECMA_LCACHE_HASH_ROW_LENGTH (2)
+#define ECMA_LCACHE_HASH_ROW_LENGTH 2
 
 /**
  * LCache's hash table
@@ -79,66 +74,31 @@ ecma_lcache_init (void)
 /**
  * Invalidate specified LCache entry
  */
-static void
+static inline void __attr_always_inline___
 ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to invalidate */
 {
   JERRY_ASSERT (entry_p != NULL);
   JERRY_ASSERT (entry_p->object_cp != ECMA_NULL_POINTER);
-
-  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                entry_p->object_cp));
+  JERRY_ASSERT (entry_p->prop_name_cp != ECMA_NULL_POINTER);
+  JERRY_ASSERT (entry_p->prop_p != NULL);
 
   entry_p->object_cp = ECMA_NULL_POINTER;
-  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     entry_p->prop_name_cp));
-
-  if (entry_p->prop_p != NULL)
-  {
-    ecma_set_property_lcached (entry_p->prop_p, false);
-  }
+  ecma_set_property_lcached (entry_p->prop_p, false);
 } /* ecma_lcache_invalidate_entry */
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
- * Invalidate all entries in LCache
+ * Compute the row index of object / property name pair
+ *
+ * @return row index
  */
-void
-ecma_lcache_invalidate_all (void)
+static inline size_t __attr_always_inline___
+ecma_lcache_row_idx (jmem_cpointer_t object_cp, /**< compressed pointer to object */
+                     const ecma_string_t *prop_name_p) /**< proeprty name */
 {
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  for (uint32_t row_index = 0; row_index < ECMA_LCACHE_HASH_ROWS_COUNT; row_index++)
-  {
-    for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
-    {
-      if (ecma_lcache_hash_table[ row_index ][ entry_index ].object_cp != ECMA_NULL_POINTER)
-      {
-        ecma_lcache_invalidate_entry (&ecma_lcache_hash_table[ row_index ][ entry_index ]);
-      }
-    }
-  }
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-} /* ecma_lcache_invalidate_all */
-
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-/**
- * Invalidate entries of LCache's row that correspond to given (object, property) pair
- */
-static void
-ecma_lcache_invalidate_row_for_object_property_pair (uint32_t row_index, /**< index of the row */
-                                                     unsigned int object_cp, /**< compressed pointer
-                                                                              *   to an object */
-                                                     ecma_property_t *property_p) /**< pointer to the
-                                                                                   *   object's property */
-{
-  for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
-  {
-    if (ecma_lcache_hash_table[ row_index ][ entry_index ].object_cp == object_cp
-        && ecma_lcache_hash_table[ row_index ][ entry_index ].prop_p == property_p)
-    {
-      ecma_lcache_invalidate_entry (&ecma_lcache_hash_table[ row_index ][ entry_index ]);
-    }
-  }
-} /* ecma_lcache_invalidate_row_for_object_property_pair */
+  /* Randomize the hash of the property name with the object pointer using a xor operation,
+   * so properties of different objects with the same name can be cached effectively. */
+  return (size_t) ((ecma_string_hash (prop_name_p) ^ object_cp) & (ECMA_LCACHE_HASH_ROWS_COUNT - 1));
+} /* ecma_lcache_row_idx */
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
@@ -146,51 +106,26 @@ ecma_lcache_invalidate_row_for_object_property_pair (uint32_t row_index, /**< in
  */
 void
 ecma_lcache_insert (ecma_object_t *object_p, /**< object */
-                    ecma_string_t *prop_name_p, /**< property's name */
-                    ecma_property_t *prop_p) /**< pointer to associated property or NULL
-                                              *   (NULL indicates that the object doesn't have property
-                                              *   with the name specified) */
+                    ecma_string_t *prop_name_p, /**< property name */
+                    ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
+  JERRY_ASSERT (prop_p != NULL && !ecma_is_property_lcached (prop_p));
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+                || ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-  prop_name_p = ecma_copy_or_ref_ecma_string (prop_name_p);
+  jmem_cpointer_t object_cp;
 
-  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  if (prop_p != NULL)
-  {
-    if (unlikely (ecma_is_property_lcached (prop_p)))
-    {
-      int32_t entry_index;
-      for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
-      {
-        if (ecma_lcache_hash_table[hash_key][entry_index].object_cp != ECMA_NULL_POINTER
-            && ecma_lcache_hash_table[hash_key][entry_index].prop_p == prop_p)
-        {
-#ifndef JERRY_NDEBUG
-          ecma_object_t *obj_in_entry_p;
-          obj_in_entry_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                      ecma_lcache_hash_table[hash_key][entry_index].object_cp);
-          JERRY_ASSERT (obj_in_entry_p == object_p);
-#endif /* !JERRY_NDEBUG */
-          break;
-        }
-      }
-
-      JERRY_ASSERT (entry_index != ECMA_LCACHE_HASH_ROW_LENGTH);
-      ecma_lcache_invalidate_entry (&ecma_lcache_hash_table[hash_key][entry_index]);
-    }
-
-    JERRY_ASSERT (!ecma_is_property_lcached (prop_p));
-    ecma_set_property_lcached (prop_p, true);
-  }
+  ecma_lcache_hash_entry_t *entries_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
 
   int32_t entry_index;
   for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
   {
-    if (ecma_lcache_hash_table[hash_key][entry_index].object_cp == ECMA_NULL_POINTER)
+    if (entries_p[entry_index].object_cp == ECMA_NULL_POINTER)
     {
       break;
     }
@@ -198,122 +133,112 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 
   if (entry_index == ECMA_LCACHE_HASH_ROW_LENGTH)
   {
-    /* No empty entry was found, invalidating the whole row */
-    for (uint32_t i = 0; i < ECMA_LCACHE_HASH_ROW_LENGTH; i++)
+    /* Invalidate the last entry. */
+    ecma_lcache_invalidate_entry (entries_p + ECMA_LCACHE_HASH_ROW_LENGTH - 1);
+
+    /* Shift other entries towards the end. */
+    for (uint32_t i = ECMA_LCACHE_HASH_ROW_LENGTH - 1; i > 0; i--)
     {
-      ecma_lcache_invalidate_entry (&ecma_lcache_hash_table[hash_key][i]);
+      entries_p[i] = entries_p[i - 1];
     }
 
     entry_index = 0;
   }
 
-  ecma_ref_object (object_p);
-  ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].object_cp, object_p);
-  ECMA_SET_NON_NULL_POINTER (ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_name_cp, prop_name_p);
-  ecma_lcache_hash_table[ hash_key ][ entry_index ].prop_p = prop_p;
-#else /* CONFIG_ECMA_LCACHE_DISABLE */
-  (void) prop_p;
+  ecma_lcache_hash_entry_t *entry_p = entries_p + entry_index;
+  ECMA_SET_NON_NULL_POINTER (entry_p->object_cp, object_p);
+  ECMA_SET_NON_NULL_POINTER (entry_p->prop_name_cp, prop_name_p);
+  entry_p->prop_p = prop_p;
+
+  ecma_set_property_lcached (entry_p->prop_p, true);
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_insert */
 
 /**
  * Lookup property in the LCache
  *
- * @return true - if (object, property name) pair is registered in LCache,
- *         false - probably, not registered.
+ * @return a pointer to an ecma_property_t if the lookup is successful
+ *         NULL otherwise
  */
-inline bool __attr_always_inline___
+inline ecma_property_t * __attr_always_inline___
 ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
-                    const ecma_string_t *prop_name_p, /**< property's name */
-                    ecma_property_t **prop_p_p) /**< [out] if return value is true,
-                                                 *         then here will be pointer to property,
-                                                 *         if the object contains property with specified name,
-                                                 *         or, otherwise - NULL;
-                                                 *         if return value is false,
-                                                 *         then the output parameter is not set */
+                    const ecma_string_t *prop_name_p) /**< property's name */
 {
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (prop_name_p != NULL);
 
-  unsigned int object_cp;
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  for (uint32_t i = 0; i < ECMA_LCACHE_HASH_ROW_LENGTH; i++)
+  ecma_lcache_hash_entry_t *entry_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
+  ecma_lcache_hash_entry_t *entry_end_p = entry_p + ECMA_LCACHE_HASH_ROW_LENGTH;
+
+  while (entry_p < entry_end_p)
   {
-    if (ecma_lcache_hash_table[hash_key][i].object_cp == object_cp)
+    if (entry_p->object_cp == object_cp)
     {
       ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                    ecma_lcache_hash_table[hash_key][i].prop_name_cp);
+                                                                    entry_p->prop_name_cp);
 
       JERRY_ASSERT (prop_name_p->hash == entry_prop_name_p->hash);
 
       if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
           && prop_name_p->u.common_field == entry_prop_name_p->u.common_field)
       {
-        ecma_property_t *prop_p = ecma_lcache_hash_table[hash_key][i].prop_p;
-        JERRY_ASSERT (prop_p == NULL || ecma_is_property_lcached (prop_p));
+        ecma_property_t *prop_p = entry_p->prop_p;
+        JERRY_ASSERT (prop_p != NULL && ecma_is_property_lcached (prop_p));
 
-        *prop_p_p = prop_p;
-
-        return true;
+        return prop_p;
       }
       else
       {
-        /* may be equal but it is long to compare it here */
+        /* They can be equal, but generic string comparison is too costly. */
       }
     }
+    entry_p++;
   }
-#else /* CONFIG_ECMA_LCACHE_DISABLE */
-  (void) object_p;
-  (void) prop_name_p;
-  (void) prop_p_p;
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
-  return false;
+  return NULL;
 } /* ecma_lcache_lookup */
 
 /**
  * Invalidate LCache entries associated with given object and property name / property
- *
- * Note:
- *      Either property name argument or property argument should be NULL,
- *      and another should be non-NULL.
- *      In case property name argument is NULL, property's name is taken
- *      from property's description.
  */
 void
 ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
-                        ecma_string_t *prop_name_p, /**< property's name (See also: Note) */
-                        ecma_property_t *prop_p) /**< property (See also: Note) */
+                        ecma_string_t *prop_name_p, /**< property's name */
+                        ecma_property_t *prop_p) /**< property */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
+  JERRY_ASSERT (prop_p != NULL && ecma_is_property_lcached (prop_p));
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+                || ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-  if (prop_p != NULL)
-  {
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                  || ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
-
-    bool is_cached = ecma_is_property_lcached (prop_p);
-
-    if (!is_cached)
-    {
-      return;
-    }
-
-    ecma_set_property_lcached (prop_p, false);
-  }
-
-  unsigned int object_cp;
+  jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  lit_string_hash_t hash_key = ecma_string_hash (prop_name_p);
+  ecma_lcache_hash_entry_t *entry_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
 
-  /* Property's name has was computed.
-   * Given (object, property name) pair should be in the row corresponding to computed hash.
-   */
-  ecma_lcache_invalidate_row_for_object_property_pair (hash_key, object_cp, prop_p);
+  for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
+  {
+    if (entry_p->object_cp != ECMA_NULL_POINTER && entry_p->prop_p == prop_p)
+    {
+      JERRY_ASSERT (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                               entry_p->prop_name_cp) == prop_name_p);
+      JERRY_ASSERT (entry_p->object_cp == object_cp);
+
+      ecma_lcache_invalidate_entry (entry_p);
+      return;
+    }
+    entry_p++;
+  }
+
+  /* The property must be present. */
+  JERRY_UNREACHABLE ();
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate */
 

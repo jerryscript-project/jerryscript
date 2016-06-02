@@ -586,8 +586,6 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  ecma_lcache_invalidate (object_p, name_p, NULL);
-
   ecma_property_value_t value;
   value.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -614,8 +612,6 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
 
   name_p = ecma_copy_or_ref_ecma_string (name_p);
 
-  ecma_lcache_invalidate (object_p, name_p, NULL);
-
   ecma_property_value_t value;
   ECMA_SET_POINTER (value.getter_setter_pair.getter_p, get_p);
   ECMA_SET_POINTER (value.getter_setter_pair.setter_p, set_p);
@@ -636,9 +632,9 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
 
-  ecma_property_t *property_p;
+  ecma_property_t *property_p = ecma_lcache_lookup (obj_p, name_p);
 
-  if (ecma_lcache_lookup (obj_p, name_p, &property_p))
+  if (property_p != NULL)
   {
     return property_p;
   }
@@ -649,14 +645,23 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   if (prop_iter_p != NULL
       && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
   {
-    property_p = ecma_property_hashmap_find ((ecma_property_hashmap_t *) prop_iter_p, name_p);
-    ecma_lcache_insert (obj_p, name_p, property_p);
+    ecma_string_t *property_real_name_p;
+    property_p = ecma_property_hashmap_find ((ecma_property_hashmap_t *) prop_iter_p,
+                                             name_p,
+                                             &property_real_name_p);
+
+    if (property_p != NULL
+        && !ecma_is_property_lcached (property_p))
+    {
+      ecma_lcache_insert (obj_p, property_real_name_p, property_p);
+    }
 
     return property_p;
   }
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
   property_p = NULL;
+  ecma_string_t *property_name_p = NULL;
 
   uint32_t steps = 0;
 
@@ -670,8 +675,8 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     if (prop_pair_p->names_cp[0] != ECMA_NULL_POINTER)
     {
-      ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  prop_pair_p->names_cp[0]);
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   prop_pair_p->names_cp[0]);
 
       if (ecma_compare_ecma_strings (name_p, property_name_p))
       {
@@ -682,8 +687,8 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     if (prop_pair_p->names_cp[1] != ECMA_NULL_POINTER)
     {
-      ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  prop_pair_p->names_cp[1]);
+      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                   prop_pair_p->names_cp[1]);
 
       if (ecma_compare_ecma_strings (name_p, property_name_p))
       {
@@ -703,7 +708,11 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     ecma_property_hashmap_create (obj_p);
   }
 
-  ecma_lcache_insert (obj_p, name_p, property_p);
+  if (property_p != NULL
+      && !ecma_is_property_lcached (property_p))
+  {
+    ecma_lcache_insert (obj_p, property_name_p, property_p);
+  }
 
   return property_p;
 } /* ecma_find_named_property */
@@ -875,12 +884,18 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
       ecma_free_named_data_property (object_p, property_p);
-      ecma_lcache_invalidate (object_p, name_p, property_p);
+      if (ecma_is_property_lcached (property_p))
+      {
+        ecma_lcache_invalidate (object_p, name_p, property_p);
+      }
       break;
     }
     case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
     {
-      ecma_lcache_invalidate (object_p, name_p, property_p);
+      if (ecma_is_property_lcached (property_p))
+      {
+        ecma_lcache_invalidate (object_p, name_p, property_p);
+      }
       break;
     }
     case ECMA_PROPERTY_TYPE_INTERNAL:
@@ -1270,7 +1285,7 @@ ecma_is_property_lcached (ecma_property_t *prop_p) /**< property */
 /**
  * Set value of flag indicating whether the property is registered in LCache
  */
-void
+inline void __attr_always_inline___
 ecma_set_property_lcached (ecma_property_t *prop_p, /**< property */
                            bool is_lcached) /**< contained (true) or not (false) */
 {

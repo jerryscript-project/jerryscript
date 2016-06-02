@@ -59,7 +59,7 @@ extern void ecma_property_hashmap_insert (ecma_object_t *, ecma_string_t *, ecma
 extern void ecma_property_hashmap_delete (ecma_object_t *, ecma_string_t *, ecma_property_t *);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-extern ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *, ecma_string_t *);
+extern ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *, ecma_string_t *, ecma_string_t **);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
 /**

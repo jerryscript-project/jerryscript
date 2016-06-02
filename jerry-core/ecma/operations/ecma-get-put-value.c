@@ -75,83 +75,69 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_get_value_object_base (ecma_reference_t ref) /**< ECMA-reference */
+ecma_op_get_value_object_base (ecma_value_t base, /**< base value */
+                               ecma_string_t *property_name_p) /**< property name */
 {
-  const ecma_value_t base = ref.base;
-  const bool is_unresolvable_reference = ecma_is_value_undefined (base);
-  const bool has_primitive_base = (ecma_is_value_boolean (base)
-                                   || ecma_is_value_number (base)
-                                   || ecma_is_value_string (base));
-  const bool has_object_base = (ecma_is_value_object (base)
-                                && !(ecma_is_lexical_environment (ecma_get_object_from_value (base))));
-  const bool is_property_reference = has_primitive_base || has_object_base;
-
-  JERRY_ASSERT (!is_unresolvable_reference);
-  JERRY_ASSERT (is_property_reference);
-
-  ecma_string_t *referenced_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                ref.referenced_name_cp);
-
   // 4.a
-  if (!has_primitive_base)
+  if (ecma_is_value_object (base))
   {
     // 4.b case 1
-
     ecma_object_t *obj_p = ecma_get_object_from_value (base);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
-    return ecma_op_object_get (obj_p, referenced_name_p);
+    return ecma_op_object_get (obj_p, property_name_p);
+  }
+
+  JERRY_ASSERT (ecma_is_value_boolean (base)
+                || ecma_is_value_number (base)
+                || ecma_is_value_string (base));
+
+  // 4.b case 2
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+  // 1.
+  ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
+  JERRY_ASSERT (obj_p != NULL
+                && !ecma_is_lexical_environment (obj_p));
+
+  // 2.
+  ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, property_name_p);
+
+  if (prop_p == NULL)
+  {
+    // 3.
+    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+  else if (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+  {
+    // 4.
+    ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
   }
   else
   {
-    // 4.b case 2
-    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    // 5.
+    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-    // 1.
-    ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
+    ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
-    JERRY_ASSERT (obj_p != NULL
-                  && !ecma_is_lexical_environment (obj_p));
-
-
-    // 2.
-    ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, referenced_name_p);
-
-    if (prop_p == NULL)
+    // 6.
+    if (obj_p == NULL)
     {
-      // 3.
       ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-    }
-    else if (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
-    {
-      // 4.
-      ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
     }
     else
     {
-      // 5.
-      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
-
-      ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
-
-      // 6.
-      if (obj_p == NULL)
-      {
-        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-      }
-      else
-      {
-        // 7.
-        ret_value = ecma_op_function_call (obj_p, base, NULL, 0);
-      }
+      // 7.
+      ret_value = ecma_op_function_call (obj_p, base, NULL, 0);
     }
-
-    ECMA_FINALIZE (obj_base);
-
-    return ret_value;
   }
+
+  ECMA_FINALIZE (obj_base);
+
+  return ret_value;
 } /* ecma_op_get_value_object_base */
 
 /**

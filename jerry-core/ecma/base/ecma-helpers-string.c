@@ -527,7 +527,6 @@ ecma_copy_or_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
   if (unlikely (string_p->refs_and_container >= ECMA_STRING_MAX_REF))
   {
     /* First trying to free unreachable objects that maybe refer to the string */
-    ecma_lcache_invalidate_all ();
     ecma_gc_run ();
 
     if (string_p->refs_and_container >= ECMA_STRING_MAX_REF)

@@ -583,8 +583,6 @@ ecma_try_to_give_back_some_memory (jmem_try_give_memory_back_severity_t severity
     JERRY_ASSERT (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
 
     /* Freeing as much memory as we currently can */
-    ecma_lcache_invalidate_all ();
-
     ecma_gc_run ();
   }
 } /* ecma_try_to_give_back_some_memory */

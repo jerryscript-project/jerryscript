@@ -402,7 +402,8 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
  */
 ecma_property_t *
 ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
-                            ecma_string_t *name_p) /**< property name */
+                            ecma_string_t *name_p, /**< property name */
+                            ecma_string_t **property_real_name_p) /**< [out] property real name */
 {
 #ifndef JERRY_NDEBUG
   /* A sanity check in debug mode: a named property must be present
@@ -481,6 +482,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
 #ifndef JERRY_NDEBUG
         JERRY_ASSERT (property_found);
 #endif /* !JERRY_NDEBUG */
+        *property_real_name_p = property_name_p;
         return property_pair_p->header.types + offset;
       }
     }

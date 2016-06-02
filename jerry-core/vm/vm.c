@@ -24,6 +24,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
@@ -65,31 +66,40 @@ static ecma_compiled_code_t *__program = NULL;
  */
 static ecma_value_t
 vm_op_get_value (ecma_value_t object, /**< base object */
-                 ecma_value_t property, /**< property name */
-                 bool is_strict) /**< strict mode */
+                 ecma_value_t property) /**< property name */
 {
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
 
-  ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t prop_to_string_result = ecma_op_to_string (property);
 
-  ECMA_TRY_CATCH (property_val,
-                  ecma_op_to_string (property),
-                  completion_value);
+  if (ecma_is_value_error (prop_to_string_result))
+  {
+    return prop_to_string_result;
+  }
 
-  ecma_string_t *property_p = ecma_get_string_from_value (property_val);
+  ecma_string_t *property_name_p = ecma_get_string_from_value (prop_to_string_result);
 
-  ecma_reference_t reference = ecma_make_reference (object, property_p, is_strict);
+  if (ecma_is_value_object (object))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (object);
 
-  completion_value = ecma_op_get_value_object_base (reference);
+    ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
-  ecma_free_reference (reference);
+    if (property_p != NULL &&
+        ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+    {
+      ecma_deref_ecma_string (property_name_p);
+      return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+    }
+  }
 
-  ECMA_FINALIZE (property_val);
+  ecma_value_t get_value_result = ecma_op_get_value_object_base (object, property_name_p);
 
-  return completion_value;
+  ecma_deref_ecma_string (property_name_p);
+  return get_value_result;
 } /* vm_op_get_value */
 
 /**
@@ -1145,8 +1155,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_PROP_POST_DECR:
         {
           last_completion_value = vm_op_get_value (left_value,
-                                                   right_value,
-                                                   is_strict);
+                                                   right_value);
 
           if (ecma_is_value_error (last_completion_value))
           {

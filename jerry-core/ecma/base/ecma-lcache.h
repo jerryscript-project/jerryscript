@@ -24,9 +24,8 @@
  */
 
 extern void ecma_lcache_init (void);
-extern void ecma_lcache_invalidate_all (void);
 extern void ecma_lcache_insert (ecma_object_t *, ecma_string_t *, ecma_property_t *);
-extern bool ecma_lcache_lookup (ecma_object_t *, const ecma_string_t *, ecma_property_t **);
+extern ecma_property_t *ecma_lcache_lookup (ecma_object_t *, const ecma_string_t *);
 extern void ecma_lcache_invalidate (ecma_object_t *, ecma_string_t *, ecma_property_t *);
 
 /**

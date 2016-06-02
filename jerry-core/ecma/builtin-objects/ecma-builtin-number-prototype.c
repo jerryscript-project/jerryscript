@@ -48,8 +48,6 @@
  * @{
  */
 
-#define min(X,Y) ((X) < (Y) ? (X) : (Y))
-
 /**
  * Helper for stringifying numbers
  *
@@ -59,7 +57,7 @@ static lit_utf8_size_t
 ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< number as string in decimal form */
                                                 lit_utf8_size_t num_digits, /**< length of the string representation */
                                                 int32_t exponent, /**< decimal exponent */
-                                                lit_utf8_byte_t *to_digits, /**< buffer to write */
+                                                lit_utf8_byte_t *to_digits, /**< [out] buffer to write */
                                                 lit_utf8_size_t to_num_digits) /**< requested number of digits */
 {
   lit_utf8_byte_t *p = to_digits;
@@ -85,8 +83,8 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
   else
   {
     /* Add significant digits of the integer part. */
-    lit_utf8_size_t to_copy = min (num_digits, to_num_digits);
-    to_copy = min (to_copy, (lit_utf8_size_t) exponent);
+    lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
+    to_copy = JERRY_MIN (to_copy, (lit_utf8_size_t) exponent);
     memmove (p, digits, (size_t) to_copy);
     p += to_copy;
     to_num_digits -= to_copy;
@@ -112,7 +110,7 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
   if (to_num_digits > 0)
   {
     /* Add significant digits of the fraction part. */
-    lit_utf8_size_t to_copy = min (num_digits, to_num_digits);
+    lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
     memmove (p, digits, (size_t) to_copy);
     p += to_copy;
     to_num_digits -= to_copy;
@@ -127,8 +125,6 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits, /**< nu
 
   return (lit_utf8_size_t) (p - to_digits);
 } /* ecma_builtin_number_prototype_helper_to_string */
-
-#undef min
 
 /**
  * Helper for rounding numbers
@@ -558,7 +554,10 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
             *p++ = '-';
           }
 
-          p += ecma_builtin_number_prototype_helper_to_string (digits, num_digits, exponent, p,
+          p += ecma_builtin_number_prototype_helper_to_string (digits,
+                                                               num_digits,
+                                                               exponent,
+                                                               p,
                                                                (exponent > 0)
                                                                ? (lit_utf8_size_t) (exponent + frac_digits)
                                                                : (lit_utf8_size_t) (frac_digits + 1));
@@ -690,7 +689,10 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
           *actual_char_p++ = '-';
         }
 
-        actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits, num_digits, 1, actual_char_p,
+        actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits,
+                                                                         num_digits,
+                                                                         1,
+                                                                         actual_char_p,
                                                                          (lit_utf8_size_t) (frac_digits + 1));
 
         *actual_char_p++ = 'e';
@@ -846,7 +848,10 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
         /* 10.c, Exponential notation.*/
         if (exponent < -5 || exponent > precision)
         {
-          actual_char_p  += ecma_builtin_number_prototype_helper_to_string (digits, num_digits, 1, actual_char_p,
+          actual_char_p  += ecma_builtin_number_prototype_helper_to_string (digits,
+                                                                            num_digits,
+                                                                            1,
+                                                                            actual_char_p,
                                                                             (lit_utf8_size_t) precision);
 
           *actual_char_p++ = 'e';
@@ -870,7 +875,10 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
         {
           lit_utf8_size_t to_num_digits = ((exponent <= 0) ? (lit_utf8_size_t) (1 - exponent + precision)
                                                            : (lit_utf8_size_t) precision);
-          actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits, num_digits, exponent, actual_char_p,
+          actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits,
+                                                                           num_digits,
+                                                                           exponent,
+                                                                           actual_char_p,
                                                                            to_num_digits);
 
         }

@@ -114,6 +114,7 @@
   }
 
 /* ecma-helpers-value.c */
+extern bool ecma_is_value_direct (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_simple (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_empty (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_undefined (ecma_value_t) __attr_pure___;

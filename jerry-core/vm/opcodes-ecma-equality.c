@@ -47,29 +47,13 @@ opfunc_equal_value (ecma_value_t left_value, /**< left value */
   JERRY_ASSERT (!ecma_is_value_error (left_value)
                 && !ecma_is_value_error (right_value));
 
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if (left_value == right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
+  ecma_value_t compare_result = ecma_op_abstract_equality_compare (left_value,
+                                                                   right_value);
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  JERRY_ASSERT (ecma_is_value_boolean (compare_result)
+                || ecma_is_value_error (compare_result));
 
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (left_value,
-                                                     right_value),
-                  ret_value);
-
-  JERRY_ASSERT (ecma_is_value_boolean (compare_result));
-
-  ret_value = compare_result;
-
-  ECMA_FINALIZE (compare_result);
-
-  return ret_value;
+  return compare_result;
 } /* opfunc_equal_value */
 
 /**
@@ -87,92 +71,19 @@ opfunc_not_equal_value (ecma_value_t left_value, /**< left value */
   JERRY_ASSERT (!ecma_is_value_error (left_value)
                 && !ecma_is_value_error (right_value));
 
-  if (ecma_are_values_integer_numbers (left_value, right_value))
+  ecma_value_t compare_result = ecma_op_abstract_equality_compare (left_value,
+                                                                   right_value);
+
+  JERRY_ASSERT (ecma_is_value_boolean (compare_result)
+                || ecma_is_value_error (compare_result));
+
+  if (!ecma_is_value_error (compare_result))
   {
-    if (left_value == right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    compare_result = ecma_invert_boolean_value (compare_result);
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_TRY_CATCH (compare_result,
-                  ecma_op_abstract_equality_compare (left_value, right_value),
-                  ret_value);
-
-  JERRY_ASSERT (ecma_is_value_boolean (compare_result));
-
-  bool is_equal = ecma_is_value_true (compare_result);
-
-  ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                               : ECMA_SIMPLE_VALUE_TRUE);
-
-  ECMA_FINALIZE (compare_result);
-
-  return ret_value;
+  return compare_result;
 } /* opfunc_not_equal_value */
-
-/**
- * 'Strict Equals' opcode handler.
- *
- * See also: ECMA-262 v5, 11.9.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-opfunc_equal_value_type (ecma_value_t left_value, /**< left value */
-                         ecma_value_t right_value) /**< right value */
-{
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if (left_value == right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-
-  bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
-
-  return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
-                                          : ECMA_SIMPLE_VALUE_FALSE);
-} /* opfunc_equal_value_type */
-
-/**
- * 'Strict Does-not-equals' opcode handler.
- *
- * See also: ECMA-262 v5, 11.9.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-opfunc_not_equal_value_type (ecma_value_t left_value, /**< left value */
-                             ecma_value_t right_value) /**< right value */
-{
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if (left_value == right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-  }
-
-  bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
-
-  return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                          : ECMA_SIMPLE_VALUE_TRUE);
-} /* opfunc_not_equal_value_type */
 
 /**
  * @}

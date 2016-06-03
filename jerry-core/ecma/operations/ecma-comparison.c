@@ -38,41 +38,22 @@ ecma_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
                                    ecma_value_t y) /**< second operand */
 {
-  const bool is_x_undefined = ecma_is_value_undefined (x);
-  const bool is_x_null = ecma_is_value_null (x);
-  const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = ecma_is_value_number (x);
-  const bool is_x_string = ecma_is_value_string (x);
-  const bool is_x_object = ecma_is_value_object (x);
-
-  const bool is_y_undefined = ecma_is_value_undefined (y);
-  const bool is_y_null = ecma_is_value_null (y);
-  const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = ecma_is_value_number (y);
-  const bool is_y_string = ecma_is_value_string (y);
-  const bool is_y_object = ecma_is_value_object (y);
-
-  const bool is_types_equal = ((is_x_undefined && is_y_undefined)
-                               || (is_x_null && is_y_null)
-                               || (is_x_boolean && is_y_boolean)
-                               || (is_x_number && is_y_number)
-                               || (is_x_string && is_y_string)
-                               || (is_x_object && is_y_object));
-
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (is_types_equal)
+  if (x == y)
   {
-    // 1.
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
 
-    if (is_x_undefined
-        || is_x_null)
+  if (ecma_are_values_integer_numbers (x, y))
+  {
+    /* Note: the (x == y) comparison captures the true case. */
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  if (ecma_is_value_number (x))
+  {
+    if (ecma_is_value_number (y))
     {
-      // a., b.
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    else if (is_x_number)
-    { // c.
+      // 1.c
       ecma_number_t x_num = ecma_get_number_from_value (x);
       ecma_number_t y_num = ecma_get_number_from_value (y);
 
@@ -100,111 +81,104 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
 #endif /* !JERRY_NDEBUG */
 
-      ret_value = ecma_make_simple_value (is_x_equal_to_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_simple_value (is_x_equal_to_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
-    else if (is_x_string)
-    { // d.
+
+    /* Swap values. */
+    ecma_value_t tmp = x;
+    x = y;
+    y = tmp;
+  }
+
+  if (ecma_is_value_string (x))
+  {
+    if (ecma_is_value_string (y))
+    {
+      // 1., d.
       ecma_string_t *x_str_p = ecma_get_string_from_value (x);
       ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
-      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
     }
-    else if (is_x_boolean)
-    { // e.
-      bool is_equal = (ecma_is_value_true (x) == ecma_is_value_true (y));
 
-      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    if (ecma_is_value_number (y))
+    {
+      // 4.
+      ecma_value_t x_num_value = ecma_op_to_number (x);
+
+      if (ecma_is_value_error (x_num_value))
+      {
+        return x_num_value;
+      }
+
+      ecma_value_t compare_result = ecma_op_abstract_equality_compare (x_num_value, y);
+
+      ecma_free_value (x_num_value);
+      return compare_result;
     }
-    else
-    { // f.
-      JERRY_ASSERT (is_x_object);
 
-      bool is_equal = (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
-
-      ret_value = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
-    }
+    /* Swap values. */
+    ecma_value_t tmp = x;
+    x = y;
+    y = tmp;
   }
-  else if ((is_x_null && is_y_undefined)
-           || (is_x_undefined && is_y_null))
-  { // 2., 3.
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-  }
-  else if (is_x_number && is_y_string)
+
+  if (ecma_is_value_boolean (y))
   {
-    // 4.
-    ECMA_TRY_CATCH (y_num_value,
-                    ecma_op_to_number (y),
-                    ret_value);
+    if (ecma_is_value_boolean (x))
+    {
+      // 1., e.
+      /* Note: the (x == y) comparison captures the true case. */
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
 
-    ret_value = ecma_op_abstract_equality_compare (x, y_num_value);
-
-    ECMA_FINALIZE (y_num_value);
+    // 7.
+    return ecma_op_abstract_equality_compare (x, ecma_make_integer_value (ecma_is_value_true (y) ? 1 : 0));
   }
-  else if (is_x_string && is_y_number)
+
+  if (ecma_is_value_object (x))
   {
-    // 5.
-    ECMA_TRY_CATCH (x_num_value,
-                    ecma_op_to_number (x),
-                    ret_value);
+    if (ecma_is_value_string (y)
+        || ecma_is_value_number (y))
+    {
+      // 9.
+      ecma_value_t x_prim_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO);
 
-    ret_value = ecma_op_abstract_equality_compare (x_num_value, y);
+      if (ecma_is_value_error (x_prim_value))
+      {
+        return x_prim_value;
+      }
 
-    ECMA_FINALIZE (x_num_value);
+      ecma_value_t compare_result = ecma_op_abstract_equality_compare (x_prim_value, y);
+
+      ecma_free_value (x_prim_value);
+      return compare_result;
+    }
+
+    // 1., f.
+    /* Note: the (x == y) comparison captures the true case. */
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
-  else if (is_x_boolean)
+
+  if (ecma_is_value_boolean (x))
   {
     // 6.
-    ECMA_TRY_CATCH (x_num_value,
-                    ecma_op_to_number (x),
-                    ret_value);
-
-    ret_value = ecma_op_abstract_equality_compare (x_num_value, y);
-
-    ECMA_FINALIZE (x_num_value);
+    return ecma_op_abstract_equality_compare (ecma_make_integer_value (ecma_is_value_true (x) ? 1 : 0), y);
   }
-  else if (is_y_boolean)
+
+  if (ecma_is_value_undefined (x)
+      || ecma_is_value_null (x))
   {
-    // 7.
-    ECMA_TRY_CATCH (y_num_value,
-                    ecma_op_to_number (y),
-                    ret_value);
+    // 1. a., b.
+    // 2., 3.
+    bool is_equal = ecma_is_value_undefined (y) || ecma_is_value_null (y);
 
-    ret_value = ecma_op_abstract_equality_compare (x, y_num_value);
-
-    ECMA_FINALIZE (y_num_value);
-  }
-  else if (is_y_object
-           && (is_x_number || is_x_string))
-  {
-    // 8.
-    ECMA_TRY_CATCH (y_prim_value,
-                    ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NO),
-                    ret_value);
-
-    ret_value = ecma_op_abstract_equality_compare (x, y_prim_value);
-
-    ECMA_FINALIZE (y_prim_value);
-  }
-  else if (is_x_object
-           && (is_y_number || is_y_string))
-  {
-    // 9.
-    ECMA_TRY_CATCH (x_prim_value,
-                    ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO),
-                    ret_value);
-
-    ret_value = ecma_op_abstract_equality_compare (x_prim_value, y);
-
-    ECMA_FINALIZE (x_prim_value);
-  }
-  else
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
   }
 
-  return ret_value;
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
 } /* ecma_op_abstract_equality_compare */
 
 /**
@@ -219,104 +193,81 @@ bool
 ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
                                  ecma_value_t y) /**< second operand */
 {
-  const bool is_x_undefined = ecma_is_value_undefined (x);
-  const bool is_x_null = ecma_is_value_null (x);
-  const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = ecma_is_value_number (x);
-  const bool is_x_string = ecma_is_value_string (x);
-  const bool is_x_object = ecma_is_value_object (x);
-
-  const bool is_y_undefined = ecma_is_value_undefined (y);
-  const bool is_y_null = ecma_is_value_null (y);
-  const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = ecma_is_value_number (y);
-  const bool is_y_string = ecma_is_value_string (y);
-  const bool is_y_object = ecma_is_value_object (y);
-
-  const bool is_types_equal = ((is_x_undefined && is_y_undefined)
-                               || (is_x_null && is_y_null)
-                               || (is_x_boolean && is_y_boolean)
-                               || (is_x_number && is_y_number)
-                               || (is_x_string && is_y_string)
-                               || (is_x_object && is_y_object));
-
-  // 1. If Type (x) is different from Type (y), return false.
-  if (!is_types_equal)
+  if (ecma_is_value_direct (x)
+      || ecma_is_value_direct (y)
+      || ecma_is_value_object (x)
+      || ecma_is_value_object (y))
   {
-    return false;
-  }
+    JERRY_ASSERT (!ecma_is_value_direct (x)
+                  || ecma_is_value_undefined (x)
+                  || ecma_is_value_null (x)
+                  || ecma_is_value_boolean (x)
+                  || ecma_is_value_integer_number (x));
 
-  // 2. If Type (x) is Undefined, return true.
-  if (is_x_undefined)
-  {
-    return true;
-  }
+    JERRY_ASSERT (!ecma_is_value_direct (y)
+                  || ecma_is_value_undefined (y)
+                  || ecma_is_value_null (y)
+                  || ecma_is_value_boolean (y)
+                  || ecma_is_value_integer_number (y));
 
-  // 3. If Type (x) is Null, return true.
-  if (is_x_null)
-  {
-    return true;
-  }
-
-  // 4. If Type (x) is Number, then
-  if (is_x_number)
-  {
-    // a. If x is NaN, return false.
-    // b. If y is NaN, return false.
-    // c. If x is the same Number value as y, return true.
-    // d. If x is +0 and y is -0, return true.
-    // e. If x is -0 and y is +0, return true.
-
-    ecma_number_t x_num = ecma_get_number_from_value (x);
-    ecma_number_t y_num = ecma_get_number_from_value (y);
-
-    bool is_x_equal_to_y = (x_num == y_num);
-
-#ifndef JERRY_NDEBUG
-    bool is_x_equal_to_y_check;
-
-    if (ecma_number_is_nan (x_num)
-        || ecma_number_is_nan (y_num))
+    if ((x != ecma_make_integer_value (0) || !ecma_is_value_float_number (y))
+        && (y != ecma_make_integer_value (0) || !ecma_is_value_float_number (x)))
     {
-      is_x_equal_to_y_check = false;
-    }
-    else if (x_num == y_num
-             || (ecma_number_is_zero (x_num)
-                 && ecma_number_is_zero (y_num)))
-    {
-      is_x_equal_to_y_check = true;
-    }
-    else
-    {
-      is_x_equal_to_y_check = false;
+      return (x == y);
     }
 
-    JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
-#endif /* !JERRY_NDEBUG */
-
-    return is_x_equal_to_y;
+    /* The +0 === -0 case handled below. */
   }
 
-  // 5. If Type (x) is String, then return true if x and y are exactly the same sequence of characters
-  // (same length and same characters in corresponding positions); otherwise, return false.
-  if (is_x_string)
+  JERRY_ASSERT (ecma_is_value_number (x) || ecma_is_value_string (x));
+  JERRY_ASSERT (ecma_is_value_number (y) || ecma_is_value_string (y));
+
+  if (ecma_is_value_string (x))
   {
+    if (!ecma_is_value_string (y))
+    {
+      return false;
+    }
+
     ecma_string_t *x_str_p = ecma_get_string_from_value (x);
     ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
-  // 6. If Type (x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
-  if (is_x_boolean)
+  if (!ecma_is_value_number (y))
   {
-    return (ecma_is_value_true (x) == ecma_is_value_true (y));
+    return false;
   }
 
-  // 7. Return true if x and y refer to the same object. Otherwise, return false.
-  JERRY_ASSERT (is_x_object);
+  ecma_number_t x_num = ecma_get_number_from_value (x);
+  ecma_number_t y_num = ecma_get_number_from_value (y);
 
-  return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
+  bool is_x_equal_to_y = (x_num == y_num);
+
+#ifndef JERRY_NDEBUG
+  bool is_x_equal_to_y_check;
+
+  if (ecma_number_is_nan (x_num)
+      || ecma_number_is_nan (y_num))
+  {
+    is_x_equal_to_y_check = false;
+  }
+  else if (x_num == y_num
+           || (ecma_number_is_zero (x_num)
+               && ecma_number_is_zero (y_num)))
+  {
+    is_x_equal_to_y_check = true;
+  }
+  else
+  {
+    is_x_equal_to_y_check = false;
+  }
+
+  JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
+#endif /* !JERRY_NDEBUG */
+
+  return is_x_equal_to_y;
 } /* ecma_op_strict_equality_compare */
 
 /**

@@ -63,12 +63,6 @@ ecma_value_t
 opfunc_not_equal_value (ecma_value_t, ecma_value_t);
 
 ecma_value_t
-opfunc_equal_value_type (ecma_value_t, ecma_value_t);
-
-ecma_value_t
-opfunc_not_equal_value_type (ecma_value_t, ecma_value_t);
-
-ecma_value_t
 do_number_arithmetic (number_arithmetic_op, ecma_value_t, ecma_value_t);
 
 ecma_value_t

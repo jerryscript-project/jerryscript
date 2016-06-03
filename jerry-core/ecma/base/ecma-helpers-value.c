@@ -114,6 +114,18 @@ ecma_get_pointer_from_ecma_value (ecma_value_t value) /**< value */
 } /* ecma_get_pointer_from_ecma_value */
 
 /**
+ * Check if the value is direct ecma-value.
+ *
+ * @return true - if the value is a direct value,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_is_value_direct (ecma_value_t value) /**< ecma value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT);
+} /* ecma_is_value_direct */
+
+/**
  * Check if the value is simple ecma-value.
  *
  * @return true - if the value is a simple value,

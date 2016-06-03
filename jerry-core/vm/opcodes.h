@@ -32,7 +32,6 @@
  */
 typedef enum
 {
-  NUMBER_ARITHMETIC_ADDITION, /**< addition */
   NUMBER_ARITHMETIC_SUBSTRACTION, /**< substraction */
   NUMBER_ARITHMETIC_MULTIPLICATION, /**< multiplication */
   NUMBER_ARITHMETIC_DIVISION, /**< division */

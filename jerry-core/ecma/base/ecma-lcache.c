@@ -46,12 +46,18 @@ typedef struct
 /**
  * Number of rows in LCache's hash table
  */
-#define ECMA_LCACHE_HASH_ROWS_COUNT 256
+#define ECMA_LCACHE_HASH_ROWS_COUNT 128
 
 /**
  * Number of entries in a row of LCache's hash table
  */
 #define ECMA_LCACHE_HASH_ROW_LENGTH 2
+
+
+/**
+ * Mask for hash bits
+ */
+#define ECMA_LCACHE_HASH_MASK (ECMA_LCACHE_HASH_ROWS_COUNT - 1)
 
 /**
  * LCache's hash table
@@ -97,7 +103,7 @@ ecma_lcache_row_idx (jmem_cpointer_t object_cp, /**< compressed pointer to objec
 {
   /* Randomize the hash of the property name with the object pointer using a xor operation,
    * so properties of different objects with the same name can be cached effectively. */
-  return (size_t) ((ecma_string_hash (prop_name_p) ^ object_cp) & (ECMA_LCACHE_HASH_ROWS_COUNT - 1));
+  return (size_t) ((ecma_string_hash (prop_name_p) ^ object_cp) & ECMA_LCACHE_HASH_MASK);
 } /* ecma_lcache_row_idx */
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
@@ -181,7 +187,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
       ecma_string_t *entry_prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                     entry_p->prop_name_cp);
 
-      JERRY_ASSERT (prop_name_p->hash == entry_prop_name_p->hash);
+      JERRY_ASSERT ((prop_name_p->hash & ECMA_LCACHE_HASH_MASK) == (entry_prop_name_p->hash & ECMA_LCACHE_HASH_MASK));
 
       if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
           && prop_name_p->u.common_field == entry_prop_name_p->u.common_field)

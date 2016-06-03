@@ -341,15 +341,6 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 {
   /* TODO: Check license issues */
 
-  const lit_utf8_byte_t dec_digits_range[10] = { '0', '9' };
-  const lit_utf8_byte_t hex_lower_digits_range[10] = { 'a', 'f' };
-  const lit_utf8_byte_t hex_upper_digits_range[10] = { 'A', 'F' };
-  const lit_utf8_byte_t hex_x_chars[2] = { 'x', 'X' };
-  const lit_utf8_byte_t e_chars[2] = { 'e', 'E' };
-  const lit_utf8_byte_t plus_char = '+';
-  const lit_utf8_byte_t minus_char = '-';
-  const lit_utf8_byte_t dot_char = '.';
-
   if (str_size == 0)
   {
     return ECMA_NUMBER_ZERO;
@@ -396,9 +387,9 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
 
   if ((end_p >= begin_p + 2)
-      && begin_p[0] == dec_digits_range[0]
-      && (begin_p[1] == hex_x_chars[0]
-          || begin_p[1] == hex_x_chars[1]))
+      && begin_p[0] == LIT_CHAR_0
+      && (begin_p[1] == LIT_CHAR_LOWERCASE_X
+          || begin_p[1] == LIT_CHAR_UPPERCASE_X))
   {
     /* Hex literal handling */
     begin_p += 2;
@@ -411,20 +402,20 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     {
       int32_t digit_value;
 
-      if (*iter_p >= dec_digits_range[0]
-          && *iter_p <= dec_digits_range[1])
+      if (*iter_p >= LIT_CHAR_0
+          && *iter_p <= LIT_CHAR_9)
       {
-        digit_value = (*iter_p - dec_digits_range[0]);
+        digit_value = (*iter_p - LIT_CHAR_0);
       }
-      else if (*iter_p >= hex_lower_digits_range[0]
-               && *iter_p <= hex_lower_digits_range[1])
+      else if (*iter_p >= LIT_CHAR_LOWERCASE_A
+               && *iter_p <= LIT_CHAR_LOWERCASE_F)
       {
-        digit_value = 10 + (*iter_p - hex_lower_digits_range[0]);
+        digit_value = 10 + (*iter_p - LIT_CHAR_LOWERCASE_A);
       }
-      else if (*iter_p >= hex_upper_digits_range[0]
-               && *iter_p <= hex_upper_digits_range[1])
+      else if (*iter_p >= LIT_CHAR_UPPERCASE_A
+               && *iter_p <= LIT_CHAR_UPPERCASE_F)
       {
-        digit_value = 10 + (*iter_p - hex_upper_digits_range[0]);
+        digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
       }
       else
       {
@@ -439,11 +430,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
   bool sign = false; /* positive */
 
-  if (*begin_p == plus_char)
+  if (*begin_p == LIT_CHAR_PLUS)
   {
     begin_p++;
   }
-  else if (*begin_p == minus_char)
+  else if (*begin_p == LIT_CHAR_MINUS)
   {
     sign = true; /* negative */
 
@@ -482,10 +473,10 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   {
     int32_t digit_value;
 
-    if (*begin_p >= dec_digits_range[0]
-        && *begin_p <= dec_digits_range[1])
+    if (*begin_p >= LIT_CHAR_0
+        && *begin_p <= LIT_CHAR_9)
     {
-      digit_value = (*begin_p - dec_digits_range[0]);
+      digit_value = (*begin_p - LIT_CHAR_0);
     }
     else
     {
@@ -511,7 +502,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
 
   if (begin_p <= end_p
-      && *begin_p == dot_char)
+      && *begin_p == LIT_CHAR_DOT)
   {
     begin_p++;
 
@@ -520,10 +511,10 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     {
       int32_t digit_value;
 
-      if (*begin_p >= dec_digits_range[0]
-          && *begin_p <= dec_digits_range[1])
+      if (*begin_p >= LIT_CHAR_0
+          && *begin_p <= LIT_CHAR_9)
       {
-        digit_value = (*begin_p - dec_digits_range[0]);
+        digit_value = (*begin_p - LIT_CHAR_0);
       }
       else
       {
@@ -550,16 +541,16 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   bool e_in_lit_sign = false;
 
   if (begin_p <= end_p
-      && (*begin_p == e_chars[0]
-          || *begin_p == e_chars[1]))
+      && (*begin_p == LIT_CHAR_LOWERCASE_E
+          || *begin_p == LIT_CHAR_UPPERCASE_E))
   {
     begin_p++;
 
-    if (*begin_p == plus_char)
+    if (*begin_p == LIT_CHAR_PLUS)
     {
       begin_p++;
     }
-    else if (*begin_p == minus_char)
+    else if (*begin_p == LIT_CHAR_MINUS)
     {
       e_in_lit_sign = true;
       begin_p++;
@@ -574,10 +565,10 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     {
       int32_t digit_value;
 
-      if (*begin_p >= dec_digits_range[0]
-          && *begin_p <= dec_digits_range[1])
+      if (*begin_p >= LIT_CHAR_0
+          && *begin_p <= LIT_CHAR_9)
       {
-        digit_value = (*begin_p - dec_digits_range[0]);
+        digit_value = (*begin_p - LIT_CHAR_0);
       }
       else
       {

@@ -72,14 +72,14 @@ read_file (const char *file_name,
  * @return true - if only one argument was passed and the argument is a boolean true.
  */
 static bool
-assert_handler (const jerry_api_object_t *function_obj_p __attribute__((unused)), /**< function object */
-                const jerry_api_value_t *this_p __attribute__((unused)), /**< this arg */
-                jerry_api_value_t *ret_val_p __attribute__((unused)), /**< return argument */
-                const jerry_api_value_t args_p[], /**< function arguments */
-                const jerry_api_length_t args_cnt) /**< number of function arguments */
+assert_handler (const jerry_object_t *function_obj_p __attribute__((unused)), /**< function object */
+                const jerry_value_t *this_p __attribute__((unused)), /**< this arg */
+                jerry_value_t *ret_val_p __attribute__((unused)), /**< return argument */
+                const jerry_value_t args_p[], /**< function arguments */
+                const jerry_length_t args_cnt) /**< number of function arguments */
 {
   if (args_cnt == 1
-      && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
+      && args_p[0].type == JERRY_DATA_TYPE_BOOLEAN
       && args_p[0].u.v_bool == true)
   {
     return true;
@@ -313,18 +313,18 @@ main (int argc,
 
   jerry_init (flags);
 
-  jerry_api_object_t *global_obj_p = jerry_api_get_global ();
-  jerry_api_object_t *assert_func_p = jerry_api_create_external_function (assert_handler);
-  jerry_api_value_t assert_value;
-  assert_value.type = JERRY_API_DATA_TYPE_OBJECT;
+  jerry_object_t *global_obj_p = jerry_get_global ();
+  jerry_object_t *assert_func_p = jerry_create_external_function (assert_handler);
+  jerry_value_t assert_value;
+  assert_value.type = JERRY_DATA_TYPE_OBJECT;
   assert_value.u.v_object = assert_func_p;
 
-  bool is_assert_added = jerry_api_set_object_field_value (global_obj_p,
-                                                           (jerry_api_char_t *) "assert",
-                                                           &assert_value);
+  bool is_assert_added = jerry_set_object_field_value (global_obj_p,
+                                                       (jerry_char_t *) "assert",
+                                                       &assert_value);
 
-  jerry_api_release_value (&assert_value);
-  jerry_api_release_object (global_obj_p);
+  jerry_release_value (&assert_value);
+  jerry_release_object (global_obj_p);
 
   if (!is_assert_added)
   {
@@ -344,12 +344,12 @@ main (int argc,
     }
     else
     {
-      jerry_api_value_t ret_value;
+      jerry_value_t ret_value;
       ret_code = jerry_exec_snapshot ((void *) snapshot_p,
                                       snapshot_size,
                                       true,
                                       &ret_value);
-      assert (ret_value.type == JERRY_API_DATA_TYPE_UNDEFINED);
+      assert (ret_value.type == JERRY_DATA_TYPE_UNDEFINED);
     }
 
     if (ret_code != JERRY_COMPLETION_CODE_OK)
@@ -358,15 +358,15 @@ main (int argc,
     }
   }
 
-  jerry_api_object_t *err_obj_p = NULL;
-  jerry_api_value_t err_value = jerry_api_create_void_value ();
+  jerry_object_t *err_obj_p = NULL;
+  jerry_value_t err_value = jerry_create_void_value ();
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {
     for (int i = 0; i < files_counter; i++)
     {
       size_t source_size;
-      const jerry_api_char_t *source_p = read_file (file_names[i], &source_size);
+      const jerry_char_t *source_p = read_file (file_names[i], &source_size);
 
       if (source_p == NULL)
       {
@@ -377,7 +377,7 @@ main (int argc,
       {
         static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
 
-        size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_api_char_t *) source_p,
+        size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_char_t *) source_p,
                                                               source_size,
                                                               is_save_snapshot_mode_for_global_or_eval,
                                                               snapshot_save_buffer,
@@ -418,15 +418,15 @@ main (int argc,
     const char *prompt = "jerry> ";
     bool is_done = false;
 
-    jerry_api_object_t *global_obj_p = jerry_api_get_global ();
-    jerry_api_value_t print_function;
+    jerry_object_t *global_obj_p = jerry_get_global ();
+    jerry_value_t print_function;
 
-    if (!jerry_api_get_object_field_value (global_obj_p, (jerry_api_char_t *) "print", &print_function))
+    if (!jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "print", &print_function))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    if (!jerry_api_is_function (print_function.u.v_object))
+    if (!jerry_is_function (print_function.u.v_object))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -458,23 +458,23 @@ main (int argc,
       if (len > 0)
       {
         /* Evaluate the line */
-        jerry_api_value_t ret_val;
-        ret_code = jerry_api_eval (buffer, len, false, false, &ret_val);
+        jerry_value_t ret_val;
+        ret_code = jerry_eval (buffer, len, false, false, &ret_val);
 
         /* Print return value */
-        const jerry_api_value_t args[] = { ret_val };
-        jerry_api_value_t ret_val_print;
-        if (jerry_api_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
+        const jerry_value_t args[] = { ret_val };
+        jerry_value_t ret_val_print;
+        if (jerry_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
         {
-          jerry_api_release_value (&ret_val_print);
+          jerry_release_value (&ret_val_print);
         }
 
-        jerry_api_release_value (&ret_val);
+        jerry_release_value (&ret_val);
       }
     }
 
-    jerry_api_release_object (global_obj_p);
-    jerry_api_release_value (&print_function);
+    jerry_release_object (global_obj_p);
+    jerry_release_value (&print_function);
   }
 
 #ifdef JERRY_ENABLE_LOG
@@ -492,33 +492,33 @@ main (int argc,
   }
   else if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
   {
-    jerry_api_string_t *err_str_p = NULL;
+    jerry_string_t *err_str_p = NULL;
 
     if (err_obj_p != NULL)
     {
-      jerry_api_value_t err_value = jerry_api_create_object_value (err_obj_p);
-      err_str_p = jerry_api_value_to_string (&err_value);
-      jerry_api_release_object (err_obj_p);
+      jerry_value_t err_value = jerry_create_object_value (err_obj_p);
+      err_str_p = jerry_value_to_string (&err_value);
+      jerry_release_object (err_obj_p);
     }
-    else if (!jerry_api_value_is_void (&err_value))
+    else if (!jerry_value_is_void (&err_value))
     {
-      err_str_p = jerry_api_value_to_string (&err_value);
-      jerry_api_release_value (&err_value);
+      err_str_p = jerry_value_to_string (&err_value);
+      jerry_release_value (&err_value);
     }
 
     if (__builtin_expect (!!(err_str_p != NULL), 1))
     {
-      jerry_api_char_t err_str_buf[256];
+      jerry_char_t err_str_buf[256];
 
-      jerry_api_size_t err_str_size = jerry_api_get_string_size (err_str_p);
+      jerry_size_t err_str_size = jerry_get_string_size (err_str_p);
       assert (err_str_size < 256);
-      jerry_api_size_t sz = jerry_api_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
+      jerry_size_t sz = jerry_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
       assert (sz == err_str_size);
       err_str_buf[err_str_size] = 0;
 
       jerry_port_errormsg ("Script Error: unhandled exception: %s\n", err_str_buf);
 
-      jerry_api_release_string (err_str_p);
+      jerry_release_string (err_str_p);
     }
 
     jerry_cleanup ();

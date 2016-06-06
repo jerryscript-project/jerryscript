@@ -47,67 +47,67 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_API_DATA_TYPE_VOID, /**< no return value */
-  JERRY_API_DATA_TYPE_UNDEFINED, /**< undefined */
-  JERRY_API_DATA_TYPE_NULL, /**< null */
-  JERRY_API_DATA_TYPE_BOOLEAN, /**< bool */
-  JERRY_API_DATA_TYPE_FLOAT32, /**< 32-bit float */
-  JERRY_API_DATA_TYPE_FLOAT64, /**< 64-bit float */
-  JERRY_API_DATA_TYPE_UINT32, /**< number converted to 32-bit unsigned integer */
-  JERRY_API_DATA_TYPE_STRING, /**< string */
-  JERRY_API_DATA_TYPE_OBJECT  /**< object */
-} jerry_api_data_type_t;
+  JERRY_DATA_TYPE_VOID,      /**< no return value */
+  JERRY_DATA_TYPE_UNDEFINED, /**< undefined */
+  JERRY_DATA_TYPE_NULL,      /**< null */
+  JERRY_DATA_TYPE_BOOLEAN,   /**< bool */
+  JERRY_DATA_TYPE_FLOAT32,   /**< 32-bit float */
+  JERRY_DATA_TYPE_FLOAT64,   /**< 64-bit float */
+  JERRY_DATA_TYPE_UINT32,    /**< number converted to 32-bit unsigned integer */
+  JERRY_DATA_TYPE_STRING,    /**< string */
+  JERRY_DATA_TYPE_OBJECT     /**< object */
+} jerry_data_type_t;
 
 /**
  * Jerry API Error object types
  */
 typedef enum
 {
-  JERRY_API_ERROR_COMMON, /**< Error */
-  JERRY_API_ERROR_EVAL, /**< EvalError */
-  JERRY_API_ERROR_RANGE, /**< RangeError */
-  JERRY_API_ERROR_REFERENCE, /**< ReferenceError */
-  JERRY_API_ERROR_SYNTAX, /**< SyntaxError */
-  JERRY_API_ERROR_TYPE, /**< TypeError */
-  JERRY_API_ERROR_URI /**< URIError */
-} jerry_api_error_t;
+  JERRY_ERROR_COMMON,    /**< Error */
+  JERRY_ERROR_EVAL,      /**< EvalError */
+  JERRY_ERROR_RANGE,     /**< RangeError */
+  JERRY_ERROR_REFERENCE, /**< ReferenceError */
+  JERRY_ERROR_SYNTAX,    /**< SyntaxError */
+  JERRY_ERROR_TYPE,      /**< TypeError */
+  JERRY_ERROR_URI        /**< URIError */
+} jerry_error_t;
 
 /**
  * Jerry's char value
-*/
-typedef uint8_t jerry_api_char_t;
+ */
+typedef uint8_t jerry_char_t;
 
 /**
  * Pointer to an array of character values
  */
-typedef jerry_api_char_t *jerry_api_char_ptr_t;
+typedef jerry_char_t *jerry_char_ptr_t;
 
 /**
  * Jerry's size
-*/
-typedef uint32_t jerry_api_size_t;
+ */
+typedef uint32_t jerry_size_t;
 
 /**
  * Jerry's length
-*/
-typedef uint32_t jerry_api_length_t;
+ */
+typedef uint32_t jerry_length_t;
 
 /**
  * Jerry's string value
  */
-typedef struct ecma_string_t jerry_api_string_t;
+typedef struct ecma_string_t jerry_string_t;
 
 /**
  * Jerry's object value
  */
-typedef struct ecma_object_t jerry_api_object_t;
+typedef struct ecma_object_t jerry_object_t;
 
 /**
  * Description of an extension function's argument
  */
-typedef struct jerry_api_value_t
+typedef struct jerry_value_t
 {
-  jerry_api_data_type_t type; /**< argument data type */
+  jerry_data_type_t type; /**< argument data type */
 
   union
   {
@@ -118,212 +118,128 @@ typedef struct jerry_api_value_t
 
     uint32_t v_uint32; /**< number converted 32-bit unsigned integer */
 
-    jerry_api_string_t *v_string; /**< pointer to a JS string */
-    jerry_api_object_t *v_object; /**< pointer to a JS object */
+    jerry_string_t *v_string; /**< pointer to a JS string */
+    jerry_object_t *v_object; /**< pointer to a JS object */
 
   } u;
-} jerry_api_value_t;
+} jerry_value_t;
 
 /**
- * Jerry external function handler type
+ * Type of an external function handler
  */
-typedef bool (*jerry_external_handler_t) (const jerry_api_object_t *function_obj_p,
-                                          const jerry_api_value_t *this_p,
-                                          jerry_api_value_t *ret_val_p,
-                                          const jerry_api_value_t args_p[],
-                                          const jerry_api_length_t args_count);
+typedef bool (*jerry_external_handler_t) (const jerry_object_t *function_obj_p,
+                                          const jerry_value_t *this_p,
+                                          jerry_value_t *ret_val_p,
+                                          const jerry_value_t args_p[],
+                                          const jerry_length_t args_count);
 
 /**
- * An object's native free callback
+ * Native free callback of an object
  */
 typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 
 /**
- * function type applied for each fields in objects
+ * Function type applied for each fields in objects
  */
-typedef bool (*jerry_object_field_foreach_t) (const jerry_api_string_t *field_name_p,
-                                              const jerry_api_value_t *field_value_p,
+typedef bool (*jerry_object_field_foreach_t) (const jerry_string_t *field_name_p,
+                                              const jerry_value_t *field_value_p,
                                               void *user_data_p);
-/**
- * Returns whether the given jerry_api_value_t is void.
- */
-bool jerry_api_value_is_void (const jerry_api_value_t *value_p);
 
 /**
- * Returns whether the given jerry_api_value_t is null.
+ * Get the global context
  */
-bool jerry_api_value_is_null (const jerry_api_value_t *value_p);
+jerry_object_t *jerry_get_global (void);
 
 /**
- * Returns whether the given jerry_api_value_t is undefined.
+ * Checker functions of 'jerry_value_t'
  */
-bool jerry_api_value_is_undefined (const jerry_api_value_t *value_p);
+bool jerry_value_is_void (const jerry_value_t *value_p);
+bool jerry_value_is_null (const jerry_value_t *value_p);
+bool jerry_value_is_undefined (const jerry_value_t *value_p);
+bool jerry_value_is_boolean (const jerry_value_t *value_p);
+bool jerry_value_is_number (const jerry_value_t *value_p);
+bool jerry_value_is_string (const jerry_value_t *value_p);
+bool jerry_value_is_object (const jerry_value_t *value_p);
+bool jerry_value_is_function (const jerry_value_t *value_p);
 
 /**
- * Returns whether the given jerry_api_value_t has boolean type.
+ * Getter functions of 'jerry_value_t'
  */
-bool jerry_api_value_is_boolean (const jerry_api_value_t *value_p);
+bool jerry_get_boolean_value (const jerry_value_t *value_p);
+double jerry_get_number_value (const jerry_value_t *value_p);
+jerry_string_t *jerry_get_string_value (const jerry_value_t *value_p);
+jerry_object_t *jerry_get_object_value (const jerry_value_t *value_p);
 
 /**
- * Returns whether the given jerry_api_value_t is number.
- *
- * More specifically, returns true if the type is JERRY_API_DATA_TYPE_FLOAT32,
- * JERRY_API_DATA_TYPE_FLOAT64 or JERRY_API_DATA_TYPE_UINT32, false otherwise.
+ * Converters of 'jerry_value_t'
  */
-bool jerry_api_value_is_number (const jerry_api_value_t *value_p);
+jerry_string_t *jerry_value_to_string (const jerry_value_t *);
 
 /**
- * Returns whether the given jerry_api_value_t is string.
+ * Create functions of 'jerry_value_t'
  */
-bool jerry_api_value_is_string (const jerry_api_value_t *value_p);
+jerry_value_t jerry_create_void_value (void);
+jerry_value_t jerry_create_null_value (void);
+jerry_value_t jerry_create_undefined_value (void);
+jerry_value_t jerry_create_boolean_value (bool value);
+jerry_value_t jerry_create_number_value (double value);
+jerry_value_t jerry_create_object_value (jerry_object_t *value);
+jerry_value_t jerry_create_string_value (jerry_string_t *value);
 
 /**
- * Returns whether the given jerry_api_value_t is object.
+ * Acquire types with reference counter (increase the references)
  */
-bool jerry_api_value_is_object (const jerry_api_value_t *value_p);
+jerry_string_t *jerry_acquire_string (jerry_string_t *);
+jerry_object_t *jerry_acquire_object (jerry_object_t *);
+jerry_value_t *jerry_acquire_value (jerry_value_t *);
 
 /**
- * Returns whether the given jerry_api_value_t is a function object.
- *
- * More specifically, returns true if the jerry_api_value_t of the value
- * pointed by value_p has JERRY_API_DATA_TYPE_OBJECT type and
- * jerry_api_is_function() functiron return true for its v_object member,
- * otherwise false.
+ * Relase the referenced values
  */
-bool jerry_api_value_is_function (const jerry_api_value_t *value_p);
+void jerry_release_object (jerry_object_t *);
+void jerry_release_string (jerry_string_t *);
+void jerry_release_value (jerry_value_t *);
 
 /**
- * Returns the boolean v_bool member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_BOOLEAN, JERRY_ASSERT fails.
+ * Create functions of API objects
  */
-bool jerry_api_get_boolean_value (const jerry_api_value_t *value_p);
+jerry_object_t *jerry_create_object (void);
+jerry_object_t *jerry_create_array_object (jerry_size_t);
+jerry_object_t *jerry_create_external_function (jerry_external_handler_t);
+jerry_object_t *jerry_create_error (jerry_error_t, const jerry_char_t *);
+jerry_object_t *jerry_create_error_sz (jerry_error_t, const jerry_char_t *, jerry_size_t);
+jerry_string_t *jerry_create_string (const jerry_char_t *);
+jerry_string_t *jerry_create_string_sz (const jerry_char_t *, jerry_size_t);
 
 /**
- * Returns the number value of the given jerry_api_value_t structure
- * as a double.
- *
- * If the given jerry_api_value_t structure has type JERRY_API_DATA_TYPE_UINT32
- * v_uint32 member will be returned as a double value. If the given
- * jerry_api_value_t structure has type JERRY_API_DATA_TYPE_FLOAT32
- * v_float32 member will be returned as a double and if tpye is
- * JERRY_API_DATA_TYPE_FLOAT64 the function returns the v_float64 member.
- * As long as the type is none of the above, JERRY_ASSERT falis.
+ * Functions of array objects
  */
-double jerry_api_get_number_value (const jerry_api_value_t *value_p);
+bool jerry_set_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t *);
+bool jerry_get_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t *);
 
 /**
- * Returns the v_string member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_STRING, JERRY_ASSERT fails.
+ * Functions of 'jerry_string_t'
  */
-jerry_api_string_t *jerry_api_get_string_value (const jerry_api_value_t *value_p);
+jerry_size_t jerry_get_string_size (const jerry_string_t *);
+jerry_length_t jerry_get_string_length (const jerry_string_t *);
+jerry_size_t jerry_string_to_char_buffer (const jerry_string_t *, jerry_char_t *, jerry_size_t);
 
 /**
- * Returns the v_object member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_OBJECT, JERRY_ASSERT fails.
+ * General API functions of JS objects
  */
-jerry_api_object_t *jerry_api_get_object_value (const jerry_api_value_t *value_p);
-
-/**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_VOID.
- */
-jerry_api_value_t jerry_api_create_void_value (void);
-
-/**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_NULL.
- */
-jerry_api_value_t jerry_api_create_null_value (void);
-
-/**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_UNDEFINED.
- */
-jerry_api_value_t jerry_api_create_undefined_value (void);
-
-/**
- * Creates a JERRY_API_DATA_TYPE_BOOLEAN jerry_api_value_t from the given
- * boolean parameter and returns with it.
- */
-jerry_api_value_t jerry_api_create_boolean_value (bool value);
-
-/**
- * Creates a jerry_api_value_t from the given double parameter and returns
- * with it.
- * The v_float64 member will be set and the will be JERRY_API_DATA_TYPE_FLOAT64.
- */
-jerry_api_value_t jerry_api_create_number_value (double value);
-
-/**
- * Creates a JERRY_API_DATA_TYPE_OBJECT type jerry_api_value_t from the
- * given jerry_api_object_t *parameter and returns with it.
- */
-jerry_api_value_t jerry_api_create_object_value (jerry_api_object_t *value);
-
-/**
- * Creates a JERRY_API_DATA_TYPE_STRING type jerry_api_value_t from the
- * given jerry_api_string_t *parameter and returns with it.
- */
-jerry_api_value_t jerry_api_create_string_value (jerry_api_string_t *value);
-
-jerry_api_size_t jerry_api_string_to_char_buffer (const jerry_api_string_t *, jerry_api_char_t *, jerry_api_size_t);
-jerry_api_string_t *jerry_api_acquire_string (jerry_api_string_t *);
-jerry_api_object_t *jerry_api_acquire_object (jerry_api_object_t *);
-jerry_api_value_t *jerry_api_acquire_value (jerry_api_value_t *);
-
-void jerry_api_release_object (jerry_api_object_t *);
-void jerry_api_release_string (jerry_api_string_t *);
-void jerry_api_release_value (jerry_api_value_t *);
-
-jerry_api_object_t *jerry_api_create_array_object (jerry_api_size_t);
-jerry_api_object_t *jerry_api_create_object (void);
-jerry_api_string_t *jerry_api_create_string (const jerry_api_char_t *);
-jerry_api_string_t *jerry_api_create_string_sz (const jerry_api_char_t *, jerry_api_size_t);
-
-bool jerry_api_set_array_index_value (jerry_api_object_t *, jerry_api_length_t, jerry_api_value_t *);
-bool jerry_api_get_array_index_value (jerry_api_object_t *, jerry_api_length_t, jerry_api_value_t *);
-
-jerry_api_object_t *jerry_api_create_error (jerry_api_error_t, const jerry_api_char_t *);
-jerry_api_object_t *jerry_api_create_error_sz (jerry_api_error_t, const jerry_api_char_t *, jerry_api_size_t);
-jerry_api_object_t *jerry_api_create_external_function (jerry_external_handler_t);
-
-bool jerry_api_is_constructor (const jerry_api_object_t *);
-bool jerry_api_is_function (const jerry_api_object_t *);
-
-bool jerry_api_add_object_field (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_size_t,
-                                 const jerry_api_value_t *, bool);
-bool jerry_api_delete_object_field (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_size_t);
-
-bool jerry_api_get_object_field_value (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_value_t *);
-bool jerry_api_get_object_field_value_sz (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_size_t,
-                                          jerry_api_value_t *);
-
-bool jerry_api_set_object_field_value (jerry_api_object_t *, const jerry_api_char_t *, const jerry_api_value_t *);
-bool jerry_api_set_object_field_value_sz (jerry_api_object_t *, const jerry_api_char_t *, jerry_api_size_t,
-                                          const jerry_api_value_t *);
-
-bool jerry_api_foreach_object_field (jerry_api_object_t *, jerry_object_field_foreach_t, void *);
-bool jerry_api_get_object_native_handle (jerry_api_object_t *, uintptr_t *);
-void jerry_api_set_object_native_handle (jerry_api_object_t *, uintptr_t, jerry_object_free_callback_t);
-bool jerry_api_call_function (jerry_api_object_t *, jerry_api_object_t *, jerry_api_value_t *,
-                              const jerry_api_value_t[], uint16_t);
-bool jerry_api_construct_object (jerry_api_object_t *, jerry_api_value_t *, const jerry_api_value_t[], uint16_t);
-jerry_completion_code_t jerry_api_eval (const jerry_api_char_t *, size_t, bool, bool, jerry_api_value_t *);
-jerry_api_object_t *jerry_api_get_global (void);
-
-void jerry_api_gc (void);
-void jerry_register_external_magic_strings (const jerry_api_char_ptr_t *, uint32_t, const jerry_api_length_t *);
-
-size_t jerry_parse_and_save_snapshot (const jerry_api_char_t *, size_t, bool, uint8_t *, size_t);
-jerry_completion_code_t jerry_exec_snapshot (const void *, size_t, bool, jerry_api_value_t *);
-
-jerry_api_size_t jerry_api_get_string_size (const jerry_api_string_t *);
-jerry_api_length_t jerry_api_get_string_length (const jerry_api_string_t *);
-
-jerry_api_string_t *jerry_api_value_to_string (const jerry_api_value_t *);
+bool jerry_is_constructor (const jerry_object_t *);
+bool jerry_is_function (const jerry_object_t *);
+bool jerry_add_object_field (jerry_object_t *, const jerry_char_t *, jerry_size_t, const jerry_value_t *, bool);
+bool jerry_delete_object_field (jerry_object_t *, const jerry_char_t *, jerry_size_t);
+bool jerry_get_object_field_value (jerry_object_t *, const jerry_char_t *, jerry_value_t *);
+bool jerry_get_object_field_value_sz (jerry_object_t *, const jerry_char_t *, jerry_size_t, jerry_value_t *);
+bool jerry_set_object_field_value (jerry_object_t *, const jerry_char_t *, const jerry_value_t *);
+bool jerry_set_object_field_value_sz (jerry_object_t *, const jerry_char_t *, jerry_size_t, const jerry_value_t *);
+bool jerry_foreach_object_field (jerry_object_t *, jerry_object_field_foreach_t, void *);
+bool jerry_get_object_native_handle (jerry_object_t *, uintptr_t *);
+void jerry_set_object_native_handle (jerry_object_t *, uintptr_t, jerry_object_free_callback_t);
+bool jerry_construct_object (jerry_object_t *, jerry_value_t *, const jerry_value_t[], uint16_t);
+bool jerry_call_function (jerry_object_t *, jerry_object_t *, jerry_value_t *, const jerry_value_t[], uint16_t);
 
 /**
  * @}

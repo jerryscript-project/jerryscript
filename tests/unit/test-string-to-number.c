@@ -1,4 +1,5 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,26 +28,26 @@ main (int __attr_unused___ argc,
 {
   TEST_INIT ();
 
-  const jerry_api_char_t *strings[] =
+  const jerry_char_t *strings[] =
   {
-    (const jerry_api_char_t *) "1",
-    (const jerry_api_char_t *) "0.5",
-    (const jerry_api_char_t *) "12345",
-    (const jerry_api_char_t *) "1e-45",
-    (const jerry_api_char_t *) "-2.5e+38",
-    (const jerry_api_char_t *) "-2.5e38",
-    (const jerry_api_char_t *) "- 2.5e+38",
-    (const jerry_api_char_t *) "-2 .5e+38",
-    (const jerry_api_char_t *) "-2. 5e+38",
-    (const jerry_api_char_t *) "-2.5e+ 38",
-    (const jerry_api_char_t *) "-2.5 e+38",
-    (const jerry_api_char_t *) "-2.5e +38",
-    (const jerry_api_char_t *) "NaN",
-    (const jerry_api_char_t *) "abc",
-    (const jerry_api_char_t *) "   Infinity  ",
-    (const jerry_api_char_t *) "-Infinity",
-    (const jerry_api_char_t *) "0",
-    (const jerry_api_char_t *) "0",
+    (const jerry_char_t *) "1",
+    (const jerry_char_t *) "0.5",
+    (const jerry_char_t *) "12345",
+    (const jerry_char_t *) "1e-45",
+    (const jerry_char_t *) "-2.5e+38",
+    (const jerry_char_t *) "-2.5e38",
+    (const jerry_char_t *) "- 2.5e+38",
+    (const jerry_char_t *) "-2 .5e+38",
+    (const jerry_char_t *) "-2. 5e+38",
+    (const jerry_char_t *) "-2.5e+ 38",
+    (const jerry_char_t *) "-2.5 e+38",
+    (const jerry_char_t *) "-2.5e +38",
+    (const jerry_char_t *) "NaN",
+    (const jerry_char_t *) "abc",
+    (const jerry_char_t *) "   Infinity  ",
+    (const jerry_char_t *) "-Infinity",
+    (const jerry_char_t *) "0",
+    (const jerry_char_t *) "0",
   };
 
   const ecma_number_t nums[] =

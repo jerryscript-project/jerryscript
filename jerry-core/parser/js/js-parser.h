@@ -138,15 +138,15 @@ typedef enum
 } jsp_status_t;
 
 /* Note: source must be a valid UTF-8 string */
-extern jsp_status_t parser_parse_script (const jerry_api_char_t *,
+extern jsp_status_t parser_parse_script (const jerry_char_t *,
                                          size_t,
                                          ecma_compiled_code_t **,
-                                         jerry_api_object_t **);
-extern jsp_status_t parser_parse_eval (const jerry_api_char_t *,
+                                         jerry_object_t **);
+extern jsp_status_t parser_parse_eval (const jerry_char_t *,
                                        size_t,
                                        bool,
                                        ecma_compiled_code_t **,
-                                       jerry_api_object_t **);
+                                       jerry_object_t **);
 
 const char *parser_error_to_string (parser_error_t);
 

@@ -41,8 +41,7 @@ typedef enum
   JERRY_FLAG_SHOW_OPCODES       = (1u << 0), /**< dump byte-code to stdout after parse */
   JERRY_FLAG_MEM_STATS          = (1u << 1), /**< dump memory statistics */
   JERRY_FLAG_MEM_STATS_SEPARATE = (1u << 2), /**< dump memory statistics and reset peak values after parse */
-  JERRY_FLAG_PARSE_ONLY         = (1u << 3), /**< parse only, prevents script execution (only for testing)
-                                              *   TODO: Remove. */
+  JERRY_FLAG_PARSE_ONLY         = (1u << 3), /**< parse only, prevents script execution */
   JERRY_FLAG_ENABLE_LOG         = (1u << 4), /**< enable logging */
 } jerry_flag_t;
 
@@ -71,9 +70,16 @@ void jerry_cleanup (void);
 
 void jerry_get_memory_limits (size_t *, size_t *);
 
-bool jerry_parse (const jerry_api_char_t *, size_t, jerry_api_object_t **);
-jerry_completion_code_t jerry_run (jerry_api_value_t *);
-jerry_completion_code_t jerry_run_simple (const jerry_api_char_t *, size_t, jerry_flag_t);
+bool jerry_parse (const jerry_char_t *, size_t, jerry_object_t **);
+jerry_completion_code_t jerry_run (jerry_value_t *);
+jerry_completion_code_t jerry_run_simple (const jerry_char_t *, size_t, jerry_flag_t);
+
+jerry_completion_code_t jerry_eval (const jerry_char_t *, size_t, bool, bool, jerry_value_t *);
+void jerry_gc (void);
+void jerry_register_external_magic_strings (const jerry_char_ptr_t *, uint32_t, const jerry_length_t *);
+
+size_t jerry_parse_and_save_snapshot (const jerry_char_t *, size_t, bool, uint8_t *, size_t);
+jerry_completion_code_t jerry_exec_snapshot (const void *, size_t, bool, jerry_value_t *);
 
 /**
  * @}

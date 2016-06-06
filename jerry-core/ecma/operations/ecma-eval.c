@@ -56,7 +56,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
   {
     ECMA_STRING_TO_UTF8_STRING (code_p, code_utf8_buffer_p, code_utf8_buffer_size);
 
-    ret_value = ecma_op_eval_chars_buffer ((jerry_api_char_t *) code_utf8_buffer_p,
+    ret_value = ecma_op_eval_chars_buffer ((jerry_char_t *) code_utf8_buffer_p,
                                            chars_num,
                                            is_direct,
                                            is_called_from_strict_mode_code);
@@ -77,7 +77,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
  * @return ecma value
  */
 ecma_value_t
-ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters buffer */
+ecma_op_eval_chars_buffer (const jerry_char_t *code_p, /**< code characters buffer */
                            size_t code_buffer_size, /**< size of the buffer */
                            bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
                            bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
@@ -90,7 +90,7 @@ ecma_op_eval_chars_buffer (const jerry_api_char_t *code_p, /**< code characters 
   jsp_status_t parse_status;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
-  jerry_api_object_t *error_obj_p = NULL;
+  jerry_object_t *error_obj_p = NULL;
 
   parse_status = parser_parse_eval (code_p,
                                     code_buffer_size,

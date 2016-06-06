@@ -176,7 +176,7 @@ static const uint16_t vm_decode_table[] =
  * Run global code
  *
  * Note:
- *      returned error value should be freed with jerry_api_release_value
+ *      returned error value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
  * @return completion code

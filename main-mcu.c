@@ -1,4 +1,5 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +32,7 @@ main (void)
   const char *source_p = generated_source;
   const size_t source_size = sizeof (generated_source);
 
-  jerry_completion_code_t ret_code = jerry_run_simple ((jerry_api_char_t *) source_p, source_size, JERRY_FLAG_EMPTY);
+  jerry_completion_code_t ret_code = jerry_run_simple ((jerry_char_t *) source_p, source_size, JERRY_FLAG_EMPTY);
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {

@@ -125,119 +125,119 @@ jerry_make_api_unavailable (void)
 } /* jerry_make_api_unavailable */
 
 /**
- * Returns whether the given jerry_api_value_t is void.
+ * Returns whether the given jerry_value_t is void.
  */
 bool
-jerry_api_value_is_void (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_void (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_VOID;
-} /* jerry_api_value_is_void */
+  return value_p->type == JERRY_DATA_TYPE_VOID;
+} /* jerry_value_is_void */
 
 /**
- * Returns whether the given jerry_api_value_t is null.
+ * Returns whether the given jerry_value_t is null.
  */
 bool
-jerry_api_value_is_null (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_null (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_NULL;
-} /* jerry_api_value_is_null */
+  return value_p->type == JERRY_DATA_TYPE_NULL;
+} /* jerry_value_is_null */
 
 /**
- * Returns whether the given jerry_api_value_t is undefined.
+ * Returns whether the given jerry_value_t is undefined.
  */
 bool
-jerry_api_value_is_undefined (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_undefined (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_UNDEFINED;
-} /* jerry_api_value_is_undefined */
+  return value_p->type == JERRY_DATA_TYPE_UNDEFINED;
+} /* jerry_value_is_undefined */
 
 /**
- * Returns whether the given jerry_api_value_t has boolean type.
+ * Returns whether the given jerry_value_t has boolean type.
  */
 bool
-jerry_api_value_is_boolean (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_boolean (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_BOOLEAN;
-} /* jerry_api_value_is_boolean */
+  return value_p->type == JERRY_DATA_TYPE_BOOLEAN;
+} /* jerry_value_is_boolean */
 
 /**
- * Returns whether the given jerry_api_value_t is number.
+ * Returns whether the given jerry_value_t is number.
  *
- * More specifically, returns true if the type is JERRY_API_DATA_TYPE_FLOAT32,
- * JERRY_API_DATA_TYPE_FLOAT64 or JERRY_API_DATA_TYPE_UINT32, false otherwise.
+ * More specifically, returns true if the type is JERRY_DATA_TYPE_FLOAT32,
+ * JERRY_DATA_TYPE_FLOAT64 or JERRY_DATA_TYPE_UINT32, false otherwise.
  */
 bool
-jerry_api_value_is_number (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_number (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_FLOAT32
-  || value_p->type == JERRY_API_DATA_TYPE_FLOAT64
-  || value_p->type == JERRY_API_DATA_TYPE_UINT32;
-} /* jerry_api_value_is_number */
+  return value_p->type == JERRY_DATA_TYPE_FLOAT32
+  || value_p->type == JERRY_DATA_TYPE_FLOAT64
+  || value_p->type == JERRY_DATA_TYPE_UINT32;
+} /* jerry_value_is_number */
 
 /**
- * Returns whether the given jerry_api_value_t is string.
+ * Returns whether the given jerry_value_t is string.
  */
 bool
-jerry_api_value_is_string (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_string (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_STRING;
-} /* jerry_api_value_is_string */
+  return value_p->type == JERRY_DATA_TYPE_STRING;
+} /* jerry_value_is_string */
 
 /**
- * Returns whether the given jerry_api_value_t is object.
+ * Returns whether the given jerry_value_t is object.
  */
 bool
-jerry_api_value_is_object (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_object (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return value_p->type == JERRY_API_DATA_TYPE_OBJECT;
-} /* jerry_api_value_is_object */
+  return value_p->type == JERRY_DATA_TYPE_OBJECT;
+} /* jerry_value_is_object */
 
 /**
- * Returns whether the given jerry_api_value_t is a function object.
+ * Returns whether the given jerry_value_t is a function object.
  *
- * More specifically, returns true if the jerry_api_value_t of the value
- * pointed by value_p has JERRY_API_DATA_TYPE_OBJECT type and
- * jerry_api_is_function() functiron return true for its v_object member,
+ * More specifically, returns true if the jerry_value_t of the value
+ * pointed by value_p has JERRY_DATA_TYPE_OBJECT type and
+ * jerry_is_function() functiron return true for its v_object member,
  * otherwise false.
  */
 bool
-jerry_api_value_is_function (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_value_is_function (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  return jerry_api_value_is_object (value_p) && jerry_api_is_function (value_p->u.v_object);
-} /* jerry_api_value_is_function */
+  return jerry_value_is_object (value_p) && jerry_is_function (value_p->u.v_object);
+} /* jerry_value_is_function */
 
 /**
- * Returns the boolean v_bool member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_BOOLEAN, JERRY_ASSERT fails.
+ * Returns the boolean v_bool member of the given jerry_value_t structure.
+ * If the given jerry_value_t structure has type other than
+ * JERRY_DATA_TYPE_BOOLEAN, JERRY_ASSERT fails.
  */
 bool
-jerry_api_get_boolean_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_get_boolean_value (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  JERRY_ASSERT (jerry_api_value_is_boolean (value_p));
+  JERRY_ASSERT (jerry_value_is_boolean (value_p));
   return value_p->u.v_bool;
-} /* jerry_api_get_boolean_value */
+} /* jerry_get_boolean_value */
 
 /**
- * Returns the number value of the given jerry_api_value_t structure
+ * Returns the number value of the given jerry_value_t structure
  * as a double.
  *
- * If the given jerry_api_value_t structure has type JERRY_API_DATA_TYPE_UINT32
+ * If the given jerry_value_t structure has type JERRY_DATA_TYPE_UINT32
  * v_uint32 member will be returned as a double value. If the given
- * jerry_api_value_t structure has type JERRY_API_DATA_TYPE_FLOAT32
+ * jerry_value_t structure has type JERRY_DATA_TYPE_FLOAT32
  * v_float32 member will be returned as a double and if tpye is
- * JERRY_API_DATA_TYPE_FLOAT64 the function returns the v_float64 member.
+ * JERRY_DATA_TYPE_FLOAT64 the function returns the v_float64 member.
  * As long as the type is none of the above, JERRY_ASSERT falis.
  */
 double
-jerry_api_get_number_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_get_number_value (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  JERRY_ASSERT (jerry_api_value_is_number (value_p));
-  if (value_p->type == JERRY_API_DATA_TYPE_UINT32)
+  JERRY_ASSERT (jerry_value_is_number (value_p));
+  if (value_p->type == JERRY_DATA_TYPE_UINT32)
   {
     return value_p->u.v_uint32;
   }
-  else if (value_p->type == JERRY_API_DATA_TYPE_FLOAT32)
+  else if (value_p->type == JERRY_DATA_TYPE_FLOAT32)
   {
     return value_p->u.v_float32;
   }
@@ -245,134 +245,134 @@ jerry_api_get_number_value (const jerry_api_value_t *value_p) /**< pointer to ap
   {
     return value_p->u.v_float64;
   }
-} /* jerry_api_get_number_value */
+} /* jerry_get_number_value */
 
 /**
- * Returns the v_string member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_STRING, JERRY_ASSERT fails.
+ * Returns the v_string member of the given jerry_value_t structure.
+ * If the given jerry_value_t structure has type other than
+ * JERRY_DATA_TYPE_STRING, JERRY_ASSERT fails.
  */
-jerry_api_string_t *
-jerry_api_get_string_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_string_t *
+jerry_get_string_value (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  JERRY_ASSERT (jerry_api_value_is_string (value_p));
+  JERRY_ASSERT (jerry_value_is_string (value_p));
   return value_p->u.v_string;
-} /* jerry_api_get_string_value */
+} /* jerry_get_string_value */
 
 /**
- * Returns the v_object member of the given jerry_api_value_t structure.
- * If the given jerry_api_value_t structure has type other than
- * JERRY_API_DATA_TYPE_OBJECT, JERRY_ASSERT fails.
+ * Returns the v_object member of the given jerry_value_t structure.
+ * If the given jerry_value_t structure has type other than
+ * JERRY_DATA_TYPE_OBJECT, JERRY_ASSERT fails.
  */
-jerry_api_object_t *
-jerry_api_get_object_value (const jerry_api_value_t *value_p) /**< pointer to api value */
+jerry_object_t *
+jerry_get_object_value (const jerry_value_t *value_p) /**< pointer to api value */
 {
-  JERRY_ASSERT (jerry_api_value_is_object (value_p));
+  JERRY_ASSERT (jerry_value_is_object (value_p));
   return value_p->u.v_object;
-} /* jerry_api_get_object_value */
+} /* jerry_get_object_value */
 
 /**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_VOID.
+ * Creates and returns a jerry_value_t with type
+ * JERRY_DATA_TYPE_VOID.
  */
-jerry_api_value_t
-jerry_api_create_void_value (void)
+jerry_value_t
+jerry_create_void_value (void)
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_VOID;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_VOID;
   return jerry_val;
-} /* jerry_api_create_void_value */
+} /* jerry_create_void_value */
 
 /**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_NULL.
+ * Creates and returns a jerry_value_t with type
+ * JERRY_DATA_TYPE_NULL.
  */
-jerry_api_value_t
-jerry_api_create_null_value (void)
+jerry_value_t
+jerry_create_null_value (void)
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_NULL;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_NULL;
   return jerry_val;
-} /* jerry_api_create_null_value */
+} /* jerry_create_null_value */
 
 /**
- * Creates and returns a jerry_api_value_t with type
- * JERRY_API_DATA_TYPE_UNDEFINED.
+ * Creates and returns a jerry_value_t with type
+ * JERRY_DATA_TYPE_UNDEFINED.
  */
-jerry_api_value_t
-jerry_api_create_undefined_value (void)
+jerry_value_t
+jerry_create_undefined_value (void)
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_UNDEFINED;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_UNDEFINED;
   return jerry_val;
-} /* jerry_api_create_undefined_value */
+} /* jerry_create_undefined_value */
 
 /**
- * Creates a JERRY_API_DATA_TYPE_BOOLEAN jerry_api_value_t from the given
+ * Creates a JERRY_DATA_TYPE_BOOLEAN jerry_value_t from the given
  * boolean parameter and returns with it.
  */
-jerry_api_value_t
-jerry_api_create_boolean_value (bool value) /**< bool value from which a jerry_api_value_t will be created */
+jerry_value_t
+jerry_create_boolean_value (bool value) /**< bool value from which a jerry_value_t will be created */
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_BOOLEAN;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_BOOLEAN;
   jerry_val.u.v_bool = value;
   return jerry_val;
-} /* jerry_api_create_boolean_value */
+} /* jerry_create_boolean_value */
 
 /**
- * Creates a jerry_api_value_t from the given double parameter and returns
+ * Creates a jerry_value_t from the given double parameter and returns
  * with it.
- * The v_float64 member will be set and the will be JERRY_API_DATA_TYPE_FLOAT64.
+ * The v_float64 member will be set and the will be JERRY_DATA_TYPE_FLOAT64.
  */
-jerry_api_value_t
-jerry_api_create_number_value (double value) /**< double value from which a jerry_api_value_t will be created */
+jerry_value_t
+jerry_create_number_value (double value) /**< double value from which a jerry_value_t will be created */
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_FLOAT64;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_FLOAT64;
   jerry_val.u.v_float64 = value;
   return jerry_val;
-} /* jerry_api_create_number_value */
+} /* jerry_create_number_value */
 
 /**
- * Creates a JERRY_API_DATA_TYPE_OBJECT type jerry_api_value_t from the
- * given jerry_api_object_t *parameter and returns with it.
+ * Creates a JERRY_DATA_TYPE_OBJECT type jerry_value_t from the
+ * given jerry_object_t *parameter and returns with it.
  */
-jerry_api_value_t
-jerry_api_create_object_value (jerry_api_object_t *value) /**< jerry_api_object_t from which a value will be created */
+jerry_value_t
+jerry_create_object_value (jerry_object_t *value) /**< jerry_object_t from which a value will be created */
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_OBJECT;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_OBJECT;
   jerry_val.u.v_object = value;
   return jerry_val;
-} /* jerry_api_create_object_value */
+} /* jerry_create_object_value */
 
 /**
- * Creates a JERRY_API_DATA_TYPE_STRING type jerry_api_value_t from the
- * given jerry_api_string_t *parameter and returns with it.
+ * Creates a JERRY_DATA_TYPE_STRING type jerry_value_t from the
+ * given jerry_string_t *parameter and returns with it.
  */
-jerry_api_value_t
-jerry_api_create_string_value (jerry_api_string_t *value) /**< jerry_api_string_t from which a value will be created */
+jerry_value_t
+jerry_create_string_value (jerry_string_t *value) /**< jerry_string_t from which a value will be created */
 {
-  jerry_api_value_t jerry_val;
-  jerry_val.type = JERRY_API_DATA_TYPE_STRING;
+  jerry_value_t jerry_val;
+  jerry_val.type = JERRY_DATA_TYPE_STRING;
   jerry_val.u.v_string = value;
   return jerry_val;
-} /* jerry_api_create_string_value */
+} /* jerry_create_string_value */
 
 /**
  * Convert ecma value to Jerry API value representation
  *
  * Note:
  *      if the output value contains string / object, it should be freed
- *      with jerry_api_release_string / jerry_api_release_object,
+ *      with jerry_release_string / jerry_release_object,
  *      just when it becomes unnecessary.
  */
 static void
-jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< [out] api value */
-                                           ecma_value_t value) /**< ecma value (undefined,
-                                                                *   null, boolean, number,
-                                                                *   string or object */
+jerry_convert_ecma_value_to_api_value (jerry_value_t *out_value_p, /**< [out] api value */
+                                       ecma_value_t value) /**< ecma value (undefined,
+                                                            *   null, boolean, number,
+                                                            *   string or object */
 {
   jerry_assert_api_available ();
 
@@ -380,19 +380,19 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
 
   if (ecma_is_value_empty (value))
   {
-    out_value_p->type = JERRY_API_DATA_TYPE_VOID;
+    out_value_p->type = JERRY_DATA_TYPE_VOID;
   }
   else if (ecma_is_value_undefined (value))
   {
-    out_value_p->type = JERRY_API_DATA_TYPE_UNDEFINED;
+    out_value_p->type = JERRY_DATA_TYPE_UNDEFINED;
   }
   else if (ecma_is_value_null (value))
   {
-    out_value_p->type = JERRY_API_DATA_TYPE_NULL;
+    out_value_p->type = JERRY_DATA_TYPE_NULL;
   }
   else if (ecma_is_value_boolean (value))
   {
-    out_value_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
+    out_value_p->type = JERRY_DATA_TYPE_BOOLEAN;
     out_value_p->u.v_bool = ecma_is_value_true (value);
   }
   else if (ecma_is_value_number (value))
@@ -400,10 +400,10 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
     ecma_number_t num = ecma_get_number_from_value (value);
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-    out_value_p->type = JERRY_API_DATA_TYPE_FLOAT32;
+    out_value_p->type = JERRY_DATA_TYPE_FLOAT32;
     out_value_p->u.v_float32 = num;
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-    out_value_p->type = JERRY_API_DATA_TYPE_FLOAT64;
+    out_value_p->type = JERRY_DATA_TYPE_FLOAT64;
     out_value_p->u.v_float64 = num;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
   }
@@ -411,7 +411,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
   {
     ecma_string_t *str = ecma_get_string_from_value (value);
 
-    out_value_p->type = JERRY_API_DATA_TYPE_STRING;
+    out_value_p->type = JERRY_DATA_TYPE_STRING;
     out_value_p->u.v_string = ecma_copy_or_ref_ecma_string (str);
   }
   else if (ecma_is_value_object (value))
@@ -419,7 +419,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
     ecma_object_t *obj = ecma_get_object_from_value (value);
     ecma_ref_object (obj);
 
-    out_value_p->type = JERRY_API_DATA_TYPE_OBJECT;
+    out_value_p->type = JERRY_DATA_TYPE_OBJECT;
     out_value_p->u.v_object = obj;
   }
   else
@@ -427,7 +427,7 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
     /* Impossible type of conversion from ecma_value to api_value */
     JERRY_UNREACHABLE ();
   }
-} /* jerry_api_convert_ecma_value_to_api_value */
+} /* jerry_convert_ecma_value_to_api_value */
 
 /**
  * Convert value, represented in Jerry API format, to ecma value.
@@ -436,48 +436,48 @@ jerry_api_convert_ecma_value_to_api_value (jerry_api_value_t *out_value_p, /**< 
  *      the output ecma value should be freed with ecma_free_value when it becomes unnecessary.
  */
 static void
-jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out] ecma value */
-                                           const jerry_api_value_t *api_value_p) /**< value in Jerry API format */
+jerry_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out] ecma value */
+                                       const jerry_value_t *api_value_p) /**< value in Jerry API format */
 {
   switch (api_value_p->type)
   {
-    case JERRY_API_DATA_TYPE_UNDEFINED:
+    case JERRY_DATA_TYPE_UNDEFINED:
     {
       *out_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
       break;
     }
-    case JERRY_API_DATA_TYPE_NULL:
+    case JERRY_DATA_TYPE_NULL:
     {
       *out_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
 
       break;
     }
-    case JERRY_API_DATA_TYPE_BOOLEAN:
+    case JERRY_DATA_TYPE_BOOLEAN:
     {
       *out_value_p = ecma_make_simple_value (api_value_p->u.v_bool ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
 
       break;
     }
-    case JERRY_API_DATA_TYPE_FLOAT32:
+    case JERRY_DATA_TYPE_FLOAT32:
     {
       *out_value_p = ecma_make_number_value ((ecma_number_t) (api_value_p->u.v_float32));
 
       break;
     }
-    case JERRY_API_DATA_TYPE_FLOAT64:
+    case JERRY_DATA_TYPE_FLOAT64:
     {
       *out_value_p = ecma_make_number_value ((ecma_number_t) (api_value_p->u.v_float64));
 
       break;
     }
-    case JERRY_API_DATA_TYPE_UINT32:
+    case JERRY_DATA_TYPE_UINT32:
     {
       *out_value_p = ecma_make_uint32_value ((uint32_t) (api_value_p->u.v_uint32));
 
       break;
     }
-    case JERRY_API_DATA_TYPE_STRING:
+    case JERRY_DATA_TYPE_STRING:
     {
       ecma_string_t *str_p = ecma_copy_or_ref_ecma_string (api_value_p->u.v_string);
 
@@ -485,7 +485,7 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out]
 
       break;
     }
-    case JERRY_API_DATA_TYPE_OBJECT:
+    case JERRY_DATA_TYPE_OBJECT:
     {
       ecma_object_t *obj_p = api_value_p->u.v_object;
 
@@ -500,25 +500,25 @@ jerry_api_convert_api_value_to_ecma_value (ecma_value_t *out_value_p, /**< [out]
       JERRY_UNREACHABLE ();
     }
   }
-} /* jerry_api_convert_api_value_to_ecma_value */
+} /* jerry_convert_api_value_to_ecma_value */
 
 /**
  * Convert completion of 'eval' to API value and completion code
  *
  * Note:
- *      The value returned in 'retval_p' should be freed with jerry_api_release_value
+ *      The value returned in 'retval_p' should be freed with jerry_release_value
  *
  * @return completion code
  */
 static jerry_completion_code_t
-jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< [out] api value */
-                                             ecma_value_t completion) /**< completion of 'eval'-mode
-                                                                       *   code execution */
+jerry_convert_eval_completion_to_retval (jerry_value_t *retval_p, /**< [out] api value */
+                                         ecma_value_t completion) /**< completion of 'eval'-mode
+                                                                   *   code execution */
 {
-  jerry_api_convert_ecma_value_to_api_value (retval_p, completion);
+  jerry_convert_ecma_value_to_api_value (retval_p, completion);
 
   return (ecma_is_value_error (completion)) ? JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION : JERRY_COMPLETION_CODE_OK;
-} /* jerry_api_convert_eval_completion_to_retval */
+} /* jerry_convert_eval_completion_to_retval */
 
 /**
  * @}
@@ -533,83 +533,83 @@ jerry_api_convert_eval_completion_to_retval (jerry_api_value_t *retval_p, /**< [
  *
  * @return number of bytes, actually copied to the buffer.
  */
-jerry_api_size_t
-jerry_api_string_to_char_buffer (const jerry_api_string_t *string_p, /**< string descriptor */
-                                 jerry_api_char_t *buffer_p, /**< [out] output characters buffer */
-                                 jerry_api_size_t buffer_size) /**< size of output buffer */
+jerry_size_t
+jerry_string_to_char_buffer (const jerry_string_t *string_p, /**< string descriptor */
+                             jerry_char_t *buffer_p, /**< [out] output characters buffer */
+                             jerry_size_t buffer_size) /**< size of output buffer */
 {
   jerry_assert_api_available ();
 
   return ecma_string_to_utf8_string (string_p, (lit_utf8_byte_t *) buffer_p, buffer_size);
-} /* jerry_api_string_to_char_buffer */
+} /* jerry_string_to_char_buffer */
 
 /**
  * Acquire string pointer for usage outside of the engine
  * from string retrieved in extension routine call from engine.
  *
  * Warning:
- *         acquired pointer should be released with jerry_api_release_string
+ *         acquired pointer should be released with jerry_release_string
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_api_string_t *
-jerry_api_acquire_string (jerry_api_string_t *string_p) /**< pointer passed to function */
+jerry_string_t *
+jerry_acquire_string (jerry_string_t *string_p) /**< pointer passed to function */
 {
   jerry_assert_api_available ();
 
   return ecma_copy_or_ref_ecma_string (string_p);
-} /* jerry_api_acquire_string */
+} /* jerry_acquire_string */
 
 /**
  * Release string pointer
  *
  * See also:
- *          jerry_api_acquire_string
- *          jerry_api_call_function
+ *          jerry_acquire_string
+ *          jerry_call_function
  *
  */
 void
-jerry_api_release_string (jerry_api_string_t *string_p) /**< pointer acquired through jerry_api_acquire_string */
+jerry_release_string (jerry_string_t *string_p) /**< pointer acquired through jerry_acquire_string */
 {
   jerry_assert_api_available ();
 
   ecma_deref_ecma_string (string_p);
-} /* jerry_api_release_string */
+} /* jerry_release_string */
 
 /**
  * Acquire object pointer for usage outside of the engine
  * from object retrieved in extension routine call from engine.
  *
  * Warning:
- *         acquired pointer should be released with jerry_api_release_object
+ *         acquired pointer should be released with jerry_release_object
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_api_object_t *
-jerry_api_acquire_object (jerry_api_object_t *object_p) /**< pointer passed to function */
+jerry_object_t *
+jerry_acquire_object (jerry_object_t *object_p) /**< pointer passed to function */
 {
   jerry_assert_api_available ();
 
   ecma_ref_object (object_p);
 
   return object_p;
-} /* jerry_api_acquire_object */
+} /* jerry_acquire_object */
 
 /**
  * Release object pointer
  *
  * See also:
- *          jerry_api_acquire_object
- *          jerry_api_call_function
- *          jerry_api_get_object_field_value
+ *          jerry_acquire_object
+ *          jerry_call_function
+ *          jerry_get_object_field_value
  */
 void
-jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired through jerry_api_acquire_object */
+jerry_release_object (jerry_object_t *object_p) /**< pointer acquired through jerry_acquire_object */
 {
   jerry_assert_api_available ();
 
   ecma_deref_object (object_p);
-} /* jerry_api_release_object */
+} /* jerry_release_object */
 
 /**
  * Acquire specified Jerry API value.
@@ -619,26 +619,26 @@ jerry_api_release_object (jerry_api_object_t *object_p) /**< pointer acquired th
  *      for all other types it is a no-op.
  *
  * Warning:
- *         Acquired pointer should be released with jerry_api_release_value
+ *         Acquired pointer should be released with jerry_release_value
  *
  * @return pointer that may be used outside of the engine
  */
-jerry_api_value_t *
-jerry_api_acquire_value (jerry_api_value_t *value_p) /**< API value */
+jerry_value_t *
+jerry_acquire_value (jerry_value_t *value_p) /**< API value */
 {
   jerry_assert_api_available ();
 
-  if (value_p->type == JERRY_API_DATA_TYPE_STRING)
+  if (value_p->type == JERRY_DATA_TYPE_STRING)
   {
-    jerry_api_acquire_string (value_p->u.v_string);
+    jerry_acquire_string (value_p->u.v_string);
   }
-  else if (value_p->type == JERRY_API_DATA_TYPE_OBJECT)
+  else if (value_p->type == JERRY_DATA_TYPE_OBJECT)
   {
-    jerry_api_acquire_object (value_p->u.v_object);
+    jerry_acquire_object (value_p->u.v_object);
   }
 
   return value_p;
-} /* jerry_api_acquire_value */
+} /* jerry_acquire_value */
 
 /**
  * Release specified Jerry API value
@@ -648,93 +648,93 @@ jerry_api_acquire_value (jerry_api_value_t *value_p) /**< API value */
  *      for all other types it is a no-op.
  */
 void
-jerry_api_release_value (jerry_api_value_t *value_p) /**< API value */
+jerry_release_value (jerry_value_t *value_p) /**< API value */
 {
   jerry_assert_api_available ();
 
-  if (value_p->type == JERRY_API_DATA_TYPE_STRING)
+  if (value_p->type == JERRY_DATA_TYPE_STRING)
   {
-    jerry_api_release_string (value_p->u.v_string);
+    jerry_release_string (value_p->u.v_string);
   }
-  else if (value_p->type == JERRY_API_DATA_TYPE_OBJECT)
+  else if (value_p->type == JERRY_DATA_TYPE_OBJECT)
   {
-    jerry_api_release_object (value_p->u.v_object);
+    jerry_release_object (value_p->u.v_object);
   }
-} /* jerry_api_release_value */
+} /* jerry_release_value */
 
 /**
  * Create a string
  *
  * Note:
- *      caller should release the string with jerry_api_release_string, just when the value becomes unnecessary.
+ *      caller should release the string with jerry_release_string, just when the value becomes unnecessary.
  *
  * @return pointer to created string
  */
-jerry_api_string_t *
-jerry_api_create_string (const jerry_api_char_t *v) /**< string value */
+jerry_string_t *
+jerry_create_string (const jerry_char_t *v) /**< string value */
 {
   jerry_assert_api_available ();
 
   return ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) v, lit_zt_utf8_string_size ((lit_utf8_byte_t *) v));
-} /* jerry_api_create_string */
+} /* jerry_create_string */
 
 /**
  * Create a string
  *
  * Note:
- *      caller should release the string with jerry_api_release_string, just when the value becomes unnecessary.
+ *      caller should release the string with jerry_release_string, just when the value becomes unnecessary.
  *
  * @return pointer to created string
  */
-jerry_api_string_t *
-jerry_api_create_string_sz (const jerry_api_char_t *v, /**< string value */
-                            jerry_api_size_t v_size) /**< string size */
+jerry_string_t *
+jerry_create_string_sz (const jerry_char_t *v, /**< string value */
+                        jerry_size_t v_size) /**< string size */
 {
   jerry_assert_api_available ();
 
   return ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) v,
                                          (lit_utf8_size_t) v_size);
-} /* jerry_api_create_string_sz */
+} /* jerry_create_string_sz */
 
 /**
  * Create an object
  *
  * Note:
- *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *      caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to created object
  */
-jerry_api_object_t *
-jerry_api_create_object (void)
+jerry_object_t *
+jerry_create_object (void)
 {
   jerry_assert_api_available ();
 
   return ecma_op_create_object_object_noarg ();
-} /* jerry_api_create_object */
+} /* jerry_create_object */
 
 /**
  * Create an array object
  *
  * Note:
- *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *      caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to created array object
  */
-jerry_api_object_t *
-jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
+jerry_object_t *
+jerry_create_array_object (jerry_size_t size) /**< size of array */
 {
   JERRY_ASSERT (size > 0);
 
   ecma_value_t array_length = ecma_make_uint32_value (size);
 
-  jerry_api_length_t argument_size = 1;
+  jerry_length_t argument_size = 1;
   ecma_value_t new_array_completion = ecma_op_create_array_object (&array_length, argument_size, true);
   JERRY_ASSERT (!ecma_is_value_error (new_array_completion));
-  jerry_api_object_t *obj_p = ecma_get_object_from_value (new_array_completion);
+  jerry_object_t *obj_p = ecma_get_object_from_value (new_array_completion);
 
   ecma_free_value (array_length);
   return obj_p;
-} /* jerry_api_create_array_object */
+} /* jerry_create_array_object */
 
 /**
  * Set value of field in the specified array object
@@ -743,13 +743,13 @@ jerry_api_create_array_object (jerry_api_size_t size) /* size of array */
  *         throw exception, otherwise
  */
 bool
-jerry_api_set_array_index_value (jerry_api_object_t *array_obj_p, /* array object */
-                                 jerry_api_length_t index, /* index to be written */
-                                 jerry_api_value_t *value_p) /* value to set */
+jerry_set_array_index_value (jerry_object_t *array_obj_p, /**< array object */
+                             jerry_length_t index, /**< index to be written */
+                             jerry_value_t *value_p) /**< value to set */
 {
   ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
   ecma_value_t value;
-  jerry_api_convert_api_value_to_ecma_value (&value, value_p);
+  jerry_convert_api_value_to_ecma_value (&value, value_p);
   ecma_value_t set_completion = ecma_op_object_put (array_obj_p, str_idx_p, value, false);
   JERRY_ASSERT (!ecma_is_value_error (set_completion));
 
@@ -758,66 +758,66 @@ jerry_api_set_array_index_value (jerry_api_object_t *array_obj_p, /* array objec
   ecma_free_value (value);
 
   return true;
-} /* jerry_api_set_array_index_value */
+} /* jerry_set_array_index_value */
 
 /**
  * Get value of field in the specified array object
  *
  * Note:
  *      if value was retrieved successfully, it should be freed
- *      with jerry_api_release_value just when it becomes unnecessary.
+ *      with jerry_release_value just when it becomes unnecessary.
  *
  * @return true, if field value was retrieved successfully, i.e. upon the call:
  *                - there is field with specified name in the object;
  *         throw exception - otherwise.
  */
 bool
-jerry_api_get_array_index_value (jerry_api_object_t *array_obj_p, /* array object */
-                                 jerry_api_length_t index, /* index to be written */
-                                 jerry_api_value_t *value_p) /* output value at index */
+jerry_get_array_index_value (jerry_object_t *array_obj_p, /**< array object */
+                             jerry_length_t index, /**< index to be written */
+                             jerry_value_t *value_p) /**< output value at index */
 {
   ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
   ecma_value_t get_completion = ecma_op_object_get (array_obj_p, str_idx_p);
   JERRY_ASSERT (!ecma_is_value_error (get_completion));
-  jerry_api_convert_ecma_value_to_api_value (value_p, get_completion);
+  jerry_convert_ecma_value_to_api_value (value_p, get_completion);
 
   ecma_free_value (get_completion);
   ecma_deref_ecma_string (str_idx_p);
 
   return true;
-} /* jerry_api_get_array_index_value */
+} /* jerry_get_array_index_value */
 
 /**
  * Create an error object
  *
  * Note:
- *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *      caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to created error object
  */
-jerry_api_object_t *
-jerry_api_create_error (jerry_api_error_t error_type, /**< type of error */
-                        const jerry_api_char_t *message_p) /**< value of 'message' property
-                                                            *   of constructed error object */
+jerry_object_t *
+jerry_create_error (jerry_error_t error_type, /**< type of error */
+                    const jerry_char_t *message_p) /**< value of 'message' property
+                                                    *   of constructed error object */
 {
-  return jerry_api_create_error_sz (error_type,
-                                    (lit_utf8_byte_t *) message_p,
-                                    lit_zt_utf8_string_size (message_p));
-} /* jerry_api_create_error */
+  return jerry_create_error_sz (error_type,
+                                (lit_utf8_byte_t *) message_p,
+                                lit_zt_utf8_string_size (message_p));
+} /* jerry_create_error */
 
 /**
  * Create an error object
  *
  * Note:
- *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *      caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to created error object
  */
-jerry_api_object_t *
-jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
-                           const jerry_api_char_t *message_p, /**< value of 'message' property
-                                                               *   of constructed error object */
-                           jerry_api_size_t message_size) /**< size of the message in bytes */
+jerry_object_t *
+jerry_create_error_sz (jerry_error_t error_type, /**< type of error */
+                       const jerry_char_t *message_p, /**< value of 'message' property
+                                                       *   of constructed error object */
+                       jerry_size_t message_size) /**< size of the message in bytes */
 {
   jerry_assert_api_available ();
 
@@ -825,37 +825,37 @@ jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
 
   switch (error_type)
   {
-    case JERRY_API_ERROR_COMMON:
+    case JERRY_ERROR_COMMON:
     {
       standard_error_type = ECMA_ERROR_COMMON;
       break;
     }
-    case JERRY_API_ERROR_EVAL:
+    case JERRY_ERROR_EVAL:
     {
       standard_error_type = ECMA_ERROR_EVAL;
       break;
     }
-    case JERRY_API_ERROR_RANGE:
+    case JERRY_ERROR_RANGE:
     {
       standard_error_type = ECMA_ERROR_RANGE;
       break;
     }
-    case JERRY_API_ERROR_REFERENCE:
+    case JERRY_ERROR_REFERENCE:
     {
       standard_error_type = ECMA_ERROR_REFERENCE;
       break;
     }
-    case JERRY_API_ERROR_SYNTAX:
+    case JERRY_ERROR_SYNTAX:
     {
       standard_error_type = ECMA_ERROR_SYNTAX;
       break;
     }
-    case JERRY_API_ERROR_TYPE:
+    case JERRY_ERROR_TYPE:
     {
       standard_error_type = ECMA_ERROR_TYPE;
       break;
     }
-    case JERRY_API_ERROR_URI:
+    case JERRY_ERROR_URI:
     {
       standard_error_type = ECMA_ERROR_URI;
       break;
@@ -881,24 +881,24 @@ jerry_api_create_error_sz (jerry_api_error_t error_type, /**< type of error */
 
     return error_object_p;
   }
-} /* jerry_api_create_error_sz */
+} /* jerry_create_error_sz */
 
 /**
  * Create an external function object
  *
  * Note:
- *      caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *      caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to created external function object
  */
-jerry_api_object_t *
-jerry_api_create_external_function (jerry_external_handler_t handler_p) /**< pointer to native handler
-                                                                         *   for the function */
+jerry_object_t *
+jerry_create_external_function (jerry_external_handler_t handler_p) /**< pointer to native handler
+                                                                     *   for the function */
 {
   jerry_assert_api_available ();
 
   return ecma_op_create_external_function_object ((ecma_external_pointer_t) handler_p);
-} /* jerry_api_create_external_function */
+} /* jerry_create_external_function */
 
 /**
  * Dispatch call to specified external function using the native handler
@@ -922,7 +922,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 
   ecma_value_t completion_value;
 
-  JMEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_api_value_t);
+  JMEM_DEFINE_LOCAL_ARRAY (api_arg_values, args_count, jerry_value_t);
 
   ecma_collection_iterator_t args_iterator;
   ecma_collection_iterator_init (&args_iterator, arg_collection_p);
@@ -932,15 +932,15 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
     bool is_moved = ecma_collection_iterator_next (&args_iterator);
     JERRY_ASSERT (is_moved);
 
-    jerry_api_convert_ecma_value_to_api_value (&api_arg_values[i], *args_iterator.current_value_p);
+    jerry_convert_ecma_value_to_api_value (&api_arg_values[i], *args_iterator.current_value_p);
   }
 
-  jerry_api_value_t api_this_arg_value, api_ret_value;
-  jerry_api_convert_ecma_value_to_api_value (&api_this_arg_value, this_arg_value);
+  jerry_value_t api_this_arg_value, api_ret_value;
+  jerry_convert_ecma_value_to_api_value (&api_this_arg_value, this_arg_value);
 
   // default return value
-  jerry_api_convert_ecma_value_to_api_value (&api_ret_value,
-                                             ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  jerry_convert_ecma_value_to_api_value (&api_ret_value,
+                                         ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
   bool is_successful = ((jerry_external_handler_t) handler_p) (function_object_p,
                                                                &api_this_arg_value,
@@ -949,7 +949,7 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
                                                                args_count);
 
   ecma_value_t ret_value;
-  jerry_api_convert_api_value_to_ecma_value (&ret_value, &api_ret_value);
+  jerry_convert_api_value_to_ecma_value (&ret_value, &api_ret_value);
 
   if (is_successful)
   {
@@ -960,11 +960,11 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
     completion_value = ecma_make_error_value (ret_value);
   }
 
-  jerry_api_release_value (&api_ret_value);
-  jerry_api_release_value (&api_this_arg_value);
+  jerry_release_value (&api_ret_value);
+  jerry_release_value (&api_this_arg_value);
   for (uint32_t i = 0; i < args_count; i++)
   {
-    jerry_api_release_value (&api_arg_values[i]);
+    jerry_release_value (&api_arg_values[i]);
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (api_arg_values);
@@ -998,7 +998,7 @@ jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< poin
  *         false - otherwise.
  */
 bool
-jerry_api_is_function (const jerry_api_object_t *object_p) /**< an object */
+jerry_is_function (const jerry_object_t *object_p) /**< an object */
 {
   jerry_assert_api_available ();
 
@@ -1007,7 +1007,7 @@ jerry_api_is_function (const jerry_api_object_t *object_p) /**< an object */
   ecma_value_t obj_val = ecma_make_object_value (object_p);
 
   return ecma_op_is_callable (obj_val);
-} /* jerry_api_is_function */
+} /* jerry_is_function */
 
 /**
  * Check if the specified object is a constructor function object.
@@ -1016,7 +1016,7 @@ jerry_api_is_function (const jerry_api_object_t *object_p) /**< an object */
  *         false - otherwise.
  */
 bool
-jerry_api_is_constructor (const jerry_api_object_t *object_p) /**< an object */
+jerry_is_constructor (const jerry_object_t *object_p) /**< an object */
 {
   jerry_assert_api_available ();
 
@@ -1025,7 +1025,7 @@ jerry_api_is_constructor (const jerry_api_object_t *object_p) /**< an object */
   ecma_value_t obj_val = ecma_make_object_value (object_p);
 
   return ecma_is_constructor (obj_val);
-} /* jerry_api_is_constructor */
+} /* jerry_is_constructor */
 
 /**
  * Create field (named data property) in the specified object
@@ -1036,11 +1036,11 @@ jerry_api_is_constructor (const jerry_api_object_t *object_p) /**< an object */
  *         false - otherwise.
  */
 bool
-jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add field at */
-                            const jerry_api_char_t *field_name_p, /**< name of the field */
-                            jerry_api_size_t field_name_size, /**< size of field name in bytes */
-                            const jerry_api_value_t *field_value_p, /**< value of the field */
-                            bool is_writable) /**< flag indicating whether the created field should be writable */
+jerry_add_object_field (jerry_object_t *object_p, /**< object to add field at */
+                        const jerry_char_t *field_name_p, /**< name of the field */
+                        jerry_size_t field_name_size, /**< size of field name in bytes */
+                        const jerry_value_t *field_value_p, /**< value of the field */
+                        bool is_writable) /**< flag indicating whether the created field should be writable */
 {
   jerry_assert_api_available ();
 
@@ -1058,7 +1058,7 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
       is_successful = true;
 
       ecma_value_t value_to_put;
-      jerry_api_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
+      jerry_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
 
       uint8_t prop_attributes = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE;
 
@@ -1079,7 +1079,7 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
   }
 
   return is_successful;
-} /* jerry_api_add_object_field */
+} /* jerry_add_object_field */
 
 /**
  * Delete field in the specified object
@@ -1089,9 +1089,9 @@ jerry_api_add_object_field (jerry_api_object_t *object_p, /**< object to add fie
  *         false - otherwise.
  */
 bool
-jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to delete field at */
-                               const jerry_api_char_t *field_name_p, /**< name of the field */
-                               jerry_api_size_t field_name_size) /**< size of the field name in bytes */
+jerry_delete_object_field (jerry_object_t *object_p, /**< object to delete field at */
+                           const jerry_char_t *field_name_p, /**< name of the field */
+                           jerry_size_t field_name_size) /**< size of the field name in bytes */
 {
   jerry_assert_api_available ();
 
@@ -1114,28 +1114,28 @@ jerry_api_delete_object_field (jerry_api_object_t *object_p, /**< object to dele
   ecma_deref_ecma_string (field_name_str_p);
 
   return is_successful;
-} /* jerry_api_delete_object_field */
+} /* jerry_delete_object_field */
 
 /**
  * Get value of field in the specified object
  *
  * Note:
  *      if value was retrieved successfully, it should be freed
- *      with jerry_api_release_value just when it becomes unnecessary.
+ *      with jerry_release_value just when it becomes unnecessary.
  *
  * @return true, if field value was retrieved successfully, i.e. upon the call:
  *                - there is field with specified name in the object;
  *         false - otherwise.
  */
-bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object */
-                                       const jerry_api_char_t *field_name_p, /**< field name */
-                                       jerry_api_value_t *field_value_p) /**< [out] field value */
+bool jerry_get_object_field_value (jerry_object_t *object_p, /**< object */
+                                   const jerry_char_t *field_name_p, /**< field name */
+                                   jerry_value_t *field_value_p) /**< [out] field value */
 {
-  return jerry_api_get_object_field_value_sz (object_p,
-                                              field_name_p,
-                                              lit_zt_utf8_string_size (field_name_p),
-                                              field_value_p);
-} /* jerry_api_get_object_field_value */
+  return jerry_get_object_field_value_sz (object_p,
+                                          field_name_p,
+                                          lit_zt_utf8_string_size (field_name_p),
+                                          field_value_p);
+} /* jerry_get_object_field_value */
 
 /**
  * Applies the given function to the every fields in the objects
@@ -1147,9 +1147,9 @@ bool jerry_api_get_object_field_value (jerry_api_object_t *object_p, /**< object
  *                 if getter of field threw a exception or unhandled exceptions were thrown during traversal;
  */
 bool
-jerry_api_foreach_object_field (jerry_api_object_t *object_p, /**< object */
-                                jerry_object_field_foreach_t foreach_p, /**< foreach function */
-                                void *user_data_p) /**< user data for foreach function */
+jerry_foreach_object_field (jerry_object_t *object_p, /**< object */
+                            jerry_object_field_foreach_t foreach_p, /**< foreach function */
+                            void *user_data_p) /**< user data for foreach function */
 {
   jerry_assert_api_available ();
 
@@ -1169,12 +1169,12 @@ jerry_api_foreach_object_field (jerry_api_object_t *object_p, /**< object */
 
     ECMA_TRY_CATCH (property_value, ecma_op_object_get (object_p, property_name_p), ret_value);
 
-    jerry_api_value_t field_value;
-    jerry_api_convert_ecma_value_to_api_value (&field_value, property_value);
+    jerry_value_t field_value;
+    jerry_convert_ecma_value_to_api_value (&field_value, property_value);
 
     continuous = foreach_p (property_name_p, &field_value, user_data_p);
 
-    jerry_api_release_value (&field_value);
+    jerry_release_value (&field_value);
 
     ECMA_FINALIZE (property_value);
   }
@@ -1192,25 +1192,24 @@ jerry_api_foreach_object_field (jerry_api_object_t *object_p, /**< object */
 
     return false;
   }
-} /* jerry_api_foreach_object_field */
+} /* jerry_foreach_object_field */
 
 /**
  * Get value of field in the specified object
  *
  * Note:
  *      if value was retrieved successfully, it should be freed
- *      with jerry_api_release_value just when it becomes unnecessary.
+ *      with jerry_release_value just when it becomes unnecessary.
  *
  * @return true, if field value was retrieved successfully, i.e. upon the call:
  *                - there is field with specified name in the object;
  *         false - otherwise.
  */
 bool
-jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object */
-                                     const jerry_api_char_t *field_name_p, /**< name of the field */
-                                     jerry_api_size_t field_name_size, /**< size of field name in bytes */
-                                     jerry_api_value_t *field_value_p) /**< [out] field value, if retrieved
- * successfully */
+jerry_get_object_field_value_sz (jerry_object_t *object_p, /**< object */
+                                 const jerry_char_t *field_name_p, /**< name of the field */
+                                 jerry_size_t field_name_size, /**< size of field name in bytes */
+                                 jerry_value_t *field_value_p) /**< [out] field value, if retrieved successfully */
 {
   jerry_assert_api_available ();
 
@@ -1223,7 +1222,7 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
 
   if (!ecma_is_value_error (field_value))
   {
-    jerry_api_convert_ecma_value_to_api_value (field_value_p, field_value);
+    jerry_convert_ecma_value_to_api_value (field_value_p, field_value);
 
     if (ecma_is_value_undefined (field_value))
     {
@@ -1240,7 +1239,7 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
   ecma_deref_ecma_string (field_name_str_p);
 
   return is_successful;
-} /* jerry_api_get_object_field_value_sz */
+} /* jerry_get_object_field_value_sz */
 
 /**
  * Set value of field in the specified object
@@ -1250,15 +1249,15 @@ jerry_api_get_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
  *         false - otherwise.
  */
 bool
-jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
-                                  const jerry_api_char_t *field_name_p, /**< name of the field */
-                                  const jerry_api_value_t *field_value_p) /**< field value to set */
+jerry_set_object_field_value (jerry_object_t *object_p, /**< object */
+                              const jerry_char_t *field_name_p, /**< name of the field */
+                              const jerry_value_t *field_value_p) /**< field value to set */
 {
-  return jerry_api_set_object_field_value_sz (object_p,
-                                              field_name_p,
-                                              lit_zt_utf8_string_size (field_name_p),
-                                              field_value_p);
-} /* jerry_api_set_object_field_value */
+  return jerry_set_object_field_value_sz (object_p,
+                                          field_name_p,
+                                          lit_zt_utf8_string_size (field_name_p),
+                                          field_value_p);
+} /* jerry_set_object_field_value */
 
 /**
  * Set value of field in the specified object
@@ -1268,10 +1267,10 @@ jerry_api_set_object_field_value (jerry_api_object_t *object_p, /**< object */
  *         false - otherwise.
  */
 bool
-jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object */
-                                     const jerry_api_char_t *field_name_p, /**< name of the field */
-                                     jerry_api_size_t field_name_size, /**< size of field name in bytes */
-                                     const jerry_api_value_t *field_value_p) /**< field value to set */
+jerry_set_object_field_value_sz (jerry_object_t *object_p, /**< object */
+                                 const jerry_char_t *field_name_p, /**< name of the field */
+                                 jerry_size_t field_name_size, /**< size of field name in bytes */
+                                 const jerry_value_t *field_value_p) /**< field value to set */
 {
   jerry_assert_api_available ();
 
@@ -1281,7 +1280,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
                                                                     (lit_utf8_size_t) field_name_size);
 
   ecma_value_t value_to_put;
-  jerry_api_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
+  jerry_convert_api_value_to_ecma_value (&value_to_put, field_value_p);
 
   ecma_value_t set_completion = ecma_op_object_put (object_p,
                                                     field_name_str_p,
@@ -1299,7 +1298,7 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
   ecma_deref_ecma_string (field_name_str_p);
 
   return is_successful;
-} /* jerry_api_set_object_field_value_sz */
+} /* jerry_set_object_field_value_sz */
 
 /**
  * Get native handle, associated with specified object
@@ -1308,8 +1307,8 @@ jerry_api_set_object_field_value_sz (jerry_api_object_t *object_p, /**< object *
  *         false - otherwise.
  */
 bool
-jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to get handle from */
-                                    uintptr_t *out_handle_p) /**< [out] handle value */
+jerry_get_object_native_handle (jerry_object_t *object_p, /**< object to get handle from */
+                                uintptr_t *out_handle_p) /**< [out] handle value */
 {
   jerry_assert_api_available ();
 
@@ -1325,7 +1324,7 @@ jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to
   }
 
   return does_exist;
-} /* jerry_api_get_object_native_handle */
+} /* jerry_get_object_native_handle */
 
 /**
  * Set native handle and, optionally, free callback for the specified object
@@ -1340,9 +1339,9 @@ jerry_api_get_object_native_handle (jerry_api_object_t *object_p, /**< object to
  *      and, if a free callback was added earlier for the object, it is removed.
  */
 void
-jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to set handle in */
-                                    uintptr_t handle, /**< handle value */
-                                    jerry_object_free_callback_t freecb_p) /**< object free callback or NULL */
+jerry_set_object_native_handle (jerry_object_t *object_p, /**< object to set handle in */
+                                uintptr_t handle, /**< handle value */
+                                jerry_object_free_callback_t freecb_p) /**< object free callback or NULL */
 {
   jerry_assert_api_available ();
 
@@ -1364,13 +1363,13 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
       ecma_delete_property (object_p, prop_p);
     }
   }
-} /* jerry_api_set_object_native_handle */
+} /* jerry_set_object_native_handle */
 
 /**
  * Invoke function specified by a function object
  *
  * Note:
- *      returned value should be freed with jerry_api_release_value
+ *      returned value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
  * Note:
@@ -1382,21 +1381,21 @@ jerry_api_set_object_native_handle (jerry_api_object_t *object_p, /**< object to
  *         false - otherwise.
  */
 static bool
-jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke function as constructor
-                                                           *          (this_arg_p should be NULL, as it is ignored),
-                                                           *   false - perform function call */
-                           jerry_api_object_t *function_object_p, /**< function object to call */
-                           jerry_api_object_t *this_arg_p, /**< object for 'this' binding
-                                                            *   or NULL (set 'this' binding to newly constructed object,
-                                                            *            if function is invoked as constructor;
-                                                            *            in case of simple function call set 'this'
-                                                            *            binding to the global object) */
-                           jerry_api_value_t *retval_p, /**< pointer to place for function's
-                                                         *   return value / thrown exception value
-                                                         *   or NULL (to ignore the values) */
-                           const jerry_api_value_t args_p[], /**< function's call arguments
-                                                              *   (NULL if arguments number is zero) */
-                           jerry_api_length_t args_count) /**< number of the arguments */
+jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke function as constructor
+                                                       *          (this_arg_p should be NULL, as it is ignored),
+                                                       *   false - perform function call */
+                       jerry_object_t *function_object_p, /**< function object to call */
+                       jerry_object_t *this_arg_p, /**< object for 'this' binding
+                                                    *   or NULL (set 'this' binding to newly constructed object,
+                                                    *            if function is invoked as constructor;
+                                                    *            in case of simple function call set 'this'
+                                                    *            binding to the global object) */
+                       jerry_value_t *retval_p, /**< pointer to place for function's
+                                                 *   return value / thrown exception value
+                                                 *   or NULL (to ignore the values) */
+                       const jerry_value_t args_p[], /**< function's call arguments
+                                                      *   (NULL if arguments number is zero) */
+                       jerry_length_t args_count) /**< number of the arguments */
 {
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
   JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t),
@@ -1408,7 +1407,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   for (uint32_t i = 0; i < args_count; ++i)
   {
-    jerry_api_convert_api_value_to_ecma_value (arguments_list_p + i, args_p + i);
+    jerry_convert_api_value_to_ecma_value (arguments_list_p + i, args_p + i);
   }
 
   ecma_value_t call_completion;
@@ -1416,7 +1415,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
   if (is_invoke_as_constructor)
   {
     JERRY_ASSERT (this_arg_p == NULL);
-    JERRY_ASSERT (jerry_api_is_constructor (function_object_p));
+    JERRY_ASSERT (jerry_is_constructor (function_object_p));
 
     call_completion = ecma_op_function_construct (function_object_p,
                                                   arguments_list_p,
@@ -1424,7 +1423,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
   }
   else
   {
-    JERRY_ASSERT (jerry_api_is_function (function_object_p));
+    JERRY_ASSERT (jerry_is_function (function_object_p));
 
     ecma_value_t this_arg_val;
 
@@ -1451,7 +1450,7 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
 
   if (retval_p != NULL)
   {
-    jerry_api_convert_ecma_value_to_api_value (retval_p, call_completion);
+    jerry_convert_ecma_value_to_api_value (retval_p, call_completion);
   }
 
   ecma_free_value (call_completion);
@@ -1464,120 +1463,120 @@ jerry_api_invoke_function (bool is_invoke_as_constructor, /**< true - invoke fun
   JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
 
   return is_successful;
-} /* jerry_api_invoke_function */
+} /* jerry_invoke_function */
 
 /**
  * Construct new TypeError object
  */
 static void
-jerry_api_construct_type_error (jerry_api_value_t *retval_p) /**< [out] value with constructed
-                                                              *        TypeError object */
+jerry_construct_type_error (jerry_value_t *retval_p) /**< [out] value with constructed
+                                                      *         TypeError object */
 {
   ecma_object_t *type_error_obj_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
   ecma_value_t type_error_value = ecma_make_object_value (type_error_obj_p);
 
-  jerry_api_convert_ecma_value_to_api_value (retval_p, type_error_value);
+  jerry_convert_ecma_value_to_api_value (retval_p, type_error_value);
 
   ecma_deref_object (type_error_obj_p);
-} /* jerry_api_construct_type_error */
+} /* jerry_construct_type_error */
 
 /**
  * Call function specified by a function object
  *
  * Note:
- *      returned value should be freed with jerry_api_release_value
+ *      returned value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
  * @return true, if call was performed successfully, i.e.:
- *                - specified object is a function object (see also jerry_api_is_function);
+ *                - specified object is a function object (see also jerry_is_function);
  *                - no unhandled exceptions were thrown in connection with the call;
  *         false - otherwise, 'retval_p' contains thrown exception:
  *                  if called object is not function object - a TypeError instance;
  *                  else - exception, thrown during the function call.
  */
 bool
-jerry_api_call_function (jerry_api_object_t *function_object_p, /**< function object to call */
-                         jerry_api_object_t *this_arg_p, /**< object for 'this' binding
-                                                          *   or NULL (set 'this' binding to the global object) */
-                         jerry_api_value_t *retval_p, /**< pointer to place for function's
-                                                       *   return value / thrown exception value
-                                                       *   or NULL (to ignore the values) */
-                         const jerry_api_value_t args_p[], /**< function's call arguments
-                                                            *   (NULL if arguments number is zero) */
-                         uint16_t args_count) /**< number of the arguments */
+jerry_call_function (jerry_object_t *function_object_p, /**< function object to call */
+                     jerry_object_t *this_arg_p, /**< object for 'this' binding
+                                                  *   or NULL (set 'this' binding to the global object) */
+                     jerry_value_t *retval_p, /**< pointer to place for function's
+                                               *   return value / thrown exception value
+                                               *   or NULL (to ignore the values) */
+                     const jerry_value_t args_p[], /**< function's call arguments
+                                                    *   (NULL if arguments number is zero) */
+                     uint16_t args_count) /**< number of the arguments */
 {
   jerry_assert_api_available ();
 
-  if (jerry_api_is_function (function_object_p))
+  if (jerry_is_function (function_object_p))
   {
-    return jerry_api_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
+    return jerry_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
   }
   else
   {
     if (retval_p != NULL)
     {
-      jerry_api_construct_type_error (retval_p);
+      jerry_construct_type_error (retval_p);
     }
 
     return false;
   }
-} /* jerry_api_call_function */
+} /* jerry_call_function */
 
 /**
  * Construct object invoking specified function object as a constructor
  *
  * Note:
- *      returned value should be freed with jerry_api_release_value
+ *      returned value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
  * @return true, if construction was performed successfully, i.e.:
- *                - specified object is a constructor function object (see also jerry_api_is_constructor);
- *                - no unhandled exceptions were thrown in connection with the invocation;
+ *                 - specified object is a constructor function object (see also jerry_is_constructor);
+ *                 - no unhandled exceptions were thrown in connection with the invocation;
  *         false - otherwise, 'retval_p' contains thrown exception:
- *                if  specified object is not a constructor function object - a TypeError instance;
- *                else - exception, thrown during the invocation.
+ *                 if  specified object is not a constructor function object - a TypeError instance;
+ *                 else - exception, thrown during the invocation.
  */
 bool
-jerry_api_construct_object (jerry_api_object_t *function_object_p, /**< function object to call */
-                            jerry_api_value_t *retval_p, /**< pointer to place for function's
-                                                          *   return value / thrown exception value
-                                                          *   or NULL (to ignore the values) */
-                            const jerry_api_value_t args_p[], /**< function's call arguments
-                                                               *   (NULL if arguments number is zero) */
-                            uint16_t args_count) /**< number of the arguments */
+jerry_construct_object (jerry_object_t *function_object_p, /**< function object to call */
+                        jerry_value_t *retval_p, /**< pointer to place for function's
+                                                  *   return value / thrown exception value
+                                                  *   or NULL (to ignore the values) */
+                        const jerry_value_t args_p[], /**< function's call arguments
+                                                       *   (NULL if arguments number is zero) */
+                        uint16_t args_count) /**< number of the arguments */
 {
   jerry_assert_api_available ();
 
-  if (jerry_api_is_constructor (function_object_p))
+  if (jerry_is_constructor (function_object_p))
   {
-    return jerry_api_invoke_function (true, function_object_p, NULL, retval_p, args_p, args_count);
+    return jerry_invoke_function (true, function_object_p, NULL, retval_p, args_p, args_count);
   }
   else
   {
     if (retval_p != NULL)
     {
-      jerry_api_construct_type_error (retval_p);
+      jerry_construct_type_error (retval_p);
     }
 
     return false;
   }
-} /* jerry_api_construct_object */
+} /* jerry_construct_object */
 
 /**
  * Get global object
  *
  * Note:
- *       caller should release the object with jerry_api_release_object, just when the value becomes unnecessary.
+ *       caller should release the object with jerry_release_object, just when the value becomes unnecessary.
  *
  * @return pointer to the global object
  */
-jerry_api_object_t *
-jerry_api_get_global (void)
+jerry_object_t *
+jerry_get_global (void)
 {
   jerry_assert_api_available ();
 
   return ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
-} /* jerry_api_get_global */
+} /* jerry_get_global */
 
 /**
  * Perform eval
@@ -1590,11 +1589,11 @@ jerry_api_get_global (void)
  * @return completion status
  */
 jerry_completion_code_t
-jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
-                size_t source_size, /**< length of source code */
-                bool is_direct, /**< perform eval invocation in direct mode */
-                bool is_strict, /**< perform eval as it is called from strict mode code */
-                jerry_api_value_t *retval_p) /**< [out] returned value */
+jerry_eval (const jerry_char_t *source_p, /**< source code */
+            size_t source_size, /**< length of source code */
+            bool is_direct, /**< perform eval invocation in direct mode */
+            bool is_strict, /**< perform eval as it is called from strict mode code */
+            jerry_value_t *retval_p) /**< [out] returned value */
 {
   jerry_assert_api_available ();
 
@@ -1605,23 +1604,23 @@ jerry_api_eval (const jerry_api_char_t *source_p, /**< source code */
                                                        is_direct,
                                                        is_strict);
 
-  status = jerry_api_convert_eval_completion_to_retval (retval_p, completion);
+  status = jerry_convert_eval_completion_to_retval (retval_p, completion);
 
   ecma_free_value (completion);
 
   return status;
-} /* jerry_api_eval */
+} /* jerry_eval */
 
 /**
  * Perform GC
  */
 void
-jerry_api_gc (void)
+jerry_gc (void)
 {
   jerry_assert_api_available ();
 
   ecma_gc_run ();
-} /* jerry_api_gc */
+} /* jerry_gc */
 
 /**
  * Jerry engine initialization
@@ -1680,7 +1679,7 @@ jerry_cleanup (void)
  */
 void
 jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< [out] Jerry's maximum usage of
-                                                            *        data + bss + brk sections */
+                                                            *         data + bss + brk sections */
                          size_t *out_stack_limit_p) /**< [out] Jerry's maximum usage of stack */
 {
   *out_data_bss_brk_limit_p = CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE;
@@ -1691,15 +1690,15 @@ jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< [out] Jerry's ma
  * Parse script for specified context
  *
  * Note:
- *      returned error object should be freed with jerry_api_release_object
+ *      returned error object should be freed with jerry_release_object
  *
  * @return true - if script was parsed successfully,
  *         false - otherwise (SyntaxError was raised).
  */
 bool
-jerry_parse (const jerry_api_char_t *source_p, /**< script source */
+jerry_parse (const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
-             jerry_api_object_t **error_obj_p) /**< [out] error object */
+             jerry_object_t **error_obj_p) /**< [out] error object */
 {
   jerry_assert_api_available ();
 
@@ -1741,20 +1740,20 @@ jerry_parse (const jerry_api_char_t *source_p, /**< script source */
  * Run Jerry in specified run context
  *
  * Note:
- *      returned error value should be freed with jerry_api_release_value
+ *      returned error value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run (jerry_api_value_t *error_value_p) /**< [out] error value */
+jerry_run (jerry_value_t *error_value_p) /**< [out] error value */
 {
   jerry_assert_api_available ();
 
   ecma_value_t error_value;
   jerry_completion_code_t ret_code = vm_run_global (&error_value);
 
-  jerry_api_convert_ecma_value_to_api_value (error_value_p, error_value);
+  jerry_convert_ecma_value_to_api_value (error_value_p, error_value);
   ecma_free_value (error_value);
 
   return ret_code;
@@ -1766,14 +1765,14 @@ jerry_run (jerry_api_value_t *error_value_p) /**< [out] error value */
  * @return completion status
  */
 jerry_completion_code_t
-jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
+jerry_run_simple (const jerry_char_t *script_source, /**< script source */
                   size_t script_source_size, /**< script source size */
                   jerry_flag_t flags) /**< combination of Jerry flags */
 {
   jerry_init (flags);
 
   jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
-  jerry_api_object_t *error_obj_p = NULL;
+  jerry_object_t *error_obj_p = NULL;
 
   if (!jerry_parse (script_source, script_source_size, &error_obj_p))
   {
@@ -1782,11 +1781,11 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
   }
   else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
   {
-    jerry_api_value_t error_value;
+    jerry_value_t error_value;
 
     ret_code = jerry_run (&error_value);
 
-    jerry_api_release_value (&error_value);
+    jerry_release_value (&error_value);
   }
 
   jerry_cleanup ();
@@ -1798,10 +1797,10 @@ jerry_run_simple (const jerry_api_char_t *script_source, /**< script source */
  * Register external magic string array
  */
 void
-jerry_register_external_magic_strings (const jerry_api_char_ptr_t *ex_str_items, /**< character arrays, representing
-                                                                                  * external magic strings' contents */
-                                       uint32_t count,                           /**< number of the strings */
-                                       const jerry_api_length_t *str_lengths)    /**< lengths of the strings */
+jerry_register_external_magic_strings (const jerry_char_ptr_t *ex_str_items, /**< character arrays, representing
+                                                                              *   external magic strings' contents */
+                                       uint32_t count,                       /**< number of the strings */
+                                       const jerry_length_t *str_lengths)    /**< lengths of the strings */
 {
   lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_external_magic_strings */
@@ -2051,7 +2050,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
  *         0 - otherwise.
  */
 size_t
-jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script source */
+jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source */
                                size_t source_size, /**< script source size */
                                bool is_for_global, /**< snapshot would be executed as global (true)
                                                     *   or eval (false) */
@@ -2067,7 +2066,7 @@ jerry_parse_and_save_snapshot (const jerry_api_char_t *source_p, /**< script sou
   snapshot_error_occured = false;
   snapshot_buffer_p = buffer_p;
   snapshot_buffer_size = buffer_size;
-  jerry_api_object_t *error_obj_p = NULL;
+  jerry_object_t *error_obj_p = NULL;
 
   if (is_for_global)
   {
@@ -2308,10 +2307,10 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
                                           *   buffer could be freed after the call).
                                           *   Otherwise (if the flag is not set) - the buffer could only be
                                           *   freed after the engine stops (i.e. after call to jerry_cleanup). */
-                     jerry_api_value_t *retval_p) /**< [out] returned value (ECMA-262 'undefined' if
-                                                   * code is executed as global scope code) */
+                     jerry_value_t *retval_p) /**< [out] returned value (ECMA-262 'undefined' if
+                                               *         code is executed as global scope code) */
 {
-  jerry_api_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  jerry_convert_ecma_value_to_api_value (retval_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   JERRY_ASSERT (snapshot_p != NULL);
@@ -2391,7 +2390,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
     /* vm should be already initialized */
     ecma_value_t completion = vm_run_eval (bytecode_p, false);
 
-    ret_code = jerry_api_convert_eval_completion_to_retval (retval_p, completion);
+    ret_code = jerry_convert_eval_completion_to_retval (retval_p, completion);
 
     ecma_free_value (completion);
   }
@@ -2412,43 +2411,43 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
  *
  * @return string value
  */
-jerry_api_string_t *
-jerry_api_value_to_string (const jerry_api_value_t *in_value_p) /**< input value */
+jerry_string_t *
+jerry_value_to_string (const jerry_value_t *in_value_p) /**< input value */
 {
   jerry_assert_api_available ();
 
   ecma_value_t in_value;
-  jerry_api_convert_api_value_to_ecma_value (&in_value, in_value_p);
+  jerry_convert_api_value_to_ecma_value (&in_value, in_value_p);
 
   ecma_value_t str_value = ecma_op_to_string (in_value);
 
   ecma_free_value (in_value);
 
-  return (jerry_api_string_t *) ecma_get_string_from_value (str_value);
-} /* jerry_api_value_to_string */
+  return (jerry_string_t *) ecma_get_string_from_value (str_value);
+} /* jerry_value_to_string */
 
 /**
  * Get size of Jerry string
  *
  * @return number of bytes in the buffer needed to represent the string
  */
-jerry_api_size_t
-jerry_api_get_string_size (const jerry_api_string_t *str_p) /**< input string */
+jerry_size_t
+jerry_get_string_size (const jerry_string_t *str_p) /**< input string */
 {
   jerry_assert_api_available ();
 
   return ecma_string_get_size ((ecma_string_t *) str_p);
-} /* jerry_api_get_string_size */
+} /* jerry_get_string_size */
 
 /**
  * Get length of Jerry string
  *
  * @return number of characters in the string
  */
-jerry_api_length_t
-jerry_api_get_string_length (const jerry_api_string_t *str_p) /**< input string */
+jerry_length_t
+jerry_get_string_length (const jerry_string_t *str_p) /**< input string */
 {
   jerry_assert_api_available ();
 
   return ecma_string_get_length ((ecma_string_t *) str_p);
-} /* jerry_api_get_string_length */
+} /* jerry_get_string_length */

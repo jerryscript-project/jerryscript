@@ -8,6 +8,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-qemu-arm.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
+  - if [[ "$TARGET" == "build-zephyr" ]]; then tools/apt-get-install-zephyr-deps.sh; fi
 
 install:
 
@@ -26,5 +27,8 @@ matrix:
       env: TARGET="build.darwin test-js"
     - os: osx
       env: TARGET=test-unit
+    - os: linux
+      env: TARGET=build-zephyr
   allow_failures:
     - os: osx
+    - env: TARGET=build-zephyr

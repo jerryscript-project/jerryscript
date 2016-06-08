@@ -27,11 +27,8 @@
  * Attributes
  */
 #define __attr_unused___ __attribute__((unused))
-#define __attr_used___ __attribute__((used))
-#define __attr_packed___ __attribute__((packed))
 #define __noreturn __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
-#define __attr_used___ __attribute__((used))
 #define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
 #ifndef __attr_always_inline___
 # define __attr_always_inline___ __attribute__((always_inline))

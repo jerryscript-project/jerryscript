@@ -49,7 +49,7 @@ int jerryscript_test ()
   "print ('Hi JS World! '+test);";
 
   printf ("Script [%s]\n",script);
-  ret_code = jerry_run_simple ((jerry_api_char_t *) script,
+  ret_code = jerry_run_simple ((jerry_char_t *) script,
       strlen (script),
       JERRY_FLAG_EMPTY);
 
@@ -129,7 +129,7 @@ static int shell_cmd_handler (int argc, char *argv[])
 
   jerry_completion_code_t ret_code;
 
-  ret_code = jerry_run_simple ((jerry_api_char_t *) source_buffer,
+  ret_code = jerry_run_simple ((jerry_char_t *) source_buffer,
     strlen (source_buffer),
     JERRY_FLAG_EMPTY);
 

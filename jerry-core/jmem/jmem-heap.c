@@ -199,8 +199,7 @@ static void jmem_heap_stat_free_iter ();
 void
 jmem_heap_init (void)
 {
-  JERRY_STATIC_ASSERT ((uintptr_t) jmem_heap.area % JMEM_ALIGNMENT == 0,
-                       jmem_heap_area_must_be_multiple_of_MEM_ALIGNMENT);
+  JERRY_ASSERT ((uintptr_t) jmem_heap.area % JMEM_ALIGNMENT == 0);
 
   JERRY_STATIC_ASSERT ((1u << JMEM_HEAP_OFFSET_LOG) >= JMEM_HEAP_SIZE,
                        two_pow_mem_heap_offset_should_not_be_less_than_mem_heap_size);

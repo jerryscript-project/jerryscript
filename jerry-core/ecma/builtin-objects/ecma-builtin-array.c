@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,10 @@
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_array_object_is_array (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument */
                                     ecma_value_t arg) /**< first argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;
 
   if (ecma_is_value_object (arg))

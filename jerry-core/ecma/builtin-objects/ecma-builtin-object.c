@@ -105,9 +105,10 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' argument */
                                              ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
@@ -145,9 +146,10 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg __attr_unused
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg, /**< 'this' argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
@@ -175,9 +177,10 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg __attr_
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_seal (ecma_value_t this_arg, /**< 'this' argument */
                                  ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -247,9 +250,10 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg __attr_unused___, /**< 't
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument */
                                    ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -327,9 +331,10 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg __attr_unused___, /**< 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg, /**< 'this' argument */
                                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
@@ -357,9 +362,10 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg __attr_unus
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -425,9 +431,10 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg __attr_unused___, /*
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -503,9 +510,10 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg __attr_unused___, /*
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_is_extensible (ecma_value_t this_arg, /**< 'this' argument */
                                           ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
@@ -535,9 +543,10 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg __attr_unused___
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_keys (ecma_value_t this_arg, /**< 'this' argument */
                                  ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg))
@@ -565,10 +574,11 @@ ecma_builtin_object_object_keys (ecma_value_t this_arg __attr_unused___, /**< 't
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /**< 'this' argument */
                                                         ecma_value_t arg1, /**< routine's first argument */
                                                         ecma_value_t arg2) /**< routine's second argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -676,10 +686,11 @@ ecma_builtin_object_object_create (ecma_value_t this_arg, /**< 'this' argument *
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this' argument */
                                               ecma_value_t arg1, /**< routine's first argument */
                                               ecma_value_t arg2) /**< routine's second argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   // 1.
@@ -782,11 +793,12 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg __attr_unuse
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_define_property (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_object_object_define_property (ecma_value_t this_arg, /**< 'this' argument */
                                             ecma_value_t arg1, /**< routine's first argument */
                                             ecma_value_t arg2, /**< routine's second argument */
                                             ecma_value_t arg3) /**< routine's third argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (arg1))

@@ -35,8 +35,7 @@ uint8_t *ptrs[TEST_MAX_SUB_ITERS];
 uint8_t data[TEST_MAX_SUB_ITERS][JMEM_POOL_CHUNK_SIZE];
 
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
   TEST_INIT ();
 

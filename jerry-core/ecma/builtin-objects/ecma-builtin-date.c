@@ -182,9 +182,10 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argument */
+ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
                          ecma_value_t arg) /**< string */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_number_t date_num = ecma_number_make_nan ();
 
@@ -398,10 +399,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg __attr_unused___, /**< this argum
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argument */
+ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
                        const ecma_value_t args[], /**< arguments list */
                        ecma_length_t args_number) /**< number of arguments */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (args_number < 2)
@@ -433,8 +435,9 @@ ecma_builtin_date_utc (ecma_value_t this_arg __attr_unused___, /**< this argumen
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argument */
+ecma_builtin_date_now (ecma_value_t this_arg) /**< this argument */
 {
+  JERRY_UNUSED (this_arg);
   return ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
 } /* ecma_builtin_date_now */
 
@@ -447,9 +450,11 @@ ecma_builtin_date_now (ecma_value_t this_arg __attr_unused___) /**< this argumen
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p __attr_unused___, /**< arguments list */
-                                 ecma_length_t arguments_list_len __attr_unused___) /**< number of arguments */
+ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
+  JERRY_UNUSED (arguments_list_p);
+  JERRY_UNUSED (arguments_list_len);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (now_val,

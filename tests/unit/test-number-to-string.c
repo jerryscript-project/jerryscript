@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@
  * Unit test's main function.
  */
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
   TEST_INIT ();
 

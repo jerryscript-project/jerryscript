@@ -59,9 +59,10 @@
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_abs (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_abs (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -83,9 +84,10 @@ ecma_builtin_math_object_abs (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_acos (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_acos (ecma_value_t this_arg, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -106,9 +108,10 @@ ecma_builtin_math_object_acos (ecma_value_t this_arg __attr_unused___, /**< 'thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_asin (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_asin (ecma_value_t this_arg, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -129,9 +132,10 @@ ecma_builtin_math_object_asin (ecma_value_t this_arg __attr_unused___, /**< 'thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_atan (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_atan (ecma_value_t this_arg, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -152,10 +156,11 @@ ecma_builtin_math_object_atan (ecma_value_t this_arg __attr_unused___, /**< 'thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_atan2 (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_atan2 (ecma_value_t this_arg, /**< 'this' argument */
                                 ecma_value_t arg1, /**< first routine's argument */
                                 ecma_value_t arg2) /**< second routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
@@ -178,9 +183,10 @@ ecma_builtin_math_object_atan2 (ecma_value_t this_arg __attr_unused___, /**< 'th
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_ceil (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_ceil (ecma_value_t this_arg, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -201,9 +207,10 @@ ecma_builtin_math_object_ceil (ecma_value_t this_arg __attr_unused___, /**< 'thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_cos (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_cos (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -224,9 +231,10 @@ ecma_builtin_math_object_cos (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_exp (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_exp (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -248,9 +256,10 @@ ecma_builtin_math_object_exp (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_floor (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_floor (ecma_value_t this_arg, /**< 'this' argument */
                                 ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -271,9 +280,10 @@ ecma_builtin_math_object_floor (ecma_value_t this_arg __attr_unused___, /**< 'th
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_log (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_log (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -295,10 +305,11 @@ ecma_builtin_math_object_log (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_max (ecma_value_t this_arg, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_number_t ret_num = ecma_number_make_infinity (true);
@@ -375,10 +386,11 @@ ecma_builtin_math_object_max (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_min (ecma_value_t this_arg, /**< 'this' argument */
                               const ecma_value_t args[], /**< arguments list */
                               ecma_length_t args_number) /**< number of arguments */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_number_t ret_num = ecma_number_make_infinity (false);
@@ -455,10 +467,11 @@ ecma_builtin_math_object_min (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_pow (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_pow (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg1, /**< first routine's argument */
                               ecma_value_t arg2) /**< second routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
@@ -482,8 +495,9 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_random (ecma_value_t this_arg __attr_unused___) /**< 'this' argument */
+ecma_builtin_math_object_random (ecma_value_t this_arg) /**< 'this' argument */
 {
+  JERRY_UNUSED (this_arg);
   uint32_t rnd = 1;
   uint32_t reps_count;
 #if RAND_MAX < 0x100
@@ -518,9 +532,10 @@ ecma_builtin_math_object_random (ecma_value_t this_arg __attr_unused___) /**< 't
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_round (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_round (ecma_value_t this_arg, /**< 'this' argument */
                                 ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -572,9 +587,10 @@ ecma_builtin_math_object_round (ecma_value_t this_arg __attr_unused___, /**< 'th
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_sin (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_sin (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -595,9 +611,10 @@ ecma_builtin_math_object_sin (ecma_value_t this_arg __attr_unused___, /**< 'this
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_sqrt (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_sqrt (ecma_value_t this_arg, /**< 'this' argument */
                                ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
@@ -618,9 +635,10 @@ ecma_builtin_math_object_sqrt (ecma_value_t this_arg __attr_unused___, /**< 'thi
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_tan (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_math_object_tan (ecma_value_t this_arg, /**< 'this' argument */
                               ecma_value_t arg) /**< routine's argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);

@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@
   } \
   else \
   { \
-    ecma_value_t var __attr_unused___ = var ## _completion;
+    ecma_value_t var = var ## _completion; \
+    JERRY_UNUSED (var);
 
 /**
  * The macro marks end of code block that is defined by corresponding

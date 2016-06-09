@@ -23,8 +23,7 @@
  * Unit test's main function.
  */
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
   TEST_INIT ();
 

@@ -81,8 +81,7 @@ compare_utf8_string_and_string_literal (const lit_utf8_byte_t *str_p, lit_utf8_s
 } /* compare_utf8_string_and_string_literal */
 
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
   TEST_INIT ();
 

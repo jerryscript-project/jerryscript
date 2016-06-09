@@ -73,8 +73,7 @@ check_double (const char *expr, double computed, double expected)
 } /* check_double */
 
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
 #define INF INFINITY
 #include "test-libm.inc.h"

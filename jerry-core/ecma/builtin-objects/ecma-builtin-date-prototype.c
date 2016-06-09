@@ -1166,8 +1166,9 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
  */
 static ecma_value_t
 ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument */
-                                     ecma_value_t arg __attr_unused___) /**< key */
+                                     ecma_value_t arg) /**< key */
 {
+  JERRY_UNUSED (arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */

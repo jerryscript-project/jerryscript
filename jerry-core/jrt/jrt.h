@@ -26,7 +26,6 @@
 /**
  * Attributes
  */
-#define __attr_unused___ __attribute__((unused))
 #define __noreturn __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
 #define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
@@ -57,11 +56,10 @@
  *         __LINE__ may be the same for asserts in a header
  *         and in an implementation file.
  */
-#define JERRY_STATIC_ASSERT_GLUE_(a, b, c) a ## b ## c
+#define JERRY_STATIC_ASSERT_GLUE_(a, b, c) a ## b ## _ ## c
 #define JERRY_STATIC_ASSERT_GLUE(a, b, c) JERRY_STATIC_ASSERT_GLUE_ (a, b, c)
 #define JERRY_STATIC_ASSERT(x, msg) \
-  typedef char JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) \
-  [ (x) ? 1 : -1 ] __attr_unused___
+  enum { JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) = 1 / (!!(x)) }
 
 /**
  * Variable that must not be referenced.
@@ -80,6 +78,8 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
 #else /* JERRY_NDEBUG */
 #define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
 #endif /* !JERRY_NDEBUG */
+
+#define JERRY_UNUSED(x) ((void) (x))
 
 #ifdef JERRY_ENABLE_LOG
 #define JERRY_LOG(lvl, ...) \

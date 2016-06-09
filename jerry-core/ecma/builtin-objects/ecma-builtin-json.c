@@ -696,10 +696,11 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_json_parse (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
                          ecma_value_t arg1, /**< string argument */
                          ecma_value_t arg2) /**< reviver argument */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_TRY_CATCH (string,
@@ -790,11 +791,12 @@ ecma_builtin_json_array (ecma_object_t *obj_p, ecma_json_stringify_context_t *co
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_json_stringify (ecma_value_t this_arg __attr_unused___, /**< 'this' argument */
+ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
                              ecma_value_t arg1,  /**< value */
                              ecma_value_t arg2,  /**< replacer */
                              ecma_value_t arg3)  /**< space */
 {
+  JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_json_stringify_context_t context;

@@ -288,12 +288,10 @@ static bool foreach (const jerry_string_t *name,
   return true;
 } /* foreach */
 
-#define UNUSED(x) (void)(x)
-
 static bool foreach_exception (const jerry_string_t *name, const jerry_value_t *value, void * user_data)
 {
-  UNUSED (value);
-  UNUSED (user_data);
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (user_data);
   char str_buf_p[128];
   jerry_size_t sz = jerry_string_to_char_buffer (name, (jerry_char_t *) str_buf_p, 128);
   str_buf_p[sz] = '\0';
@@ -307,8 +305,8 @@ static bool foreach_exception (const jerry_string_t *name, const jerry_value_t *
 
 static bool foreach_subset (const jerry_string_t *name, const jerry_value_t *value, void *user_data)
 {
-  UNUSED (name);
-  UNUSED (value);
+  JERRY_UNUSED (name);
+  JERRY_UNUSED (value);
   int *count_p = (int *) (user_data);
 
   if (*count_p == 3)

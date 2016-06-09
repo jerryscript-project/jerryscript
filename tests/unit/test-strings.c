@@ -102,8 +102,7 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
 } /* generate_cesu8_string */
 
 int
-main (int __attr_unused___ argc,
-      char __attr_unused___ **argv)
+main ()
 {
   TEST_INIT ();
 

@@ -63,96 +63,49 @@ const char *test_source = (
 
 bool test_api_is_free_callback_was_called = false;
 
-/**
- * Initialize Jerry API value with specified boolean value
- */
-static void
-test_api_init_api_value_bool (jerry_value_t *out_value_p, /**< out: API value */
-                              bool v) /**< boolean value to initialize with */
-{
-  out_value_p->type = JERRY_DATA_TYPE_BOOLEAN;
-  out_value_p->u.v_bool = v;
-} /* test_api_init_api_value_bool */
-
-/**
- * Initialize Jerry API value with specified float64 number
- */
-static void
-test_api_init_api_value_float64 (jerry_value_t *out_value_p, /**< out: API value */
-                                 double v) /**< float64 value to initialize with */
-{
-  out_value_p->type = JERRY_DATA_TYPE_FLOAT64;
-  out_value_p->u.v_float64 = v;
-} /* test_api_init_api_value_float64 */
-
-/**
- * Initialize Jerry API value with specified string
- */
-static void
-test_api_init_api_value_string (jerry_value_t *out_value_p, /**< out: API value */
-                                const char *v) /**< string value to initialize with */
-{
-  out_value_p->type = JERRY_DATA_TYPE_STRING;
-  out_value_p->u.v_string = jerry_create_string ((jerry_char_t *) v);
-} /* test_api_init_api_value_string */
-
-/**
- * Initialize Jerry API value with specified object
- */
-static void
-test_api_init_api_value_object (jerry_value_t *out_value_p, /**< out: API value */
-                                jerry_object_t *v) /**< object value to initialize with */
-{
-  jerry_acquire_object (v);
-
-  out_value_p->type = JERRY_DATA_TYPE_OBJECT;
-  out_value_p->u.v_object = v;
-} /* test_api_init_api_value_object */
-
 static bool
-handler (const jerry_object_t *function_obj_p,
-         const jerry_value_t *this_p,
-         jerry_value_t *ret_val_p,
-         const jerry_value_t args_p[],
-         const jerry_length_t args_cnt)
+handler (const jerry_object_t *function_obj_p, /**< function object */
+         const jerry_value_t this_val, /**< this value */
+         jerry_value_t *ret_val_p, /**< [out] return value */
+         const jerry_value_t args_p[], /**< arguments list */
+         const jerry_length_t args_cnt) /**< arguments length */
 {
   char buffer[32];
   jerry_size_t sz;
 
-  printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+  printf ("ok %p %p %p %d %p\n", function_obj_p, this_val, args_p, args_cnt, ret_val_p);
 
   JERRY_ASSERT (args_cnt == 2);
 
-  JERRY_ASSERT (args_p[0].type == JERRY_DATA_TYPE_STRING);
-  sz = jerry_get_string_size (args_p[0].u.v_string);
+  JERRY_ASSERT (jerry_value_is_string (args_p[0]));
+  sz = jerry_get_string_size (jerry_get_string_value (args_p[0]));
   JERRY_ASSERT (sz == 1);
-  sz = jerry_string_to_char_buffer (args_p[0].u.v_string, (jerry_char_t *) buffer, sz);
+  sz = jerry_string_to_char_buffer (jerry_get_string_value (args_p[0]),
+                                    (jerry_char_t *) buffer,
+                                    sz);
   JERRY_ASSERT (sz == 1);
   JERRY_ASSERT (!strncmp (buffer, "1", (size_t) sz));
 
-  JERRY_ASSERT (args_p[1].type == JERRY_DATA_TYPE_BOOLEAN);
-  JERRY_ASSERT (args_p[1].u.v_bool == true);
+  JERRY_ASSERT (jerry_value_is_boolean (args_p[1]));
 
-  test_api_init_api_value_string (ret_val_p, "string from handler");
+  *ret_val_p = jerry_create_string_value (jerry_create_string ((jerry_char_t *) "string from handler"));
 
   return true;
 } /* handler */
 
 static bool
-handler_throw_test (const jerry_object_t *function_obj_p,
-                    const jerry_value_t *this_p,
-                    jerry_value_t *ret_val_p,
-                    const jerry_value_t args_p[],
-                    const jerry_length_t args_cnt)
+handler_throw_test (const jerry_object_t *function_obj_p, /**< function object */
+                    const jerry_value_t this_val, /**< this value */
+                    jerry_value_t *ret_val_p, /**< [out] return value */
+                    const jerry_value_t args_p[], /**< arguments list */
+                    const jerry_length_t args_cnt) /**< arguments length */
 {
-  printf ("ok %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+  printf ("ok %p %p %p %d %p\n", function_obj_p, this_val, args_p, args_cnt, ret_val_p);
 
   jerry_object_t *error_p = jerry_create_error (JERRY_ERROR_TYPE,
                                                 (jerry_char_t *) "error");
 
-  test_api_init_api_value_object (ret_val_p, error_p);
-
-  jerry_release_object (error_p);
+  *ret_val_p = jerry_create_object_value (error_p);
 
   return false;
 } /* handler_throw_test */
@@ -167,39 +120,39 @@ handler_construct_freecb (uintptr_t native_p)
 } /* handler_construct_freecb */
 
 static bool
-handler_construct (const jerry_object_t *function_obj_p,
-                   const jerry_value_t *this_p,
-                   jerry_value_t *ret_val_p,
-                   const jerry_value_t args_p[],
-                   const jerry_length_t args_cnt)
+handler_construct (const jerry_object_t *function_obj_p, /**< function object */
+                   const jerry_value_t this_val, /**< this value */
+                   jerry_value_t *ret_val_p, /**< [out] return value */
+                   const jerry_value_t args_p[], /**< arguments list */
+                   const jerry_length_t args_cnt) /**< arguments length */
 {
-  printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_p, args_p, args_cnt, ret_val_p);
+  printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_val, args_p, args_cnt, ret_val_p);
 
-  JERRY_ASSERT (this_p != NULL);
-  JERRY_ASSERT (this_p->type == JERRY_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (jerry_value_is_object (this_val));
 
   JERRY_ASSERT (args_cnt == 1);
-  JERRY_ASSERT (args_p[0].type == JERRY_DATA_TYPE_BOOLEAN);
-  JERRY_ASSERT (args_p[0].u.v_bool == true);
+  JERRY_ASSERT (jerry_value_is_boolean (args_p[0]));
+  JERRY_ASSERT (jerry_get_boolean_value (args_p[0]) == true);
 
-  jerry_set_object_field_value (this_p->u.v_object, (jerry_char_t *) "value_field", &args_p[0]);
+  jerry_set_object_field_value (jerry_get_object_value (this_val),
+                                (jerry_char_t *) "value_field",
+                                args_p[0]);
 
-  jerry_set_object_native_handle (this_p->u.v_object,
+  jerry_set_object_native_handle (jerry_get_object_value (this_val),
                                   (uintptr_t) 0x0000000000000000ull,
                                   handler_construct_freecb);
 
   uintptr_t ptr;
-  bool is_ok = jerry_get_object_native_handle (this_p->u.v_object, &ptr);
+  bool is_ok = jerry_get_object_native_handle (jerry_get_object_value (this_val), &ptr);
   JERRY_ASSERT (is_ok && ptr == (uintptr_t) 0x0000000000000000ull);
 
   /* check if setting handle for second time is handled correctly */
-  jerry_set_object_native_handle (this_p->u.v_object,
+  jerry_set_object_native_handle (jerry_get_object_value (this_val),
                                   (uintptr_t) 0x0012345678abcdefull,
                                   handler_construct_freecb);
 
   return true;
 } /* handler_construct */
-
 
 /**
  * Extended Magic Strings
@@ -219,7 +172,7 @@ JERRY_MAGIC_STRING_ITEMS
 const jerry_length_t magic_string_lengths[] =
 {
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
-    (jerry_length_t)(sizeof(jerry_magic_string_ex_ ## NAME) - 1u),
+    (jerry_length_t) (sizeof (jerry_magic_string_ex_ ## NAME) - 1u),
 
   JERRY_MAGIC_STRING_ITEMS
 
@@ -229,15 +182,17 @@ const jerry_length_t magic_string_lengths[] =
 const jerry_char_ptr_t magic_string_items[] =
 {
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
-    (const jerry_char_ptr_t)jerry_magic_string_ex_ ## NAME,
+    (const jerry_char_ptr_t) jerry_magic_string_ex_ ## NAME,
 
   JERRY_MAGIC_STRING_ITEMS
 
 #undef JERRY_MAGIC_STRING_DEF
 };
 
-static bool foreach (const jerry_string_t *name,
-                     const jerry_value_t *value, void *user_data)
+static bool
+foreach (const jerry_string_t *name, /**< field name */
+         const jerry_value_t value, /**< field value */
+         void *user_data) /**< user data */
 {
   char str_buf_p[128];
   jerry_size_t sz = jerry_string_to_char_buffer (name, (jerry_char_t *) str_buf_p, 128);
@@ -245,37 +200,29 @@ static bool foreach (const jerry_string_t *name,
 
   if (!strncmp (str_buf_p, "alpha", (size_t) sz))
   {
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_FLOAT32);
-    JERRY_ASSERT (value->v_float32 == 32.0f);
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_FLOAT64);
-    JERRY_ASSERT (value->u.v_float64 == 32.0);
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+    JERRY_ASSERT (jerry_value_is_number (value));
+    JERRY_ASSERT (jerry_get_number_value (value) == 32.0);
   }
   else if (!strncmp (str_buf_p, "bravo", (size_t) sz))
   {
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_BOOLEAN);
-    JERRY_ASSERT (value->u.v_bool == false);
+    JERRY_ASSERT (jerry_value_is_boolean (value));
+    JERRY_ASSERT (jerry_get_boolean_value (value) == false);
   }
   else if (!strncmp (str_buf_p, "charlie", (size_t) sz))
   {
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_OBJECT);
+    JERRY_ASSERT (jerry_value_is_object (value));
   }
   else if (!strncmp (str_buf_p, "delta", (size_t) sz))
   {
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_FLOAT32);
-    JERRY_ASSERT (value->v_float32 == 123.45f);
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_FLOAT64);
-    JERRY_ASSERT (value->u.v_float64 == 123.45);
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+    JERRY_ASSERT (jerry_value_is_number (value));
+    JERRY_ASSERT (jerry_get_number_value (value) == 123.45);
   }
   else if (!strncmp (str_buf_p, "echo", (size_t) sz))
   {
-    JERRY_ASSERT (value->type == JERRY_DATA_TYPE_STRING);
-    jerry_size_t echo_sz = jerry_string_to_char_buffer (value->u.v_string, (jerry_char_t *) str_buf_p, 128);
+    JERRY_ASSERT (jerry_value_is_string (value));
+    jerry_size_t echo_sz = jerry_string_to_char_buffer (jerry_get_string_value (value),
+                                                        (jerry_char_t *) str_buf_p,
+                                                        128);
     str_buf_p[echo_sz] = '\0';
     JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t) echo_sz));
   }
@@ -288,7 +235,10 @@ static bool foreach (const jerry_string_t *name,
   return true;
 } /* foreach */
 
-static bool foreach_exception (const jerry_string_t *name, const jerry_value_t *value, void * user_data)
+static bool
+foreach_exception (const jerry_string_t *name, /**< field name */
+                   const jerry_value_t value, /**< field value */
+                   void *user_data) /**< user data */
 {
   JERRY_UNUSED (value);
   JERRY_UNUSED (user_data);
@@ -303,7 +253,10 @@ static bool foreach_exception (const jerry_string_t *name, const jerry_value_t *
   return true;
 } /* foreach_exception */
 
-static bool foreach_subset (const jerry_string_t *name, const jerry_value_t *value, void *user_data)
+static bool
+foreach_subset (const jerry_string_t *name, /**< field name */
+                const jerry_value_t value, /**< field value */
+                void *user_data) /**< user data */
 {
   JERRY_UNUSED (name);
   JERRY_UNUSED (value);
@@ -340,141 +293,147 @@ main (void)
 
   is_ok = (jerry_run (&res) == JERRY_COMPLETION_CODE_OK);
   JERRY_ASSERT (is_ok);
-  JERRY_ASSERT (jerry_value_is_void (&res));
+  JERRY_ASSERT (jerry_value_is_undefined (res));
 
   global_obj_p = jerry_get_global ();
 
   // Test corner case for jerry_string_to_char_buffer
-  test_api_init_api_value_string (&args[0], "");
-  sz = jerry_get_string_size (args[0].u.v_string);
+  args[0] = jerry_create_string_value (jerry_create_string ((jerry_char_t *) ""));
+  sz = jerry_get_string_size (jerry_get_string_value (args[0]));
   JERRY_ASSERT (sz == 0);
-  jerry_release_value (&args[0]);
+  jerry_release_value (args[0]);
 
   // Get global.boo (non-existing field)
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "boo", &val_t);
   JERRY_ASSERT (!is_ok);
-  JERRY_ASSERT (val_t.type == JERRY_DATA_TYPE_UNDEFINED);
+  JERRY_ASSERT (jerry_value_is_undefined (val_t));
 
   // Get global.t
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *)"t", &val_t);
-  JERRY_ASSERT (is_ok
-                && val_t.type == JERRY_DATA_TYPE_FLOAT64
-                && val_t.u.v_float64 == 1.0);
-  jerry_release_value (&val_t);
+  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "t", &val_t);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_number (val_t)
+                && jerry_get_number_value (val_t) == 1.0);
+  jerry_release_value (val_t);
 
   // Get global.foo
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *)"foo", &val_foo);
-  JERRY_ASSERT (is_ok
-                && val_foo.type == JERRY_DATA_TYPE_OBJECT);
+  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "foo", &val_foo);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_foo));
 
   // Call foo (4, 2)
-  test_api_init_api_value_float64 (&args[0], 4);
-  test_api_init_api_value_float64 (&args[1], 2);
-  is_ok = jerry_call_function (val_foo.u.v_object, NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_FLOAT64
-                && res.u.v_float64 == 1.0);
-  jerry_release_value (&res);
+  args[0] = jerry_create_number_value (4);
+  args[1] = jerry_create_number_value (2);
+  is_ok = jerry_call_function (jerry_get_object_value (val_foo), NULL, &res, args, 2);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_number (res)
+                && jerry_get_number_value (res) == 1.0);
+  jerry_release_value (res);
 
   // Get global.bar
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *)"bar", &val_bar);
-  JERRY_ASSERT (is_ok
-                && val_bar.type == JERRY_DATA_TYPE_OBJECT);
+  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "bar", &val_bar);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_bar));
 
   // Call bar (4, 2)
-  is_ok = jerry_call_function (val_bar.u.v_object, NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_FLOAT64
-                && res.u.v_float64 == 5.0);
-  jerry_release_value (&res);
-  jerry_release_value (&val_bar);
+  is_ok = jerry_call_function (jerry_get_object_value (val_bar), NULL, &res, args, 2);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_number (res)
+                && jerry_get_number_value (res) == 5.0);
+  jerry_release_value (res);
+  jerry_release_value (val_bar);
 
   // Set global.t = "abcd"
-  test_api_init_api_value_string (&args[0], "abcd");
-  is_ok = jerry_set_object_field_value (global_obj_p,
-                                        (jerry_char_t *)"t",
-                                        &args[0]);
+  jerry_release_value (args[0]);
+  args[0] = jerry_create_string_value (jerry_create_string ((jerry_char_t *) "abcd"));
+  is_ok = jerry_set_object_field_value (global_obj_p, (jerry_char_t *) "t", args[0]);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&args[0]);
 
   // Call foo (4, 2)
-  is_ok = jerry_call_function (val_foo.u.v_object, NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_STRING);
-  sz = jerry_get_string_size (res.u.v_string);
+  is_ok = jerry_call_function (jerry_get_object_value (val_foo), NULL, &res, args, 2);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_string (res));
+  sz = jerry_get_string_size (jerry_get_string_value (res));
   JERRY_ASSERT (sz == 4);
-  sz = jerry_string_to_char_buffer (res.u.v_string, (jerry_char_t *) buffer, sz);
+  sz = jerry_string_to_char_buffer (jerry_get_string_value (res), (jerry_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 4);
-  jerry_release_value (&res);
+  jerry_release_value (res);
   JERRY_ASSERT (!strncmp (buffer, "abcd", (size_t) sz));
+  jerry_release_value (args[0]);
+  jerry_release_value (args[1]);
 
   // Get global.A
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *)"A", &val_A);
-  JERRY_ASSERT (is_ok
-                && val_A.type == JERRY_DATA_TYPE_OBJECT);
+  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "A", &val_A);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_A));
 
   // Get A.prototype
-  is_ok = jerry_is_constructor (val_A.u.v_object);
+  is_ok = jerry_is_constructor (jerry_get_object_value (val_A));
   JERRY_ASSERT (is_ok);
-  is_ok = jerry_get_object_field_value (val_A.u.v_object,
+  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_A),
                                         (jerry_char_t *) "prototype",
                                         &val_A_prototype);
-  JERRY_ASSERT (is_ok
-                && val_A_prototype.type == JERRY_DATA_TYPE_OBJECT);
-  jerry_release_value (&val_A);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_A_prototype));
+  jerry_release_value (val_A);
 
   // Set A.prototype.foo = global.foo
-  is_ok = jerry_set_object_field_value (val_A_prototype.u.v_object,
+  is_ok = jerry_set_object_field_value (jerry_get_object_value (val_A_prototype),
                                         (jerry_char_t *) "foo",
-                                        &val_foo);
+                                        val_foo);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_A_prototype);
-  jerry_release_value (&val_foo);
+  jerry_release_value (val_A_prototype);
+  jerry_release_value (val_foo);
 
   // Get global.a
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "a", &val_a);
-  JERRY_ASSERT (is_ok
-                && val_a.type == JERRY_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_a));
 
   // Get a.t
-  is_ok = jerry_get_object_field_value (val_a.u.v_object, (jerry_char_t *) "t", &res);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_FLOAT64
-                && res.u.v_float64 == 12.0);
-  jerry_release_value (&res);
+  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_a), (jerry_char_t *) "t", &res);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_number (res)
+                && jerry_get_number_value (res) == 12.0);
+  jerry_release_value (res);
 
   // foreach properties
   jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "p", &val_p);
-  is_ok = jerry_foreach_object_field (val_p.u.v_object, foreach, (void *) "user_data");
+  is_ok = jerry_foreach_object_field (jerry_get_object_value (val_p), foreach, (void *) "user_data");
   JERRY_ASSERT (is_ok);
 
   // break foreach at third element
   int count = 0;
-  is_ok = jerry_foreach_object_field (val_p.u.v_object, foreach_subset, &count);
+  is_ok = jerry_foreach_object_field (jerry_get_object_value (val_p), foreach_subset, &count);
   JERRY_ASSERT (is_ok);
   JERRY_ASSERT (count == 3);
-  jerry_release_value (&val_p);
+  jerry_release_value (val_p);
 
   // foreach with throw test
   jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "np", &val_np);
-  is_ok = !jerry_foreach_object_field (val_np.u.v_object, foreach_exception, NULL);
+  is_ok = !jerry_foreach_object_field (jerry_get_object_value (val_np), foreach_exception, NULL);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_np);
+  jerry_release_value (val_np);
 
   // Get a.foo
-  is_ok = jerry_get_object_field_value (val_a.u.v_object, (jerry_char_t *) "foo", &val_a_foo);
-  JERRY_ASSERT (is_ok
-                && val_a_foo.type == JERRY_DATA_TYPE_OBJECT);
+  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_a),
+                                        (jerry_char_t *) "foo",
+                                        &val_a_foo);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_a_foo));
 
   // Call a.foo ()
-  is_ok = jerry_call_function (val_a_foo.u.v_object, val_a.u.v_object, &res, NULL, 0);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_FLOAT64
-                && res.u.v_float64 == 12.0);
-  jerry_release_value (&res);
-  jerry_release_value (&val_a_foo);
+  is_ok = jerry_call_function (jerry_get_object_value (val_a_foo),
+                               jerry_get_object_value (val_a),
+                               &res,
+                               NULL,
+                               0);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_number (res)
+                && jerry_get_number_value (res) == 12.0);
+  jerry_release_value (res);
+  jerry_release_value (val_a_foo);
 
-  jerry_release_value (&val_a);
+  jerry_release_value (val_a);
 
   // Create native handler bound function object and set it to 'external' variable
   external_func_p = jerry_create_external_function (handler);
@@ -482,30 +441,30 @@ main (void)
                 && jerry_is_function (external_func_p)
                 && jerry_is_constructor (external_func_p));
 
-  test_api_init_api_value_object (&val_external, external_func_p);
+  val_external = jerry_create_object_value (external_func_p);
   is_ok = jerry_set_object_field_value (global_obj_p,
                                         (jerry_char_t *) "external",
-                                        &val_external);
+                                        val_external);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_external);
-  jerry_release_object (external_func_p);
+  jerry_release_value (val_external);
 
   // Call 'call_external' function that should call external function created above
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "call_external", &val_call_external);
-  JERRY_ASSERT (is_ok
-                && val_call_external.type == JERRY_DATA_TYPE_OBJECT);
-  is_ok = jerry_call_function (val_call_external.u.v_object,
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_call_external));
+  is_ok = jerry_call_function (jerry_get_object_value (val_call_external),
                                global_obj_p,
                                &res,
-                               NULL, 0);
-  jerry_release_value (&val_call_external);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_STRING);
-  sz = jerry_get_string_size (res.u.v_string);
+                               NULL,
+                               0);
+  jerry_release_value (val_call_external);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_string (res));
+  sz = jerry_get_string_size (jerry_get_string_value (res));
   JERRY_ASSERT (sz == 19);
-  sz = jerry_string_to_char_buffer (res.u.v_string, (jerry_char_t *) buffer, sz);
+  sz = jerry_string_to_char_buffer (jerry_get_string_value (res), (jerry_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 19);
-  jerry_release_value (&res);
+  jerry_release_value (res);
   JERRY_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
 
   // Create native handler bound function object and set it to 'external_construct' variable
@@ -514,35 +473,34 @@ main (void)
                 && jerry_is_function (external_construct_p)
                 && jerry_is_constructor (external_construct_p));
 
-  test_api_init_api_value_object (&val_external_construct, external_construct_p);
+  val_external_construct = jerry_create_object_value (external_construct_p);
   is_ok = jerry_set_object_field_value (global_obj_p,
                                         (jerry_char_t *) "external_construct",
-                                        &val_external_construct);
+                                        val_external_construct);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_external_construct);
-  jerry_release_object (external_construct_p);
 
   // Call external function created above, as constructor
-  test_api_init_api_value_bool (&args[0], true);
+  args[0] = jerry_create_boolean_value (true);
   is_ok = jerry_construct_object (external_construct_p, &res, args, 1);
-  JERRY_ASSERT (is_ok
-                && res.type == JERRY_DATA_TYPE_OBJECT);
-  is_ok = jerry_get_object_field_value (res.u.v_object,
-                                        (jerry_char_t *)"value_field",
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (res));
+  is_ok = jerry_get_object_field_value (jerry_get_object_value (res),
+                                        (jerry_char_t *) "value_field",
                                         &val_value_field);
 
   // Get 'value_field' of constructed object
-  JERRY_ASSERT (is_ok
-                && val_value_field.type == JERRY_DATA_TYPE_BOOLEAN
-                && val_value_field.u.v_bool == true);
-  jerry_release_value (&val_value_field);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_boolean (val_value_field)
+                && jerry_get_boolean_value (val_value_field));
+  jerry_release_value (val_value_field);
+  jerry_release_object (external_construct_p);
 
   uintptr_t ptr;
-  is_ok = jerry_get_object_native_handle (res.u.v_object, &ptr);
+  is_ok = jerry_get_object_native_handle (jerry_get_object_value (res), &ptr);
   JERRY_ASSERT (is_ok
                 && ptr == (uintptr_t) 0x0012345678abcdefull);
 
-  jerry_release_value (&res);
+  jerry_release_value (res);
 
 
   // Test: Throwing exception from native handler.
@@ -550,43 +508,42 @@ main (void)
   JERRY_ASSERT (throw_test_handler_p != NULL
                 && jerry_is_function (throw_test_handler_p));
 
-  test_api_init_api_value_object (&val_t, throw_test_handler_p);
+  val_t = jerry_create_object_value (throw_test_handler_p);
   is_ok = jerry_set_object_field_value (global_obj_p,
                                         (jerry_char_t *) "throw_test",
-                                        &val_t);
+                                        val_t);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_t);
-  jerry_release_object (throw_test_handler_p);
+  jerry_release_value (val_t);
 
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "call_throw_test", &val_t);
-  JERRY_ASSERT (is_ok
-                && val_t.type == JERRY_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_call_function (val_t.u.v_object,
+  is_ok = jerry_call_function (jerry_get_object_value (val_t),
                                global_obj_p,
                                &res,
                                NULL, 0);
   JERRY_ASSERT (is_ok);
-  jerry_release_value (&val_t);
-  jerry_release_value (&res);
+  jerry_release_value (val_t);
+  jerry_release_value (res);
 
   // Test: Unhandled exception in called function
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "throw_reference_error", &val_t);
-  JERRY_ASSERT (is_ok
-                && val_t.type == JERRY_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_call_function (val_t.u.v_object,
+  is_ok = jerry_call_function (jerry_get_object_value (val_t),
                                global_obj_p,
                                &res,
                                NULL, 0);
   is_exception = !is_ok;
 
   JERRY_ASSERT (is_exception);
-  jerry_release_value (&val_t);
+  jerry_release_value (val_t);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (res.type == JERRY_DATA_TYPE_OBJECT);
-  jerry_release_value (&res);
+  JERRY_ASSERT (jerry_value_is_object (res));
+  jerry_release_value (res);
 
   // Test: Call of non-function
   obj_p = jerry_create_object ();
@@ -598,27 +555,27 @@ main (void)
   JERRY_ASSERT (is_exception);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (res.type == JERRY_DATA_TYPE_OBJECT);
-  jerry_release_value (&res);
+  JERRY_ASSERT (jerry_value_is_object (res));
+  jerry_release_value (res);
 
   jerry_release_object (obj_p);
 
   // Test: Unhandled exception in function called, as constructor
   is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "throw_reference_error", &val_t);
-  JERRY_ASSERT (is_ok
-                && val_t.type == JERRY_DATA_TYPE_OBJECT);
+  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_construct_object (val_t.u.v_object,
+  is_ok = jerry_construct_object (jerry_get_object_value (val_t),
                                   &res,
                                   NULL, 0);
   is_exception = !is_ok;
 
   JERRY_ASSERT (is_exception);
-  jerry_release_value (&val_t);
+  jerry_release_value (val_t);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (res.type == JERRY_DATA_TYPE_OBJECT);
-  jerry_release_value (&res);
+  JERRY_ASSERT (jerry_value_is_object (res));
+  jerry_release_value (res);
 
   // Test: Call of non-function as constructor
   obj_p = jerry_create_object ();
@@ -629,8 +586,8 @@ main (void)
   JERRY_ASSERT (is_exception);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (res.type == JERRY_DATA_TYPE_OBJECT);
-  jerry_release_value (&res);
+  JERRY_ASSERT (jerry_value_is_object (res));
+  jerry_release_value (res);
 
   jerry_release_object (obj_p);
 
@@ -638,16 +595,17 @@ main (void)
   // Test: Array Object API
   jerry_object_t *array_obj_p = jerry_create_array_object (10);
 
-  jerry_value_t v_in;
-  test_api_init_api_value_float64 (&v_in, 10.5);
-  jerry_set_array_index_value (array_obj_p, 5, &v_in);
+  jerry_value_t v_in = jerry_create_number_value (10.5);
+  jerry_set_array_index_value (array_obj_p, 5, v_in);
   jerry_value_t v_out;
   jerry_get_array_index_value (array_obj_p, 5, &v_out);
 
-  JERRY_ASSERT (v_out.type == JERRY_DATA_TYPE_FLOAT64 && v_out.u.v_float64 == 10.5);
+  JERRY_ASSERT (jerry_value_is_number (v_out)
+                && jerry_get_number_value (v_out) == 10.5);
 
+  jerry_release_value (v_in);
+  jerry_release_value (v_out);
   jerry_release_object (array_obj_p);
-
 
   // Test: eval
   const char *eval_code_src_p = "(function () { return 123; })";
@@ -657,19 +615,19 @@ main (void)
                                                true,
                                                &val_t);
   JERRY_ASSERT (status == JERRY_COMPLETION_CODE_OK);
-  JERRY_ASSERT (val_t.type == JERRY_DATA_TYPE_OBJECT);
-  JERRY_ASSERT (jerry_is_function (val_t.u.v_object));
+  JERRY_ASSERT (jerry_value_is_object (val_t));
+  JERRY_ASSERT (jerry_is_function (jerry_get_object_value (val_t)));
 
-  is_ok = jerry_call_function (val_t.u.v_object,
+  is_ok = jerry_call_function (jerry_get_object_value (val_t),
                                NULL,
                                &res,
                                NULL, 0);
   JERRY_ASSERT (is_ok);
-  JERRY_ASSERT (res.type == JERRY_DATA_TYPE_FLOAT64
-                && res.u.v_float64 == 123.0);
-  jerry_release_value (&res);
+  JERRY_ASSERT (jerry_value_is_number (res)
+                && jerry_get_number_value (res) == 123.0);
+  jerry_release_value (res);
 
-  jerry_release_value (&val_t);
+  jerry_release_value (val_t);
 
   // cleanup.
   jerry_release_object (global_obj_p);
@@ -695,7 +653,7 @@ main (void)
 
   is_ok = (jerry_run (&res) == JERRY_COMPLETION_CODE_OK);
   JERRY_ASSERT (is_ok);
-  JERRY_ASSERT (jerry_value_is_void (&res));
+  JERRY_ASSERT (jerry_value_is_undefined (res));
 
   jerry_cleanup ();
 
@@ -733,22 +691,22 @@ main (void)
                                   false,
                                   &res) == JERRY_COMPLETION_CODE_OK);
 
-    JERRY_ASSERT (is_ok
-                  && res.type == JERRY_DATA_TYPE_UNDEFINED);
-    jerry_release_value (&res);
+    JERRY_ASSERT (is_ok);
+    JERRY_ASSERT (jerry_value_is_undefined (res));
+    jerry_release_value (res);
 
     is_ok = (jerry_exec_snapshot (eval_mode_snapshot_buffer,
                                   eval_mode_snapshot_size,
                                   false,
                                   &res) == JERRY_COMPLETION_CODE_OK);
 
-    JERRY_ASSERT (is_ok
-                  && res.type == JERRY_DATA_TYPE_STRING);
-    sz = jerry_get_string_size (res.u.v_string);
+    JERRY_ASSERT (is_ok);
+    JERRY_ASSERT (jerry_value_is_string (res));
+    sz = jerry_get_string_size (jerry_get_string_value (res));
     JERRY_ASSERT (sz == 20);
-    sz = jerry_string_to_char_buffer (res.u.v_string, (jerry_char_t *) buffer, sz);
+    sz = jerry_string_to_char_buffer (jerry_get_string_value (res), (jerry_char_t *) buffer, sz);
     JERRY_ASSERT (sz == 20);
-    jerry_release_value (&res);
+    jerry_release_value (res);
     JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
 
     jerry_cleanup ();

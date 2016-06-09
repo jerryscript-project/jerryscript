@@ -229,7 +229,7 @@ vm_run_global (ecma_value_t *error_value_p) /**< [out] error value */
   else
   {
     ecma_free_value (ret_value);
-    *error_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    *error_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     ret_code = JERRY_COMPLETION_CODE_OK;
   }
 

@@ -655,16 +655,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                          &handler_p);
     JERRY_ASSERT (is_retrieved);
 
-    ecma_collection_header_t *arg_collection_p = ecma_new_values_collection (arguments_list_p,
-                                                                             arguments_list_len,
-                                                                             true);
-
     ret_value = jerry_dispatch_external_function (func_obj_p,
                                                   handler_p,
                                                   this_arg_value,
-                                                  arg_collection_p);
-
-    ecma_free_values_collection (arg_collection_p, true);
+                                                  arguments_list_p,
+                                                  arguments_list_len);
   }
   else
   {

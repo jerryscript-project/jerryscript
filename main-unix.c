@@ -73,14 +73,14 @@ read_file (const char *file_name,
  */
 static bool
 assert_handler (const jerry_object_t *function_obj_p __attribute__((unused)), /**< function object */
-                const jerry_value_t *this_p __attribute__((unused)), /**< this arg */
+                const jerry_value_t this_p __attribute__((unused)), /**< this arg */
                 jerry_value_t *ret_val_p __attribute__((unused)), /**< return argument */
                 const jerry_value_t args_p[], /**< function arguments */
                 const jerry_length_t args_cnt) /**< number of function arguments */
 {
   if (args_cnt == 1
-      && args_p[0].type == JERRY_DATA_TYPE_BOOLEAN
-      && args_p[0].u.v_bool == true)
+      && jerry_value_is_boolean (args_p[0])
+      && jerry_get_boolean_value (args_p[0]))
   {
     return true;
   }
@@ -315,15 +315,13 @@ main (int argc,
 
   jerry_object_t *global_obj_p = jerry_get_global ();
   jerry_object_t *assert_func_p = jerry_create_external_function (assert_handler);
-  jerry_value_t assert_value;
-  assert_value.type = JERRY_DATA_TYPE_OBJECT;
-  assert_value.u.v_object = assert_func_p;
+  jerry_value_t assert_value = jerry_create_object_value (assert_func_p);
 
   bool is_assert_added = jerry_set_object_field_value (global_obj_p,
                                                        (jerry_char_t *) "assert",
-                                                       &assert_value);
+                                                       assert_value);
 
-  jerry_release_value (&assert_value);
+  jerry_release_value (assert_value);
   jerry_release_object (global_obj_p);
 
   if (!is_assert_added)
@@ -349,7 +347,7 @@ main (int argc,
                                       snapshot_size,
                                       true,
                                       &ret_value);
-      assert (ret_value.type == JERRY_DATA_TYPE_UNDEFINED);
+      assert (jerry_value_is_undefined (ret_value));
     }
 
     if (ret_code != JERRY_COMPLETION_CODE_OK)
@@ -359,7 +357,7 @@ main (int argc,
   }
 
   jerry_object_t *err_obj_p = NULL;
-  jerry_value_t err_value = jerry_create_void_value ();
+  jerry_value_t err_value = jerry_create_undefined_value ();
 
   if (ret_code == JERRY_COMPLETION_CODE_OK)
   {
@@ -426,7 +424,7 @@ main (int argc,
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    if (!jerry_is_function (print_function.u.v_object))
+    if (!jerry_is_function (jerry_get_object_value (print_function)))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -464,17 +462,21 @@ main (int argc,
         /* Print return value */
         const jerry_value_t args[] = { ret_val };
         jerry_value_t ret_val_print;
-        if (jerry_call_function (print_function.u.v_object, NULL, &ret_val_print, args, 1))
+        if (jerry_call_function (jerry_get_object_value (print_function),
+                                 NULL,
+                                 &ret_val_print,
+                                 args,
+                                 1))
         {
-          jerry_release_value (&ret_val_print);
+          jerry_release_value (ret_val_print);
         }
 
-        jerry_release_value (&ret_val);
+        jerry_release_value (ret_val);
       }
     }
 
     jerry_release_object (global_obj_p);
-    jerry_release_value (&print_function);
+    jerry_release_value (print_function);
   }
 
 #ifdef JERRY_ENABLE_LOG
@@ -497,13 +499,13 @@ main (int argc,
     if (err_obj_p != NULL)
     {
       jerry_value_t err_value = jerry_create_object_value (err_obj_p);
-      err_str_p = jerry_value_to_string (&err_value);
+      err_str_p = jerry_get_string_value (jerry_value_to_string (err_value));
       jerry_release_object (err_obj_p);
     }
-    else if (!jerry_value_is_void (&err_value))
+    else if (!jerry_value_is_undefined (err_value))
     {
-      err_str_p = jerry_value_to_string (&err_value);
-      jerry_release_value (&err_value);
+      err_str_p = jerry_get_string_value (jerry_value_to_string (err_value));
+      jerry_release_value (err_value);
     }
 
     if (__builtin_expect (!!(err_str_p != NULL), 1))

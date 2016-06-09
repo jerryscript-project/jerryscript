@@ -115,7 +115,9 @@ typedef enum
   VM_OC_PUSH_FALSE,              /**< push false value */
   VM_OC_PUSH_NULL,               /**< push null value */
   VM_OC_PUSH_THIS,               /**< push this */
-  VM_OC_PUSH_NUMBER,             /**< push number */
+  VM_OC_PUSH_NUMBER_0,           /**< push number zero */
+  VM_OC_PUSH_NUMBER_POS_BYTE,    /**< push number between 1 and 256 */
+  VM_OC_PUSH_NUMBER_NEG_BYTE,    /**< push number between -1 and -256 */
   VM_OC_PUSH_OBJECT,             /**< push object */
   VM_OC_SET_PROPERTY,            /**< set property */
   VM_OC_SET_GETTER,              /**< set getter */

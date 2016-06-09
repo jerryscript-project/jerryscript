@@ -910,28 +910,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           result = ecma_copy_value (frame_ctx_p->this_binding);
           break;
         }
-        case VM_OC_PUSH_NUMBER:
+        case VM_OC_PUSH_NUMBER_0:
         {
-          ecma_integer_value_t number;
-
-          if (opcode == CBC_PUSH_NUMBER_0)
-          {
-            number = 0;
-          }
-          else
-          {
-            number = *byte_code_p++;
-
-            JERRY_ASSERT (opcode == CBC_PUSH_NUMBER_1);
-
-            if (number >= CBC_PUSH_NUMBER_1_RANGE_END)
-            {
-              number = -(number - CBC_PUSH_NUMBER_1_RANGE_END);
-            }
-          }
-
-          result = ecma_make_integer_value (number);
-          break;
+          *stack_top_p++ = ecma_make_integer_value (0);
+          continue;
+        }
+        case VM_OC_PUSH_NUMBER_POS_BYTE:
+        {
+          ecma_integer_value_t number = *byte_code_p++;
+          *stack_top_p++ = ecma_make_integer_value (number + 1);
+          continue;
+        }
+        case VM_OC_PUSH_NUMBER_NEG_BYTE:
+        {
+          ecma_integer_value_t number = *byte_code_p++;
+          *stack_top_p++ = ecma_make_integer_value (-(number + 1));
+          continue;
         }
         case VM_OC_PUSH_OBJECT:
         {

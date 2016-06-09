@@ -310,8 +310,10 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
     parser_flush_cbc (context_p);
   }
 
-  JERRY_ASSERT (value < CBC_PUSH_NUMBER_1_RANGE_END);
-  JERRY_ASSERT (CBC_STACK_ADJUST_VALUE (cbc_flags[CBC_PUSH_NUMBER_1]) == 1);
+  cbc_opcode_t opcode = is_negative_number ? CBC_PUSH_NUMBER_NEG_BYTE : CBC_PUSH_NUMBER_POS_BYTE;
+
+  JERRY_ASSERT (value > 0 && value <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
+  JERRY_ASSERT (CBC_STACK_ADJUST_VALUE (cbc_flags[opcode]) == 1);
 
   context_p->stack_depth++;
 
@@ -325,18 +327,11 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
       real_value = -real_value;
     }
 
-    printf ("  [%3d] %s number:%d\n", (int) context_p->stack_depth, cbc_names[CBC_PUSH_NUMBER_1], real_value);
+    printf ("  [%3d] %s number:%d\n", (int) context_p->stack_depth, cbc_names[opcode], real_value);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
-  if (is_negative_number)
-  {
-    PARSER_PLUS_EQUAL_U16 (value, CBC_PUSH_NUMBER_1_RANGE_END);
-  }
-
-  parser_emit_two_bytes (context_p,
-                         CBC_PUSH_NUMBER_1,
-                         (uint8_t) value);
+  parser_emit_two_bytes (context_p, opcode, (uint8_t) (value - 1));
 
   context_p->byte_code_size += 2;
 

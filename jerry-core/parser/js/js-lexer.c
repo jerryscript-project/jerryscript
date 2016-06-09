@@ -1553,7 +1553,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 
     if (int_num == num)
     {
-      if (int_num < CBC_PUSH_NUMBER_1_RANGE_END
+      if (int_num <= CBC_PUSH_NUMBER_BYTE_RANGE_END
           && (int_num != 0 || !is_negative_number))
       {
         context_p->lit_object.index = (uint16_t) int_num;

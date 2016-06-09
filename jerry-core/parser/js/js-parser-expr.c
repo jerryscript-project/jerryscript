@@ -88,8 +88,6 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
   if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
       && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
   {
-    JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_LITERAL, opcode + CBC_UNARY_LVALUE_WITH_IDENT));
-
     if (context_p->status_flags & PARSER_IS_STRICT)
     {
       if (context_p->last_cbc.literal_object_type != LEXER_LITERAL_OBJECT_ANY)
@@ -107,16 +105,40 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
         }
         parser_raise_error (context_p, error);
       }
-      if (opcode == CBC_DELETE)
+      if (opcode == CBC_DELETE_PUSH_RESULT)
       {
         parser_raise_error (context_p, PARSER_ERR_DELETE_IDENT_NOT_ALLOWED);
       }
     }
 
-    if (opcode == CBC_DELETE)
+    if (opcode == CBC_DELETE_PUSH_RESULT)
     {
       context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+
+      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+      {
+        context_p->last_cbc_opcode = CBC_DELETE_IDENT_PUSH_RESULT;
+      }
+      else if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
+      {
+        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+        parser_emit_cbc_literal (context_p,
+                                 CBC_DELETE_IDENT_PUSH_RESULT,
+                                 context_p->last_cbc.value);
+      }
+      else
+      {
+        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_THREE_LITERALS);
+
+        context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
+        parser_emit_cbc_literal (context_p,
+                                 CBC_DELETE_IDENT_PUSH_RESULT,
+                                 context_p->last_cbc.third_literal_index);
+      }
+      return;
     }
+
+    JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_LITERAL, opcode + CBC_UNARY_LVALUE_WITH_IDENT));
 
     if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
@@ -169,8 +191,8 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
       default:
       {
         /* Invalid LeftHandSide expression. */
-        parser_emit_cbc_ext (context_p, (opcode == CBC_DELETE) ? CBC_EXT_PUSH_UNDEFINED_BASE
-                                                               : CBC_EXT_THROW_REFERENCE_ERROR);
+        parser_emit_cbc_ext (context_p, (opcode == CBC_DELETE_PUSH_RESULT) ? CBC_EXT_PUSH_UNDEFINED_BASE
+                                                                           : CBC_EXT_THROW_REFERENCE_ERROR);
         break;
       }
     }
@@ -505,7 +527,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 
         if (lexer_construct_number_object (context_p, PARSER_TRUE, is_negative_number))
         {
-          JERRY_ASSERT (context_p->lit_object.index < CBC_PUSH_NUMBER_1_RANGE_END);
+          JERRY_ASSERT (context_p->lit_object.index <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
 
           if (context_p->lit_object.index == 0)
           {
@@ -949,7 +971,14 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
     if (LEXER_IS_UNARY_LVALUE_OP_TOKEN (token))
     {
-      token = (uint8_t) (LEXER_UNARY_LVALUE_OP_TOKEN_TO_OPCODE (token));
+      if (token == LEXER_KEYW_DELETE)
+      {
+        token = CBC_DELETE_PUSH_RESULT;
+      }
+      else
+      {
+        token = (uint8_t) (LEXER_UNARY_LVALUE_OP_TOKEN_TO_OPCODE (token));
+      }
       parser_emit_unary_lvalue_opcode (context_p, (cbc_opcode_t) token);
     }
     else

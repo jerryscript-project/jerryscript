@@ -1135,16 +1135,17 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
         continue;
       }
 
-      if (opcode == CBC_PUSH_NUMBER_1)
+      if (opcode == CBC_PUSH_NUMBER_POS_BYTE)
       {
         int value = *byte_code_p++;
+        printf (" number:%d\n", value + 1);
+        continue;
+      }
 
-        if (value >= CBC_PUSH_NUMBER_1_RANGE_END)
-        {
-          value = -(value - CBC_PUSH_NUMBER_1_RANGE_END);
-        }
-
-        printf (" number:%d\n", value);
+      if (opcode == CBC_PUSH_NUMBER_NEG_BYTE)
+      {
+        int value = *byte_code_p++;
+        printf (" number:%d\n", -(value + 1));
         continue;
       }
     }

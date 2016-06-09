@@ -26,7 +26,7 @@ int test_jerry (int argc, char **argv)
   /* Suppress compiler errors */
   (void) argc;
   (void) argv;
-  const jerry_api_char_t script[] = "print ('Hello, World!');";
+  const jerry_char_t script[] = "print ('Hello, World!');";
   printf ("This test run the following script code: [%s]\n\n", script);
 
   size_t script_size = strlen ((const char *) script);

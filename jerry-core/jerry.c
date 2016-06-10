@@ -517,7 +517,7 @@ jerry_convert_eval_completion_to_retval (jerry_value_t *retval_p, /**< [out] api
 {
   jerry_convert_ecma_value_to_api_value (retval_p, completion);
 
-  return (ecma_is_value_error (completion)) ? JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION : JERRY_COMPLETION_CODE_OK;
+  return (ECMA_IS_VALUE_ERROR (completion)) ? JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION : JERRY_COMPLETION_CODE_OK;
 } /* jerry_convert_eval_completion_to_retval */
 
 /**
@@ -729,7 +729,7 @@ jerry_create_array_object (jerry_size_t size) /**< size of array */
 
   jerry_length_t argument_size = 1;
   ecma_value_t new_array_completion = ecma_op_create_array_object (&array_length, argument_size, true);
-  JERRY_ASSERT (!ecma_is_value_error (new_array_completion));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array_completion));
   jerry_object_t *obj_p = ecma_get_object_from_value (new_array_completion);
 
   ecma_free_value (array_length);
@@ -751,7 +751,7 @@ jerry_set_array_index_value (jerry_object_t *array_obj_p, /**< array object */
   ecma_value_t value;
   jerry_convert_api_value_to_ecma_value (&value, value_p);
   ecma_value_t set_completion = ecma_op_object_put (array_obj_p, str_idx_p, value, false);
-  JERRY_ASSERT (!ecma_is_value_error (set_completion));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (set_completion));
 
   ecma_free_value (set_completion);
   ecma_deref_ecma_string (str_idx_p);
@@ -778,7 +778,7 @@ jerry_get_array_index_value (jerry_object_t *array_obj_p, /**< array object */
 {
   ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
   ecma_value_t get_completion = ecma_op_object_get (array_obj_p, str_idx_p);
-  JERRY_ASSERT (!ecma_is_value_error (get_completion));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_completion));
   jerry_convert_ecma_value_to_api_value (value_p, get_completion);
 
   ecma_free_value (get_completion);
@@ -1104,7 +1104,7 @@ jerry_delete_object_field (jerry_object_t *object_p, /**< object to delete field
                                                           field_name_str_p,
                                                           true);
 
-  if (ecma_is_value_error (delete_completion))
+  if (ECMA_IS_VALUE_ERROR (delete_completion))
   {
     is_successful = false;
   }
@@ -1186,7 +1186,7 @@ jerry_foreach_object_field (jerry_object_t *object_p, /**< object */
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_error (ret_value));
+    JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
 
     ecma_free_value (ret_value);
 
@@ -1220,7 +1220,7 @@ jerry_get_object_field_value_sz (jerry_object_t *object_p, /**< object */
 
   ecma_value_t field_value = ecma_op_object_get (object_p, field_name_str_p);
 
-  if (!ecma_is_value_error (field_value))
+  if (!ECMA_IS_VALUE_ERROR (field_value))
   {
     jerry_convert_ecma_value_to_api_value (field_value_p, field_value);
 
@@ -1287,7 +1287,7 @@ jerry_set_object_field_value_sz (jerry_object_t *object_p, /**< object */
                                                     value_to_put,
                                                     true);
 
-  if (ecma_is_value_error (set_completion))
+  if (ECMA_IS_VALUE_ERROR (set_completion))
   {
     is_successful = false;
   }
@@ -1442,7 +1442,7 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
                                              args_count);
   }
 
-  if (ecma_is_value_error (call_completion))
+  if (ECMA_IS_VALUE_ERROR (call_completion))
   {
     /* unhandled exception during the function call */
     is_successful = false;
@@ -2374,7 +2374,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
     if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
     {
-      JERRY_ASSERT (ecma_is_value_error (error_value));
+      JERRY_ASSERT (ECMA_IS_VALUE_ERROR (error_value));
       ecma_free_value (error_value);
     }
     else

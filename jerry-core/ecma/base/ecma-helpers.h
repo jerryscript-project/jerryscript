@@ -129,7 +129,6 @@ extern bool ecma_is_value_float_number (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_number (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_string (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_object (ecma_value_t) __attr_pure___;
-extern bool ecma_is_value_error (ecma_value_t) __attr_pure___;
 
 extern void ecma_check_value_type_is_spec_defined (ecma_value_t);
 

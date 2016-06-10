@@ -32,7 +32,7 @@
 #define ECMA_TRY_CATCH(var, op, return_value) \
   JERRY_ASSERT (return_value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY)); \
   ecma_value_t var ## _completion = op; \
-  if (unlikely (ecma_is_value_error (var ## _completion))) \
+  if (ECMA_IS_VALUE_ERROR (var ## _completion)) \
   { \
     return_value = var ## _completion; \
   } \

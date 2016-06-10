@@ -2005,7 +2005,7 @@ ecma_builtin_array_prototype_object_every (ecma_value_t this_arg, /**< this argu
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
     ecma_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (to_object_comp));
 
     func_object_p = ecma_get_object_from_value (to_object_comp);
 
@@ -2103,7 +2103,7 @@ ecma_builtin_array_prototype_object_some (ecma_value_t this_arg, /**< this argum
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
     ecma_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (to_object_comp));
 
     func_object_p = ecma_get_object_from_value (to_object_comp);
 
@@ -2200,7 +2200,7 @@ ecma_builtin_array_prototype_object_for_each (ecma_value_t this_arg, /**< this a
 
     /* We already checked that arg1 is callable, so it will always coerce to an object. */
     ecma_value_t to_object_comp = ecma_op_to_object (arg1);
-    JERRY_ASSERT (!ecma_is_value_error (to_object_comp));
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (to_object_comp));
 
     func_object_p = ecma_get_object_from_value (to_object_comp);
 
@@ -2295,7 +2295,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
 
     /* 6. */
     ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-    JERRY_ASSERT (!ecma_is_value_error (new_array));
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
     ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* 7-8. */
@@ -2402,7 +2402,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
 
     /* 6. */
     ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-    JERRY_ASSERT (!ecma_is_value_error (new_array));
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
     ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* We already checked that arg1 is callable, so it will always be an object. */

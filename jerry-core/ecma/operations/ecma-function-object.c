@@ -601,7 +601,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         // 3., 4.
         this_binding = ecma_op_to_object (this_arg_value);
 
-        JERRY_ASSERT (!ecma_is_value_error (this_binding));
+        JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));
       }
 
       // 5.

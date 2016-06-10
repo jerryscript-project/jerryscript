@@ -289,7 +289,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     if (ecma_object_get_class_name (this_arg_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)
     {
       ecma_value_t get_len_value = ecma_op_object_get (this_arg_obj_p, magic_string_length_p);
-      JERRY_ASSERT (!ecma_is_value_error (get_len_value));
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
       JERRY_ASSERT (ecma_is_value_number (get_len_value));
 
       const ecma_length_t bound_arg_count = arg_count > 1 ? arg_count - 1 : 0;

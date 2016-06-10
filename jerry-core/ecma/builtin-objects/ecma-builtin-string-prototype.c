@@ -1763,7 +1763,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
               ecma_string_t *zero_str_p = ecma_new_ecma_string_from_number (ECMA_NUMBER_ZERO);
               ecma_value_t match_comp_value = ecma_op_object_get (match_array_obj_p, zero_str_p);
 
-              JERRY_ASSERT (!ecma_is_value_error (match_comp_value));
+              JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (match_comp_value));
 
               ecma_string_t *match_str_p = ecma_get_string_from_value (match_comp_value);
               ecma_length_t match_str_length = ecma_string_get_length (match_str_p);
@@ -1842,7 +1842,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
 
                 ecma_value_t match_comp_value = ecma_op_object_get (match_array_obj_p, idx_str_p);
 
-                JERRY_ASSERT (!ecma_is_value_error (match_comp_value));
+                JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (match_comp_value));
 
                 /* 13.c.iii.7.b */
                 ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,

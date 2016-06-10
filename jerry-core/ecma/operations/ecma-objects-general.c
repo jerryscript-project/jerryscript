@@ -424,7 +424,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
                                                   &value,
                                                   1);
 
-  if (!ecma_is_value_error (ret_value))
+  if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     ecma_fast_free_value (ret_value);
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
@@ -533,7 +533,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_deref_ecma_string (function_name_p);
 
-    if (ecma_is_value_error (function_value_get_completion))
+    if (ECMA_IS_VALUE_ERROR (function_value_get_completion))
     {
       return function_value_get_completion;
     }
@@ -552,7 +552,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_free_value (function_value_get_completion);
 
-    if (ecma_is_value_error (call_completion)
+    if (ECMA_IS_VALUE_ERROR (call_completion)
         || (!ecma_is_value_empty (call_completion)
            && !ecma_is_value_object (call_completion)))
     {

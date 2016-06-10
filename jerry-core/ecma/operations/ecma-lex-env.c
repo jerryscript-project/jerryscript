@@ -162,7 +162,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
                                                is_deletable, /* Configurable */
                                                true); /* Failure handling */
 
-    if (ecma_is_value_error (completion))
+    if (ECMA_IS_VALUE_ERROR (completion))
     {
       return completion;
     }
@@ -218,7 +218,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
                                                   value,
                                                   is_strict);
 
-    if (ecma_is_value_error (completion))
+    if (ECMA_IS_VALUE_ERROR (completion))
     {
       return completion;
     }

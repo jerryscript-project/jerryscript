@@ -53,8 +53,8 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
                        && ECMA_INTEGER_NUMBER_MIN * 2 >= INT32_MIN,
                        doubled_ecma_numbers_must_fit_into_int32_range);
 
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {
@@ -177,7 +177,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
     left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
     free_left_value = true;
 
-    if (ecma_is_value_error (left_value))
+    if (ECMA_IS_VALUE_ERROR (left_value))
     {
       return left_value;
     }
@@ -189,7 +189,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
     right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
     free_right_value = true;
 
-    if (ecma_is_value_error (right_value))
+    if (ECMA_IS_VALUE_ERROR (right_value))
     {
       if (free_left_value)
       {

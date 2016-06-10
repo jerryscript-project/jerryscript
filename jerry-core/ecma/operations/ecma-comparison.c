@@ -108,7 +108,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       // 4.
       ecma_value_t x_num_value = ecma_op_to_number (x);
 
-      if (ecma_is_value_error (x_num_value))
+      if (ECMA_IS_VALUE_ERROR (x_num_value))
       {
         return x_num_value;
       }
@@ -146,7 +146,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       // 9.
       ecma_value_t x_prim_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO);
 
-      if (ecma_is_value_error (x_prim_value))
+      if (ECMA_IS_VALUE_ERROR (x_prim_value))
       {
         return x_prim_value;
       }

@@ -599,7 +599,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
     ecma_deref_ecma_string (enumerable_magic_string_p);
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -621,7 +621,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (configurable_magic_string_p);
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -643,7 +643,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (value_magic_string_p);
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -665,7 +665,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (writable_magic_string_p);
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -708,7 +708,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (get_magic_string_p);
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -752,7 +752,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       ecma_deref_ecma_string (set_magic_string_p);
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
@@ -768,7 +768,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       }
     }
 
-    if (!ecma_is_value_error (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
     }

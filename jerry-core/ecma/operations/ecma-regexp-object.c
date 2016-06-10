@@ -306,7 +306,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
 
   ECMA_FINALIZE (empty);
 
-  if (ecma_is_value_error (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     ecma_deref_object (obj_p);
   }
@@ -552,7 +552,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           if (!sub_str_p)
           {
             match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
-            if (ecma_is_value_error (match_value))
+            if (ECMA_IS_VALUE_ERROR (match_value))
             {
               break;
             }
@@ -561,7 +561,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
         while (re_get_opcode (&bc_p) == RE_OP_ALTERNATIVE);
 
-        if (!ecma_is_value_error (match_value))
+        if (!ECMA_IS_VALUE_ERROR (match_value))
         {
           JERRY_DDLOG ("Execute RE_OP_LOOKAHEAD_POS/NEG: ");
           ecma_free_value (match_value);
@@ -578,7 +578,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           }
         }
 
-        if (!ecma_is_value_error (match_value))
+        if (!ECMA_IS_VALUE_ERROR (match_value))
         {
           if (ecma_is_value_true (match_value))
           {
@@ -707,7 +707,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -792,7 +792,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           *out_str_p = sub_str_p;
           return match_value; /* match */
         }
-        else if (ecma_is_value_error (match_value))
+        else if (ECMA_IS_VALUE_ERROR (match_value))
         {
           return match_value;
         }
@@ -850,7 +850,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -874,7 +874,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -928,7 +928,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -997,7 +997,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -1021,7 +1021,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
               *out_str_p = sub_str_p;
               return match_value; /* match */
             }
-            else if (ecma_is_value_error (match_value))
+            else if (ECMA_IS_VALUE_ERROR (match_value))
             {
               return match_value;
             }
@@ -1042,7 +1042,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }
@@ -1077,7 +1077,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
               *out_str_p = sub_str_p;
               return match_value; /* match */
             }
-            else if (ecma_is_value_error (match_value))
+            else if (ECMA_IS_VALUE_ERROR (match_value))
             {
               return match_value;
             }
@@ -1087,7 +1087,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
           if (!ecma_is_value_true (match_value))
           {
-            if (ecma_is_value_error (match_value))
+            if (ECMA_IS_VALUE_ERROR (match_value))
             {
               return match_value;
             }
@@ -1120,7 +1120,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
           if (!ecma_is_value_true (match_value))
           {
-            if (ecma_is_value_error (match_value))
+            if (ECMA_IS_VALUE_ERROR (match_value))
             {
               return match_value;
             }
@@ -1141,7 +1141,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             *out_str_p = sub_str_p;
             return match_value; /* match */
           }
-          else if (ecma_is_value_error (match_value))
+          else if (ECMA_IS_VALUE_ERROR (match_value))
           {
             return match_value;
           }

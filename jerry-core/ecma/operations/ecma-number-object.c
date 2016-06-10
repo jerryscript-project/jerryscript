@@ -43,7 +43,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 {
   ecma_value_t conv_to_num_completion = ecma_op_to_number (arg);
 
-  if (ecma_is_value_error (conv_to_num_completion))
+  if (ECMA_IS_VALUE_ERROR (conv_to_num_completion))
   {
     return conv_to_num_completion;
   }

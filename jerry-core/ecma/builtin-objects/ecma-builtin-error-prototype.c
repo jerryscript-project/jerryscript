@@ -87,7 +87,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
       name_to_str_completion = ecma_op_to_string (name_get_ret_value);
     }
 
-    if (unlikely (ecma_is_value_error (name_to_str_completion)))
+    if (unlikely (ECMA_IS_VALUE_ERROR (name_to_str_completion)))
     {
       ret_value = ecma_copy_value (name_to_str_completion);
     }
@@ -112,7 +112,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
         msg_to_str_completion = ecma_op_to_string (msg_get_ret_value);
       }
 
-      if (unlikely (ecma_is_value_error (msg_to_str_completion)))
+      if (unlikely (ECMA_IS_VALUE_ERROR (msg_to_str_completion)))
       {
         ret_value = ecma_copy_value (msg_to_str_completion);
       }

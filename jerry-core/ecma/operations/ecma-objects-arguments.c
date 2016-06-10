@@ -291,7 +291,7 @@ ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]
   ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
 
   ecma_value_t completion = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-  JERRY_ASSERT (!ecma_is_value_error (completion));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion));
 
   return completion;
 } /* ecma_arguments_get_mapped_arg_value */

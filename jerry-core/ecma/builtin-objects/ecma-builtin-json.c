@@ -533,7 +533,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
       uint32_t length = 0;
 
       ecma_value_t array_construction = ecma_op_create_array_object (NULL, 0, false);
-      JERRY_ASSERT (!ecma_is_value_error (array_construction));
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_construction));
 
       ecma_object_t *array_p = ecma_get_object_from_value (array_construction);
 
@@ -678,7 +678,7 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_error (ret_value));
+    JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
   }
 
   ECMA_FINALIZE (value_get);
@@ -1323,7 +1323,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
     if (ecma_is_value_null (my_val) || ecma_is_value_boolean (my_val))
     {
       ret_value = ecma_op_to_string (my_val);
-      JERRY_ASSERT (!ecma_is_value_error (ret_value));
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (ret_value));
     }
     /* 8. */
     else if (ecma_is_value_string (my_val))
@@ -1340,7 +1340,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
       if (!ecma_number_is_nan (num_value_p) && !ecma_number_is_infinity (num_value_p))
       {
         ret_value = ecma_op_to_string (my_val);
-        JERRY_ASSERT (!ecma_is_value_error (ret_value));
+        JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (ret_value));
       }
       else
       {
@@ -1482,7 +1482,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
       /* 8.b.i */
       ecma_value_t str_comp_val = ecma_builtin_json_quote (key_p);
-      JERRY_ASSERT (!ecma_is_value_error (str_comp_val));
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (str_comp_val));
 
       ecma_string_t *member_str_p = ecma_get_string_from_value (str_comp_val);
 

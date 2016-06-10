@@ -564,7 +564,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
   }
   else
   {
-    JERRY_ASSERT (ecma_is_value_error (ret_value));
+    JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
     ecma_deref_object (obj_p);
   }
 

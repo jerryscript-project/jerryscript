@@ -48,8 +48,8 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   JERRY_STATIC_ASSERT ((ECMA_DIRECT_TYPE_MASK | ECMA_VALUE_ERROR_FLAG) == ((1 << ECMA_DIRECT_SHIFT) - 1),
                        direct_type_mask_and_error_flag_must_fill_all_bits_before_the_value_starts);
 
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {

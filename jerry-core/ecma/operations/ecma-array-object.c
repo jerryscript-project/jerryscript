@@ -179,12 +179,12 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
     // c.
     ecma_value_t completion = ecma_op_to_number (property_desc_p->value);
-    if (ecma_is_value_error (completion))
+    if (ECMA_IS_VALUE_ERROR (completion))
     {
       return completion;
     }
 
-    JERRY_ASSERT (!ecma_is_value_error (completion)
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion)
                   && ecma_is_value_number (completion));
 
     ecma_number_t new_len_num = ecma_get_number_from_value (completion);
@@ -255,7 +255,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
           if (!ecma_is_value_true (succeeded))
           {
             JERRY_ASSERT (ecma_is_value_false (succeeded)
-                          || ecma_is_value_error (succeeded));
+                          || ECMA_IS_VALUE_ERROR (succeeded));
 
             // k.
             ret_value = succeeded;

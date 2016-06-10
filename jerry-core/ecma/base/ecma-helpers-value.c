@@ -312,18 +312,6 @@ ecma_is_value_object (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_object */
 
 /**
- * Check if the value is an error value.
- *
- * @return true - if the value contains an error value,
- *         false - otherwise.
- */
-inline bool __attr_pure___ __attr_always_inline___
-ecma_is_value_error (ecma_value_t value) /**< ecma value */
-{
-  return (value & ECMA_VALUE_ERROR_FLAG) != 0;
-} /* ecma_is_value_error */
-
-/**
  * Debug assertion that specified value's type is one of ECMA-defined
  * script-visible types, i.e.: undefined, null, boolean, number, string, object.
  */
@@ -501,7 +489,7 @@ ecma_value_t __attr_const___
 ecma_make_error_value (ecma_value_t value) /**< original ecma value */
 {
   /* Error values cannot be converted. */
-  JERRY_ASSERT (!ecma_is_value_error (value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (value));
 
   return value | ECMA_VALUE_ERROR_FLAG;
 } /* ecma_make_error_value */
@@ -618,11 +606,11 @@ ecma_invert_boolean_value (ecma_value_t value) /**< ecma value */
 ecma_value_t __attr_pure___
 ecma_get_value_from_error_value (ecma_value_t value) /**< ecma value */
 {
-  JERRY_ASSERT (ecma_is_value_error (value));
+  JERRY_ASSERT (ECMA_IS_VALUE_ERROR (value));
 
   value = (ecma_value_t) (value & ~ECMA_VALUE_ERROR_FLAG);
 
-  JERRY_ASSERT (!ecma_is_value_error (value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (value));
 
   return value;
 } /* ecma_get_value_from_error_value */

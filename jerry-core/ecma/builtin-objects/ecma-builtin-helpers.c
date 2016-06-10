@@ -65,7 +65,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   {
     ecma_value_t obj_this = ecma_op_to_object (this_arg);
 
-    if (ecma_is_value_error (obj_this))
+    if (ECMA_IS_VALUE_ERROR (obj_this))
     {
       return obj_this;
     }
@@ -200,7 +200,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (obj_p != NULL);
 
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-  JERRY_ASSERT (!ecma_is_value_error (new_array));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   uint32_t index = 0;

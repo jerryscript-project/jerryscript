@@ -41,8 +41,8 @@ ecma_value_t
 opfunc_less_than (ecma_value_t left_value, /**< left value */
                   ecma_value_t right_value) /**< right value */
 {
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {
@@ -55,7 +55,7 @@ opfunc_less_than (ecma_value_t left_value, /**< left value */
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 
-  if (ecma_is_value_error (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     return ret_value;
   }
@@ -84,8 +84,8 @@ ecma_value_t
 opfunc_greater_than (ecma_value_t left_value, /**< left value */
                      ecma_value_t right_value) /**< right value */
 {
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {
@@ -98,7 +98,7 @@ opfunc_greater_than (ecma_value_t left_value, /**< left value */
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
-  if (ecma_is_value_error (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     return ret_value;
   }
@@ -127,8 +127,8 @@ ecma_value_t
 opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
                            ecma_value_t right_value) /**< right value */
 {
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {
@@ -141,7 +141,7 @@ opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
-  if (ecma_is_value_error (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     return ret_value;
   }
@@ -172,8 +172,8 @@ ecma_value_t
 opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
                               ecma_value_t right_value) /**< right value */
 {
-  JERRY_ASSERT (!ecma_is_value_error (left_value)
-                && !ecma_is_value_error (right_value));
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
+                && !ECMA_IS_VALUE_ERROR (right_value));
 
   if (ecma_are_values_integer_numbers (left_value, right_value))
   {
@@ -186,7 +186,7 @@ opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 
-  if (ecma_is_value_error (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     return ret_value;
   }

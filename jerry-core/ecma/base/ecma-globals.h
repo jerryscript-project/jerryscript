@@ -173,6 +173,12 @@ typedef int32_t ecma_integer_value_t;
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**
+ * Checks whether the error flag is set.
+ */
+#define ECMA_IS_VALUE_ERROR(value) \
+  (unlikely ((value & ECMA_VALUE_ERROR_FLAG) != 0))
+
+/**
  * Internal properties' identifiers.
  */
 typedef enum

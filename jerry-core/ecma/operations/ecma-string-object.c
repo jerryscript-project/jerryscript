@@ -60,13 +60,13 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   {
     ecma_value_t to_str_arg_value = ecma_op_to_string (arguments_list_p[0]);
 
-    if (ecma_is_value_error (to_str_arg_value))
+    if (ECMA_IS_VALUE_ERROR (to_str_arg_value))
     {
       return to_str_arg_value;
     }
     else
     {
-      JERRY_ASSERT (!ecma_is_value_error (to_str_arg_value));
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (to_str_arg_value));
       JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
 
       prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);

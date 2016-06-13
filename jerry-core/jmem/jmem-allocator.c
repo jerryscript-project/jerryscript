@@ -30,7 +30,7 @@
 /**
  * The 'try to give memory back' callback
  */
-static jmem_try_give_memory_back_callback_t jmem_try_give_memory_back_callback = NULL;
+static jmem_free_unused_memory_callback_t jmem_free_unused_memory_callback = NULL;
 
 /**
  * Initialize memory allocators.
@@ -91,40 +91,39 @@ jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompres
  * Register specified 'try to give memory back' callback routine
  */
 void
-jmem_register_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t callback) /**< callback routine */
+jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
   /* Currently only one callback is supported */
-  JERRY_ASSERT (jmem_try_give_memory_back_callback == NULL);
+  JERRY_ASSERT (jmem_free_unused_memory_callback == NULL);
 
-  jmem_try_give_memory_back_callback = callback;
-} /* jmem_register_a_try_give_memory_back_callback */
+  jmem_free_unused_memory_callback = callback;
+} /* jmem_register_free_unused_memory_callback */
 
 /**
  * Unregister specified 'try to give memory back' callback routine
  */
 void
-jmem_unregister_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t callback) /**< callback routine */
+jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
   /* Currently only one callback is supported */
-  JERRY_ASSERT (jmem_try_give_memory_back_callback == callback);
+  JERRY_ASSERT (jmem_free_unused_memory_callback == callback);
 
-  jmem_try_give_memory_back_callback = NULL;
-} /* jmem_unregister_a_try_give_memory_back_callback */
+  jmem_free_unused_memory_callback = NULL;
+} /* jmem_unregister_free_unused_memory_callback */
 
 /**
  * Run 'try to give memory back' callbacks with specified severity
  */
 void
-jmem_run_try_to_give_memory_back_callbacks (jmem_try_give_memory_back_severity_t severity) /**< severity of
-                                                                                               the request */
+jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
-  if (jmem_try_give_memory_back_callback != NULL)
+  if (jmem_free_unused_memory_callback != NULL)
   {
-    jmem_try_give_memory_back_callback (severity);
+    jmem_free_unused_memory_callback (severity);
   }
 
   jmem_pools_collect_empty ();
-} /* jmem_run_try_to_give_memory_back_callbacks */
+} /* jmem_run_free_unused_memory_callbacks */
 
 #ifdef JMEM_STATS
 /**

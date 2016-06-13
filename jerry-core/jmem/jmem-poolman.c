@@ -133,7 +133,7 @@ inline void * __attribute__((hot)) __attr_always_inline___
 jmem_pools_alloc (void)
 {
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
-  jmem_run_try_to_give_memory_back_callbacks (JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
+  jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
 
   if (jmem_free_chunk_p != NULL)

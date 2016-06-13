@@ -380,12 +380,12 @@ jmem_heap_alloc_block (const size_t size)
   VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
 
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
-  jmem_run_try_to_give_memory_back_callbacks (JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
+  jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
 
   if (jmem_heap_allocated_size + size >= jmem_heap_limit)
   {
-    jmem_run_try_to_give_memory_back_callbacks (JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW);
+    jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
   }
 
   void *data_space_p = jmem_heap_alloc_block_internal (size);
@@ -396,11 +396,11 @@ jmem_heap_alloc_block (const size_t size)
     return data_space_p;
   }
 
-  for (jmem_try_give_memory_back_severity_t severity = JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW;
-       severity <= JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH;
-       severity = (jmem_try_give_memory_back_severity_t) (severity + 1))
+  for (jmem_free_unused_memory_severity_t severity = JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW;
+       severity <= JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH;
+       severity = (jmem_free_unused_memory_severity_t) (severity + 1))
   {
-    jmem_run_try_to_give_memory_back_callbacks (severity);
+    jmem_run_free_unused_memory_callbacks (severity);
 
     data_space_p = jmem_heap_alloc_block_internal (size);
 

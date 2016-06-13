@@ -24,7 +24,7 @@
  * @{
  */
 
-extern void jmem_run_try_to_give_memory_back_callbacks (jmem_try_give_memory_back_severity_t);
+extern void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t);
 
 /**
  * @}

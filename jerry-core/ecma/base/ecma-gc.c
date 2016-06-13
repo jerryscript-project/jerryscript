@@ -564,10 +564,9 @@ ecma_gc_run (void)
  * Try to free some memory (depending on severity).
  */
 void
-ecma_try_to_give_back_some_memory (jmem_try_give_memory_back_severity_t severity) /**< severity of
-                                                                                  *    the request */
+ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
-  if (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
+  if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW)
   {
     /*
      * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
@@ -580,12 +579,12 @@ ecma_try_to_give_back_some_memory (jmem_try_give_memory_back_severity_t severity
   }
   else
   {
-    JERRY_ASSERT (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
+    JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
     /* Freeing as much memory as we currently can */
     ecma_gc_run ();
   }
-} /* ecma_try_to_give_back_some_memory */
+} /* ecma_free_unused_memory */
 
 /**
  * @}

@@ -64,14 +64,14 @@ typedef uint16_t jmem_cpointer_t;
  */
 typedef enum
 {
-  JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW, /* 'low' severity */
-  JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH, /* 'high' severity */
-} jmem_try_give_memory_back_severity_t;
+  JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW, /* 'low' severity */
+  JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH, /* 'high' severity */
+} jmem_free_unused_memory_severity_t;
 
 /**
  * A 'try give memory back' callback routine type.
  */
-typedef void (*jmem_try_give_memory_back_callback_t) (jmem_try_give_memory_back_severity_t);
+typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_severity_t);
 
 /**
  * Get value of pointer from specified non-null compressed pointer value
@@ -117,8 +117,8 @@ extern void jmem_finalize (bool);
 extern uintptr_t jmem_compress_pointer (const void *);
 extern void *jmem_decompress_pointer (uintptr_t);
 
-extern void jmem_register_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t);
-extern void jmem_unregister_a_try_give_memory_back_callback (jmem_try_give_memory_back_callback_t);
+extern void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
+extern void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
 
 #ifdef JMEM_STATS
 extern void jmem_stats_reset_peak (void);

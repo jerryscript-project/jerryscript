@@ -35,17 +35,17 @@ size_t sizes[test_sub_iters];
 bool is_one_chunked[test_sub_iters];
 
 static void
-test_heap_give_some_memory_back (jmem_try_give_memory_back_severity_t severity)
+test_heap_give_some_memory_back (jmem_free_unused_memory_severity_t severity)
 {
   int p;
 
-  if (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_LOW)
+  if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW)
   {
     p = 8;
   }
   else
   {
-    JERRY_ASSERT (severity == JMEM_TRY_GIVE_MEMORY_BACK_SEVERITY_HIGH);
+    JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
     p = 1;
   }
@@ -76,7 +76,7 @@ main (int __attr_unused___ argc,
 
   jmem_heap_init ();
 
-  jmem_register_a_try_give_memory_back_callback (test_heap_give_some_memory_back);
+  jmem_register_free_unused_memory_callback (test_heap_give_some_memory_back);
 
 #ifdef JMEM_STATS
   jmem_heap_stats_print ();

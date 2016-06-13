@@ -39,7 +39,7 @@ ecma_init (void)
   ecma_lcache_init ();
   ecma_init_environment ();
 
-  jmem_register_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
+  jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
 } /* ecma_init */
 
 /**
@@ -48,7 +48,7 @@ ecma_init (void)
 void
 ecma_finalize (void)
 {
-  jmem_unregister_a_try_give_memory_back_callback (ecma_try_to_give_back_some_memory);
+  jmem_unregister_free_unused_memory_callback (ecma_free_unused_memory);
 
   ecma_finalize_environment ();
   ecma_finalize_builtins ();

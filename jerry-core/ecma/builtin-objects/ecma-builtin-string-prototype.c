@@ -79,12 +79,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
       ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                        ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-      ecma_string_t *prim_value_str_p;
-      prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
-
-      prim_value_str_p = ecma_ref_ecma_string (prim_value_str_p);
-
-      return ecma_make_string_value (prim_value_str_p);
+      return ecma_copy_value (ecma_get_internal_property_value (prim_value_prop_p));
     }
   }
 
@@ -250,10 +245,11 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
                   ret_value);
 
   /* 3 */
-  // No copy performed
+  /* No copy performed */
 
   /* 4 */
-  ecma_string_t *string_to_return = ecma_ref_ecma_string (ecma_get_string_from_value (to_string_val));
+  ecma_string_t *string_to_return = ecma_get_string_from_value (to_string_val);
+  ecma_ref_ecma_string (string_to_return);
 
   /* 5 */
   for (uint32_t arg_index = 0;
@@ -659,7 +655,8 @@ ecma_builtin_string_prototype_object_replace_append_substr (ecma_string_t *base_
   }
   else
   {
-    ret_string_p = ecma_ref_ecma_string (base_string_p);
+    ret_string_p = base_string_p;
+    ecma_ref_ecma_string (ret_string_p);
   }
 
   return ret_string_p;

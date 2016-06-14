@@ -576,8 +576,8 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
     re_compiled_code.header.refs = 1;
     re_compiled_code.header.status_flags = re_ctx.flags;
-    ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp,
-                               ecma_ref_ecma_string (pattern_str_p));
+    ecma_ref_ecma_string (pattern_str_p);
+    ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp, pattern_str_p);
     re_compiled_code.num_of_captures = re_ctx.num_of_captures * 2;
     re_compiled_code.num_of_non_captures = re_ctx.num_of_non_captures;
 

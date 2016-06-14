@@ -384,11 +384,13 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   if (str1_size == 0)
   {
-    return ecma_ref_ecma_string (string2_p);
+    ecma_ref_ecma_string (string2_p);
+    return string2_p;
   }
   else if (str2_size == 0)
   {
-    return ecma_ref_ecma_string (string1_p);
+    ecma_ref_ecma_string (string1_p);
+    return string1_p;
   }
 
   const lit_utf8_size_t new_size = str1_size + str2_size;
@@ -444,11 +446,8 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
 /**
  * Increase reference counter of ecma-string.
- *
- * @return pointer to same ecma-string descriptor with increased reference counter
- *         or the ecma-string's copy with reference counter set to 1
  */
-ecma_string_t *
+void
 ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_p != NULL);
@@ -463,8 +462,6 @@ ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
   {
     jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
-
-  return string_p;
 } /* ecma_ref_ecma_string */
 
 /**

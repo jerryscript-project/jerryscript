@@ -109,7 +109,8 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
       }
       else
       {
-        pattern_string_p = ecma_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
+        pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+        ecma_ref_ecma_string (pattern_string_p);
       }
 
       ECMA_FINALIZE (regexp_str_value);
@@ -125,7 +126,9 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
                       ecma_op_to_string (flags_value),
                       ret_value);
 
-      flags_string_p = ecma_ref_ecma_string (ecma_get_string_from_value (flags_str_value));
+      flags_string_p = ecma_get_string_from_value (flags_str_value);
+      ecma_ref_ecma_string (flags_string_p);
+
       ECMA_FINALIZE (flags_str_value);
     }
 

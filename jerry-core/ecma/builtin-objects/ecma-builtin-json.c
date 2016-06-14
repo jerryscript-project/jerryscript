@@ -992,7 +992,8 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
 
         if (num_of_chars < 10)
         {
-          context.gap_str_p = ecma_ref_ecma_string (space_str_p);
+          ecma_ref_ecma_string (space_str_p);
+          context.gap_str_p = space_str_p;
         }
         else
         {
@@ -1061,7 +1062,8 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
 {
   /* 1. */
   ecma_string_t *quote_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
-  ecma_string_t *product_str_p = ecma_ref_ecma_string (quote_str_p);
+  ecma_ref_ecma_string (quote_str_p);
+  ecma_string_t *product_str_p = quote_str_p;
   ecma_string_t *tmp_str_p;
 
   ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);

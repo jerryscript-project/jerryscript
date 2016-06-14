@@ -168,7 +168,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         }
         else
         {
-          pattern_string_p = ecma_ref_ecma_string (ecma_get_string_from_value (regexp_str_value));
+          pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+          ecma_ref_ecma_string (pattern_string_p);
         }
 
         ECMA_FINALIZE (regexp_str_value);
@@ -380,8 +381,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
     ecma_string_t *src_sep_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SLASH_CHAR);
     ecma_string_t *source_str_p = ecma_get_string_from_value (ecma_get_named_data_property_value (source_prop_p));
-    ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, ecma_ref_ecma_string (source_str_p));
-    ecma_deref_ecma_string (source_str_p);
+    ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, source_str_p);
 
     ecma_string_t *concat_p = ecma_concat_ecma_strings (output_str_p, src_sep_str_p);
     ecma_deref_ecma_string (src_sep_str_p);

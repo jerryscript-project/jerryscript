@@ -336,7 +336,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
     if (ecma_is_value_string (value))
     {
       res_p = ecma_get_string_from_value (value);
-      res_p = ecma_ref_ecma_string (res_p);
+      ecma_ref_ecma_string (res_p);
     }
     else if (ecma_is_value_integer_number (value))
     {

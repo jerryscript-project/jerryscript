@@ -169,7 +169,7 @@ extern ecma_string_t *ecma_new_ecma_string_from_lit_cp (lit_cpointer_t);
 extern ecma_string_t *ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t);
 extern ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t);
 extern ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *, ecma_string_t *);
-extern ecma_string_t *ecma_ref_ecma_string (ecma_string_t *);
+extern void ecma_ref_ecma_string (ecma_string_t *);
 extern void ecma_deref_ecma_string (ecma_string_t *);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *);
 extern bool ecma_string_get_array_index (const ecma_string_t *, uint32_t *);

@@ -125,11 +125,13 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
         if (ecma_string_get_length (name_string_p) == 0)
         {
-          ret_str_p = ecma_ref_ecma_string (msg_string_p);
+          ret_str_p = msg_string_p;
+          ecma_ref_ecma_string (ret_str_p);
         }
         else if (ecma_string_get_length (msg_string_p) == 0)
         {
-          ret_str_p = ecma_ref_ecma_string (name_string_p);
+          ret_str_p = name_string_p;
+          ecma_ref_ecma_string (ret_str_p);
         }
         else
         {

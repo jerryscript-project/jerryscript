@@ -122,23 +122,23 @@ static int shell_cmd_handler (int argc, char *argv[])
 
   * (d - 1) = '\0';
 
-  if (flags & VERBOSE)
-  {
-    printf ("[%s] %lu\n", source_buffer, strlen (source_buffer));
-  }
-
   jerry_completion_code_t ret_code;
 
   ret_code = jerry_run_simple ((jerry_char_t *) source_buffer,
     strlen (source_buffer),
     JERRY_FLAG_EMPTY);
 
-  free (source_buffer);
-
   if (ret_code != JERRY_COMPLETION_CODE_OK)
   {
     printf ("Failed to run JS\n");
   }
+
+  if (flags & VERBOSE || ret_code != JERRY_COMPLETION_CODE_OK)
+  {
+    printf ("[%s] %lu\n", source_buffer, strlen (source_buffer));
+  }
+
+  free (source_buffer);
 
   return 0;
 } /* shell_cmd_handler */

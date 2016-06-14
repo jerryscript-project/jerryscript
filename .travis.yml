@@ -4,6 +4,19 @@ os: linux
 dist: trusty
 sudo: required
 
+addons:
+  apt:
+    packages:
+      - gcc
+      - gcc-multilib
+      - g++
+      - libc6-dev-i386
+      - g++-multilib
+      - python3-ply
+      - linux-libc-dev
+      - gcc-multilib
+      - build-essential
+
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-qemu-arm.sh; fi
@@ -26,5 +39,8 @@ matrix:
       env: TARGET="build.darwin test-js"
     - os: osx
       env: TARGET=test-unit
+    - os: linux
+      env: TARGET=build_zephyr
   allow_failures:
     - os: osx
+    - env: TARGET=build_zephyr

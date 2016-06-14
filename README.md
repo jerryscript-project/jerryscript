@@ -1,36 +1,43 @@
 ![](https://github.com/Samsung/jerryscript/blob/master/LOGO.png)
-# JerryScript: JavaScript engine for Internet of Things
-[![Join the chat at https://gitter.im/Samsung/jerryscript](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Samsung/jerryscript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# JerryScript: JavaScript engine for the Internet of Things
 [![License](https://img.shields.io/badge/licence-Apache%202.0-brightgreen.svg?style=flat)](LICENSE)
 [![Build Status](https://travis-ci.org/Samsung/jerryscript.svg?branch=master)](https://travis-ci.org/Samsung/jerryscript)
 
+JerryScript is a lightweight JavaScript engine for resource-constrained devices such as microcontrollers. It can run on devices with less than 64 KB of RAM and less than 200 KB of flash memory.
 
-JerryScript is the lightweight JavaScript engine for very constrained devices such as microcontrollers:
-- Only few kilobytes of RAM available to the engine (&lt;64 KB RAM)
-- Constrained ROM space for the code of the engine (&lt;200 KB ROM)
+Key characteristics of JerryScript:
+* Full ECMAScript 5.1 standard compliance
+* 170K binary size when compiled for ARM Thumb-2
+* Heavily optimized for low memory consumption
+* Written in C99 for maximum portability
+* Snapshot support for precompiling JavaScript source code to byte code
+* Mature C API, easy to embed in applications
 
-Additional informantion can be found on our [project page](http://samsung.github.io/jerryscript/) and  [wiki](https://github.com/Samsung/jerryscript/wiki).
+Additional information can be found on our [project page](http://samsung.github.io/jerryscript) and [wiki](https://github.com/Samsung/jerryscript/wiki).
+
+IRC channel: #jerryscript on [freenode](https://freenode.net)  
+Mailing list: jerryscript-dev@gna.org, you can subscribe [here](https://mail.gna.org/listinfo/jerryscript-dev) and access the mailing list archive [here](https://mail.gna.org/public/jerryscript-dev).
 
 ## Quick Start
-### Getting Sources
+### Getting the sources
 ```bash
-git clone https://github.com/Samsung/jerryscript.git jr
-cd jr
+git clone https://github.com/Samsung/jerryscript.git
+cd jerryscript
 ```
 
-### Building
+### Building JerryScript
 ```bash
 make release.linux -j
 ```
 
-For Additional information see [Development](docs/DEVELOPMENT.md).
+For additional information see [Development](docs/DEVELOPMENT.md).
 
 ## Documentation
 - [API Reference](docs/API-REFERENCE.md)
 - [API Example](docs/API-EXAMPLE.md)
 
 ## License
-JerryScript is Open Source software under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0). Complete license and copyright information can be found within the code.
+JerryScript is Open Source software under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Complete license and copyright information can be found in the source code.
 
 > Copyright 2015 Samsung Electronics Co., Ltd.
 

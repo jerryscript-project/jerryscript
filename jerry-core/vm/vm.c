@@ -69,6 +69,43 @@ static ecma_value_t
 vm_op_get_value (ecma_value_t object, /**< base object */
                  ecma_value_t property) /**< property name */
 {
+  if (ecma_is_value_object (object))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (object);
+    ecma_string_t *property_name_p = NULL;
+    ecma_string_t uint32_string;
+
+    if (ecma_is_value_integer_number (property))
+    {
+      ecma_integer_value_t int_value = ecma_get_integer_from_value (property);
+
+      if (int_value >= 0)
+      {
+        /* Statically allocated string for searching. */
+        ecma_init_ecma_string_from_uint32 (&uint32_string, (uint32_t) int_value);
+        property_name_p = &uint32_string;
+      }
+    }
+    else if (ecma_is_value_string (property))
+    {
+      property_name_p = ecma_get_string_from_value (property);
+    }
+
+    if (property_name_p != NULL)
+    {
+      ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
+
+      if (property_p != NULL &&
+          ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      {
+        return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+      }
+
+      /* There is no need to free the name. */
+      return ecma_op_get_value_object_base (object, property_name_p);
+    }
+  }
+
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG (""));
@@ -82,20 +119,6 @@ vm_op_get_value (ecma_value_t object, /**< base object */
   }
 
   ecma_string_t *property_name_p = ecma_get_string_from_value (prop_to_string_result);
-
-  if (ecma_is_value_object (object))
-  {
-    ecma_object_t *object_p = ecma_get_object_from_value (object);
-
-    ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
-
-    if (property_p != NULL &&
-        ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
-    {
-      ecma_deref_ecma_string (property_name_p);
-      return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
-    }
-  }
 
   ecma_value_t get_value_result = ecma_op_get_value_object_base (object, property_name_p);
 

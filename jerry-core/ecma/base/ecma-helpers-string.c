@@ -222,12 +222,11 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
 } /* ecma_new_ecma_string_from_code_unit */
 
 /**
- * Allocate new ecma-string and fill it with ecma-number
- *
- * @return pointer to ecma-string descriptor
+ * Initialize an ecma-string with an ecma-number
  */
-ecma_string_t *
-ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represented ecma-number */
+inline void __attr_always_inline___
+ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, /**< ecma-string */
+                                   uint32_t uint32_number) /**< uint32 value of the string */
 {
   lit_utf8_byte_t byte_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
   lit_utf8_byte_t *buf_p = byte_buf + ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32;
@@ -245,13 +244,24 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< UInt32-represente
 
   lit_utf8_size_t size = (lit_utf8_size_t) (byte_buf + ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 - buf_p);
 
-  ecma_string_t *string_desc_p = ecma_alloc_string ();
   string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_UINT32_IN_DESC | ECMA_STRING_REF_ONE;
   string_desc_p->hash = lit_utf8_string_calc_hash (buf_p, size);
 
   string_desc_p->u.common_field = 0;
   string_desc_p->u.uint32_number = uint32_number;
+} /* ecma_init_ecma_string_from_uint32 */
 
+/**
+ * Allocate new ecma-string and fill it with ecma-number
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of the string */
+{
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+
+  ecma_init_ecma_string_from_uint32 (string_desc_p, uint32_number);
   return string_desc_p;
 } /* ecma_new_ecma_string_from_uint32 */
 

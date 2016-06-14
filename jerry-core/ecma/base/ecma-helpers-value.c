@@ -637,7 +637,7 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
     }
     case ECMA_TYPE_STRING:
     {
-      return ecma_make_string_value (ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (value)));
+      return ecma_make_string_value (ecma_ref_ecma_string (ecma_get_string_from_value (value)));
     }
     case ECMA_TYPE_OBJECT:
     {

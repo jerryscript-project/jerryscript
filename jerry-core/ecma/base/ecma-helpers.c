@@ -584,7 +584,7 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
 
   uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDDATA | prop_attributes;
 
-  name_p = ecma_copy_or_ref_ecma_string (name_p);
+  name_p = ecma_ref_ecma_string (name_p);
 
   ecma_property_value_t value;
   value.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
@@ -610,7 +610,7 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
 
   uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDACCESSOR | prop_attributes;
 
-  name_p = ecma_copy_or_ref_ecma_string (name_p);
+  name_p = ecma_ref_ecma_string (name_p);
 
   ecma_property_value_t value;
   ECMA_SET_POINTER (value.getter_setter_pair.getter_p, get_p);

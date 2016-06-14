@@ -357,7 +357,7 @@ jerry_acquire_string (jerry_string_t *string_p) /**< pointer passed to function 
 {
   jerry_assert_api_available ();
 
-  return ecma_copy_or_ref_ecma_string (string_p);
+  return ecma_ref_ecma_string (string_p);
 } /* jerry_acquire_string */
 
 /**

@@ -384,11 +384,11 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   if (str1_size == 0)
   {
-    return ecma_copy_or_ref_ecma_string (string2_p);
+    return ecma_ref_ecma_string (string2_p);
   }
   else if (str2_size == 0)
   {
-    return ecma_copy_or_ref_ecma_string (string1_p);
+    return ecma_ref_ecma_string (string1_p);
   }
 
   const lit_utf8_size_t new_size = str1_size + str2_size;
@@ -443,110 +443,29 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 } /* ecma_concat_ecma_strings */
 
 /**
- * Copy ecma-string
- *
- * @return pointer to copy of ecma-string with reference counter set to 1
- */
-static ecma_string_t *
-ecma_copy_ecma_string (ecma_string_t *string_desc_p) /**< string descriptor */
-{
-  JERRY_ASSERT (string_desc_p != NULL);
-  JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
-
-  ecma_string_t *new_str_p;
-
-  switch (ECMA_STRING_GET_CONTAINER (string_desc_p))
-  {
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
-    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-    case ECMA_STRING_CONTAINER_MAGIC_STRING:
-    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
-    {
-      new_str_p = ecma_alloc_string ();
-
-      *new_str_p = *string_desc_p;
-
-      new_str_p->refs_and_container = ECMA_STRING_SET_REF_TO_ONE (new_str_p->refs_and_container);
-
-      break;
-    }
-
-    case ECMA_STRING_CONTAINER_HEAP_UTF8_STRING:
-    {
-      new_str_p = ecma_alloc_string ();
-      *new_str_p = *string_desc_p;
-      new_str_p->refs_and_container = ECMA_STRING_SET_REF_TO_ONE (new_str_p->refs_and_container);
-
-      const ecma_string_heap_header_t *data_p = ECMA_GET_NON_NULL_POINTER (ecma_string_heap_header_t,
-                                                                           string_desc_p->u.utf8_collection_cp);
-      JERRY_ASSERT (data_p != NULL);
-      const size_t data_size = data_p->size + sizeof (ecma_string_heap_header_t);
-      ecma_string_heap_header_t *new_data_p = (ecma_string_heap_header_t *) jmem_heap_alloc_block (data_size);
-      memcpy (new_data_p, data_p, data_size);
-
-      ECMA_SET_NON_NULL_POINTER (new_str_p->u.utf8_collection_cp, new_data_p);
-
-      break;
-    }
-
-    case ECMA_STRING_CONTAINER_HEAP_ASCII_STRING:
-    {
-      new_str_p = ecma_alloc_string ();
-      *new_str_p = *string_desc_p;
-      new_str_p->refs_and_container = ECMA_STRING_SET_REF_TO_ONE (new_str_p->refs_and_container);
-
-      const lit_utf8_byte_t *data_p = ECMA_GET_NON_NULL_POINTER (lit_utf8_byte_t,
-                                                                 string_desc_p->u.ascii_string.ascii_collection_cp);
-
-      JERRY_ASSERT (data_p != NULL);
-      const size_t data_size = string_desc_p->u.ascii_string.size;
-      lit_utf8_byte_t *new_data_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (data_size);
-      memcpy (new_data_p, data_p, data_size);
-
-      ECMA_SET_NON_NULL_POINTER (new_str_p->u.ascii_string.ascii_collection_cp, new_data_p);
-
-      break;
-    }
-
-    default:
-    {
-      JERRY_UNREACHABLE ();
-    }
-  }
-
-  JERRY_ASSERT (ecma_compare_ecma_strings (string_desc_p, new_str_p));
-
-  return new_str_p;
-} /* ecma_copy_ecma_string */
-
-/**
  * Increase reference counter of ecma-string.
  *
  * @return pointer to same ecma-string descriptor with increased reference counter
  *         or the ecma-string's copy with reference counter set to 1
  */
 ecma_string_t *
-ecma_copy_or_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
+ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_p != NULL);
   JERRY_ASSERT (string_p->refs_and_container >= ECMA_STRING_REF_ONE);
 
-  if (unlikely (string_p->refs_and_container >= ECMA_STRING_MAX_REF))
+  if (likely (string_p->refs_and_container < ECMA_STRING_MAX_REF))
   {
-    /* First trying to free unreachable objects that maybe refer to the string */
-    ecma_gc_run ();
-
-    if (string_p->refs_and_container >= ECMA_STRING_MAX_REF)
-    {
-      /* reference counter was not changed during GC, copying string */
-      return ecma_copy_ecma_string (string_p);
-    }
+    /* Increase reference counter. */
+    string_p->refs_and_container = (uint16_t) (string_p->refs_and_container + ECMA_STRING_REF_ONE);
+  }
+  else
+  {
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
 
-  /* Increase reference counter. */
-  string_p->refs_and_container = (uint16_t) (string_p->refs_and_container + ECMA_STRING_REF_ONE);
   return string_p;
-} /* ecma_copy_or_ref_ecma_string */
+} /* ecma_ref_ecma_string */
 
 /**
  * Decrease reference counter and deallocate ecma-string

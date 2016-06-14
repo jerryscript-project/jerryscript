@@ -167,7 +167,7 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 void
 ecma_ref_object (ecma_object_t *object_p) /**< object */
 {
-  if (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF)
+  if (likely (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF))
   {
     object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs + ECMA_OBJECT_REF_ONE);
   }

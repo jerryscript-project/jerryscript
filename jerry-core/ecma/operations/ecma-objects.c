@@ -751,7 +751,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
         JERRY_ASSERT (name_pos > 0
                       && name_pos <= array_index_named_properties_count + string_named_properties_count);
-        names_p[--name_pos] = ecma_copy_or_ref_ecma_string (name_p);
+        names_p[--name_pos] = ecma_ref_ecma_string (name_p);
       }
     }
 

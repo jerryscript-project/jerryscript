@@ -123,7 +123,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE);
 
   ecma_set_named_data_property_value (prop_p,
-                                      ecma_make_string_value (ecma_copy_or_ref_ecma_string (message_string_p)));
+                                      ecma_make_string_value (ecma_ref_ecma_string (message_string_p)));
   ecma_deref_ecma_string (message_magic_string_p);
 
   return new_error_obj_p;

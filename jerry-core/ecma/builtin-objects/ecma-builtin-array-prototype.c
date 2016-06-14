@@ -175,7 +175,7 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
                     ecma_builtin_helper_get_to_locale_string_at_index (obj_p, 0),
                     ret_value);
 
-    ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
+    ecma_string_t *return_string_p = ecma_ref_ecma_string (ecma_get_string_from_value (first_value));
 
     /* 9-10. */
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
@@ -402,7 +402,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
                     ecma_op_array_get_to_string_at_index (obj_p, 0),
                     ret_value);
 
-    ecma_string_t *return_string_p = ecma_copy_or_ref_ecma_string (ecma_get_string_from_value (first_value));
+    ecma_string_t *return_string_p = ecma_ref_ecma_string (ecma_get_string_from_value (first_value));
 
     /* 9-10. */
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)

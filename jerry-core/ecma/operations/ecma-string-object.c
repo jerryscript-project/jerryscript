@@ -142,7 +142,7 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
   {
     uint32_index = property_name_p->u.uint32_number;
 
-    new_prop_name_p = ecma_copy_or_ref_ecma_string (property_name_p);
+    new_prop_name_p = ecma_ref_ecma_string (property_name_p);
   }
   else
   {

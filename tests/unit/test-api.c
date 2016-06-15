@@ -66,9 +66,9 @@ bool test_api_is_free_callback_was_called = false;
 static bool
 handler (const jerry_object_t *function_obj_p, /**< function object */
          const jerry_value_t this_val, /**< this value */
-         jerry_value_t *ret_val_p, /**< [out] return value */
          const jerry_value_t args_p[], /**< arguments list */
-         const jerry_length_t args_cnt) /**< arguments length */
+         const jerry_length_t args_cnt, /**< arguments length */
+         jerry_value_t *ret_val_p) /**< [out] return value */
 {
   char buffer[32];
   jerry_size_t sz;
@@ -96,9 +96,9 @@ handler (const jerry_object_t *function_obj_p, /**< function object */
 static bool
 handler_throw_test (const jerry_object_t *function_obj_p, /**< function object */
                     const jerry_value_t this_val, /**< this value */
-                    jerry_value_t *ret_val_p, /**< [out] return value */
                     const jerry_value_t args_p[], /**< arguments list */
-                    const jerry_length_t args_cnt) /**< arguments length */
+                    const jerry_length_t args_cnt, /**< arguments length */
+                    jerry_value_t *ret_val_p) /**< [out] return value */
 {
   printf ("ok %p %p %p %d %p\n", function_obj_p, this_val, args_p, args_cnt, ret_val_p);
 
@@ -122,9 +122,9 @@ handler_construct_freecb (uintptr_t native_p)
 static bool
 handler_construct (const jerry_object_t *function_obj_p, /**< function object */
                    const jerry_value_t this_val, /**< this value */
-                   jerry_value_t *ret_val_p, /**< [out] return value */
                    const jerry_value_t args_p[], /**< arguments list */
-                   const jerry_length_t args_cnt) /**< arguments length */
+                   const jerry_length_t args_cnt, /**< arguments length */
+                   jerry_value_t *ret_val_p) /**< [out] return value */
 {
   printf ("ok construct %p %p %p %d %p\n", function_obj_p, this_val, args_p, args_cnt, ret_val_p);
 
@@ -277,7 +277,7 @@ main (void)
 
   jerry_init (JERRY_FLAG_EMPTY);
 
-  bool is_ok, is_exception;
+  bool is_ok;
   jerry_size_t sz;
   jerry_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_value_t val_external, val_external_construct, val_call_external;
@@ -304,39 +304,39 @@ main (void)
   jerry_release_value (args[0]);
 
   // Get global.boo (non-existing field)
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "boo", &val_t);
-  JERRY_ASSERT (!is_ok);
+  val_t = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "boo");
+  JERRY_ASSERT (!jerry_value_is_error (val_t));
   JERRY_ASSERT (jerry_value_is_undefined (val_t));
 
   // Get global.t
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "t", &val_t);
-  JERRY_ASSERT (is_ok);
+  val_t = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "t");
+  JERRY_ASSERT (!jerry_value_is_error (val_t));
   JERRY_ASSERT (jerry_value_is_number (val_t)
                 && jerry_get_number_value (val_t) == 1.0);
   jerry_release_value (val_t);
 
   // Get global.foo
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "foo", &val_foo);
-  JERRY_ASSERT (is_ok);
+  val_foo = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "foo");
+  JERRY_ASSERT (!jerry_value_is_error (val_foo));
   JERRY_ASSERT (jerry_value_is_object (val_foo));
 
   // Call foo (4, 2)
   args[0] = jerry_create_number_value (4);
   args[1] = jerry_create_number_value (2);
-  is_ok = jerry_call_function (jerry_get_object_value (val_foo), NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_foo), NULL, args, 2);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 1.0);
   jerry_release_value (res);
 
   // Get global.bar
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "bar", &val_bar);
-  JERRY_ASSERT (is_ok);
+  val_bar = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "bar");
+  JERRY_ASSERT (!jerry_value_is_error (val_bar));
   JERRY_ASSERT (jerry_value_is_object (val_bar));
 
   // Call bar (4, 2)
-  is_ok = jerry_call_function (jerry_get_object_value (val_bar), NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_bar), NULL, args, 2);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 5.0);
   jerry_release_value (res);
@@ -349,8 +349,8 @@ main (void)
   JERRY_ASSERT (is_ok);
 
   // Call foo (4, 2)
-  is_ok = jerry_call_function (jerry_get_object_value (val_foo), NULL, &res, args, 2);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_foo), NULL, args, 2);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_string (res));
   sz = jerry_get_string_size (jerry_get_string_value (res));
   JERRY_ASSERT (sz == 4);
@@ -362,17 +362,16 @@ main (void)
   jerry_release_value (args[1]);
 
   // Get global.A
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "A", &val_A);
-  JERRY_ASSERT (is_ok);
+  val_A = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "A");
+  JERRY_ASSERT (!jerry_value_is_error (val_A));
   JERRY_ASSERT (jerry_value_is_object (val_A));
 
   // Get A.prototype
   is_ok = jerry_is_constructor (jerry_get_object_value (val_A));
   JERRY_ASSERT (is_ok);
-  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_A),
-                                        (jerry_char_t *) "prototype",
-                                        &val_A_prototype);
-  JERRY_ASSERT (is_ok);
+  val_A_prototype = jerry_get_object_field_value (jerry_get_object_value (val_A),
+                                                  (jerry_char_t *) "prototype");
+  JERRY_ASSERT (!jerry_value_is_error (val_A_prototype));
   JERRY_ASSERT (jerry_value_is_object (val_A_prototype));
   jerry_release_value (val_A);
 
@@ -385,19 +384,19 @@ main (void)
   jerry_release_value (val_foo);
 
   // Get global.a
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "a", &val_a);
-  JERRY_ASSERT (is_ok);
+  val_a = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "a");
+  JERRY_ASSERT (!jerry_value_is_error (val_a));
   JERRY_ASSERT (jerry_value_is_object (val_a));
 
   // Get a.t
-  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_a), (jerry_char_t *) "t", &res);
-  JERRY_ASSERT (is_ok);
+  res = jerry_get_object_field_value (jerry_get_object_value (val_a), (jerry_char_t *) "t");
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 12.0);
   jerry_release_value (res);
 
   // foreach properties
-  jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "p", &val_p);
+  val_p = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "p");
   is_ok = jerry_foreach_object_field (jerry_get_object_value (val_p), foreach, (void *) "user_data");
   JERRY_ASSERT (is_ok);
 
@@ -409,25 +408,23 @@ main (void)
   jerry_release_value (val_p);
 
   // foreach with throw test
-  jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "np", &val_np);
+  val_np = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "np");
   is_ok = !jerry_foreach_object_field (jerry_get_object_value (val_np), foreach_exception, NULL);
   JERRY_ASSERT (is_ok);
   jerry_release_value (val_np);
 
   // Get a.foo
-  is_ok = jerry_get_object_field_value (jerry_get_object_value (val_a),
-                                        (jerry_char_t *) "foo",
-                                        &val_a_foo);
-  JERRY_ASSERT (is_ok);
+  val_a_foo = jerry_get_object_field_value (jerry_get_object_value (val_a),
+                                            (jerry_char_t *) "foo");
+  JERRY_ASSERT (!jerry_value_is_error (val_a_foo));
   JERRY_ASSERT (jerry_value_is_object (val_a_foo));
 
   // Call a.foo ()
-  is_ok = jerry_call_function (jerry_get_object_value (val_a_foo),
-                               jerry_get_object_value (val_a),
-                               &res,
-                               NULL,
-                               0);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_a_foo),
+                             jerry_get_object_value (val_a),
+                             NULL,
+                             0);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 12.0);
   jerry_release_value (res);
@@ -449,16 +446,16 @@ main (void)
   jerry_release_value (val_external);
 
   // Call 'call_external' function that should call external function created above
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "call_external", &val_call_external);
-  JERRY_ASSERT (is_ok);
+  val_call_external = jerry_get_object_field_value (global_obj_p,
+                                                    (jerry_char_t *) "call_external");
+  JERRY_ASSERT (!jerry_value_is_error (val_call_external));
   JERRY_ASSERT (jerry_value_is_object (val_call_external));
-  is_ok = jerry_call_function (jerry_get_object_value (val_call_external),
-                               global_obj_p,
-                               &res,
-                               NULL,
-                               0);
+  res = jerry_call_function (jerry_get_object_value (val_call_external),
+                             global_obj_p,
+                             NULL,
+                             0);
   jerry_release_value (val_call_external);
-  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_string (res));
   sz = jerry_get_string_size (jerry_get_string_value (res));
   JERRY_ASSERT (sz == 19);
@@ -481,15 +478,14 @@ main (void)
 
   // Call external function created above, as constructor
   args[0] = jerry_create_boolean_value (true);
-  is_ok = jerry_construct_object (external_construct_p, &res, args, 1);
-  JERRY_ASSERT (is_ok);
+  res = jerry_construct_object (external_construct_p, args, 1);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_object (res));
-  is_ok = jerry_get_object_field_value (jerry_get_object_value (res),
-                                        (jerry_char_t *) "value_field",
-                                        &val_value_field);
+  val_value_field = jerry_get_object_field_value (jerry_get_object_value (res),
+                                                  (jerry_char_t *) "value_field");
 
   // Get 'value_field' of constructed object
-  JERRY_ASSERT (is_ok);
+  JERRY_ASSERT (!jerry_value_is_error (val_value_field));
   JERRY_ASSERT (jerry_value_is_boolean (val_value_field)
                 && jerry_get_boolean_value (val_value_field));
   jerry_release_value (val_value_field);
@@ -515,30 +511,30 @@ main (void)
   JERRY_ASSERT (is_ok);
   jerry_release_value (val_t);
 
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "call_throw_test", &val_t);
-  JERRY_ASSERT (is_ok);
+  val_t = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "call_throw_test");
+  JERRY_ASSERT (!jerry_value_is_error (val_t));
   JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_call_function (jerry_get_object_value (val_t),
-                               global_obj_p,
-                               &res,
-                               NULL, 0);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_t),
+                             global_obj_p,
+                             NULL,
+                             0);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   jerry_release_value (val_t);
   jerry_release_value (res);
 
   // Test: Unhandled exception in called function
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "throw_reference_error", &val_t);
-  JERRY_ASSERT (is_ok);
+  val_t = jerry_get_object_field_value (global_obj_p,
+                                        (jerry_char_t *) "throw_reference_error");
+  JERRY_ASSERT (!jerry_value_is_error (val_t));
   JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_call_function (jerry_get_object_value (val_t),
+  res = jerry_call_function (jerry_get_object_value (val_t),
                                global_obj_p,
-                               &res,
-                               NULL, 0);
-  is_exception = !is_ok;
+                               NULL,
+                               0);
 
-  JERRY_ASSERT (is_exception);
+  JERRY_ASSERT (jerry_value_is_error (res));
   jerry_release_value (val_t);
 
   // 'res' should contain exception object
@@ -547,12 +543,11 @@ main (void)
 
   // Test: Call of non-function
   obj_p = jerry_create_object ();
-  is_ok = jerry_call_function (obj_p,
-                               global_obj_p,
-                               &res,
-                               NULL, 0);
-  is_exception = !is_ok;
-  JERRY_ASSERT (is_exception);
+  res = jerry_call_function (obj_p,
+                             global_obj_p,
+                             NULL,
+                             0);
+  JERRY_ASSERT (jerry_value_is_error (res));
 
   // 'res' should contain exception object
   JERRY_ASSERT (jerry_value_is_object (res));
@@ -561,16 +556,13 @@ main (void)
   jerry_release_object (obj_p);
 
   // Test: Unhandled exception in function called, as constructor
-  is_ok = jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "throw_reference_error", &val_t);
-  JERRY_ASSERT (is_ok);
+  val_t = jerry_get_object_field_value (global_obj_p,
+                                        (jerry_char_t *) "throw_reference_error");
+  JERRY_ASSERT (!jerry_value_is_error (val_t));
   JERRY_ASSERT (jerry_value_is_object (val_t));
 
-  is_ok = jerry_construct_object (jerry_get_object_value (val_t),
-                                  &res,
-                                  NULL, 0);
-  is_exception = !is_ok;
-
-  JERRY_ASSERT (is_exception);
+  res = jerry_construct_object (jerry_get_object_value (val_t), NULL, 0);
+  JERRY_ASSERT (jerry_value_is_error (res));
   jerry_release_value (val_t);
 
   // 'res' should contain exception object
@@ -579,11 +571,8 @@ main (void)
 
   // Test: Call of non-function as constructor
   obj_p = jerry_create_object ();
-  is_ok = jerry_construct_object (obj_p,
-                                  &res,
-                                  NULL, 0);
-  is_exception = !is_ok;
-  JERRY_ASSERT (is_exception);
+  res = jerry_construct_object (obj_p, NULL, 0);
+  JERRY_ASSERT (jerry_value_is_error (res));
 
   // 'res' should contain exception object
   JERRY_ASSERT (jerry_value_is_object (res));
@@ -618,11 +607,11 @@ main (void)
   JERRY_ASSERT (jerry_value_is_object (val_t));
   JERRY_ASSERT (jerry_is_function (jerry_get_object_value (val_t)));
 
-  is_ok = jerry_call_function (jerry_get_object_value (val_t),
-                               NULL,
-                               &res,
-                               NULL, 0);
-  JERRY_ASSERT (is_ok);
+  res = jerry_call_function (jerry_get_object_value (val_t),
+                             NULL,
+                             NULL,
+                             0);
+  JERRY_ASSERT (!jerry_value_is_error (res));
   JERRY_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 123.0);
   jerry_release_value (res);

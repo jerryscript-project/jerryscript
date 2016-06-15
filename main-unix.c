@@ -74,9 +74,9 @@ read_file (const char *file_name,
 static bool
 assert_handler (const jerry_object_t *function_obj_p __attribute__((unused)), /**< function object */
                 const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-                jerry_value_t *ret_val_p __attribute__((unused)), /**< return argument */
                 const jerry_value_t args_p[], /**< function arguments */
-                const jerry_length_t args_cnt) /**< number of function arguments */
+                const jerry_length_t args_cnt, /**< number of function arguments */
+                jerry_value_t *ret_val_p __attribute__((unused))) /**< return argument */
 {
   if (args_cnt == 1
       && jerry_value_is_boolean (args_p[0])
@@ -417,9 +417,10 @@ main (int argc,
     bool is_done = false;
 
     jerry_object_t *global_obj_p = jerry_get_global ();
-    jerry_value_t print_function;
+    jerry_value_t print_function = jerry_get_object_field_value (global_obj_p,
+                                                                 (jerry_char_t *) "print");
 
-    if (!jerry_get_object_field_value (global_obj_p, (jerry_char_t *) "print", &print_function))
+    if (jerry_value_is_error (print_function))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -461,16 +462,12 @@ main (int argc,
 
         /* Print return value */
         const jerry_value_t args[] = { ret_val };
-        jerry_value_t ret_val_print;
-        if (jerry_call_function (jerry_get_object_value (print_function),
-                                 NULL,
-                                 &ret_val_print,
-                                 args,
-                                 1))
-        {
-          jerry_release_value (ret_val_print);
-        }
+        jerry_value_t ret_val_print = jerry_call_function (jerry_get_object_value (print_function),
+                                                           NULL,
+                                                           args,
+                                                           1);
 
+        jerry_release_value (ret_val_print);
         jerry_release_value (ret_val);
       }
     }

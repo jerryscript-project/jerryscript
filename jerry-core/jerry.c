@@ -125,6 +125,15 @@ jerry_make_api_unavailable (void)
 } /* jerry_make_api_unavailable */
 
 /**
+ * Returns whether the given jerry_value_t is error.
+ */
+bool
+jerry_value_is_error (const jerry_value_t value) /**< api value */
+{
+  return ECMA_IS_VALUE_ERROR (value);
+} /* jerry_value_is_error */
+
+/**
  * Returns whether the given jerry_value_t is null.
  */
 bool
@@ -310,10 +319,10 @@ jerry_create_string_value (jerry_string_t *str_p) /**< jerry_string_t from which
  *
  * @return completion code
  */
-inline static jerry_completion_code_t __attr_always_inline___
-jerry_convert_eval_completion_to_retval (jerry_value_t *retval_p, /**< [out] api value */
-                                         ecma_value_t completion) /**< completion of 'eval'-mode
+static inline jerry_completion_code_t __attr_always_inline___
+jerry_convert_eval_completion_to_retval (ecma_value_t completion, /**< completion of 'eval'-mode
                                                                    *   code execution */
+                                         jerry_value_t *retval_p) /**< [out] api value */
 {
   *retval_p = completion;
 
@@ -698,8 +707,8 @@ jerry_create_external_function (jerry_external_handler_t handler_p) /**< pointer
  * Dispatch call to specified external function using the native handler
  *
  * Note:
- *       if called native handler returns true, then dispatcher just returns value received
- *       through 'return value' output argument, otherwise - throws the value as an exception.
+ *      if called native handler returns true, then dispatcher just returns value received
+ *      through 'return value' output argument, otherwise - throws the value as an exception.
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -717,9 +726,9 @@ jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< externa
 
   bool is_successful = ((jerry_external_handler_t) handler_p) (function_object_p,
                                                                this_arg_value,
-                                                               &ret_value,
                                                                arguments_list_p,
-                                                               arguments_list_len);
+                                                               arguments_list_len,
+                                                               &ret_value);
 
   if (!is_successful)
   {
@@ -879,14 +888,13 @@ jerry_delete_object_field (jerry_object_t *object_p, /**< object to delete field
  *                - there is field with specified name in the object;
  *         false - otherwise.
  */
-bool jerry_get_object_field_value (jerry_object_t *object_p, /**< object */
-                                   const jerry_char_t *field_name_p, /**< field name */
-                                   jerry_value_t *field_value_p) /**< [out] field value */
+jerry_value_t
+jerry_get_object_field_value (jerry_object_t *object_p, /**< object */
+                              const jerry_char_t *field_name_p) /**< field name */
 {
   return jerry_get_object_field_value_sz (object_p,
                                           field_name_p,
-                                          lit_zt_utf8_string_size (field_name_p),
-                                          field_value_p);
+                                          lit_zt_utf8_string_size (field_name_p));
 } /* jerry_get_object_field_value */
 
 /**
@@ -945,38 +953,32 @@ jerry_foreach_object_field (jerry_object_t *object_p, /**< object */
  * Get value of field in the specified object
  *
  * Note:
- *      if value was retrieved successfully, it should be freed
- *      with jerry_release_value just when it becomes unnecessary.
+ *      returned value should be freed with jerry_release_value.
  *
- * @return true, if field value was retrieved successfully, i.e. upon the call:
- *                - there is field with specified name in the object;
- *         false - otherwise.
+ * @return jerry value of the given field
  */
-bool
+jerry_value_t
 jerry_get_object_field_value_sz (jerry_object_t *object_p, /**< object */
                                  const jerry_char_t *field_name_p, /**< name of the field */
-                                 jerry_size_t field_name_size, /**< size of field name in bytes */
-                                 jerry_value_t *field_value_p) /**< [out] field value, if retrieved successfully */
+                                 jerry_size_t field_name_size) /**< size of field name in bytes */
 {
   jerry_assert_api_available ();
 
   ecma_string_t *field_name_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) field_name_p,
                                                                     (lit_utf8_size_t) field_name_size);
 
-  *field_value_p = ecma_op_object_get (object_p, field_name_str_p);
+  ecma_value_t field_value = ecma_op_object_get (object_p, field_name_str_p);
 
   ecma_deref_ecma_string (field_name_str_p);
 
-  return (!ECMA_IS_VALUE_ERROR (*field_value_p)
-          && !ecma_is_value_undefined (*field_value_p));
+  return field_value;
 } /* jerry_get_object_field_value_sz */
 
 /**
  * Set value of field in the specified object
  *
- * @return true, if field value was set successfully, i.e. upon the call:
- *                - field value is writable;
- *         false - otherwise.
+ * @return true  - if field value was set successfully
+ *         false - otherwise
  */
 bool
 jerry_set_object_field_value (jerry_object_t *object_p, /**< object */
@@ -1100,11 +1102,9 @@ jerry_set_object_native_handle (jerry_object_t *object_p, /**< object to set han
  *      If function is invoked as constructor, it should support [[Construct]] method,
  *      otherwise, if function is simply called - it should support [[Call]] method.
  *
- * @return true, if invocation was performed successfully, i.e.:
- *                - no unhandled exceptions were thrown in connection with the call;
- *         false - otherwise.
+ * @return returned jerry value of the given function object
  */
-static bool
+static jerry_value_t
 jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke function as constructor
                                                        *          (this_arg_p should be NULL, as it is ignored),
                                                        *   false - perform function call */
@@ -1114,9 +1114,6 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
                                                     *            if function is invoked as constructor;
                                                     *            in case of simple function call set 'this'
                                                     *            binding to the global object) */
-                       jerry_value_t *retval_p, /**< pointer to place for function's
-                                                 *   return value / thrown exception value
-                                                 *   or NULL (to ignore the values) */
                        const jerry_value_t args_p[], /**< function's call arguments
                                                       *   (NULL if arguments number is zero) */
                        jerry_length_t args_count) /**< number of the arguments */
@@ -1124,8 +1121,6 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
   JERRY_ASSERT (args_count == 0 || args_p != NULL);
   JERRY_STATIC_ASSERT (sizeof (args_count) == sizeof (ecma_length_t),
                        size_of_args_count_must_be_equal_to_size_of_ecma_length_t);
-
-  bool is_successful = true;
 
   ecma_value_t call_completion;
 
@@ -1159,29 +1154,19 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
                                              args_count);
   }
 
-  if (ECMA_IS_VALUE_ERROR (call_completion))
-  {
-    /* unhandled exception during the function call */
-    is_successful = false;
-  }
-
-  if (retval_p != NULL)
-  {
-    *retval_p = call_completion;
-  }
-
-  return is_successful;
+  return call_completion;
 } /* jerry_invoke_function */
 
 /**
  * Construct new TypeError object
+ *
+ * @return TypeError object value
  */
-static void
-jerry_construct_type_error (jerry_value_t *retval_p) /**< [out] value with constructed
-                                                      *         TypeError object */
+static jerry_value_t __attr_always_inline___
+jerry_construct_type_error (void)
 {
   ecma_object_t *type_error_obj_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
-  *retval_p = ecma_make_object_value (type_error_obj_p);
+  return ecma_make_error_obj_value (type_error_obj_p);
 } /* jerry_construct_type_error */
 
 /**
@@ -1191,20 +1176,12 @@ jerry_construct_type_error (jerry_value_t *retval_p) /**< [out] value with const
  *      returned value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
- * @return true, if call was performed successfully, i.e.:
- *                - specified object is a function object (see also jerry_is_function);
- *                - no unhandled exceptions were thrown in connection with the call;
- *         false - otherwise, 'retval_p' contains thrown exception:
- *                  if called object is not function object - a TypeError instance;
- *                  else - exception, thrown during the function call.
+ * @return returned jerry value of the given function object
  */
-bool
+jerry_value_t
 jerry_call_function (jerry_object_t *function_object_p, /**< function object to call */
                      jerry_object_t *this_arg_p, /**< object for 'this' binding
                                                   *   or NULL (set 'this' binding to the global object) */
-                     jerry_value_t *retval_p, /**< pointer to place for function's
-                                               *   return value / thrown exception value
-                                               *   or NULL (to ignore the values) */
                      const jerry_value_t args_p[], /**< function's call arguments
                                                     *   (NULL if arguments number is zero) */
                      uint16_t args_count) /**< number of the arguments */
@@ -1213,17 +1190,10 @@ jerry_call_function (jerry_object_t *function_object_p, /**< function object to 
 
   if (jerry_is_function (function_object_p))
   {
-    return jerry_invoke_function (false, function_object_p, this_arg_p, retval_p, args_p, args_count);
+    return jerry_invoke_function (false, function_object_p, this_arg_p, args_p, args_count);
   }
-  else
-  {
-    if (retval_p != NULL)
-    {
-      jerry_construct_type_error (retval_p);
-    }
 
-    return false;
-  }
+  return jerry_construct_type_error ();
 } /* jerry_call_function */
 
 /**
@@ -1233,18 +1203,10 @@ jerry_call_function (jerry_object_t *function_object_p, /**< function object to 
  *      returned value should be freed with jerry_release_value
  *      just when the value becomes unnecessary.
  *
- * @return true, if construction was performed successfully, i.e.:
- *                 - specified object is a constructor function object (see also jerry_is_constructor);
- *                 - no unhandled exceptions were thrown in connection with the invocation;
- *         false - otherwise, 'retval_p' contains thrown exception:
- *                 if  specified object is not a constructor function object - a TypeError instance;
- *                 else - exception, thrown during the invocation.
+ * @return returned jerry value of the given constructor
  */
-bool
+jerry_value_t
 jerry_construct_object (jerry_object_t *function_object_p, /**< function object to call */
-                        jerry_value_t *retval_p, /**< pointer to place for function's
-                                                  *   return value / thrown exception value
-                                                  *   or NULL (to ignore the values) */
                         const jerry_value_t args_p[], /**< function's call arguments
                                                        *   (NULL if arguments number is zero) */
                         uint16_t args_count) /**< number of the arguments */
@@ -1253,17 +1215,10 @@ jerry_construct_object (jerry_object_t *function_object_p, /**< function object 
 
   if (jerry_is_constructor (function_object_p))
   {
-    return jerry_invoke_function (true, function_object_p, NULL, retval_p, args_p, args_count);
+    return jerry_invoke_function (true, function_object_p, NULL, args_p, args_count);
   }
-  else
-  {
-    if (retval_p != NULL)
-    {
-      jerry_construct_type_error (retval_p);
-    }
 
-    return false;
-  }
+  return jerry_construct_type_error ();
 } /* jerry_construct_object */
 
 /**
@@ -1308,7 +1263,7 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
                                                        is_direct,
                                                        is_strict);
 
-  status = jerry_convert_eval_completion_to_retval (retval_p, completion);
+  status = jerry_convert_eval_completion_to_retval (completion, retval_p);
 
   return status;
 } /* jerry_eval */
@@ -2088,7 +2043,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
     /* vm should be already initialized */
     ecma_value_t completion = vm_run_eval (bytecode_p, false);
 
-    ret_code = jerry_convert_eval_completion_to_retval (retval_p, completion);
+    ret_code = jerry_convert_eval_completion_to_retval (completion, retval_p);
 
     ecma_free_value (completion);
   }

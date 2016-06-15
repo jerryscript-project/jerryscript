@@ -619,6 +619,8 @@ ecma_number_negate (ecma_number_t num) /**< ecma-number */
 ecma_number_t
 ecma_number_trunc (ecma_number_t num) /**< ecma-number */
 {
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+
   uint64_t fraction;
   int32_t exponent;
   const int32_t dot_shift = ecma_number_get_fraction_and_exponent (num, &fraction, &exponent);

@@ -136,18 +136,14 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
 
   if (ecma_is_value_empty (ret_value))
   {
-    if (!ecma_number_is_nan (year) && !ecma_number_is_infinity (year))
+    if (!ecma_number_is_nan (year))
     {
       /* 8. */
-      int32_t y = ecma_number_to_int32 (year);
+      ecma_number_t y = ecma_number_trunc (year);
 
       if (y >= 0 && y <= 99)
       {
-        year = (ecma_number_t) (1900 + y);
-      }
-      else
-      {
-        year = (ecma_number_t) y;
+        year = 1900 + y;
       }
     }
 

@@ -140,6 +140,9 @@ jerry_object_t *jerry_get_object_value (const jerry_value_t);
 /**
  * Converters of 'jerry_value_t'
  */
+bool jerry_value_to_boolean (const jerry_value_t);
+jerry_value_t jerry_value_to_number (const jerry_value_t);
+jerry_value_t jerry_value_to_object (const jerry_value_t);
 jerry_value_t jerry_value_to_string (const jerry_value_t);
 
 /**

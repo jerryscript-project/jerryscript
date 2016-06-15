@@ -2060,7 +2060,59 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 } /* jerry_exec_snapshot */
 
 /**
+ * Call ToBoolean operation on the api value.
+ *
+ * @return true  - if the logical value is true
+ *         false - otherwise
+ */
+bool
+jerry_value_to_boolean (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_op_to_boolean (value);
+} /* jerry_value_to_boolean */
+
+/**
+ * Call ToNumber operation on the api value.
+ *
+ * Note:
+ *      - Can throw error, so return value should be checked with 'jerry_value_is_error'.
+ *      - Return value must be freed with 'jerry_release_value'.
+ *
+ * @return number value
+ */
+jerry_value_t
+jerry_value_to_number (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_op_to_number (value);
+} /* jerry_value_to_number */
+
+/**
+ * Call ToObject operation on the api value.
+ *
+ * Note:
+ *      - Can throw error, so return value should be checked with 'jerry_value_is_error'.
+ *      - Return value must be freed with 'jerry_release_value'.
+ *
+ * @return object value
+ */
+jerry_value_t
+jerry_value_to_object (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_op_to_object (value);
+} /* jerry_value_to_object */
+
+/**
  * Call the ToString ecma builtin operation on the api value.
+ *
+ * Note:
+ *      - Can throw error, so return value should be checked with 'jerry_value_is_error'.
+ *      - Return value must be freed with 'jerry_release_value'.
  *
  * @return string value
  */

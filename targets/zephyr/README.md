@@ -1,33 +1,31 @@
 ### About
 
-This folder contains files to run JerryScript on Zephyr with
-[Arduino 101 / Genuino 101](https://www.arduino.cc/en/Main/ArduinoBoard101)
-
-Zephyr project arduino 101
-[Zephyr Arduino 101](https://www.zephyrproject.org/doc/board/arduino_101.html)
+This folder contains files to integrate JerryScript with Zephyr RTOS to
+run on a number of supported boards (like
+[Arduino 101 / Genuino 101](https://www.arduino.cc/en/Main/ArduinoBoard101),
+[Zephyr Arduino 101](https://www.zephyrproject.org/doc/board/arduino_101.html)).
 
 ### How to build
 
 #### 1. Preface
 
-1, Directory structure
+1. Directory structure
 
 Assume `harmony` as the path to the projects to build.
 The folder tree related would look like this.
 
 ```
 harmony
-  + jerry
+  + jerryscript
   |  + targets
-  |      + arduino_101
+  |      + zephyr
   + zephyr
 ```
 
 
-2, Target board
+2. Target boards/emulations
 
-Assume [Arduino 101 / Genuino 101](https://www.arduino.cc/en/Main/ArduinoBoard101)
-as the target board.
+Following Zephyr boards were tested: qemu_x86, qemu_cortex_m3, arduino_101.
 
 
 #### 2. Prepare Zephyr
@@ -35,9 +33,11 @@ as the target board.
 Follow [this](https://www.zephyrproject.org/doc/getting_started/getting_started.html) page to get
 the Zephyr source and configure the environment.
 
-Follow "Building a Sample Application" and check that you can flash the Arduino 101
+If you just start with Zephyr, you may want to follow "Building a Sample
+Application" section in the doc above and check that you can flash your
+target board.
 
-Remember to source the zephyr environment.
+Remember to source the Zephyr environment:
 
 ```
 source zephyr-env.sh
@@ -49,10 +49,26 @@ export ZEPHYR_SDK_INSTALL_DIR=<sdk installation directory>
 
 #### 3. Build JerryScript for Zephyr
 
+The easiest way is to build and run on a QEMU emulator:
+
+For x86 architecture:
+
+```
+make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_x86 qemu
+```
+
+For ARM (Cortex-M) architecture:
+
+```
+make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 qemu
+```
+
+#### 4. Build for Arduino 101
+
 ```
 # assume you are in harmony folder
 cd jerry
-make -f ./targets/arduino_101/Makefile.arduino_101
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
 ```
 
 This will generate the following libraries:
@@ -71,6 +87,7 @@ The final Zephyr image will be located here:
 
 Details on how to flash the image can be found here:
 [Flashing image](https://www.zephyrproject.org/doc/board/arduino_101.html)
+(or similar page for other supported boards).
 
 To be able to use this demo in hardware you will need the serial console
 which will be generating output to Pins 0 & 1
@@ -78,13 +95,13 @@ which will be generating output to Pins 0 & 1
 Some examples of building the software
 
 ```
-make -f ./targets/arduino_101/Makefile.arduino_101 clean
+make -f ./targets/zephyr/Makefile.zephyr clean
 ```
 
 - Not using a Jtag and having a factory stock Arduino 101.
 
 ```
-make -f ./targets/arduino_101/Makefile.arduino_101 BOARD=arduino_101_factory 
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory
 ```
 
 Follow the Zephyr instructions to flash using the dfu-util command.
@@ -96,15 +113,9 @@ There is a helper function to flash using the JTAG and Flywatter2
 
 ![alt tag](docs/arduino_101.jpg?raw=true "Example")
 ```
-make -f ./targets/arduino_101/Makefile.arduino_101 BOARD=arduino_101 flash
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 flash
 
 ```
-
-- Compiling and running with the emulator
-```
-make -f ./targets/arduino_101/Makefile.arduino_101 BOARD=qemu_x86 qemu
-```
-
 
 #### 6. Serial terminal
 

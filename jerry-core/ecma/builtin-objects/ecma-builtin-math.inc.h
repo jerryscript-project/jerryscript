@@ -22,15 +22,15 @@
 #endif /* !OBJECT_ID */
 
 #ifndef SIMPLE_VALUE
-# define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable)
+# define SIMPLE_VALUE(name, simple_value, prop_attributes)
 #endif /* !SIMPLE_VALUE */
 
 #ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+# define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef ROUTINE
@@ -45,59 +45,43 @@ OBJECT_ID (ECMA_BUILTIN_ID_MATH)
 
 // ECMA-262 v5, 15.8.1.1
 NUMBER_VALUE (LIT_MAGIC_STRING_E_U,
-              ECMA_NUMBER_E,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_E,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.2
 NUMBER_VALUE (LIT_MAGIC_STRING_LN10_U,
-              ECMA_NUMBER_LN10,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_LN10,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.3
 NUMBER_VALUE (LIT_MAGIC_STRING_LN2_U,
-              ECMA_NUMBER_LN2,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_LN2,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.4
 NUMBER_VALUE (LIT_MAGIC_STRING_LOG2E_U,
-              ECMA_NUMBER_LOG2E,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_LOG2E,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.5
 NUMBER_VALUE (LIT_MAGIC_STRING_LOG10E_U,
-              ECMA_NUMBER_LOG10E,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_LOG10E,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.6
 NUMBER_VALUE (LIT_MAGIC_STRING_PI_U,
-              ECMA_NUMBER_PI,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_PI,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.7
 NUMBER_VALUE (LIT_MAGIC_STRING_SQRT1_2_U,
-              ECMA_NUMBER_SQRT_1_2,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_SQRT_1_2,
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.8.1.8
 NUMBER_VALUE (LIT_MAGIC_STRING_SQRT2_U,
-              ECMA_NUMBER_SQRT2,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_SQRT2,
+              ECMA_PROPERTY_FIXED)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -125,5 +109,4 @@ ROUTINE (LIT_MAGIC_STRING_TAN, ecma_builtin_math_object_tan, 1, 1)
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

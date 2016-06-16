@@ -23,11 +23,11 @@
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+# define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
 #ifndef ROUTINE
@@ -42,10 +42,8 @@ OBJECT_ID (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE)
 
 // 15.4.4.1
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY),
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_BUILTIN_ID_ARRAY,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 /* Number properties:
  *  (property name, object pointer getter) */
@@ -53,9 +51,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 // 15.4.4
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FLAG_WRITABLE)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -86,6 +82,5 @@ ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_r
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE
 

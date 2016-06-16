@@ -22,11 +22,11 @@
 #endif /* !OBJECT_ID */
 
 #ifndef STRING_VALUE
-# define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable)
+# define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef ROUTINE
@@ -41,24 +41,18 @@ OBJECT_ID (ECMA_BUILTIN_ID_ERROR_PROTOTYPE)
 
 // 15.11.4.1
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_ERROR),
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_BUILTIN_ID_ERROR,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 // 15.11.4.2
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_ERROR_UL,
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 // 15.11.4.3
 STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
               LIT_MAGIC_STRING__EMPTY,
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -69,5 +63,4 @@ ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_error_prototype_object_to_s
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

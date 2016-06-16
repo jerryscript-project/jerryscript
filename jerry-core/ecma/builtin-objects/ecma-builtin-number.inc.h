@@ -22,11 +22,11 @@
 #endif /* !OBJECT_ID */
 
 #ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+# define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 /* Object identifier */
@@ -38,59 +38,44 @@ OBJECT_ID (ECMA_BUILTIN_ID_NUMBER)
 // 15.7.3
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
 
 // 15.7.3.4
 NUMBER_VALUE (LIT_MAGIC_STRING_NAN,
-              ecma_number_make_nan (),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_NAN,
+              ECMA_PROPERTY_FIXED)
 
 // 15.7.3.2
 NUMBER_VALUE (LIT_MAGIC_STRING_MAX_VALUE_U,
-              ECMA_NUMBER_MAX_VALUE,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_MAX,
+              ECMA_PROPERTY_FIXED)
 
 // 15.7.3.3
 NUMBER_VALUE (LIT_MAGIC_STRING_MIN_VALUE_U,
-              ECMA_NUMBER_MIN_VALUE,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_MIN,
+              ECMA_PROPERTY_FIXED)
 
 // 15.7.3.5
 NUMBER_VALUE (LIT_MAGIC_STRING_POSITIVE_INFINITY_U,
-              ecma_number_make_infinity (false),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_POSITIVE_INFINITY,
+              ECMA_PROPERTY_FIXED)
 
 // 15.7.3.6
 NUMBER_VALUE (LIT_MAGIC_STRING_NEGATIVE_INFINITY_U,
-              ecma_number_make_infinity (true),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_NUMBER_NEGATIVE_INFINITY,
+              ECMA_PROPERTY_FIXED)
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
 // 15.7.3.1
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
-              ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
+              ECMA_PROPERTY_FIXED)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

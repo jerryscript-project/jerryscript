@@ -23,7 +23,7 @@
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef ROUTINE
@@ -34,10 +34,8 @@
 OBJECT_ID (ECMA_BUILTIN_ID_DATE_PROTOTYPE)
 
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_DATE),
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_BUILTIN_ID_DATE,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_date_prototype_to_string, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_TO_DATE_STRING_UL, ecma_builtin_date_prototype_to_date_string, 0, 0)
@@ -96,5 +94,4 @@ ROUTINE (LIT_MAGIC_STRING_TO_GMT_STRING_UL, ecma_builtin_date_prototype_to_utc_s
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

@@ -61,12 +61,58 @@
 extern ecma_object_t *
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t, uint16_t, uint8_t);
 
+/**
+ * Type of built-in properties.
+ */
+typedef enum
+{
+  ECMA_BUILTIN_PROPERTY_SIMPLE, /**< simple value property */
+  ECMA_BUILTIN_PROPERTY_NUMBER, /**< number value property */
+  ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
+  ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
+  ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */
+  ECMA_BUILTIN_PROPERTY_END, /**< last property */
+} ecma_builtin_property_type_t;
+
+/**
+ * Type of symbolic built-in number types (starting from 256).
+ */
+typedef enum
+{
+  ECMA_BUILTIN_NUMBER_MAX = 256, /**< value of ECMA_NUMBER_MAX_VALUE */
+  ECMA_BUILTIN_NUMBER_MIN, /**< value of ECMA_NUMBER_MIN_VALUE */
+  ECMA_BUILTIN_NUMBER_E, /**< value of ECMA_NUMBER_E */
+  ECMA_BUILTIN_NUMBER_PI, /**< value of ECMA_NUMBER_PI */
+  ECMA_BUILTIN_NUMBER_LN10, /**< value of ECMA_NUMBER_LN10 */
+  ECMA_BUILTIN_NUMBER_LN2, /**< value of ECMA_NUMBER_LN2 */
+  ECMA_BUILTIN_NUMBER_LOG2E, /**< value of ECMA_NUMBER_LOG2E */
+  ECMA_BUILTIN_NUMBER_LOG10E, /**< value of ECMA_NUMBER_LOG10E */
+  ECMA_BUILTIN_NUMBER_SQRT2, /**< value of ECMA_NUMBER_SQRT2 */
+  ECMA_BUILTIN_NUMBER_SQRT_1_2, /**< value of ECMA_NUMBER_SQRT_1_2 */
+  ECMA_BUILTIN_NUMBER_NAN, /**< result of ecma_number_make_nan () */
+  ECMA_BUILTIN_NUMBER_POSITIVE_INFINITY, /**< result of ecma_number_make_infinity (false) */
+  ECMA_BUILTIN_NUMBER_NEGATIVE_INFINITY, /**< result of ecma_number_make_infinity (true) */
+} ecma_builtin_number_type_t;
+
+/**
+ * Description of built-in properties.
+ */
+typedef struct
+{
+  uint16_t magic_string_id; /**< name of the property */
+  uint8_t type; /**< type of the property */
+  uint8_t attributes; /**< attributes of the property */
+  uint16_t value; /**< value of the property */
+} ecma_builtin_property_descriptor_t;
+
 #define BUILTIN(builtin_id, \
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
                 is_static, \
                 lowercase_name) \
+extern const ecma_builtin_property_descriptor_t \
+ecma_builtin_ ## lowercase_name ## _property_descriptor_list[]; \
 extern ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *, \
                                                    ecma_length_t); \
@@ -78,9 +124,6 @@ ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_i
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \
                                                       ecma_length_t); \
-extern ecma_property_t * \
-ecma_builtin_ ## lowercase_name ## _try_to_instantiate_property (ecma_object_t *, \
-                                                                 ecma_string_t *); \
 extern void \
 ecma_builtin_ ## lowercase_name ## _list_lazy_property_names (ecma_object_t *, \
                                                               bool, \

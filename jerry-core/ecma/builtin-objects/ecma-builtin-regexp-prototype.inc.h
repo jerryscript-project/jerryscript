@@ -23,19 +23,19 @@
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+# define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
 #ifndef SIMPLE_VALUE
-# define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable)
+# define SIMPLE_VALUE(name, simple_value, prop_attributes)
 #endif /* !SIMPLE_VALUE */
 
 #ifndef STRING_VALUE
-# define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable)
+# define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
 
 #ifndef ROUTINE
@@ -47,44 +47,33 @@ OBJECT_ID (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
 
 // ECMA-262 v5, 15.10.6.1
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP),
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_CONFIGURABLE)
+              ECMA_BUILTIN_ID_REGEXP,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 // ECMA-262 v5, 15.10.7.1
 STRING_VALUE (LIT_MAGIC_STRING_SOURCE,
               LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.10.7.2
 SIMPLE_VALUE (LIT_MAGIC_STRING_GLOBAL,
               ECMA_SIMPLE_VALUE_FALSE,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.10.7.3
 SIMPLE_VALUE (LIT_MAGIC_STRING_IGNORECASE_UL,
               ECMA_SIMPLE_VALUE_FALSE,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
+
 // ECMA-262 v5, 15.10.7.4
 SIMPLE_VALUE (LIT_MAGIC_STRING_MULTILINE,
               ECMA_SIMPLE_VALUE_FALSE,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
 
 // ECMA-262 v5, 15.10.7.5
 NUMBER_VALUE (LIT_MAGIC_STRING_LASTINDEX_UL,
               0,
-              ECMA_PROPERTY_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FLAG_WRITABLE)
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_COMPILE, ecma_builtin_regexp_prototype_compile, 2, 1)
@@ -98,5 +87,4 @@ ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string,
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

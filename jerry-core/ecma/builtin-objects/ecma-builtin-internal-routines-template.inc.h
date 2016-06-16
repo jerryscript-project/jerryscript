@@ -28,10 +28,8 @@
 #define PASTE_(x, y) PASTE__ (x, y)
 #define PASTE(x, y) PASTE_ (x, y)
 
-#define FIND_PROPERTY_INDEX_ROUTINE_NAME \
-  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _find_property_index)
-#define TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME \
-  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _try_to_instantiate_property)
+#define PROPERTY_DESCRIPTOR_LIST_NAME \
+  PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _property_descriptor_list)
 #define LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME \
   PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _list_lazy_property_names)
 #define DISPATCH_ROUTINE_ROUTINE_NAME \
@@ -59,11 +57,10 @@
 
 static const lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
 {
-#define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
-#define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
-#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
-#define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
-#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) name,
+#define SIMPLE_VALUE(name, simple_value, prop_attributes) name,
+#define NUMBER_VALUE(name, number_value, prop_attributes) name,
+#define STRING_VALUE(name, magic_string_id, prop_attributes) name,
+#define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) name,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) name,
 #include BUILTIN_INC_HEADER_NAME
 };
@@ -73,15 +70,13 @@ static const lit_magic_string_id_t ECMA_BUILTIN_PROPERTY_NAMES[] =
 
 enum
 {
-#define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+#define SIMPLE_VALUE(name, simple_value, prop_attributes) \
   ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+#define NUMBER_VALUE(name, number_value, prop_attributes) \
   ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+#define STRING_VALUE(name, magic_string_id, prop_attributes) \
   ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
+#define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
   ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
@@ -89,242 +84,53 @@ enum
 };
 
 /**
- * Return the index of a magic string ID in the ECMA_BUILTIN_PROPERTY_NAMES
- * array, or -1 if not found.
- *
- * Note: we trust the compiler to find the optimal (most performance and/or
- * memory effective) way of implementing the switch construct of this function
- * in binary code (e.g., jump tables for large consecutive cases, binary search
- * for non-consecutive cases, some simple conditional branches for low number of
- * cases, etc. -- the worst case is a linear sequence of comparisons, but even
- * that's not that bad, since we cannot have more than 64 IDs in the array).
+ * Built-in property list of the built-in object.
  */
-static int32_t
-FIND_PROPERTY_INDEX_ROUTINE_NAME (lit_magic_string_id_t id) /**< magic string id */
+const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
 {
-  switch (id)
-  {
-#define SIMPLE_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
-#define NUMBER_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
-#define STRING_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
-#define CP_UNIMPLEMENTED_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
-#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
-    case name: \
-    { \
-      return ECMA_BUILTIN_PROPERTY_NAME_INDEX(name); \
-    }
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ROUTINE, \
+    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    length_prop_value \
+  },
+#define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_OBJECT, \
+    prop_attributes, \
+    obj_builtin_id \
+  },
+#define SIMPLE_VALUE(name, simple_value, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_SIMPLE, \
+    prop_attributes, \
+    simple_value \
+  },
+#define NUMBER_VALUE(name, number_value, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_NUMBER, \
+    prop_attributes, \
+    number_value \
+  },
+#define STRING_VALUE(name, magic_string_id, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_STRING, \
+    prop_attributes, \
+    magic_string_id \
+  },
 #include BUILTIN_INC_HEADER_NAME
-    default:
-    {
-      return -1;
-    }
-  }
-} /* FIND_PROPERTY_INDEX_ROUTINE_NAME */
-
-/**
- * If the property's name is one of built-in properties of the built-in object
- * that is not instantiated yet, instantiate the property and
- * return pointer to the instantiated property.
- *
- * @return pointer property, if one was instantiated,
- *         NULL - otherwise.
- */
-ecma_property_t *
-TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME (ecma_object_t *obj_p, /**< object */
-                                          ecma_string_t *prop_name_p) /**< property's name */
-{
-#define OBJECT_ID(builtin_id) const ecma_builtin_id_t builtin_object_id = builtin_id;
-#include BUILTIN_INC_HEADER_NAME
-
-  JERRY_ASSERT (ecma_builtin_is (obj_p, builtin_object_id));
-  JERRY_ASSERT (ecma_find_named_property (obj_p, prop_name_p) == NULL);
-
-  lit_magic_string_id_t id;
-
-  if (!ecma_is_string_magic (prop_name_p, &id))
   {
-    return NULL;
+    LIT_MAGIC_STRING__COUNT,
+    ECMA_BUILTIN_PROPERTY_END,
+    0,
+    0
   }
-
-  int32_t index = FIND_PROPERTY_INDEX_ROUTINE_NAME (id);
-
-  if (index == -1)
-  {
-    return NULL;
-  }
-
-  JERRY_ASSERT (index >= 0 && (uint32_t) index < sizeof (uint64_t) * JERRY_BITSINBYTE);
-
-  uint32_t bit;
-  ecma_internal_property_id_t mask_prop_id;
-
-  if (index >= 32)
-  {
-    mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63;
-    bit = (uint32_t) 1u << (index - 32);
-  }
-  else
-  {
-    mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31;
-    bit = (uint32_t) 1u << index;
-  }
-
-  ecma_property_t *mask_prop_p = ecma_find_internal_property (obj_p, mask_prop_id);
-  if (mask_prop_p == NULL)
-  {
-    mask_prop_p = ecma_create_internal_property (obj_p, mask_prop_id);
-    ecma_set_internal_property_value (mask_prop_p, 0);
-  }
-
-  uint32_t bit_mask = ecma_get_internal_property_value (mask_prop_p);
-
-  if (bit_mask & bit)
-  {
-    return NULL;
-  }
-
-  bit_mask |= bit;
-
-  ecma_set_internal_property_value (mask_prop_p, bit_mask);
-
-  ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_property_writable_value_t writable;
-  ecma_property_enumerable_value_t enumerable;
-  ecma_property_configurable_value_t configurable;
-
-  switch (id)
-  {
-    JERRY_ASSERT ((uint16_t) id == id);
-
-#define ROUTINE(name, c_function_name, args_number, length_prop_value) case name: \
-    { \
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_object_id, \
-                                                                                 id, \
-                                                                                 length_prop_value); \
-      \
-      writable = ECMA_PROPERTY_WRITABLE; \
-      enumerable = ECMA_PROPERTY_NOT_ENUMERABLE; \
-      configurable = ECMA_PROPERTY_CONFIGURABLE; \
-      \
-      value = ecma_make_object_value (func_obj_p); \
-      \
-      break; \
-    }
-#define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable) case name: \
-    { \
-      value = ecma_make_object_value (obj_getter); \
-      writable = prop_writable; \
-      enumerable = prop_enumerable; \
-      configurable = prop_configurable; \
-      break; \
-    }
-#define SIMPLE_VALUE(name, simple_value, prop_writable, prop_enumerable, prop_configurable) case name: \
-    { \
-      value = ecma_make_simple_value (simple_value); \
-      \
-      writable = prop_writable; \
-      enumerable = prop_enumerable; \
-      configurable = prop_configurable; \
-      \
-      break; \
-   }
-#define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable) case name: \
-    { \
-      value = ecma_make_number_value (number_value); \
-      \
-      writable = prop_writable; \
-      enumerable = prop_enumerable; \
-      configurable = prop_configurable; \
-      \
-      break; \
-    }
-#define STRING_VALUE(name, magic_string_id, prop_writable, prop_enumerable, prop_configurable) case name: \
-    { \
-      ecma_string_t *magic_string_p = ecma_get_magic_string (magic_string_id); \
-      \
-      value = ecma_make_string_value (magic_string_p); \
-      \
-      writable = prop_writable; \
-      enumerable = prop_enumerable; \
-      configurable = prop_configurable; \
-      \
-      break; \
-    }
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-#define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable) case name: \
-    { \
-      /* The object throws CompactProfileError upon invocation */ \
-      ecma_object_t *get_set_p = ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR); \
-      ecma_property_t *compact_profile_thrower_property_p = ecma_create_named_accessor_property (obj_p, \
-                                                                                                 prop_name_p, \
-                                                                                                 get_set_p, \
-                                                                                                 get_set_p, \
-                                                                                                 true, \
-                                                                                                 false); \
-      ecma_deref_object (get_set_p); \
-      \
-      return compact_profile_thrower_property_p; \
-    }
-#else /* !CONFIG_ECMA_COMPACT_PROFILE */
-#define CP_UNIMPLEMENTED_VALUE(name, value, prop_writable, prop_enumerable, prop_configurable) case name: \
-      { \
-        JERRY_UNIMPLEMENTED ("The built-in is not implemented."); \
-      }
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
-#include BUILTIN_INC_HEADER_NAME
-
-    default:
-    {
-      JERRY_UNREACHABLE ();
-    }
-  }
-
-  uint8_t prop_attributes = 0;
-
-  if (configurable)
-  {
-    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
-  }
-  if (enumerable)
-  {
-    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
-  }
-  if (writable)
-  {
-    prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_WRITABLE);
-  }
-
-  ecma_property_t *prop_p = ecma_create_named_data_property (obj_p,
-                                                             prop_name_p,
-                                                             prop_attributes);
-
-  ecma_named_data_property_assign_value (obj_p, prop_p, value);
-
-  ecma_free_value (value);
-
-  return prop_p;
-} /* TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME */
+};
 
 /**
  * List names of the built-in object's lazy instantiated properties
@@ -487,8 +293,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
 #undef PASTE__
 #undef PASTE_
 #undef PASTE
-#undef FIND_PROPERTY_INDEX_ROUTINE_NAME
-#undef TRY_TO_INSTANTIATE_PROPERTY_ROUTINE_NAME
+#undef PROPERTY_DESCRIPTOR_LIST_NAME
 #undef LIST_LAZY_PROPERTY_NAMES_ROUTINE_NAME
 #undef DISPATCH_ROUTINE_ROUTINE_NAME
 #undef BUILTIN_UNDERSCORED_ID

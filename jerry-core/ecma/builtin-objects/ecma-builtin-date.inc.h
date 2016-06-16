@@ -23,11 +23,11 @@
 #endif /* !OBJECT_ID */
 
 #ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_getter, prop_writable, prop_enumerable, prop_configurable)
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
 
 #ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_writable, prop_enumerable, prop_configurable)
+# define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
 #ifndef ROUTINE
@@ -39,16 +39,12 @@ OBJECT_ID (ECMA_BUILTIN_ID_DATE)
 
 // ECMA-262 v5, 15.9.4.1
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
-              ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE),
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_BUILTIN_ID_DATE_PROTOTYPE,
+              ECMA_PROPERTY_FIXED)
 
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               7,
-              ECMA_PROPERTY_NOT_WRITABLE,
-              ECMA_PROPERTY_NOT_ENUMERABLE,
-              ECMA_PROPERTY_NOT_CONFIGURABLE)
+              ECMA_PROPERTY_FIXED)
 
 ROUTINE (LIT_MAGIC_STRING_PARSE, ecma_builtin_date_parse, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UTC_U, ecma_builtin_date_utc, NON_FIXED, 7)
@@ -59,5 +55,4 @@ ROUTINE (LIT_MAGIC_STRING_NOW, ecma_builtin_date_now, 0, 0)
 #undef NUMBER_VALUE
 #undef STRING_VALUE
 #undef OBJECT_VALUE
-#undef CP_UNIMPLEMENTED_VALUE
 #undef ROUTINE

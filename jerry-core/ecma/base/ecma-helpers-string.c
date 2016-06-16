@@ -1259,8 +1259,7 @@ ecma_char_t
 ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
                              ecma_length_t index) /**< index of character */
 {
-  ecma_length_t string_length = ecma_string_get_length (string_p);
-  JERRY_ASSERT (index < string_length);
+  JERRY_ASSERT (index < ecma_string_get_length (string_p));
 
   lit_utf8_size_t buffer_size;
   bool is_ascii;

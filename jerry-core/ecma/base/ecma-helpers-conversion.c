@@ -962,7 +962,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (ecma_number_is_zero (num))
   {
     // 2.
-    *buffer_p = (lit_utf8_byte_t) LIT_CHAR_0;
+    *buffer_p = LIT_CHAR_0;
     JERRY_ASSERT (1 <= buffer_size);
     return 1;
   }
@@ -972,7 +972,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   if (ecma_number_is_negative (num))
   {
     // 3.
-    *dst_p++ = (lit_utf8_byte_t) LIT_CHAR_MINUS;
+    *dst_p++ = LIT_CHAR_MINUS;
     num = ecma_number_negate (num);
   }
 
@@ -1009,7 +1009,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
     // 6.
     dst_p += k;
 
-    memset (dst_p, (lit_utf8_byte_t) LIT_CHAR_0, (size_t) (n - k));
+    memset (dst_p, LIT_CHAR_0, (size_t) (n - k));
     dst_p += n - k;
 
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
@@ -1020,7 +1020,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   {
     // 7.
     memmove (dst_p + n + 1, dst_p + n, (size_t) (k - n));
-    *(dst_p + n) = (lit_utf8_byte_t) LIT_CHAR_DOT;
+    *(dst_p + n) = LIT_CHAR_DOT;
     dst_p += k + 1;
 
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
@@ -1031,9 +1031,9 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   {
     // 8.
     memmove (dst_p + 2 - n, dst_p, (size_t) k);
-    memset (dst_p + 2, (lit_utf8_byte_t) LIT_CHAR_0, (size_t) -n);
-    *dst_p = (lit_utf8_byte_t) LIT_CHAR_0;
-    *(dst_p + 1) = (lit_utf8_byte_t) LIT_CHAR_DOT;
+    memset (dst_p + 2, LIT_CHAR_0, (size_t) -n);
+    *dst_p = LIT_CHAR_0;
+    *(dst_p + 1) = LIT_CHAR_DOT;
     dst_p += k - n + 2;
 
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
@@ -1049,13 +1049,13 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   {
     // 10.
     memmove (dst_p + 2, dst_p + 1, (size_t) (k - 1));
-    *(dst_p + 1) = (lit_utf8_byte_t) LIT_CHAR_DOT;
+    *(dst_p + 1) = LIT_CHAR_DOT;
     dst_p += k + 1;
   }
 
   // 9., 10.
-  *dst_p++ = (lit_utf8_byte_t) LIT_CHAR_LOWERCASE_E;
-  *dst_p++ = (n >= 1) ? (lit_utf8_byte_t) LIT_CHAR_PLUS : (lit_utf8_byte_t) LIT_CHAR_MINUS;
+  *dst_p++ = LIT_CHAR_LOWERCASE_E;
+  *dst_p++ = (n >= 1) ? LIT_CHAR_PLUS : LIT_CHAR_MINUS;
   uint32_t t = (uint32_t) (n >= 1 ? (n - 1) : -(n - 1));
 
   dst_p += ecma_uint32_to_utf8_string (t, dst_p, (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));

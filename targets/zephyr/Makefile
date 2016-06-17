@@ -18,10 +18,10 @@
 ifndef ZEPHYR_BASE
 $(error Missing zephyr base)
 endif
- 
+
 # For testing without real hardware use qemu_x86 instead of arduino_101
 BOARD ?= arduino_101
- 
+
 O ?= $(PROJECT_BASE)/outdir
 
 ZEPHYR    ?= $(ZEPHYR_BASE)
@@ -31,7 +31,7 @@ JERRYHEAP ?= 16
 ZEPHYRINC   = $(ZEPHYR_BASE)/include
 ZEPHYRLIB   = $(ZEPHYR_BASE)/lib
 
-SOURCE_DIR = ./targets/arduino_101/src
+SOURCE_DIR = ./targets/zephyr/src
 
 export JERRY_INCLUDE = $(CURDIR)/jerry-core/
 
@@ -56,7 +56,7 @@ export ALL_LIBS
 LDFLAGS_zephyr += $(USER_LIB_INCLUDE_DIR)
 export LDFLAGS_zephyr
 
-include ${ZEPHYR_BASE}/Makefile.inc 
+include ${ZEPHYR_BASE}/Makefile.inc
 
 .PHONY = showconfig
 

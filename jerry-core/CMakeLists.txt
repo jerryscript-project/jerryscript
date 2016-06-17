@@ -150,6 +150,9 @@ project (JerryCore C ASM)
  # Jerry port
  if(NOT ("${PORT_DIR}" STREQUAL ""))
   file(GLOB SOURCE_PORT_FILES ${PORT_DIR}/*.c)
+  if (NOT USE_JERRY_LIBC)
+   set (DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE)
+  endif()
  endif()
 
  # All-in-one build

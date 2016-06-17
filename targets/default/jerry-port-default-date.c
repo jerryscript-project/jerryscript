@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#define _BSD_SOURCE
 #include <sys/time.h>
 
 #include "jerry-port.h"

@@ -266,6 +266,7 @@ lit_find_literal_by_num (const ecma_number_t num) /**< a number to search for */
   return NULL;
 } /* lit_find_literal_by_num */
 
+#ifndef JERRY_NDEBUG
 /**
  * Check if literal really exists in the storage
  *
@@ -289,6 +290,7 @@ lit_literal_exists (lit_literal_t lit) /**< literal to check for existence */
 
   return false;
 } /* lit_literal_exists */
+#endif /* !JERRY_NDEBUG */
 
 /**
  * Convert compressed pointer to literal
@@ -299,7 +301,9 @@ lit_literal_t
 lit_get_literal_by_cp (lit_cpointer_t lit_cp) /**< compressed pointer to literal */
 {
   lit_literal_t lit = lit_cpointer_decompress (lit_cp);
+#ifndef JERRY_NDEBUG
   JERRY_ASSERT (lit_literal_exists (lit));
+#endif /* !JERRY_NDEBUG */
 
   return lit;
 } /* lit_get_literal_by_cp */

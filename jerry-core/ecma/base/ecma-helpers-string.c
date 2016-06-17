@@ -1314,6 +1314,7 @@ ecma_get_magic_string_ex (lit_magic_string_ex_id_t id) /**< external magic strin
   return ecma_new_ecma_string_from_magic_string_ex_id (id);
 } /* ecma_get_magic_string_ex */
 
+#ifndef JERRY_NDEBUG
 /**
  * Long path part of ecma_is_string_magic
  *
@@ -1338,6 +1339,7 @@ ecma_is_string_magic_longpath (const ecma_string_t *string_p, /**< ecma-string *
 
   return lit_is_utf8_string_magic (utf8_str_p, utf8_str_size, out_id_p);
 } /* ecma_is_string_magic_longpath */
+#endif /* !JERRY_NDEBUG */
 
 /**
  * Check if passed string equals to one of magic strings
@@ -1365,8 +1367,10 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
      * should return ecma-string with ECMA_STRING_CONTAINER_MAGIC_STRING
      * container type if new ecma-string's content is equal to one of magic strings.
      */
+#ifndef JERRY_NDEBUG
     JERRY_ASSERT (ecma_string_get_length (string_p) > LIT_MAGIC_STRING_LENGTH_LIMIT
                   || !ecma_is_string_magic_longpath (string_p, out_id_p));
+#endif /* !JERRY_NDEBUG */
 
     return false;
   }

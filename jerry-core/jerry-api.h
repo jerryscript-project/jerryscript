@@ -109,7 +109,7 @@ typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
  * Function type applied for each fields in objects
  */
 typedef bool (*jerry_object_field_foreach_t) (const jerry_string_t *field_name_p,
-                                              const jerry_value_t field_value_p,
+                                              const jerry_value_t field_value,
                                               void *user_data_p);
 
 /**

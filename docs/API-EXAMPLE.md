@@ -61,13 +61,13 @@ main (int argc, char * argv[])
   else
   {
     /* Execute Global scope code */
-    jerry_value_t error_value = jerry_create_void_value ();
+    jerry_value_t error_value = jerry_create_undefined_value ();
     jerry_completion_code_t return_code = jerry_run (&error_value);
 
     if (return_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
     {
       /* Error value must be freed, if 'jerry_run' returns with an unhandled exception */
-      jerry_release_value (&error_value);
+      jerry_release_value (error_value);
     }
   }
 
@@ -105,7 +105,7 @@ main (int argc, char * argv[])
               &eval_ret);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (&eval_ret);
+  jerry_release_value (eval_ret);
 
   /* Evaluate script2 */
   jerry_eval (script_2,
@@ -115,7 +115,7 @@ main (int argc, char * argv[])
               &eval_ret);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (&eval_ret);
+  jerry_release_value (eval_ret);
 
   /* Cleanup engine */
   jerry_cleanup ();
@@ -148,12 +148,10 @@ main (int argc, char * argv[]) {
   jerry_string_t *str_val_p = jerry_create_string (str);
 
   /* Constructing string value descriptor */
-  jerry_value_t value;
-  value.type = JERRY_API_DATA_TYPE_STRING;
-  value.u.v_string = str_val_p;
+  jerry_value_t value = jerry_create_string_value (str_val_p);
 
   /* Setting the string value to field of the Global object */
-  jerry_set_object_field_value (object_p, var_name, &value);
+  jerry_set_object_field_value (object_p, var_name, value);
 
   /* Releasing string value, as it is no longer necessary outside of engine */
   jerry_release_string (str_val_p);
@@ -171,7 +169,7 @@ main (int argc, char * argv[]) {
               &eval_ret);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (&eval_ret);
+  jerry_release_value (eval_ret);
 
   /* Freeing engine */
   jerry_cleanup ();
@@ -212,79 +210,51 @@ The following example function will output a JavaScript value:
 ```c
 #include <stdlib.h>
 
-static void
-print_value (const jerry_value_t *value_p)
+print_value (const jerry_value_t value)
 {
-  switch (value_p->type)
+  if (jerry_value_is_undefined (value))
   {
-    /* Simple values: void, undefined, null, false, true */
-    case JERRY_API_DATA_TYPE_VOID:
+    jerry_port_logmsg (stdout, "undefined");
+  }
+  else if (jerry_value_is_null (value))
+  {
+    jerry_port_logmsg (stdout, "null");
+  }
+  else if (jerry_value_is_boolean (value))
+  {
+    if (jerry_get_boolean_value (value))
     {
-      printf ("void");
-      break;
+      jerry_port_logmsg (stdout, "true");
     }
-    case JERRY_API_DATA_TYPE_UNDEFINED:
+    else
     {
-      printf ("undefined");
-      break;
-    }
-    case JERRY_API_DATA_TYPE_NULL:
-    {
-      printf ("null");
-      break;
-    }
-    case JERRY_API_DATA_TYPE_BOOLEAN:
-    {
-      if (value_p->u.v_bool)
-      {
-        printf ("true");
-      }
-      else
-      {
-        printf ("false");
-      }
-      break;
-    }
-    /* Float value */
-    case JERRY_API_DATA_TYPE_FLOAT32:
-    {
-      printf ("%f", value_p->u.v_float32);
-      break;
-    }
-    /* Double value */
-    case JERRY_API_DATA_TYPE_FLOAT64:
-    {
-      printf ("%lf", value_p->u.v_float64);
-      break;
-    }
-    /* Unsigned integer value */
-    case JERRY_API_DATA_TYPE_UINT32:
-    {
-      printf ("%d", value_p->u.v_uint32);
-      break;
-    }
-    /* String value */
-    case JERRY_API_DATA_TYPE_STRING:
-    {
-      /* Determining required buffer size */
-      jerry_size_t req_sz = jerry_get_string_size (value_p->u.v_string);
-      jerry_char_t *str_buf_p = (jerry_char_t *) malloc (req_sz);
-      jerry_string_to_char_buffer (value_p->u.v_string, str_buf_p, req_sz);
-
-      printf ("%s", (const char *) str_buf_p);
-
-      free (str_buf_p);
-      break;
-    }
-    /* Object reference */
-    case JERRY_API_DATA_TYPE_OBJECT:
-    {
-      printf ("[JS object]");
-      break;
+      jerry_port_logmsg (stdout, "false");
     }
   }
+  /* Float value */
+  else if (jerry_value_is_number (value))
+  {
+    jerry_port_logmsg (stdout, "number");
+  }
+  /* String value */
+  else if (jerry_value_is_string (value))
+  {
+    /* Determining required buffer size */
+    jerry_string_t *str_p = jerry_get_string_value (value);
+    jerry_size_t req_sz = jerry_get_string_size (str_p);
+    jerry_char_t str_buf_p[req_sz];
 
-  printf ("\n");
+    jerry_string_to_char_buffer (str_p, str_buf_p, req_sz);
+
+    jerry_port_logmsg (stdout, "%s", (const char *) str_buf_p);
+  }
+  /* Object reference */
+  else if (jerry_value_is_object (value))
+  {
+    jerry_port_logmsg (stdout, "[JS object]");
+  }
+
+  jerry_port_logmsg (stdout, "\n");
 }
 ```
 
@@ -309,34 +279,47 @@ Shell operation can be described with the following loop:
 
 #include "jerry.h"
 
-static void print_value (const jerry_value_t *value_p);
+static void print_value (const jerry_api_value_t);
 
 int
 main (int argc, char * argv[])
 {
   jerry_completion_code_t status = JERRY_COMPLETION_CODE_OK;
+  bool is_done = false;
 
   /* Initialize engine */
   jerry_init (JERRY_FLAG_EMPTY);
 
-  char cmd [256];
-  while (true)
+  while (!is_done)
   {
-    printf ("> ");
+    char cmd [256];
+    char *cmd_tail = cmd;
+    size_t len = 0;
 
-    /* Input next command */
-    if (fgets (cmd, sizeof (cmd), stdin) == NULL
-        || strcmp (cmd, "quit\n") == 0)
+    jerry_port_logmsg (stdout, "> ");
+
+    /* Read next command */
+    while (true)
     {
-      /* If the command is 'quit', exit from loop */
-      break;
+      if (fread (cmd_tail, 1, 1, stdin) != 1 && len == 0)
+      {
+        is_done = true;
+        break;
+      }
+      if (*cmd_tail == '\n')
+      {
+        break;
+      }
+
+      cmd_tail++;
+      len++;
     }
 
     jerry_value_t ret_val;
 
     /* Evaluate entered command */
     status = jerry_eval ((const jerry_char_t *) cmd,
-                         strlen (cmd),
+                         len,
                          false,
                          false,
                          &ret_val);
@@ -345,17 +328,17 @@ main (int argc, char * argv[])
     if (status == JERRY_COMPLETION_CODE_OK)
     {
       /* 'eval' completed successfully */
-      print_value (&ret_val);
-      jerry_release_value (&ret_val);
+      print_value (ret_val);
     }
     else
     {
       /* Evaluated JS code thrown an exception
-         and didn't handle it with try-catch-finally */
-      printf ("Unhandled JS exception occured\n");
+       *  and didn't handle it with try-catch-finally */
+      jerry_port_errormsg ("Unhandled JS exception occured: ");
+      print_value (ret_val);
     }
 
-    fflush (stdout);
+    jerry_release_value (ret_val);
   }
 
   /* Cleanup engine */
@@ -385,10 +368,10 @@ struct my_struct
  */
 static bool
 get_msg_handler (const jerry_object_t *function_obj_p, /**< function object */
-                 const jerry_value_t *this_p, /**< this arg */
-                 jerry_value_t *ret_val_p, /**< return argument */
+                 const jerry_value_t this_p, /**< this arg */
                  const jerry_value_t *args_p, /**< function arguments */
-                 const jerry_length_t args_cnt) /**< number of function arguments */
+                 const jerry_length_t args_cnt, /**< number of function arguments */
+                 jerry_value_t *ret_val_p) /**< [out] return argument */
 {
   jerry_string_t *msg_str_p = jerry_create_string ((const jerry_char_t *) my_struct.msg);
   *ret_val_p = jerry_create_string_value (msg_str_p);
@@ -411,26 +394,24 @@ main (int argc, char * argv[])
   jerry_object_t *object_p = jerry_create_object ();
 
   /* Create a JS function object and wrap into a jerry value */
-  jerry_value_t object_value;
-  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  object_value.u.v_object = jerry_create_external_function (get_msg_handler);
+  jerry_object_t *func_obj_p = jerry_create_external_function (get_msg_handler);
+  jerry_value_t object_value = jerry_create_object_value (func_obj_p);
 
   /* Set the native function as a property of the empty JS object */
   jerry_set_object_field_value (object_p,
                                 (const jerry_char_t *) "myFunc",
-                                &object_value);
-  jerry_release_value (&object_value);
+                                object_value);
+  jerry_release_value (object_value);
 
   /* Wrap the JS object (not empty anymore) into a jerry api value */
-  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  object_value.u.v_object = object_p;
+  object_value = jerry_create_object_value (object_p);
   jerry_object_t *global_obj_p = jerry_get_global ();
 
   /* Add the JS object to the global context */
   jerry_set_object_field_value (global_obj_p,
                                 (const jerry_char_t *) "MyObject",
-                                &object_value);
-  jerry_release_value (&object_value);
+                                object_value);
+  jerry_release_value (object_value);
   jerry_release_object (global_obj_p);
 
   /* Now we have a "builtin" object called MyObject with a function called myFunc()
@@ -447,10 +428,14 @@ main (int argc, char * argv[])
   jerry_value_t eval_ret;
 
   /* Evaluate script */
-  status = jerry_eval (script, script_size, false, false, &eval_ret);
+  status = jerry_eval (script,
+                       script_size,
+                       false,
+                       false,
+                       &eval_ret);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (&eval_ret);
+  jerry_release_value (eval_ret);
 
   /* Cleanup engine */
   jerry_cleanup ();
@@ -478,21 +463,21 @@ Here we create a JS Object with `jerry_eval`, then extend it with a native funct
  */
 static bool
 add_handler (const jerry_object_t *function_obj_p, /**< function object */
-             const jerry_value_t *this_p, /**< this arg */
-             jerry_value_t *ret_val_p, /**< return argument */
+             const jerry_value_t this_p, /**< this arg */
              const jerry_value_t *args_p, /**< function arguments */
-             const jerry_length_t args_cnt) /**< number of function arguments */
+             const jerry_length_t args_cnt, /**< number of function arguments */
+             jerry_value_t *ret_val_p) /**< [out] return argument */
 {
-  jerry_value_t x_val;
-
   /* Get 'this.x' */
-  if (jerry_get_object_field_value (jerry_get_object_value (this_p),
-                                    (const jerry_char_t *) "x",
-                                    &x_val))
+  jerry_value_t x_val = jerry_get_object_field_value (jerry_get_object_value (this_p),
+                                                      (const jerry_char_t *) "x");
+
+
+  if (!jerry_value_is_error (x_val))
   {
     /* Convert Jerry API values to double */
-    double x = jerry_get_number_value (&x_val);
-    double d = jerry_get_number_value (args_p);
+    double x = jerry_get_number_value (x_val);
+    double d = jerry_get_number_value (*args_p);
 
     /* Add the parameter to 'x' */
     jerry_value_t res_val = jerry_create_number_value (x + d);
@@ -500,8 +485,7 @@ add_handler (const jerry_object_t *function_obj_p, /**< function object */
     /* Set the new value of 'this.x' */
     jerry_set_object_field_value (jerry_get_object_value (this_p),
                                   (const jerry_char_t *) "x",
-                                  &res_val);
-
+                                  res_val);
   }
 
   return true;
@@ -536,21 +520,20 @@ main (int argc, char * argv[])
                        false,
                        &my_js_obj_val);
 
-  jerry_object_t *object_p = jerry_get_object_value (&my_js_obj_val);
+  jerry_object_t *object_p = jerry_get_object_value (my_js_obj_val);
 
   /* Create a JS function object and wrap into a jerry value */
-  jerry_value_t object_value;
-  object_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  object_value.u.v_object = jerry_create_external_function (add_handler);
+  jerry_object_t *add_func_obj_p = jerry_create_external_function (add_handler);
+  jerry_value_t object_value = jerry_create_object_value (add_func_obj_p);
 
   /* Set the native function as a property of previously created MyObject */
   jerry_set_object_field_value (object_p,
                                 (const jerry_char_t *) "add2x",
-                                &object_value);
-  jerry_release_value (&object_value);
+                                object_value);
+  jerry_release_value (object_value);
 
   /* Free JavaScript value, returned by eval (my_js_object) */
-  jerry_release_value (&my_js_obj_val);
+  jerry_release_value (my_js_obj_val);
 
   const jerry_char_t script[] = " \
     var str = MyObject.foo (); \
@@ -563,10 +546,14 @@ main (int argc, char * argv[])
   jerry_value_t eval_ret;
 
   /* Evaluate script */
-  status = jerry_eval (script, script_size, false, false, &eval_ret);
+  status = jerry_eval (script,
+                       script_size,
+                       false,
+                       false,
+                       &eval_ret);
 
   /* Free JavaScript value, returned by eval */
-  jerry_release_value (&eval_ret);
+  jerry_release_value (eval_ret);
 
   /* Cleanup engine */
   jerry_cleanup ();

@@ -52,7 +52,7 @@ OUTPUT     = build/$(BOARD)
 
 CC = $(CROSS_COMPILE)gcc
 
-EXT_CFLAGS := -fno-asynchronous-unwind-tables -fno-omit-frame-pointer 
+EXT_CFLAGS := -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
 EXT_CFLAGS += -fno-stack-protector -fno-strict-overflow -ffreestanding
 EXT_CFLAGS += -fno-reorder-functions -fno-defer-pop -fdata-sections
 EXT_CFLAGS += -ffunction-sections -fno-inline-functions
@@ -124,7 +124,7 @@ endif
 	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=lakemont \
 	 -DEXTERNAL_LIBC_INTERFACE="$(ZEPHYR_LIBC_INC)" \
 	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
-	 -DEXTERNAL_BUILD_ENTRY_FILE=./targets/arduino_101/src/jerry-entry.c
+	 -DEXTERNAL_BUILD_ENTRY_FILE=./targets/zephyr/src/jerry-entry.c
 
 	make -C $(INTERM) $(TYPE).external$(VARIETY) V=1
 	cp `cat $(INTERM)/$(TYPE).external$(VARIETY)/list` $(OUTPUT)/.
@@ -134,10 +134,10 @@ $(ZEPHYR_BIN):
 ifdef V
 	@echo "- ZEPHYR -------------------------------------------------------"
 endif
-	make -f ./targets/arduino_101/Makefile $(BUILD_CONFIG)
+	make -f ./targets/zephyr/Makefile $(BUILD_CONFIG)
 	@echo "Finished"
 	@file $(OUTPUT)/zephyr/zephyr.strip
-	@size $(OUTPUT)/zephyr/zephyr.strip	
+	@size $(OUTPUT)/zephyr/zephyr.strip
 
 jerry: $(EXTERNAL_LIB)
 	@touch $(EXTERNAL_LIB)
@@ -146,14 +146,14 @@ zephyr:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
 	@touch $(ZEPHYR_BIN)
 
 qemu:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
-	make -f ./targets/arduino_101/Makefile $(BUILD_CONFIG) qemu
+	make -f ./targets/zephyr/Makefile $(BUILD_CONFIG) qemu
 
 flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr/zephyr.strip
-	make -f ./targets/arduino_101/Makefile $(BUILD_CONFIG) flash
+	make -f ./targets/zephyr/Makefile $(BUILD_CONFIG) flash
 
 usage:
 help:
-	@echo Usage: 
+	@echo Usage:
 	@echo showconfig	 Show parameters and configuration
 	@echo flash	         Flash into board
 	@echo all	         Compile jerryscript and zephyr
@@ -168,22 +168,22 @@ showconfig:
 	@echo "TOOLCHAIN_CFLAGS = $(TOOLCHAIN_CFLAGS) "
 	@echo "CROSS_COMPILE    = $(CROSS_COMPILE) "
 	@echo "TOOLCHAIN_LIBS   = $(TOOLCHAIN_LIBS) "
-	@echo "LIBS             = $(LIBS) "	
+	@echo "LIBS             = $(LIBS) "
 	@echo "LIB_INCLUDE_DIR  = $(LIB_INCLUDE_DIR) "
 	@echo "BUILD_CONFIG     = $(BUILD_CONFIG) "
-	make -f ./targets/arduino_101/Makefile $(BUILD_CONFIG) showconfig
+	make -f ./targets/zephyr/Makefile $(BUILD_CONFIG) showconfig
 
-# TODO @sergioamr Temporal cleanup before finding why Zephyr is ignoring my 
+# TODO @sergioamr Temporal cleanup before finding why Zephyr is ignoring my
 # 		  outdir for the project
 clean:
 	@echo "Clearing Jerryscript"
 	@rm -rf $(OUTPUT)
 	@rm -rf $(INTERM)
-	@rm -f ./targets/arduino_101/src/.*.o.cmd
-	@rm -f ./targets/arduino_101/src/*.o
+	@rm -f ./targets/zephyr/src/.*.o.cmd
+	@rm -f ./targets/zephyr/src/*.o
 	@echo "Clearing Zephyr"
-	make -f ./targets/arduino_101/Makefile clean
-	make -f ./targets/arduino_101/Makefile pristine
+	make -f ./targets/zephyr/Makefile clean
+	make -f ./targets/zephyr/Makefile pristine
 
 mrproper:
-	make -f ./targets/arduino_101/Makefile mrproper
+	make -f ./targets/zephyr/Makefile mrproper

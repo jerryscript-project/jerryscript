@@ -583,6 +583,8 @@ main (void)
 
   // Test: Array Object API
   jerry_object_t *array_obj_p = jerry_create_array_object (10);
+  JERRY_ASSERT (jerry_is_array (array_obj_p));
+  JERRY_ASSERT (jerry_get_array_length (array_obj_p) == 10);
 
   jerry_value_t v_in = jerry_create_number_value (10.5);
   jerry_set_array_index_value (array_obj_p, 5, v_in);

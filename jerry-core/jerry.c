@@ -591,6 +591,40 @@ jerry_get_array_index_value (jerry_object_t *array_obj_p, /**< array object */
 } /* jerry_get_array_index_value */
 
 /**
+ * Get length of an array object
+ *
+ * Note:
+ *      Returns 0, if the given parameter is not an array object.
+ *
+ * @return length of the given array
+ */
+uint32_t
+jerry_get_array_length (const jerry_object_t *object_p)
+{
+  jerry_assert_api_available ();
+
+  if (!jerry_is_array (object_p))
+  {
+    return 0;
+  }
+
+  jerry_length_t length = 0;
+  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+
+  ecma_value_t len_value = ecma_op_object_get ((jerry_object_t *) object_p, magic_string_length_p);
+  ecma_deref_ecma_string (magic_string_length_p);
+
+  if (ecma_is_value_number (len_value))
+  {
+    length = ecma_number_to_uint32 (ecma_get_number_from_value (len_value));
+  }
+
+  ecma_free_value (len_value);
+
+  return length;
+} /* jerry_get_array_length */
+
+/**
  * Create an error object
  *
  * Note:
@@ -756,6 +790,20 @@ jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< poin
 
   jerry_make_api_available ();
 } /* jerry_dispatch_object_free_callback */
+
+/**
+ * Check if the specified object is an array object.
+ *
+ * @return true  - if the specified object is an array object,
+ *         false - otherwise.
+ */
+bool
+jerry_is_array (const jerry_object_t *object_p) /**< an object */
+{
+  jerry_assert_api_available ();
+
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
+} /* jerry_is_array */
 
 /**
  * Check if the specified object is a function object.

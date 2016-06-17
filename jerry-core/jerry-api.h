@@ -185,6 +185,7 @@ jerry_string_t *jerry_create_string_sz (const jerry_char_t *, jerry_size_t);
  */
 bool jerry_set_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t);
 bool jerry_get_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t *);
+uint32_t jerry_get_array_length (const jerry_object_t *);
 
 /**
  * Functions of 'jerry_string_t'
@@ -196,6 +197,7 @@ jerry_size_t jerry_string_to_char_buffer (const jerry_string_t *, jerry_char_t *
 /**
  * General API functions of JS objects
  */
+bool jerry_is_array (const jerry_object_t *);
 bool jerry_is_constructor (const jerry_object_t *);
 bool jerry_is_function (const jerry_object_t *);
 bool jerry_add_object_field (jerry_object_t *, const jerry_char_t *, jerry_size_t, const jerry_value_t, bool);

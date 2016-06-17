@@ -270,6 +270,20 @@ ecma_finalize_builtins (void)
   }
 } /* ecma_finalize_builtins */
 
+typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_reference_t;
+
+static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_references[] =
+{
+#define BUILTIN(builtin_id, \
+                object_type, \
+                object_prototype_builtin_id, \
+                is_extensible, \
+                is_static, \
+                lowercase_name) \
+  ecma_builtin_ ## lowercase_name ## _property_descriptor_list,
+#include "ecma-builtins.inc.h"
+};
+
 /**
  * If the property's name is one of built-in properties of the object
  * that is not instantiated yet, instantiate the property and
@@ -338,31 +352,11 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                                                     ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
 
   ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ecma_get_internal_property_value (built_in_id_prop_p);
-  const ecma_builtin_property_descriptor_t *property_list_p = NULL;
 
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
   JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
 
-  switch (builtin_id)
-  {
-#define BUILTIN(builtin_id, \
-                object_type, \
-                object_prototype_builtin_id, \
-                is_extensible, \
-                is_static, \
-                lowercase_name) \
-    case builtin_id: \
-    { \
-      property_list_p = ecma_builtin_ ## lowercase_name ## _property_descriptor_list; \
-      break; \
-    }
-#include "ecma-builtins.inc.h"
-
-    default:
-    {
-      JERRY_UNREACHABLE ();
-      break;
-    }
-  }
+  const ecma_builtin_property_descriptor_t *property_list_p = ecma_builtin_property_list_references[builtin_id];
 
   const ecma_builtin_property_descriptor_t *curr_property_p = property_list_p;
 
@@ -379,42 +373,42 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   JERRY_ASSERT (index < 64);
 
-  uint32_t bit;
+  uint32_t bit_for_index;
   ecma_internal_property_id_t mask_prop_id;
 
   if (likely (index < 32))
   {
     mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31;
-    bit = (uint32_t) 1u << index;
+    bit_for_index = (uint32_t) 1u << index;
   }
   else
   {
     mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63;
-    bit = (uint32_t) 1u << (index - 32);
+    bit_for_index = (uint32_t) 1u << (index - 32);
   }
 
   ecma_property_t *mask_prop_p = ecma_find_internal_property (object_p, mask_prop_id);
-  uint32_t bit_mask;
+  uint32_t instantiated_bitset;
 
   if (mask_prop_p == NULL)
   {
     mask_prop_p = ecma_create_internal_property (object_p, mask_prop_id);
-    bit_mask = 0;
+    instantiated_bitset = 0;
   }
   else
   {
-    bit_mask = ecma_get_internal_property_value (mask_prop_p);
+    instantiated_bitset = ecma_get_internal_property_value (mask_prop_p);
 
-    if (bit_mask & bit)
+    if (instantiated_bitset & bit_for_index)
     {
       /* This property was instantiated before. */
       return NULL;
     }
   }
 
-  bit_mask |= bit;
+  instantiated_bitset |= bit_for_index;
 
-  ecma_set_internal_property_value (mask_prop_p, bit_mask);
+  ecma_set_internal_property_value (mask_prop_p, instantiated_bitset);
 
   ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -559,42 +553,64 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
                                                                       ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
     ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ecma_get_internal_property_value (built_in_id_prop_p);
 
+    JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
     JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
 
-    switch (builtin_id)
+    const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
+
+    ecma_length_t index = 0;
+    ecma_internal_property_id_t mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31;
+    ecma_property_t *mask_prop_p = ecma_find_internal_property (object_p, mask_prop_id);
+
+    ecma_collection_header_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
+                                                                          : main_collection_p);
+
+    while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
     {
-#define BUILTIN(builtin_id, \
-                object_type, \
-                object_prototype_builtin_id, \
-                is_extensible, \
-                is_static, \
-                lowercase_name) \
-      case builtin_id: \
-                       { \
-                         ecma_builtin_ ## lowercase_name ## _list_lazy_property_names (object_p, \
-                                                                                       separate_enumerable, \
-                                                                                       main_collection_p, \
-                                                                                       non_enum_collection_p); \
-                         return; \
-                       }
-#include "ecma-builtins.inc.h"
+      JERRY_ASSERT (index < 64);
 
-      case ECMA_BUILTIN_ID__COUNT:
+      if (index == 32)
       {
-        JERRY_UNREACHABLE ();
+        ecma_internal_property_id_t mask_prop_id = ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63;
+        mask_prop_p = ecma_find_internal_property (object_p, mask_prop_id);
       }
 
-      default:
+      uint32_t bit_for_index;
+      if (index >= 32)
       {
-#ifdef CONFIG_ECMA_COMPACT_PROFILE
-        JERRY_UNREACHABLE ();
-#else /* !CONFIG_ECMA_COMPACT_PROFILE */
-        JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
-#endif /* CONFIG_ECMA_COMPACT_PROFILE */
+        bit_for_index = (uint32_t) 1u << (index - 32);
       }
+      else
+      {
+        bit_for_index = (uint32_t) 1u << index;
+      }
+
+      bool was_instantiated = true;
+
+      if (mask_prop_p != NULL)
+      {
+        uint32_t instantiated_bitset = ecma_get_internal_property_value (mask_prop_p);
+
+        if (!(instantiated_bitset & bit_for_index))
+        {
+          was_instantiated = false;
+        }
+      }
+
+      ecma_string_t *name_p = ecma_get_magic_string (curr_property_p->magic_string_id);
+
+      if (!was_instantiated || ecma_op_object_get_own_property (object_p, name_p) != NULL)
+      {
+        ecma_append_to_values_collection (for_non_enumerable_p,
+                                          ecma_make_string_value (name_p),
+                                          true);
+      }
+
+      ecma_deref_ecma_string (name_p);
+
+      curr_property_p++;
+      index++;
     }
-
-    JERRY_UNREACHABLE ();
   }
 } /* ecma_builtin_list_lazy_property_names */
 

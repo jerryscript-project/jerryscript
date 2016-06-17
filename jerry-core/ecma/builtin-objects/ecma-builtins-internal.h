@@ -123,12 +123,7 @@ extern ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \
-                                                      ecma_length_t); \
-extern void \
-ecma_builtin_ ## lowercase_name ## _list_lazy_property_names (ecma_object_t *, \
-                                                              bool, \
-                                                              ecma_collection_header_t *, \
-                                                              ecma_collection_header_t *);
+                                                      ecma_length_t);
 #include "ecma-builtins.inc.h"
 
 #endif /* !ECMA_BUILTINS_INTERNAL_H */

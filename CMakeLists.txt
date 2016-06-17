@@ -26,17 +26,6 @@ project (Jerry C ASM)
   endif()
  endif()
 
- if(CMAKE_COMPILER_IS_GNUCC)
-  # Require gcc of version >= 4.7.0
-   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                   OUTPUT_VARIABLE GNU_CC_VERSION
-                   OUTPUT_STRIP_TRAILING_WHITESPACE)
-   if(${GNU_CC_VERSION} VERSION_LESS 4.7.0)
-    message(FATAL_ERROR "gcc compiler version 4.7.0 or higher required")
-   endif()
- endif()
-
-
 # Imported targets prefix
  set(PREFIX_IMPORTED_LIB imported_)
 

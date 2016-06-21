@@ -167,7 +167,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
  *         NULL otherwise
  */
 inline ecma_property_t * __attr_always_inline___
-ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
+ecma_lcache_lookup (const ecma_object_t *object_p, /**< object */
                     const ecma_string_t *prop_name_p) /**< property's name */
 {
   JERRY_ASSERT (object_p != NULL);

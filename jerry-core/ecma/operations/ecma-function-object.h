@@ -45,7 +45,7 @@ ecma_op_function_call (ecma_object_t *, ecma_value_t,
                        const ecma_value_t *, ecma_length_t);
 
 extern ecma_property_t *
-ecma_op_function_object_get_own_property (ecma_object_t *, ecma_string_t *);
+ecma_op_function_object_get_own_property (const ecma_object_t *, ecma_string_t *);
 
 extern ecma_value_t
 ecma_op_function_construct (ecma_object_t *, const ecma_value_t *, ecma_length_t);

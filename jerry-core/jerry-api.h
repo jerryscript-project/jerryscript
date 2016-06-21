@@ -184,7 +184,7 @@ jerry_string_t *jerry_create_string_sz (const jerry_char_t *, jerry_size_t);
  * Functions of array objects
  */
 bool jerry_set_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t);
-bool jerry_get_array_index_value (jerry_object_t *, jerry_length_t, jerry_value_t *);
+bool jerry_get_array_index_value (const jerry_object_t *, jerry_length_t, jerry_value_t *);
 
 /**
  * Functions of 'jerry_string_t'
@@ -200,12 +200,12 @@ bool jerry_is_constructor (const jerry_object_t *);
 bool jerry_is_function (const jerry_object_t *);
 bool jerry_add_object_field (jerry_object_t *, const jerry_char_t *, jerry_size_t, const jerry_value_t, bool);
 bool jerry_delete_object_field (jerry_object_t *, const jerry_char_t *, jerry_size_t);
-jerry_value_t jerry_get_object_field_value (jerry_object_t *, const jerry_char_t *);
-jerry_value_t jerry_get_object_field_value_sz (jerry_object_t *, const jerry_char_t *, jerry_size_t);
+jerry_value_t jerry_get_object_field_value (const jerry_object_t *, const jerry_char_t *);
+jerry_value_t jerry_get_object_field_value_sz (const jerry_object_t *, const jerry_char_t *, jerry_size_t);
 bool jerry_set_object_field_value (jerry_object_t *, const jerry_char_t *, const jerry_value_t);
 bool jerry_set_object_field_value_sz (jerry_object_t *, const jerry_char_t *, jerry_size_t, const jerry_value_t);
 bool jerry_foreach_object_field (jerry_object_t *, jerry_object_field_foreach_t, void *);
-bool jerry_get_object_native_handle (jerry_object_t *, uintptr_t *);
+bool jerry_get_object_native_handle (const jerry_object_t *, uintptr_t *);
 void jerry_set_object_native_handle (jerry_object_t *, uintptr_t, jerry_object_free_callback_t);
 jerry_value_t jerry_construct_object (jerry_object_t *, const jerry_value_t[], uint16_t);
 jerry_value_t jerry_call_function (jerry_object_t *, jerry_object_t *, const jerry_value_t[], uint16_t);

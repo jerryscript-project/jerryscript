@@ -29,7 +29,7 @@ extern ecma_value_t
 ecma_op_create_string_object (const ecma_value_t *, ecma_length_t);
 
 extern ecma_property_t *
-ecma_op_string_object_get_own_property (ecma_object_t *, ecma_string_t *);
+ecma_op_string_object_get_own_property (const ecma_object_t *, ecma_string_t *);
 
 extern void
 ecma_op_string_list_lazy_property_names (ecma_object_t *,

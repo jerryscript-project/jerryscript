@@ -373,7 +373,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_function_object_get_own_property (ecma_object_t *obj_p, /**< the function object */
+ecma_op_function_object_get_own_property (const ecma_object_t *obj_p, /**< the function object */
                                           ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
@@ -386,7 +386,7 @@ ecma_op_function_object_get_own_property (ecma_object_t *obj_p, /**< the functio
   }
   else if (!ecma_get_object_is_builtin (obj_p))
   {
-    prop_p = ecma_op_function_try_lazy_instantiate_property (obj_p, property_name_p);
+    prop_p = ecma_op_function_try_lazy_instantiate_property ((ecma_object_t *) obj_p, property_name_p);
 
     /*
      * Only non-configurable properties could be instantiated lazily in the function,

@@ -572,7 +572,7 @@ jerry_set_array_index_value (jerry_object_t *array_obj_p, /**< array object */
  *         throw exception - otherwise.
  */
 bool
-jerry_get_array_index_value (jerry_object_t *array_obj_p, /**< array object */
+jerry_get_array_index_value (const jerry_object_t *array_obj_p, /**< array object */
                              jerry_length_t index, /**< index to be written */
                              jerry_value_t *value_p) /**< [out] value at index */
 {
@@ -889,7 +889,7 @@ jerry_delete_object_field (jerry_object_t *object_p, /**< object to delete field
  *         false - otherwise.
  */
 jerry_value_t
-jerry_get_object_field_value (jerry_object_t *object_p, /**< object */
+jerry_get_object_field_value (const jerry_object_t *object_p, /**< object */
                               const jerry_char_t *field_name_p) /**< field name */
 {
   return jerry_get_object_field_value_sz (object_p,
@@ -958,7 +958,7 @@ jerry_foreach_object_field (jerry_object_t *object_p, /**< object */
  * @return jerry value of the given field
  */
 jerry_value_t
-jerry_get_object_field_value_sz (jerry_object_t *object_p, /**< object */
+jerry_get_object_field_value_sz (const jerry_object_t *object_p, /**< object */
                                  const jerry_char_t *field_name_p, /**< name of the field */
                                  jerry_size_t field_name_size) /**< size of field name in bytes */
 {
@@ -1034,7 +1034,7 @@ jerry_set_object_field_value_sz (jerry_object_t *object_p, /**< object */
  *         false - otherwise.
  */
 bool
-jerry_get_object_native_handle (jerry_object_t *object_p, /**< object to get handle from */
+jerry_get_object_native_handle (const jerry_object_t *object_p, /**< object to get handle from */
                                 uintptr_t *out_handle_p) /**< [out] handle value */
 {
   jerry_assert_api_available ();

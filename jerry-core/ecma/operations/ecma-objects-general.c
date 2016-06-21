@@ -140,7 +140,7 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_get (const ecma_object_t *obj_p, /**< the object */
                             ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL
@@ -194,14 +194,14 @@ ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_get_own_property (const ecma_object_t *obj_p, /**< the object */
                                          ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  return ecma_find_named_property (obj_p, property_name_p);
+  return ecma_find_named_property ((ecma_object_t *) obj_p, property_name_p);
 } /* ecma_op_general_object_get_own_property */
 
 /**
@@ -215,7 +215,7 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_general_object_get_property (const ecma_object_t *obj_p, /**< the object */
                                      ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (obj_p != NULL

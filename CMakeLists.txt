@@ -263,7 +263,7 @@ project (Jerry C ASM)
     endforeach()
   endmacro()
 
-  add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations pedantic)
+  add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
   add_jerry_compile_flags(-Wno-stack-protector -Wno-attributes)
   if(CMAKE_COMPILER_IS_GNUCC)
     if(${USE_JERRY_LIBC})
@@ -286,7 +286,7 @@ project (Jerry C ASM)
   endif()
 
  # C
-  set(C_FLAGS_JERRY "-std=c99")
+  set(C_FLAGS_JERRY "-std=c99 -pedantic")
 
  # Platform-specific
   # MCU

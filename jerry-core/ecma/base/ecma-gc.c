@@ -245,15 +245,10 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
         case ECMA_INTERNAL_PROPERTY_ECMA_VALUE: /* an ecma_value_t except object */
         case ECMA_INTERNAL_PROPERTY_DATE_FLOAT: /* pointer to a ecma_number_t */
         case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-        case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* pointer to a bytecode array */
         case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* pointer to a regexp bytecode array */
-        case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
         case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
         case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
-        case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
-        case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
-        case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
-        case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
+        case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
         {
           break;
         }
@@ -354,6 +349,17 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
     if (proto_p != NULL)
     {
       ecma_gc_set_object_visited (proto_p, true);
+    }
+
+    if (!ecma_get_object_is_builtin (object_p)
+        && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
+    {
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+      ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                ext_func_p->u.function.scope_cp);
+
+      ecma_gc_set_object_visited (scope_p, true);
     }
   }
 
@@ -469,6 +475,28 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 
   JERRY_ASSERT (ecma_gc_objects_number > 0);
   ecma_gc_objects_number--;
+
+  if (!ecma_is_lexical_environment (object_p))
+  {
+    if (ecma_get_object_is_builtin (object_p)
+        || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+    {
+      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p);
+      return;
+    }
+
+    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
+    {
+      /* Function with byte-code (not a built-in function). */
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+      ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                            ext_func_p->u.function.bytecode_cp));
+
+      ecma_dealloc_extended_object (ext_func_p);
+      return;
+    }
+  }
 
   ecma_dealloc_object (object_p);
 } /* ecma_gc_sweep */

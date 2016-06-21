@@ -30,6 +30,8 @@ JERRY_STATIC_ASSERT (sizeof (ecma_property_pair_t) == sizeof (uint64_t) * 2,
 
 JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t),
                      size_of_ecma_object_t_must_be_less_than_or_equal_to_8_bytes);
+JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) <= sizeof (uint64_t) * 2,
+                     size_of_ecma_extended_object_t_must_be_less_than_or_equal_to_16_bytes);
 
 JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t),
                      size_of_ecma_collection_header_t_must_be_less_than_or_equal_to_8_bytes);
@@ -97,20 +99,40 @@ DECLARE_ROUTINES_FOR (getter_setter_pointers)
 DECLARE_ROUTINES_FOR (external_pointer)
 
 /**
+ * Allocate memory for extended object
+ *
+ * @return pointer to allocated memory
+ */
+inline ecma_extended_object_t * __attr_always_inline___
+ecma_alloc_extended_object (void)
+{
+  return jmem_heap_alloc_block (sizeof (ecma_extended_object_t));
+} /* ecma_alloc_extended_object */
+
+/**
+ * Dealloc memory of an extended object
+ */
+inline void __attr_always_inline___
+ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p) /**< property pair to be freed */
+{
+  jmem_heap_free_block (ext_object_p, sizeof (ecma_extended_object_t));
+} /* ecma_dealloc_extended_object */
+
+/**
  * Allocate memory for ecma-property pair
  *
  * @return pointer to allocated memory
  */
-ecma_property_pair_t *
+inline ecma_property_pair_t * __attr_always_inline___
 ecma_alloc_property_pair (void)
 {
   return jmem_heap_alloc_block (sizeof (ecma_property_pair_t));
 } /* ecma_alloc_property_pair */
 
 /**
- * Dealloc memory from an ecma-property
+ * Dealloc memory of an ecma-property
  */
-extern void
+inline void __attr_always_inline___
 ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */
 {
   jmem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));

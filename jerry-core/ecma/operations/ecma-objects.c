@@ -877,11 +877,9 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 
       if (ecma_get_object_is_builtin (obj_p))
       {
-        ecma_property_t *built_in_id_prop_p = ecma_get_internal_property (obj_p,
-                                                                          ECMA_INTERNAL_PROPERTY_BUILT_IN_ID);
-        ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ECMA_PROPERTY_VALUE_PTR (built_in_id_prop_p)->value;
+        ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-        switch (builtin_id)
+        switch (ext_obj_p->u.built_in.id)
         {
           case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
           {

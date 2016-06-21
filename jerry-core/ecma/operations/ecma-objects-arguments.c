@@ -51,7 +51,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   // 2., 3., 6.
   ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
 
   ecma_deref_object (prototype_p);
 

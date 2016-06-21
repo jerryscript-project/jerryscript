@@ -179,6 +179,11 @@ typedef int32_t ecma_integer_value_t;
   (unlikely ((value & ECMA_VALUE_ERROR_FLAG) != 0))
 
 /**
+ * Representation for native external pointer
+ */
+typedef uintptr_t ecma_external_pointer_t;
+
+/**
  * Internal properties' identifiers.
  */
 typedef enum
@@ -186,10 +191,8 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-  ECMA_INTERNAL_PROPERTY_CODE_BYTECODE, /**< pointer to compact bytecode array */
   ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE, /**< pointer to RegExp bytecode array */
 
-  ECMA_INTERNAL_PROPERTY_NATIVE_CODE, /**< native handler location descriptor */
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
   ECMA_INTERNAL_PROPERTY_ECMA_VALUE, /**< [[Primitive value]] for String, Number, and Boolean */
@@ -200,20 +203,8 @@ typedef enum
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS,
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS,
 
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ID, /**< Implementation-defined identifier of built-in object */
-
-  ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC,   /**< Implementation-defined identifier of built-in routine
-                                                   * that corresponds to a built-in function object
-                                                   * ([[Built-in routine's description]])
-                                                   */
-
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31, /**< Bit-mask of non-instantiated
-                                                               * built-in's properties (bits 0-31)
-                                                               */
-
-  ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63, /**< Bit-mask of non-instantiated
-                                                                * built-in's properties (bits 32-63)
-                                                                */
+  ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63, /**< Bit-mask of non-instantiated
+                                                   *   built-in's properties (bits 32-63) */
 
   ECMA_INTERNAL_PROPERTY__COUNT /**< Number of internal properties' types */
 } ecma_internal_property_id_t;
@@ -525,6 +516,44 @@ typedef struct ecma_object_t
   /** object prototype or outer reference */
   jmem_cpointer_t prototype_or_outer_reference_cp;
 } ecma_object_t;
+
+/**
+ * Description of extended ECMA-object.
+ *
+ * The extended object is an object with extra fields.
+ */
+typedef struct
+{
+  ecma_object_t object; /**< object header */
+
+  /*
+   * Description of extra fields. These extra fields depends on the object type.
+   */
+  union
+  {
+    /*
+     * Description of built-in objects.
+     */
+    struct
+    {
+      uint8_t id; /**< built-in id */
+      uint8_t length; /**< length for built-in functions */
+      uint16_t routine_id; /**< routine id for built-in functions */
+      uint32_t instantiated_bitset; /**< bit set for instantiated properties */
+    } built_in;
+
+    /*
+     * Description of function objects.
+     */
+    struct
+    {
+      ecma_value_t scope_cp; /**< function scope */
+      ecma_value_t bytecode_cp; /**< function byte code */
+    } function;
+
+    ecma_external_pointer_t external_function; /**< external function */
+  } u;
+} ecma_extended_object_t;
 
 /**
  * Description of ECMA property descriptor
@@ -871,13 +900,8 @@ typedef struct ecma_string_t
 } ecma_string_t;
 
 /**
- * Representation for native external pointer
- */
-typedef uintptr_t ecma_external_pointer_t;
-
-/**
  * Compiled byte code data.
-  */
+ */
 typedef struct
 {
   uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */

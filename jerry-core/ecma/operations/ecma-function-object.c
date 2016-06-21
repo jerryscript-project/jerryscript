@@ -148,7 +148,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   // 1., 4., 13.
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *f = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_FUNCTION);
+  ecma_object_t *func_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
@@ -166,13 +166,13 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
    * See also: ecma_object_get_class_name
    */
 
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
+
   // 9.
-  ecma_property_t *scope_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_SCOPE);
-  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value, scope_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.scope_cp, scope_p);
 
   // 10., 11., 12.
-  ecma_property_t *bytecode_prop_p = ecma_create_internal_property (f, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
-  ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value, bytecode_data_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
 
   // 14., 15., 16., 17., 18.
@@ -204,14 +204,14 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
     }
 
     ecma_string_t *magic_string_caller_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
-    ecma_op_object_define_own_property (f,
+    ecma_op_object_define_own_property (func_p,
                                         magic_string_caller_p,
                                         &prop_desc,
                                         false);
     ecma_deref_ecma_string (magic_string_caller_p);
 
     ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    ecma_op_object_define_own_property (f,
+    ecma_op_object_define_own_property (func_p,
                                         magic_string_arguments_p,
                                         &prop_desc,
                                         false);
@@ -220,7 +220,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
     ecma_deref_object (thrower_p);
   }
 
-  return f;
+  return func_p;
 } /* ecma_op_create_function_object */
 
 /**
@@ -287,16 +287,14 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
   if (is_length_property)
   {
     /* ECMA-262 v5, 13.2, 14-15 */
-
-    // 14
-    uint32_t len = 0;
-
-    ecma_property_t *bytecode_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;
 
     const ecma_compiled_code_t *bytecode_data_p;
     bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                       ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
+                                                       ext_func_p->u.function.bytecode_cp);
 
+    // 14
+    uint32_t len;
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
       cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
@@ -413,7 +411,8 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  ecma_object_t *function_obj_p;
+  function_obj_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
@@ -423,10 +422,8 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
    * See also: ecma_object_get_class_name
    */
 
-  bool is_created = ecma_create_external_pointer_property (function_obj_p,
-                                                           ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
-                                                           (ecma_external_pointer_t) code_p);
-  JERRY_ASSERT (is_created);
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
+  ext_func_obj_p->u.external_function = code_p;
 
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
   ecma_builtin_helper_def_prop (function_obj_p,
@@ -567,11 +564,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       /* Entering Function Code (ECMA-262 v5, 10.4.3) */
-      ecma_property_t *scope_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_SCOPE);
-      ecma_property_t *bytecode_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_CODE_BYTECODE);
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
 
       ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                ECMA_PROPERTY_VALUE_PTR (scope_prop_p)->value);
+                                                                ext_func_p->u.function.scope_cp);
 
       // 8.
       ecma_value_t this_binding;
@@ -580,7 +576,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       const ecma_compiled_code_t *bytecode_data_p;
       bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                         ECMA_PROPERTY_VALUE_PTR (bytecode_prop_p)->value);
+                                                         ext_func_p->u.function.bytecode_cp);
 
       is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
       is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
@@ -649,14 +645,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ecma_external_pointer_t handler_p;
-    bool is_retrieved = ecma_get_external_pointer_value (func_obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_NATIVE_CODE,
-                                                         &handler_p);
-    JERRY_ASSERT (is_retrieved);
+    ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
 
     ret_value = jerry_dispatch_external_function (func_obj_p,
-                                                  handler_p,
+                                                  ext_func_obj_p->u.external_function,
                                                   this_arg_value,
                                                   arguments_list_p,
                                                   arguments_list_len);
@@ -754,6 +746,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   {
     //  6.
     obj_p = ecma_create_object (ecma_get_object_from_value (func_obj_prototype_prop_value),
+                                false,
                                 true,
                                 ECMA_OBJECT_TYPE_GENERAL);
   }
@@ -762,7 +755,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
     // 7.
     ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-    obj_p = ecma_create_object (prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+    obj_p = ecma_create_object (prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
 
     ecma_deref_object (prototype_p);
   }

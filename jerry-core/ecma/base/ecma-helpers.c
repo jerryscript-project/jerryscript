@@ -90,10 +90,12 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF | (ECMA_OBJECT_REF_ONE - 1)) == UINT16
  */
 ecma_object_t *
 ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe of the object (or NULL) */
+                    bool is_extended, /**< extended object */
                     bool is_extensible, /**< value of extensible attribute */
                     ecma_object_type_t type) /**< object type */
 {
-  ecma_object_t *new_object_p = ecma_alloc_object ();
+  ecma_object_t *new_object_p = (is_extended ? ((ecma_object_t *) ecma_alloc_extended_object ())
+                                             : ecma_alloc_object ());
 
   uint16_t type_flags = (uint16_t) type;
 
@@ -805,7 +807,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_NATIVE_CODE: /* an external pointer */
     case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
     case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an external pointer */
     {
@@ -817,10 +818,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
     case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-    case ECMA_INTERNAL_PROPERTY_BUILT_IN_ID: /* an integer */
-    case ECMA_INTERNAL_PROPERTY_BUILT_IN_ROUTINE_DESC: /* an integer */
-    case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_0_31: /* an integer (bit-mask) */
-    case ECMA_INTERNAL_PROPERTY_NON_INSTANTIATED_BUILT_IN_MASK_32_63: /* an integer (bit-mask) */
+    case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
     {
       break;
@@ -847,12 +845,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
                                          * but number of the real internal property types */
     {
       JERRY_UNREACHABLE ();
-      break;
-    }
-
-    case ECMA_INTERNAL_PROPERTY_CODE_BYTECODE: /* compressed pointer to a bytecode array */
-    {
-      ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, property_value));
       break;
     }
 

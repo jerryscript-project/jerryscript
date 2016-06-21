@@ -116,7 +116,7 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
                                                                                               the object
                                                                                               (can be NULL) */
 {
-  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
 
   /*
    * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects

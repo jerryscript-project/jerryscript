@@ -24,44 +24,6 @@
 #include "ecma-globals.h"
 
 /**
- * Position of built-in object's id field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS   (0)
-
-/**
- * Width of built-in object's id field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH (8)
-
-/**
- * Position of built-in routine's id field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS \
-  (ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_POS + \
-   ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_OBJECT_ID_WIDTH)
-
-/**
- * Width of built-in routine's id field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH (16)
-
-/**
- * Position of built-in routine's length field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_POS \
-  (ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_POS + \
-   ECMA_BUILTIN_ROUTINE_ID_BUILT_IN_ROUTINE_ID_WIDTH)
-
-/**
- * Width of built-in routine's id field in [[Built-in routine's description]] internal property
- */
-#define ECMA_BUILTIN_ROUTINE_ID_LENGTH_VALUE_WIDTH (8)
-
-/* ecma-builtins.c */
-extern ecma_object_t *
-ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t, uint16_t, uint8_t);
-
-/**
  * Type of built-in properties.
  */
 typedef enum

@@ -954,6 +954,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
           ecma_object_t *obj_p = ecma_create_object (prototype_p,
+                                                     false,
                                                      true,
                                                      ECMA_OBJECT_TYPE_GENERAL);
           ecma_deref_object (prototype_p);

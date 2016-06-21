@@ -83,6 +83,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
+                                             false,
                                              true,
                                              ECMA_OBJECT_TYPE_STRING);
   ecma_deref_object (prototype_obj_p);

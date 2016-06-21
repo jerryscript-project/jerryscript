@@ -237,7 +237,10 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
   {
     /* 4. 11. 18. */
     ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
-    ecma_object_t *function_p = ecma_create_object (prototype_obj_p, true, ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+    ecma_object_t *function_p = ecma_create_object (prototype_obj_p,
+                                                    false,
+                                                    true,
+                                                    ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     ecma_deref_object (prototype_obj_p);
 

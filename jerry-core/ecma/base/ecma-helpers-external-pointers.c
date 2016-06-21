@@ -30,7 +30,6 @@
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
  *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
  *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
  *
@@ -43,8 +42,7 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
                                                                         *   property to create */
                                        ecma_external_pointer_t ptr_value) /**< value to store in the property */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
-                || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
+  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
   bool is_new;
@@ -96,7 +94,6 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
  *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
  *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
  *
@@ -109,8 +106,7 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
                                                                   *   to get value from */
                                  ecma_external_pointer_t *out_pointer_p) /**< [out] value of the external pointer */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
-                || id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
+  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
   ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
@@ -142,15 +138,13 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_CODE;
  *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
  *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
  */
 void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal property */
 {
-  JERRY_ASSERT (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_NATIVE_CODE
-                || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
+  JERRY_ASSERT (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY

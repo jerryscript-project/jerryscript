@@ -109,6 +109,18 @@ extern ecma_external_pointer_t *ecma_alloc_external_pointer (void);
 */
 extern void ecma_dealloc_external_pointer (ecma_external_pointer_t *);
 
+/*
+ * Allocate memory for extended object
+ *
+ * @return pointer to allocated memory
+ */
+extern ecma_extended_object_t *ecma_alloc_extended_object (void);
+
+/**
+ * Dealloc memory of an extended object
+ */
+extern void ecma_dealloc_extended_object (ecma_extended_object_t *);
+
 /**
  * Allocate memory for ecma-property pair
  *

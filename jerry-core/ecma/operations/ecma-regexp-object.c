@@ -232,7 +232,7 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (re_prototype_obj_p);
 
   /* Set the internal [[Class]] property */
@@ -284,7 +284,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (re_prototype_obj_p);
 
   /* Set the internal [[Class]] property */

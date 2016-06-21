@@ -55,6 +55,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 #endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
+                                             false,
                                              true,
                                              ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (prototype_obj_p);

@@ -246,7 +246,7 @@ extern bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *);
 
 /* ecma-helpers.c */
-extern ecma_object_t *ecma_create_object (ecma_object_t *, bool, ecma_object_type_t);
+extern ecma_object_t *ecma_create_object (ecma_object_t *, bool, bool, ecma_object_type_t);
 extern ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *);
 extern ecma_object_t *ecma_create_object_lex_env (ecma_object_t *, ecma_object_t *, bool);
 extern bool ecma_is_lexical_environment (const ecma_object_t *) __attr_pure___;

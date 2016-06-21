@@ -30,11 +30,12 @@ cd jerryscript
 make release.linux -j
 ```
 
-For additional information see [Development](docs/DEVELOPMENT.md).
+For additional information see [Getting Started](docs/GETTING-STARTED.md).
 
 ## Documentation
 - [API Reference](docs/API-REFERENCE.md)
 - [API Example](docs/API-EXAMPLE.md)
+- [Internals](docs/INTERNALS.md)
 
 ## License
 JerryScript is Open Source software under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Complete license and copyright information can be found in the source code.

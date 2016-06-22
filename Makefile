@@ -343,6 +343,10 @@ clean:
 check-signed-off:
 	$(Q) ./tools/check-signed-off.sh
 
+.PHONY: build-zephyr
+build-zephyr:
+	$(Q) ./tools/build-zephyr.sh
+
 .PHONY: check-vera
 check-vera:
 	$(Q) $(call SHLOG,./tools/check-vera.sh,$(OUT_DIR)/vera.log,Vera++)

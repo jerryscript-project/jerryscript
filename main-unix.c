@@ -501,6 +501,7 @@ main (int argc,
     }
     else if (!jerry_value_is_undefined (err_value))
     {
+      err_value = jerry_value_remove_error_flag (err_value);
       err_str_p = jerry_get_string_value (jerry_value_to_string (err_value));
       jerry_release_value (err_value);
     }

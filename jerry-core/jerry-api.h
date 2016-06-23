@@ -144,6 +144,7 @@ bool jerry_value_to_boolean (const jerry_value_t);
 jerry_value_t jerry_value_to_number (const jerry_value_t);
 jerry_value_t jerry_value_to_object (const jerry_value_t);
 jerry_value_t jerry_value_to_string (const jerry_value_t);
+jerry_value_t jerry_value_remove_error_flag (const jerry_value_t);
 
 /**
  * Create functions of 'jerry_value_t'

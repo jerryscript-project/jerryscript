@@ -88,6 +88,22 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 } /* ecma_builtin_get */
 
 /**
+ * Checks whether the given function is a built-in routine
+ *
+ * @return true if the function object is a built-in routine
+ *         false otherwise
+ */
+inline bool __attr_always_inline___
+ecma_builtin_function_is_routine (ecma_object_t *func_obj_p) /**< function object */
+{
+  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+  JERRY_ASSERT (ecma_get_object_is_builtin (func_obj_p));
+
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+  return (ext_func_obj_p->u.built_in.routine_id >= ECMA_BUILTIN_ID__COUNT);
+} /* ecma_builtin_function_is_routine */
+
+/**
  * Initialize specified built-in object.
  *
  * Warning:
@@ -113,6 +129,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
   ext_obj_p->u.built_in.id = obj_builtin_id;
+  ext_obj_p->u.built_in.routine_id = obj_builtin_id;
   ext_obj_p->u.built_in.instantiated_bitset = 0;
 
   /** Initializing [[PrimitiveValue]] properties of built-in prototype objects */
@@ -285,11 +302,13 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *func_obj_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+  ecma_object_t *func_obj_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
   ecma_set_object_is_builtin (func_obj_p);
+
+  JERRY_ASSERT (routine_id >= ECMA_BUILTIN_ID__COUNT);
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
   ext_func_obj_p->u.built_in.id = builtin_id;
@@ -328,9 +347,10 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
 
-  const ecma_object_type_t type = ecma_get_object_type (object_p);
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
-  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+      && ecma_builtin_function_is_routine (object_p))
   {
     ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
 
@@ -347,8 +367,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
        *      We don't need to mark that the property was already lazy instantiated,
        *      as it is non-configurable and so can't be deleted
        */
-
-      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
       ecma_property_t *len_prop_p = ecma_create_named_data_property (object_p,
                                                                      string_p,
@@ -370,8 +388,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   {
     return NULL;
   }
-
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
   ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ext_obj_p->u.built_in.id;
 
@@ -513,9 +529,10 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
     case ECMA_BUILTIN_PROPERTY_ROUTINE:
     {
-      ecma_object_t *func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_id,
-                                                                                 magic_string_id,
-                                                                                 (uint8_t) curr_property_p->value);
+      ecma_object_t *func_obj_p;
+      func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_id,
+                                                                  ECMA_GET_ROUTINE_ID (curr_property_p->value),
+                                                                  ECMA_GET_ROUTINE_LENGTH (curr_property_p->value));
       value = ecma_make_object_value (func_obj_p);
       break;
     }
@@ -559,9 +576,12 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
                                        ecma_collection_header_t *non_enum_collection_p) /**< skipped 'non-enumerable'
                                                                                          *   collection */
 {
-  const ecma_object_type_t type = ecma_get_object_type (object_p);
+  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
 
-  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
+      && ecma_builtin_function_is_routine (object_p))
   {
     ecma_collection_header_t *for_enumerable_p = main_collection_p;
     (void) for_enumerable_p;
@@ -575,8 +595,6 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
   }
   else
   {
-    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
     ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) ext_obj_p->u.built_in.id;
 
     JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
@@ -659,7 +677,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  if (ecma_builtin_function_is_routine (obj_p))
   {
     ret_value = ecma_builtin_dispatch_routine (ext_obj_p->u.built_in.id,
                                                ext_obj_p->u.built_in.routine_id,

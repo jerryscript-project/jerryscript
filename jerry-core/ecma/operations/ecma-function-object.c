@@ -59,9 +59,8 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 } /* ecma_op_is_callable */
 
 /**
@@ -83,8 +82,13 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
-  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    return (!ecma_get_object_is_builtin (obj_p)
+            || !ecma_builtin_function_is_routine (obj_p));
+  }
+
+  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 } /* ecma_is_constructor */
 
@@ -444,7 +448,7 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
  * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
  * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
  * and for built-in Function objects
- * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
+ * from section 15 (ECMA_OBJECT_TYPE_FUNCTION).
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -460,6 +464,12 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
+    if (ecma_get_object_is_builtin (func_obj_p)
+        && ecma_builtin_function_is_routine (func_obj_p))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    }
+
     if (!ecma_is_value_object (value))
     {
       return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
@@ -505,8 +515,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     ecma_deref_ecma_string (prototype_magic_string_p);
   }
-  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION ||
-           ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
   }
@@ -535,7 +544,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
  * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
  * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
  * and for built-in Function objects
- * from section 15 (ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION).
+ * from section 15 (ECMA_OBJECT_TYPE_FUNCTION).
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -635,13 +644,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       ecma_free_value (this_binding);
     }
-  }
-  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
-  {
-    ret_value = ecma_builtin_dispatch_call (func_obj_p,
-                                            this_arg_value,
-                                            arguments_list_p,
-                                            arguments_list_len);
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
@@ -822,8 +824,8 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    if (unlikely (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-                  && ecma_get_object_is_builtin (func_obj_p)))
+    if (unlikely (ecma_get_object_is_builtin (func_obj_p)
+                  && !ecma_builtin_function_is_routine (func_obj_p)))
     {
       ret_value = ecma_builtin_dispatch_construct (func_obj_p,
                                                    arguments_list_p,

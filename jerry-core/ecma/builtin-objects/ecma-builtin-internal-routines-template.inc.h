@@ -50,21 +50,11 @@
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG
 
-#define ECMA_BUILTIN_PROPERTY_NAME_INDEX(name) \
-  PASTE (PASTE (PASTE (PASTE (ecma_builtin_property_names, _), BUILTIN_UNDERSCORED_ID), _), name)
-
 enum
 {
-#define SIMPLE_VALUE(name, simple_value, prop_attributes) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define NUMBER_VALUE(name, number_value, prop_attributes) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define STRING_VALUE(name, magic_string_id, prop_attributes) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
-#define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+  PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
-  ECMA_BUILTIN_PROPERTY_NAME_INDEX(name),
+  ECMA_ROUTINE_ ## name ## c_function_name,
 #include BUILTIN_INC_HEADER_NAME
 };
 
@@ -78,7 +68,7 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
-    length_prop_value \
+    ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
   { \
@@ -148,7 +138,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2, ROUTINE_ARG(3)
 #define ROUTINE_ARG_LIST_NON_FIXED , arguments_list, arguments_number
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
-       case name: \
+       case ECMA_ROUTINE_ ## name ## c_function_name: \
        { \
          return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
        }

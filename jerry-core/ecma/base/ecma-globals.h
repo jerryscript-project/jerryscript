@@ -430,13 +430,11 @@ typedef enum
   ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5), Function (15.3),
                                  Arguments (10.6), Array (15.4) specification-defined objects */
   ECMA_OBJECT_TYPE_FUNCTION = 1, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION = 2, /** One of built-in functions described in section 15
-                                           *  of ECMA-262 v5 specification */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 2, /**< External (host) function object */
   ECMA_OBJECT_TYPE_ARRAY = 3, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_STRING = 4, /**< String objects (15.5) */
-  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 5, /**< External (host) function object */
-  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_ARGUMENTS = 7, /**< Arguments object (10.6) */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_ARGUMENTS = 6, /**< Arguments object (10.6) */
 
   ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_ARGUMENTS /**< maximum value */
 } ecma_object_type_t;
@@ -448,7 +446,7 @@ typedef enum
 {
   /* ECMA_OBJECT_TYPE_GENERAL (0) with built-in flag. */
   /* ECMA_OBJECT_TYPE_FUNCTION (1) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION (2) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (2) with built-in flag. */
   /* ECMA_OBJECT_TYPE_ARRAY (3) with built-in flag. */
   /* ECMA_OBJECT_TYPE_STRING (4) with built-in flag. */
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 5, /**< declarative lexical environment */

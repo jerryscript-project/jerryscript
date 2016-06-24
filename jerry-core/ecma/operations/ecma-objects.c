@@ -39,13 +39,12 @@
 #ifndef JERRY_NDEBUG
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type) \
   JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL \
-                || type == ECMA_OBJECT_TYPE_ARRAY \
                 || type == ECMA_OBJECT_TYPE_FUNCTION \
-                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION \
-                || type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_ARRAY \
                 || type == ECMA_OBJECT_TYPE_STRING \
-                || type == ECMA_OBJECT_TYPE_ARGUMENTS \
-                || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION \
+                || type == ECMA_OBJECT_TYPE_ARGUMENTS);
 #else /* JERRY_NDEBUG */
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type)
 #endif /* !JERRY_NDEBUG */
@@ -71,12 +70,11 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
-    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_general_object_get (obj_p, property_name_p);
     }
@@ -112,10 +110,9 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
 
@@ -142,6 +139,7 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
       break;
     }
+
     default:
     {
       JERRY_UNREACHABLE ();
@@ -213,13 +211,12 @@ ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
    * static const get_property_ptr_t get_property [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_property,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_get_property
+   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_property,
+   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_get_property,
+   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_property,
+   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_get_property
    * };
    *
    * return get_property[type] (obj_p, property_name_p);
@@ -254,13 +251,12 @@ ecma_op_object_put (ecma_object_t *obj_p, /**< the object */
    * static const put_ptr_t put [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_put,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_put,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_put
+   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_put,
+   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_put,
+   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_put,
+   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_put
    * };
    *
    * return put[type] (obj_p, property_name_p);
@@ -292,12 +288,11 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
-    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_general_object_delete (obj_p,
                                             property_name_p,
@@ -342,13 +337,12 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
    * static const default_value_ptr_t default_value [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION] = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_default_value
+   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_default_value,
+   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_default_value,
+   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_default_value,
+   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_default_value
    * };
    *
    * return default_value[type] (obj_p, property_name_p);
@@ -383,10 +377,9 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   {
     case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_general_object_define_own_property (obj_p,
                                                          property_name_p,
@@ -435,8 +428,8 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
 
   switch (type)
   {
-    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_ARRAY:
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
@@ -444,12 +437,12 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_function_has_instance (obj_p, value);
     }
+
     default:
     {
       JERRY_UNREACHABLE ();
@@ -559,12 +552,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           break;
         }
 
-        case ECMA_OBJECT_TYPE_ARRAY:
         case ECMA_OBJECT_TYPE_GENERAL:
-        case ECMA_OBJECT_TYPE_ARGUMENTS:
-        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
         case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-        case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+        case ECMA_OBJECT_TYPE_ARRAY:
+        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+        case ECMA_OBJECT_TYPE_ARGUMENTS:
         {
           break;
         }
@@ -865,9 +857,8 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       return LIT_MAGIC_STRING_ARGUMENTS_UL;
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return LIT_MAGIC_STRING_FUNCTION_UL;
     }

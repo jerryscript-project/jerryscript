@@ -103,30 +103,30 @@ memcpy (void *s1, /**< destination */
         const void *s2, /**< source */
         size_t n) /**< bytes number */
 {
+  uint8_t *dst_p = (uint8_t *) s1;
+  const uint8_t *src_p = (const uint8_t *) s2;
+
   /* Aligned fast case. */
   if (n >= 4 && !(((uintptr_t) s1) & 0x3) && !(((uintptr_t) s2) & 0x3))
   {
     size_t chunks = (n >> 2);
-    uint32_t *area1_p = (uint32_t *) s1;
-    const uint32_t *area2_p = (const uint32_t *) s2;
+    uint32_t *u32_dst_p = (uint32_t *) dst_p;
+    const uint32_t *u32_src_p = (const uint32_t *) src_p;
 
     do
     {
-      *area1_p++ = *area2_p++;
+      *u32_dst_p++ = *u32_src_p++;
     }
     while (--chunks);
 
     n &= 0x3;
-    s1 = area1_p;
-    s2 = area2_p;
+    dst_p = (uint8_t *) u32_dst_p;
+    src_p = (const uint8_t *) u32_src_p;
   }
-
-  uint8_t *area1_p = (uint8_t *) s1;
-  const uint8_t *area2_p = (const uint8_t *) s2;
 
   while (n--)
   {
-    *area1_p++ = *area2_p++;
+    *dst_p++ = *src_p++;
   }
 
   return s1;

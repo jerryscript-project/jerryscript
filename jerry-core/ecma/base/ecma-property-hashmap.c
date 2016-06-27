@@ -124,13 +124,13 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
   uint8_t shift_counter = 0;
 
-  if (max_property_count <= (1u << LIT_STRING_HASH_BITS))
+  if (max_property_count <= LIT_STRING_HASH_LIMIT)
   {
     hashmap_p->header.types[1].type_and_flags = 0;
   }
   else
   {
-    while (max_property_count > (1u << LIT_STRING_HASH_BITS))
+    while (max_property_count > LIT_STRING_HASH_LIMIT)
     {
       shift_counter++;
       max_property_count >>= 1;
@@ -162,7 +162,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
       uint32_t entry_index = name_p->hash;
       uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
 
-      if (mask < (1u << LIT_STRING_HASH_BITS))
+      if (mask < LIT_STRING_HASH_LIMIT)
       {
         entry_index &= mask;
       }
@@ -261,7 +261,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
 
-  if (mask < (1u << LIT_STRING_HASH_BITS))
+  if (mask < LIT_STRING_HASH_LIMIT)
   {
     entry_index &= mask;
   }
@@ -336,7 +336,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
-  if (mask < (1u << LIT_STRING_HASH_BITS))
+  if (mask < LIT_STRING_HASH_LIMIT)
   {
     entry_index &= mask;
   }
@@ -446,7 +446,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
-  if (mask < (1u << LIT_STRING_HASH_BITS))
+  if (mask < LIT_STRING_HASH_LIMIT)
   {
     entry_index &= mask;
   }

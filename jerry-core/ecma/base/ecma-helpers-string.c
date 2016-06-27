@@ -1286,7 +1286,6 @@ ecma_is_string_magic (const ecma_string_t *string_p, /**< ecma-string */
  */
 lit_string_hash_t
 ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate hash for */
-
 {
   return (string_p->hash);
 } /* ecma_string_hash */

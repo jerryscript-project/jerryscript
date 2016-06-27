@@ -32,6 +32,11 @@
  */
 
 /**
+ * Hash bitmap size for ecma objects
+ */
+#define ECMA_OBJECT_HASH_BITMAP_SIZE 256
+
+/**
  * Assert that specified object type value is valid
  *
  * @param object's implementation-defined type
@@ -48,6 +53,7 @@
 #else /* JERRY_NDEBUG */
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type)
 #endif /* !JERRY_NDEBUG */
+
 /**
  * [[Get]] ecma object's operation
  *
@@ -483,7 +489,7 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
  *
  * Order of names in the collection:
  *  - integer indices in ascending order
- *  - other indices in creation order (for built-ins - in the order the properties are listed in specification).
+ *  - other indices in creation order (for built-ins: the order of the properties are listed in specification).
  *
  * Note:
  *      Implementation of the routine assumes that new properties are appended to beginning of corresponding object's
@@ -510,7 +516,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
-  uint32_t names_hashes_bitmap[(1u << LIT_STRING_HASH_BITS) / bitmap_row_size];
+  uint32_t names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
 
   memset (names_hashes_bitmap, 0, sizeof (names_hashes_bitmap));
 
@@ -571,14 +577,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     ecma_collection_iterator_t iter;
     ecma_collection_iterator_init (&iter, prop_names_p);
 
-    uint32_t own_names_hashes_bitmap[(1u << LIT_STRING_HASH_BITS) / bitmap_row_size];
+    uint32_t own_names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
     memset (own_names_hashes_bitmap, 0, sizeof (own_names_hashes_bitmap));
 
     while (ecma_collection_iterator_next (&iter))
     {
       ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-      lit_string_hash_t hash = name_p->hash;
+      uint8_t hash = (uint8_t) name_p->hash;
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
       uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
@@ -613,7 +619,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           if (!(is_enumerable_only && !ecma_is_property_enumerable (property_p)))
           {
-            lit_string_hash_t hash = name_p->hash;
+            uint8_t hash = (uint8_t) name_p->hash;
             uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
             uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
@@ -652,7 +658,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                               ecma_make_string_value (name_p),
                                               true);
 
-            lit_string_hash_t hash = name_p->hash;
+            uint8_t hash = (uint8_t) name_p->hash;
             uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
             uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
@@ -771,7 +777,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       ecma_string_t *name_p = names_p[i];
 
-      lit_string_hash_t hash = name_p->hash;
+      uint8_t hash = (uint8_t) name_p->hash;
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
       uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 

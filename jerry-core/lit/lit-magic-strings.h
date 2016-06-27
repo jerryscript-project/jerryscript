@@ -33,7 +33,8 @@ typedef enum
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
 
-  LIT_MAGIC_STRING__COUNT /**< number of magic strings */
+  LIT_MAGIC_STRING__COUNT, /**< number of magic strings */
+  LIT_MAGIC_STRING__FORCE_LARGE = INT32_MAX,
 } lit_magic_string_id_t;
 
 /**

@@ -47,7 +47,7 @@ typedef struct
   uint8_t *byte_code_start_p;                         /**< byte code start pointer */
   ecma_value_t *registers_p;                          /**< register start pointer */
   ecma_value_t *stack_top_p;                          /**< stack top pointer */
-  lit_cpointer_t *literal_start_p;                    /**< literal list start pointer */
+  jmem_cpointer_t *literal_start_p;                   /**< literal list start pointer */
   ecma_object_t *lex_env_p;                           /**< current lexical environment */
   ecma_value_t this_binding;                          /**< this binding */
   ecma_value_t call_block_result;                     /**< preserve block result during a call */

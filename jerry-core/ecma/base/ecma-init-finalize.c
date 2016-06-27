@@ -19,6 +19,7 @@
 #include "ecma-init-finalize.h"
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
+#include "ecma-literal-storage.h"
 #include "jmem-allocator.h"
 
 /** \addtogroup ecma ECMA
@@ -37,6 +38,7 @@ ecma_init (void)
   ecma_gc_init ();
   ecma_init_builtins ();
   ecma_lcache_init ();
+  ecma_init_lit_storage ();
   ecma_init_environment ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
@@ -53,6 +55,7 @@ ecma_finalize (void)
   ecma_finalize_environment ();
   ecma_finalize_builtins ();
   ecma_gc_run ();
+  ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 
 /**

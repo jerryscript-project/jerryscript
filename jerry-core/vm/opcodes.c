@@ -259,15 +259,14 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-vm_op_delete_var (lit_cpointer_t name_literal, /**< name literal */
+vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
                   ecma_object_t *lex_env_p, /**< lexical environment */
                   bool is_strict) /**< strict mode */
 {
   ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  ecma_string_t *var_name_str_p;
+  ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, name_literal);
 
-  var_name_str_p = ecma_new_ecma_string_from_lit_cp (name_literal);
   ecma_reference_t ref = ecma_op_get_identifier_reference (lex_env_p,
                                                            var_name_str_p,
                                                            is_strict);
@@ -297,7 +296,6 @@ vm_op_delete_var (lit_cpointer_t name_literal, /**< name literal */
   }
 
   ecma_free_reference (ref);
-  ecma_deref_ecma_string (var_name_str_p);
 
   return completion_value;
 } /* vm_op_delete_var */

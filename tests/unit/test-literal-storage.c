@@ -15,8 +15,7 @@
  */
 
 #include "ecma-helpers.h"
-#include "lit-literal.h"
-#include "lit-literal-storage.h"
+#include "ecma-literal-storage.h"
 #include "test-common.h"
 
 // Iterations count
@@ -55,31 +54,6 @@ generate_number ()
   return num;
 } /* generate_number */
 
-static bool
-compare_utf8_string_and_string_literal (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size, lit_literal_t lit)
-{
-  if (LIT_RECORD_IS_CHARSET (lit))
-  {
-    lit_utf8_byte_t *lit_str_p = lit_charset_literal_get_charset (lit);
-    lit_utf8_size_t lit_str_size = lit_charset_literal_get_size (lit);
-    return lit_compare_utf8_strings (str_p, str_size, lit_str_p, lit_str_size);
-  }
-  else if (LIT_RECORD_IS_MAGIC_STR (lit))
-  {
-    lit_magic_string_id_t magic_id = lit_magic_literal_get_magic_str_id (lit);
-    return lit_compare_utf8_string_and_magic_string (str_p, str_size, magic_id);
-
-  }
-  else if (LIT_RECORD_IS_MAGIC_STR_EX (lit))
-  {
-    lit_magic_string_ex_id_t magic_id = lit_magic_literal_get_magic_str_ex_id (lit);
-    return lit_compare_utf8_string_and_magic_string_ex (str_p, str_size, magic_id);
-
-  }
-
-  return false;
-} /* compare_utf8_string_and_string_literal */
-
 int
 main ()
 {
@@ -91,7 +65,7 @@ main ()
   lit_utf8_size_t lengths[test_sub_iters];
 
   jmem_init ();
-  lit_init ();
+  ecma_init_lit_storage ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {
@@ -106,7 +80,7 @@ main ()
       {
         lengths[j] = (lit_utf8_size_t) (rand () % max_characters_in_string + 1);
         generate_string (strings[j], lengths[j]);
-        lit_create_literal_from_utf8_string (strings[j], lengths[j]);
+        ecma_find_or_create_literal_string (strings[j], lengths[j]);
         strings[j][lengths[j]] = '\0';
         ptrs[j] = strings[j];
         JERRY_ASSERT (ptrs[j]);
@@ -117,36 +91,34 @@ main ()
         ptrs[j] = lit_get_magic_string_utf8 (msi);
         JERRY_ASSERT (ptrs[j]);
         lengths[j] = (lit_utf8_size_t) lit_zt_utf8_string_size (ptrs[j]);
-        lit_create_literal_from_utf8_string (ptrs[j], lengths[j]);
+        ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
       }
       else
       {
         ecma_number_t num = generate_number ();
         lengths[j] = ecma_number_to_utf8_string (num, strings[j], max_characters_in_string);
-        lit_create_literal_from_num (num);
+        ecma_find_or_create_literal_number (num);
       }
     }
 
     // Add empty string
-    lit_create_literal_from_utf8_string (NULL, 0);
+    ecma_find_or_create_literal_string (NULL, 0);
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      lit_literal_t lit1;
-      lit_literal_t lit2;
+      jmem_cpointer_t lit1;
+      jmem_cpointer_t lit2;
       if (ptrs[j])
       {
-        lit1 = lit_find_or_create_literal_from_utf8_string (ptrs[j], lengths[j]);
-        lit2 = lit_find_literal_by_utf8_string (ptrs[j], lengths[j]);
-        JERRY_ASSERT (compare_utf8_string_and_string_literal (ptrs[j], lengths[j], lit1));
-        JERRY_ASSERT (compare_utf8_string_and_string_literal (ptrs[j], lengths[j], lit2));
+        lit1 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
+        lit2 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
+        JERRY_ASSERT (lit1 == lit2);
       }
       else
       {
-        lit1 = lit_find_or_create_literal_from_num (numbers[j]);
-        lit2 = lit_find_literal_by_num (numbers[j]);
-        JERRY_ASSERT (numbers[j] == lit_number_literal_get_number (lit1));
-        JERRY_ASSERT (numbers[j] == lit_number_literal_get_number (lit2));
+        lit1 = ecma_find_or_create_literal_number (numbers[j]);
+        lit2 = ecma_find_or_create_literal_number (numbers[j]);
+        JERRY_ASSERT (lit1 == lit2);
       }
       JERRY_ASSERT (lit1);
       JERRY_ASSERT (lit2);
@@ -154,10 +126,10 @@ main ()
     }
 
     // Check empty string exists
-    JERRY_ASSERT (lit_find_literal_by_utf8_string (NULL, 0));
+    JERRY_ASSERT (ecma_find_or_create_literal_string (NULL, 0) != JMEM_CP_NULL);
   }
 
-  lit_finalize ();
+  ecma_finalize_lit_storage ();
   jmem_finalize (true);
   return 0;
 } /* main */

@@ -17,7 +17,7 @@
 #include "ecma-alloc.h"
 #include "ecma-helpers.h"
 #include "ecma-function-object.h"
-#include "jerry-snapshot.h"
+#include "ecma-literal-storage.h"
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
 
@@ -1523,7 +1523,6 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 {
   parser_list_iterator_t literal_iterator;
   lexer_literal_t *literal_p;
-  lit_cpointer_t lit_cp;
   ecma_number_t num;
   uint32_t literal_index = 0;
   uint16_t length = context_p->token.lit_location.length;
@@ -1567,7 +1566,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     num = -num;
   }
 
-  lit_cp = lit_cpointer_compress (lit_find_or_create_literal_from_num (num));
+  jmem_cpointer_t lit_cp = ecma_find_or_create_literal_number (num);
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
 
   while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)

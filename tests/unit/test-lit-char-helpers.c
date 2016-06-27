@@ -16,7 +16,6 @@
 #include "ecma-helpers.h"
 #include "lit-strings.h"
 #include "ecma-init-finalize.h"
-#include "lit-literal.h"
 #include "lit-char-helpers.h"
 #include "js-parser-internal.h"
 
@@ -28,7 +27,6 @@ main ()
   TEST_INIT ();
 
   jmem_init ();
-  lit_init ();
   ecma_init ();
 
   const uint8_t _1_byte_long1[] = "\\u007F";
@@ -76,7 +74,6 @@ main ()
   JERRY_ASSERT (length == 3);
 
   ecma_finalize ();
-  lit_finalize ();
   jmem_finalize (true);
 
   return 0;

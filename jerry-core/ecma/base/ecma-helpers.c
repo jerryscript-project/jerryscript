@@ -1429,14 +1429,14 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
   if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
   {
-    lit_cpointer_t *literal_start_p = NULL;
+    jmem_cpointer_t *literal_start_p = NULL;
     uint32_t literal_end;
     uint32_t const_literal_end;
 
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
       uint8_t *byte_p = (uint8_t *) bytecode_p;
-      literal_start_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+      literal_start_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
 
       cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_p;
       literal_end = args_p->literal_end;
@@ -1445,7 +1445,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     else
     {
       uint8_t *byte_p = (uint8_t *) bytecode_p;
-      literal_start_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+      literal_start_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
 
       cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_p;
       literal_end = args_p->literal_end;

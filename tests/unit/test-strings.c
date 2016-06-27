@@ -17,7 +17,6 @@
 #include "ecma-helpers.h"
 #include "lit-strings.h"
 #include "ecma-init-finalize.h"
-#include "lit-literal.h"
 
 #include "test-common.h"
 
@@ -107,7 +106,6 @@ main ()
   TEST_INIT ();
 
   jmem_init ();
-  lit_init ();
   ecma_init ();
 
   lit_utf8_byte_t cesu8_string[max_bytes_in_string];
@@ -219,7 +217,6 @@ main ()
   JERRY_ASSERT (res_buf[2] == 0xBF);
 
   ecma_finalize ();
-  lit_finalize ();
   jmem_finalize (true);
 
   return 0;

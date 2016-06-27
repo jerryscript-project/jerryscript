@@ -106,9 +106,12 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
   }
   else if (literal_p->type == LEXER_NUMBER_LITERAL)
   {
-    lit_literal_t literal = lit_get_literal_by_cp (literal_p->u.value);
+    ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, literal_p->u.value);
+
+    JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
+
     printf ("number(");
-    util_print_number (lit_number_literal_get_number (literal));
+    util_print_number (ecma_get_number_from_value (value_p->u.lit_number));
   }
   else if (literal_p->type == LEXER_REGEXP_LITERAL)
   {

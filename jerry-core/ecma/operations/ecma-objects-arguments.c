@@ -102,7 +102,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   if (bytecode_data_p != NULL)
   {
     ecma_length_t formal_params_number;
-    lit_cpointer_t *literal_p;
+    jmem_cpointer_t *literal_p;
 
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
@@ -110,7 +110,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       uint8_t *byte_p = (uint8_t *) bytecode_data_p;
 
       formal_params_number = args_p->argument_end;
-      literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+      literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
     }
     else
     {
@@ -118,7 +118,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       uint8_t *byte_p = (uint8_t *) bytecode_data_p;
 
       formal_params_number = args_p->argument_end;
-      literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+      literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
     }
 
     if (!is_strict
@@ -139,7 +139,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
           continue;
         }
 
-        ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_p[indx]);
+        ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, literal_p[indx]);
         ecma_string_t *indx_string_p = ecma_new_ecma_string_from_uint32 ((uint32_t) indx);
 
         prop_desc.is_value_defined = true;
@@ -155,7 +155,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
         JERRY_ASSERT (ecma_is_value_true (completion));
 
         ecma_deref_ecma_string (indx_string_p);
-        ecma_deref_ecma_string (name_p);
       }
 
       // 12.

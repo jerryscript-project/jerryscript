@@ -809,7 +809,6 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_LIT_TABLE, /**< actual data is in literal table */
   ECMA_STRING_CONTAINER_HEAP_ASCII_STRING, /**< actual data is on the heap as an ascii string */
   ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 string */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
@@ -817,7 +816,11 @@ typedef enum
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
 
-  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_MAGIC_STRING_EX /**< maximum value */
+  ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
+                               *   so no string processing function supports this type except
+                               *   the ecma_deref_ecma_string function. */
+
+  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_LITERAL_NUMBER /**< maximum value */
 } ecma_string_container_t;
 
 /**
@@ -846,6 +849,12 @@ typedef enum
  */
 #define ECMA_STRING_GET_CONTAINER(string_desc_p) \
   ((ecma_string_container_t) ((string_desc_p)->refs_and_container & ECMA_STRING_CONTAINER_MASK))
+
+/**
+ * Checks whether the reference counter is 1.
+ */
+#define ECMA_STRING_IS_REF_EQUALS_TO_ONE(string_desc_p) \
+  (((string_desc_p)->refs_and_container >> 3) == 1)
 
 /**
  * ECMA string-value descriptor
@@ -891,6 +900,9 @@ typedef struct ecma_string_t
 
     /** Identifier of external magic string */
     lit_magic_string_ex_id_t magic_string_ex_id;
+
+    /** Literal number */
+    ecma_value_t lit_number;
 
     /** For zeroing and comparison in some cases */
     uint32_t common_field;

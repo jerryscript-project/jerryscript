@@ -25,13 +25,12 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
+#include "ecma-literal-storage.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "jerry-snapshot.h"
-#include "lit-literal.h"
 #include "lit-magic-strings.h"
-#include "lit-snapshot.h"
 #include "js-parser.h"
 #include "re-compiler.h"
 
@@ -1359,7 +1358,6 @@ jerry_init (jerry_flag_t flags) /**< combination of Jerry flags */
   jerry_make_api_available ();
 
   jmem_init ();
-  lit_init ();
   ecma_init ();
 } /* jerry_init */
 
@@ -1375,7 +1373,6 @@ jerry_cleanup (void)
 
   vm_finalize ();
   ecma_finalize ();
-  lit_finalize ();
   jmem_finalize (is_show_mem_stats);
 } /* jerry_cleanup */
 
@@ -1604,15 +1601,15 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
   /* Sub-functions and regular expressions are stored recursively. */
   uint8_t *src_buffer_p = (uint8_t *) compiled_code_p;
   uint8_t *dst_buffer_p = (uint8_t *) copied_compiled_code_p;
-  lit_cpointer_t *src_literal_start_p;
-  uint16_t *dst_literal_start_p;
+  jmem_cpointer_t *src_literal_start_p;
+  jmem_cpointer_t *dst_literal_start_p;
   uint32_t const_literal_end;
   uint32_t literal_end;
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
-    src_literal_start_p = (lit_cpointer_t *) (src_buffer_p + sizeof (cbc_uint16_arguments_t));
-    dst_literal_start_p = (uint16_t *) (dst_buffer_p + sizeof (cbc_uint16_arguments_t));
+    src_literal_start_p = (jmem_cpointer_t *) (src_buffer_p + sizeof (cbc_uint16_arguments_t));
+    dst_literal_start_p = (jmem_cpointer_t *) (dst_buffer_p + sizeof (cbc_uint16_arguments_t));
 
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) src_buffer_p;
     literal_end = args_p->literal_end;
@@ -1620,8 +1617,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p) /**< compiled
   }
   else
   {
-    src_literal_start_p = (lit_cpointer_t *) (src_buffer_p + sizeof (cbc_uint8_arguments_t));
-    dst_literal_start_p = (uint16_t *) (dst_buffer_p + sizeof (cbc_uint8_arguments_t));
+    src_literal_start_p = (jmem_cpointer_t *) (src_buffer_p + sizeof (cbc_uint8_arguments_t));
+    dst_literal_start_p = (jmem_cpointer_t *) (dst_buffer_p + sizeof (cbc_uint8_arguments_t));
 
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) src_buffer_p;
     literal_end = args_p->literal_end;
@@ -1663,14 +1660,14 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
 
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
     {
-      lit_cpointer_t *literal_start_p;
+      jmem_cpointer_t *literal_start_p;
       uint32_t argument_end;
       uint32_t register_end;
       uint32_t const_literal_end;
 
       if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
       {
-        literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
+        literal_start_p = (jmem_cpointer_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
 
         cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
         argument_end = args_p->argument_end;
@@ -1679,7 +1676,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
       }
       else
       {
-        literal_start_p = (lit_cpointer_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
+        literal_start_p = (jmem_cpointer_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
 
         cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
         argument_end = args_p->argument_end;
@@ -1703,7 +1700,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
               current_p++;
             }
 
-            literal_start_p[i] = (uint16_t) current_p->literal_offset;
+            literal_start_p[i] = current_p->literal_offset;
           }
         }
 
@@ -1726,7 +1723,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
             current_p++;
           }
 
-          literal_start_p[i] = (uint16_t) current_p->literal_offset;
+          literal_start_p[i] = current_p->literal_offset;
         }
       }
 
@@ -1811,12 +1808,12 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
   lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
   uint32_t literals_num;
 
-  if (!lit_save_literals_for_snapshot (buffer_p,
-                                       buffer_size,
-                                       &snapshot_buffer_write_offset,
-                                       &lit_map_p,
-                                       &literals_num,
-                                       &header.lit_table_size))
+  if (!ecma_save_literals_for_snapshot (buffer_p,
+                                        buffer_size,
+                                        &snapshot_buffer_write_offset,
+                                        &lit_map_p,
+                                        &literals_num,
+                                        &header.lit_table_size))
   {
     JERRY_ASSERT (lit_map_p == NULL);
     return 0;
@@ -1836,7 +1833,7 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
 
   if (lit_map_p != NULL)
   {
-    jmem_heap_free_block_size_stored (lit_map_p);
+    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
   }
 
   ecma_bytecode_deref (bytecode_data_p);
@@ -1929,7 +1926,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   }
   else
   {
-    code_size = (uint32_t) (header_size + literal_end * sizeof (lit_cpointer_t));
+    code_size = (uint32_t) (header_size + literal_end * sizeof (jmem_cpointer_t));
 
     uint8_t *real_bytecode_p = ((uint8_t *) bytecode_p) + code_size;
     uint32_t total_size = JERRY_ALIGNUP (code_size + 1 + sizeof (uint8_t *), JMEM_ALIGNMENT);
@@ -1948,7 +1945,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   JERRY_ASSERT (bytecode_p->refs == 1);
 
-  lit_cpointer_t *literal_start_p = (lit_cpointer_t *) (((uint8_t *) bytecode_p) + header_size);
+  jmem_cpointer_t *literal_start_p = (jmem_cpointer_t *) (((uint8_t *) bytecode_p) + header_size);
 
   for (uint32_t i = 0; i < const_literal_end; i++)
   {
@@ -2038,10 +2035,10 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION;
   }
 
-  if (!lit_load_literals_from_snapshot (snapshot_data_p + header_p->lit_table_offset,
-                                        header_p->lit_table_size,
-                                        &lit_map_p,
-                                        &literals_num))
+  if (!ecma_load_literals_from_snapshot (snapshot_data_p + header_p->lit_table_offset,
+                                         header_p->lit_table_size,
+                                         &lit_map_p,
+                                         &literals_num))
   {
     JERRY_ASSERT (lit_map_p == NULL);
     return JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT;
@@ -2055,7 +2052,7 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 
   if (lit_map_p != NULL)
   {
-    jmem_heap_free_block_size_stored (lit_map_p);
+    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
   }
 
   if (bytecode_p == NULL)

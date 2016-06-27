@@ -31,7 +31,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
-#include "lit-literal-storage.h"
 #include "opcodes.h"
 #include "vm.h"
 #include "vm-stack.h"
@@ -295,7 +294,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
  */
 static ecma_value_t
 vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                             lit_cpointer_t lit_cp) /**< literal */
+                             jmem_cpointer_t lit_cp) /**< literal */
 {
   ecma_compiled_code_t *bytecode_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
                                                                 lit_cp);
@@ -504,7 +503,8 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       } \
       else \
       { \
-        ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]); \
+        ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
+                                                              literal_start_p[literal_index]); \
         ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, \
                                                                             name_p); \
         if (ref_base_lex_env_p != NULL) \
@@ -518,8 +518,6 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           result = ecma_raise_reference_error (ECMA_ERR_MSG ("")); \
         } \
         \
-        ecma_deref_ecma_string (name_p); \
-        \
         if (ECMA_IS_VALUE_ERROR (result)) \
         { \
           goto error; \
@@ -529,17 +527,17 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     } \
     else if (literal_index < const_literal_end) \
     { \
-      lit_cpointer_t lit_cpointer = literal_start_p[literal_index]; \
-      lit_literal_t lit = lit_cpointer_decompress (lit_cpointer); \
-      if (unlikely (LIT_RECORD_IS_NUMBER (lit))) \
+      ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
+                                                             literal_start_p[literal_index]); \
+      \
+      if (unlikely (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER)) \
       { \
-        ecma_number_t number = lit_number_literal_get_number (lit); \
-        (target_value) = ecma_make_number_value (number); \
+        (target_value) = ecma_fast_copy_value (value_p->u.lit_number); \
       } \
       else \
       { \
-        ecma_string_t *string_p = ecma_new_ecma_string_from_lit_cp (lit_cpointer); \
-        (target_value) = ecma_make_string_value (string_p); \
+        ecma_ref_ecma_string (value_p); \
+        (target_value) = ecma_make_string_value (value_p); \
       } \
     } \
     else \
@@ -578,7 +576,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
-  lit_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
+  jmem_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
 
   /* Prepare. */
@@ -618,9 +616,9 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         while (literal_index <= literal_index_end)
         {
-          ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
+          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                literal_start_p[literal_index]);
           vm_var_decl (frame_ctx_p, name_p);
-          ecma_deref_ecma_string (name_p);
           literal_index++;
         }
         break;
@@ -649,7 +647,8 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t value_index;
           ecma_value_t lit_value;
-          ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
+          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                literal_start_p[literal_index]);
 
           vm_var_decl (frame_ctx_p, name_p);
 
@@ -678,7 +677,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_free_value (lit_value);
           }
 
-          ecma_deref_ecma_string (name_p);
           literal_index++;
         }
         break;
@@ -714,7 +712,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
-  lit_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
+  jmem_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
 
   ecma_value_t *stack_top_p;
   uint16_t encoding_limit;
@@ -1109,7 +1107,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
+            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  literal_start_p[literal_index]);
             ecma_object_t *ref_base_lex_env_p;
 
             ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
@@ -1128,11 +1127,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
-              ecma_deref_ecma_string (name_p);
               goto error;
             }
 
             ecma_ref_object (ref_base_lex_env_p);
+            ecma_ref_ecma_string (name_p);
             *stack_top_p++ = ecma_make_object_value (ref_base_lex_env_p);
             *stack_top_p++ = ecma_make_string_value (name_p);
             *stack_top_p++ = result;
@@ -1611,7 +1610,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            ecma_string_t *name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
+            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  literal_start_p[literal_index]);
+
             ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                                 name_p);
 
@@ -1626,8 +1627,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                        is_strict);
 
             }
-
-            ecma_deref_ecma_string (name_p);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
@@ -2158,19 +2157,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         else
         {
-          ecma_string_t *var_name_str_p;
-          ecma_object_t *ref_base_lex_env_p;
-
-          var_name_str_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
-          ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
-                                                               var_name_str_p);
+          ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                        literal_start_p[literal_index]);
+          ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
+                                                                              var_name_str_p);
 
           ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
                                                                           var_name_str_p,
                                                                           is_strict,
                                                                           result);
-
-          ecma_deref_ecma_string (var_name_str_p);
 
           if (ECMA_IS_VALUE_ERROR (put_value_result))
           {
@@ -2325,11 +2320,10 @@ error:
 
           catch_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
 
-          catch_name_p = ecma_new_ecma_string_from_lit_cp (literal_start_p[literal_index]);
+          catch_name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                       literal_start_p[literal_index]);
 
           ecma_op_create_mutable_binding (catch_env_p, catch_name_p, false);
-
-          ecma_deref_ecma_string (catch_name_p);
 
           stack_top_p[-2 - 1] = ecma_make_object_value (frame_ctx_p->lex_env_p);
           frame_ctx_p->lex_env_p = catch_env_p;
@@ -2498,7 +2492,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         const ecma_value_t *arg_list_p, /**< arguments list */
         ecma_length_t arg_list_len) /**< length of arguments list */
 {
-  lit_cpointer_t *literal_p;
+  jmem_cpointer_t *literal_p;
   vm_frame_ctx_t frame_ctx;
   uint32_t call_stack_size;
 
@@ -2507,7 +2501,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
     uint8_t *byte_p = (uint8_t *) bytecode_header_p;
 
-    literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
     frame_ctx.literal_start_p = literal_p;
     literal_p += args_p->literal_end;
     call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
@@ -2517,7 +2511,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
     uint8_t *byte_p = (uint8_t *) bytecode_header_p;
 
-    literal_p = (lit_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
     frame_ctx.literal_start_p = literal_p;
     literal_p += args_p->literal_end;
     call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);

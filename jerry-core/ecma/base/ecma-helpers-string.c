@@ -22,10 +22,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
-#include "lit-literal.h"
 #include "lit-magic-strings.h"
-#include "lit-literal-storage.h"
-#include "vm.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -73,48 +70,12 @@ typedef struct
 } ecma_string_heap_header_t;
 
 static void
-ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p,
-                                   lit_cpointer_t lit_index);
-static void
 ecma_init_ecma_string_from_magic_string_id (ecma_string_t *string_p,
                                             lit_magic_string_id_t magic_string_id);
 
 static void
 ecma_init_ecma_string_from_magic_string_ex_id (ecma_string_t *string_p,
                                                lit_magic_string_ex_id_t magic_string_ex_id);
-
-/**
- * Initialize ecma-string descriptor with string described by index in literal table
- */
-static void
-ecma_init_ecma_string_from_lit_cp (ecma_string_t *string_p, /**< descriptor to initialize */
-                                   lit_cpointer_t lit_cp) /**< compressed pointer to literal */
-{
-  lit_literal_t lit = lit_cpointer_decompress (lit_cp);
-
-  if (LIT_RECORD_IS_MAGIC_STR (lit))
-  {
-    ecma_init_ecma_string_from_magic_string_id (string_p,
-                                                lit_magic_literal_get_magic_str_id (lit));
-
-    return;
-  }
-
-  if (LIT_RECORD_IS_MAGIC_STR_EX (lit))
-  {
-    ecma_init_ecma_string_from_magic_string_ex_id (string_p,
-                                                   lit_magic_literal_get_magic_str_ex_id (lit));
-    return;
-  }
-
-  JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-  string_p->refs_and_container = ECMA_STRING_CONTAINER_LIT_TABLE | ECMA_STRING_REF_ONE;
-  string_p->hash = lit_charset_literal_get_hash (lit);
-
-  string_p->u.common_field = 0;
-  string_p->u.lit_cp = lit_cp;
-} /* ecma_init_ecma_string_from_lit_cp */
 
 /**
  * Initialize ecma-string descriptor with specified magic string
@@ -321,21 +282,6 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 } /* ecma_new_ecma_string_from_number */
 
 /**
- * Allocate new ecma-string and fill it with reference to string literal
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_new_ecma_string_from_lit_cp (lit_cpointer_t lit_cp) /**< index in the literal table */
-{
-  ecma_string_t *string_desc_p = ecma_alloc_string ();
-
-  ecma_init_ecma_string_from_lit_cp (string_desc_p, lit_cp);
-
-  return string_desc_p;
-} /* ecma_new_ecma_string_from_lit_cp */
-
-/**
  * Allocate new ecma-string and fill it with reference to ECMA magic string
  *
  * @return pointer to ecma-string descriptor
@@ -502,13 +448,21 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
       break;
     }
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
       /* only the string descriptor itself should be freed */
       break;
+    }
+    case ECMA_STRING_LITERAL_NUMBER:
+    {
+      ecma_fast_free_value (string_p->u.lit_number);
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
     }
   }
 
@@ -532,7 +486,6 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
       return ((ecma_number_t) uint32_number);
     }
 
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
     case ECMA_STRING_CONTAINER_HEAP_UTF8_STRING:
     case ECMA_STRING_CONTAINER_HEAP_ASCII_STRING:
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
@@ -553,9 +506,12 @@ ecma_string_to_number (const ecma_string_t *str_p) /**< ecma-string */
 
       return num;
     }
-  }
 
-  JERRY_UNREACHABLE ();
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
 } /* ecma_string_to_number */
 
 /**
@@ -626,14 +582,6 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-s
                                                                  string_desc_p->u.ascii_string.ascii_collection_cp);
       size = string_desc_p->u.ascii_string.size;
       memcpy (buffer_p, data_p, size);
-      break;
-    }
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
-    {
-      const lit_literal_t lit = lit_get_literal_by_cp (string_desc_p->u.lit_cp);
-      JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-      size = lit_charset_literal_get_size (lit);
-      memcpy (buffer_p, lit_charset_literal_get_charset (lit), size);
       break;
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
@@ -762,16 +710,6 @@ ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
 
   switch (ECMA_STRING_GET_CONTAINER (string_p))
   {
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
-    {
-      lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-      JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-      length = lit_charset_literal_get_length (lit);
-      size = lit_charset_literal_get_size (lit);
-      result_p = lit_charset_literal_get_charset (lit);
-      break;
-    }
     case ECMA_STRING_CONTAINER_HEAP_UTF8_STRING:
     {
       const ecma_string_heap_header_t *data_p = ECMA_GET_NON_NULL_POINTER (ecma_string_heap_header_t,
@@ -861,11 +799,6 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
   {
     switch (ECMA_STRING_GET_CONTAINER (string1_p))
     {
-      case ECMA_STRING_CONTAINER_LIT_TABLE:
-      {
-        JERRY_ASSERT (string1_p->u.lit_cp != string2_p->u.lit_cp);
-        return false;
-      }
       case ECMA_STRING_CONTAINER_MAGIC_STRING:
       {
         JERRY_ASSERT (string1_p->u.magic_string_id != string2_p->u.magic_string_id);
@@ -958,13 +891,6 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 
     utf8_string1_p = data_p;
   }
-  else if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    const lit_literal_t lit = lit_get_literal_by_cp (string1_p->u.lit_cp);
-    JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-    utf8_string1_p = (lit_utf8_byte_t *) lit_charset_literal_get_charset (lit);
-  }
   else
   {
     utf8_string1_p = (lit_utf8_byte_t *) jmem_heap_alloc_block ((size_t) strings_size);
@@ -987,13 +913,6 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
                                                                string2_p->u.ascii_string.ascii_collection_cp);
 
     utf8_string2_p = data_p;
-  }
-  else if (ECMA_STRING_GET_CONTAINER (string2_p) == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    const lit_literal_t lit = lit_get_literal_by_cp (string2_p->u.lit_cp);
-    JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-    utf8_string2_p = (lit_utf8_byte_t *) lit_charset_literal_get_charset (lit);
   }
   else
   {
@@ -1088,14 +1007,6 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
     utf8_string1_p = data_p;
     utf8_string1_size = (lit_utf8_size_t) string1_p->u.ascii_string.size;
   }
-  else if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    const lit_literal_t lit = lit_get_literal_by_cp (string1_p->u.lit_cp);
-    JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-    utf8_string1_p = (lit_utf8_byte_t *) lit_charset_literal_get_charset (lit);
-    utf8_string1_size = (lit_utf8_size_t) lit_charset_literal_get_size (lit);
-  }
   else
   {
     utf8_string1_size = ecma_string_get_size (string1_p);
@@ -1128,14 +1039,6 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
 
     utf8_string2_p = data_p;
     utf8_string2_size = (lit_utf8_size_t) string2_p->u.ascii_string.size;
-  }
-  else if (ECMA_STRING_GET_CONTAINER (string2_p) == ECMA_STRING_CONTAINER_LIT_TABLE)
-  {
-    const lit_literal_t lit = lit_get_literal_by_cp (string2_p->u.lit_cp);
-    JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-    utf8_string2_p = (lit_utf8_byte_t *) lit_charset_literal_get_charset (lit);
-    utf8_string2_size = (lit_utf8_size_t) lit_charset_literal_get_size (lit);
   }
   else
   {
@@ -1182,12 +1085,6 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 {
   switch (ECMA_STRING_GET_CONTAINER (string_p))
   {
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
-    {
-      lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-      JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-      return lit_charset_literal_get_length (lit);
-    }
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       JERRY_ASSERT (ECMA_STRING_IS_ASCII (lit_get_magic_string_utf8 (string_p->u.magic_string_id),
@@ -1229,13 +1126,6 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
 {
   switch (ECMA_STRING_GET_CONTAINER (string_p))
   {
-    case ECMA_STRING_CONTAINER_LIT_TABLE:
-    {
-      lit_literal_t lit = lit_get_literal_by_cp (string_p->u.lit_cp);
-      JERRY_ASSERT (LIT_RECORD_IS_CHARSET (lit));
-
-      return lit_charset_literal_get_size (lit);
-    }
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
       return lit_get_magic_string_size (string_p->u.magic_string_id);

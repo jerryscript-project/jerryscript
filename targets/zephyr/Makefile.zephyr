@@ -53,9 +53,12 @@ VARIETY ?= -cp_minimal
 INTERM     = build/$(BOARD)/obj-$(BOARD)
 OUTPUT     = build/$(BOARD)
 
+-include $(ZEPHYR_BASE)/boards/$(BOARD_NAME)/Makefile.board
+-include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
+
 CC = $(CROSS_COMPILE)gcc
 
-EXT_CFLAGS := -fno-asynchronous-unwind-tables -fno-omit-frame-pointer 
+EXT_CFLAGS := -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
 EXT_CFLAGS += -fno-stack-protector -fno-strict-overflow -ffreestanding
 EXT_CFLAGS += -fno-reorder-functions -fno-defer-pop -fdata-sections
 EXT_CFLAGS += -ffunction-sections -fno-inline-functions
@@ -92,9 +95,6 @@ EXT_CFLAGS += $(TOOLCHAIN_CFLAGS)
 EXT_CFLAGS += $(LIB_INCLUDE_DIR)
 EXT_CFLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
 EXT_CFLAGS += -isystem $(shell $(CC) -print-file-name=include-fixed)
-
--include $(ZEPHYR_BASE)/boards/$(BOARD_NAME)/Makefile.board
--include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
 
 ZEPHYR_LIBC_INC = $(subst -I,,$(TOOLCHAIN_CFLAGS))
 LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)
@@ -142,7 +142,7 @@ endif
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG)
 	@echo "Finished"
 	@file $(OUTPUT)/zephyr/zephyr.strip
-	@size $(OUTPUT)/zephyr/zephyr.strip	
+	@size $(OUTPUT)/zephyr/zephyr.strip
 
 jerry: $(EXTERNAL_LIB)
 	@touch $(EXTERNAL_LIB)
@@ -158,7 +158,7 @@ flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr/zephyr.strip
 
 usage:
 help:
-	@echo Usage: 
+	@echo Usage:
 	@echo showconfig	 Show parameters and configuration
 	@echo flash	         Flash into board
 	@echo all	         Compile jerryscript and zephyr
@@ -173,12 +173,12 @@ showconfig:
 	@echo "TOOLCHAIN_CFLAGS = $(TOOLCHAIN_CFLAGS) "
 	@echo "CROSS_COMPILE    = $(CROSS_COMPILE) "
 	@echo "TOOLCHAIN_LIBS   = $(TOOLCHAIN_LIBS) "
-	@echo "LIBS             = $(LIBS) "	
+	@echo "LIBS             = $(LIBS) "
 	@echo "LIB_INCLUDE_DIR  = $(LIB_INCLUDE_DIR) "
 	@echo "BUILD_CONFIG     = $(BUILD_CONFIG) "
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) showconfig
 
-# TODO @sergioamr Temporal cleanup before finding why Zephyr is ignoring my 
+# TODO @sergioamr Temporal cleanup before finding why Zephyr is ignoring my
 # 		  outdir for the project
 clean:
 	@echo "Clearing Jerryscript"

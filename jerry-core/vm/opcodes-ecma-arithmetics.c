@@ -46,63 +46,6 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /**< right value */
 {
-  JERRY_STATIC_ASSERT (ECMA_INTEGER_MULTIPLY_MAX * ECMA_INTEGER_MULTIPLY_MAX <= ECMA_INTEGER_NUMBER_MAX
-                       && -(ECMA_INTEGER_MULTIPLY_MAX * ECMA_INTEGER_MULTIPLY_MAX) >= ECMA_INTEGER_NUMBER_MIN,
-                       square_of_integer_multiply_max_must_fit_into_integer_value_range);
-  JERRY_STATIC_ASSERT (ECMA_INTEGER_NUMBER_MAX * 2 <= INT32_MAX
-                       && ECMA_INTEGER_NUMBER_MIN * 2 >= INT32_MIN,
-                       doubled_ecma_numbers_must_fit_into_int32_range);
-
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
-                && !ECMA_IS_VALUE_ERROR (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    switch (op)
-    {
-      case NUMBER_ARITHMETIC_SUBSTRACTION:
-      {
-        ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-        return ecma_make_int32_value ((int32_t) (left_integer - right_integer));
-      }
-      case NUMBER_ARITHMETIC_MULTIPLICATION:
-      {
-        ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-
-        if (-ECMA_INTEGER_MULTIPLY_MAX <= left_integer
-            && left_integer <= ECMA_INTEGER_MULTIPLY_MAX
-            && -ECMA_INTEGER_MULTIPLY_MAX <= right_integer
-            && right_integer <= ECMA_INTEGER_MULTIPLY_MAX)
-        {
-          return ecma_make_integer_value (left_integer * right_integer);
-        }
-        break;
-      }
-      case NUMBER_ARITHMETIC_DIVISION:
-      {
-        /* Not optimized since the result is likely not an integer number. */
-        break;
-      }
-      case NUMBER_ARITHMETIC_REMAINDER:
-      {
-        ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-        if (right_integer != 0)
-        {
-          ecma_integer_value_t result = left_integer % right_integer;
-
-          if (result != 0 || left_integer >= 0)
-          {
-            return ecma_make_integer_value (result);
-          }
-        }
-        break;
-      }
-    }
-  }
-
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
@@ -154,20 +97,6 @@ ecma_value_t
 opfunc_addition (ecma_value_t left_value, /**< left value */
                  ecma_value_t right_value) /**< right value */
 {
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-    ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-    return ecma_make_int32_value ((int32_t) (left_integer + right_integer));
-  }
-
-  if (ecma_is_value_number (left_value) && ecma_is_value_number (right_value))
-  {
-    ecma_number_t num_left = ecma_get_number_from_value (left_value);
-    ecma_number_t num_right = ecma_get_number_from_value (right_value);
-    return ecma_make_number_value (ecma_number_add (num_left, num_right));
-  }
-
   bool free_left_value = false;
   bool free_right_value = false;
 

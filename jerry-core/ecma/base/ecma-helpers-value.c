@@ -733,6 +733,35 @@ ecma_value_assign_value (ecma_value_t *value_p, /**< [in, out] ecma value */
 } /* ecma_value_assign_value */
 
 /**
+ * Update the value of a float number to a new value
+ *
+ * Note:
+ *   The original value is destroyed.
+ *
+ * @return updated ecma value
+ */
+ecma_value_t
+ecma_update_float_number (ecma_value_t float_value, /**< original float value */
+                          ecma_number_t new_number) /**< updated number value */
+{
+  JERRY_ASSERT (ecma_is_value_float_number (float_value));
+
+  ecma_integer_value_t integer_number = (ecma_integer_value_t) new_number;
+  ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (float_value);
+
+  if ((ecma_number_t) integer_number == new_number
+      && ((integer_number == 0) ? ecma_is_number_equal_to_positive_zero (new_number)
+                                : ECMA_IS_INTEGER_NUMBER (integer_number)))
+  {
+    ecma_dealloc_number (number_p);
+    return ecma_make_integer_value (integer_number);
+  }
+
+  *number_p = new_number;
+  return float_value;
+} /* ecma_update_float_number */
+
+/**
  * Assign a float number to an ecma-value
  *
  * Note:

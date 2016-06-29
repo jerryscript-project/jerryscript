@@ -30,7 +30,7 @@ extern ecma_value_t
 ecma_op_eval (ecma_string_t *, bool, bool);
 
 extern ecma_value_t
-ecma_op_eval_chars_buffer (const jerry_char_t *, size_t, bool, bool);
+ecma_op_eval_chars_buffer (const lit_utf8_byte_t *, size_t, bool, bool);
 
 /**
  * @}

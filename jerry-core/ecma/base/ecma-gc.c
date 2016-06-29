@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -502,7 +503,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 } /* ecma_gc_sweep */
 
 /**
- * Run garbage collecting
+ * Run garbage collection
  */
 void
 ecma_gc_run (void)

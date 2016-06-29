@@ -16,6 +16,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "jerry-api.h"
 
 #include "test-common.h"
 

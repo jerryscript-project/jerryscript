@@ -275,9 +275,7 @@ typedef enum
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 
-extern void vm_init (ecma_compiled_code_t *);
-extern void vm_finalize (void);
-extern jerry_completion_code_t vm_run_global (ecma_value_t *);
+extern ecma_value_t vm_run_global (const ecma_compiled_code_t *);
 extern ecma_value_t vm_run_eval (ecma_compiled_code_t *, bool);
 
 extern ecma_value_t vm_run (const ecma_compiled_code_t *, ecma_value_t,

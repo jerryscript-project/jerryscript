@@ -17,7 +17,7 @@
 #ifndef JS_PARSER_H
 #define JS_PARSER_H
 
-#include "byte-code.h"
+#include "ecma-globals.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -128,25 +128,8 @@ typedef struct
   parser_line_counter_t column;                       /**< column where the error occured */
 } parser_error_location;
 
-/**
- * Parser completion status
- */
-typedef enum
-{
-  JSP_STATUS_OK,             /**< parse finished successfully, no early errors occured */
-  JSP_STATUS_SYNTAX_ERROR,   /**< SyntaxError early error occured */
-} jsp_status_t;
-
 /* Note: source must be a valid UTF-8 string */
-extern jsp_status_t parser_parse_script (const jerry_char_t *,
-                                         size_t,
-                                         ecma_compiled_code_t **,
-                                         jerry_object_t **);
-extern jsp_status_t parser_parse_eval (const jerry_char_t *,
-                                       size_t,
-                                       bool,
-                                       ecma_compiled_code_t **,
-                                       jerry_object_t **);
+extern ecma_value_t parser_parse_script (const uint8_t *, size_t, bool, ecma_compiled_code_t **);
 
 const char *parser_error_to_string (parser_error_t);
 

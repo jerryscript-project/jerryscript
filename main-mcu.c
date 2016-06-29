@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "jerry.h"
+#include "jerry-api.h"
 
 /**
  * Standalone Jerry exit codes
@@ -32,14 +32,7 @@ main (void)
   const char *source_p = generated_source;
   const size_t source_size = sizeof (generated_source);
 
-  jerry_completion_code_t ret_code = jerry_run_simple ((jerry_char_t *) source_p, source_size, JERRY_FLAG_EMPTY);
+  bool ret_code = jerry_run_simple ((jerry_char_t *) source_p, source_size, JERRY_INIT_EMPTY);
 
-  if (ret_code == JERRY_COMPLETION_CODE_OK)
-  {
-    return JERRY_STANDALONE_EXIT_CODE_OK;
-  }
-  else
-  {
-    return JERRY_STANDALONE_EXIT_CODE_FAIL;
-  }
+  return (ret_code ? JERRY_STANDALONE_EXIT_CODE_OK : JERRY_STANDALONE_EXIT_CODE_FAIL);
 } /* main */

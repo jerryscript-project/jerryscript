@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jerry.h"
+#include "jerry-api.h"
 #include "jerry-port.h"
 #include "jerry-port-default.h"
 
@@ -71,18 +71,17 @@ read_file (const char *file_name,
  *
  * @return true - if only one argument was passed and the argument is a boolean true.
  */
-static bool
-assert_handler (const jerry_object_t *function_obj_p __attribute__((unused)), /**< function object */
+static jerry_value_t
+assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
                 const jerry_value_t this_p __attribute__((unused)), /**< this arg */
                 const jerry_value_t args_p[], /**< function arguments */
-                const jerry_length_t args_cnt, /**< number of function arguments */
-                jerry_value_t *ret_val_p __attribute__((unused))) /**< return argument */
+                const jerry_length_t args_cnt) /**< number of function arguments */
 {
   if (args_cnt == 1
       && jerry_value_is_boolean (args_p[0])
       && jerry_get_boolean_value (args_p[0]))
   {
-    return true;
+    return jerry_create_boolean (true);
   }
   else
   {
@@ -143,11 +142,12 @@ main (int argc,
   // FIXME:
   //  jrt_set_mem_limits (max_data_bss_size, max_stack_size);
 
-  jerry_flag_t flags = JERRY_FLAG_EMPTY;
+  jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
   const char *exec_snapshot_file_names[JERRY_MAX_COMMAND_LINE_ARGS];
   int exec_snapshots_count = 0;
 
+  bool is_parse_only = false;
   bool is_save_snapshot_mode = false;
   bool is_save_snapshot_mode_for_global_or_eval = false;
   const char *save_snapshot_file_name_p = NULL;
@@ -166,27 +166,24 @@ main (int argc,
     }
     else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
     {
-      printf ("Build date: \t%s\n", jerry_build_date);
-      printf ("Commit hash:\t%s\n", jerry_commit_hash);
-      printf ("Branch name:\t%s\n", jerry_branch_name);
-      printf ("\n");
+      printf ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
       return JERRY_STANDALONE_EXIT_CODE_OK;
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
-      flags |= JERRY_FLAG_MEM_STATS;
+      flags |= JERRY_INIT_MEM_STATS;
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
-      flags |= JERRY_FLAG_MEM_STATS_SEPARATE;
+      flags |= JERRY_INIT_MEM_STATS_SEPARATE;
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {
-      flags |= JERRY_FLAG_PARSE_ONLY;
+      is_parse_only = true;
     }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
-      flags |= JERRY_FLAG_SHOW_OPCODES;
+      flags |= JERRY_INIT_SHOW_OPCODES;
     }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))
@@ -208,7 +205,6 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      flags |= JERRY_FLAG_PARSE_ONLY;
       save_snapshot_file_name_p = argv[i];
     }
     else if (!strcmp ("--exec-snapshot", argv[i]))
@@ -240,7 +236,7 @@ main (int argc,
       }
 
 #ifdef JERRY_ENABLE_LOG
-      flags |= JERRY_FLAG_ENABLE_LOG;
+      flags |= JERRY_INIT_ENABLE_LOG;
       jerry_debug_level = argv[i][0] - '0';
 #endif /* JERRY_ENABLE_LOG */
     }
@@ -254,7 +250,7 @@ main (int argc,
       }
 
 #ifdef JERRY_ENABLE_LOG
-      flags |= JERRY_FLAG_ENABLE_LOG;
+      flags |= JERRY_INIT_ENABLE_LOG;
       log_file_name = argv[i];
 #endif /* JERRY_ENABLE_LOG */
     }
@@ -313,23 +309,22 @@ main (int argc,
 
   jerry_init (flags);
 
-  jerry_object_t *global_obj_p = jerry_get_global ();
-  jerry_object_t *assert_func_p = jerry_create_external_function (assert_handler);
-  jerry_value_t assert_value = jerry_create_object_value (assert_func_p);
+  jerry_value_t global_obj_val = jerry_get_global_object ();
+  jerry_value_t assert_value = jerry_create_external_function (assert_handler);
 
-  bool is_assert_added = jerry_set_object_field_value (global_obj_p,
-                                                       (jerry_char_t *) "assert",
-                                                       assert_value);
+  jerry_value_t assert_func_name_val = jerry_create_string ((jerry_char_t *) "assert");
+  bool is_assert_added = jerry_set_property (global_obj_val, assert_func_name_val, assert_value);
 
+  jerry_release_value (assert_func_name_val);
   jerry_release_value (assert_value);
-  jerry_release_object (global_obj_p);
+  jerry_release_value (global_obj_val);
 
   if (!is_assert_added)
   {
     jerry_port_errormsg ("Warning: failed to register 'assert' method.");
   }
 
-  jerry_completion_code_t ret_code = JERRY_COMPLETION_CODE_OK;
+  jerry_value_t ret_value = jerry_create_undefined ();
 
   for (int i = 0; i < exec_snapshots_count; i++)
   {
@@ -338,28 +333,22 @@ main (int argc,
 
     if (snapshot_p == NULL)
     {
-      ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+      ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
     }
     else
     {
-      jerry_value_t ret_value;
-      ret_code = jerry_exec_snapshot ((void *) snapshot_p,
-                                      snapshot_size,
-                                      true,
-                                      &ret_value);
-      assert (jerry_value_is_undefined (ret_value));
+      ret_value = jerry_exec_snapshot ((void *) snapshot_p,
+                                       snapshot_size,
+                                       true);
     }
 
-    if (ret_code != JERRY_COMPLETION_CODE_OK)
+    if (jerry_value_has_error_flag (ret_value))
     {
       break;
     }
   }
 
-  jerry_object_t *err_obj_p = NULL;
-  jerry_value_t err_value = jerry_create_undefined_value ();
-
-  if (ret_code == JERRY_COMPLETION_CODE_OK)
+  if (!jerry_value_has_error_flag (ret_value))
   {
     for (int i = 0; i < files_counter; i++)
     {
@@ -368,7 +357,7 @@ main (int argc,
 
       if (source_p == NULL)
       {
-        ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
       }
 
       if (is_save_snapshot_mode)
@@ -378,11 +367,12 @@ main (int argc,
         size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_char_t *) source_p,
                                                               source_size,
                                                               is_save_snapshot_mode_for_global_or_eval,
+                                                              false,
                                                               snapshot_save_buffer,
                                                               JERRY_BUFFER_SIZE);
         if (snapshot_size == 0)
         {
-          ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
+          ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
         }
         else
         {
@@ -393,18 +383,17 @@ main (int argc,
       }
       else
       {
-        if (!jerry_parse (source_p, source_size, &err_obj_p))
+        ret_value = jerry_parse (source_p, source_size, false);
+
+        if (!jerry_value_has_error_flag (ret_value) && !is_parse_only)
         {
-          /* unhandled SyntaxError */
-          ret_code = JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION;
-        }
-        else if ((flags & JERRY_FLAG_PARSE_ONLY) == 0)
-        {
-          ret_code = jerry_run (&err_value);
+          jerry_value_t func_val = ret_value;
+          ret_value = jerry_run (func_val);
+          jerry_release_value (func_val);
         }
       }
 
-      if (ret_code != JERRY_COMPLETION_CODE_OK)
+      if (jerry_value_has_error_flag (ret_value))
       {
         break;
       }
@@ -416,16 +405,18 @@ main (int argc,
     const char *prompt = "jerry> ";
     bool is_done = false;
 
-    jerry_object_t *global_obj_p = jerry_get_global ();
-    jerry_value_t print_function = jerry_get_object_field_value (global_obj_p,
-                                                                 (jerry_char_t *) "print");
+    jerry_value_t global_obj_val = jerry_get_global_object ();
+    jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");
+    jerry_value_t print_function = jerry_get_property (global_obj_val, print_func_name_val);
 
-    if (jerry_value_is_error (print_function))
+    jerry_release_value (print_func_name_val);
+
+    if (jerry_value_has_error_flag (print_function))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    if (!jerry_is_function (jerry_get_object_value (print_function)))
+    if (!jerry_value_is_function (print_function))
     {
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -457,22 +448,21 @@ main (int argc,
       if (len > 0)
       {
         /* Evaluate the line */
-        jerry_value_t ret_val;
-        ret_code = jerry_eval (buffer, len, false, false, &ret_val);
+        jerry_value_t ret_val_eval = jerry_eval (buffer, len, false);
 
         /* Print return value */
-        const jerry_value_t args[] = { ret_val };
-        jerry_value_t ret_val_print = jerry_call_function (jerry_get_object_value (print_function),
-                                                           NULL,
+        const jerry_value_t args[] = { ret_val_eval };
+        jerry_value_t ret_val_print = jerry_call_function (print_function,
+                                                           jerry_create_undefined (),
                                                            args,
                                                            1);
 
         jerry_release_value (ret_val_print);
-        jerry_release_value (ret_val);
+        jerry_release_value (ret_val_eval);
       }
     }
 
-    jerry_release_object (global_obj_p);
+    jerry_release_value (global_obj_val);
     jerry_release_value (print_function);
   }
 
@@ -484,49 +474,31 @@ main (int argc,
   }
 #endif /* JERRY_ENABLE_LOG */
 
-  if (ret_code == JERRY_COMPLETION_CODE_OK)
+  int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
+
+  if (jerry_value_has_error_flag (ret_value))
   {
-    jerry_cleanup ();
-    return JERRY_STANDALONE_EXIT_CODE_OK;
-  }
-  else if (ret_code == JERRY_COMPLETION_CODE_UNHANDLED_EXCEPTION)
-  {
-    jerry_string_t *err_str_p = NULL;
+    jerry_value_clear_error_flag (&ret_value);
+    jerry_value_t err_str_val = jerry_value_to_string (ret_value);
 
-    if (err_obj_p != NULL)
-    {
-      jerry_value_t err_value = jerry_create_object_value (err_obj_p);
-      err_str_p = jerry_get_string_value (jerry_value_to_string (err_value));
-      jerry_release_object (err_obj_p);
-    }
-    else if (!jerry_value_is_undefined (err_value))
-    {
-      err_value = jerry_value_remove_error_flag (err_value);
-      err_str_p = jerry_get_string_value (jerry_value_to_string (err_value));
-      jerry_release_value (err_value);
-    }
+    jerry_char_t err_str_buf[256];
+    jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
 
-    if (__builtin_expect (!!(err_str_p != NULL), 1))
-    {
-      jerry_char_t err_str_buf[256];
+    assert (err_str_size < 256);
+    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    assert (sz == err_str_size);
+    err_str_buf[err_str_size] = 0;
 
-      jerry_size_t err_str_size = jerry_get_string_size (err_str_p);
-      assert (err_str_size < 256);
-      jerry_size_t sz = jerry_string_to_char_buffer (err_str_p, err_str_buf, err_str_size);
-      assert (sz == err_str_size);
-      err_str_buf[err_str_size] = 0;
+    jerry_port_errormsg ("Script Error: unhandled exception: %s\n", err_str_buf);
 
-      jerry_port_errormsg ("Script Error: unhandled exception: %s\n", err_str_buf);
+    jerry_release_value (err_str_val);
 
-      jerry_release_string (err_str_p);
-    }
-
-    jerry_cleanup ();
-    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  assert (ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_FORMAT
-          || ret_code == JERRY_COMPLETION_CODE_INVALID_SNAPSHOT_VERSION);
+  jerry_release_value (ret_value);
   jerry_cleanup ();
-  return JERRY_STANDALONE_EXIT_CODE_FAIL;
+
+  return ret_code;
+
 } /* main */

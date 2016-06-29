@@ -20,7 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "jerry.h"
+#include "jerry-api.h"
+#include "jerry-port.h"
 #include "jrt-types.h"
 
 /**

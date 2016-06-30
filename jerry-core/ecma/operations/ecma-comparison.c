@@ -81,7 +81,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       JERRY_ASSERT (is_x_equal_to_y == is_x_equal_to_y_check);
 #endif /* !JERRY_NDEBUG */
 
-      return ecma_make_simple_value (is_x_equal_to_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_boolean_value (is_x_equal_to_y);
     }
 
     /* Swap values. */
@@ -100,7 +100,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
       bool is_equal = ecma_compare_ecma_strings (x_str_p, y_str_p);
 
-      return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      return ecma_make_boolean_value (is_equal);
     }
 
     if (ecma_is_value_number (y))
@@ -175,7 +175,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     // 2., 3.
     bool is_equal = ecma_is_value_undefined (y) || ecma_is_value_null (y);
 
-    return ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    return ecma_make_boolean_value (is_equal);
   }
 
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
@@ -375,7 +375,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       JERRY_ASSERT (is_x_less_than_y_check == is_x_less_than_y);
 #endif /* !JERRY_NDEBUG */
 
-      ret_value = ecma_make_simple_value (is_x_less_than_y ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ecma_make_boolean_value (is_x_less_than_y);
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (ny);
@@ -390,7 +390,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 
     bool is_px_less = ecma_compare_ecma_strings_relational (str_x_p, str_y_p);
 
-    ret_value = ecma_make_simple_value (is_px_less ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE);
+    ret_value = ecma_make_boolean_value (is_px_less);
   }
 
   ECMA_FINALIZE (prim_second_converted_value);

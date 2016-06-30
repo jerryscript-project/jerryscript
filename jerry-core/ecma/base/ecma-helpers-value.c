@@ -336,6 +336,18 @@ ecma_make_simple_value (const ecma_simple_value_t simple_value) /**< simple valu
 } /* ecma_make_simple_value */
 
 /**
+ * Creates an ecma value from the given raw boolean.
+ *
+ * @return boolean ecma_value
+ */
+inline ecma_value_t __attr_const___ __attr_always_inline___
+ecma_make_boolean_value (bool boolean_value) /**< raw bool value from which the ecma value will be created */
+{
+  return ecma_make_simple_value (boolean_value ? ECMA_SIMPLE_VALUE_TRUE
+                                               : ECMA_SIMPLE_VALUE_FALSE);
+} /* ecma_make_boolean_value */
+
+/**
  * Encode an integer number into an ecma-value without allocating memory
  *
  * Note:

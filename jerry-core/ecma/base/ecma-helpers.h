@@ -132,6 +132,7 @@ extern bool ecma_is_value_object (ecma_value_t) __attr_pure___;
 extern void ecma_check_value_type_is_spec_defined (ecma_value_t);
 
 extern ecma_value_t ecma_make_simple_value (const ecma_simple_value_t value) __attr_const___;
+extern ecma_value_t ecma_make_boolean_value (bool) __attr_const___;
 extern ecma_value_t ecma_make_integer_value (ecma_integer_value_t) __attr_const___;
 extern ecma_value_t ecma_make_nan_value (void);
 extern ecma_value_t ecma_make_number_value (ecma_number_t);

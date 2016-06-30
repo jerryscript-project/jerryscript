@@ -472,8 +472,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
 
     // b.
     const bool is_writable = (src_prop_desc_p->is_writable);
-    prop_desc.value = ecma_make_simple_value (is_writable ? ECMA_SIMPLE_VALUE_TRUE
-                                                          : ECMA_SIMPLE_VALUE_FALSE);
+    prop_desc.value = ecma_make_boolean_value (is_writable);
 
     ecma_string_t *writable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE);
     completion = ecma_op_object_define_own_property (obj_p,
@@ -527,8 +526,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   }
 
   const bool is_enumerable = src_prop_desc_p->is_enumerable;
-  prop_desc.value = ecma_make_simple_value (is_enumerable ? ECMA_SIMPLE_VALUE_TRUE
-                                            : ECMA_SIMPLE_VALUE_FALSE);
+  prop_desc.value = ecma_make_boolean_value (is_enumerable);
 
   ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE);
   completion = ecma_op_object_define_own_property (obj_p,
@@ -539,8 +537,7 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   JERRY_ASSERT (ecma_is_value_true (completion));
 
   const bool is_configurable = src_prop_desc_p->is_configurable;
-  prop_desc.value = ecma_make_simple_value (is_configurable ? ECMA_SIMPLE_VALUE_TRUE
-                                            : ECMA_SIMPLE_VALUE_FALSE);
+  prop_desc.value = ecma_make_boolean_value (is_configurable);
 
   ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE);
   completion = ecma_op_object_define_own_property (obj_p,

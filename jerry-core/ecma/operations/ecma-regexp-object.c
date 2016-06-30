@@ -151,8 +151,6 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
                                          prop_p,
                                          ecma_make_string_value (source_p));
 
-  ecma_simple_value_t prop_value;
-
   /* Set global property. ECMA-262 v5, 15.10.7.2 */
   magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
   prop_p = ecma_find_named_property (re_obj_p, magic_string_p);
@@ -165,9 +163,8 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   }
 
   ecma_deref_ecma_string (magic_string_p);
-  prop_value = (flags & RE_FLAG_GLOBAL) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-  ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (prop_value));
+  ecma_set_named_data_property_value (prop_p, ecma_make_boolean_value (flags & RE_FLAG_GLOBAL));
 
   /* Set ignoreCase property. ECMA-262 v5, 15.10.7.3 */
   magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
@@ -181,9 +178,8 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   }
 
   ecma_deref_ecma_string (magic_string_p);
-  prop_value = (flags & RE_FLAG_IGNORE_CASE) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-  ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (prop_value));
+  ecma_set_named_data_property_value (prop_p, ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE));
 
   /* Set multiline property. ECMA-262 v5, 15.10.7.4 */
   magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
@@ -197,9 +193,8 @@ re_initialize_props (ecma_object_t *re_obj_p, /**< RegExp obejct */
   }
 
   ecma_deref_ecma_string (magic_string_p);
-  prop_value = (flags & RE_FLAG_MULTILINE) ? ECMA_SIMPLE_VALUE_TRUE : ECMA_SIMPLE_VALUE_FALSE;
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-  ecma_set_named_data_property_value (prop_p, ecma_make_simple_value (prop_value));
+  ecma_set_named_data_property_value (prop_p, ecma_make_boolean_value (flags & RE_FLAG_MULTILINE));
 
   /* Set lastIndex property. ECMA-262 v5, 15.10.7.5 */
   magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);

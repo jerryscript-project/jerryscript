@@ -1735,8 +1735,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-          result = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_TRUE
-                                                    : ECMA_SIMPLE_VALUE_FALSE);
+          result = ecma_make_boolean_value (is_equal);
 
           *stack_top_p++ = result;
           goto free_both_values;
@@ -1745,8 +1744,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           bool is_equal = ecma_op_strict_equality_compare (left_value, right_value);
 
-          result = ecma_make_simple_value (is_equal ? ECMA_SIMPLE_VALUE_FALSE
-                                                    : ECMA_SIMPLE_VALUE_TRUE);
+          result = ecma_make_boolean_value (!is_equal);
 
           *stack_top_p++ = result;
           goto free_both_values;

@@ -277,8 +277,7 @@ jerry_create_undefined_value (void)
 jerry_value_t
 jerry_create_boolean_value (bool value) /**< bool value from which a jerry_value_t will be created */
 {
-  return (value ? ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE)
-                : ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+  return ecma_make_boolean_value (value);
 } /* jerry_create_boolean_value */
 
 /**

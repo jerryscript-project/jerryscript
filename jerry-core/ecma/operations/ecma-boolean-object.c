@@ -58,8 +58,7 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                       ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-  ecma_value_t prim_value = ecma_make_simple_value (boolean_value ? ECMA_SIMPLE_VALUE_TRUE
-                                                                  : ECMA_SIMPLE_VALUE_FALSE);
+  ecma_value_t prim_value = ecma_make_boolean_value (boolean_value);
 
   ecma_set_internal_property_value (prim_value_prop_p, prim_value);
 

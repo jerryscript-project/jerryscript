@@ -25,7 +25,8 @@ harmony
 
 2. Target boards/emulations
 
-Following Zephyr boards were tested: qemu_x86, qemu_cortex_m3, arduino_101.
+Following Zephyr boards were tested: qemu_x86, qemu_cortex_m3, arduino_101,
+frdm_k64f.
 
 
 #### 2. Prepare Zephyr

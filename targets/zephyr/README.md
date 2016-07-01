@@ -19,7 +19,7 @@ harmony
   + jerryscript
   |  + targets
   |      + zephyr
-  + zephyr
+  + zephyr-project
 ```
 
 
@@ -37,13 +37,13 @@ If you just start with Zephyr, you may want to follow "Building a Sample
 Application" section in the doc above and check that you can flash your
 target board.
 
-Remember to source the Zephyr environment:
+Remember to source the Zephyr environment as explained in the zephyr documenation:
 
 ```
+cd zephyr-project
 source zephyr-env.sh
 
 export ZEPHYR_GCC_VARIANT=zephyr
-
 export ZEPHYR_SDK_INSTALL_DIR=<sdk installation directory>
 ```
 
@@ -67,20 +67,20 @@ make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 qemu
 
 ```
 # assume you are in harmony folder
-cd jerry
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
+cd jerryscript
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory
 ```
 
 This will generate the following libraries:
 ```
-./build/arduino_101/librelease-cp_minimal.jerry-core.a
-./build/arduino_101/librelease-cp_minimal.jerry-libm.lib.a
-./build/arduino_101/librelease.external-cp_minimal-entry.a
+./build/arduino_101_factory/librelease-cp_minimal.jerry-core.a
+./build/arduino_101_factory/librelease-cp_minimal.jerry-libm.lib.a
+./build/arduino_101_factory/librelease.external-cp_minimal-entry.a
 ```
 
 The final Zephyr image will be located here:
 ```
-./build/arduino_101/zephyr/zephyr.strip
+./build/arduino_101_factory/zephyr/zephyr.strip
 ```
 
 #### 5. Flashing
@@ -90,32 +90,39 @@ Details on how to flash the image can be found here:
 (or similar page for other supported boards).
 
 To be able to use this demo in hardware you will need the serial console
-which will be generating output to Pins 0 & 1
+which will be generating output to Pins 0 & 1.
+
+You will need a 3.3v TTL to RS232, please follow the zephyr documentation on it.
 
 Some examples of building the software
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr clean
+make -f ./targets/zephyr/Makefile.zephyr BOARD=<board> clean
 ```
 
 - Not using a Jtag and having a factory stock Arduino 101.
+You can follow the Zephyr instructions to flash using the dfu-util command
+or use this helper:
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory dfu-x86
 ```
 
-Follow the Zephyr instructions to flash using the dfu-util command.
-
+Make sure you have the factory bootloader in your device to use this method or it will not flash.
 
 - Using JTAG
 
 There is a helper function to flash using the JTAG and Flywatter2
 
 ![alt tag](docs/arduino_101.jpg?raw=true "Example")
-```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 flash
 
 ```
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory flash
+```
+
+<warning> Careful if you flash the BOARD arduino_101, you will lose the bootloader
+and you will have to follow the zephyr documentation to get it back from
+the backup we all know you did at the setup. </warning>
 
 #### 6. Serial terminal
 

@@ -18,15 +18,11 @@ ifeq ($(.DEFAULT_GOAL),)
   $(warning no default goal is set)
 endif
 
-ifeq ($(MAKECMDGOALS),qemu)
-BOARD ?= qemu_x86
-else
-BOARD ?= arduino_101
+BOARD ?= arduino_101_factory
 BOARD_NAME ?= arduino_101
-endif
 
 ifeq ($(BOARD),qemu_x86)
-BOARD_NAME ?= qemu_x86
+BOARD_NAME = qemu_x86
 endif
 
 TARGET_ZEPHYR ?= ./targets/zephyr
@@ -156,6 +152,11 @@ qemu:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
 flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr/zephyr.strip
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) flash
 
+dfu-x86: all
+	@- dfu-util -a x86_app -D build/$(BOARD)/zephyr/zephyr.bin; \
+	if [ $$? -eq 0 ] ; then echo "\nYour program will launch in 5 seconds." ; \
+	else echo "\nProgram didn't flash, try pressing the reset buttons \nand wait a second for the bootloader to load, \nor flash again the factory bootloader."; fi
+
 usage:
 help:
 	@echo Usage:
@@ -184,7 +185,6 @@ clean:
 	@echo "Clearing Jerryscript"
 	@rm -rf $(OUTPUT)
 	@rm -rf $(INTERM)
-	@rm -f $(TARGET_ZEPHYR_SRC_DIR)/.*.o.cmd
 	@rm -f $(TARGET_ZEPHYR_SRC_DIR)/*.o
 	@echo "Clearing Zephyr"
 	make -f $(TARGET_ZEPHYR)/Makefile clean

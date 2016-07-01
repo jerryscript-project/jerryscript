@@ -20,7 +20,7 @@ $(error Missing zephyr base)
 endif
 
 # For testing without real hardware use qemu_x86 instead of arduino_101
-BOARD ?= arduino_101
+BOARD ?= arduino_101_factory
 
 O ?= $(PROJECT_BASE)/outdir
 

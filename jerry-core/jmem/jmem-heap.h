@@ -32,6 +32,7 @@
 extern void jmem_heap_init (void);
 extern void jmem_heap_finalize (void);
 extern void *jmem_heap_alloc_block (const size_t);
+extern void *jmem_heap_alloc_block_null_on_error (const size_t);
 extern void jmem_heap_free_block (void *, const size_t);
 extern void *jmem_heap_alloc_block_store_size (size_t);
 extern void jmem_heap_free_block_size_stored (void *);

@@ -321,12 +321,17 @@ void *jmem_heap_alloc_block_internal (const size_t size)
  * Allocation of memory block, running 'try to give memory back' callbacks, if there is not enough memory.
  *
  * Note:
- *      if after running the callbacks, there is still not enough memory, engine is terminated with ERR_OUT_OF_MEMORY.
+ *      if there is still not enough memory after running the callbacks
+ *        - NULL value will be returned if parmeter 'ret_null_on_error' is true
+ *        - the engine will terminate with ERR_OUT_OF_MEMORY if 'ret_null_on_error' is false
  *
- * @return pointer to allocated memory block
+ * @return NULL, if the required memory size is 0
+ *         also NULL, if 'ret_null_on_error' is true and the allocation fails because of there is not enough memory
  */
-void * __attribute__((hot))
-jmem_heap_alloc_block (const size_t size)
+static void *
+jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size */
+                              bool ret_null_on_error) /**< indicates whether return null or terminate
+                                                           with ERR_OUT_OF_MEMORY on out of memory */
 {
   if (unlikely (size == 0))
   {
@@ -369,8 +374,45 @@ jmem_heap_alloc_block (const size_t size)
 
   JERRY_ASSERT (data_space_p == NULL);
 
-  jerry_fatal (ERR_OUT_OF_MEMORY);
+  if (!ret_null_on_error)
+  {
+    jerry_fatal (ERR_OUT_OF_MEMORY);
+  }
+
+  return data_space_p;
+} /* jmem_heap_gc_and_alloc_block */
+
+/**
+ * Allocation of memory block, running 'try to give memory back' callbacks, if there is not enough memory.
+ *
+ * Note:
+ *      If there is still not enough memory after running the callbacks, then the engine will be
+ *      terminated with ERR_OUT_OF_MEMORY.
+ *
+ * @return NULL, if the required memory is 0
+ *         pointer to allocated memory block, otherwise
+ */
+void * __attribute__((hot)) __attr_always_inline___
+jmem_heap_alloc_block (const size_t size)  /**< required memory size */
+{
+  return jmem_heap_gc_and_alloc_block (size, false);
 } /* jmem_heap_alloc_block */
+
+/**
+ * Allocation of memory block, running 'try to give memory back' callbacks, if there is not enough memory.
+ *
+ * Note:
+ *      If there is still not enough memory after running the callbacks, NULL will be returned.
+ *
+ * @return NULL, if the required memory size is 0
+ *         also NULL, if the allocation has failed
+ *         pointer to the allocated memory block, otherwise
+ */
+void * __attribute__((hot)) __attr_always_inline___
+jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory size */
+{
+  return jmem_heap_gc_and_alloc_block (size, true);
+} /* jmem_heap_alloc_block_null_on_error */
 
 /**
  *  Allocate block and store block size.

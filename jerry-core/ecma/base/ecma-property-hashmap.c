@@ -110,7 +110,13 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
   size_t total_size = ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (max_property_count);
 
-  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) jmem_heap_alloc_block (total_size);
+  ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) jmem_heap_alloc_block_null_on_error (total_size);
+
+  if (hashmap_p == NULL)
+  {
+    return;
+  }
+
   memset (hashmap_p, 0, total_size);
 
   hashmap_p->header.types[0].type_and_flags = ECMA_PROPERTY_TYPE_HASHMAP;

@@ -54,7 +54,7 @@ ecma_finalize (void)
 
   ecma_finalize_environment ();
   ecma_finalize_builtins ();
-  ecma_gc_run ();
+  ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 

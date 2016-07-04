@@ -506,7 +506,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
  * Run garbage collection
  */
 void
-ecma_gc_run (void)
+ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 {
   ecma_gc_new_objects_since_last_gc = 0;
 
@@ -577,6 +577,26 @@ ecma_gc_run (void)
     ecma_gc_sweep (obj_iter_p);
   }
 
+  if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH)
+  {
+    /* Remove the property hashmap of BLACK objects */
+    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK], *obj_next_p;
+         obj_iter_p != NULL;
+         obj_iter_p = obj_next_p)
+    {
+      obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+
+      JERRY_ASSERT (ecma_gc_is_object_visited (obj_iter_p));
+
+      ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_iter_p);
+      if (prop_iter_p != NULL
+          && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+      {
+        ecma_property_hashmap_free (obj_iter_p);
+      }
+    }
+  }
+
   /* Unmarking all objects */
   ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK];
   ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
@@ -603,7 +623,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
      */
     if (ecma_gc_new_objects_since_last_gc * CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC > ecma_gc_objects_number)
     {
-      ecma_gc_run ();
+      ecma_gc_run (severity);
     }
   }
   else
@@ -611,7 +631,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
     JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
     /* Freeing as much memory as we currently can */
-    ecma_gc_run ();
+    ecma_gc_run (severity);
   }
 } /* ecma_free_unused_memory */
 

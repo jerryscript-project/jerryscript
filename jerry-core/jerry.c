@@ -224,7 +224,7 @@ jerry_gc (void)
 {
   jerry_assert_api_available ();
 
-  ecma_gc_run ();
+  ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
 } /* jerry_gc */
 
 /**

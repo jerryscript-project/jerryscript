@@ -1968,6 +1968,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_LESS:
         {
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = (ecma_integer_value_t) left_value;
+            ecma_integer_value_t right_integer = (ecma_integer_value_t) right_value;
+
+            *stack_top_p++ = ecma_make_boolean_value (left_integer < right_integer);
+            continue;
+          }
+
+          if (ecma_is_value_number (left_value) && ecma_is_value_number (right_value))
+          {
+            ecma_number_t left_number = ecma_get_number_from_value (left_value);
+            ecma_number_t right_number = ecma_get_number_from_value (right_value);
+
+            *stack_top_p++ = ecma_make_boolean_value (left_number < right_number);
+            goto free_both_values;
+          }
+
           result = opfunc_less_than (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
@@ -1980,6 +1998,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_GREATER:
         {
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = (ecma_integer_value_t) left_value;
+            ecma_integer_value_t right_integer = (ecma_integer_value_t) right_value;
+
+            *stack_top_p++ = ecma_make_boolean_value (left_integer > right_integer);
+            continue;
+          }
+
+          if (ecma_is_value_number (left_value) && ecma_is_value_number (right_value))
+          {
+            ecma_number_t left_number = ecma_get_number_from_value (left_value);
+            ecma_number_t right_number = ecma_get_number_from_value (right_value);
+
+            *stack_top_p++ = ecma_make_boolean_value (left_number > right_number);
+            goto free_both_values;
+          }
+
           result = opfunc_greater_than (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
@@ -1992,6 +2028,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_LESS_EQUAL:
         {
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = (ecma_integer_value_t) left_value;
+            ecma_integer_value_t right_integer = (ecma_integer_value_t) right_value;
+
+            *stack_top_p++ = ecma_make_boolean_value (left_integer <= right_integer);
+            continue;
+          }
+
+          if (ecma_is_value_number (left_value) && ecma_is_value_number (right_value))
+          {
+            ecma_number_t left_number = ecma_get_number_from_value (left_value);
+            ecma_number_t right_number = ecma_get_number_from_value (right_value);
+
+            *stack_top_p++ = ecma_make_boolean_value (left_number <= right_number);
+            goto free_both_values;
+          }
+
           result = opfunc_less_or_equal_than (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
@@ -2004,6 +2058,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_GREATER_EQUAL:
         {
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = (ecma_integer_value_t) left_value;
+            ecma_integer_value_t right_integer = (ecma_integer_value_t) right_value;
+
+            *stack_top_p++ = ecma_make_boolean_value (left_integer >= right_integer);
+            continue;
+          }
+
+          if (ecma_is_value_number (left_value) && ecma_is_value_number (right_value))
+          {
+            ecma_number_t left_number = ecma_get_number_from_value (left_value);
+            ecma_number_t right_number = ecma_get_number_from_value (right_value);
+
+            *stack_top_p++ = ecma_make_boolean_value (left_number >= right_number);
+            goto free_both_values;
+          }
+
           result = opfunc_greater_or_equal_than (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))

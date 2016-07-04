@@ -44,15 +44,6 @@ opfunc_less_than (ecma_value_t left_value, /**< left value */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
 
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if ((ecma_integer_value_t) left_value < (ecma_integer_value_t) right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
@@ -87,15 +78,6 @@ opfunc_greater_than (ecma_value_t left_value, /**< left value */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
 
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if ((ecma_integer_value_t) left_value > (ecma_integer_value_t) right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
@@ -129,15 +111,6 @@ opfunc_less_or_equal_than (ecma_value_t left_value, /**< left value */
 {
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if ((ecma_integer_value_t) left_value <= (ecma_integer_value_t) right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, false);
 
@@ -174,15 +147,6 @@ opfunc_greater_or_equal_than (ecma_value_t left_value, /**< left value */
 {
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    if ((ecma_integer_value_t) left_value >= (ecma_integer_value_t) right_value)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
 
   ecma_value_t ret_value = ecma_op_abstract_relational_compare (left_value, right_value, true);
 

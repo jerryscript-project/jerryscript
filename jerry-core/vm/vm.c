@@ -1215,12 +1215,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (opcode_flags & VM_OC_DECREMENT_OPERATOR_FLAG)
             {
-              if (int_value > (ECMA_INTEGER_NUMBER_MIN << ECMA_DIRECT_SHIFT))
+              if (int_value > ECMA_INTEGER_NUMBER_MIN_SHIFTED)
               {
                 int_increase = -(1 << ECMA_DIRECT_SHIFT);
               }
             }
-            else if (int_value < (ECMA_INTEGER_NUMBER_MAX << ECMA_DIRECT_SHIFT))
+            else if (int_value < ECMA_INTEGER_NUMBER_MAX_SHIFTED)
             {
               int_increase = 1 << ECMA_DIRECT_SHIFT;
             }

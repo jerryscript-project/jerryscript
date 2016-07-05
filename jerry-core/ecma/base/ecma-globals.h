@@ -143,19 +143,27 @@ typedef int32_t ecma_integer_value_t;
  * Maximum integer number for an ecma value
  */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-#define ECMA_INTEGER_NUMBER_MAX 0x7fffff
+#define ECMA_INTEGER_NUMBER_MAX         0x7fffff
+#define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7fffff0
 #else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
-#define ECMA_INTEGER_NUMBER_MAX 0x7ffffff
+#define ECMA_INTEGER_NUMBER_MAX         0x7ffffff
+#define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7ffffff0
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**
  * Minimum integer number for an ecma value
  */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
-#define ECMA_INTEGER_NUMBER_MIN -0x7fffff
+#define ECMA_INTEGER_NUMBER_MIN         -0x7fffff
+#define ECMA_INTEGER_NUMBER_MIN_SHIFTED -0x7fffff0
 #else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
-#define ECMA_INTEGER_NUMBER_MIN -0x8000000
+#define ECMA_INTEGER_NUMBER_MIN         -0x8000000
+#define ECMA_INTEGER_NUMBER_MIN_SHIFTED (-0x7fffffff - 1) /* -0x80000000 */
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+
+#if ECMA_DIRECT_SHIFT != 4
+#error "Please update ECMA_INTEGER_NUMBER_MIN/MAX_SHIFTED according to the new value of ECMA_DIRECT_SHIFT."
+#endif
 
 /**
  * Checks whether the integer number is in the integer number range.

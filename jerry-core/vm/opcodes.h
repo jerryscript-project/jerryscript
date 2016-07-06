@@ -107,7 +107,7 @@ ecma_value_t
 vm_op_delete_prop (ecma_value_t, ecma_value_t, bool);
 
 ecma_value_t
-vm_op_delete_var (jmem_cpointer_t, ecma_object_t *, bool);
+vm_op_delete_var (jmem_cpointer_t, ecma_object_t *);
 
 ecma_collection_header_t *
 opfunc_for_in (ecma_value_t, ecma_value_t *);

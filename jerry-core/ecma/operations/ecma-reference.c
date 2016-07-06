@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
+#include "ecma-objects.h"
 #include "ecma-reference.h"
 #include "jrt.h"
 
@@ -57,69 +59,64 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 } /* ecma_op_resolve_reference_base */
 
 /**
- * Resolve syntactic reference to ECMA-reference.
+ * Resolve value corresponding to reference.
  *
- * @return ECMA-reference
- *         Returned value must be freed through ecma_free_reference.
+ * @return value of the reference
  */
-ecma_reference_t
-ecma_op_get_identifier_reference (ecma_object_t *lex_env_p, /**< lexical environment */
-                                  ecma_string_t *name_p, /**< identifier's name */
-                                  bool is_strict) /**< strict reference flag */
+ecma_value_t
+ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical environment */
+                                 ecma_string_t *name_p, /**< identifier's name */
+                                 bool is_strict) /**< strict mode */
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
-  ecma_object_t *base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, name_p);
-
-  if (base_lex_env_p != NULL)
+  while (lex_env_p != NULL)
   {
-    return ecma_make_reference (ecma_make_object_value (base_lex_env_p),
-                                name_p,
-                                is_strict);
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+    {
+      ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+      if (property_p != NULL)
+      {
+        ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);
+
+        /* is the binding mutable? */
+        if (unlikely (!ecma_is_property_writable (property_p)
+                      && ecma_is_value_empty (prop_value)))
+        {
+          /* unitialized mutable binding */
+          if (is_strict)
+          {
+            return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+          }
+          else
+          {
+            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+          }
+        }
+        return ecma_fast_copy_value (prop_value);
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
+                    || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+
+      ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+
+      ecma_property_t *property_p = ecma_op_object_get_property (binding_obj_p, name_p);
+
+      if (property_p != NULL)
+      {
+        return ecma_op_object_get (binding_obj_p, name_p);
+      }
+    }
+
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
-  else
-  {
-    return ecma_make_reference (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                name_p,
-                                is_strict);
-  }
-} /* ecma_op_get_identifier_reference */
 
-/**
- * ECMA-reference constructor.
- *
- * @return ECMA-reference
- *         Returned value must be freed through ecma_free_reference.
- */
-ecma_reference_t
-ecma_make_reference (ecma_value_t base, /**< base value */
-                     ecma_string_t *name_p, /**< referenced name */
-                     bool is_strict) /**< strict reference flag */
-{
-  ecma_ref_ecma_string (name_p);
-
-  ecma_reference_t ref;
-  ref.base = ecma_copy_value (base);
-  ref.is_strict = (is_strict != 0);
-
-  ECMA_SET_POINTER (ref.referenced_name_cp, name_p);
-
-  return ref;
-} /* ecma_make_reference */
-
-/**
- * Free specified ECMA-reference.
- *
- * Warning:
- *         freeing invalidates all copies of the reference.
- */
-void
-ecma_free_reference (ecma_reference_t ref) /**< reference */
-{
-  ecma_free_value (ref.base);
-  ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                     ref.referenced_name_cp));
-} /* ecma_free_reference */
+  return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+} /* ecma_op_resolve_reference_value */
 
 /**
  * @}

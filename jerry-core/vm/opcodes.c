@@ -260,42 +260,24 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
  */
 ecma_value_t
 vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
-                  ecma_object_t *lex_env_p, /**< lexical environment */
-                  bool is_strict) /**< strict mode */
+                  ecma_object_t *lex_env_p) /**< lexical environment */
 {
   ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, name_literal);
 
-  ecma_reference_t ref = ecma_op_get_identifier_reference (lex_env_p,
-                                                           var_name_str_p,
-                                                           is_strict);
+  ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, var_name_str_p);
 
-  JERRY_ASSERT (!ref.is_strict);
-
-  if (ecma_is_value_undefined (ref.base))
+  if (ref_base_lex_env_p == NULL)
   {
     completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
   else
   {
-    ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, var_name_str_p);
-
     JERRY_ASSERT (ecma_is_lexical_environment (ref_base_lex_env_p));
 
-    ECMA_TRY_CATCH (delete_op_ret_val,
-                    ecma_op_delete_binding (ref_base_lex_env_p,
-                                            ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                       ref.referenced_name_cp)),
-                    completion_value);
-
-    completion_value = delete_op_ret_val;
-
-    ECMA_FINALIZE (delete_op_ret_val);
-
+    completion_value = ecma_op_delete_binding (ref_base_lex_env_p, var_name_str_p);
   }
-
-  ecma_free_reference (ref);
 
   return completion_value;
 } /* vm_op_delete_var */

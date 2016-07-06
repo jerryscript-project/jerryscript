@@ -128,7 +128,11 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 /**
  * Set the value of object[property].
  *
- * @return ecma value
+ * Note:
+ *  this function frees its object and property arguments
+ *
+ * @return an ecma value which contains an error
+ *         if the property setting is unsuccessful
  */
 static ecma_value_t
 vm_op_set_value (ecma_value_t object, /**< base object */
@@ -136,36 +140,55 @@ vm_op_set_value (ecma_value_t object, /**< base object */
                  ecma_value_t value, /**< ecma value */
                  bool is_strict) /**< strict mode */
 {
+  if (unlikely (!ecma_is_value_object (object)))
+  {
+    ecma_value_t to_object = ecma_op_to_object (object);
+    ecma_free_value (object);
+
+    if (ECMA_IS_VALUE_ERROR (to_object))
+    {
+      ecma_free_value (property);
+      return to_object;
+    }
+
+    object = to_object;
+  }
+
+  if (!ecma_is_value_string (property))
+  {
+    ecma_value_t to_string = ecma_op_to_string (property);
+    ecma_fast_free_value (property);
+
+    if (ECMA_IS_VALUE_ERROR (property))
+    {
+      ecma_free_value (object);
+      return to_string;
+    }
+
+    property = to_string;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (object);
+  ecma_string_t *property_p = ecma_get_string_from_value (property);
   ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  ECMA_TRY_CATCH (obj_val,
-                  ecma_op_to_object (object),
-                  completion_value);
-
-  ECMA_TRY_CATCH (property_val,
-                  ecma_op_to_string (property),
-                  completion_value);
-
-  ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
-  ecma_string_t *property_p = ecma_get_string_from_value (property_val);
-
-  if (ecma_is_lexical_environment (object_p))
-  {
-    completion_value = ecma_op_put_value_lex_env_base (object_p,
-                                                       property_p,
-                                                       is_strict,
-                                                       value);
-  }
-  else
+  if (!ecma_is_lexical_environment (object_p))
   {
     completion_value = ecma_op_object_put (object_p,
                                            property_p,
                                            value,
                                            is_strict);
   }
+  else
+  {
+    completion_value = ecma_op_set_mutable_binding (object_p,
+                                                    property_p,
+                                                    value,
+                                                    is_strict);
+  }
 
-  ECMA_FINALIZE (property_val);
-  ECMA_FINALIZE (obj_val);
+  ecma_free_value (object);
+  ecma_free_value (property);
 
   return completion_value;
 } /* vm_op_set_value */
@@ -505,18 +528,9 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       { \
         ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
                                                               literal_start_p[literal_index]); \
-        ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, \
-                                                                            name_p); \
-        if (ref_base_lex_env_p != NULL) \
-        { \
-          result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p, \
-                                                   name_p, \
-                                                   is_strict); \
-        } \
-        else \
-        { \
-          result = ecma_raise_reference_error (ECMA_ERR_MSG ("")); \
-        } \
+        result = ecma_op_resolve_reference_value (frame_ctx_p->lex_env_p, \
+                                                  name_p, \
+                                                  is_strict); \
         \
         if (ECMA_IS_VALUE_ERROR (result)) \
         { \
@@ -1103,7 +1117,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             *stack_top_p++ = ecma_make_simple_value (ECMA_SIMPLE_VALUE_REGISTER_REF);
             *stack_top_p++ = literal_index;
-            *stack_top_p++ = ecma_copy_value (frame_ctx_p->registers_p[literal_index]);
+            *stack_top_p++ = ecma_fast_copy_value (frame_ctx_p->registers_p[literal_index]);
           }
           else
           {
@@ -1486,8 +1500,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           result = vm_op_delete_var (literal_start_p[literal_index],
-                                     frame_ctx_p->lex_env_p,
-                                     is_strict);
+                                     frame_ctx_p->lex_env_p);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2406,10 +2419,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           frame_ctx_p->registers_p[property] = result;
 
-          if (opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK))
+          if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
           {
-            result = ecma_fast_copy_value (result);
+            goto free_both_values;
           }
+          result = ecma_fast_copy_value (result);
         }
         else
         {
@@ -2417,9 +2431,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                            property,
                                                            result,
                                                            is_strict);
-
-          ecma_free_value (object);
-          ecma_free_value (property);
 
           if (ECMA_IS_VALUE_ERROR (set_value_result))
           {
@@ -2431,6 +2442,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
           {
             ecma_fast_free_value (result);
+            goto free_both_values;
           }
         }
       }

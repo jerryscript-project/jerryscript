@@ -817,8 +817,7 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_HEAP_ASCII_STRING, /**< actual data is on the heap as an ascii string */
-  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 string */
+  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
@@ -880,25 +879,14 @@ typedef struct ecma_string_t
    */
   union
   {
-    /** Index of string in literal table */
-    jmem_cpointer_t lit_cp;
-
-    /** Compressed pointer to an ecma_collection_header_t */
-    jmem_cpointer_t utf8_collection_cp;
-
     /**
-    * Actual data of an ascii string type
+    * Actual data of an utf-8 string type
     */
     struct
     {
-      /** Compressed pointer to a raw character array */
-      jmem_cpointer_t ascii_collection_cp;
-      /** Size of ascii string in bytes */
-      uint16_t size;
-    } ascii_string;
-
-    /** Compressed pointer to an ecma_number_t */
-    jmem_cpointer_t number_cp;
+      uint16_t size; /**< Size of this utf-8 string in bytes */
+      uint16_t length; /**< Length of this utf-8 string in characters */
+    } utf8_string;
 
     /** UInt32-represented number placed locally in the descriptor */
     uint32_t uint32_number;

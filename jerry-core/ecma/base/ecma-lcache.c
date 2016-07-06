@@ -179,6 +179,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
 
   ecma_lcache_hash_entry_t *entry_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
   ecma_lcache_hash_entry_t *entry_end_p = entry_p + ECMA_LCACHE_HASH_ROW_LENGTH;
+  ecma_string_container_t prop_container = ECMA_STRING_GET_CONTAINER (prop_name_p);
 
   while (entry_p < entry_end_p)
   {
@@ -189,8 +190,10 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
 
       JERRY_ASSERT ((prop_name_p->hash & ECMA_LCACHE_HASH_MASK) == (entry_prop_name_p->hash & ECMA_LCACHE_HASH_MASK));
 
-      if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
-          && prop_name_p->u.common_field == entry_prop_name_p->u.common_field)
+      if (prop_name_p == entry_prop_name_p
+          || (prop_container != ECMA_STRING_CONTAINER_HEAP_UTF8_STRING
+              && prop_container == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
+              && prop_name_p->u.common_field == entry_prop_name_p->u.common_field))
       {
         ecma_property_t *prop_p = entry_p->prop_p;
         JERRY_ASSERT (prop_p != NULL && ecma_is_property_lcached (prop_p));

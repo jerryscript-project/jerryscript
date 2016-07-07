@@ -21,7 +21,7 @@
 #include <misc/printk.h>
 #include <misc/shell.h>
 
-#include "jerry.h"
+#include "jerry-api.h"
 
 #if defined (CONFIG_STDOUT_CONSOLE)
 #include <stdio.h>
@@ -41,19 +41,19 @@ static unsigned char flags = 0;
  */
 int jerryscript_test ()
 {
-  jerry_completion_code_t ret_code;
+  jerry_value_t ret_val;
 
   const char script[] =
   "var test=0; " \
   "for (var t=100; t<1000; t++) test+=t; " \
   "print ('Hi JS World! '+test);";
 
-  printf ("Script [%s]\n",script);
-  ret_code = jerry_run_simple ((jerry_char_t *) script,
+  printf ("Script [%s]\n", script);
+  ret_val = jerry_eval ((jerry_char_t *) script,
       strlen (script),
-      JERRY_FLAG_EMPTY);
+      false);
 
-  return ret_code;
+  return jerry_value_has_error_flag (ret_val) ? -1 : 0;
 } /* jerryscript_test */
 
 
@@ -76,9 +76,7 @@ static int shell_cmd_version (int argc, char *argv[])
 {
   uint32_t version = sys_kernel_version_get ();
 
-  printf ("Jerryscript %s %s %s\n", jerry_branch_name,
-      jerry_build_date,
-      jerry_commit_hash);
+  printf ("Jerryscript API %d.%d\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
 
   printk ("Zephyr version %d.%d.%d\n", SYS_KERNEL_VER_MAJOR (version),
     SYS_KERNEL_VER_MINOR (version),
@@ -127,18 +125,20 @@ static int shell_cmd_handler (int argc, char *argv[])
     printf ("[%s] %lu\n", source_buffer, strlen (source_buffer));
   }
 
-  jerry_completion_code_t ret_code;
+  jerry_value_t ret_val;
 
-  ret_code = jerry_run_simple ((jerry_char_t *) source_buffer,
+  ret_val = jerry_eval ((jerry_char_t *) source_buffer,
     strlen (source_buffer),
-    JERRY_FLAG_EMPTY);
+    false);
 
   free (source_buffer);
 
-  if (ret_code != JERRY_COMPLETION_CODE_OK)
+  if (jerry_value_has_error_flag (ret_val))
   {
     printf ("Failed to run JS\n");
   }
+
+  jerry_release_value (ret_val);
 
   return 0;
 } /* shell_cmd_handler */
@@ -158,7 +158,12 @@ const struct shell_cmd commands[] =
 void main (void)
 {
   printf ("Jerry Compilation " __DATE__ " " __TIME__ "\n");
+  jerry_init (JERRY_INIT_EMPTY);
   shell_register_app_cmd_handler (shell_cmd_handler);
   shell_init ("js> ", commands);
+  /* Don't call jerry_cleanup() here, as shell_init() returns after setting
+     up background task to process shell input, and that task calls
+     shell_cmd_handler(), etc. as callbacks. This processing happens in
+     the infinite loop, so JerryScript doesn't need to be de-initialized. */
 } /* main */
 

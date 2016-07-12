@@ -832,7 +832,7 @@ jerry_create_external_function (jerry_external_handler_t handler_p) /**< pointer
 } /* jerry_create_external_function */
 
 /**
- * Creates a jerry_value_t representing a null value.
+ * Creates a jerry_value_t representing a number value.
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -882,7 +882,7 @@ jerry_create_object (void)
  * Note:
  *      returned value must be freed with jerry_release_object, when it is no longer needed.
  *
- * @return string value
+ * @return value of the created string
  */
 jerry_value_t
 jerry_create_string (const jerry_char_t *str_p) /**< pointer to string */
@@ -896,7 +896,7 @@ jerry_create_string (const jerry_char_t *str_p) /**< pointer to string */
  * Note:
  *      returned value must be freed with jerry_release_object when it is no longer needed.
  *
- * @return string value
+ * @return value of the created string
  */
 jerry_value_t
 jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
@@ -1122,7 +1122,7 @@ jerry_get_property (const jerry_value_t obj_val, /**< object value */
 } /* jerry_get_property */
 
 /**
- * Get value of field in the specified object
+ * Get value by an index from the specified object.
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -1210,7 +1210,7 @@ jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
 } /* jerry_set_property_by_index */
 
 /**
- * Initialize property descriptor
+ * Initialize property descriptor.
  */
 void
 jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
@@ -1314,7 +1314,7 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 } /* jerry_define_own_property */
 
 /**
- * Construct property descriptor from specified property
+ * Construct property descriptor from specified property.
  *
  * @return true - if success, the prop_desc_p fields contains the property info
  *         false - otherwise, the prop_desc_p is unchanged
@@ -1386,7 +1386,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
 } /* jerry_get_own_property_descriptor */
 
 /**
- * Free fields of property descriptor (setter, getter and value)
+ * Free fields of property descriptor (setter, getter and value).
  */
 void
 jerry_free_property_descriptor_fields (const jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
@@ -1674,7 +1674,7 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 } /* jerry_set_object_native_handle */
 
 /**
- * Applies the given function to the every fields in the objects
+ * Applies the given function to the every property in the object.
  *
  * @return true, if object fields traversal was performed successfully, i.e.:
  *                - no unhandled exceptions were thrown in object fields traversal;
@@ -2208,8 +2208,8 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return true - if success
- *         false or thrown error - otherwise
+ * @return result of bytecode - if run was successful
+ *         thrown error - otherwise
  */
 jerry_value_t
 jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */

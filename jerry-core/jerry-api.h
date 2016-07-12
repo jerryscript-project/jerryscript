@@ -158,7 +158,7 @@ typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_na
 
 
 /**
- * Logger functions
+ * Logger
  */
 #ifdef JERRY_ENABLE_LOG
 extern int jerry_debug_level;

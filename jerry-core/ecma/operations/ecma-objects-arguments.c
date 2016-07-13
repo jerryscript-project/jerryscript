@@ -85,7 +85,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_ARGUMENTS_UL;
 
   // 7.
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
   ecma_value_t completion = ecma_builtin_helper_def_prop (obj_p,
                                                           length_magic_string_p,
                                                           ecma_make_uint32_value (arguments_number),

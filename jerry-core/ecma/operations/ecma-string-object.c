@@ -99,7 +99,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_set_internal_property_value (prim_value_prop_p, ecma_make_string_value (prim_prop_str_value_p));
 
   // 15.5.5.1
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
   ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
                                                                     length_magic_string_p,
                                                                     ECMA_PROPERTY_FIXED);

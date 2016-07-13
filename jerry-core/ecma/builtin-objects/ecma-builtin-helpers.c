@@ -335,7 +335,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
   if (ecma_is_value_object (value)
       && (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL))
   {
-    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
     /* 5.b.ii */
     ECMA_TRY_CATCH (arg_len_value,
                     ecma_op_object_get (ecma_get_object_from_value (value),

@@ -184,6 +184,21 @@ ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, /**< ecma-strin
 } /* ecma_init_ecma_string_from_uint32 */
 
 /**
+ * Initialize a length ecma-string
+ */
+inline void __attr_always_inline___
+ecma_init_ecma_length_string (ecma_string_t *string_desc_p) /**< ecma-string */
+{
+  JERRY_ASSERT (lit_utf8_string_calc_hash ((const lit_utf8_byte_t *) "length", 6) == LIT_STRING_LENGTH_HASH);
+
+  string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_MAGIC_STRING | ECMA_STRING_REF_ONE;
+  string_desc_p->hash = LIT_STRING_LENGTH_HASH;
+
+  string_desc_p->u.common_field = 0;
+  string_desc_p->u.magic_string_id = LIT_MAGIC_STRING_LENGTH;
+} /* ecma_init_ecma_length_string */
+
+/**
  * Allocate new ecma-string and fill it with ecma-number
  *
  * @return pointer to ecma-string descriptor
@@ -279,6 +294,20 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
+
+/**
+ * Allocate new ecma-string and fill it with reference to length magic string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_length_string (void)
+{
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+  ecma_init_ecma_length_string (string_desc_p);
+
+  return string_desc_p;
+} /* ecma_new_ecma_length_string */
 
 /**
  * Concatenate ecma-strings
@@ -760,6 +789,32 @@ ecma_string_is_empty (const ecma_string_t *str_p) /**< ecma-string */
   return (ECMA_STRING_GET_CONTAINER (str_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
           && str_p->u.magic_string_id == LIT_MAGIC_STRING__EMPTY);
 } /* ecma_string_is_empty */
+
+/**
+ * Checks whether the string equals to "length".
+ *
+ * @return true if the string equals to "length"
+ *         false otherwise
+ */
+inline bool __attr_always_inline___
+ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
+{
+  ecma_string_container_t container = ECMA_STRING_GET_CONTAINER (string_p);
+
+  if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
+  {
+    return string_p->u.magic_string_id == LIT_MAGIC_STRING_LENGTH;
+  }
+
+  if (container != ECMA_STRING_CONTAINER_HEAP_UTF8_STRING
+      || string_p->u.utf8_string.size != 6
+      || string_p->hash != LIT_STRING_LENGTH_HASH)
+  {
+    return false;
+  }
+
+  return !strncmp ((char *) (string_p + 1), "length", 6);
+} /* ecma_string_is_length */
 
 /**
  * Long path part of ecma-string to ecma-string comparison routine

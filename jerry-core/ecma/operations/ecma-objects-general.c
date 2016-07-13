@@ -246,25 +246,6 @@ ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_get_property */
 
 /**
- * Checks whether the property name is "length".
- *
- * @return true if the property name is length
- *         false otherwise
- */
-static inline bool __attr_always_inline___
-ecma_op_general_object_property_name_is_length (ecma_string_t *property_name_p) /**< property name */
-{
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-
-  bool property_name_is_length = ecma_compare_ecma_strings (property_name_p,
-                                                            magic_string_length_p);
-
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  return property_name_is_length;
-} /* ecma_op_general_object_property_name_is_length */
-
-/**
  * [[Put]] ecma general object's operation
  *
  * See also:
@@ -305,7 +286,7 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
         const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
         if (type == ECMA_OBJECT_TYPE_ARGUMENTS
-            || (type == ECMA_OBJECT_TYPE_ARRAY && ecma_op_general_object_property_name_is_length (property_name_p)))
+            || (type == ECMA_OBJECT_TYPE_ARRAY && ecma_string_is_length (property_name_p)))
         {
           /* These cases cannot be optimized. */
           ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor ();
@@ -379,11 +360,12 @@ ecma_op_general_object_put (ecma_object_t *obj_p, /**< the object */
         /* Since the length of an array is a non-configurable named data
          * property, the prop_p must be a non-NULL pointer for all arrays. */
 
-        JERRY_ASSERT (!ecma_op_general_object_property_name_is_length (property_name_p));
+        JERRY_ASSERT (!ecma_string_is_length (property_name_p));
 
-        ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-        ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
-        ecma_deref_ecma_string (magic_string_length_p);
+        ecma_string_t magic_string_length;
+        ecma_init_ecma_length_string (&magic_string_length);
+
+        ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, &magic_string_length);
 
         JERRY_ASSERT (len_prop_p != NULL
                       && ECMA_PROPERTY_GET_TYPE (len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);

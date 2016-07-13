@@ -942,11 +942,11 @@ jerry_get_array_length (const jerry_value_t value)
   }
 
   jerry_length_t length = 0;
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
 
   ecma_value_t len_value = ecma_op_object_get (ecma_get_object_from_value (value),
-                                               magic_string_length_p);
-  ecma_deref_ecma_string (magic_string_length_p);
+                                               &magic_string_length);
 
   length = ecma_number_to_uint32 (ecma_get_number_from_value (len_value));
   ecma_free_value (len_value);

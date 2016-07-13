@@ -135,6 +135,22 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
   /** Initializing [[PrimitiveValue]] properties of built-in prototype objects */
   switch (obj_builtin_id)
   {
+#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
+    case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
+    {
+      ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+
+      ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
+                                                                        length_str_p,
+                                                                        ECMA_PROPERTY_FLAG_WRITABLE);
+
+      ecma_set_named_data_property_value (length_prop_p, ecma_make_integer_value (0));
+
+      ecma_deref_ecma_string (length_str_p);
+      break;
+    }
+#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
@@ -352,13 +368,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
       && ecma_builtin_function_is_routine (object_p))
   {
-    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-
-    bool is_length_property = ecma_compare_ecma_strings (string_p, magic_string_length_p);
-
-    ecma_deref_ecma_string (magic_string_length_p);
-
-    if (is_length_property)
+    if (ecma_string_is_length (string_p))
     {
       /*
        * Lazy instantiation of 'length' property
@@ -589,7 +599,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
     ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
     /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
-    ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_string_t *name_p = ecma_new_ecma_length_string ();
     ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
     ecma_deref_ecma_string (name_p);
   }

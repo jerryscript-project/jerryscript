@@ -1199,7 +1199,7 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   ecma_deref_ecma_string (result_prop_str_p);
 
   /* Set length property of the result array */
-  result_prop_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  result_prop_str_p = ecma_new_ecma_length_string ();
   {
     ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
     array_item_prop_desc.is_value_defined = true;

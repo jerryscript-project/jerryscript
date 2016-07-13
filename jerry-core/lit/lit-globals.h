@@ -139,4 +139,9 @@ typedef uint16_t lit_string_hash_t;
  */
 #define LIT_STRING_HASH_LIMIT 0x10000u
 
+/**
+ * Hash of the frequently used "length" string.
+ */
+#define LIT_STRING_LENGTH_HASH 0x3615u
+
 #endif /* !LIT_GLOBALS_H */

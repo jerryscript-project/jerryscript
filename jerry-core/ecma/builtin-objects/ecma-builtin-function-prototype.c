@@ -110,7 +110,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
       else
       {
         ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
-        ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+        ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
 
         /* 4. */
         ECMA_TRY_CATCH (length_value,
@@ -286,7 +286,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
     /* 16. */
     ecma_number_t length = ECMA_NUMBER_ZERO;
-    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
 
     /* 15. */
     if (ecma_object_get_class_name (this_arg_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)

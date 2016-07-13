@@ -255,7 +255,7 @@ ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true -
   ecma_string_t *name_p;
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  name_p = ecma_new_ecma_length_string ();
   ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
   ecma_deref_ecma_string (name_p);
 
@@ -282,13 +282,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the f
 {
   JERRY_ASSERT (!ecma_get_object_is_builtin (obj_p));
 
-  ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-
-  bool is_length_property = ecma_compare_ecma_strings (magic_string_length_p, property_name_p);
-
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  if (is_length_property)
+  if (ecma_string_is_length (property_name_p))
   {
     /* ECMA-262 v5, 13.2, 14-15 */
     ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;

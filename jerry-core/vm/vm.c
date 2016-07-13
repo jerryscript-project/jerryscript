@@ -1002,7 +1002,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_APPEND_ARRAY:
         {
           ecma_object_t *array_obj_p;
-          ecma_string_t *length_str_p;
+          ecma_string_t length_str;
           ecma_property_t *length_prop_p;
           uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
@@ -1010,15 +1010,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p -= values_length;
 
           array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
-          length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-          length_prop_p = ecma_get_named_property (array_obj_p, length_str_p);
+          ecma_init_ecma_length_string (&length_str);
+          length_prop_p = ecma_get_named_property (array_obj_p, &length_str);
 
           JERRY_ASSERT (length_prop_p != NULL);
 
           left_value = ecma_get_named_data_property_value (length_prop_p);
           length_num = ecma_get_uint32_from_value (left_value);
-
-          ecma_deref_ecma_string (length_str_p);
 
           for (uint32_t i = 0; i < values_length; i++)
           {

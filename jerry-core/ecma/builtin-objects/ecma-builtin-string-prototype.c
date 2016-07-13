@@ -774,7 +774,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                                                          ecma_value_t match_value) /**< returned match value */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_string_t *length_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_string_p = ecma_new_ecma_length_string ();
   ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
 
   ECMA_TRY_CATCH (match_length_value,
@@ -1818,7 +1818,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
               /* 13.c.iii.5 */
               start_pos = end_pos + match_str_length;
 
-              ecma_string_t *magic_length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+              ecma_string_t *magic_length_str_p = ecma_new_ecma_length_string ();
 
               ECMA_TRY_CATCH (array_length_val,
                               ecma_op_object_get (match_array_obj_p, magic_length_str_p),

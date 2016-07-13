@@ -44,6 +44,7 @@ ifndef ZEPHYR_BASE
 $(error Missing Zephyr base, did you source zephyr-env.sh? )
 endif
 
+# -cp is required for user-friendly error messages in REPL
 VARIETY ?= -cp_minimal
 
 INTERM     = build/$(BOARD)/obj-$(BOARD)

@@ -33,6 +33,7 @@
 
 static char *source_buffer = NULL;
 static unsigned char flags = 0;
+static jerry_value_t print_function;
 
 #define VERBOSE 0x01
 
@@ -135,7 +136,22 @@ static int shell_cmd_handler (int argc, char *argv[])
 
   if (jerry_value_has_error_flag (ret_val))
   {
-    printf ("Failed to run JS\n");
+    /* User-friendly error messages require at least "cp" JerryScript
+       profile. Include a message prefix in case "cp_minimal" profile
+       is used. */
+    printf ("Error executing statement: ");
+    /* Clear error flag, otherwise print call below won't produce any
+       output. */
+    jerry_value_clear_error_flag (&ret_val);
+  }
+
+  if (!jerry_value_has_error_flag (print_function))
+  {
+    jerry_value_t ret_val_print = jerry_call_function (print_function,
+      jerry_create_undefined (),
+      &ret_val,
+      1);
+    jerry_release_value (ret_val_print);
   }
 
   jerry_release_value (ret_val);
@@ -159,6 +175,17 @@ void main (void)
 {
   printf ("Jerry Compilation " __DATE__ " " __TIME__ "\n");
   jerry_init (JERRY_INIT_EMPTY);
+  jerry_value_t global_obj_val = jerry_get_global_object ();
+
+  jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");
+  print_function = jerry_get_property (global_obj_val, print_func_name_val);
+  jerry_release_value (print_func_name_val);
+  jerry_release_value (global_obj_val);
+  if (jerry_value_has_error_flag (print_function))
+  {
+    printf ("Error: could not look up print function, expression results won't be printed\n");
+  }
+
   shell_register_app_cmd_handler (shell_cmd_handler);
   shell_init ("js> ", commands);
   /* Don't call jerry_cleanup() here, as shell_init() returns after setting

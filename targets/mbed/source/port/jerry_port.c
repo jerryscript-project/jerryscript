@@ -23,35 +23,33 @@
 #include "mbed-hal/us_ticker_api.h"
 
 /**
- * Provide log message to filestream implementation for the engine.
+ * Provide console message implementation for the engine.
  */
-int
-jerry_port_logmsg (FILE *stream, /**< stream pointer */
-                   const char *format, /**< format string */
-                   ...) /**< parameters */
+void
+jerry_port_console (const char *format, /**< format string */
+                    ...) /**< parameters */
 {
   va_list args;
-  int count;
   va_start (args, format);
-  count = vfprintf (stream, format, args);
+  vfprintf (stdout, format, args);
   va_end (args);
-  return count;
-} /* jerry_port_logmsg */
+} /* jerry_port_console */
 
 /**
- * Provide error message to console implementation for the engine.
+ * Provide log message implementation for the engine.
  */
-int
-jerry_port_errormsg (const char *format, /**< format string */
-                     ...) /**< parameters */
+void
+jerry_port_log (jerry_log_level_t level, /**< log level */
+                const char *format, /**< format string */
+                ...)  /**< parameters */
 {
+  (void) level; /* ignore log level */
+
   va_list args;
-  int count;
   va_start (args, format);
-  count = vfprintf (stderr, format, args);
+  vfprintf (stderr, format, args);
   va_end (args);
-  return count;
-} /* jerry_port_errormsg */
+} /* jerry_port_log */
 
 /**
  * Implementation of jerry_port_fatal.

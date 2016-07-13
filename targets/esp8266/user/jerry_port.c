@@ -17,34 +17,36 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-
 /**
- * Provide log message to filestream implementation for the engine.
+ * Provide console message implementation for the engine.
  */
-int jerry_port_logmsg (FILE* stream, const char* format, ...)
+void
+jerry_port_console (const char *format, /**< format string */
+                    ...) /**< parameters */
 {
   va_list args;
-  int count = 0;
   va_start (args, format);
-  // TODO, uncomment when vfprint link is ok
-  //count = vfprintf (stream, format, args);
+  /* TODO, uncomment when vprint link is ok */
+  /* vfprintf (stdout, format, args); */
   va_end (args);
-  return count;
-}
+} /* jerry_port_console */
 
 /**
- * Provide error message to console implementation for the engine.
+ * Provide log message implementation for the engine.
  */
-int jerry_port_errormsg (const char* format, ...)
+void
+jerry_port_log (jerry_log_level_t level, /**< log level */
+                const char *format, /**< format string */
+                ...)  /**< parameters */
 {
+  (void) level; /* ignore log level */
+
   va_list args;
-  int count = 0;
   va_start (args, format);
-  // TODO, uncomment when vprint link is ok
-  //count = vprintf (format, args);
+  /* TODO, uncomment when vprint link is ok */
+  /* vprintf (stderr, format, args); */
   va_end (args);
-  return count;
-}
+} /* jerry_port_log */
 
 
 /** exit - cause normal process termination  */

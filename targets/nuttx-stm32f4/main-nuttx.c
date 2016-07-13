@@ -1,4 +1,5 @@
 /* Copyright 2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,14 +55,14 @@ static char* read_sources (const char *script_file_names[],
     file = fopen (script_file_name, "r");
     if (file == NULL)
     {
-      jerry_port_errormsg ("Failed to fopen [%s]\n", script_file_name);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fopen [%s]\n", script_file_name);
       return NULL;
     }
 
     int fseek_status = fseek (file, 0, SEEK_END);
     if (fseek_status != 0)
     {
-      jerry_port_errormsg ("Failed to fseek fseek_status(%d)\n", fseek_status);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fseek fseek_status(%d)\n", fseek_status);
       fclose (file);
       return NULL;
     }
@@ -69,7 +70,7 @@ static char* read_sources (const char *script_file_names[],
     long script_len = ftell (file);
     if (script_len < 0)
     {
-      jerry_port_errormsg ("Failed to ftell script_len(%ld)\n", script_len);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to ftell script_len(%ld)\n", script_len);
       fclose (file);
       break;
     }
@@ -82,14 +83,14 @@ static char* read_sources (const char *script_file_names[],
 
   if (total_length <= 0)
   {
-    jerry_port_errormsg ("Theres noting to read\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Theres noting to read\n");
     return NULL;
   }
 
   source_buffer = (char*)malloc(total_length);
   if (source_buffer == NULL)
   {
-    jerry_port_errormsg ("Out of memory error\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Out of memory error\n");
     return NULL;
   }
   memset(source_buffer, 0, sizeof(char)*total_length);
@@ -102,21 +103,21 @@ static char* read_sources (const char *script_file_names[],
 
     if (file == NULL)
     {
-      jerry_port_errormsg ("Failed to fopen [%s]\n", script_file_name);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fopen [%s]\n", script_file_name);
       break;
     }
 
     int fseek_status = fseek (file, 0, SEEK_END);
     if (fseek_status != 0)
     {
-      jerry_port_errormsg ("Failed to fseek fseek_status(%d)\n", fseek_status);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fseek fseek_status(%d)\n", fseek_status);
       break;
     }
 
     long script_len = ftell (file);
     if (script_len < 0)
     {
-      jerry_port_errormsg ("Failed to ftell script_len(%ld)\n", script_len);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to ftell script_len(%ld)\n", script_len);
       break;
     }
 
@@ -126,7 +127,7 @@ static char* read_sources (const char *script_file_names[],
     size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
     if (bytes_read < current_source_size)
     {
-      jerry_port_errormsg ("Failed to fread bytes_read(%d)\n", bytes_read);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fread bytes_read(%d)\n", bytes_read);
       break;
     }
 
@@ -143,7 +144,7 @@ static char* read_sources (const char *script_file_names[],
 
   if (i < files_count)
   {
-    jerry_port_errormsg ("Failed to read script N%d\n", i + 1);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to read script N%d\n", i + 1);
     free(source_buffer);
     return NULL;
   }
@@ -157,8 +158,9 @@ int jerryscript_entry (int argc, char *argv[])
 {
   if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    jerry_port_errormsg ("Too many command line arguments. Current maximum is %d\n",
-                         JERRY_MAX_COMMAND_LINE_ARGS);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                    "Too many command line arguments. Current maximum is %d\n",
+                    JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -213,7 +215,7 @@ int jerryscript_entry (int argc, char *argv[])
       }
       else
       {
-        jerry_port_errormsg ("Error: wrong format or invalid argument\n");
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: wrong format or invalid argument\n");
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
     }
@@ -234,7 +236,7 @@ int jerryscript_entry (int argc, char *argv[])
 
   if (source_p == NULL)
   {
-    jerry_port_errormsg ("JERRY_STANDALONE_EXIT_CODE_FAIL\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "JERRY_STANDALONE_EXIT_CODE_FAIL\n");
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
@@ -252,27 +254,30 @@ int jerryscript_entry (int argc, char *argv[])
 }
 
 /**
- * Provide log message to filestream implementation for the engine.
+ * Provide console message implementation for the engine.
  */
-int jerry_port_logmsg (FILE* stream, const char* format, ...)
+void
+jerry_port_console (const char *format, /**< format string */
+                    ...) /**< parameters */
 {
   va_list args;
-  int count;
   va_start (args, format);
-  count = vfprintf (stream, format, args);
+  vfprintf (stdout, format, args);
   va_end (args);
-  return count;
-}
+} /* jerry_port_console */
 
 /**
- * Provide error message to console implementation for the engine.
+ * Provide log message implementation for the engine.
  */
-int jerry_port_errormsg (const char* format, ...)
+void
+jerry_port_log (jerry_log_level_t level, /**< log level */
+                const char *format, /**< format string */
+                ...)  /**< parameters */
 {
+  (void) level; /* ignore the log level */
+
   va_list args;
-  int count;
   va_start (args, format);
-  count = vfprintf (stderr, format, args);
+  vfprintf (stderr, format, args);
   va_end (args);
-  return count;
-}
+} /* jerry_port_log */

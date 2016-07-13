@@ -86,11 +86,6 @@ static const char *wrong_args_msg_p = "wrong type of argument";
  */
 int jerry_debug_level = 0;
 
-/**
- * File, used for logging
- */
-FILE *jerry_log_file = NULL;
-
 #endif /* JERRY_ENABLE_LOG */
 
 /**

@@ -48,14 +48,14 @@ read_file (const char *file_name,
   FILE *file = fopen (file_name, "r");
   if (file == NULL)
   {
-    jerry_port_errormsg ("Error: failed to open file: %s\n", file_name);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name);
     return NULL;
   }
 
   size_t bytes_read = fread (buffer, 1u, sizeof (buffer), file);
   if (!bytes_read)
   {
-    jerry_port_errormsg ("Error: failed to read file: %s\n", file_name);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name);
     fclose (file);
     return NULL;
   }
@@ -85,7 +85,7 @@ assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< f
   }
   else
   {
-    jerry_port_errormsg ("Script error: assertion failed\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script error: assertion failed\n");
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
 } /* assert_handler */
@@ -114,7 +114,6 @@ print_help (char *name)
           "  --save-snapshot-for-eval FILE\n"
           "  --exec-snapshot FILE\n"
           "  --log-level [0-3]\n"
-          "  --log-file FILE\n"
           "  --abort-on-fail\n"
           "\n",
           name);
@@ -126,8 +125,10 @@ main (int argc,
 {
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
-    jerry_port_errormsg ("Error: too many command line arguments: %d (JERRY_MAX_COMMAND_LINE_ARGS=%d)\n",
-                         argc, JERRY_MAX_COMMAND_LINE_ARGS);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                    "Error: too many command line arguments: %d (JERRY_MAX_COMMAND_LINE_ARGS=%d)\n",
+                    argc,
+                    JERRY_MAX_COMMAND_LINE_ARGS);
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
@@ -154,9 +155,6 @@ main (int argc,
 
   bool is_repl_mode = false;
 
-#ifdef JERRY_ENABLE_LOG
-  const char *log_file_name = NULL;
-#endif /* JERRY_ENABLE_LOG */
   for (i = 1; i < argc; i++)
   {
     if (!strcmp ("-h", argv[i]) || !strcmp ("--help", argv[i]))
@@ -193,14 +191,14 @@ main (int argc,
 
       if (save_snapshot_file_name_p != NULL)
       {
-        jerry_port_errormsg ("Error: snapshot file name already specified\n");
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: snapshot file name already specified\n");
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
       if (++i >= argc)
       {
-        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: no file specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -211,7 +209,7 @@ main (int argc,
     {
       if (++i >= argc)
       {
-        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: no file specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -223,14 +221,14 @@ main (int argc,
     {
       if (++i >= argc)
       {
-        jerry_port_errormsg ("Error: no level specified for %s\n", argv[i - 1]);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: no level specified for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
       if (strlen (argv[i]) != 1 || argv[i][0] < '0' || argv[i][0] > '3')
       {
-        jerry_port_errormsg ("Error: wrong format for %s\n", argv[i - 1]);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: wrong format for %s\n", argv[i - 1]);
         print_usage (argv[0]);
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -240,27 +238,13 @@ main (int argc,
       jerry_debug_level = argv[i][0] - '0';
 #endif /* JERRY_ENABLE_LOG */
     }
-    else if (!strcmp ("--log-file", argv[i]))
-    {
-      if (++i >= argc)
-      {
-        jerry_port_errormsg ("Error: no file specified for %s\n", argv[i - 1]);
-        print_usage (argv[0]);
-        return JERRY_STANDALONE_EXIT_CODE_FAIL;
-      }
-
-#ifdef JERRY_ENABLE_LOG
-      flags |= JERRY_INIT_ENABLE_LOG;
-      log_file_name = argv[i];
-#endif /* JERRY_ENABLE_LOG */
-    }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {
       jerry_port_default_set_abort_on_fail (true);
     }
     else if (!strncmp ("-", argv[i], 1))
     {
-      jerry_port_errormsg ("Error: unrecognized option: %s\n", argv[i]);
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: unrecognized option: %s\n", argv[i]);
       print_usage (argv[0]);
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
@@ -274,13 +258,15 @@ main (int argc,
   {
     if (files_counter != 1)
     {
-      jerry_port_errormsg ("Error: --save-snapshot argument works with exactly one script\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                      "Error: --save-snapshot argument works with exactly one script\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
     if (exec_snapshots_count != 0)
     {
-      jerry_port_errormsg ("Error: --save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                      "Error: --save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -290,22 +276,6 @@ main (int argc,
   {
     is_repl_mode = true;
   }
-
-#ifdef JERRY_ENABLE_LOG
-  if (log_file_name)
-  {
-    jerry_log_file = fopen (log_file_name, "w");
-    if (jerry_log_file == NULL)
-    {
-      jerry_port_errormsg ("Error: failed to open log file: %s\n", log_file_name);
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
-  }
-  else
-  {
-    jerry_log_file = stdout;
-  }
-#endif /* JERRY_ENABLE_LOG */
 
   jerry_init (flags);
 
@@ -321,7 +291,7 @@ main (int argc,
 
   if (!is_assert_added)
   {
-    jerry_port_errormsg ("Warning: failed to register 'assert' method.");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Warning: failed to register 'assert' method.");
   }
 
   jerry_value_t ret_value = jerry_create_undefined ();
@@ -466,14 +436,6 @@ main (int argc,
     jerry_release_value (print_function);
   }
 
-#ifdef JERRY_ENABLE_LOG
-  if (jerry_log_file && jerry_log_file != stdout)
-  {
-    fclose (jerry_log_file);
-    jerry_log_file = NULL;
-  }
-#endif /* JERRY_ENABLE_LOG */
-
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
   if (jerry_value_has_error_flag (ret_value))
@@ -489,7 +451,7 @@ main (int argc,
     assert (sz == err_str_size);
     err_str_buf[err_str_size] = 0;
 
-    jerry_port_errormsg ("Script Error: unhandled exception: %s\n", err_str_buf);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: unhandled exception: %s\n", err_str_buf);
 
     jerry_release_value (err_str_val);
 

@@ -29,12 +29,6 @@ extern "C"
  * @{
  */
 
-/**
- * Target port functions for console output
- */
-int jerry_port_logmsg (FILE *stream, const char *format, ...);
-int jerry_port_errormsg (const char *format, ...);
-
 /*
  * Termination Port API
  *
@@ -70,6 +64,54 @@ typedef enum
  * Example: a libc-based port may implement this with exit() or abort(), or both.
  */
 void jerry_port_fatal (jerry_fatal_code_t code);
+
+/*
+ *  I/O Port API
+ */
+
+/**
+ * Print a string to the console. The function should implement a printf-like
+ * interface, where the first argument specifies a format string on how to
+ * stringify the rest of the parameter list.
+ *
+ * This function is only called with strings coming from the executed ECMAScript
+ * wanting to print something as the result of its normal operation.
+ *
+ * It should be the port that decides what a "console" is.
+ *
+ * Example: a libc-based port may implement this with vprintf().
+ */
+void jerry_port_console (const char *format, ...);
+
+/**
+ * Jerry log levels. The levels are in severity order
+ * where the most serious levels come first.
+ */
+typedef enum
+{
+  JERRY_LOG_LEVEL_ERROR,    /**< the engine will terminate after the message is printed */
+  JERRY_LOG_LEVEL_WARNING,  /**< a request is aborted, but the engine continues its operation */
+  JERRY_LOG_LEVEL_DEBUG,    /**< debug messages from the engine, low volume */
+  JERRY_LOG_LEVEL_TRACE     /**< detailed info about engine internals, potentially high volume */
+} jerry_log_level_t;
+
+/**
+ * Display or log a debug/error message. The function should implement a printf-like
+ * interface, where the first argument specifies the log level
+ * and the second argument specifies a format string on how to stringify the rest
+ * of the parameter list.
+ *
+ * This function is only called with messages coming from the jerry engine as
+ * the result of some abnormal operation or describing its internal operations
+ * (e.g., data structure dumps or tracing info).
+ *
+ * It should be the port that decides whether error and debug messages are logged to
+ * the console, or saved to a database or to a file.
+ *
+ * Example: a libc-based port may implement this with vfprintf(stderr) or
+ * vfprintf(logfile), or both, depending on log level.
+ */
+void jerry_port_log (jerry_log_level_t level, const char *format, ...);
 
 /*
  * Date Port API

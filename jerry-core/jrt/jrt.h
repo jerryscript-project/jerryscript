@@ -86,9 +86,9 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
 #define JERRY_LOG(lvl, ...) \
   do \
   { \
-    if (lvl <= jerry_debug_level && jerry_log_file) \
+    if (lvl <= jerry_debug_level) \
     { \
-      jerry_port_logmsg (jerry_log_file, __VA_ARGS__); \
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__); \
     } \
   } \
   while (0)
@@ -109,8 +109,8 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
 #define JERRY_DDDLOG(...) JERRY_DLOG (__VA_ARGS__)
 #endif /* JERRY_ENABLE_LOG */
 
-#define JERRY_ERROR_MSG(...) jerry_port_errormsg (__VA_ARGS__)
-#define JERRY_WARNING_MSG(...) JERRY_ERROR_MSG (__VA_ARGS__)
+#define JERRY_ERROR_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
 
 /**
  * Mark for unreachable points and unimplemented cases

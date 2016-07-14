@@ -74,29 +74,19 @@ ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
-  switch (type)
+  if (unlikely (type == ECMA_OBJECT_TYPE_ARGUMENTS))
   {
-    case ECMA_OBJECT_TYPE_GENERAL:
-    case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_ARRAY:
-    case ECMA_OBJECT_TYPE_STRING:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    {
-      return ecma_op_general_object_get (obj_p, property_name_p);
-    }
-
-    case ECMA_OBJECT_TYPE_ARGUMENTS:
-    {
-      return ecma_op_arguments_object_get (obj_p, property_name_p);
-    }
-    default:
-    {
-      JERRY_ASSERT (false);
-
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-    }
+    return ecma_op_arguments_object_get (obj_p, property_name_p);
   }
+
+  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL
+                || type == ECMA_OBJECT_TYPE_FUNCTION
+                || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
+                || type == ECMA_OBJECT_TYPE_ARRAY
+                || type == ECMA_OBJECT_TYPE_STRING
+                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+  return ecma_op_general_object_get (obj_p, property_name_p);
 } /* ecma_op_object_get */
 
 /**

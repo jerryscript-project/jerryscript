@@ -15,6 +15,7 @@
  */
 
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -106,9 +107,24 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       ecma_property_t *property_p = ecma_op_object_get_property (binding_obj_p, name_p);
 
-      if (property_p != NULL)
+      if (likely (property_p != NULL))
       {
-        return ecma_op_object_get (binding_obj_p, name_p);
+        if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+        {
+          return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+        }
+
+        ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (property_p);
+
+        if (getter_p == NULL)
+        {
+          return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        }
+
+        return ecma_op_function_call (getter_p,
+                                      ecma_make_object_value (binding_obj_p),
+                                      NULL,
+                                      0);
       }
     }
 

@@ -93,30 +93,31 @@ assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< f
 static void
 print_usage (char *name)
 {
-  printf ("Usage: %s [OPTION]... [FILE]...\n"
-          "Try '%s --help' for more information.\n",
-          name, name);
+  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
+                      "Try '%s --help' for more information.\n",
+                      name,
+                      name);
 } /* print_usage */
 
 static void
 print_help (char *name)
 {
-  printf ("Usage: %s [OPTION]... [FILE]...\n"
-          "\n"
-          "Options:\n"
-          "  -h, --help\n"
-          "  -v, --version\n"
-          "  --mem-stats\n"
-          "  --mem-stats-separate\n"
-          "  --parse-only\n"
-          "  --show-opcodes\n"
-          "  --save-snapshot-for-global FILE\n"
-          "  --save-snapshot-for-eval FILE\n"
-          "  --exec-snapshot FILE\n"
-          "  --log-level [0-3]\n"
-          "  --abort-on-fail\n"
-          "\n",
-          name);
+  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
+                      "\n"
+                      "Options:\n"
+                      "  -h, --help\n"
+                      "  -v, --version\n"
+                      "  --mem-stats\n"
+                      "  --mem-stats-separate\n"
+                      "  --parse-only\n"
+                      "  --show-opcodes\n"
+                      "  --save-snapshot-for-global FILE\n"
+                      "  --save-snapshot-for-eval FILE\n"
+                      "  --exec-snapshot FILE\n"
+                      "  --log-level [0-3]\n"
+                      "  --abort-on-fail\n"
+                      "\n",
+                      name);
 } /* print_help */
 
 int
@@ -164,16 +165,18 @@ main (int argc,
     }
     else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
     {
-      printf ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
+      jerry_port_console ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
       return JERRY_STANDALONE_EXIT_CODE_OK;
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS;
+      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS_SEPARATE;
+      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {
@@ -182,6 +185,7 @@ main (int argc,
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_INIT_SHOW_OPCODES;
+      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))
@@ -396,7 +400,7 @@ main (int argc,
       uint8_t *source_buffer_tail = buffer;
       size_t len = 0;
 
-      printf ("%s", prompt);
+      jerry_port_console ("%s", prompt);
 
       /* Read a line */
       while (true)

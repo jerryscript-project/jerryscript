@@ -170,13 +170,13 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
       name_p = cbc_ext_names[PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode)];
     }
 
-    printf ("  [%3d] %s", (int) context_p->stack_depth, name_p);
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  [%3d] %s", (int) context_p->stack_depth, name_p);
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {
       uint16_t literal_index = context_p->last_cbc.literal_index;
       lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-      printf (" idx:%d->", literal_index);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d->", literal_index);
       util_print_literal (literal_p);
     }
 
@@ -184,7 +184,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
     {
       uint16_t literal_index = context_p->last_cbc.value;
       lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-      printf (" idx:%d->", literal_index);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d->", literal_index);
       util_print_literal (literal_p);
 
       if (!(flags & CBC_HAS_LITERAL_ARG))
@@ -192,17 +192,17 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
         literal_index = context_p->last_cbc.third_literal_index;
 
         lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-        printf (" idx:%d->", literal_index);
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d->", literal_index);
         util_print_literal (literal_p);
       }
     }
 
     if (flags & CBC_HAS_BYTE_ARG)
     {
-      printf (" byte_arg:%d", (int) context_p->last_cbc.value);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " byte_arg:%d", (int) context_p->last_cbc.value);
     }
 
-    printf ("\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -327,7 +327,11 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
       real_value = -real_value;
     }
 
-    printf ("  [%3d] %s number:%d\n", (int) context_p->stack_depth, cbc_names[opcode], real_value);
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG,
+                    "  [%3d] %s number:%d\n",
+                    (int) context_p->stack_depth,
+                    cbc_names[opcode],
+                    real_value);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -391,11 +395,11 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
   {
     if (extra_byte_code_increase == 0)
     {
-      printf ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_names[opcode]);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  [%3d] %s\n", (int) context_p->stack_depth, cbc_names[opcode]);
     }
     else
     {
-      printf ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_ext_names[opcode]);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  [%3d] %s\n", (int) context_p->stack_depth, cbc_ext_names[opcode]);
     }
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
@@ -506,7 +510,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    printf ("  [%3d] %s\n", (int) context_p->stack_depth, name);
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  [%3d] %s\n", (int) context_p->stack_depth, name);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 

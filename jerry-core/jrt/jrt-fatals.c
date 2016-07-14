@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +34,13 @@ void __noreturn
 jerry_fatal (jerry_fatal_code_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  printf ("Error: ");
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ");
 
   switch (code)
   {
     case ERR_OUT_OF_MEMORY:
     {
-      printf ("ERR_OUT_OF_MEMORY\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -49,17 +50,17 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_REF_COUNT_LIMIT:
     {
-      printf ("ERR_REF_COUNT_LIMIT\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_REF_COUNT_LIMIT\n");
       break;
     }
     case ERR_UNIMPLEMENTED_CASE:
     {
-      printf ("ERR_UNIMPLEMENTED_CASE\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_UNIMPLEMENTED_CASE\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }
@@ -83,8 +84,12 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
-          assertion, file, function, (unsigned long) line);
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                  "ICE: Assertion '%s' failed at %s(%s):%lu.\n",
+                  assertion,
+                  file,
+                  function,
+                  (unsigned long) line);
 #else /* JERRY_NDEBUG */
   (void) assertion;
   (void) file;
@@ -106,7 +111,11 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
                    const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("ICE: Unreachable control path at %s(%s):%lu was executed", file, function, (unsigned long) line);
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                  "ICE: Unreachable control path at %s(%s):%lu was executed",
+                  file,
+                  function,
+                  (unsigned long) line);
 #else /* JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -115,9 +124,10 @@ jerry_unreachable (const char *comment, /**< comment to unreachable mark if exis
 
   if (comment != NULL)
   {
-    printf ("(%s)", comment);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "(%s)", comment);
   }
-  printf (".\n");
+
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, ".\n");
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
@@ -133,7 +143,11 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
                      const uint32_t line) /**< line */
 {
 #ifndef JERRY_NDEBUG
-  printf ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                  "SORRY: Unimplemented case at %s(%s):%lu was executed",
+                  file,
+                  function,
+                  (unsigned long) line);
 #else /* JERRY_NDEBUG */
   (void) file;
   (void) function;
@@ -142,9 +156,10 @@ jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if 
 
   if (comment != NULL)
   {
-    printf ("(%s)", comment);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "(%s)", comment);
   }
-  printf (".\n");
+
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, ".\n");
 
   jerry_fatal (ERR_UNIMPLEMENTED_CASE);
 } /* jerry_unimplemented */

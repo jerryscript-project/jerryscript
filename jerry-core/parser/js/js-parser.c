@@ -873,35 +873,35 @@ parse_print_literal (ecma_compiled_code_t *compiled_code_p, /**< compiled code *
 
       if (literal_index == const_literal_end)
       {
-        printf (" idx:%d(self)->function", literal_index);
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d(self)->function", literal_index);
         break;
       }
 
       JERRY_ASSERT (literal_index < argument_end);
-      printf (" idx:%d(arg)->undefined", literal_index);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d(arg)->undefined", literal_index);
       break;
     }
 
     if (literal_p->prop.index == literal_index
         && literal_p->type != LEXER_UNUSED_LITERAL)
     {
-      printf (" idx:%d", literal_index);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " idx:%d", literal_index);
 
       if (literal_index < argument_end)
       {
-        printf ("(arg)->");
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "(arg)->");
       }
       else if (literal_index < register_end)
       {
-        printf ("(reg)->");
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "(reg)->");
       }
       else if (literal_index < ident_end)
       {
-        printf ("(ident)->");
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "(ident)->");
       }
       else
       {
-        printf ("(lit)->");
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "(lit)->");
       }
 
       util_print_literal (literal_p);
@@ -946,14 +946,14 @@ parse_print_define_vars (ecma_compiled_code_t *compiled_code_p, /**< compiled co
 
   PARSER_READ_IDENTIFIER_INDEX (identifier_end);
 
-  printf (" from: %d to: %d\n", identifier_index, identifier_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " from: %d to: %d\n", identifier_index, identifier_end);
 
   while (identifier_index <= identifier_end)
   {
-    printf ("        ");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "        ");
     parse_print_literal (compiled_code_p, identifier_index, literal_pool_p);
     identifier_index++;
-    printf ("\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n");
   }
 
   return byte_code_p;
@@ -977,21 +977,21 @@ parse_print_initialize_vars (ecma_compiled_code_t *compiled_code_p, /**< compile
   PARSER_READ_IDENTIFIER_INDEX (identifier_index);
   PARSER_READ_IDENTIFIER_INDEX (identifier_end);
 
-  printf (" from: %d to: %d\n", identifier_index, identifier_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " from: %d to: %d\n", identifier_index, identifier_end);
 
   while (identifier_index <= identifier_end)
   {
     uint16_t literal_index;
 
-    printf ("        ");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "        ");
     parse_print_literal (compiled_code_p, identifier_index, literal_pool_p);
-    printf (" =");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " =");
 
     PARSER_READ_IDENTIFIER_INDEX (literal_index);
 
     parse_print_literal (compiled_code_p, literal_index, literal_pool_p);
     identifier_index++;
-    printf ("\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n");
   }
 
   return byte_code_p;
@@ -1039,48 +1039,50 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     literal_end = args->literal_end;
   }
 
-  printf ("\nFinal byte code dump:\n\n  Maximum stack depth: %d\n  Flags: [", (int) stack_limit);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG,
+                  "\nFinal byte code dump:\n\n  Maximum stack depth: %d\n  Flags: [",
+                  (int) stack_limit);
 
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
   {
-    printf ("small_lit_enc");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "small_lit_enc");
     encoding_limit = 255;
     encoding_delta = 0xfe01;
   }
   else
   {
-    printf ("full_lit_enc");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "full_lit_enc");
     encoding_limit = 128;
     encoding_delta = 0x8000;
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
-    printf (",uint16_arguments");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ",uint16_arguments");
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
   {
-    printf (",strict_mode");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ",strict_mode");
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
   {
-    printf (",arguments_needed");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ",arguments_needed");
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED)
   {
-    printf (",no_lexical_env");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ",no_lexical_env");
   }
 
-  printf ("]\n");
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "]\n");
 
-  printf ("  Argument range end: %d\n", (int) argument_end);
-  printf ("  Register range end: %d\n", (int) register_end);
-  printf ("  Identifier range end: %d\n", (int) ident_end);
-  printf ("  Const literal range end: %d\n", (int) const_literal_end);
-  printf ("  Literal range end: %d\n\n", (int) literal_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Argument range end: %d\n", (int) argument_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Register range end: %d\n", (int) register_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Identifier range end: %d\n", (int) ident_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Const literal range end: %d\n", (int) const_literal_end);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Literal range end: %d\n\n", (int) literal_end);
 
   byte_code_start_p = (uint8_t *) compiled_code_p;
 
@@ -1110,7 +1112,7 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     if (opcode != CBC_EXT_OPCODE)
     {
       flags = cbc_flags[opcode];
-      printf (" %3d : %s", (int) cbc_offset, cbc_names[opcode]);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " %3d : %s", (int) cbc_offset, cbc_names[opcode]);
       byte_code_p++;
 
       if (opcode == CBC_INITIALIZE_VARS)
@@ -1136,14 +1138,14 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       if (opcode == CBC_PUSH_NUMBER_POS_BYTE)
       {
         int value = *byte_code_p++;
-        printf (" number:%d\n", value + 1);
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " number:%d\n", value + 1);
         continue;
       }
 
       if (opcode == CBC_PUSH_NUMBER_NEG_BYTE)
       {
         int value = *byte_code_p++;
-        printf (" number:%d\n", -(value + 1));
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " number:%d\n", -(value + 1));
         continue;
       }
     }
@@ -1151,7 +1153,7 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     {
       ext_opcode = (cbc_ext_opcode_t) byte_code_p[1];
       flags = cbc_ext_flags[ext_opcode];
-      printf (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
       byte_code_p += 2;
     }
 
@@ -1179,7 +1181,7 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
     if (flags & CBC_HAS_BYTE_ARG)
     {
-      printf (" byte_arg:%d", *byte_code_p);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " byte_arg:%d", *byte_code_p);
       byte_code_p++;
     }
 
@@ -1201,14 +1203,15 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
       if (CBC_BRANCH_IS_FORWARD (flags))
       {
-        printf (" offset:%d(->%d)", (int) offset, (int) (cbc_offset + offset));
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " offset:%d(->%d)", (int) offset, (int) (cbc_offset + offset));
       }
       else
       {
-        printf (" offset:%d(->%d)", (int) offset, (int) (cbc_offset - offset));
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, " offset:%d(->%d)", (int) offset, (int) (cbc_offset - offset));
       }
     }
-    printf ("\n");
+
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n");
   }
 } /* parse_print_final_cbc */
 
@@ -1685,7 +1688,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     lexer_literal_t *literal_p;
 
     parse_print_final_cbc (compiled_code_p, &context_p->literal_pool, length);
-    printf ("\nByte code size: %d bytes\n", (int) length);
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\nByte code size: %d bytes\n", (int) length);
     context_p->total_byte_code_size += (uint32_t) length;
 
     parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
@@ -1856,7 +1859,7 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
 
   if (context.is_show_opcodes)
   {
-    printf ("\n--- Script parsing start ---\n\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n--- Script parsing start ---\n\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -1890,8 +1893,9 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
 #ifdef PARSER_DUMP_BYTE_CODE
     if (context.is_show_opcodes)
     {
-      printf ("\nScript parsing successfully completed. Total byte code size: %d bytes\n",
-              (int) context.total_byte_code_size);
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG,
+                      "\nScript parsing successfully completed. Total byte code size: %d bytes\n",
+                      (int) context.total_byte_code_size);
     }
 #endif /* PARSER_DUMP_BYTE_CODE */
   }
@@ -1924,7 +1928,7 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context.is_show_opcodes)
   {
-    printf ("\n--- Script parsing end ---\n\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n--- Script parsing end ---\n\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -1993,7 +1997,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    printf ("\n--- Function parsing start ---\n\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n--- Function parsing start ---\n\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -2140,7 +2144,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   if (context_p->is_show_opcodes
       && (context_p->status_flags & PARSER_HAS_NON_STRICT_ARG))
   {
-    printf ("  Note: legacy (non-strict) argument definition\n\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Note: legacy (non-strict) argument definition\n\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -2156,7 +2160,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    printf ("\n--- Function parsing end ---\n\n");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "\n--- Function parsing end ---\n\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 

@@ -51,7 +51,7 @@
 /**
  * The implementation-defined Global object's 'print' routine
  *
- * The routine converts all of its arguments to strings and outputs them using 'printf'.
+ * The routine converts all of its arguments to strings and outputs them using 'jerry_port_console'.
  *
  * Code points, with except of NUL character, that are representable with one utf8-byte
  * are outputted as is, using "%c" format argument, and other code points are outputted as "\uhhll",
@@ -67,8 +67,6 @@ ecma_builtin_global_object_print (ecma_value_t this_arg, /**< this argument */
 {
   JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* TODO: Move the 'print' routine out of engine core. */
 
   for (ecma_length_t arg_index = 0;
        ecma_is_value_empty (ret_value) && arg_index < args_number;
@@ -97,11 +95,11 @@ ecma_builtin_global_object_print (ecma_value_t this_arg, /**< this argument */
 
       if (code_unit == LIT_CHAR_NULL)
       {
-        printf ("\\u0000");
+        jerry_port_console ("\\u0000");
       }
       else if (code_unit <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
       {
-        printf ("%c", (char) code_unit);
+        jerry_port_console ("%c", (char) code_unit);
       }
       else
       {
@@ -115,13 +113,13 @@ ecma_builtin_global_object_print (ecma_value_t this_arg, /**< this argument */
                                                               0,
                                                               JERRY_BITSINBYTE);
 
-        printf ("\\u%02x%02x", byte_high, byte_low);
+        jerry_port_console ("\\u%02x%02x", byte_high, byte_low);
       }
     }
 
     if (arg_index < args_number - 1)
     {
-      printf (" ");
+      jerry_port_console (" ");
     }
 
     JMEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
@@ -129,7 +127,7 @@ ecma_builtin_global_object_print (ecma_value_t this_arg, /**< this argument */
     ECMA_FINALIZE (str_value);
   }
 
-  printf ("\n");
+  jerry_port_console ("\n");
 
   if (ecma_is_value_empty (ret_value))
   {

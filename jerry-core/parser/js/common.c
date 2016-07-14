@@ -59,7 +59,7 @@ util_print_chars (const uint8_t *char_p, /**< character pointer */
 {
   while (size > 0)
   {
-    printf ("%c", *char_p++);
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "%c", *char_p++);
     size--;
   }
 } /* util_print_chars */
@@ -73,7 +73,7 @@ util_print_number (ecma_number_t num_p) /**< number to print */
   lit_utf8_byte_t str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
   lit_utf8_size_t str_size = ecma_number_to_utf8_string (num_p, str_buf, sizeof (str_buf));
   str_buf[str_size] = 0;
-  printf ("%s", str_buf);
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "%s", str_buf);
 } /* util_print_number */
 
 /**
@@ -86,22 +86,22 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (literal_p->status_flags & LEXER_FLAG_VAR)
     {
-      printf ("var_ident(");
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "var_ident(");
     }
     else
     {
-      printf ("ident(");
+      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "ident(");
     }
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_FUNCTION_LITERAL)
   {
-    printf ("function");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "function");
     return;
   }
   else if (literal_p->type == LEXER_STRING_LITERAL)
   {
-    printf ("string(");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "string(");
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_NUMBER_LITERAL)
@@ -110,21 +110,21 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
 
     JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
 
-    printf ("number(");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "number(");
     util_print_number (ecma_get_number_from_value (value_p->u.lit_number));
   }
   else if (literal_p->type == LEXER_REGEXP_LITERAL)
   {
-    printf ("regexp");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "regexp");
     return;
   }
   else
   {
-    printf ("unknown");
+    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "unknown");
     return;
   }
 
-  printf (")");
+  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ")");
 } /* util_print_literal */
 
 #endif /* PARSER_DUMP_BYTE_CODE */

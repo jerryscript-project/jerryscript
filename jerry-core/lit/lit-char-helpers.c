@@ -482,13 +482,6 @@ lit_char_to_lower_case (ecma_char_t character, /**< input character value */
     return 1;
   }
 
-  if (character == 0x130)
-  {
-    output_buffer_p[0] = LIT_CHAR_LOWERCASE_I;
-    output_buffer_p[1] = 0x307;
-    return 2;
-  }
-
   output_buffer_p[0] = character;
   return 1;
 } /* lit_char_to_lower_case */
@@ -514,21 +507,6 @@ lit_char_to_upper_case (ecma_char_t character, /**< input character value */
   {
     output_buffer_p[0] = (ecma_char_t) (character - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
     return 1;
-  }
-
-  if (character == 0xdf)
-  {
-    output_buffer_p[0] = LIT_CHAR_UPPERCASE_S;
-    output_buffer_p[1] = LIT_CHAR_UPPERCASE_S;
-    return 2;
-  }
-
-  if (character == 0x1fd7)
-  {
-    output_buffer_p[0] = 0x399;
-    output_buffer_p[1] = 0x308;
-    output_buffer_p[2] = 0x342;
-    return 3;
   }
 
   output_buffer_p[0] = character;

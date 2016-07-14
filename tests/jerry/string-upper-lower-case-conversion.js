@@ -20,14 +20,6 @@ assert ("0123456789abcdefghijklmnopqrstuvwxzyABCDEFGHIJKLMNOPQRSTUVWXYZ".toLower
 assert ("0123456789abcdefghijklmnopqrstuvwxzyABCDEFGHIJKLMNOPQRSTUVWXYZ".toUpperCase()
         == "0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
-assert ("\u0130".toLowerCase() == "i\u0307");
-assert ("\xdf".toUpperCase() == "SS");
-assert ("\u1fd7".toUpperCase() == "\u0399\u0308\u0342");
-
-assert ("H\u0130-+".toLowerCase() == "hi\u0307-+");
-assert ("\xdf\u1fd7\xdf".toUpperCase() == "SS\u0399\u0308\u0342SS");
-assert ("\u0130\u0130\u0130".toLowerCase() == "i\u0307i\u0307i\u0307");
-
 // Although codepoint 0x10400 and 0x10428 are an upper-lowercase pair,
 // we must not do their conversion in JavaScript. We must also ignore
 // stray surrogates.

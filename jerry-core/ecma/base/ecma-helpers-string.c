@@ -554,27 +554,83 @@ bool
 ecma_string_get_array_index (const ecma_string_t *str_p, /**< ecma-string */
                              uint32_t *out_index_p) /**< [out] index */
 {
-  bool is_array_index = true;
-  if (ECMA_STRING_GET_CONTAINER (str_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  const ecma_string_container_t type = ECMA_STRING_GET_CONTAINER (str_p);
+
+  if (type == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
-    *out_index_p = str_p->u.uint32_number;
+    const uint32_t index = str_p->u.uint32_number;
+    *out_index_p = index;
+    return index != UINT32_MAX;
+  }
+  else if (type == ECMA_STRING_CONTAINER_MAGIC_STRING)
+  {
+    return false;
   }
   else
   {
-    ecma_number_t num = ecma_string_to_number (str_p);
-    *out_index_p = ecma_number_to_uint32 (num);
+    lit_utf8_size_t size;
+    const lit_utf8_byte_t *raw_str_p;
 
-    ecma_string_t *to_uint32_to_string_p = ecma_new_ecma_string_from_uint32 (*out_index_p);
+    if (unlikely (type == ECMA_STRING_CONTAINER_MAGIC_STRING_EX))
+    {
+      size = lit_get_magic_string_ex_size (str_p->u.magic_string_ex_id);
+      raw_str_p = lit_get_magic_string_ex_utf8 (str_p->u.magic_string_ex_id);
+    }
+    else
+    {
+      JERRY_ASSERT (type == ECMA_STRING_CONTAINER_HEAP_UTF8_STRING);
 
-    is_array_index = ecma_compare_ecma_strings (str_p,
-                                                to_uint32_to_string_p);
+      size = str_p->u.utf8_string.size;
+      raw_str_p = (const lit_utf8_byte_t *) (str_p + 1);
+    }
 
-    ecma_deref_ecma_string (to_uint32_to_string_p);
+    if (*raw_str_p == LIT_CHAR_0)
+    {
+      *out_index_p = 0;
+      return size == 1;
+    }
+
+    if (size > 10)
+    {
+      return false;
+    }
+
+    uint32_t index = 0;
+    const lit_utf8_size_t end = (size == 10) ? 9 : size;
+
+    for (lit_utf8_size_t i = 0; i < end; i++)
+    {
+      if (raw_str_p[i] > LIT_CHAR_9 || raw_str_p[i] < LIT_CHAR_0)
+      {
+        return false;
+      }
+
+      index = (index * 10) + (uint32_t) (raw_str_p[i] - LIT_CHAR_0);
+    }
+
+    if (size == 10)
+    {
+      if (index > UINT32_MAX / 10
+          || raw_str_p[9] > LIT_CHAR_9
+          || raw_str_p[9] < LIT_CHAR_0)
+      {
+        return false;
+      }
+
+      index *= 10;
+      const uint32_t digit = (uint32_t) (raw_str_p[9] - LIT_CHAR_0);
+
+      if (index >= UINT32_MAX - digit)
+      {
+        return false;
+      }
+
+      index += digit;
+    }
+
+    *out_index_p = index;
+    return true;
   }
-
-  is_array_index = is_array_index && (*out_index_p != ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX);
-
-  return is_array_index;
 } /* ecma_string_get_array_index */
 
 /**

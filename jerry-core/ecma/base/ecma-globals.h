@@ -778,14 +778,6 @@ typedef double ecma_number_t;
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 10
 
 /**
- * Maximum value of valid array index
- *
- * See also:
- *          ECMA-262 v5, 15.4
- */
-#define ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX ((uint32_t) (-1))
-
-/**
  * Description of a collection's header.
  */
 typedef struct

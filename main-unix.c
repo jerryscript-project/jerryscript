@@ -235,7 +235,7 @@ main (int argc,
 
 #ifdef JERRY_ENABLE_LOG
       flags |= JERRY_INIT_ENABLE_LOG;
-      jerry_debug_level = argv[i][0] - '0';
+      jerry_port_default_set_log_level (argv[i][0] - '0');
 #endif /* JERRY_ENABLE_LOG */
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))

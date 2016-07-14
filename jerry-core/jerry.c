@@ -79,15 +79,6 @@ static const char *wrong_args_msg_p = "wrong type of argument";
  * @{
  */
 
-#ifdef JERRY_ENABLE_LOG
-
-/**
- * Verbosity level of logging
- */
-int jerry_debug_level = 0;
-
-#endif /* JERRY_ENABLE_LOG */
-
 /**
  * Assert that it is correct to call API in current state.
  *

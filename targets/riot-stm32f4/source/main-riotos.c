@@ -16,7 +16,7 @@
 
 #include <string.h>
 #include "shell.h"
-#include "jerry.h"
+#include "jerry-api.h"
 
 /**
  * Jerryscript simple test
@@ -30,11 +30,9 @@ int test_jerry (int argc, char **argv)
   printf ("This test run the following script code: [%s]\n\n", script);
 
   size_t script_size = strlen ((const char *) script);
-  jerry_completion_code_t return_code = jerry_run_simple (script,
-                                                          script_size,
-                                                          JERRY_FLAG_EMPTY);
+  bool ret_value = jerry_run_simple (script, script_size, JERRY_INIT_EMPTY);
 
-  return return_code;
+  return (ret_value ? 1 : 0);
 } /* test_jerry */
 
 const shell_command_t shell_commands[] = {

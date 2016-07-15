@@ -187,30 +187,31 @@ foreach (const jerry_value_t name, /**< field name */
   jerry_size_t sz = jerry_string_to_char_buffer (name, (jerry_char_t *) str_buf_p, 128);
   str_buf_p[sz] = '\0';
 
-  if (sz == 0)
-  {
-    JERRY_ASSERT (!strncmp ((const char *) user_data, "user_data", 9));
-    return true;
-  }
+  JERRY_ASSERT (!strncmp ((const char *) user_data, "user_data", 9));
+  JERRY_ASSERT (sz > 0);
 
   if (!strncmp (str_buf_p, "alpha", (size_t) sz))
   {
     JERRY_ASSERT (jerry_value_is_number (value));
     JERRY_ASSERT (jerry_get_number_value (value) == 32.0);
+    return true;
   }
   else if (!strncmp (str_buf_p, "bravo", (size_t) sz))
   {
     JERRY_ASSERT (jerry_value_is_boolean (value));
     JERRY_ASSERT (jerry_get_boolean_value (value) == false);
+    return true;
   }
   else if (!strncmp (str_buf_p, "charlie", (size_t) sz))
   {
     JERRY_ASSERT (jerry_value_is_object (value));
+    return true;
   }
   else if (!strncmp (str_buf_p, "delta", (size_t) sz))
   {
     JERRY_ASSERT (jerry_value_is_number (value));
     JERRY_ASSERT (jerry_get_number_value (value) == 123.45);
+    return true;
   }
   else if (!strncmp (str_buf_p, "echo", (size_t) sz))
   {
@@ -220,6 +221,7 @@ foreach (const jerry_value_t name, /**< field name */
                                                         128);
     str_buf_p[echo_sz] = '\0';
     JERRY_ASSERT (!strncmp (str_buf_p, "foobar", (size_t) echo_sz));
+    return true;
   }
 
   JERRY_ASSERT (false);

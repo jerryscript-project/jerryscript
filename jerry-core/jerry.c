@@ -999,7 +999,7 @@ jerry_string_to_char_buffer (const jerry_value_t value, /**< input string value 
 
   ecma_string_t *str_p = ecma_get_string_from_value (value);
 
-  if (ecma_string_get_size (str_p) < buffer_size)
+  if (ecma_string_get_size (str_p) > buffer_size)
   {
     return 0;
   }

@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "jerry-core/jerry-port.h"
+
 /**
  * Provide console message implementation for the engine.
  */

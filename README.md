@@ -30,7 +30,7 @@ cd jerryscript
 make release.linux -j
 ```
 
-For additional information see [Getting Started](docs/GETTING-STARTED.md).
+For additional information see [Getting Started](docs/01.GETTING-STARTED.md).
 
 ## Documentation
 - [Getting Started](docs/01.GETTING-STARTED.md)

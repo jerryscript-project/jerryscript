@@ -275,30 +275,19 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     if (bytecode_p == NULL)
     {
       /* Missing bytecode means empty RegExp: '/(?:)/', so always return empty string. */
-      ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
-      ecma_object_t *result_array_obj_p = ecma_get_object_from_value (result_array);
-      ecma_string_t *input_str_p = ecma_get_string_from_value (input_str_value);
-      re_set_result_array_properties (result_array_obj_p,
-                                      input_str_p,
-                                      1,
-                                      0);
-
-      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (0);
       ecma_string_t *capture_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-      ECMA_TRY_CATCH (put_res_value,
-                      ecma_op_object_put (result_array_obj_p,
-                                          index_str_p,
-                                          ecma_make_string_value (capture_str_p),
-                                          true),
-                      ret_value);
+      ecma_value_t arguments_list[1];
+      arguments_list[0] = ecma_make_string_value (capture_str_p);
 
-      ret_value = result_array;
-
-      ECMA_FINALIZE (put_res_value)
+      ret_value = ecma_op_create_array_object (arguments_list, 1, false);
 
       ecma_deref_ecma_string (capture_str_p);
-      ecma_deref_ecma_string (index_str_p);
+
+      re_set_result_array_properties (ecma_get_object_from_value (ret_value),
+                                      ecma_get_string_from_value (input_str_value),
+                                      1,
+                                      0);
     }
     else
     {

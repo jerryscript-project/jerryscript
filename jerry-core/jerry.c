@@ -2266,13 +2266,13 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
   if (header_p->is_run_global)
   {
     ret_val = vm_run_global (bytecode_p);
+    ecma_bytecode_deref (bytecode_p);
   }
   else
   {
     ret_val = vm_run_eval (bytecode_p, false);
   }
 
-  ecma_bytecode_deref (bytecode_p);
   return ret_val;
 #else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   JERRY_UNUSED (snapshot_p);

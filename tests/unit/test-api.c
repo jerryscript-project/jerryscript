@@ -725,8 +725,7 @@ main (void)
   jerry_cleanup ();
 
   // Dump / execute snapshot
-  // FIXME: support save/load snapshot for optimized parser
-  if (false)
+  if (true)
   {
     static uint8_t global_mode_snapshot_buffer[1024];
     static uint8_t eval_mode_snapshot_buffer[1024];
@@ -760,8 +759,13 @@ main (void)
                                false);
 
     JERRY_ASSERT (!jerry_value_has_error_flag (res));
-    JERRY_ASSERT (jerry_value_is_undefined (res));
+    JERRY_ASSERT (jerry_value_is_string (res));
+    sz = jerry_get_string_size (res);
+    JERRY_ASSERT (sz == 20);
+    sz = jerry_string_to_char_buffer (res, (jerry_char_t *) buffer, sz);
+    JERRY_ASSERT (sz == 20);
     jerry_release_value (res);
+    JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
 
     res = jerry_exec_snapshot (eval_mode_snapshot_buffer,
                                eval_mode_snapshot_size,

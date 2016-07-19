@@ -69,7 +69,24 @@ typedef enum
 } jmem_free_unused_memory_severity_t;
 
 /**
- * A 'try give memory back' callback routine type.
+ *  Free region node
+ */
+typedef struct
+{
+  uint32_t next_offset; /* Offset of next region in list */
+  uint32_t size; /* Size of region */
+} jmem_heap_free_t;
+
+/**
+ * Node for free chunk list
+ */
+typedef struct mem_pools_chunk
+{
+  struct mem_pools_chunk *next_p; /* pointer to next pool chunk */
+} jmem_pools_chunk_t;
+
+/**
+ * A free memory callback routine type.
  */
 typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_severity_t);
 

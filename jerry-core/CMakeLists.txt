@@ -105,16 +105,16 @@ project (JerryCore C ASM)
 # Include directories
  set(INCLUDE_CORE
      ${CMAKE_SOURCE_DIR}/jerry-core
-     ${CMAKE_SOURCE_DIR}/jerry-core/lit
-     ${CMAKE_SOURCE_DIR}/jerry-core/rcs
-     ${CMAKE_SOURCE_DIR}/jerry-core/jmem
-     ${CMAKE_SOURCE_DIR}/jerry-core/vm
-     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/base
+     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
      ${CMAKE_SOURCE_DIR}/jerry-core/ecma/operations
+     ${CMAKE_SOURCE_DIR}/jerry-core/jcontext
+     ${CMAKE_SOURCE_DIR}/jerry-core/jmem
+     ${CMAKE_SOURCE_DIR}/jerry-core/jrt
+     ${CMAKE_SOURCE_DIR}/jerry-core/lit
      ${CMAKE_SOURCE_DIR}/jerry-core/parser/js
      ${CMAKE_SOURCE_DIR}/jerry-core/parser/regexp
-     ${CMAKE_SOURCE_DIR}/jerry-core/jrt)
+     ${CMAKE_SOURCE_DIR}/jerry-core/vm)
 
  # Third-party
   # Valgrind
@@ -123,29 +123,29 @@ project (JerryCore C ASM)
 # Sources
  # Jerry core
   file(GLOB SOURCE_CORE_API                   *.c)
-  file(GLOB SOURCE_CORE_LIT                   lit/*.c)
-  file(GLOB SOURCE_CORE_RCS                   rcs/*.c)
-  file(GLOB SOURCE_CORE_MEM                   jmem/*.c)
-  file(GLOB SOURCE_CORE_VM                    vm/*.c)
-  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
   file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)
+  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
   file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.c)
+  file(GLOB SOURCE_CORE_JCONTEXT              jcontext/*.c)
+  file(GLOB SOURCE_CORE_JMEM                  jmem/*.c)
+  file(GLOB SOURCE_CORE_JRT                   jrt/*.c)
+  file(GLOB SOURCE_CORE_LIT                   lit/*.c)
   file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.c)
   file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.c)
-  file(GLOB SOURCE_CORE_JRT                   jrt/*.c)
+  file(GLOB SOURCE_CORE_VM                    vm/*.c)
 
   set(SOURCE_CORE_FILES
       ${SOURCE_CORE_API}
-      ${SOURCE_CORE_LIT}
-      ${SOURCE_CORE_RCS}
-      ${SOURCE_CORE_MEM}
-      ${SOURCE_CORE_VM}
-      ${SOURCE_CORE_ECMA_BUILTINS}
       ${SOURCE_CORE_ECMA_BASE}
+      ${SOURCE_CORE_ECMA_BUILTINS}
       ${SOURCE_CORE_ECMA_OPERATIONS}
+      ${SOURCE_CORE_JCONTEXT}
+      ${SOURCE_CORE_JMEM}
+      ${SOURCE_CORE_JRT}
+      ${SOURCE_CORE_LIT}
       ${SOURCE_CORE_PARSER_JS}
       ${SOURCE_CORE_PARSER_REGEXP}
-      ${SOURCE_CORE_JRT})
+      ${SOURCE_CORE_VM})
 
  # Jerry port
  if(NOT ("${PORT_DIR}" STREQUAL ""))

@@ -18,19 +18,14 @@
  * Allocator implementation
  */
 
-#include "jrt.h"
-#include "jrt-libc-includes.h"
+#include "jcontext.h"
 #include "jmem-allocator.h"
 #include "jmem-heap.h"
 #include "jmem-poolman.h"
+#include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
-
-/**
- * The 'try to give memory back' callback
- */
-static jmem_free_unused_memory_callback_t jmem_free_unused_memory_callback = NULL;
 
 /**
  * Initialize memory allocators.
@@ -94,9 +89,9 @@ void
 jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
   /* Currently only one callback is supported */
-  JERRY_ASSERT (jmem_free_unused_memory_callback == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == NULL);
 
-  jmem_free_unused_memory_callback = callback;
+  JERRY_CONTEXT (jmem_free_unused_memory_callback) = callback;
 } /* jmem_register_free_unused_memory_callback */
 
 /**
@@ -106,9 +101,9 @@ void
 jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
   /* Currently only one callback is supported */
-  JERRY_ASSERT (jmem_free_unused_memory_callback == callback);
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == callback);
 
-  jmem_free_unused_memory_callback = NULL;
+  JERRY_CONTEXT (jmem_free_unused_memory_callback) = NULL;
 } /* jmem_unregister_free_unused_memory_callback */
 
 /**
@@ -117,9 +112,9 @@ jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t 
 void
 jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
-  if (jmem_free_unused_memory_callback != NULL)
+  if (JERRY_CONTEXT (jmem_free_unused_memory_callback) != NULL)
   {
-    jmem_free_unused_memory_callback (severity);
+    JERRY_CONTEXT (jmem_free_unused_memory_callback) (severity);
   }
 
   jmem_pools_collect_empty ();

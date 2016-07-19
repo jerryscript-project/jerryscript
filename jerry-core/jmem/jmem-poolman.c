@@ -18,11 +18,11 @@
  * Memory pool manager implementation
  */
 
-#include "jrt.h"
-#include "jrt-libc-includes.h"
+#include "jcontext.h"
 #include "jmem-allocator.h"
 #include "jmem-heap.h"
 #include "jmem-poolman.h"
+#include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
@@ -34,25 +34,7 @@
  * @{
  */
 
-/**
- * Node for free chunk list
- */
-typedef struct jmem_pools_chunk
-{
-  struct jmem_pools_chunk *next_p; /**< pointer to next pool chunk */
-} jmem_pools_chunk_t;
-
-/**
- * List of free pool chunks
- */
-jmem_pools_chunk_t *jmem_free_chunk_p;
-
 #ifdef JMEM_STATS
-
-/**
- * Pools' memory usage statistics
- */
-jmem_pools_stats_t jmem_pools_stats;
 
 static void jmem_pools_stat_init (void);
 static void jmem_pools_stat_free_pool (void);
@@ -107,7 +89,7 @@ jmem_pools_init (void)
   JERRY_STATIC_ASSERT (sizeof (jmem_pools_chunk_t) <= JMEM_POOL_CHUNK_SIZE,
                        size_of_mem_pools_chunk_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
 
-  jmem_free_chunk_p = NULL;
+  JERRY_CONTEXT (jmem_free_chunk_p) = NULL;
 
   JMEM_POOLS_STAT_INIT ();
 } /* jmem_pools_init */
@@ -120,7 +102,7 @@ jmem_pools_finalize (void)
 {
   jmem_pools_collect_empty ();
 
-  JERRY_ASSERT (jmem_free_chunk_p == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_chunk_p) == NULL);
 } /* jmem_pools_finalize */
 
 /**
@@ -136,15 +118,15 @@ jmem_pools_alloc (void)
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
 
-  if (jmem_free_chunk_p != NULL)
+  if (JERRY_CONTEXT (jmem_free_chunk_p) != NULL)
   {
-    const jmem_pools_chunk_t *const chunk_p = jmem_free_chunk_p;
+    const jmem_pools_chunk_t *const chunk_p = JERRY_CONTEXT (jmem_free_chunk_p);
 
     JMEM_POOLS_STAT_REUSE ();
 
     VALGRIND_DEFINED_SPACE (chunk_p, JMEM_POOL_CHUNK_SIZE);
 
-    jmem_free_chunk_p = chunk_p->next_p;
+    JERRY_CONTEXT (jmem_free_chunk_p) = chunk_p->next_p;
 
     VALGRIND_UNDEFINED_SPACE (chunk_p, JMEM_POOL_CHUNK_SIZE);
 
@@ -167,8 +149,8 @@ jmem_pools_free (void *chunk_p) /**< pointer to the chunk */
 
   VALGRIND_DEFINED_SPACE (chunk_to_free_p, JMEM_POOL_CHUNK_SIZE);
 
-  chunk_to_free_p->next_p = jmem_free_chunk_p;
-  jmem_free_chunk_p = chunk_to_free_p;
+  chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_chunk_p);
+  JERRY_CONTEXT (jmem_free_chunk_p) = chunk_to_free_p;
 
   VALGRIND_NOACCESS_SPACE (chunk_to_free_p, JMEM_POOL_CHUNK_SIZE);
 
@@ -181,15 +163,15 @@ jmem_pools_free (void *chunk_p) /**< pointer to the chunk */
 void
 jmem_pools_collect_empty ()
 {
-  while (jmem_free_chunk_p)
+  while (JERRY_CONTEXT (jmem_free_chunk_p))
   {
-    VALGRIND_DEFINED_SPACE (jmem_free_chunk_p, sizeof (jmem_pools_chunk_t));
-    jmem_pools_chunk_t *const next_p = jmem_free_chunk_p->next_p;
-    VALGRIND_NOACCESS_SPACE (jmem_free_chunk_p, sizeof (jmem_pools_chunk_t));
+    VALGRIND_DEFINED_SPACE (JERRY_CONTEXT (jmem_free_chunk_p), sizeof (jmem_pools_chunk_t));
+    jmem_pools_chunk_t *const next_p = JERRY_CONTEXT (jmem_free_chunk_p)->next_p;
+    VALGRIND_NOACCESS_SPACE (JERRY_CONTEXT (jmem_free_chunk_p), sizeof (jmem_pools_chunk_t));
 
-    jmem_heap_free_block (jmem_free_chunk_p, JMEM_POOL_CHUNK_SIZE);
+    jmem_heap_free_block (JERRY_CONTEXT (jmem_free_chunk_p), JMEM_POOL_CHUNK_SIZE);
     JMEM_POOLS_STAT_DEALLOC ();
-    jmem_free_chunk_p = next_p;
+    JERRY_CONTEXT (jmem_free_chunk_p) = next_p;
   }
 } /* jmem_pools_collect_empty */
 
@@ -202,7 +184,7 @@ jmem_pools_get_stats (jmem_pools_stats_t *out_pools_stats_p) /**< [out] pools' s
 {
   JERRY_ASSERT (out_pools_stats_p != NULL);
 
-  *out_pools_stats_p = jmem_pools_stats;
+  *out_pools_stats_p = JERRY_CONTEXT (jmem_pools_stats);
 } /* jmem_pools_get_stats */
 
 /**
@@ -211,7 +193,7 @@ jmem_pools_get_stats (jmem_pools_stats_t *out_pools_stats_p) /**< [out] pools' s
 void
 jmem_pools_stats_reset_peak (void)
 {
-  jmem_pools_stats.peak_pools_count = jmem_pools_stats.pools_count;
+  JERRY_CONTEXT (jmem_pools_stats).peak_pools_count = JERRY_CONTEXT (jmem_pools_stats.pools_count);
 } /* jmem_pools_stats_reset_peak */
 
 /**
@@ -220,6 +202,8 @@ jmem_pools_stats_reset_peak (void)
 void
 jmem_pools_stats_print (void)
 {
+  jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
+
   printf ("Pools stats:\n"
           "  Chunk size: %zu\n"
           "  Pool chunks: %zu\n"
@@ -227,11 +211,11 @@ jmem_pools_stats_print (void)
           "  Free chunks: %zu\n"
           "  Pool reuse ratio: %zu.%04zu\n",
           JMEM_POOL_CHUNK_SIZE,
-          jmem_pools_stats.pools_count,
-          jmem_pools_stats.peak_pools_count,
-          jmem_pools_stats.free_chunks,
-          jmem_pools_stats.reused_count / jmem_pools_stats.new_alloc_count,
-          jmem_pools_stats.reused_count % jmem_pools_stats.new_alloc_count * 10000 / jmem_pools_stats.new_alloc_count);
+          pools_stats->pools_count,
+          pools_stats->peak_pools_count,
+          pools_stats->free_chunks,
+          pools_stats->reused_count / pools_stats->new_alloc_count,
+          pools_stats->reused_count % pools_stats->new_alloc_count * 10000 / pools_stats->new_alloc_count);
 } /* jmem_pools_stats_print */
 
 /**
@@ -240,7 +224,7 @@ jmem_pools_stats_print (void)
 static void
 jmem_pools_stat_init (void)
 {
-  memset (&jmem_pools_stats, 0, sizeof (jmem_pools_stats));
+  memset (&JERRY_CONTEXT (jmem_pools_stats), 0, sizeof (jmem_pools_stats_t));
 } /* jmem_pools_stat_init */
 
 /**
@@ -249,16 +233,18 @@ jmem_pools_stat_init (void)
 static void
 jmem_pools_stat_new_alloc (void)
 {
-  jmem_pools_stats.pools_count++;
-  jmem_pools_stats.new_alloc_count++;
+  jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
 
-  if (jmem_pools_stats.pools_count > jmem_pools_stats.peak_pools_count)
+  pools_stats->pools_count++;
+  pools_stats->new_alloc_count++;
+
+  if (pools_stats->pools_count > pools_stats->peak_pools_count)
   {
-    jmem_pools_stats.peak_pools_count = jmem_pools_stats.pools_count;
+    pools_stats->peak_pools_count = pools_stats->pools_count;
   }
-  if (jmem_pools_stats.pools_count > jmem_pools_stats.global_peak_pools_count)
+  if (pools_stats->pools_count > pools_stats->global_peak_pools_count)
   {
-    jmem_pools_stats.global_peak_pools_count = jmem_pools_stats.pools_count;
+    pools_stats->global_peak_pools_count = pools_stats->pools_count;
   }
 } /* jmem_pools_stat_new_alloc */
 
@@ -269,17 +255,19 @@ jmem_pools_stat_new_alloc (void)
 static void
 jmem_pools_stat_reuse (void)
 {
-  jmem_pools_stats.pools_count++;
-  jmem_pools_stats.free_chunks--;
-  jmem_pools_stats.reused_count++;
+  jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
 
-  if (jmem_pools_stats.pools_count > jmem_pools_stats.peak_pools_count)
+  pools_stats->pools_count++;
+  pools_stats->free_chunks--;
+  pools_stats->reused_count++;
+
+  if (pools_stats->pools_count > pools_stats->peak_pools_count)
   {
-    jmem_pools_stats.peak_pools_count = jmem_pools_stats.pools_count;
+    pools_stats->peak_pools_count = pools_stats->pools_count;
   }
-  if (jmem_pools_stats.pools_count > jmem_pools_stats.global_peak_pools_count)
+  if (pools_stats->pools_count > pools_stats->global_peak_pools_count)
   {
-    jmem_pools_stats.global_peak_pools_count = jmem_pools_stats.pools_count;
+    pools_stats->global_peak_pools_count = pools_stats->pools_count;
   }
 } /* jmem_pools_stat_reuse */
 
@@ -290,10 +278,12 @@ jmem_pools_stat_reuse (void)
 static void
 jmem_pools_stat_free_pool (void)
 {
-  JERRY_ASSERT (jmem_pools_stats.pools_count > 0);
+  jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
 
-  jmem_pools_stats.pools_count--;
-  jmem_pools_stats.free_chunks++;
+  JERRY_ASSERT (pools_stats->pools_count > 0);
+
+  pools_stats->pools_count--;
+  pools_stats->free_chunks++;
 } /* jmem_pools_stat_free_pool */
 
 /**
@@ -302,7 +292,7 @@ jmem_pools_stat_free_pool (void)
 static void
 jmem_pools_stat_dealloc (void)
 {
-  jmem_pools_stats.free_chunks--;
+  JERRY_CONTEXT (jmem_pools_stats).free_chunks--;
 } /* jmem_pools_stat_dealloc */
 #endif /* JMEM_STATS */
 

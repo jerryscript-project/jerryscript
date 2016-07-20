@@ -70,14 +70,13 @@ ecma_finalize_environment (void)
 
 /**
  * Get reference to Global lexical environment
+ * without increasing its reference count.
  *
  * @return pointer to the object's instance
  */
 ecma_object_t *
 ecma_get_global_environment (void)
 {
-  ecma_ref_object (ecma_global_lex_env_p);
-
   return ecma_global_lex_env_p;
 } /* ecma_get_global_environment */
 

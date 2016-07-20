@@ -213,18 +213,15 @@ ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
-  ecma_object_t *lex_env_p = ecma_get_global_environment ();
 
   ecma_value_t ret_value = vm_run (bytecode_p,
                                    ecma_make_object_value (glob_obj_p),
-                                   lex_env_p,
+                                   ecma_get_global_environment (),
                                    false,
                                    NULL,
                                    0);
 
   ecma_deref_object (glob_obj_p);
-  ecma_deref_object (lex_env_p);
-
   return ret_value;
 } /* vm_run_global */
 
@@ -237,8 +234,6 @@ ecma_value_t
 vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
              bool is_direct) /**< is eval called in direct mode? */
 {
-  bool is_strict = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-
   ecma_value_t this_binding;
   ecma_object_t *lex_env_p;
 
@@ -247,7 +242,6 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   {
     this_binding = ecma_copy_value (vm_top_context_p->this_binding);
     lex_env_p = vm_top_context_p->lex_env_p;
-    ecma_ref_object (vm_top_context_p->lex_env_p);
   }
   else
   {
@@ -255,7 +249,9 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     lex_env_p = ecma_get_global_environment ();
   }
 
-  if (is_strict)
+  ecma_ref_object (lex_env_p);
+
+  if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0)
   {
     ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
     ecma_deref_object (lex_env_p);

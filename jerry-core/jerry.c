@@ -88,18 +88,20 @@ static const char *wrong_args_msg_p = "wrong type of argument";
  *         While, API can be invoked jerry_api_available flag is set,
  *         and while it is incorrect to invoke API - it is not set.
  *
- *         The procedure checks that it is correct to invoke API in current state.
- *         If it is correct, procedure just returns; otherwise - engine is stopped.
+ *         This procedure checks whether the API is available, and terminates
+ *         the engine if it is unavailable. Otherwise it is a no-op.
  *
  * Note:
- *         API could not be invoked in the following cases:
- *           - between enter to and return from native free callback.
+ *         The API could not be invoked in the following cases:
+ *           - before jerry_init and after jerry_cleanup
+ *           - between enter to and return from a native free callback
  */
 static inline void __attr_always_inline___
 jerry_assert_api_available (void)
 {
-  if (!jerry_api_available)
+  if (unlikely (!jerry_api_available))
   {
+    /* Terminates the execution. */
     JERRY_UNREACHABLE ();
   }
 } /* jerry_assert_api_available */
@@ -140,6 +142,12 @@ jerry_create_type_error (void)
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
+  if (unlikely (jerry_api_available))
+  {
+    /* This function cannot be called twice unless jerry_cleanup is called. */
+    JERRY_UNREACHABLE ();
+  }
+
   if (flags & (JERRY_INIT_ENABLE_LOG))
   {
 #ifndef JERRY_ENABLE_LOG
@@ -177,10 +185,9 @@ jerry_cleanup (void)
 {
   jerry_assert_api_available ();
 
-  bool is_show_mem_stats = ((jerry_init_flags & JERRY_INIT_MEM_STATS) != 0);
-
+  jerry_make_api_unavailable ();
   ecma_finalize ();
-  jmem_finalize (is_show_mem_stats);
+  jmem_finalize ((jerry_init_flags & JERRY_INIT_MEM_STATS) != 0);
 } /* jerry_cleanup */
 
 /**
@@ -190,8 +197,10 @@ void
 jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items, /**< character arrays, representing
                                                                      *   external magic strings' contents */
                               uint32_t count, /**< number of the strings */
-                              const jerry_length_t *str_lengths) /**< lengths of the strings */
+                              const jerry_length_t *str_lengths) /**< lengths of all strings */
 {
+  jerry_assert_api_available ();
+
   lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
 } /* jerry_register_magic_strings */
 
@@ -254,7 +263,8 @@ jerry_run_simple (const jerry_char_t *script_source, /**< script source */
 } /* jerry_run_simple */
 
 /**
- * Parse script for specified context
+ * Parse script and construct an EcmaScript function. The lexical
+ * environment is set to the global lexical environment.
  *
  * @return function object value - if script was parsed successfully,
  *         thrown error - otherwise
@@ -296,14 +306,13 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
                                                               is_strict,
                                                               bytecode_data_p);
-  ecma_deref_object (lex_env_p);
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);
 } /* jerry_parse */
 
 /**
- * Run Jerry in specified run context
+ * Run an EcmaScript function created by jerry_parse.
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -330,6 +339,15 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
   }
 
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
+
+  ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                            ext_func_p->u.function.scope_cp);
+
+  if (scope_p != ecma_get_global_environment ())
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+  }
+
   const ecma_compiled_code_t *bytecode_data_p;
   bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
                                                      ext_func_p->u.function.bytecode_cp);
@@ -912,7 +930,7 @@ jerry_create_undefined (void)
  * Get length of an array object
  *
  * Note:
- *      Returns 0, if the given parameter is not an array object.
+ *      Returns 0, if the value parameter is not an array object.
  *
  * @return length of the given array
  */
@@ -921,8 +939,7 @@ jerry_get_array_length (const jerry_value_t value)
 {
   jerry_assert_api_available ();
 
-  if (!jerry_value_is_array (value)
-      || ECMA_IS_VALUE_ERROR (value))
+  if (!jerry_value_is_array (value))
   {
     return 0;
   }
@@ -943,6 +960,9 @@ jerry_get_array_length (const jerry_value_t value)
 /**
  * Get size of Jerry string
  *
+ * Note:
+ *      Returns 0, if the value parameter is not a string.
+ *
  * @return number of bytes in the buffer needed to represent the string
  */
 jerry_size_t
@@ -961,6 +981,9 @@ jerry_get_string_size (const jerry_value_t value) /**< input string */
 /**
  * Get length of Jerry string
  *
+ * Note:
+ *      Returns 0, if the value parameter is not a string.
+ *
  * @return number of characters in the string
  */
 jerry_length_t
@@ -977,11 +1000,12 @@ jerry_get_string_length (const jerry_value_t value) /**< input string */
 } /* jerry_get_string_length */
 
 /**
- * Copy string characters to specified buffer. It is the caller's responsibility
- * to make sure that the string fits in the buffer.
+ * Copy the characters of a string into a specified buffer.
  *
  * Note:
- *      '\0' could occur in character buffer.
+ *      The '\0' character could occur in character buffer.
+ *      Returns 0, if the value parameter is not a string or
+ *      the buffer is not large enough for the whole string.
  *
  * @return number of bytes, actually copied to the buffer.
  */
@@ -1010,7 +1034,7 @@ jerry_string_to_char_buffer (const jerry_value_t value, /**< input string value 
 } /* jerry_string_to_char_buffer */
 
 /**
- * Checks whether the object or it's prototype has the given property.
+ * Checks whether the object or it's prototype objects have the given property.
  *
  * @return true  - if the property exists
  *         false - otherwise
@@ -1088,8 +1112,8 @@ jerry_delete_property (const jerry_value_t obj_val, /**< object value */
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return value of property - if success
- *         thrown error - otherwise
+ * @return value of the property - if success
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_get_property (const jerry_value_t obj_val, /**< object value */
@@ -1113,8 +1137,8 @@ jerry_get_property (const jerry_value_t obj_val, /**< object value */
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return stored value on the specified index - if success
- *         thrown exception - otherwise.
+ * @return value of the property specified by the index - if success
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
@@ -1140,8 +1164,8 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return true - if success
- *         thrown error - otherwise
+ * @return true value - if the operation was successful
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_set_property (const jerry_value_t obj_val, /**< object value */
@@ -1169,8 +1193,8 @@ jerry_set_property (const jerry_value_t obj_val, /**< object value */
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return true - if field value was set successfully
- *         thrown exception - otherwise
+ * @return true value - if the operation was successful
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
@@ -1199,7 +1223,7 @@ jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
  * Initialize property descriptor.
  */
 void
-jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
+jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p) /**< [out] property descriptor */
 {
   prop_desc_p->is_value_defined = false;
   prop_desc_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
@@ -1221,8 +1245,8 @@ jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p)
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
- * @return true  - if success
- *         thrown error - otherwise
+ * @return true value - if the operation was successful
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
@@ -1256,6 +1280,11 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 
   if (prop_desc_p->is_value_defined)
   {
+    if (ECMA_IS_VALUE_ERROR (prop_desc_p->value))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+    }
+
     prop_desc.value = prop_desc_p->value;
   }
 
@@ -1267,6 +1296,11 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
   {
     ecma_value_t getter = prop_desc_p->getter;
     prop_desc.is_get_defined = true;
+
+    if (ECMA_IS_VALUE_ERROR (getter))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+    }
 
     if (ecma_op_is_callable (getter))
     {
@@ -1282,6 +1316,11 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
   {
     ecma_value_t setter = prop_desc_p->setter;
     prop_desc.is_set_defined = true;
+
+    if (ECMA_IS_VALUE_ERROR (setter))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+    }
 
     if (ecma_op_is_callable (setter))
     {
@@ -1315,7 +1354,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_string (prop_name_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+    return false;
   }
 
   ecma_property_t *property_p = ecma_op_object_get_property (ecma_get_object_from_value (obj_val),
@@ -1333,18 +1372,23 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
   prop_desc_p->is_enumerable_defined = true;
   prop_desc_p->is_enumerable = prop_desc.is_enumerable;
 
-  prop_desc_p->is_writable = prop_desc.is_writable;
   prop_desc_p->is_writable_defined = prop_desc.is_writable_defined;
-  prop_desc_p->is_value_defined = prop_desc.is_value_defined;
-  prop_desc_p->value = prop_desc.value;
+  prop_desc_p->is_writable = prop_desc.is_writable_defined ? prop_desc.is_writable : false;
 
+  prop_desc_p->is_value_defined = prop_desc.is_value_defined;
   prop_desc_p->is_get_defined = prop_desc.is_get_defined;
   prop_desc_p->is_set_defined = prop_desc.is_set_defined;
 
+  prop_desc_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   prop_desc_p->getter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   prop_desc_p->setter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  if (prop_desc_p->is_get_defined)
+  if (prop_desc.is_value_defined)
+  {
+    prop_desc_p->value = prop_desc.value;
+  }
+
+  if (prop_desc.is_get_defined)
   {
     if (prop_desc.get_p != NULL)
     {
@@ -1356,7 +1400,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     }
   }
 
-  if (prop_desc_p->is_set_defined)
+  if (prop_desc.is_set_defined)
   {
     if (prop_desc.set_p != NULL)
     {
@@ -1419,12 +1463,6 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
   {
     return ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p));
   }
-  else if (!ecma_is_value_object (func_obj_val)
-           || (!ecma_is_value_object (this_val)
-               && !ecma_is_value_undefined (this_val)))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
-  }
 
   for (uint32_t i = 0; i < args_count; i++)
   {
@@ -1439,17 +1477,17 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
     JERRY_ASSERT (jerry_value_is_constructor (func_obj_val));
 
     return ecma_op_function_construct (ecma_get_object_from_value (func_obj_val),
-                                                  args_p,
-                                                  args_count);
+                                       args_p,
+                                       args_count);
   }
   else
   {
     JERRY_ASSERT (jerry_value_is_function (func_obj_val));
 
     return ecma_op_function_call (ecma_get_object_from_value (func_obj_val),
-                                             this_val,
-                                             args_p,
-                                             args_count);
+                                  this_val,
+                                  args_p,
+                                  args_count);
   }
 } /* jerry_invoke_function */
 
@@ -1458,6 +1496,7 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      error flag must not be set for any arguments of this function.
  *
  * @return returned jerry value of the called function
  */
@@ -1482,6 +1521,7 @@ jerry_call_function (const jerry_value_t func_obj_val, /**< function object to c
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      error flag must not be set for any arguments of this function.
  *
  * @return returned jerry value of the invoked constructor
  */
@@ -1509,7 +1549,7 @@ jerry_construct_object (const jerry_value_t func_obj_val, /**< function object t
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
  * @return array object value - if success
- *         thrown error - otherwise
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
@@ -1527,8 +1567,8 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
 /**
  * Get the prototype of the specified object
  *
- * @return object value - if success
- *         null or thrown error - otherwise
+ * @return prototype object or null value - if success
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
@@ -1553,8 +1593,8 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
 /**
  * Set the prototype of the specified object
  *
- * @return true - if success
- *         thrown error - otherwise
+ * @return true value - if success
+ *         value marked with error flag - otherwise
  */
 jerry_value_t
 jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
@@ -1562,8 +1602,8 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
 {
   jerry_assert_api_available ();
 
-  if (ECMA_IS_VALUE_ERROR (proto_obj_val)
-      || !ecma_is_value_object (obj_val)
+  if (!ecma_is_value_object (obj_val)
+      || ECMA_IS_VALUE_ERROR (proto_obj_val)
       || (!ecma_is_value_object (proto_obj_val) && !ecma_is_value_null (proto_obj_val)))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
@@ -1585,7 +1625,7 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
 /**
  * Get native handle, associated with specified object
  *
- * @return true - if there is associated handle (handle is returned through out_handle_p),
+ * @return true - if there is an associated handle (handle is returned through out_handle_p),
  *         false - otherwise.
  */
 bool
@@ -1593,11 +1633,6 @@ jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get 
                                 uintptr_t *out_handle_p) /**< [out] handle value */
 {
   jerry_assert_api_available ();
-
-  if (ECMA_IS_VALUE_ERROR (obj_val))
-  {
-    return false;
-  }
 
   uintptr_t handle_value;
 
@@ -1614,16 +1649,16 @@ jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get 
 } /* jerry_get_object_native_handle */
 
 /**
- * Set native handle and, optionally, free callback for the specified object
+ * Set native handle and an optional free callback for the specified object
  *
  * Note:
  *      If native handle was already set for the object, its value is updated.
  *
  * Note:
- *      If free callback is specified, it is set to be called upon specified JS-object is freed (by GC).
- *
- *      Otherwise, if NULL is specified for free callback pointer, free callback is not created
- *      and, if a free callback was added earlier for the object, it is removed.
+ *      If a non-NULL free callback is specified, it will be called
+ *      by the garbage collector when the object is freed. The free
+ *      callback always overwrites the previous value, so passing
+ *      a NULL value deletes the current free callback.
  */
 void
 jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set handle in */
@@ -1632,16 +1667,12 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 {
   jerry_assert_api_available ();
 
-  if (ECMA_IS_VALUE_ERROR (obj_val))
-  {
-    return;
-  }
-
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
 
   ecma_create_external_pointer_property (object_p,
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle);
+
   if (freecb_p != NULL)
   {
     ecma_create_external_pointer_property (object_p,
@@ -1675,11 +1706,6 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
 {
   jerry_assert_api_available ();
 
-  if (ECMA_IS_VALUE_ERROR (obj_val))
-  {
-    return false;
-  }
-
   ecma_collection_iterator_t names_iter;
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
   ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, false, true, true);
@@ -1710,11 +1736,9 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   {
     return true;
   }
-  else
-  {
-    ecma_free_value (property_value);
-    return false;
-  }
+
+  ecma_free_value (property_value);
+  return false;
 } /* jerry_foreach_object_property */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE

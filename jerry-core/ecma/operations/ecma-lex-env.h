@@ -30,8 +30,8 @@
  * @{
  */
 
-extern void ecma_init_environment (void);
-extern void ecma_finalize_environment (void);
+extern void ecma_init_global_lex_env (void);
+extern void ecma_finalize_global_lex_env (void);
 extern ecma_object_t *ecma_get_global_environment (void);
 
 /**

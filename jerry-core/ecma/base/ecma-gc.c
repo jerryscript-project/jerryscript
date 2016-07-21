@@ -24,6 +24,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
 #include "ecma-property-hashmap.h"
+#include "jcontext.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
@@ -44,44 +45,15 @@
  */
 
 /**
- * An object's GC color
+ * Current state of an object's visited flag that
+ * indicates whether the object is in visited state:
  *
- * Tri-color marking:
- *   WHITE_GRAY, unvisited -> WHITE // not referenced by a live object or the reference not found yet
- *   WHITE_GRAY, visited   -> GRAY  // referenced by some live object
- *   BLACK                 -> BLACK // all referenced objects are gray or black
- */
-typedef enum
-{
-  ECMA_GC_COLOR_WHITE_GRAY, /**< white or gray */
-  ECMA_GC_COLOR_BLACK, /**< black */
-  ECMA_GC_COLOR__COUNT /**< number of colors */
-} ecma_gc_color_t;
-
-/**
- * List of marked (visited during current GC session) and umarked objects
- */
-static ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT];
-
-/**
- * Current state of an object's visited flag that indicates whether the object is in visited state:
  *  visited_field | visited_flip_flag | real_value
  *         false  |            false  |     false
  *         false  |             true  |      true
  *          true  |            false  |      true
  *          true  |             true  |     false
  */
-static bool ecma_gc_visited_flip_flag = false;
-
-/**
- * Number of currently allocated objects
- */
-static size_t ecma_gc_objects_number = 0;
-
-/**
- * Number of newly allocated objects since last GC session
- */
-static size_t ecma_gc_new_objects_since_last_gc = 0;
 
 static void ecma_gc_mark (ecma_object_t *object_p);
 static void ecma_gc_sweep (ecma_object_t *object_p);
@@ -119,7 +91,7 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 
   bool flag_value = (object_p->type_flags_refs & ECMA_OBJECT_FLAG_GC_VISITED) != 0;
 
-  return flag_value != ecma_gc_visited_flip_flag;
+  return flag_value != JERRY_CONTEXT (ecma_gc_visited_flip_flag);
 } /* ecma_gc_is_object_visited */
 
 /**
@@ -131,7 +103,7 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  if (is_visited != ecma_gc_visited_flip_flag)
+  if (is_visited != JERRY_CONTEXT (ecma_gc_visited_flip_flag))
   {
     object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_GC_VISITED);
   }
@@ -147,16 +119,16 @@ ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
 inline void
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
-  ecma_gc_objects_number++;
-  ecma_gc_new_objects_since_last_gc++;
+  JERRY_CONTEXT (ecma_gc_objects_number)++;
+  JERRY_CONTEXT (ecma_gc_new_objects)++;
 
-  JERRY_ASSERT (ecma_gc_new_objects_since_last_gc <= ecma_gc_objects_number);
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_new_objects) <= JERRY_CONTEXT (ecma_gc_objects_number));
 
   JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
   object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
 
-  ecma_gc_set_object_next (object_p, ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY]);
-  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = object_p;
+  ecma_gc_set_object_next (object_p, JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY]);
+  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = object_p;
 
   /* Should be set to false at the beginning of garbage collection */
   ecma_gc_set_object_visited (object_p, false);
@@ -194,11 +166,11 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 void
 ecma_gc_init (void)
 {
-  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = NULL;
-  ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
-  ecma_gc_visited_flip_flag = false;
-  ecma_gc_objects_number = 0;
-  ecma_gc_new_objects_since_last_gc = 0;
+  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = NULL;
+  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = NULL;
+  JERRY_CONTEXT (ecma_gc_visited_flip_flag) = false;
+  JERRY_CONTEXT (ecma_gc_objects_number) = 0;
+  JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 } /* ecma_gc_init */
 
 /**
@@ -474,8 +446,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     }
   }
 
-  JERRY_ASSERT (ecma_gc_objects_number > 0);
-  ecma_gc_objects_number--;
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_number) > 0);
+  JERRY_CONTEXT (ecma_gc_objects_number)--;
 
   if (!ecma_is_lexical_environment (object_p))
   {
@@ -508,12 +480,12 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 {
-  ecma_gc_new_objects_since_last_gc = 0;
+  JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 
-  JERRY_ASSERT (ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] == NULL);
 
   /* if some object is referenced from stack or globals (i.e. it is root), mark it */
-  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY];
+  for (ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
        obj_iter_p != NULL;
        obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
   {
@@ -531,17 +503,18 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
   {
     marked_anything_during_current_iteration = false;
 
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY], *obj_prev_p = NULL, *obj_next_p;
-         obj_iter_p != NULL;
-         obj_iter_p = obj_next_p)
+    ecma_object_t *obj_prev_p = NULL;
+    ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
+
+    while (obj_iter_p != NULL)
     {
-      obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+      ecma_object_t *obj_next_p = ecma_gc_get_object_next (obj_iter_p);
 
       if (ecma_gc_is_object_visited (obj_iter_p))
       {
         /* Moving the object to list of marked objects */
-        ecma_gc_set_object_next (obj_iter_p, ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK]);
-        ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = obj_iter_p;
+        ecma_gc_set_object_next (obj_iter_p, JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK]);
+        JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = obj_iter_p;
 
         if (likely (obj_prev_p != NULL))
         {
@@ -551,7 +524,7 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
         }
         else
         {
-          ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = obj_next_p;
+          JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = obj_next_p;
         }
 
         ecma_gc_mark (obj_iter_p);
@@ -561,47 +534,52 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
       {
         obj_prev_p = obj_iter_p;
       }
+
+      obj_iter_p = obj_next_p;
     }
   }
   while (marked_anything_during_current_iteration);
 
   /* Sweeping objects that are currently unmarked */
-  for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY], *obj_next_p;
-       obj_iter_p != NULL;
-       obj_iter_p = obj_next_p)
+  ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
+
+  while (obj_iter_p != NULL)
   {
-    obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+    ecma_object_t *obj_next_p = ecma_gc_get_object_next (obj_iter_p);
 
     JERRY_ASSERT (!ecma_gc_is_object_visited (obj_iter_p));
 
     ecma_gc_sweep (obj_iter_p);
+    obj_iter_p = obj_next_p;
   }
 
   if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH)
   {
     /* Remove the property hashmap of BLACK objects */
-    for (ecma_object_t *obj_iter_p = ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK], *obj_next_p;
-         obj_iter_p != NULL;
-         obj_iter_p = obj_next_p)
-    {
-      obj_next_p = ecma_gc_get_object_next (obj_iter_p);
+    obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK];
 
+    while (obj_iter_p != NULL)
+    {
       JERRY_ASSERT (ecma_gc_is_object_visited (obj_iter_p));
 
       ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_iter_p);
+
       if (prop_iter_p != NULL
           && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
       {
         ecma_property_hashmap_free (obj_iter_p);
       }
+
+      obj_iter_p = ecma_gc_get_object_next (obj_iter_p);
     }
   }
 
   /* Unmarking all objects */
-  ecma_gc_objects_lists[ECMA_GC_COLOR_WHITE_GRAY] = ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK];
-  ecma_gc_objects_lists[ECMA_GC_COLOR_BLACK] = NULL;
+  ecma_object_t *black_objects = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK];
+  JERRY_CONTEXT (ecma_gc_objects_lists)[ECMA_GC_COLOR_WHITE_GRAY] = black_objects;
+  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = NULL;
 
-  ecma_gc_visited_flip_flag = !ecma_gc_visited_flip_flag;
+  JERRY_CONTEXT (ecma_gc_visited_flip_flag) = !JERRY_CONTEXT (ecma_gc_visited_flip_flag);
 
 #ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
   /* Free RegExp bytecodes stored in cache */
@@ -621,7 +599,9 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
      * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
      * Otherwise, probability to free sufficient space is considered to be low.
      */
-    if (ecma_gc_new_objects_since_last_gc * CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC > ecma_gc_objects_number)
+    size_t new_objects_share = CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC;
+
+    if (JERRY_CONTEXT (ecma_gc_new_objects) * new_objects_share > JERRY_CONTEXT (ecma_gc_objects_number))
     {
       ecma_gc_run (severity);
     }

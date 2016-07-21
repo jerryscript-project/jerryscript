@@ -18,7 +18,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
-#include "jrt-libc-includes.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -28,41 +28,12 @@
  */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-/**
- * Entry of LCache hash table
- */
-typedef struct
-{
-  /** Pointer to a property of the object */
-  ecma_property_t *prop_p;
-
-  /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
-  jmem_cpointer_t object_cp;
-
-  /** Compressed pointer to property's name */
-  jmem_cpointer_t prop_name_cp;
-} ecma_lcache_hash_entry_t;
-
-/**
- * Number of rows in LCache's hash table
- */
-#define ECMA_LCACHE_HASH_ROWS_COUNT 128
-
-/**
- * Number of entries in a row of LCache's hash table
- */
-#define ECMA_LCACHE_HASH_ROW_LENGTH 2
-
 
 /**
  * Mask for hash bits
  */
 #define ECMA_LCACHE_HASH_MASK (ECMA_LCACHE_HASH_ROWS_COUNT - 1)
 
-/**
- * LCache's hash table
- */
-static ecma_lcache_hash_entry_t ecma_lcache_hash_table[ ECMA_LCACHE_HASH_ROWS_COUNT ][ ECMA_LCACHE_HASH_ROW_LENGTH ];
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
@@ -72,7 +43,7 @@ void
 ecma_lcache_init (void)
 {
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-  memset (ecma_lcache_hash_table, 0, sizeof (ecma_lcache_hash_table));
+  memset (JERRY_HASH_TABLE_CONTEXT (table), 0, sizeof (jerry_hash_table_t));
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_init */
 
@@ -98,13 +69,13 @@ ecma_lcache_invalidate_entry (ecma_lcache_hash_entry_t *entry_p) /**< entry to i
  * @return row index
  */
 static inline size_t __attr_always_inline___
-ecma_lcache_row_idx (jmem_cpointer_t object_cp, /**< compressed pointer to object */
-                     const ecma_string_t *prop_name_p) /**< proeprty name */
+ecma_lcache_row_index (jmem_cpointer_t object_cp, /**< compressed pointer to object */
+                       const ecma_string_t *prop_name_p) /**< proeprty name */
 {
   /* Randomize the hash of the property name with the object pointer using a xor operation,
    * so properties of different objects with the same name can be cached effectively. */
   return (size_t) ((ecma_string_hash (prop_name_p) ^ object_cp) & ECMA_LCACHE_HASH_MASK);
-} /* ecma_lcache_row_idx */
+} /* ecma_lcache_row_index */
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
@@ -126,7 +97,8 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  ecma_lcache_hash_entry_t *entries_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
+  size_t row_index = ecma_lcache_row_index (object_cp, prop_name_p);
+  ecma_lcache_hash_entry_t *entries_p = JERRY_HASH_TABLE_CONTEXT (table)[row_index];
 
   int32_t entry_index;
   for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
@@ -177,7 +149,8 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  ecma_lcache_hash_entry_t *entry_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
+  size_t row_index = ecma_lcache_row_index (object_cp, prop_name_p);
+  ecma_lcache_hash_entry_t *entry_p = JERRY_HASH_TABLE_CONTEXT (table) [row_index];
   ecma_lcache_hash_entry_t *entry_end_p = entry_p + ECMA_LCACHE_HASH_ROW_LENGTH;
   ecma_string_container_t prop_container = ECMA_STRING_GET_CONTAINER (prop_name_p);
 
@@ -230,7 +203,8 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  ecma_lcache_hash_entry_t *entry_p = ecma_lcache_hash_table[ecma_lcache_row_idx (object_cp, prop_name_p)];
+  size_t row_index = ecma_lcache_row_index (object_cp, prop_name_p);
+  ecma_lcache_hash_entry_t *entry_p = JERRY_HASH_TABLE_CONTEXT (table) [row_index];
 
   for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
   {

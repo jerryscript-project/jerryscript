@@ -21,6 +21,7 @@
 #define JCONTEXT_H
 
 #include "jrt.h"
+#include "ecma-globals.h"
 #include "jmem-allocator.h"
 #include "jmem-config.h"
 
@@ -30,29 +31,6 @@
  * \addtogroup context Context
  * @{
  */
-
-/**
- * Calculate heap area size, leaving space for a pointer to the free list
- */
-#define JMEM_HEAP_AREA_SIZE (JMEM_HEAP_SIZE - JMEM_ALIGNMENT)
-
-/**
- * Heap structure
- *
- * Memory blocks returned by the allocator must not start from the
- * beginning of the heap area because offset 0 is reserved for
- * JMEM_CP_NULL. This special constant is used in several places,
- * e.g. it marks the end of the property chain list, so it cannot
- * be eliminated from the project. Although the allocator cannot
- * use the first 8 bytes of the heap, nothing prevents to use it
- * for other purposes. Currently the free region start is stored
- * there.
- */
-typedef struct
-{
-  jmem_heap_free_t first; /**< first node in free region list */
-  uint8_t area[JMEM_HEAP_AREA_SIZE]; /**< heap area */
-} jmem_heap_t;
 
 /**
  * JerryScript context
@@ -81,17 +59,76 @@ typedef struct
   bool valgrind_freya_mempool_request; /**< Tells whether a pool manager
                                         *   allocator request is in progress */
 #endif /* JERRY_VALGRIND_FREYA */
+
+  /**
+   * Ecma part.
+   */
+  ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT]; /**< List of marked (visited during
+                                                               *   current GC session) and umarked objects */
+  bool ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
+  size_t ecma_gc_objects_number; /**< number of currently allocated objects */
+  size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
+  ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */
+  ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
+  ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
 } jerry_context_t;
 
 /**
- * Jerry global context.
+ * Calculate heap area size, leaving space for a pointer to the free list
+ */
+#define JMEM_HEAP_AREA_SIZE (JMEM_HEAP_SIZE - JMEM_ALIGNMENT)
+
+/**
+ * Heap structure
+ *
+ * Memory blocks returned by the allocator must not start from the
+ * beginning of the heap area because offset 0 is reserved for
+ * JMEM_CP_NULL. This special constant is used in several places,
+ * e.g. it marks the end of the property chain list, so it cannot
+ * be eliminated from the project. Although the allocator cannot
+ * use the first 8 bytes of the heap, nothing prevents to use it
+ * for other purposes. Currently the free region start is stored
+ * there.
+ */
+typedef struct
+{
+  jmem_heap_free_t first; /**< first node in free region list */
+  uint8_t area[JMEM_HEAP_AREA_SIZE]; /**< heap area */
+} jmem_heap_t;
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * JerryScript global hash table for caching the last access of properties.
+ */
+typedef struct
+{
+  /**
+   * Hash table
+   */
+  ecma_lcache_hash_entry_t table[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
+} jerry_hash_table_t;
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
+/**
+ * Global context.
  */
 extern jerry_context_t jerry_global_context;
 
 /**
- * Jerry global heap.
+ * Global heap.
  */
 extern jmem_heap_t jerry_global_heap;
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * Global hash table.
+ */
+extern jerry_hash_table_t jerry_global_hash_table;
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Provides a reference to a field in the current context.
@@ -102,6 +139,15 @@ extern jmem_heap_t jerry_global_heap;
  * Provides a reference to the area field of the heap.
  */
 #define JERRY_HEAP_CONTEXT(field) (jerry_global_heap.field)
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * Provides a reference to the global hash table.
+ */
+#define JERRY_HASH_TABLE_CONTEXT(field) (jerry_global_hash_table.field)
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * @}

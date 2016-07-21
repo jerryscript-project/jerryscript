@@ -22,7 +22,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
-#include "jrt.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -35,38 +35,31 @@
  */
 
 /**
- * Global lexical environment
- *
- * See also: ECMA-262 v5, 10.2.3
- */
-ecma_object_t *ecma_global_lex_env_p = NULL;
-
-/**
  * Initialize Global environment
  */
 void
-ecma_init_environment (void)
+ecma_init_global_lex_env (void)
 {
 #ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
-  ecma_global_lex_env_p = ecma_create_decl_lex_env (NULL);
+  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_decl_lex_env (NULL);
 #else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
-  ecma_global_lex_env_p = ecma_create_object_lex_env (NULL, glob_obj_p, false);
+  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL, glob_obj_p, false);
 
   ecma_deref_object (glob_obj_p);
 #endif /* CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
-} /* ecma_init_environment */
+} /* ecma_init_global_lex_env */
 
 /**
  * Finalize Global environment
  */
 void
-ecma_finalize_environment (void)
+ecma_finalize_global_lex_env (void)
 {
-  ecma_deref_object (ecma_global_lex_env_p);
-  ecma_global_lex_env_p = NULL;
-} /* ecma_finalize_environment */
+  ecma_deref_object (JERRY_CONTEXT (ecma_global_lex_env_p));
+  JERRY_CONTEXT (ecma_global_lex_env_p) = NULL;
+} /* ecma_finalize_global_lex_env */
 
 /**
  * Get reference to Global lexical environment
@@ -77,7 +70,7 @@ ecma_finalize_environment (void)
 ecma_object_t *
 ecma_get_global_environment (void)
 {
-  return ecma_global_lex_env_p;
+  return JERRY_CONTEXT (ecma_global_lex_env_p);
 } /* ecma_get_global_environment */
 
 /**

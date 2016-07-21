@@ -912,6 +912,64 @@ typedef struct
 } ecma_compiled_code_t;
 
 /**
+ * An object's GC color
+ *
+ * Tri-color marking:
+ *   WHITE_GRAY, unvisited -> WHITE // not referenced by a live object or the reference not found yet
+ *   WHITE_GRAY, visited   -> GRAY  // referenced by some live object
+ *   BLACK                 -> BLACK // all referenced objects are gray or black
+ */
+typedef enum
+{
+  ECMA_GC_COLOR_WHITE_GRAY, /**< white or gray */
+  ECMA_GC_COLOR_BLACK, /**< black */
+  ECMA_GC_COLOR__COUNT /**< number of colors */
+} ecma_gc_color_t;
+
+/**
+ * Number of values in a literal storage item
+ */
+#define ECMA_LIT_STORAGE_VALUE_COUNT 3
+
+/**
+ * Literal storage item
+ */
+typedef struct
+{
+  jmem_cpointer_t next_cp; /**< cpointer ot next item */
+  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
+} ecma_lit_storage_item_t;
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * Entry of LCache hash table
+ */
+typedef struct
+{
+  /** Pointer to a property of the object */
+  ecma_property_t *prop_p;
+
+  /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
+  jmem_cpointer_t object_cp;
+
+  /** Compressed pointer to property's name */
+  jmem_cpointer_t prop_name_cp;
+} ecma_lcache_hash_entry_t;
+
+/**
+ * Number of rows in LCache's hash table
+ */
+#define ECMA_LCACHE_HASH_ROWS_COUNT 128
+
+/**
+ * Number of entries in a row of LCache's hash table
+ */
+#define ECMA_LCACHE_HASH_ROW_LENGTH 2
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
+/**
  * @}
  * @}
  */

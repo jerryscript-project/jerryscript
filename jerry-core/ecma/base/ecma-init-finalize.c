@@ -39,7 +39,7 @@ ecma_init (void)
   ecma_init_builtins ();
   ecma_lcache_init ();
   ecma_init_lit_storage ();
-  ecma_init_environment ();
+  ecma_init_global_lex_env ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
 } /* ecma_init */
@@ -52,7 +52,7 @@ ecma_finalize (void)
 {
   jmem_unregister_free_unused_memory_callback (ecma_free_unused_memory);
 
-  ecma_finalize_environment ();
+  ecma_finalize_global_lex_env ();
   ecma_finalize_builtins ();
   ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
   ecma_finalize_lit_storage ();

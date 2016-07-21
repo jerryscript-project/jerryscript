@@ -16,6 +16,7 @@
 
 #include "ecma-literal-storage.h"
 #include "ecma-helpers.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -24,25 +25,8 @@
  * @{
  */
 
-/**
- * Number of values in a literal storage item
- */
-#define ECMA_LIT_STORAGE_VALUE_COUNT 3
-
-/**
- * Literal storage item
- */
-typedef struct
-{
-  jmem_cpointer_t next_cp; /**< cpointer ot next item */
-  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
-} ecma_lit_storage_item_t;
-
 JERRY_STATIC_ASSERT (sizeof (ecma_lit_storage_item_t) <= sizeof (uint64_t),
                      size_of_ecma_lit_storage_item_t_must_be_less_than_or_equal_to_8_bytes);
-
-static ecma_lit_storage_item_t *string_list_first_p;
-static ecma_lit_storage_item_t *number_list_first_p;
 
 /**
  * Initialize literal storage
@@ -50,8 +34,8 @@ static ecma_lit_storage_item_t *number_list_first_p;
 void
 ecma_init_lit_storage (void)
 {
-  string_list_first_p = NULL;
-  number_list_first_p = NULL;
+  JERRY_CONTEXT (string_list_first_p) = NULL;
+  JERRY_CONTEXT (number_list_first_p) = NULL;
 } /* ecma_init_lit_storage */
 
 /**
@@ -86,8 +70,8 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 void
 ecma_finalize_lit_storage (void)
 {
-  ecma_free_string_list (string_list_first_p);
-  ecma_free_string_list (number_list_first_p);
+  ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
+  ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
 } /* ecma_finalize_lit_storage */
 
 /**
@@ -101,7 +85,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
 {
   ecma_string_t *string_p = ecma_new_ecma_string_from_utf8 (chars_p, size);
 
-  ecma_lit_storage_item_t *string_list_p = string_list_first_p;
+  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
   while (string_list_p != NULL)
@@ -149,8 +133,8 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, string_list_first_p);
-  string_list_first_p = new_item_p;
+  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (string_list_first_p));
+  JERRY_CONTEXT (string_list_first_p) = new_item_p;
 
   return result;
 } /* ecma_find_or_create_literal_string */
@@ -165,7 +149,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 {
   ecma_value_t num = ecma_make_number_value (number_arg);
 
-  ecma_lit_storage_item_t *number_list_p = number_list_first_p;
+  ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
   while (number_list_p != NULL)
@@ -229,8 +213,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, number_list_first_p);
-  number_list_first_p = new_item_p;
+  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (number_list_first_p));
+  JERRY_CONTEXT (number_list_first_p) = new_item_p;
 
   return result;
 } /* ecma_find_or_create_literal_number */
@@ -268,7 +252,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
   uint32_t number_count = 0;
   uint32_t lit_table_size = 2 * sizeof (uint32_t);
 
-  ecma_lit_storage_item_t *string_list_p = string_list_first_p;
+  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
 
   while (string_list_p != NULL)
   {
@@ -288,7 +272,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
     string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
   }
 
-  ecma_lit_storage_item_t *number_list_p = number_list_first_p;
+  ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
 
   while (number_list_p != NULL)
   {
@@ -338,7 +322,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
   ((uint32_t *) buffer_p)[1] = number_count;
   buffer_p += 2 * sizeof (uint32_t);
 
-  string_list_p = string_list_first_p;
+  string_list_p = JERRY_CONTEXT (string_list_first_p);
 
   while (string_list_p != NULL)
   {
@@ -369,7 +353,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
     string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
   }
 
-  number_list_p = number_list_first_p;
+  number_list_p = JERRY_CONTEXT (number_list_first_p);
 
   while (number_list_p != NULL)
   {

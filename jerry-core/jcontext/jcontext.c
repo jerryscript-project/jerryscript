@@ -42,6 +42,15 @@ jerry_context_t jerry_global_context;
  */
 jmem_heap_t jerry_global_heap __attribute__ ((aligned (JMEM_ALIGNMENT))) JERRY_GLOBAL_HEAP_SECTION;
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * Global hash table.
+ */
+jerry_hash_table_t jerry_global_hash_table;
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
 /**
  * @}
  * @}

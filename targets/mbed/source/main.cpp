@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +16,16 @@
 
 #include "mbed-drivers/mbed.h"
 
-#include "jerry-core/jerry.h"
+#include "jerry-core/jerry-api.h"
 #include "jerry_run.h"
 
 #include "jerry_targetjs.h"
 
 static Serial pc (USBTX, USBRX); //tx, rx
 
-static int jerry_init (void)
+static int jerry_task_init (void)
 {
   int retcode;
-  int src;
 
   DECLARE_JS_CODES;
 
@@ -38,7 +38,7 @@ static int jerry_init (void)
     return -1;
   }
   /* run rest of the js files */
-  for (src = 1; js_codes[src].source; src++)
+  for (int src = 1; js_codes[src].source; src++)
   {
     retcode = js_eval (js_codes[src].source, js_codes[src].length);
     if (retcode != 0)
@@ -60,15 +60,13 @@ static void jerry_loop (void)
 
 void app_start (int, char**)
 {
-  // set 9600 baud rate for stdout
+  /* set 9600 baud rate for stdout */
   pc.baud (9600);
 
   printf ("\r\nJerryScript in mbed\r\n");
-  printf ("   build  %s\r\n", jerry_build_date);
-  printf ("   hash   %s\r\n", jerry_commit_hash);
-  printf ("   branch %s\r\n", jerry_branch_name);
+  printf ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
   
-  if (jerry_init () == 0)
+  if (jerry_task_init () == 0)
   {
     minar::Scheduler::postCallback(jerry_loop).period(minar::milliseconds(100));
   }

@@ -15,7 +15,6 @@
 
 # use TAB-8
 
-TYPE            = release
 TARGET_LIST     = k64f stm32f4 stm32f429i nucleo
 JERRYHEAP      ?= 16
 
@@ -33,10 +32,9 @@ else ifeq ($(TARGET), nucleo)
 	TARGET_DIR   ?= /media/$(USER)/NODE_F401RE
 endif
 
-UPPERC_TARGET = $(shell echo $(TARGET) | tr a-z A-Z) 
-INTERM        = build/obj-mbed-$(TARGET)
-OUTPUT        = build/bin/$(TYPE).mbed$(TARGET)
-COPYTARGET    = targets/mbed/libjerry
+BUILD_DIR	?= build/mbed
+UPPERC_TARGET	?= $(shell echo $(TARGET) | tr a-z A-Z)
+COPYTARGET	?= targets/mbed/libjerry
 
 else
   $(error This board ($(board)) is not supported!)
@@ -53,25 +51,26 @@ EXT_PORT_DIR := ""
 all: jerry js2c yotta
 
 jerry:
-	mkdir -p $(INTERM)
-	mkdir -p $(OUTPUT)
 	mkdir -p $(COPYTARGET)
-	cmake -B$(INTERM) -H./ \
+	mkdir -p $(BUILD_DIR)
+	cmake -B$(BUILD_DIR) -H./ \
 	 -DENABLE_LTO=OFF \
-	 -DENABLE_VALGRIND=OFF \
-	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
+	 -DFEATURE_VALGRIND=OFF \
+	 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_external.cmake \
+	 -DJERRY_LIBC=OFF \
+	 -DJERRY_CMDLINE=OFF \
 	 -DCOMPILER_DEFAULT_LIBC=ON \
-	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=arm7-m \
+	 -DENABLE_ALL_IN_ONE=OFF \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=armv7l-hf \
 	 -DEXTERNAL_CMAKE_C_COMPILER=arm-none-eabi-gcc \
 	 -DEXTERNAL_CMAKE_C_COMPILER_ID=GNU \
 	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
-	 -DEXTERNAL_MEM_HEAP_SIZE_KB=$(JERRYHEAP) \
-	 -DEXTERNAL_PORT_DIR=$(EXT_PORT_DIR)
+	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) \
 
-	make -C $(INTERM) $(TYPE).external
-	cp `cat $(INTERM)/$(TYPE).external/list` $(OUTPUT)/.
-	cp $(OUTPUT)/lib$(TYPE).jerry-core.a $(COPYTARGET)/libjerrycore.a
-	cp $(OUTPUT)/lib$(TYPE).jerry-libm.lib.a $(COPYTARGET)/libjerrylibm.a
+	make -C$(BUILD_DIR) jerry-core
+	make -C$(BUILD_DIR) jerry-libm
+	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/libjerrycore.a
+	cp $(BUILD_DIR)/lib/libjerry-libm.a $(COPYTARGET)/libjerrylibm.a
 
 js2c:
 	cd targets/mbed; ../tools/js2c.py;
@@ -83,7 +82,7 @@ yotta:
 
 flash:
   ifndef TARGET_DIR
-    st-flash write targets/mbed/build/$(YOTTA_TARGET)/source/jerry.bin 0x08000000
+	st-flash write targets/mbed/build/$(YOTTA_TARGET)/source/jerry.bin 0x08000000
   else
 	  @if [ ! -d "${TARGET_DIR}" ] ; then \
 	   echo "The board not mounted at ${TARGET_DIR}"; \
@@ -95,6 +94,6 @@ flash:
 	@echo "Wait till LED flashing stops..."
 
 clean:
-	rm -rf $(INTERM)
+	rm -rf $(COPYTARGET)
 	rm -rf $(OUTPUT)
 	rm -rf targets/mbed/build

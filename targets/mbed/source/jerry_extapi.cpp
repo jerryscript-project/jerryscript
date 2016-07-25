@@ -1,4 +1,5 @@
 /* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +17,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "jerry-core/jerry.h"
+#include "jerry-core/jerry-api.h"
 #include "jerry_extapi.h"
- 
+
 #include "native_mbed.h"
 
 #ifndef MIN
@@ -30,12 +31,11 @@
 #define __UNSED__ __attribute__((unused))
 
 #define DECLARE_HANDLER(NAME) \
-static bool \
-NAME ## _handler (const jerry_api_object_t * function_obj_p __UNSED__, \
-                  const jerry_api_value_t *  this_p __UNSED__, \
-                  jerry_api_value_t *        ret_val_p __UNSED__, \
-                  const jerry_api_value_t    args_p[], \
-                  const jerry_api_length_t   args_cnt)
+static jerry_value_t \
+NAME ## _handler (const jerry_value_t func_value __UNSED__, \
+                  const jerry_value_t this_value __UNSED__, \
+                  const jerry_value_t args[], \
+                  const jerry_length_t args_cnt )
 
 #define REGISTER_HANDLER(NAME) \
   register_native_function ( # NAME, NAME ## _handler)
@@ -45,39 +45,50 @@ NAME ## _handler (const jerry_api_object_t * function_obj_p __UNSED__, \
 DECLARE_HANDLER(assert)
 {
   if (args_cnt == 1
-      && args_p[0].type == JERRY_API_DATA_TYPE_BOOLEAN
-      && args_p[0].u.v_bool == true)
+      && jerry_value_is_boolean (args[0])
+      && jerry_get_boolean_value (args[0]))
   {
     printf (">> Jerry assert true\r\n");
-    return true;
+    return jerry_create_boolean (true);
   }
   printf ("ERROR: Script assertion failed\n");
   exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
-  return false;
+  return jerry_create_boolean (false);
 }
 
 DECLARE_HANDLER(led)
 {
+  jerry_value_t ret_val;
+
   if (args_cnt < 2)
   {
-    return false;
+    ret_val = jerry_create_boolean (false);
+    printf ("Error: invalid arguments number!\r\n");
+    return ret_val;
+  }
+
+  if (!(jerry_value_is_number (args[0])
+        && jerry_value_is_number (args[1])))
+  {
+    ret_val = jerry_create_boolean (false);
+    printf ("Error: arguments must be numbers!\r\n");
+    return ret_val;
   }
 
   int port, value;
-  port = (int)JS_VALUE_TO_NUMBER (&args_p[0]);
-  value = (int)JS_VALUE_TO_NUMBER (&args_p[1]);
+  port = (int) jerry_get_number_value (args[0]);
+  value = (int) jerry_get_number_value (args[1]);
 
-  ret_val_p->type = JERRY_API_DATA_TYPE_BOOLEAN;
-  if (port >=0 && port <= 3)
+  if (port >= 0 && port <= 3)
   {
-    native_led(port, value);
-    ret_val_p->u.v_bool = true;
+    native_led (port, value);
+    ret_val = jerry_create_boolean (true);
   }
   else
   {
-    ret_val_p->u.v_bool = false;
+    ret_val = jerry_create_boolean (false);
   }
-  return true;
+  return ret_val;
 }
 
 //-----------------------------------------------------------------------------
@@ -86,41 +97,49 @@ static bool
 register_native_function (const char* name,
                           jerry_external_handler_t handler)
 {
-  jerry_api_object_t *global_obj_p;
-  jerry_api_object_t *reg_func_p;
-  jerry_api_value_t reg_value;
-  bool bok;
+  jerry_value_t global_object_val = jerry_get_global_object ();
+  jerry_value_t reg_function = jerry_create_external_function (handler);
 
-  global_obj_p = jerry_api_get_global ();
-  reg_func_p = jerry_api_create_external_function (handler);
+  bool is_ok = true; 
 
-  if (!(reg_func_p != NULL
-      && jerry_api_is_function (reg_func_p)
-      && jerry_api_is_constructor (reg_func_p)))
+  if (!(jerry_value_is_function (reg_function)
+        && jerry_value_is_constructor (reg_function)))
   {
+    is_ok = false;
     printf ("Error: create_external_function failed !!!\r\n");
-    jerry_api_release_object (global_obj_p);
-    return false;
+    jerry_release_value (global_object_val);
+    jerry_release_value (reg_function);
+    return is_ok;
   }
 
-  jerry_api_acquire_object (reg_func_p);
-  reg_value.type = JERRY_API_DATA_TYPE_OBJECT;
-  reg_value.u.v_object = reg_func_p;
-
-  bok = jerry_api_set_object_field_value (global_obj_p,
-                                          (jerry_api_char_t *) name,
-                                          &reg_value);
-
-  jerry_api_release_value (&reg_value);
-  jerry_api_release_object (reg_func_p);
-  jerry_api_release_object (global_obj_p);
-
-  if (!bok)
+  if (jerry_value_has_error_flag (reg_function))
   {
+    is_ok = false;
+    printf ("Error: create_external_function has error flag! \n\r");
+    jerry_release_value (global_object_val);
+    jerry_release_value (reg_function);
+    return is_ok;
+  }
+
+  jerry_value_t jerry_name = jerry_create_string ((jerry_char_t *) name);
+
+  jerry_value_t set_result = jerry_set_property (global_object_val,
+                                                 jerry_name,
+                                                 reg_function);
+
+
+  if (jerry_value_has_error_flag (set_result))
+  {
+    is_ok = false;
     printf ("Error: register_native_function failed: [%s]\r\n", name);
   }
 
-  return bok;
+  jerry_release_value (jerry_name);
+  jerry_release_value (global_object_val);
+  jerry_release_value (reg_function);
+  jerry_release_value (set_result);
+
+  return is_ok;
 }
 
 void js_register_functions (void)

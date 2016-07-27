@@ -401,26 +401,21 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
   jmem_cpointer_t *property_list_head_p = &object_p->property_list_or_bound_object_cp;
-  bool has_hashmap = false;
-
-  if (*property_list_head_p != ECMA_NULL_POINTER)
-  {
-    /* If the first entry is a hashmap, it is skipped. */
-    ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
-                                                                          *property_list_head_p);
-
-    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
-    {
-      property_list_head_p = &first_property_p->next_property_cp;
-      has_hashmap = true;
-    }
-  }
 
   if (*property_list_head_p != ECMA_NULL_POINTER)
   {
     /* If the first entry is free (deleted), it is reused. */
     ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
                                                                           *property_list_head_p);
+    bool has_hashmap = false;
+
+    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      property_list_head_p = &first_property_p->next_property_cp;
+      first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                    *property_list_head_p);
+      has_hashmap = true;
+    }
 
     JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (first_property_p));
 
@@ -456,6 +451,23 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
 
   /* Otherwise we create a new property pair and use its second value. */
   ecma_property_pair_t *first_property_pair_p = ecma_alloc_property_pair ();
+
+  /* Need to query property_list_head_p again and recheck the existennce
+   * of property hasmap, because ecma_alloc_property_pair may delete them. */
+  property_list_head_p = &object_p->property_list_or_bound_object_cp;
+  bool has_hashmap = false;
+
+  if (*property_list_head_p != ECMA_NULL_POINTER)
+  {
+    ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                          *property_list_head_p);
+
+    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      property_list_head_p = &first_property_p->next_property_cp;
+      has_hashmap = true;
+    }
+  }
 
   /* Just copy the previous value (no need to decompress, compress). */
   first_property_pair_p->header.next_property_cp = *property_list_head_p;

@@ -549,12 +549,15 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
     {
       JERRY_ASSERT (ecma_gc_is_object_visited (obj_iter_p));
 
-      ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_iter_p);
-
-      if (prop_iter_p != NULL
-          && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+      if (!ecma_is_lexical_environment (obj_iter_p)
+          || ecma_get_lex_env_type (obj_iter_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
       {
-        ecma_property_hashmap_free (obj_iter_p);
+        ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_iter_p);
+        if (prop_iter_p != NULL
+            && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types + 0) == ECMA_PROPERTY_TYPE_HASHMAP)
+        {
+          ecma_property_hashmap_free (obj_iter_p);
+        }
       }
 
       obj_iter_p = ecma_gc_get_object_next (obj_iter_p);

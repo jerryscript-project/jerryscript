@@ -71,7 +71,7 @@ main ()
 
       if (ptrs[j] != NULL)
       {
-        JERRY_ASSERT (!memcmp (data[j], ptrs[j], JMEM_POOL_CHUNK_SIZE));
+        TEST_ASSERT (!memcmp (data[j], ptrs[j], JMEM_POOL_CHUNK_SIZE));
 
         jmem_pools_free (ptrs[j]);
       }

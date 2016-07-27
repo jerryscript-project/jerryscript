@@ -65,7 +65,7 @@ main ()
        i < sizeof (test_cases_uint32) / sizeof (test_cases_uint32[0]);
        i++)
   {
-    JERRY_ASSERT (ecma_number_to_uint32 (test_cases_uint32[i].num) == test_cases_uint32[i].uint32_num);
+    TEST_ASSERT (ecma_number_to_uint32 (test_cases_uint32[i].num) == test_cases_uint32[i].uint32_num);
   }
 
   int32_test_case_t test_cases_int32[] =
@@ -101,7 +101,7 @@ main ()
        i < sizeof (test_cases_int32) / sizeof (test_cases_int32[0]);
        i++)
   {
-    JERRY_ASSERT (ecma_number_to_int32 (test_cases_int32[i].num) == test_cases_int32[i].int32_num);
+    TEST_ASSERT (ecma_number_to_int32 (test_cases_int32[i].num) == test_cases_int32[i].int32_num);
   }
 
   return 0;

@@ -18,8 +18,8 @@
 DIR="$1"
 shift
 
-UNITTEST_ERROR=unittests.failed
-UNITTEST_OK=unittests.passed
+UNITTEST_ERROR=$DIR/unittests.failed
+UNITTEST_OK=$DIR/unittests.passed
 
 rm -f $UNITTEST_ERROR $UNITTEST_OK
 

@@ -20,21 +20,24 @@
 
 TIMEOUT=${TIMEOUT:=5}
 
-TEST_FILES=test.files
-TEST_FAILED=test.failed
-TEST_PASSED=test.passed
-
 ENGINE="$1"
 shift
 
 TESTS="$1"
 shift
 
+OUTPUT_DIR=`dirname $ENGINE`
+TESTS_BASENAME=`basename $TESTS`
+
+TEST_FILES=$OUTPUT_DIR/$TESTS_BASENAME.files
+TEST_FAILED=$OUTPUT_DIR/$TESTS_BASENAME.failed
+TEST_PASSED=$OUTPUT_DIR/$TESTS_BASENAME.passed
+
 if [ "$1" == "--snapshot" ]
 then
-    TEST_FILES="snapshot.$TEST_FILES"
-    TEST_FAILED="snapshot.$TEST_FAILED"
-    TEST_PASSED="snapshot.$TEST_PASSED"
+    TEST_FILES="$TEST_FILES.snapshot"
+    TEST_FAILED="$TEST_FAILED.snapshot"
+    TEST_PASSED="$TEST_PASSED.snapshot"
     IS_SNAPSHOT=true;
     shift
 fi

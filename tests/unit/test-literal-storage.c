@@ -83,13 +83,13 @@ main ()
         ecma_find_or_create_literal_string (strings[j], lengths[j]);
         strings[j][lengths[j]] = '\0';
         ptrs[j] = strings[j];
-        JERRY_ASSERT (ptrs[j]);
+        TEST_ASSERT (ptrs[j]);
       }
       else if (type == 1)
       {
         lit_magic_string_id_t msi = (lit_magic_string_id_t) (rand () % LIT_MAGIC_STRING__COUNT);
         ptrs[j] = lit_get_magic_string_utf8 (msi);
-        JERRY_ASSERT (ptrs[j]);
+        TEST_ASSERT (ptrs[j]);
         lengths[j] = (lit_utf8_size_t) lit_zt_utf8_string_size (ptrs[j]);
         ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
       }
@@ -112,21 +112,21 @@ main ()
       {
         lit1 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
         lit2 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
-        JERRY_ASSERT (lit1 == lit2);
+        TEST_ASSERT (lit1 == lit2);
       }
       else
       {
         lit1 = ecma_find_or_create_literal_number (numbers[j]);
         lit2 = ecma_find_or_create_literal_number (numbers[j]);
-        JERRY_ASSERT (lit1 == lit2);
+        TEST_ASSERT (lit1 == lit2);
       }
-      JERRY_ASSERT (lit1);
-      JERRY_ASSERT (lit2);
-      JERRY_ASSERT (lit1 == lit2);
+      TEST_ASSERT (lit1);
+      TEST_ASSERT (lit2);
+      TEST_ASSERT (lit1 == lit2);
     }
 
     // Check empty string exists
-    JERRY_ASSERT (ecma_find_or_create_literal_string (NULL, 0) != JMEM_CP_NULL);
+    TEST_ASSERT (ecma_find_or_create_literal_string (NULL, 0) != JMEM_CP_NULL);
   }
 
   ecma_finalize_lit_storage ();

@@ -42,7 +42,7 @@ static lit_utf8_size_t
 generate_cesu8_char (utf8_char_size char_size,
                      lit_utf8_byte_t *buf)
 {
-  JERRY_ASSERT (char_size >= 0 && char_size <= LIT_CESU8_MAX_BYTES_IN_CODE_UNIT);
+  TEST_ASSERT (char_size >= 0 && char_size <= LIT_CESU8_MAX_BYTES_IN_CODE_UNIT);
   lit_code_point_t code_point = (lit_code_point_t) rand ();
 
   if (char_size == 1)
@@ -88,14 +88,14 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
 
     lit_utf8_size_t bytes_generated = generate_cesu8_char (char_size, buf_p);
 
-    JERRY_ASSERT (lit_is_cesu8_string_valid (buf_p, bytes_generated));
+    TEST_ASSERT (lit_is_cesu8_string_valid (buf_p, bytes_generated));
 
     size += bytes_generated;
     buf_p += bytes_generated;
     length++;
   }
 
-  JERRY_ASSERT (size == buf_size);
+  TEST_ASSERT (size == buf_size);
 
   return length;
 } /* generate_cesu8_string */
@@ -119,10 +119,10 @@ main ()
 
     ecma_string_t *char_collection_string_p = ecma_new_ecma_string_from_utf8 (cesu8_string, cesu8_string_size);
     ecma_length_t char_collection_len = ecma_string_get_length (char_collection_string_p);
-    JERRY_ASSERT (char_collection_len == length);
+    TEST_ASSERT (char_collection_len == length);
     ecma_deref_ecma_string (char_collection_string_p);
 
-    JERRY_ASSERT (lit_utf8_string_length (cesu8_string, cesu8_string_size) == length);
+    TEST_ASSERT (lit_utf8_string_length (cesu8_string, cesu8_string_size) == length);
 
     const lit_utf8_byte_t *curr_p = cesu8_string;
     const lit_utf8_byte_t *end_p = cesu8_string + cesu8_string_size;
@@ -140,7 +140,7 @@ main ()
       lit_utf8_incr (&curr_p);
     }
 
-    JERRY_ASSERT (length == calculated_length);
+    TEST_ASSERT (length == calculated_length);
 
     if (code_units_count > 0)
     {
@@ -148,73 +148,73 @@ main ()
       {
         ecma_length_t index = (ecma_length_t) rand () % code_units_count;
         curr_p = saved_positions[index];
-        JERRY_ASSERT (lit_utf8_peek_next (curr_p) == code_units[index]);
+        TEST_ASSERT (lit_utf8_peek_next (curr_p) == code_units[index]);
       }
     }
 
     curr_p = (lit_utf8_byte_t *) end_p;
     while (curr_p > cesu8_string)
     {
-      JERRY_ASSERT (code_units_count > 0);
+      TEST_ASSERT (code_units_count > 0);
       calculated_length--;
-      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_peek_prev (curr_p));
+      TEST_ASSERT (code_units[calculated_length] == lit_utf8_peek_prev (curr_p));
       lit_utf8_decr (&curr_p);
     }
 
-    JERRY_ASSERT (calculated_length == 0);
+    TEST_ASSERT (calculated_length == 0);
 
     while (curr_p < end_p)
     {
       ecma_char_t code_unit = lit_utf8_read_next (&curr_p);
-      JERRY_ASSERT (code_unit == code_units[calculated_length]);
+      TEST_ASSERT (code_unit == code_units[calculated_length]);
       calculated_length++;
     }
 
-    JERRY_ASSERT (length == calculated_length);
+    TEST_ASSERT (length == calculated_length);
 
     while (curr_p > cesu8_string)
     {
-      JERRY_ASSERT (code_units_count > 0);
+      TEST_ASSERT (code_units_count > 0);
       calculated_length--;
-      JERRY_ASSERT (code_units[calculated_length] == lit_utf8_read_prev (&curr_p));
+      TEST_ASSERT (code_units[calculated_length] == lit_utf8_read_prev (&curr_p));
     }
 
-    JERRY_ASSERT (calculated_length == 0);
+    TEST_ASSERT (calculated_length == 0);
   }
 
   /* Overlong-encoded code point */
   lit_utf8_byte_t invalid_cesu8_string_1[] = {0xC0, 0x82};
-  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
+  TEST_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
 
   /* Overlong-encoded code point */
   lit_utf8_byte_t invalid_cesu8_string_2[] = {0xE0, 0x80, 0x81};
-  JERRY_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
+  TEST_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
 
   /* Pair of surrogates: 0xD901 0xDFF0 which encode Unicode character 0x507F0 */
   lit_utf8_byte_t invalid_cesu8_string_3[] = {0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0};
-  JERRY_ASSERT (lit_is_cesu8_string_valid (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
+  TEST_ASSERT (lit_is_cesu8_string_valid (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
 
   /* Isolated high surrogate 0xD901 */
   lit_utf8_byte_t valid_utf8_string_1[] = {0xED, 0xA4, 0x81};
-  JERRY_ASSERT (lit_is_cesu8_string_valid (valid_utf8_string_1, sizeof (valid_utf8_string_1)));
+  TEST_ASSERT (lit_is_cesu8_string_valid (valid_utf8_string_1, sizeof (valid_utf8_string_1)));
 
   lit_utf8_byte_t res_buf[3];
   lit_utf8_size_t res_size;
 
   res_size = lit_code_unit_to_utf8 (0x73, res_buf);
-  JERRY_ASSERT (res_size == 1);
-  JERRY_ASSERT (res_buf[0] == 0x73);
+  TEST_ASSERT (res_size == 1);
+  TEST_ASSERT (res_buf[0] == 0x73);
 
   res_size = lit_code_unit_to_utf8 (0x41A, res_buf);
-  JERRY_ASSERT (res_size == 2);
-  JERRY_ASSERT (res_buf[0] == 0xD0);
-  JERRY_ASSERT (res_buf[1] == 0x9A);
+  TEST_ASSERT (res_size == 2);
+  TEST_ASSERT (res_buf[0] == 0xD0);
+  TEST_ASSERT (res_buf[1] == 0x9A);
 
   res_size = lit_code_unit_to_utf8 (0xD7FF, res_buf);
-  JERRY_ASSERT (res_size == 3);
-  JERRY_ASSERT (res_buf[0] == 0xED);
-  JERRY_ASSERT (res_buf[1] == 0x9F);
-  JERRY_ASSERT (res_buf[2] == 0xBF);
+  TEST_ASSERT (res_size == 3);
+  TEST_ASSERT (res_buf[0] == 0xED);
+  TEST_ASSERT (res_buf[1] == 0x9F);
+  TEST_ASSERT (res_buf[2] == 0xBF);
 
   ecma_finalize ();
   jmem_finalize (true);

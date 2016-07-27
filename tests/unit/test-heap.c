@@ -45,7 +45,7 @@ test_heap_give_some_memory_back (jmem_free_unused_memory_severity_t severity)
   }
   else
   {
-    JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
+    TEST_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
     p = 1;
   }
@@ -58,7 +58,7 @@ test_heap_give_some_memory_back (jmem_free_unused_memory_severity_t severity)
       {
         for (size_t k = 0; k < sizes[i]; k++)
         {
-          JERRY_ASSERT (ptrs[i][k] == 0);
+          TEST_ASSERT (ptrs[i][k] == 0);
         }
 
         jmem_heap_free_block_size_stored (ptrs[i]);
@@ -89,7 +89,7 @@ main ()
       ptrs[j] = (uint8_t *) jmem_heap_alloc_block_store_size (size);
       sizes[j] = size;
 
-      JERRY_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
+      TEST_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
       memset (ptrs[j], 0, sizes[j]);
     }
 
@@ -101,7 +101,7 @@ main ()
       {
         for (size_t k = 0; k < sizes[j]; k++)
         {
-          JERRY_ASSERT (ptrs[j][k] == 0);
+          TEST_ASSERT (ptrs[j][k] == 0);
         }
 
         jmem_heap_free_block_size_stored (ptrs[j]);

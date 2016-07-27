@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# Copyright 2014 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,22 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git pull --rebase
-status_code=$?
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
-if [ $status_code -ne 0 ]
-then
-  echo "Pulling master failed"
+find_program(CMAKE_C_COMPILER NAMES x86_64-linux-gnu-gcc x86_64-unknown-linux-gnu-gcc)
 
-  exit 1
-fi
-
-git fetch origin refs/notes/*:refs/notes/*
-status_code=$?
-
-if [ $status_code -ne 0 ]
-then
-  echo "Pulling notes failed"
-
-  exit 1
-fi
+set(FLAGS_COMMON_ARCH -ffixed-rbp)

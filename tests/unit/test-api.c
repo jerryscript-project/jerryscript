@@ -73,7 +73,7 @@ handler (const jerry_value_t func_obj_val, /**< function object */
 
   printf ("ok %d %d %p %d\n", func_obj_val, this_val, args_p, args_cnt);
 
-  JERRY_ASSERT (args_cnt == 2);
+  TEST_ASSERT (args_cnt == 2);
 
   JERRY_ASSERT (jerry_value_is_string (args_p[0]));
   sz = jerry_get_string_size (args_p[0]);
@@ -81,10 +81,10 @@ handler (const jerry_value_t func_obj_val, /**< function object */
   sz = jerry_string_to_char_buffer (args_p[0],
                                     (jerry_char_t *) buffer,
                                     sz);
-  JERRY_ASSERT (sz == 1);
-  JERRY_ASSERT (!strncmp (buffer, "1", (size_t) sz));
+  TEST_ASSERT (sz == 1);
+  TEST_ASSERT (!strncmp (buffer, "1", (size_t) sz));
 
-  JERRY_ASSERT (jerry_value_is_boolean (args_p[1]));
+  TEST_ASSERT (jerry_value_is_boolean (args_p[1]));
 
   return jerry_create_string ((jerry_char_t *) "string from handler");
 } /* handler */
@@ -103,7 +103,7 @@ handler_throw_test (const jerry_value_t func_obj_val, /**< function object */
 static void
 handler_construct_freecb (uintptr_t native_p)
 {
-  JERRY_ASSERT (native_p == (uintptr_t) 0x0012345678abcdefull);
+  TEST_ASSERT (native_p == (uintptr_t) 0x0012345678abcdefull);
   printf ("ok object free callback\n");
 
   test_api_is_free_callback_was_called = true;
@@ -117,11 +117,11 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
 {
   printf ("ok construct %d %d %p %d\n", func_obj_val, this_val, args_p, args_cnt);
 
-  JERRY_ASSERT (jerry_value_is_object (this_val));
+  TEST_ASSERT (jerry_value_is_object (this_val));
 
-  JERRY_ASSERT (args_cnt == 1);
-  JERRY_ASSERT (jerry_value_is_boolean (args_p[0]));
-  JERRY_ASSERT (jerry_get_boolean_value (args_p[0]) == true);
+  TEST_ASSERT (args_cnt == 1);
+  TEST_ASSERT (jerry_value_is_boolean (args_p[0]));
+  TEST_ASSERT (jerry_get_boolean_value (args_p[0]) == true);
 
   jerry_value_t field_name = jerry_create_string ((jerry_char_t *) "value_field");
   jerry_set_property (this_val, field_name, args_p[0]);
@@ -131,7 +131,7 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
                                   (uintptr_t) 0x0000000000000000ull,
                                   handler_construct_freecb);
 
-  uintptr_t ptr;
+  uintptr_t ptr = (uintptr_t) NULL;
   bool is_ok = jerry_get_object_native_handle (this_val, &ptr);
   JERRY_ASSERT (is_ok && ptr == (uintptr_t) 0x0000000000000000ull);
 
@@ -226,6 +226,8 @@ foreach (const jerry_value_t name, /**< field name */
 
   JERRY_ASSERT (false);
   return false;
+
+
 } /* foreach */
 
 static bool
@@ -241,7 +243,7 @@ foreach_exception (const jerry_value_t name, /**< field name */
 
   if (!strncmp (str_buf_p, "foxtrot", (size_t) sz))
   {
-    JERRY_ASSERT (false);
+    TEST_ASSERT (false);
   }
 
   return true;
@@ -389,7 +391,7 @@ main (void)
   sz = jerry_string_to_char_buffer (res, (jerry_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 4);
   jerry_release_value (res);
-  JERRY_ASSERT (!strncmp (buffer, "abcd", (size_t) sz));
+  TEST_ASSERT (!strncmp (buffer, "abcd", (size_t) sz));
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
 
@@ -482,7 +484,7 @@ main (void)
   sz = jerry_string_to_char_buffer (res, (jerry_char_t *) buffer, sz);
   JERRY_ASSERT (sz == 19);
   jerry_release_value (res);
-  JERRY_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
+  TEST_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
 
   // Create native handler bound function object and set it to 'external_construct' variable
   external_construct_val = jerry_create_external_function (handler_construct);
@@ -508,7 +510,7 @@ main (void)
   jerry_release_value (val_value_field);
   jerry_release_value (external_construct_val);
 
-  uintptr_t ptr;
+  uintptr_t ptr = (uintptr_t) NULL;
   is_ok = jerry_get_object_native_handle (res, &ptr);
   JERRY_ASSERT (is_ok
                 && ptr == (uintptr_t) 0x0012345678abcdefull);
@@ -545,7 +547,7 @@ main (void)
   jerry_release_value (val_t);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (jerry_value_is_object (res));
+  TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   // Test: Call of non-function
@@ -554,7 +556,7 @@ main (void)
   JERRY_ASSERT (jerry_value_has_error_flag (res));
 
   // 'res' should contain exception object
-  JERRY_ASSERT (jerry_value_is_object (res));
+  TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   jerry_release_value (obj_val);
@@ -569,7 +571,7 @@ main (void)
   jerry_release_value (val_t);
 
   // 'res' should contain exception object
-  JERRY_ASSERT (jerry_value_is_object (res));
+  TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   // Test: Call of non-function as constructor
@@ -578,7 +580,7 @@ main (void)
   JERRY_ASSERT (jerry_value_has_error_flag (res));
 
   // 'res' should contain exception object
-  JERRY_ASSERT (jerry_value_is_object (res));
+  TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   jerry_release_value (obj_val);
@@ -592,7 +594,7 @@ main (void)
   jerry_set_property_by_index (array_obj_val, 5, v_in);
   jerry_value_t v_out = jerry_get_property_by_index (array_obj_val, 5);
 
-  JERRY_ASSERT (jerry_value_is_number (v_out)
+  TEST_ASSERT (jerry_value_is_number (v_out)
                 && jerry_get_number_value (v_out) == 10.5);
 
   jerry_release_value (v_in);
@@ -703,7 +705,7 @@ main (void)
 
   jerry_cleanup ();
 
-  JERRY_ASSERT (test_api_is_free_callback_was_called);
+  TEST_ASSERT (test_api_is_free_callback_was_called);
 
   // External Magic String
   jerry_init (JERRY_INIT_SHOW_OPCODES);
@@ -739,7 +741,7 @@ main (void)
                                                                       false,
                                                                       global_mode_snapshot_buffer,
                                                                       sizeof (global_mode_snapshot_buffer));
-    JERRY_ASSERT (global_mode_snapshot_size != 0);
+    TEST_ASSERT (global_mode_snapshot_size != 0);
     jerry_cleanup ();
 
     jerry_init (JERRY_INIT_SHOW_OPCODES);
@@ -749,7 +751,7 @@ main (void)
                                                                     false,
                                                                     eval_mode_snapshot_buffer,
                                                                     sizeof (eval_mode_snapshot_buffer));
-    JERRY_ASSERT (eval_mode_snapshot_size != 0);
+    TEST_ASSERT (eval_mode_snapshot_size != 0);
     jerry_cleanup ();
 
     jerry_init (JERRY_INIT_SHOW_OPCODES);
@@ -778,7 +780,7 @@ main (void)
     sz = jerry_string_to_char_buffer (res, (jerry_char_t *) buffer, sz);
     JERRY_ASSERT (sz == 20);
     jerry_release_value (res);
-    JERRY_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
+    TEST_ASSERT (!strncmp (buffer, "string from snapshot", (size_t) sz));
 
     jerry_cleanup ();
   }

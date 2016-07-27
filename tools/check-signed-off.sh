@@ -35,7 +35,7 @@ actual_signed_off_by_line=`git show -s --format=%B $commit_hash | sed '/^$/d' | 
 
 if [ "$actual_signed_off_by_line" != "$required_signed_off_by_line" ]
 then
- echo -e "\e[1;33m Signed-off-by message is incorrect. The following line should be at the end of the $commit_hash commit's message: '$required_signed_off_by_line'. \e[0m\n"
+ echo -e "\e[1;33mSigned-off-by message is incorrect. The following line should be at the end of the $commit_hash commit's message: '$required_signed_off_by_line'. \e[0m"
 
  exit 1
 fi

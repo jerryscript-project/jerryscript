@@ -45,33 +45,33 @@ main ()
 
   // test 1-byte-long unicode sequences
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long1 + 2, 4));
-  JERRY_ASSERT (length == 1);
+  TEST_ASSERT (length == 1);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long2 + 2, 4));
-  JERRY_ASSERT (length == 1);
+  TEST_ASSERT (length == 1);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long3 + 2, 4));
-  JERRY_ASSERT (length == 1);
+  TEST_ASSERT (length == 1);
 
   // test 2-byte-long unicode sequences
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long1 + 2, 4));
-  JERRY_ASSERT (length == 2);
+  TEST_ASSERT (length == 2);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long2 + 2, 4));
-  JERRY_ASSERT (length == 2);
+  TEST_ASSERT (length == 2);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long3 + 2, 4));
-  JERRY_ASSERT (length == 2);
+  TEST_ASSERT (length == 2);
 
   // test 3-byte-long unicode sequences
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long1 + 2, 4));
-  JERRY_ASSERT (length != 2);
+  TEST_ASSERT (length != 2);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long2 + 2, 4));
-  JERRY_ASSERT (length == 3);
+  TEST_ASSERT (length == 3);
 
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long3 + 2, 4));
-  JERRY_ASSERT (length == 3);
+  TEST_ASSERT (length == 3);
 
   ecma_finalize ();
   jmem_finalize (true);

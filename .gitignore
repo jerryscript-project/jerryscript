@@ -1,9 +1,6 @@
 # Produced files
 
-build/bin
-build/obj*
-build/prerequisites
-build/tests
+build/*
 
 # IDE related files
 nbproject
@@ -22,18 +19,12 @@ vgcore.*
 **.patch
 .tags*
 cscope.*
+__pycache__
+*.pyc
 
 # ctags and ID database
 tags
 ID
-
-# Prerequisites
-.prerequisites
-third-party/STM32F3-Discovery_FW_V1.1.0
-third-party/STM32F4-Discovery_FW_V1.1.0
-third-party/nuttx
-third-party/vera++
-third-party/cppcheck
 
 # targets
 jerry_targetjs.h

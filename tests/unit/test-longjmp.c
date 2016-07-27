@@ -46,22 +46,22 @@ test_setjmp_longjmp (volatile int depth)
     }
     else
     {
-      JERRY_ASSERT (k == depth + 1);
+      TEST_ASSERT (k == depth + 1);
 
-      JERRY_ASSERT (a == 1);
-      JERRY_ASSERT (b == 2);
-      JERRY_ASSERT (c == 3);
+      TEST_ASSERT (a == 1);
+      TEST_ASSERT (b == 2);
+      TEST_ASSERT (c == 3);
 
       for (int i = 0; i < 256; i++)
       {
-        JERRY_ASSERT (array[i] == i);
+        TEST_ASSERT (array[i] == i);
       }
     }
   }
   else
   {
     int t = rand () % depth;
-    JERRY_ASSERT (t >= 0 && t < depth);
+    TEST_ASSERT (t >= 0 && t < depth);
 
     longjmp (buffers[t], t + 1);
   }

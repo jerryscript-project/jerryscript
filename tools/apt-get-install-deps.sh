@@ -19,4 +19,4 @@ sudo apt-get update -q
 sudo apt-get install -q -y \
     make cmake ninja-build \
     gcc gcc-arm-none-eabi \
-    cppcheck vera++
+    cppcheck vera++ python

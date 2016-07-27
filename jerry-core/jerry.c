@@ -2062,11 +2062,12 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
 
   return snapshot_buffer_write_offset;
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
-  (void) source_p;
-  (void) source_size;
-  (void) is_for_global;
-  (void) buffer_p;
-  (void) buffer_size;
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (is_for_global);
+  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
 
   return 0;
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */

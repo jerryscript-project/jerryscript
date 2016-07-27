@@ -25,12 +25,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-/**
- * Verify that unit tests are built with enabled debug check
- */
-#ifdef JERRY_NDEBUG
-# error "defined (JERRY_NDEBUG) in a unit test"
-#endif /* JERRY_NDEBUG */
+#define TEST_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
+    jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
 
 /**
  * Test initialization statement that should be included

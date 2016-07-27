@@ -11,20 +11,20 @@ before_install:
 
 install:
 
-script: "make -j VERBOSE=1 NINJA=1 $TARGET"
+script: "python tools/run-tests.py $OPTS"
 
 env:
-  - TARGET="check-signed-off check-vera check-cppcheck"
-  - TARGET="build.linux test-js"
-  - TARGET="build.linux test-js" TOOLCHAIN=build/configs/toolchain_linux_armv7l-hf.cmake TIMEOUT=300
-  - TARGET=test-buildoptions
-  - TARGET=test-unit
+  - OPTS="--check-signed-off --check-cppcheck --check-vera"
+  - OPTS="--jerry-tests --jerry-test-suite"
+  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l-hf.cmake" TIMEOUT=300
+  - OPTS=--buildoption-test
+  - OPTS=--unittests
 
 matrix:
   include:
     - os: osx
-      env: TARGET="build.darwin test-js"
+      env: OPTS="--jerry-tests --jerry-test-suite"
     - os: osx
-      env: TARGET=test-unit
+      env: OPTS=--unittests
   allow_failures:
     - os: osx

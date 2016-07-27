@@ -27,7 +27,7 @@ cd jerryscript
 
 ### Building JerryScript
 ```bash
-make release.linux -j
+python tools/build.py
 ```
 
 For additional information see [Getting Started](docs/01.GETTING-STARTED.md).

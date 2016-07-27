@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# Copyright 2014-2015 Samsung Electronics Co., Ltd.
+# Copyright 2015-2016 Samsung Electronics Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-git log --graph --branches --decorate \
-        --show-notes=perf --show-notes=mem --show-notes=test_build_env \
-        --show-notes=arm-linux-perf \
-        --show-notes=arm-linux-memory-consumption \
-        --show-notes=arm-linux-binary-size \
-        --show-notes=stm32f4-binary-size
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR armv7l-el)
 
-exit 0
+set(CMAKE_C_COMPILER arm-linux-gnueabi-gcc)
+
+set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb)

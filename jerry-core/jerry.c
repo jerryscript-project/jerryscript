@@ -868,7 +868,7 @@ jerry_create_null (void)
  * Create new JavaScript object, like with new Object().
  *
  * Note:
- *      returned value must be freed with jerry_release_object, when it is no longer needed.
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
  * @return value of the created object
  */
@@ -884,7 +884,7 @@ jerry_create_object (void)
  * Create string from a valid CESU8 string
  *
  * Note:
- *      returned value must be freed with jerry_release_object, when it is no longer needed.
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
  * @return value of the created string
  */
@@ -898,7 +898,7 @@ jerry_create_string (const jerry_char_t *str_p) /**< pointer to string */
  * Create string from a valid CESU8 string
  *
  * Note:
- *      returned value must be freed with jerry_release_object when it is no longer needed.
+ *      returned value must be freed with jerry_release_value when it is no longer needed.
  *
  * @return value of the created string
  */

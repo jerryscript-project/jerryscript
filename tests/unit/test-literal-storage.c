@@ -65,7 +65,6 @@ main ()
   lit_utf8_size_t lengths[test_sub_iters];
 
   jmem_init ();
-  ecma_init_lit_storage ();
 
   for (uint32_t i = 0; i < test_iters; i++)
   {

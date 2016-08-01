@@ -34,7 +34,6 @@ void
 jmem_init (void)
 {
   jmem_heap_init ();
-  jmem_pools_init ();
 } /* jmem_init */
 
 /**

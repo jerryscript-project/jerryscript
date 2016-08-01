@@ -29,7 +29,6 @@
  * @{
  */
 
-extern void jmem_pools_init (void);
 extern void jmem_pools_finalize (void);
 extern void *jmem_pools_alloc (void);
 extern void jmem_pools_free (void *);

@@ -13,27 +13,9 @@
  * limitations under the License.
  */
 
+#include "jcontext.h"
 #include "lit-magic-strings.h"
-
 #include "lit-strings.h"
-
-/**
- * External magic strings data array, count and lengths
- */
-static const lit_utf8_byte_t **lit_magic_string_ex_array = NULL;
-static uint32_t lit_magic_string_ex_count = 0;
-static const lit_utf8_size_t *lit_magic_string_ex_sizes = NULL;
-
-/**
- * Initialize external magic strings
- */
-void
-lit_magic_strings_ex_init (void)
-{
-  lit_magic_string_ex_array = NULL;
-  lit_magic_string_ex_count = 0;
-  lit_magic_string_ex_sizes = NULL;
-} /* lit_magic_strings_ex_init */
 
 /**
  * Get number of external magic strings
@@ -44,7 +26,7 @@ lit_magic_strings_ex_init (void)
 uint32_t
 lit_get_magic_string_ex_count (void)
 {
-  return lit_magic_string_ex_count;
+  return JERRY_CONTEXT (lit_magic_string_ex_count);
 } /* lit_get_magic_string_ex_count */
 
 /**
@@ -97,9 +79,9 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 const lit_utf8_byte_t *
 lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic string id */
 {
-  if (lit_magic_string_ex_array && id < lit_magic_string_ex_count)
+  if (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count))
   {
-    return lit_magic_string_ex_array[id];
+    return JERRY_CONTEXT (lit_magic_string_ex_array)[id];
   }
 
   JERRY_UNREACHABLE ();
@@ -113,7 +95,7 @@ lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic str
 lit_utf8_size_t
 lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic string id */
 {
-  return lit_magic_string_ex_sizes[id];
+  return JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 } /* lit_get_magic_string_ex_size */
 
 /**
@@ -129,22 +111,23 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
   JERRY_ASSERT (count > 0);
   JERRY_ASSERT (ex_str_sizes != NULL);
 
-  JERRY_ASSERT (lit_magic_string_ex_array == NULL);
-  JERRY_ASSERT (lit_magic_string_ex_count == 0);
-  JERRY_ASSERT (lit_magic_string_ex_sizes == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_count) == 0);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes) == NULL);
 
   /* Set external magic strings information */
-  lit_magic_string_ex_array = ex_str_items;
-  lit_magic_string_ex_count = count;
-  lit_magic_string_ex_sizes = ex_str_sizes;
+  JERRY_CONTEXT (lit_magic_string_ex_array) = ex_str_items;
+  JERRY_CONTEXT (lit_magic_string_ex_count) = count;
+  JERRY_CONTEXT (lit_magic_string_ex_sizes) = ex_str_sizes;
 
 #ifndef JERRY_NDEBUG
   for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < lit_magic_string_ex_count;
+       id < JERRY_CONTEXT (lit_magic_string_ex_count);
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
-    JERRY_ASSERT (lit_magic_string_ex_sizes[id] == lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id)));
-    JERRY_ASSERT (lit_magic_string_ex_sizes[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+    lit_utf8_size_t string_size = lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id));
+    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] == string_size);
+    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
   }
 #endif /* !JERRY_NDEBUG */
 } /* lit_magic_strings_ex_set */
@@ -195,7 +178,7 @@ bool lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 st
   /* TODO: Improve performance of search */
 
   for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < lit_magic_string_ex_count;
+       id < JERRY_CONTEXT (lit_magic_string_ex_count);
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
     if (lit_compare_utf8_string_and_magic_string_ex (string_p, string_size, id))
@@ -206,7 +189,7 @@ bool lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 st
     }
   }
 
-  *out_id_p = lit_magic_string_ex_count;
+  *out_id_p = JERRY_CONTEXT (lit_magic_string_ex_count);
 
   return false;
 } /* lit_is_ex_utf8_string_magic */

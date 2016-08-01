@@ -150,9 +150,7 @@ jmem_heap_init (void)
 
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
-  JERRY_CONTEXT (jmem_heap_allocated_size) = 0;
   JERRY_CONTEXT (jmem_heap_limit) = CONFIG_MEM_HEAP_DESIRED_LIMIT;
-  JERRY_CONTEXT (jmem_free_unused_memory_callback) = NULL;
 
   jmem_heap_free_t *const region_p = (jmem_heap_free_t *) JERRY_HEAP_CONTEXT (area);
 
@@ -163,10 +161,6 @@ jmem_heap_init (void)
   JERRY_HEAP_CONTEXT (first).next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (region_p);
 
   JERRY_CONTEXT (jmem_heap_list_skip_p) = &JERRY_HEAP_CONTEXT (first);
-
-#ifdef JERRY_VALGRIND_FREYA
-  JERRY_CONTEXT (valgrind_freya_mempool_request) = false;
-#endif /* JERRY_VALGRIND_FREYA */
 
   VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
@@ -681,8 +675,6 @@ jmem_heap_stats_print (void)
 static void
 jmem_heap_stat_init ()
 {
-  memset (&JERRY_CONTEXT (jmem_heap_stats), 0, sizeof (jmem_heap_stats_t));
-
   JERRY_CONTEXT (jmem_heap_stats).size = JMEM_HEAP_AREA_SIZE;
 } /* jmem_heap_stat_init */
 

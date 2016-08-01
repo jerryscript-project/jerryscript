@@ -161,19 +161,6 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 } /* ecma_deref_object */
 
 /**
- * Initialize garbage collector
- */
-void
-ecma_gc_init (void)
-{
-  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = NULL;
-  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = NULL;
-  JERRY_CONTEXT (ecma_gc_visited_flip_flag) = false;
-  JERRY_CONTEXT (ecma_gc_objects_number) = 0;
-  JERRY_CONTEXT (ecma_gc_new_objects) = 0;
-} /* ecma_gc_init */
-
-/**
  * Mark referenced object from property
  */
 static void

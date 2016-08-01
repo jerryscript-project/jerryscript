@@ -37,7 +37,6 @@ typedef struct
   jmem_cpointer_t literal_offset; /**< literal offset */
 } lit_mem_to_snapshot_id_map_entry_t;
 
-extern void ecma_init_lit_storage (void);
 extern void ecma_finalize_lit_storage (void);
 
 extern jmem_cpointer_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *, lit_utf8_size_t);

@@ -26,7 +26,6 @@
  * @{
  */
 
-extern void ecma_gc_init (void);
 extern void ecma_init_gc_info (ecma_object_t *);
 extern void ecma_ref_object (ecma_object_t *);
 extern void ecma_deref_object (ecma_object_t *);

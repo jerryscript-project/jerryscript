@@ -29,16 +29,6 @@ JERRY_STATIC_ASSERT (sizeof (ecma_lit_storage_item_t) <= sizeof (uint64_t),
                      size_of_ecma_lit_storage_item_t_must_be_less_than_or_equal_to_8_bytes);
 
 /**
- * Initialize literal storage
- */
-void
-ecma_init_lit_storage (void)
-{
-  JERRY_CONTEXT (string_list_first_p) = NULL;
-  JERRY_CONTEXT (number_list_first_p) = NULL;
-} /* ecma_init_lit_storage */
-
-/**
  * Free string list
  */
 static void

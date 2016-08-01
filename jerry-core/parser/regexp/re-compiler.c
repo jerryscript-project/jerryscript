@@ -18,6 +18,7 @@
 #include "ecma-helpers.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 #include "jrt-libc-includes.h"
 #include "jmem-heap.h"
 #include "re-bytecode.h"
@@ -444,9 +445,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
   return ret_value;
 } /* re_parse_alternative */
 
-static const re_compiled_code_t *re_cache[RE_CACHE_SIZE];
-static uint8_t re_cache_idx = RE_CACHE_SIZE;
-
 /**
  * Search for the given pattern in the RegExp cache
  *
@@ -461,7 +459,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
 
   for (uint8_t idx = 0u; idx < RE_CACHE_SIZE; idx++)
   {
-    const re_compiled_code_t *cached_bytecode_p = re_cache[idx];
+    const re_compiled_code_t *cached_bytecode_p = JERRY_CONTEXT (re_cache)[idx];
 
     if (cached_bytecode_p != NULL)
     {
@@ -494,14 +492,14 @@ re_cache_gc_run ()
 {
   for (uint32_t i = 0u; i < RE_CACHE_SIZE; i++)
   {
-    const re_compiled_code_t *cached_bytecode_p = re_cache[i];
+    const re_compiled_code_t *cached_bytecode_p = JERRY_CONTEXT (re_cache)[i];
 
     if (cached_bytecode_p != NULL
         && cached_bytecode_p->header.refs == 1)
     {
       /* Only the cache has reference for the bytecode */
       ecma_bytecode_deref ((ecma_compiled_code_t *) cached_bytecode_p);
-      re_cache[i] = NULL;
+      JERRY_CONTEXT (re_cache)[i] = NULL;
     }
   }
 } /* re_cache_gc_run */
@@ -524,7 +522,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
   if (cache_idx < RE_CACHE_SIZE)
   {
-    *out_bytecode_p = re_cache[cache_idx];
+    *out_bytecode_p = JERRY_CONTEXT (re_cache)[cache_idx];
 
     if (*out_bytecode_p != NULL)
     {
@@ -614,25 +612,26 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
 
     if (cache_idx == RE_CACHE_SIZE)
     {
-      if (re_cache_idx == 0u)
+      if (JERRY_CONTEXT (re_cache_idx) == RE_CACHE_SIZE)
       {
-        re_cache_idx = RE_CACHE_SIZE;
+        JERRY_CONTEXT (re_cache_idx) = 0;
       }
 
-      const re_compiled_code_t *cached_bytecode_p = re_cache[--re_cache_idx];
-      JERRY_DDLOG ("RegExp cache is full! Remove the element on idx: %d\n", re_cache_idx);
+      JERRY_DDLOG ("RegExp cache is full! Remove the element on idx: %d\n", JERRY_CONTEXT (re_cache_idx));
 
-      if (cached_bytecode_p != NULL)
+      cache_idx = JERRY_CONTEXT (re_cache_idx)++;
+
+      /* The garbage collector might run during the byte code
+       * allocations above and it may free this entry. */
+      if (JERRY_CONTEXT (re_cache)[cache_idx] != NULL)
       {
-        ecma_bytecode_deref ((ecma_compiled_code_t *) cached_bytecode_p);
+        ecma_bytecode_deref ((ecma_compiled_code_t *) JERRY_CONTEXT (re_cache)[cache_idx]);
       }
-
-      cache_idx = re_cache_idx;
     }
 
     JERRY_DDLOG ("Insert bytecode into RegExp cache (idx: %d).\n", cache_idx);
     ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
-    re_cache[cache_idx] = *out_bytecode_p;
+    JERRY_CONTEXT (re_cache)[cache_idx] = *out_bytecode_p;
   }
 
   return ret_value;

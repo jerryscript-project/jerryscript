@@ -50,7 +50,6 @@ typedef enum
 #define ECMA_GET_ROUTINE_ID(value) ((uint16_t) ((value) >> 4))
 
 /* ecma-builtins.c */
-extern void ecma_init_builtins (void);
 extern void ecma_finalize_builtins (void);
 
 extern ecma_value_t

@@ -35,10 +35,7 @@
 void
 ecma_init (void)
 {
-  ecma_gc_init ();
-  ecma_init_builtins ();
   ecma_lcache_init ();
-  ecma_init_lit_storage ();
   ecma_init_global_lex_env ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);

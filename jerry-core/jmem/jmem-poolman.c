@@ -36,19 +36,16 @@
 
 #ifdef JMEM_STATS
 
-static void jmem_pools_stat_init (void);
 static void jmem_pools_stat_free_pool (void);
 static void jmem_pools_stat_new_alloc (void);
 static void jmem_pools_stat_reuse (void);
 static void jmem_pools_stat_dealloc (void);
 
-#  define JMEM_POOLS_STAT_INIT() jmem_pools_stat_init ()
 #  define JMEM_POOLS_STAT_FREE_POOL() jmem_pools_stat_free_pool ()
 #  define JMEM_POOLS_STAT_NEW_ALLOC() jmem_pools_stat_new_alloc ()
 #  define JMEM_POOLS_STAT_REUSE() jmem_pools_stat_reuse ()
 #  define JMEM_POOLS_STAT_DEALLOC() jmem_pools_stat_dealloc ()
 #else /* !JMEM_STATS */
-#  define JMEM_POOLS_STAT_INIT()
 #  define JMEM_POOLS_STAT_FREE_POOL()
 #  define JMEM_POOLS_STAT_NEW_ALLOC()
 #  define JMEM_POOLS_STAT_REUSE()
@@ -80,19 +77,8 @@ static void jmem_pools_stat_dealloc (void);
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */
 
-/**
- * Initialize pool manager
- */
-void
-jmem_pools_init (void)
-{
-  JERRY_STATIC_ASSERT (sizeof (jmem_pools_chunk_t) <= JMEM_POOL_CHUNK_SIZE,
-                       size_of_mem_pools_chunk_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
-
-  JERRY_CONTEXT (jmem_free_chunk_p) = NULL;
-
-  JMEM_POOLS_STAT_INIT ();
-} /* jmem_pools_init */
+JERRY_STATIC_ASSERT (sizeof (jmem_pools_chunk_t) <= JMEM_POOL_CHUNK_SIZE,
+                     size_of_mem_pools_chunk_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
 
 /**
  * Finalize pool manager
@@ -218,15 +204,6 @@ jmem_pools_stats_print (void)
                   pools_stats->reused_count / pools_stats->new_alloc_count,
                   pools_stats->reused_count % pools_stats->new_alloc_count * 10000 / pools_stats->new_alloc_count);
 } /* jmem_pools_stats_print */
-
-/**
- * Initalize pools' memory usage statistics account structure
- */
-static void
-jmem_pools_stat_init (void)
-{
-  memset (&JERRY_CONTEXT (jmem_pools_stats), 0, sizeof (jmem_pools_stats_t));
-} /* jmem_pools_stat_init */
 
 /**
  * Account for allocation of new pool chunk

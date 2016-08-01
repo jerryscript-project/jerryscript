@@ -28,7 +28,7 @@ endif
 TARGET_ZEPHYR ?= ./targets/zephyr
 TARGET_ZEPHYR_SRC_DIR = $(TARGET_ZEPHYR)/src
 
-TYPE  ?= release
+TYPE  ?= jerry-core
 JERRYHEAP ?= 16
 
 # Include functionality like regular expressions
@@ -44,27 +44,20 @@ ifndef ZEPHYR_BASE
 $(error Missing Zephyr base, did you source zephyr-env.sh? )
 endif
 
-# -cp is required for user-friendly error messages in REPL
-VARIETY ?= -cp_minimal
-
 INTERM     = build/$(BOARD)/obj-$(BOARD)
 OUTPUT     = build/$(BOARD)
 
 -include $(ZEPHYR_BASE)/boards/$(BOARD_NAME)/Makefile.board
 -include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
 
-CC = $(CROSS_COMPILE)gcc
-
 EXT_CFLAGS := -fno-asynchronous-unwind-tables -fno-omit-frame-pointer
 EXT_CFLAGS += -fno-stack-protector -fno-strict-overflow -ffreestanding
 EXT_CFLAGS += -fno-reorder-functions -fno-defer-pop -fdata-sections
 EXT_CFLAGS += -ffunction-sections -fno-inline-functions
 
-# TODO @sergioamr Read the arch and cflags from zephyr
-
 ifeq ($(BOARD),qemu_x86)
 CONFIG_TOOLCHAIN_VARIANT = x86
-CPU = x86
+CPU = i686
 EXT_CFLAGS += -march=pentium
 EXT_CFLAGS += -mpreferred-stack-boundary=2 -mno-sse
 else ifeq ($(BOARD),$(filter $(BOARD),qemu_cortex_m3 frdm_k64f))
@@ -78,31 +71,36 @@ CPU = arc
 EXT_CFLAGS += -mARCv2EM -mav2em -mno-sdata
 else
 CONFIG_TOOLCHAIN_VARIANT = iamcu
-CPU = lakemont
+CPU = i686
 EXT_CFLAGS += -march=lakemont -mtune=lakemont -miamcu -msoft-float
 EXT_CFLAGS += -mpreferred-stack-boundary=2 -mno-sse
 endif
 
 EXT_CFLAGS += -Wall -Wno-format-zero-length -Wno-pointer-sign
 EXT_CFLAGS += -Werror=format -Werror=implicit-int -Wno-unused-but-set-variable
-EXT_CFLAGS += -Wno-main -Wno-strict-aliasing
+EXT_CFLAGS += -Wno-main -Wno-strict-aliasing -Wno-old-style-declaration
 EXT_CFLAGS += -Wno-error=format=
 
-EXT_CFLAGS += $(TOOLCHAIN_CFLAGS)
-EXT_CFLAGS += $(LIB_INCLUDE_DIR)
-EXT_CFLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
-EXT_CFLAGS += -isystem $(shell $(CC) -print-file-name=include-fixed)
+# Pass2
+-include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
+
+CC = $(CROSS_COMPILE)gcc
 
 ZEPHYR_LIBC_INC = $(subst -I,,$(TOOLCHAIN_CFLAGS))
 LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)
 
-EXTERNAL_LIB = $(INTERM)/lib$(TYPE).external$(VARIETY)-entry.a
+# TODO: Order of includes seems to have changed and time_t seems to be defined differently. Temporary disable the conversion and sign-conversion until we find what is happening
+# this will generate warnings on the default date port.
+EXT_CFLAGS += -Wno-error=conversion -Wno-error=sign-conversion
+EXT_CFLAGS += $(LIB_INCLUDE_DIR)
+EXT_CFLAGS += $(TOOLCHAIN_CFLAGS)
+
+EXTERNAL_LIB = $(INTERM)/lib/libjerry-core.a
 ZEPHYR_BIN = $(OUTPUT)/zephyr/zephyr.strip
 
-PREFIX = $(TYPE)$(VARIETY)
-LIBS = $(TYPE).external$(VARIETY)-entry $(PREFIX).jerry-core $(PREFIX).jerry-libm.lib
+LIBS = jerry-core
 
-BUILD_CONFIG = O="$(OUTPUT)/zephyr" V=$(V) USER_LIBS="$(LIBS)" USER_LIB_INCLUDE_DIR="-L $(CURDIR)/$(OUTPUT)" TARGET_ZEPHYR=$(TARGET_ZEPHYR)
+BUILD_CONFIG = O="$(OUTPUT)/zephyr" V=$(V) USER_LIBS="$(LIBS)" USER_LIB_INCLUDE_DIR="-L $(CURDIR)/$(INTERM)/lib" TARGET_ZEPHYR=$(TARGET_ZEPHYR)
 
 .PHONY: all
 all: jerry zephyr
@@ -114,23 +112,24 @@ endif
 	mkdir -p $(INTERM)
 	mkdir -p $(OUTPUT)
 	cmake -B$(INTERM) -H./ \
-	 -DENABLE_LTO=OFF \
-	 -DENABLE_VALGRIND=OFF \
+ 	 -DENABLE_LTO=OFF \
+	 -DFEATURE_VALGRIND=OFF \
+	 -DFEATURE_PROFILE=minimal \
 	 -DCMAKE_BUILD_TYPE=Release \
 	 -DCMAKE_VERBOSE_MAKEFILE=$(V) \
+	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) \
 	 -DEXTERNAL_CMAKE_C_COMPILER=$(CC) \
 	 -DEXTERNAL_CMAKE_C_COMPILER_ID=GNU \
 	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=$(CPU) \
-	 -DEXTERNAL_MEM_HEAP_SIZE_KB=$(JERRYHEAP) \
+	 -DCOMPILER_DEFAULT_LIBC=OFF \
+	 -DJERRY_CMDLINE=OFF \
 	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
-	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=lakemont \
-	 -DEXTERNAL_LIBC_INTERFACE="$(ZEPHYR_LIBC_INC)" \
-	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
-	 -DEXTERNAL_BUILD_ENTRY_FILE=$(TARGET_ZEPHYR_SRC_DIR)/jerry-entry.c
+	 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_external.cmake \
+	 -DFEATURE_SNAPSHOT_EXEC=OFF \
+	 -DENABLE_ALL_IN_ONE=OFF \
+	 -DJERRY_LIBC=OFF
 
-	make -C $(INTERM) $(TYPE).external$(VARIETY) V=1
-	cp `cat $(INTERM)/$(TYPE).external$(VARIETY)/list` $(OUTPUT)/.
-	cp  $(EXTERNAL_LIB) $(OUTPUT)/.
+	make -C $(INTERM) $(TYPE)$(VARIETY) V=1
 
 $(ZEPHYR_BIN):
 ifdef V
@@ -152,6 +151,9 @@ qemu:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
 
 flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr/zephyr.strip
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) flash
+
+debugserver:
+	make -f $(TARGET_ZEPHYR)/Makefile BOARD=$(BOARD_NAME) debugserver
 
 dfu-x86: all
 	@- dfu-util -a x86_app -D build/$(BOARD)/zephyr/zephyr.bin; \
@@ -178,10 +180,9 @@ showconfig:
 	@echo "LIBS             = $(LIBS) "
 	@echo "LIB_INCLUDE_DIR  = $(LIB_INCLUDE_DIR) "
 	@echo "BUILD_CONFIG     = $(BUILD_CONFIG) "
+	@echo "ZEPHYR_LIBC_INC  = $(ZEPHYR_LIBC_INC) "
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) showconfig
 
-# TODO @sergioamr Temporal cleanup before finding why Zephyr is ignoring my
-# 		  outdir for the project
 clean:
 	@echo "Clearing Jerryscript"
 	@rm -rf $(OUTPUT)

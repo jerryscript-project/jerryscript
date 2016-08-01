@@ -30,9 +30,21 @@ ESPTOOL    ?= /opt/Espressif/esptool-py/esptool.py
 
 # compile flags
 ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
+
+MFORCE32 = `xtensa-lx106-elf-gcc --help=target | grep mforce-l32`
+
+ifneq ($(MFORCE32),)
+    # Your compiler supports the -mforce-l32 flag which means that 
+    # constants can be placed in ROM to free additional RAM
+    ESP_CFLAGS += -DJERRY_CONST_DATA="__attribute__((aligned(4))) __attribute__((section(\".irom.text\")))"
+endif
+
 ESP_CFLAGS += -Wl,-EL -fno-inline-functions
 ESP_CFLAGS += -ffunction-sections -fdata-sections
 ESP_CFLAGS += -mlongcalls -mtext-section-literals -mno-serialize-volatile
+ifneq ($(MFORCE32),)
+	ESP_CFLAGS += -mforce-l32
+endif
 
 # include path
 ESP_LIBS_INC :=$(CURDIR)/targets/esp8266/include

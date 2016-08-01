@@ -30,7 +30,7 @@
  * The characters covered by these intervalse are from
  * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint16_t unicode_letter_interv_sps[] =
+static const uint16_t unicode_letter_interv_sps[] JERRY_CONST_DATA =
 {
 /*
  * these are handled separetely
@@ -67,7 +67,7 @@ static const uint16_t unicode_letter_interv_sps[] =
  * The characters covered by these intervalse are from
  * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint8_t unicode_letter_interv_lens[] =
+static const uint8_t unicode_letter_interv_lens[] JERRY_CONST_DATA =
 {
   22, 30, 255, 39, 17, 93, 8, 6,
   1, 4, 2, 19, 43, 7, 25, 129, 56, 1,
@@ -100,7 +100,7 @@ static const uint8_t unicode_letter_interv_lens[] =
  * The characters are from the following Unicode categories:
  * Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint16_t unicode_letter_chars[] =
+static const uint16_t unicode_letter_chars[] JERRY_CONST_DATA =
 {
   0x00AA, 0x00B5, 0x00BA, 0x02EE, 0x037A, 0x0386, 0x038C, 0x0559, 0x06D5, 0x0710,
   0x093D, 0x0950, 0x09B2, 0x0A5E, 0x0A8D, 0x0ABD, 0x0AD0, 0x0AE0, 0x0B3D, 0x0B9C,
@@ -117,7 +117,7 @@ static const uint16_t unicode_letter_chars[] =
  * The characters covered by these intervalse are from
  * the following Unicode categories: Nd, Mn, Mc, Pc
  */
-static const uint16_t unicode_non_letter_ident_part_interv_sps[] =
+static const uint16_t unicode_non_letter_ident_part_interv_sps[] JERRY_CONST_DATA =
 {
 /*
  * decimal digits: handled separately

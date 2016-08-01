@@ -184,7 +184,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 /**
  * Decode table for both opcodes and extended opcodes.
  */
-static const uint16_t vm_decode_table[] =
+static const uint16_t vm_decode_table[] JERRY_CONST_DATA =
 {
   CBC_OPCODE_LIST
   CBC_EXT_OPCODE_LIST

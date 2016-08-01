@@ -32,7 +32,7 @@
 /**
  * Flags of the opcodes.
  */
-const uint8_t cbc_flags[] =
+const uint8_t cbc_flags[] JERRY_CONST_DATA =
 {
   CBC_OPCODE_LIST
 };

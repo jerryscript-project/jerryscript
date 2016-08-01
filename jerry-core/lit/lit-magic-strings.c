@@ -37,7 +37,7 @@ lit_get_magic_string_ex_count (void)
 const lit_utf8_byte_t *
 lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 {
-  static const lit_utf8_byte_t * const magic_strings[] =
+  static const lit_utf8_byte_t * const magic_strings[] JERRY_CONST_DATA =
   {
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     (const lit_utf8_byte_t *) utf8_string,
@@ -58,7 +58,7 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 lit_utf8_size_t
 lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 {
-  static const lit_magic_size_t lit_magic_string_sizes[] =
+  static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
   {
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     sizeof(utf8_string) - 1,

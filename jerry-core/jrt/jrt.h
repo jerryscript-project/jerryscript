@@ -40,6 +40,17 @@
 # define __attr_pure___ __attribute__((pure))
 #endif /* !__attr_pure___ */
 
+/**
+ * Normally compilers store const(ant)s in ROM. Thus saving RAM.
+ * But if your compiler does not support it then the directive below can force it.
+ *
+ * For the moment it is mainly meant for the following targets:
+ *      - ESP8266
+ */
+#ifndef JERRY_CONST_DATA
+# define JERRY_CONST_DATA
+#endif /* JERRY_CONST_DATA */
+
 #ifndef __GNUC__
 #define __extension__
 #endif /* !__GNUC__ */

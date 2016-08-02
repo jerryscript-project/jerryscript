@@ -30,7 +30,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
+#ifndef CONFIG_DISABLE_MATH_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -655,4 +655,4 @@ ecma_builtin_math_object_tan (ecma_value_t this_arg, /**< 'this' argument */
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN */
+#endif /* !CONFIG_DISABLE_MATH_BUILTIN */

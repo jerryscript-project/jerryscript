@@ -26,8 +26,6 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -78,4 +76,3 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< 
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */

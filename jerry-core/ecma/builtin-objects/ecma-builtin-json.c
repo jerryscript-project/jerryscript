@@ -31,7 +31,7 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -1738,4 +1738,4 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN */
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */

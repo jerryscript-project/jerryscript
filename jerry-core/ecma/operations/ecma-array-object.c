@@ -84,11 +84,11 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     array_items_count = arguments_list_len;
   }
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
   ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+#else /* CONFIG_DISABLE_ARRAY_BUILTIN */
   ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (array_prototype_obj_p,
                                              false,

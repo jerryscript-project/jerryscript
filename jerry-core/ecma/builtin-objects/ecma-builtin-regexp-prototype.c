@@ -24,7 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 #include "ecma-regexp-object.h"
 #include "re-compiler.h"
 
@@ -45,7 +45,7 @@
  * @{
  */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
 /**
  * The RegExp.prototype object's 'compile' routine
@@ -234,7 +234,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   return ret_value;
 } /* ecma_builtin_regexp_prototype_compile */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * The RegExp.prototype object's 'exec' routine
@@ -433,4 +433,4 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

@@ -76,11 +76,11 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
     }
   }
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+#ifndef CONFIG_DISABLE_STRING_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_STRING_PROTOTYPE);
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#else /* CONFIG_DISABLE_STRING_BUILTIN */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              false,

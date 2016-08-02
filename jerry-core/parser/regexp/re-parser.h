@@ -17,7 +17,7 @@
 #ifndef RE_PARSER_H
 #define RE_PARSER_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /** \addtogroup parser Parser
  * @{
@@ -113,5 +113,5 @@ re_parse_next_token (re_parser_ctx_t *, re_token_t *);
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !RE_PARSER_H */

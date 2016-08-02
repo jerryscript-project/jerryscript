@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+#ifndef CONFIG_DISABLE_DATE_BUILTIN
 
 /** \addtogroup ecma ECMA
  * @{
@@ -1320,4 +1320,4 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_DISABLE_DATE_BUILTIN */

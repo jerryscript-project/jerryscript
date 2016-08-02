@@ -17,7 +17,7 @@
 #ifndef RE_BYTECODE_H
 #define RE_BYTECODE_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #include "ecma-globals.h"
 
@@ -125,5 +125,5 @@ void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !RE_BYTECODE_H */

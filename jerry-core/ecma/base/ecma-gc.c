@@ -571,10 +571,10 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 
   JERRY_CONTEXT (ecma_gc_visited_flip_flag) = !JERRY_CONTEXT (ecma_gc_visited_flip_flag);
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   /* Free RegExp bytecodes stored in cache */
   re_cache_gc_run ();
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 } /* ecma_gc_run */
 
 /**

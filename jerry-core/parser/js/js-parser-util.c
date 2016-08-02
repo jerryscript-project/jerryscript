@@ -718,7 +718,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_UNSUPPORTED_REGEXP:
     {
-      return "Regexp is not supported in compact profile.";
+      return "Regexp is not supported in the selected profile.";
     }
     case PARSER_ERR_IDENTIFIER_TOO_LONG:
     {

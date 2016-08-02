@@ -25,7 +25,7 @@
 #include "re-compiler.h"
 #include "re-parser.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /** \addtogroup parser Parser
  * @{
@@ -643,4 +643,4 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

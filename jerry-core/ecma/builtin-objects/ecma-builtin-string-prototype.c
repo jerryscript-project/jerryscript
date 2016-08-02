@@ -31,11 +31,11 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 #include "ecma-regexp-object.h"
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+#ifndef CONFIG_DISABLE_STRING_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -378,7 +378,7 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**<
   return ret_value;
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /**
  * The String.prototype object's 'match' routine
@@ -1395,7 +1395,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_search */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
 /**
  * The String.prototype object's 'slice' routine
@@ -1470,7 +1470,7 @@ ecma_builtin_string_prototype_object_slice (ecma_value_t this_arg, /**< this arg
   return ret_value;
 } /* ecma_builtin_string_prototype_object_slice */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /**
  * The abstract SplitMatch routine for String.prototype.split()
@@ -1930,7 +1930,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
   return ret_value;
 } /* ecma_builtin_string_prototype_object_split */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
 /**
  * The String.prototype object's 'substring' routine
@@ -2224,7 +2224,7 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   return ret_value;
 } /* ecma_builtin_string_prototype_object_trim */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
 /**
  * The String.prototype object's 'substr' routine
@@ -2292,7 +2292,7 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_substr */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}
@@ -2300,4 +2300,4 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#endif /* !CONFIG_DISABLE_STRING_BUILTIN */

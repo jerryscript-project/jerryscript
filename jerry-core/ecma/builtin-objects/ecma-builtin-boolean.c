@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
+#ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -97,4 +97,4 @@ ecma_builtin_boolean_dispatch_construct (const ecma_value_t *arguments_list_p, /
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN */
+#endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */

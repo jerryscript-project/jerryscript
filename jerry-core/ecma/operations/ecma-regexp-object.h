@@ -17,7 +17,7 @@
 #ifndef ECMA_REGEXP_OBJECT_H
 #define ECMA_REGEXP_OBJECT_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #include "ecma-globals.h"
 #include "re-compiler.h"
@@ -66,5 +66,5 @@ void re_initialize_props (ecma_object_t *, ecma_string_t *, uint16_t);
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !ECMA_REGEXP_OBJECT_H */

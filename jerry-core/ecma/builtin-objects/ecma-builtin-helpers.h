@@ -48,7 +48,7 @@ extern ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *, ecma_string_t *, ecma_value_t,
                               bool, bool, bool, bool);
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+#ifndef CONFIG_DISABLE_DATE_BUILTIN
 
 /**
  * Time range defines for helper functions.
@@ -128,7 +128,7 @@ extern ecma_value_t ecma_date_value_to_date_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_time_string (ecma_number_t);
 extern ecma_value_t ecma_date_get_primitive_value (ecma_value_t);
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
 
 /* ecma-builtin-helper-json.c */
 
@@ -168,12 +168,8 @@ ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *, ecma_string
 
 /* ecma-builtin-helper-error.c */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
-
 extern ecma_value_t
 ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t, const ecma_value_t *, ecma_length_t);
-
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 
 /**
  * @}

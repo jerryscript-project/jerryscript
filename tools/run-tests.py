@@ -72,10 +72,10 @@ jerry_tests_options = [
 
 # Test options for jerry-test-suite
 jerry_test_suite_options = jerry_tests_options[:]
-jerry_test_suite_options.append(Options('jerry_test_suite-compact', ['--profile=compact']))
-jerry_test_suite_options.append(Options('jerry_test_suite-compact-snapshot', ['--profile=compact', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
-jerry_test_suite_options.append(Options('jerry_test_suite-compact-debug', ['--debug', '--profile=compact']))
-jerry_test_suite_options.append(Options('jerry_test_suite-compact-debug-snapshot', ['--debug', '--profile=compact', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
+jerry_test_suite_options.append(Options('jerry_test_suite-minimal', ['--profile=minimal']))
+jerry_test_suite_options.append(Options('jerry_test_suite-minimal-snapshot', ['--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
+jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug', ['--debug', '--profile=minimal']))
+jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug-snapshot', ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
 
 # Test options for buildoption-test
 jerry_buildoptions = [
@@ -133,8 +133,8 @@ def run_jerry_test_suite():
         if not ret:
             test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir)]
 
-            if '--profile=compact' in job.build_args:
-                test_cmd.append(JERRY_TEST_SUITE_COMPACT_LIST)
+            if '--profile=minimal' in job.build_args:
+                test_cmd.append(JERRY_TEST_SUITE_MINIMAL_LIST)
             else:
                 test_cmd.append(JERRY_TEST_SUITE_DIR)
 

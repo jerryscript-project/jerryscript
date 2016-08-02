@@ -612,7 +612,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       else
       {
         local_env_p = ecma_create_decl_lex_env (scope_p);
-#ifndef CONFIG_ECMA_COMPACT_PROFILE
         if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
         {
           ecma_op_create_arguments_object (func_obj_p,
@@ -621,7 +620,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                            arguments_list_len,
                                            bytecode_data_p);
         }
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE */
       }
 
       ret_value = vm_run (bytecode_data_p,

@@ -80,10 +80,10 @@ typedef struct
   ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
   ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT]; /**< List of marked (visited during
                                                                *   current GC session) and umarked objects */
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
   bool ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
   bool is_direct_eval_form_call; /**< direct call from eval */

@@ -1778,7 +1778,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
     {
@@ -1820,9 +1820,9 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
     copied_code_p->status_flags = compiled_code_p->status_flags;
 
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("RegExp is not supported in compact profile.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
+    JERRY_UNIMPLEMENTED ("RegExp is not supported in the selected profile.");
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
     return start_offset;
   }
 
@@ -2100,7 +2100,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     const re_compiled_code_t *re_bytecode_p = NULL;
 
     const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (ecma_compiled_code_t);
@@ -2116,9 +2116,9 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
     ecma_deref_ecma_string (pattern_str_p);
 
     return (ecma_compiled_code_t *) re_bytecode_p;
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("RegExp is not supported in compact profile.");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
+    JERRY_UNIMPLEMENTED ("RegExp is not supported in the selected profile.");
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 
   size_t header_size;

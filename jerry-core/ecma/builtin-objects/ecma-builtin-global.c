@@ -1190,7 +1190,7 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg, /**< thi
   return ecma_builtin_global_object_encode_uri_helper (uri_component, unescaped_uri_component_set);
 } /* ecma_builtin_global_object_encode_uri_component */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
 /*
  * Maximum value of a byte.
@@ -1432,7 +1432,7 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg, /**< this argument *
   return ret_value;
 } /* ecma_builtin_global_object_unescape */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

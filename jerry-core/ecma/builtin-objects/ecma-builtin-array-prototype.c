@@ -30,7 +30,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -2768,4 +2768,4 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */

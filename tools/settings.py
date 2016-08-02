@@ -25,7 +25,7 @@ TOOLS_DIR = path.dirname(path.abspath(__file__))
 PROJECT_DIR = path.normpath(path.join(TOOLS_DIR, '..'))
 JERRY_TESTS_DIR = path.join(PROJECT_DIR, 'tests/jerry')
 JERRY_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/jerry-test-suite')
-JERRY_TEST_SUITE_COMPACT_LIST = path.join(PROJECT_DIR, 'tests/jerry-test-suite/compact-profile-list')
+JERRY_TEST_SUITE_MINIMAL_LIST = path.join(PROJECT_DIR, 'tests/jerry-test-suite/minimal-profile-list')
 
 BUILD_SCRIPT = path.join(TOOLS_DIR, 'build.py')
 CPPCHECK_SCRIPT = path.join(TOOLS_DIR, 'check-cppcheck.sh')

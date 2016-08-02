@@ -17,7 +17,7 @@
 #include "ecma-globals.h"
 #include "re-bytecode.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /** \addtogroup parser Parser
  * @{
@@ -442,4 +442,4 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

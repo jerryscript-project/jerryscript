@@ -25,7 +25,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+#ifndef CONFIG_DISABLE_DATE_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -1225,7 +1225,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
 /**
  * The Date.prototype object's 'getYear' routine
@@ -1321,7 +1321,7 @@ ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument 
   return ret_value;
 } /* ecma_builtin_date_prototype_set_year */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}
@@ -1329,5 +1329,5 @@ ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument 
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
 

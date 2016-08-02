@@ -37,7 +37,7 @@
 ecma_object_t *
 ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
 {
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
+#ifndef CONFIG_DISABLE_ERROR_BUILTINS
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
 
   switch (error_type)
@@ -84,6 +84,10 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
       break;
     }
   }
+#else
+  (void) error_type;
+  ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
+#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
@@ -99,11 +103,6 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
-  (void) error_type;
-
-  return ecma_builtin_get (ECMA_BUILTIN_ID_COMPACT_PROFILE_ERROR);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */
 } /* ecma_new_standard_error */
 
 /**

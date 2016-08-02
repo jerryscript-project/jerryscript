@@ -289,7 +289,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   }
   else
   {
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     ecma_value_t ret_value;
     ret_value = ecma_op_create_regexp_object_from_bytecode ((re_compiled_code_t *) bytecode_p);
 
@@ -300,9 +300,9 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
 
     return ret_value;
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in compact profile!");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
+    JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in the selected profile!");
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 } /* vm_construct_literal_object */
 

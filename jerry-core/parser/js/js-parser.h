@@ -56,7 +56,7 @@ typedef enum
   PARSER_ERR_INVALID_REGEXP,                          /**< invalid regular expression */
   PARSER_ERR_UNKNOWN_REGEXP_FLAG,                     /**< unknown regexp flag */
   PARSER_ERR_DUPLICATED_REGEXP_FLAG,                  /**< duplicated regexp flag */
-  PARSER_ERR_UNSUPPORTED_REGEXP,                      /**< regular expression is not supported in compact profile */
+  PARSER_ERR_UNSUPPORTED_REGEXP,                      /**< regular expression is not supported */
 
   PARSER_ERR_IDENTIFIER_TOO_LONG,                     /**< too long identifier */
   PARSER_ERR_STRING_TOO_LONG,                         /**< too long string literal */

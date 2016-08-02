@@ -33,7 +33,7 @@ def add_build_args(parser):
     parser.add_argument('--all-in-one', choices=['on', 'off'], default='off', help='All-in-one build (default: %(default)s)')
     parser.add_argument('--debug', action='store_const', const='Debug', default='Release', dest='build_type', help='Debug build')
     parser.add_argument('--lto', choices=['on', 'off'], default='on', help='Enable link-time optimizations (default: %(default)s)')
-    parser.add_argument('--profile', choices=['full', 'compact', 'minimal'], default='full', help='Specify the ECMAScript profile (default: %(default)s)')
+    parser.add_argument('--profile', choices=['full', 'minimal'], default='full', help='Specify the profile (default: %(default)s)')
     parser.add_argument('--error-messages', choices=['on', 'off'], default='off', help='Enable error messages (default: %(default)s)')
     parser.add_argument('--log', choices=['on', 'off'], default='off', help='Enable logging (default: %(default)s)')
     parser.add_argument('--valgrind', choices=['on', 'off'], default='off', help='Enable Valgrind support (default: %(default)s)')

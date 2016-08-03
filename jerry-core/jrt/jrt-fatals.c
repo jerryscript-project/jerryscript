@@ -34,13 +34,11 @@ void __noreturn
 jerry_fatal (jerry_fatal_code_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ");
-
   switch (code)
   {
     case ERR_OUT_OF_MEMORY:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_OUT_OF_MEMORY\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -50,17 +48,17 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_REF_COUNT_LIMIT:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_REF_COUNT_LIMIT\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
     case ERR_UNIMPLEMENTED_CASE:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_UNIMPLEMENTED_CASE\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_UNIMPLEMENTED_CASE\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "ERR_FAILED_INTERNAL_ASSERTION\n");
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }

@@ -1821,7 +1821,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     copied_code_p->status_flags = compiled_code_p->status_flags;
 
 #else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("RegExp is not supported in the selected profile.");
+    JERRY_UNREACHABLE (); /* RegExp is not supported in the selected profile. */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
     return start_offset;
   }
@@ -2117,7 +2117,7 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
     return (ecma_compiled_code_t *) re_bytecode_p;
 #else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("RegExp is not supported in the selected profile.");
+    JERRY_UNREACHABLE (); /* RegExp is not supported in the selected profile. */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 

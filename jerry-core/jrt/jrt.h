@@ -24,7 +24,7 @@
 #include "jerry-port.h"
 #include "jrt-types.h"
 
-/**
+/*
  * Attributes
  */
 #define __noreturn __attribute__((noreturn))
@@ -40,7 +40,13 @@
 # define __attr_pure___ __attribute__((pure))
 #endif /* !__attr_pure___ */
 
-/**
+/*
+ * Conditions' likeliness, unlikeliness.
+ */
+#define likely(x) __builtin_expect (!!(x), 1)
+#define unlikely(x) __builtin_expect (!!(x) , 0)
+
+/*
  * Normally compilers store const(ant)s in ROM. Thus saving RAM.
  * But if your compiler does not support it then the directive below can force it.
  *
@@ -51,16 +57,17 @@
 # define JERRY_CONST_DATA
 #endif /* JERRY_CONST_DATA */
 
-#ifndef __GNUC__
-#define __extension__
-#endif /* !__GNUC__ */
-
-/**
+/*
  * Constants
  */
 #define JERRY_BITSINBYTE 8
 
-/**
+/*
+ * Make sure unused parameters, variables, or expressions trigger no compiler warning.
+ */
+#define JERRY_UNUSED(x) ((void) (x))
+
+/*
  * Asserts
  *
  * Warning:
@@ -73,30 +80,54 @@
 #define JERRY_STATIC_ASSERT(x, msg) \
   enum { JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) = 1 / (!!(x)) }
 
-/**
- * Variable that must not be referenced.
- *
- * May be used for static assertion checks.
- */
-extern uint32_t jerry_unreferenced_expression;
-
-extern void __noreturn jerry_assert_fail (const char *, const char *, const char *, const uint32_t);
-extern void __noreturn jerry_unreachable (const char *, const char *, const char *, const uint32_t);
-extern void __noreturn jerry_unimplemented (const char *, const char *, const char *, const uint32_t);
-
 #ifndef JERRY_NDEBUG
-#define JERRY_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
-    jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
+extern void __noreturn jerry_assert_fail (const char *, const char *, const char *, const uint32_t);
+extern void __noreturn jerry_unreachable (const char *, const char *, const uint32_t);
+
+#define JERRY_ASSERT(x) \
+  do \
+  { \
+    if (unlikely (!(x))) \
+    { \
+      jerry_assert_fail (#x, __FILE__, __func__, __LINE__); \
+    } \
+  } while (0)
+
+#define JERRY_UNREACHABLE() \
+  do \
+  { \
+    jerry_unreachable (__FILE__, __func__, __LINE__); \
+  } while (0)
 #else /* JERRY_NDEBUG */
-#define JERRY_ASSERT(x) do { if (false) { (void)(x); } } while (0)
+#define JERRY_ASSERT(x) \
+  do \
+  { \
+    if (false) \
+    { \
+      JERRY_UNUSED (x); \
+    } \
+  } while (0)
+
+#define JERRY_UNREACHABLE() __builtin_unreachable ()
 #endif /* !JERRY_NDEBUG */
 
-#define JERRY_UNUSED(x) ((void) (x))
+/**
+ * Exit on fatal error
+ */
+extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 
+/*
+ * Logging
+ */
 #ifdef JERRY_ENABLE_LOG
 #define JERRY_DLOG(...) jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define JERRY_DDLOG(...) jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
 #else /* !JERRY_ENABLE_LOG */
+/**
+ * Mark for unreachable points and unimplemented cases
+ */
+extern void jerry_ref_unused_variables (void *, ...);
+
 #define JERRY_DLOG(...) \
   do \
   { \
@@ -112,75 +143,9 @@ extern void __noreturn jerry_unimplemented (const char *, const char *, const ch
 #define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
 
 /**
- * Mark for unreachable points and unimplemented cases
- */
-extern void jerry_ref_unused_variables (void *, ...);
-
-#ifndef JERRY_NDEBUG
-#define JERRY_UNREACHABLE() \
-  do \
-  { \
-    jerry_unreachable (NULL, __FILE__, __func__, __LINE__); \
-  } while (0)
-
-#define JERRY_UNIMPLEMENTED(comment) \
-  do \
-  { \
-    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
-  } while (0)
-
-#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(comment, ...) \
-  do \
-  { \
-    if (false) \
-    { \
-      jerry_ref_unused_variables (0, __VA_ARGS__); \
-    } \
-    jerry_unimplemented (comment, __FILE__, __func__, __LINE__); \
-  } while (0)
-#else /* JERRY_NDEBUG */
-#define JERRY_UNREACHABLE() \
-  do \
-  { \
-    jerry_unreachable (NULL, NULL, NULL, 0); \
-  } while (0)
-
-#define JERRY_UNIMPLEMENTED(comment) \
-  do \
-  { \
-    jerry_unimplemented (comment, NULL, NULL, 0); \
-  } while (0)
-
-#define JERRY_UNIMPLEMENTED_REF_UNUSED_VARS(comment, ...) \
-  do \
-  { \
-    if (false) \
-    { \
-      jerry_ref_unused_variables (0, __VA_ARGS__); \
-    } \
-    jerry_unimplemented (comment, NULL, NULL, 0); \
-  } while (0)
-#endif /* !JERRY_NDEBUG */
-
-/**
- * Conditions' likeliness, unlikeliness.
- */
-#define likely(x) __builtin_expect (!!(x), 1)
-#define unlikely(x) __builtin_expect (!!(x) , 0)
-
-/**
- * Exit
- */
-extern void __noreturn jerry_fatal (jerry_fatal_code_t);
-
-/**
- * sizeof, offsetof, ...
+ * Size of struct member
  */
 #define JERRY_SIZE_OF_STRUCT_MEMBER(struct_name, member_name) sizeof (((struct_name *) NULL)->member_name)
-
-/**
- * Alignment
- */
 
 /**
  * Aligns @a value to @a alignment. @a must be the power of 2.
@@ -189,15 +154,13 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
  */
 #define JERRY_ALIGNUP(value, alignment) (((value) + ((alignment) - 1)) & ~((alignment) - 1))
 
-/**
+/*
  * min, max
  */
 #define JERRY_MIN(v1, v2) (((v1) < (v2)) ? (v1) : (v2))
 #define JERRY_MAX(v1, v2) (((v1) < (v2)) ? (v2) : (v1))
 
-
 extern bool jrt_read_from_buffer_by_offset (const uint8_t *, size_t, size_t *, void *, size_t);
-
 extern bool jrt_write_to_buffer_by_offset (uint8_t *, size_t, size_t *, const void *, size_t);
 
 #endif /* !JRT_H */

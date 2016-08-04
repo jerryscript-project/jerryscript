@@ -253,7 +253,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
     {
       JERRY_ASSERT (id < ECMA_BUILTIN_ID__COUNT);
 
-      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+      JERRY_UNREACHABLE (); /* The built-in is not implemented. */
     }
   }
 } /* ecma_instantiate_builtin */
@@ -683,7 +683,7 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
 
     default:
     {
-      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+      JERRY_UNREACHABLE (); /* The built-in is not implemented. */
     }
   }
 
@@ -744,7 +744,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 
       default:
       {
-        JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+        JERRY_UNREACHABLE (); /* The built-in is not implemented. */
       }
     }
   }
@@ -799,7 +799,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 
     default:
     {
-      JERRY_UNIMPLEMENTED ("The built-in is not implemented.");
+      JERRY_UNREACHABLE (); /* The built-in is not implemented. */
     }
   }
 

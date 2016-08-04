@@ -51,11 +51,6 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
-    case ERR_UNIMPLEMENTED_CASE:
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_UNIMPLEMENTED_CASE\n");
-      break;
-    }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_FAILED_INTERNAL_ASSERTION\n");
@@ -72,6 +67,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 } /* jerry_fatal */
 
+#ifndef JERRY_NDEBUG
 /**
  * Handle failed assertion
  */
@@ -81,19 +77,12 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-#ifndef JERRY_NDEBUG
   jerry_port_log (JERRY_LOG_LEVEL_ERROR,
                   "ICE: Assertion '%s' failed at %s(%s):%lu.\n",
                   assertion,
                   file,
                   function,
                   (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) assertion;
-  (void) file;
-  (void) function;
-  (void) line;
-#endif /* !JERRY_NDEBUG */
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
@@ -102,62 +91,16 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
  * Handle execution of control path that should be unreachable
  */
 void __noreturn
-jerry_unreachable (const char *comment, /**< comment to unreachable mark if exists,
-                                             NULL - otherwise */
-                   const char *file, /**< file name */
+jerry_unreachable (const char *file, /**< file name */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-#ifndef JERRY_NDEBUG
   jerry_port_log (JERRY_LOG_LEVEL_ERROR,
-                  "ICE: Unreachable control path at %s(%s):%lu was executed",
+                  "ICE: Unreachable control path at %s(%s):%lu was executed.\n",
                   file,
                   function,
                   (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) file;
-  (void) function;
-  (void) line;
-#endif /* !JERRY_NDEBUG */
-
-  if (comment != NULL)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "(%s)", comment);
-  }
-
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, ".\n");
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
-
-/**
- * Handle unimplemented case execution
- */
-void __noreturn
-jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if exists,
-                                               NULL - otherwise */
-                     const char *file, /**< file name */
-                     const char *function, /**< function name */
-                     const uint32_t line) /**< line */
-{
-#ifndef JERRY_NDEBUG
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
-                  "SORRY: Unimplemented case at %s(%s):%lu was executed",
-                  file,
-                  function,
-                  (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) file;
-  (void) function;
-  (void) line;
 #endif /* !JERRY_NDEBUG */
-
-  if (comment != NULL)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "(%s)", comment);
-  }
-
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, ".\n");
-
-  jerry_fatal (ERR_UNIMPLEMENTED_CASE);
-} /* jerry_unimplemented */

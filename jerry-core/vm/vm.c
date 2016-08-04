@@ -301,7 +301,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
     return ret_value;
 #else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in the selected profile!");
+    JERRY_UNREACHABLE (); /* Regular Expressions are not supported in the selected profile! */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 } /* vm_construct_literal_object */

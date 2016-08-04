@@ -1,4 +1,5 @@
 /* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+ * Copyright 2016 University of Szeged
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +26,20 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define TEST_ASSERT(x) do { if (__builtin_expect (!(x), 0)) { \
-    jerry_assert_fail (#x, __FILE__, __func__, __LINE__); } } while (0)
+#define TEST_ASSERT(x) \
+  do \
+  { \
+    if (unlikely (!(x))) \
+    { \
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, \
+                      "TEST: Assertion '%s' failed at %s(%s):%lu.\n", \
+                      #x, \
+                      __FILE__, \
+                      __func__, \
+                      (unsigned long) __LINE__); \
+      jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION); \
+    } \
+  } while (0)
 
 /**
  * Test initialization statement that should be included

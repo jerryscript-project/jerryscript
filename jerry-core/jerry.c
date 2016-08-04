@@ -1748,6 +1748,34 @@ typedef struct
 } snapshot_globals_t;
 
 /**
+ * Write data into the specified buffer.
+ *
+ * Note:
+ *      Offset is in-out and is incremented if the write operation completes successfully.
+ *
+ * @return true, if write was successful, i.e. offset + data_size doesn't exceed buffer size,
+ *         false - otherwise.
+ */
+static inline bool __attr_always_inline___
+snapshot_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
+                                    size_t buffer_size, /**< size of buffer */
+                                    size_t *in_out_buffer_offset_p,  /**< [in,out] offset to write to
+                                                                      * incremented with data_size */
+                                    const void *data_p, /**< data */
+                                    size_t data_size) /**< size of the writable data */
+{
+  if (*in_out_buffer_offset_p + data_size > buffer_size)
+  {
+    return false;
+  }
+
+  memcpy (buffer_p + *in_out_buffer_offset_p, data_p, data_size);
+  *in_out_buffer_offset_p += data_size;
+
+  return true;
+} /* snapshot_write_to_buffer_by_offset */
+
+/**
  * Snapshot callback for byte codes.
  *
  * @return start offset
@@ -1798,11 +1826,11 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
     pattern_size = buffer_size;
 
-    if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
-                                        snapshot_buffer_size,
-                                        &globals_p->snapshot_buffer_write_offset,
-                                        buffer_p,
-                                        buffer_size))
+    if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
+                                             snapshot_buffer_size,
+                                             &globals_p->snapshot_buffer_write_offset,
+                                             buffer_p,
+                                             buffer_size))
     {
       globals_p->snapshot_error_occured = true;
     }
@@ -1826,11 +1854,11 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     return start_offset;
   }
 
-  if (!jrt_write_to_buffer_by_offset (snapshot_buffer_p,
-                                      snapshot_buffer_size,
-                                      &globals_p->snapshot_buffer_write_offset,
-                                      compiled_code_p,
-                                      ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
+  if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
+                                           snapshot_buffer_size,
+                                           &globals_p->snapshot_buffer_write_offset,
+                                           compiled_code_p,
+                                           ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
     globals_p->snapshot_error_occured = true;
     return 0;
@@ -2049,11 +2077,11 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
 
   size_t header_offset = 0;
 
-  jrt_write_to_buffer_by_offset (buffer_p,
-                                 buffer_size,
-                                 &header_offset,
-                                 &header,
-                                 sizeof (header));
+  snapshot_write_to_buffer_by_offset (buffer_p,
+                                      buffer_size,
+                                      &header_offset,
+                                      &header,
+                                      sizeof (header));
 
   if (lit_map_p != NULL)
   {

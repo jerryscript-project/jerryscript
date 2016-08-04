@@ -75,14 +75,36 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/")
 
 # Compile/link flags
+# Helper macros
+macro(jerry_add_flags VAR)
+  foreach(_flag ${ARGN})
+    set(${VAR} "${${VAR}} ${_flag}")
+  endforeach()
+endmacro()
+
+macro(jerry_add_compile_flags)
+  jerry_add_flags(CMAKE_C_FLAGS ${ARGV})
+endmacro()
+
+macro(jerry_add_compile_warnings)
+  foreach(_warning ${ARGV})
+    jerry_add_compile_flags(-W${_warning})
+    if(CMAKE_COMPILER_IS_GNUCC)
+      jerry_add_compile_flags(-Werror=${_warning})
+    endif()
+  endforeach()
+endmacro()
+
+macro(jerry_add_link_flags)
+  jerry_add_flags(LINKER_FLAGS_COMMON ${ARGV})
+endmacro()
+
 # build mode specific compile/link flags
 set(CMAKE_C_FLAGS_RELEASE "-Os")
 
 # Architecture-specific compile/link flags
-foreach(FLAG ${FLAGS_COMMON_ARCH})
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${FLAG}")
-endforeach()
+jerry_add_compile_flags(${FLAGS_COMMON_ARCH})
+jerry_add_flags(CMAKE_EXE_LINKER_FLAGS ${FLAGS_COMMON_ARCH})
 
 # Use jerry libc
 if(JERRY_LIBC AND COMPILER_DEFAULT_LIBC)
@@ -91,11 +113,11 @@ endif()
 
 # LTO
 if(ENABLE_LTO)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
-  set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -flto")
+  jerry_add_compile_flags(-flto)
+  jerry_add_link_flags(-flto)
   if(CMAKE_COMPILER_IS_GNUCC)
     if(NOT "${PLATFORM}" STREQUAL "DARWIN")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-fat-lto-objects")
+      jerry_add_compile_flags(-fno-fat-lto-objects)
     endif()
     # Use gcc-ar and gcc-ranlib to support LTO
     set(CMAKE_AR "gcc-ar")
@@ -134,69 +156,50 @@ else()
 endif()
 
 # Compiler / Linker flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin")
+jerry_add_compile_flags(-fno-builtin)
 if(("${PLATFORM}" STREQUAL "DARWIN"))
-  set(LINKER_FLAGS_COMMON "-lSystem")
+  jerry_add_link_flags(-lSystem)
 else()
-  set(LINKER_FLAGS_COMMON "-Wl,-z,noexecstack")
+  jerry_add_link_flags(-Wl,-z,noexecstack)
 endif()
 
 # Turn off linking to compiler's default libc, in case jerry-libc or external is used
 if(NOT COMPILER_DEFAULT_LIBC)
-  set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -nostdlib")
+  jerry_add_link_flags(-nostdlib)
 endif()
 
 # Turn off stack protector
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector")
+jerry_add_compile_flags(-fno-stack-protector)
 
 # Debug information
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gdwarf-4")
+jerry_add_compile_flags(-g -gdwarf-4)
 
-macro(add_jerry_compile_flags)
-  foreach(_flag ${ARGV})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_flag}")
-  endforeach()
-endmacro()
-
-macro(add_jerry_compile_warnings)
-  foreach(_warning ${ARGV})
-    add_jerry_compile_flags(-W${_warning})
-    if(CMAKE_COMPILER_IS_GNUCC)
-      add_jerry_compile_flags(-Werror=${_warning})
-    endif()
-  endforeach()
-endmacro()
-
-add_jerry_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
-add_jerry_compile_flags(-Wno-stack-protector -Wno-attributes)
+jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
+jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
 
 if(CMAKE_COMPILER_IS_GNUCC)
   if(JERRY_LIBC)
-    add_jerry_compile_flags(-Werror)
+    jerry_add_compile_flags(-Werror)
   endif()
-  add_jerry_compile_warnings(logical-op)
+  jerry_add_compile_warnings(logical-op)
 else()
-  add_jerry_compile_flags(-Wno-nested-anon-types)
+  jerry_add_compile_flags(-Wno-nested-anon-types)
 endif()
 
 if(DEFINED EXTERNAL_COMPILE_FLAGS)
-  foreach(FLAG ${EXTERNAL_COMPILE_FLAGS})
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${FLAG}")
-  endforeach()
+  jerry_add_compile_flags(${EXTERNAL_COMPILE_FLAGS})
 endif()
 
 if(DEFINED EXTERNAL_LINKER_FLAGS)
-  foreach(FLAG ${EXTERNAL_LINKER_FLAGS})
-    set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} ${FLAG}")
-  endforeach()
+  jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
 endif()
 
 # C
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pedantic")
+jerry_add_compile_flags(-std=c99 -pedantic)
 
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -s")
+  jerry_add_link_flags(-s)
 endif()
 
 # Jerry's libc

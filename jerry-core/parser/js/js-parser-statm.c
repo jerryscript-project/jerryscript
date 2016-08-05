@@ -171,7 +171,7 @@ typedef struct
  *
  * @return size consumed by a statement.
  */
-static PARSER_INLINE size_t
+static inline size_t
 parser_statement_length (uint8_t type) /**< type of statement */
 {
   static const uint8_t statement_lengths[12] =
@@ -211,7 +211,7 @@ parser_statement_length (uint8_t type) /**< type of statement */
 /**
  * Initialize a range from the current location.
  */
-static PARSER_INLINE void
+static inline void
 parser_save_range (parser_context_t *context_p, /**< context */
                    lexer_range_t *range_p, /**< destination range */
                    const uint8_t *source_end_p) /**< source end */
@@ -225,7 +225,7 @@ parser_save_range (parser_context_t *context_p, /**< context */
 /**
  * Set the current location on the stack.
  */
-static PARSER_INLINE void
+static inline void
 parser_set_range (parser_context_t *context_p, /**< context */
                   lexer_range_t *range_p) /**< destination range */
 {
@@ -238,7 +238,7 @@ parser_set_range (parser_context_t *context_p, /**< context */
 /**
  * Initialize stack iterator.
  */
-static PARSER_INLINE void
+static inline void
 parser_stack_iterator_init (parser_context_t *context_p, /**< context */
                             parser_stack_iterator_t *iterator) /**< iterator */
 {
@@ -249,7 +249,7 @@ parser_stack_iterator_init (parser_context_t *context_p, /**< context */
 /**
  * Read the next byte from the stack.
  */
-static PARSER_INLINE uint8_t
+static inline uint8_t
 parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterator */
 {
   JERRY_ASSERT (iterator->current_position > 0 && iterator->current_position <= PARSER_STACK_PAGE_SIZE);
@@ -259,7 +259,7 @@ parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterat
 /**
  * Change last byte of the stack.
  */
-static PARSER_INLINE void
+static inline void
 parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
                                 uint8_t new_value) /**< new value */
 {
@@ -275,7 +275,7 @@ parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
 /**
  * Parse expression enclosed in parens.
  */
-static PARSER_INLINE void
+static inline void
 parser_parse_enclosed_expr (parser_context_t *context_p) /**< context */
 {
   lexer_next_token (context_p);
@@ -494,9 +494,9 @@ parser_parse_with_statement_start (parser_context_t *context_p) /**< context */
 
   parser_parse_enclosed_expr (context_p);
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
   context_p->status_flags |= PARSER_INSIDE_WITH | PARSER_LEXICAL_ENV_NEEDED;
   parser_emit_cbc_ext_forward_branch (context_p,
@@ -525,9 +525,9 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 
   parser_flush_cbc (context_p);
   PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
   parser_emit_cbc (context_p, CBC_CONTEXT_END);
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
@@ -638,7 +638,7 @@ parser_parse_while_statement_start (parser_context_t *context_p) /**< context */
 /**
  * Parse while statement (ending part).
  */
-static void PARSER_NOINLINE
+static void __attr_noinline___
 parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_while_statement_t while_statement;
@@ -720,9 +720,9 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
     }
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
     PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
     parser_emit_cbc_ext_forward_branch (context_p,
                                         CBC_EXT_FOR_IN_CREATE_CONTEXT,
@@ -878,7 +878,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 /**
  * Parse for statement (ending part).
  */
-static void PARSER_NOINLINE
+static void __attr_noinline___
 parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_for_statement_t for_statement;
@@ -953,7 +953,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 /**
  * Parse switch statement (starting part).
  */
-static void PARSER_NOINLINE
+static void __attr_noinline___
 parser_parse_switch_statement_start (parser_context_t *context_p) /**< context */
 {
   parser_switch_statement_t switch_statement;
@@ -1120,9 +1120,9 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
   {
     parser_flush_cbc (context_p);
     PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
     PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
     parser_emit_cbc (context_p, CBC_CONTEXT_END);
     parser_set_branch_to_current_position (context_p, &try_statement.branch);
@@ -1137,9 +1137,9 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
       {
         parser_flush_cbc (context_p);
         PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
         PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
         parser_emit_cbc (context_p, CBC_CONTEXT_END);
         parser_flush_cbc (context_p);
@@ -1641,9 +1641,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   while (context_p->token.type != LEXER_EOS
          || context_p->stack_top_uint8 != PARSER_STATEMENT_START)
   {
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
     JERRY_ASSERT (context_p->stack_depth == context_p->context_stack_depth);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
     switch (context_p->token.type)
     {
@@ -1747,9 +1747,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
         }
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
         PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
         try_statement.type = parser_try_block;
         parser_emit_cbc_ext_forward_branch (context_p,
@@ -1922,9 +1922,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           parser_stack_pop_uint8 (context_p);
           context_p->last_statement.current_p = NULL;
           JERRY_ASSERT (context_p->stack_depth == 0);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
           JERRY_ASSERT (context_p->context_stack_depth == 0);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
           return;
@@ -2015,9 +2015,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
           parser_flush_cbc (context_p);
           PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
           PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
           parser_emit_cbc_ext_backward_branch (context_p,
                                                CBC_EXT_BRANCH_IF_FOR_IN_HAS_NEXT,
@@ -2044,9 +2044,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 
   JERRY_ASSERT (context_p->stack_depth == 0);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   JERRY_ASSERT (context_p->context_stack_depth == 0);
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
   parser_stack_pop_uint8 (context_p);
   context_p->last_statement.current_p = NULL;
@@ -2060,7 +2060,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 /**
  * Free jumps stored on the stack if a parse error is occured.
  */
-void PARSER_NOINLINE
+void __attr_noinline___
 parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
 {
   while (PARSER_TRUE)

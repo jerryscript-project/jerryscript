@@ -223,9 +223,9 @@ typedef struct parser_saved_context_t
   uint32_t byte_code_size;                    /**< byte code size for branches */
   parser_mem_data_t literal_pool_data;        /**< literal list */
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 } parser_saved_context_t;
 
 /**
@@ -271,10 +271,10 @@ typedef struct
   parser_mem_page_t *free_page_p;             /**< space for fast allocation */
   uint8_t stack_top_uint8;                    /**< top byte stored on the stack */
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   /* Variables for debugging / logging. */
   uint16_t context_stack_depth;               /**< current context stack depth */
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
 #ifdef PARSER_DUMP_BYTE_CODE
   int is_show_opcodes;                        /**< show opcodes */

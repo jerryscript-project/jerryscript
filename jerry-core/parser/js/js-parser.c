@@ -388,7 +388,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
  *
  * @return position after the encoded values
  */
-static PARSER_INLINE uint8_t *
+static inline uint8_t *
 parser_encode_literal (uint8_t *dst_p, /**< destination buffer */
                        uint16_t literal_index, /**< literal index */
                        uint16_t literal_one_byte_limit) /**< maximum value of a literal
@@ -445,9 +445,9 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
   if (context_p->status_flags & PARSER_HAS_INITIALIZED_VARS)
   {
     const uint8_t expected_status_flags = LEXER_FLAG_VAR | LEXER_FLAG_NO_REG_STORE | LEXER_FLAG_INITIALIZED;
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
     uint16_t next_index = uninitialized_var_end;
-#endif
+#endif /* !JERRY_NDEBUG */
 
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
 
@@ -474,10 +474,10 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
         uint16_t init_index;
 
         JERRY_ASSERT (literal_p->type == LEXER_IDENT_LITERAL);
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
         JERRY_ASSERT (literal_p->prop.index == next_index);
         next_index++;
-#endif
+#endif /* !JERRY_NDEBUG */
         literal_p->status_flags = (uint8_t) (literal_p->status_flags & ~LEXER_FLAG_INITIALIZED);
 
 
@@ -1849,9 +1849,9 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
                     (uint32_t) ((128 - sizeof (void *)) / sizeof (lexer_literal_t)));
   parser_stack_init (&context);
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   context.context_stack_depth = 0;
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
 #ifdef PARSER_DUMP_BYTE_CODE
   context.is_show_opcodes = parser_show_instrs;
@@ -1967,9 +1967,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   saved_context.byte_code_size = context_p->byte_code_size;
   saved_context.literal_pool_data = context_p->literal_pool.data;
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   saved_context.context_stack_depth = context_p->context_stack_depth;
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
   /* Reset private part of the context. */
 
@@ -1990,9 +1990,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   context_p->byte_code_size = 0;
   parser_list_reset (&context_p->literal_pool);
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   context_p->context_stack_depth = 0;
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
@@ -2184,9 +2184,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   context_p->byte_code_size = saved_context.byte_code_size;
   context_p->literal_pool.data = saved_context.literal_pool_data;
 
-#ifdef PARSER_DEBUG
+#ifndef JERRY_NDEBUG
   context_p->context_stack_depth = saved_context.context_stack_depth;
-#endif /* PARSER_DEBUG */
+#endif /* !JERRY_NDEBUG */
 
   return compiled_code_p;
 } /* parser_parse_function */

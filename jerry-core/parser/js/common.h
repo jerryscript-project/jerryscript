@@ -34,10 +34,6 @@
  */
 
 #ifndef JERRY_NDEBUG
-#define PARSER_DEBUG
-#endif /* !JERRY_NDEBUG */
-
-#ifndef JERRY_NDEBUG
 /* Note: This flag is independent from debug mode. */
 #define PARSER_DUMP_BYTE_CODE
 #endif /* !JERRY_NDEBUG */
@@ -136,11 +132,6 @@ void util_print_literal (lexer_literal_t *);
 #define PARSER_TRY_END \
     } \
   }
-
-/* Other */
-
-#define PARSER_INLINE inline
-#define PARSER_NOINLINE __attribute__ ((noinline))
 
 /**
  * @}

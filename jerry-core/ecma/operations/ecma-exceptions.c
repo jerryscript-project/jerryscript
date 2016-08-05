@@ -85,7 +85,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
     }
   }
 #else
-  (void) error_type;
+  JERRY_UNUSED (error_type);
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
 #endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
 

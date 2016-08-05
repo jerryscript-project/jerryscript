@@ -2235,7 +2235,7 @@ parser_set_show_instrs (int show_instrs) /**< flag indicating whether to dump by
 #ifdef PARSER_DUMP_BYTE_CODE
   parser_show_instrs = show_instrs;
 #else /* !PARSER_DUMP_BYTE_CODE */
-  (void) show_instrs;
+  JERRY_UNUSED (show_instrs);
 #endif /* PARSER_DUMP_BYTE_CODE */
 } /* parser_set_show_instrs */
 

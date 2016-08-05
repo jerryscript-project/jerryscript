@@ -248,7 +248,7 @@ ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true -
                                                                                              *   collection */
 {
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
-  (void) for_enumerable_p;
+  JERRY_UNUSED (for_enumerable_p);
 
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 

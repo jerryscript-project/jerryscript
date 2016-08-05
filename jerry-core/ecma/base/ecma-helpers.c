@@ -1038,8 +1038,8 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
   JERRY_UNREACHABLE ();
 
 #else /* JERRY_NDEBUG */
-  (void) object_p;
-  (void) prop_p;
+  JERRY_UNUSED (object_p);
+  JERRY_UNUSED (prop_p);
 #endif /* !JERRY_NDEBUG */
 } /* ecma_assert_object_contains_the_property */
 

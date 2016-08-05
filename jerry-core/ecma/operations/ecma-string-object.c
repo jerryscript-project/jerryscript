@@ -233,7 +233,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
 
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
-  (void) for_non_enumerable_p;
+  JERRY_UNUSED (for_non_enumerable_p);
 
   ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_ECMA_VALUE);

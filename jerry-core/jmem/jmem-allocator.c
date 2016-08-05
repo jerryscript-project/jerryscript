@@ -51,7 +51,7 @@ jmem_finalize (bool is_show_mem_stats) /**< show heap memory stats
     jmem_stats_print ();
   }
 #else /* !JMEM_STATS */
-  (void) is_show_mem_stats;
+  JERRY_UNUSED (is_show_mem_stats);
 #endif /* JMEM_STATS */
 
   jmem_heap_finalize ();

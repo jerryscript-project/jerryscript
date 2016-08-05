@@ -124,9 +124,9 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
                                                                     arguments' list */
 {
   /* the arguments may be unused for some built-ins */
-  (void) this_arg_value;
-  (void) arguments_list;
-  (void) arguments_number;
+  JERRY_UNUSED (this_arg_value);
+  JERRY_UNUSED (arguments_list);
+  JERRY_UNUSED (arguments_number);
 
   switch (builtin_routine_id)
   {

@@ -567,7 +567,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
       && ecma_builtin_function_is_routine (object_p))
   {
     ecma_collection_header_t *for_enumerable_p = main_collection_p;
-    (void) for_enumerable_p;
+    JERRY_UNUSED (for_enumerable_p);
 
     ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 

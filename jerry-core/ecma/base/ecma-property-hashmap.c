@@ -209,7 +209,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
                                     prop_iter_p->next_property_cp);
   }
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
-  (void) object_p;
+  JERRY_UNUSED (object_p);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 } /* ecma_property_hashmap_create */
 
@@ -234,7 +234,7 @@ ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
   jmem_heap_free_block (hashmap_p,
                         ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (hashmap_p->max_property_count));
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
-  (void) object_p;
+  JERRY_UNUSED (object_p);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 } /* ecma_property_hashmap_free */
 
@@ -315,10 +315,10 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
     *bits_p = (uint8_t) ((*bits_p) | mask);
   }
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
-  (void) object_p;
-  (void) name_p;
-  (void) property_pair_p;
-  (void) property_index;
+  JERRY_UNUSED (object_p);
+  JERRY_UNUSED (name_p);
+  JERRY_UNUSED (property_pair_p);
+  JERRY_UNUSED (property_index);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 } /* ecma_property_hashmap_insert */
 
@@ -394,9 +394,9 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
 #endif /* !JERRY_NDEBUG */
   }
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
-  (void) object_p;
-  (void) name_p;
-  (void) property_p;
+  JERRY_UNUSED (object_p);
+  JERRY_UNUSED (name_p);
+  JERRY_UNUSED (property_p);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 } /* ecma_property_hashmap_delete */
 

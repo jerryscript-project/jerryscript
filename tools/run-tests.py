@@ -112,51 +112,51 @@ def create_binary(buildoptions):
     return 0
 
 def run_jerry_tests():
+    ret_build = ret_test = 0
     for job in jerry_tests_options:
-        ret = create_binary(job.build_args)
-
-        if not ret:
-            test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir), JERRY_TESTS_DIR]
-            if job.test_args:
-                test_cmd.extend(job.test_args)
-
-            ret = run_check(test_cmd)
-        else:
+        ret_build = create_binary(job.build_args)
+        if ret_build:
             break
 
-    return ret
+        test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir), JERRY_TESTS_DIR]
+        if job.test_args:
+            test_cmd.extend(job.test_args)
+
+        ret_test |= run_check(test_cmd)
+
+    return ret_build | ret_test
 
 def run_jerry_test_suite():
+    ret_build = ret_test = 0
     for job in jerry_test_suite_options:
-        ret = create_binary(job.build_args)
-
-        if not ret:
-            test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir)]
-
-            if '--profile=minimal' in job.build_args:
-                test_cmd.append(JERRY_TEST_SUITE_MINIMAL_LIST)
-            else:
-                test_cmd.append(JERRY_TEST_SUITE_DIR)
-
-            if job.test_args:
-                test_cmd.extend(job.test_args)
-
-            ret = run_check(test_cmd)
-        else:
+        ret_build = create_binary(job.build_args)
+        if ret_build:
             break
 
-    return ret
+        test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir)]
+
+        if '--profile=minimal' in job.build_args:
+            test_cmd.append(JERRY_TEST_SUITE_MINIMAL_LIST)
+        else:
+            test_cmd.append(JERRY_TEST_SUITE_DIR)
+
+        if job.test_args:
+            test_cmd.extend(job.test_args)
+
+        ret_test |= run_check(test_cmd)
+
+    return ret_build | ret_test
 
 def run_unittests():
+    ret_build = ret_test = 0
     for job in jerry_unittests_options:
-        ret = create_binary(job.build_args)
-
-        if not ret:
-            ret = run_check([UNITTEST_RUNNER_SCRIPT, get_bin_dir_path(job.out_dir)])
-        else:
+        ret_build = create_binary(job.build_args)
+        if ret_build:
             break
 
-    return ret
+        ret_test |= run_check([UNITTEST_RUNNER_SCRIPT, get_bin_dir_path(job.out_dir)])
+
+    return ret_build | ret_test
 
 def run_buildoption_test():
     for job in jerry_buildoptions:

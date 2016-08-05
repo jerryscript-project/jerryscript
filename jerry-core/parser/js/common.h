@@ -33,11 +33,6 @@
  * @{
  */
 
-#ifndef JERRY_NDEBUG
-/* Note: This flag is independent from debug mode. */
-#define PARSER_DUMP_BYTE_CODE
-#endif /* !JERRY_NDEBUG */
-
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
 #include "jmem-heap.h"

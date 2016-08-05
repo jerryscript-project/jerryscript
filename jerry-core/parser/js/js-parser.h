@@ -133,8 +133,6 @@ extern ecma_value_t parser_parse_script (const uint8_t *, size_t, bool, ecma_com
 
 const char *parser_error_to_string (parser_error_t);
 
-extern void parser_set_show_instrs (int);
-
 /**
  * @}
  * @}

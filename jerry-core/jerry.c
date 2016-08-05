@@ -143,25 +143,34 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
   /* Zero out all members. */
   memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
 
-  if (flags & (JERRY_INIT_ENABLE_LOG))
-  {
-#ifndef JERRY_ENABLE_LOG
-    JERRY_WARNING_MSG ("Ignoring log options because of '!JERRY_ENABLE_LOG' build configuration.\n");
-#endif /* !JERRY_ENABLE_LOG */
-  }
-
   if (flags & (JERRY_INIT_MEM_STATS | JERRY_INIT_MEM_STATS_SEPARATE))
   {
 #ifndef JMEM_STATS
     flags &= (jerry_init_flag_t) ~(JERRY_INIT_MEM_STATS | JERRY_INIT_MEM_STATS_SEPARATE);
 
-    JERRY_WARNING_MSG ("Ignoring memory statistics option because of '!JMEM_STATS' build configuration.\n");
+    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_MEM_STATS flag because of !JMEM_STATS configuration.\n");
 #else /* JMEM_STATS */
-    if (flags & JERRY_INIT_MEM_STATS_SEPARATE)
-    {
-      flags |= JERRY_INIT_MEM_STATS;
-    }
+    flags |= JERRY_INIT_MEM_STATS;
 #endif /* !JMEM_STATS */
+  }
+
+  if (flags & JERRY_INIT_SHOW_OPCODES)
+  {
+#ifndef PARSER_DUMP_BYTE_CODE
+    flags &= (jerry_init_flag_t) ~JERRY_INIT_SHOW_OPCODES;
+
+    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_SHOW_OPCODES flag because of !PARSER_DUMP_BYTE_CODE configuration.\n");
+#endif /* !PARSER_DUMP_BYTE_CODE */
+  }
+
+  if (flags & JERRY_INIT_SHOW_REGEXP_OPCODES)
+  {
+#ifndef REGEXP_DUMP_BYTE_CODE
+    flags &= (jerry_init_flag_t) ~JERRY_INIT_SHOW_REGEXP_OPCODES;
+
+    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_SHOW_REGEXP_OPCODES flag "
+                       "because of !REGEXP_DUMP_BYTE_CODE configuration.\n");
+#endif /* !REGEXP_DUMP_BYTE_CODE */
   }
 
   JERRY_CONTEXT (jerry_init_flags) = flags;
@@ -182,7 +191,7 @@ jerry_cleanup (void)
 
   jerry_make_api_unavailable ();
   ecma_finalize ();
-  jmem_finalize ((JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_MEM_STATS) != 0);
+  jmem_finalize ();
 } /* jerry_cleanup */
 
 /**
@@ -270,8 +279,6 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
              bool is_strict) /**< strict mode */
 {
   jerry_assert_api_available ();
-
-  parser_set_show_instrs ((JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_OPCODES));
 
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;

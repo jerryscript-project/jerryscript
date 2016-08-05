@@ -645,28 +645,27 @@ jmem_heap_stats_print (void)
 {
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG,
-                  "Heap stats:\n"
-                  "  Heap size = %zu bytes\n"
-                  "  Allocated = %zu bytes\n"
-                  "  Waste = %zu bytes\n"
-                  "  Peak allocated = %zu bytes\n"
-                  "  Peak waste = %zu bytes\n"
-                  "  Skip-ahead ratio = %zu.%04zu\n"
-                  "  Average alloc iteration = %zu.%04zu\n"
-                  "  Average free iteration = %zu.%04zu\n"
-                  "\n",
-                  heap_stats->size,
-                  heap_stats->allocated_bytes,
-                  heap_stats->waste_bytes,
-                  heap_stats->peak_allocated_bytes,
-                  heap_stats->peak_waste_bytes,
-                  heap_stats->skip_count / heap_stats->nonskip_count,
-                  heap_stats->skip_count % heap_stats->nonskip_count * 10000 / heap_stats->nonskip_count,
-                  heap_stats->alloc_iter_count / heap_stats->alloc_count,
-                  heap_stats->alloc_iter_count % heap_stats->alloc_count * 10000 / heap_stats->alloc_count,
-                  heap_stats->free_iter_count / heap_stats->free_count,
-                  heap_stats->free_iter_count % heap_stats->free_count * 10000 / heap_stats->free_count);
+  JERRY_DEBUG_MSG ("Heap stats:\n"
+                   "  Heap size = %zu bytes\n"
+                   "  Allocated = %zu bytes\n"
+                   "  Waste = %zu bytes\n"
+                   "  Peak allocated = %zu bytes\n"
+                   "  Peak waste = %zu bytes\n"
+                   "  Skip-ahead ratio = %zu.%04zu\n"
+                   "  Average alloc iteration = %zu.%04zu\n"
+                   "  Average free iteration = %zu.%04zu\n"
+                   "\n",
+                   heap_stats->size,
+                   heap_stats->allocated_bytes,
+                   heap_stats->waste_bytes,
+                   heap_stats->peak_allocated_bytes,
+                   heap_stats->peak_waste_bytes,
+                   heap_stats->skip_count / heap_stats->nonskip_count,
+                   heap_stats->skip_count % heap_stats->nonskip_count * 10000 / heap_stats->nonskip_count,
+                   heap_stats->alloc_iter_count / heap_stats->alloc_count,
+                   heap_stats->alloc_iter_count % heap_stats->alloc_count * 10000 / heap_stats->alloc_count,
+                   heap_stats->free_iter_count / heap_stats->free_count,
+                   heap_stats->free_iter_count % heap_stats->free_count * 10000 / heap_stats->free_count);
 } /* jmem_heap_stats_print */
 
 /**

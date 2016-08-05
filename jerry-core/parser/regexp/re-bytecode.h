@@ -115,9 +115,9 @@ void re_insert_opcode (re_bytecode_ctx_t *, uint32_t, re_opcode_t);
 void re_insert_u32 (re_bytecode_ctx_t *, uint32_t, uint32_t);
 void re_bytecode_list_insert (re_bytecode_ctx_t *, size_t, uint8_t *, size_t);
 
-#ifdef JERRY_ENABLE_LOG
+#ifdef REGEXP_DUMP_BYTE_CODE
 void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
-#endif /* JERRY_ENABLE_LOG */
+#endif /* REGEXP_DUMP_BYTE_CODE */
 
 /**
  * @}

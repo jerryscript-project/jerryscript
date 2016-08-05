@@ -237,7 +237,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       case RE_TOK_START_CAPTURE_GROUP:
       {
         idx = re_ctx_p->num_of_captures++;
-        JERRY_DDLOG ("Compile a capture group start (idx: %d)\n", idx);
+        JERRY_TRACE_MSG ("Compile a capture group start (idx: %d)\n", idx);
 
         ret_value = re_parse_alternative (re_ctx_p, false);
 
@@ -251,7 +251,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       case RE_TOK_START_NON_CAPTURE_GROUP:
       {
         idx = re_ctx_p->num_of_non_captures++;
-        JERRY_DDLOG ("Compile a non-capture group start (idx: %d)\n", idx);
+        JERRY_TRACE_MSG ("Compile a non-capture group start (idx: %d)\n", idx);
 
         ret_value = re_parse_alternative (re_ctx_p, false);
 
@@ -264,8 +264,8 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_CHAR:
       {
-        JERRY_DDLOG ("Compile character token: %c, qmin: %d, qmax: %d\n",
-                     re_ctx_p->current_token.value, re_ctx_p->current_token.qmin, re_ctx_p->current_token.qmax);
+        JERRY_TRACE_MSG ("Compile character token: %c, qmin: %d, qmax: %d\n",
+                         re_ctx_p->current_token.value, re_ctx_p->current_token.qmin, re_ctx_p->current_token.qmax);
 
         re_append_opcode (bc_ctx_p, RE_OP_CHAR);
         re_append_char (bc_ctx_p, re_canonicalize ((ecma_char_t) re_ctx_p->current_token.value,
@@ -279,7 +279,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_PERIOD:
       {
-        JERRY_DDLOG ("Compile a period\n");
+        JERRY_TRACE_MSG ("Compile a period\n");
         re_append_opcode (bc_ctx_p, RE_OP_PERIOD);
 
         if ((re_ctx_p->current_token.qmin != 1) || (re_ctx_p->current_token.qmax != 1))
@@ -290,7 +290,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_ALTERNATIVE:
       {
-        JERRY_DDLOG ("Compile an alternative\n");
+        JERRY_TRACE_MSG ("Compile an alternative\n");
         re_insert_u32 (bc_ctx_p, alterantive_offset, re_get_bytecode_length (bc_ctx_p) - alterantive_offset);
         re_append_opcode (bc_ctx_p, RE_OP_ALTERNATIVE);
         alterantive_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
@@ -298,31 +298,31 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_ASSERT_START:
       {
-        JERRY_DDLOG ("Compile a start assertion\n");
+        JERRY_TRACE_MSG ("Compile a start assertion\n");
         re_append_opcode (bc_ctx_p, RE_OP_ASSERT_START);
         break;
       }
       case RE_TOK_ASSERT_END:
       {
-        JERRY_DDLOG ("Compile an end assertion\n");
+        JERRY_TRACE_MSG ("Compile an end assertion\n");
         re_append_opcode (bc_ctx_p, RE_OP_ASSERT_END);
         break;
       }
       case RE_TOK_ASSERT_WORD_BOUNDARY:
       {
-        JERRY_DDLOG ("Compile a word boundary assertion\n");
+        JERRY_TRACE_MSG ("Compile a word boundary assertion\n");
         re_append_opcode (bc_ctx_p, RE_OP_ASSERT_WORD_BOUNDARY);
         break;
       }
       case RE_TOK_ASSERT_NOT_WORD_BOUNDARY:
       {
-        JERRY_DDLOG ("Compile a not word boundary assertion\n");
+        JERRY_TRACE_MSG ("Compile a not word boundary assertion\n");
         re_append_opcode (bc_ctx_p, RE_OP_ASSERT_NOT_WORD_BOUNDARY);
         break;
       }
       case RE_TOK_ASSERT_START_POS_LOOKAHEAD:
       {
-        JERRY_DDLOG ("Compile a positive lookahead assertion\n");
+        JERRY_TRACE_MSG ("Compile a positive lookahead assertion\n");
         idx = re_ctx_p->num_of_non_captures++;
         re_append_opcode (bc_ctx_p, RE_OP_LOOKAHEAD_POS);
 
@@ -339,7 +339,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_ASSERT_START_NEG_LOOKAHEAD:
       {
-        JERRY_DDLOG ("Compile a negative lookahead assertion\n");
+        JERRY_TRACE_MSG ("Compile a negative lookahead assertion\n");
         idx = re_ctx_p->num_of_non_captures++;
         re_append_opcode (bc_ctx_p, RE_OP_LOOKAHEAD_NEG);
 
@@ -364,7 +364,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
           re_ctx_p->highest_backref = backref;
         }
 
-        JERRY_DDLOG ("Compile a backreference: %d\n", backref);
+        JERRY_TRACE_MSG ("Compile a backreference: %d\n", backref);
         re_append_opcode (bc_ctx_p, RE_OP_BACKREFERENCE);
         re_append_u32 (bc_ctx_p, backref);
 
@@ -380,7 +380,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       case RE_TOK_START_CHAR_CLASS:
       case RE_TOK_START_INV_CHAR_CLASS:
       {
-        JERRY_DDLOG ("Compile a character class\n");
+        JERRY_TRACE_MSG ("Compile a character class\n");
         re_append_opcode (bc_ctx_p,
                           re_ctx_p->current_token.type == RE_TOK_START_INV_CHAR_CLASS
                                                        ? RE_OP_INV_CHAR_CLASS
@@ -406,7 +406,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_END_GROUP:
       {
-        JERRY_DDLOG ("Compile a group end\n");
+        JERRY_TRACE_MSG ("Compile a group end\n");
 
         if (expect_eof)
         {
@@ -469,7 +469,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
       if ((cached_bytecode_p->header.status_flags & RE_FLAGS_MASK) == flags
           && ecma_compare_ecma_strings (cached_pattern_str_p, pattern_str_p))
       {
-        JERRY_DDLOG ("RegExp is found in cache\n");
+        JERRY_TRACE_MSG ("RegExp is found in cache\n");
         return idx;
       }
     }
@@ -480,7 +480,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
     }
   }
 
-  JERRY_DDLOG ("RegExp is NOT found in cache\n");
+  JERRY_TRACE_MSG ("RegExp is NOT found in cache\n");
   return free_idx;
 } /* re_find_bytecode_in_cache */
 
@@ -594,15 +594,18 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   if (!ecma_is_value_empty (ret_value))
   {
     /* Compilation failed, free bytecode. */
-    JERRY_DDLOG ("RegExp compilation failed!\n");
+    JERRY_TRACE_MSG ("RegExp compilation failed!\n");
     jmem_heap_free_block (bc_ctx.block_start_p, byte_code_size);
     *out_bytecode_p = NULL;
   }
   else
   {
-#ifdef JERRY_ENABLE_LOG
-    re_dump_bytecode (&bc_ctx);
-#endif /* JERRY_ENABLE_LOG */
+#ifdef REGEXP_DUMP_BYTE_CODE
+    if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_REGEXP_OPCODES)
+    {
+      re_dump_bytecode (&bc_ctx);
+    }
+#endif /* REGEXP_DUMP_BYTE_CODE */
 
     /* The RegExp bytecode contains at least a RE_OP_SAVE_AT_START opdoce, so it cannot be NULL. */
     JERRY_ASSERT (bc_ctx.block_start_p != NULL);
@@ -617,7 +620,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
         JERRY_CONTEXT (re_cache_idx) = 0;
       }
 
-      JERRY_DDLOG ("RegExp cache is full! Remove the element on idx: %d\n", JERRY_CONTEXT (re_cache_idx));
+      JERRY_TRACE_MSG ("RegExp cache is full! Remove the element on idx: %d\n", JERRY_CONTEXT (re_cache_idx));
 
       cache_idx = JERRY_CONTEXT (re_cache_idx)++;
 
@@ -629,7 +632,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
       }
     }
 
-    JERRY_DDLOG ("Insert bytecode into RegExp cache (idx: %d).\n", cache_idx);
+    JERRY_TRACE_MSG ("Insert bytecode into RegExp cache (idx: %d).\n", cache_idx);
     ecma_bytecode_ref ((ecma_compiled_code_t *) *out_bytecode_p);
     JERRY_CONTEXT (re_cache)[cache_idx] = *out_bytecode_p;
   }

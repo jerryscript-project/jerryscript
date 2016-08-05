@@ -80,11 +80,13 @@ jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug-snapshot
 # Test options for buildoption-test
 jerry_buildoptions = [
                       Options('buildoption_test-lto', ['--lto=on']),
-                      Options('buildoption_test-log', ['--log=on']),
                       Options('buildoption_test-error_messages', ['--error-messages=on']),
                       Options('buildoption_test-all_in_one', ['--all-in-one=on']),
                       Options('buildoption_test-valgrind', ['--valgrind=on']),
                       Options('buildoption_test-valgrind_freya', ['--valgrind-freya=on']),
+                      Options('buildoption_test-mem_stats', ['--mem-stats=on']),
+                      Options('buildoption_test-show_opcodes', ['--show-opcodes=on']),
+                      Options('buildoption_test-show_regexp_opcodes', ['--show-regexp-opcodes=on']),
                       Options('buildoption_test-jerry_libc', ['--jerry-libc=on', '--compiler-default-libc=off']),
                       Options('buildoption_test-compiler_default_libc', ['--compiler-default-libc=on', '--jerry-libc=off']),
                      ]

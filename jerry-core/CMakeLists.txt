@@ -20,11 +20,12 @@ project (${JERRY_CORE_NAME} C)
 # Optional features
 set(FEATURE_PROFILE         "full" CACHE STRING "Profile types: full, minimal")
 set(FEATURE_ERROR_MESSAGES  OFF    CACHE BOOL   "Enable error messages?")
-set(FEATURE_LOG             OFF    CACHE BOOL   "Enable logging?")
 set(FEATURE_VALGRIND        OFF    CACHE BOOL   "Enable Valgrind support?")
 set(FEATURE_VALGRIND_FREYA  OFF    CACHE BOOL   "Enable Valgrind-Freya support?")
 set(FEATURE_MEM_STRESS_TEST OFF    CACHE BOOL   "Enable mem-stress test?")
-set(FEATURE_MEM_STATS       OFF    CACHE BOOL   "Enable memory-statistics?")
+set(FEATURE_MEM_STATS       OFF    CACHE BOOL   "Enable memory statistics?")
+set(FEATURE_PARSER_DUMP     OFF    CACHE BOOL   "Enable parser byte-code dumps?")
+set(FEATURE_REGEXP_DUMP     OFF    CACHE BOOL   "Enable regexp byte-code dumps?")
 set(FEATURE_SNAPSHOT_SAVE   OFF    CACHE BOOL   "Allow to save snapshot files?")
 set(FEATURE_SNAPSHOT_EXEC   OFF    CACHE BOOL   "Allow to execute snapshot files?")
 set(MEM_HEAP_SIZE_KB        "512"  CACHE STRING "Size of memory heap, in kilobytes")
@@ -32,11 +33,12 @@ set(MEM_HEAP_SIZE_KB        "512"  CACHE STRING "Size of memory heap, in kilobyt
 # Status messages
 message(STATUS "FEATURE_PROFILE           " ${FEATURE_PROFILE})
 message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
-message(STATUS "FEATURE_LOG               " ${FEATURE_LOG})
 message(STATUS "FEATURE_VALGRIND          " ${FEATURE_VALGRIND})
 message(STATUS "FEATURE_VALGRIND_FREYA    " ${FEATURE_VALGRIND_FREYA})
 message(STATUS "FEATURE_MEM_STRESS_TEST   " ${FEATURE_MEM_STRESS_TEST})
 message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
+message(STATUS "FEATURE_PARSER_DUMP       " ${FEATURE_PARSER_DUMP})
+message(STATUS "FEATURE_REGEXP_DUMP       " ${FEATURE_REGEXP_DUMP})
 message(STATUS "FEATURE_SNAPSHOT_SAVE     " ${FEATURE_SNAPSHOT_SAVE})
 message(STATUS "FEATURE_SNAPSHOT_EXEC     " ${FEATURE_SNAPSHOT_EXEC})
 message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
@@ -170,11 +172,6 @@ if(FEATURE_ERROR_MESSAGES)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_ERROR_MESSAGES)
 endif()
 
-# Log
-if(FEATURE_LOG)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
-endif()
-
 # Valgrind
 if(FEATURE_VALGRIND)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND)
@@ -195,6 +192,16 @@ endif()
 # Memory statistics
 if(FEATURE_MEM_STATS)
   set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_STATS)
+endif()
+
+# Parser byte-code dumps
+if(FEATURE_PARSER_DUMP)
+  set(DEFINES_JERRY ${DEFINES_JERRY} PARSER_DUMP_BYTE_CODE)
+endif()
+
+# RegExp byte-code dumps
+if(FEATURE_REGEXP_DUMP)
+  set(DEFINES_JERRY ${DEFINES_JERRY} REGEXP_DUMP_BYTE_CODE)
 endif()
 
 # Snapshot save

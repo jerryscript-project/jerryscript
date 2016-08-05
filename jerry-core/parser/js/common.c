@@ -59,7 +59,7 @@ util_print_chars (const uint8_t *char_p, /**< character pointer */
 {
   while (size > 0)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "%c", *char_p++);
+    JERRY_DEBUG_MSG ("%c", *char_p++);
     size--;
   }
 } /* util_print_chars */
@@ -73,7 +73,7 @@ util_print_number (ecma_number_t num_p) /**< number to print */
   lit_utf8_byte_t str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
   lit_utf8_size_t str_size = ecma_number_to_utf8_string (num_p, str_buf, sizeof (str_buf));
   str_buf[str_size] = 0;
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "%s", str_buf);
+  JERRY_DEBUG_MSG ("%s", str_buf);
 } /* util_print_number */
 
 /**
@@ -86,22 +86,22 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (literal_p->status_flags & LEXER_FLAG_VAR)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "var_ident(");
+      JERRY_DEBUG_MSG ("var_ident(");
     }
     else
     {
-      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "ident(");
+      JERRY_DEBUG_MSG ("ident(");
     }
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_FUNCTION_LITERAL)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "function");
+    JERRY_DEBUG_MSG ("function");
     return;
   }
   else if (literal_p->type == LEXER_STRING_LITERAL)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "string(");
+    JERRY_DEBUG_MSG ("string(");
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_NUMBER_LITERAL)
@@ -110,21 +110,21 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
 
     JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
 
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "number(");
+    JERRY_DEBUG_MSG ("number(");
     util_print_number (ecma_get_number_from_value (value_p->u.lit_number));
   }
   else if (literal_p->type == LEXER_REGEXP_LITERAL)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "regexp");
+    JERRY_DEBUG_MSG ("regexp");
     return;
   }
   else
   {
-    jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "unknown");
+    JERRY_DEBUG_MSG ("unknown");
     return;
   }
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, ")");
+  JERRY_DEBUG_MSG (")");
 } /* util_print_literal */
 
 #endif /* PARSER_DUMP_BYTE_CODE */

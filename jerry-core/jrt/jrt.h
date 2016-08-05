@@ -119,28 +119,10 @@ extern void __noreturn jerry_fatal (jerry_fatal_code_t);
 /*
  * Logging
  */
-#ifdef JERRY_ENABLE_LOG
-#define JERRY_DLOG(...) jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define JERRY_DDLOG(...) jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
-#else /* !JERRY_ENABLE_LOG */
-/**
- * Mark for unreachable points and unimplemented cases
- */
-extern void jerry_ref_unused_variables (void *, ...);
-
-#define JERRY_DLOG(...) \
-  do \
-  { \
-    if (false) \
-    { \
-      jerry_ref_unused_variables (0, __VA_ARGS__); \
-    } \
-  } while (0)
-#define JERRY_DDLOG(...) JERRY_DLOG (__VA_ARGS__)
-#endif /* JERRY_ENABLE_LOG */
-
 #define JERRY_ERROR_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define JERRY_DEBUG_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define JERRY_TRACE_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
 
 /**
  * Size of struct member

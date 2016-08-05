@@ -32,7 +32,7 @@ function is_mem_stats_build() {
   [ -x "$1" ] || fail_msg "Engine '$1' is not executable"
 
   tmpfile=`mktemp`
-  "$1" --mem-stats $tmpfile 2>&1 | grep -- "Ignoring memory statistics option because of '!JMEM_STATS' build configuration." 2>&1 > /dev/null
+  "$1" --mem-stats $tmpfile 2>&1 | grep -- "Ignoring JERRY_INIT_MEM_STATS flag because of !JMEM_STATS configuration." 2>&1 > /dev/null
   code=$?
   rm $tmpfile
 

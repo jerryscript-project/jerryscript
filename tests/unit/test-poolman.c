@@ -82,7 +82,7 @@ main ()
   jmem_pools_stats_print ();
 #endif /* JMEM_STATS */
 
-  jmem_finalize (false);
+  jmem_finalize ();
 
   return 0;
 } /* main */

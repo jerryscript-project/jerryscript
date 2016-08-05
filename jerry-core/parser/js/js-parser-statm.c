@@ -1609,7 +1609,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     if (context_p->is_show_opcodes
         && switch_to_strict_mode)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "  Note: switch to strict mode\n\n");
+      JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
     }
 #endif /* PARSER_DUMP_BYTE_CODE */
 

@@ -217,7 +217,7 @@ main ()
   TEST_ASSERT (res_buf[2] == 0xBF);
 
   ecma_finalize ();
-  jmem_finalize (true);
+  jmem_finalize ();
 
   return 0;
 } /* main */

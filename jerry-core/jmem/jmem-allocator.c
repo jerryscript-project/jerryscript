@@ -40,18 +40,15 @@ jmem_init (void)
  * Finalize memory allocators.
  */
 void
-jmem_finalize (bool is_show_mem_stats) /**< show heap memory stats
-                                            before finalization? */
+jmem_finalize ()
 {
   jmem_pools_finalize ();
 
 #ifdef JMEM_STATS
-  if (is_show_mem_stats)
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_MEM_STATS)
   {
     jmem_stats_print ();
   }
-#else /* !JMEM_STATS */
-  JERRY_UNUSED (is_show_mem_stats);
 #endif /* JMEM_STATS */
 
   jmem_heap_finalize ();

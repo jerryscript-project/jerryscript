@@ -38,7 +38,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   {
     case ERR_OUT_OF_MEMORY:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_OUT_OF_MEMORY\n");
+      JERRY_ERROR_MSG ("Error: ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -48,12 +48,12 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_REF_COUNT_LIMIT:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_REF_COUNT_LIMIT\n");
+      JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: ERR_FAILED_INTERNAL_ASSERTION\n");
+      JERRY_ERROR_MSG ("Error: ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }
@@ -77,12 +77,11 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
-                  "ICE: Assertion '%s' failed at %s(%s):%lu.\n",
-                  assertion,
-                  file,
-                  function,
-                  (unsigned long) line);
+  JERRY_ERROR_MSG ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
+                   assertion,
+                   file,
+                   function,
+                   (unsigned long) line);
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
@@ -95,11 +94,10 @@ jerry_unreachable (const char *file, /**< file name */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR,
-                  "ICE: Unreachable control path at %s(%s):%lu was executed.\n",
-                  file,
-                  function,
-                  (unsigned long) line);
+  JERRY_ERROR_MSG ("ICE: Unreachable control path at %s(%s):%lu was executed.\n",
+                   file,
+                   function,
+                   (unsigned long) line);
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */

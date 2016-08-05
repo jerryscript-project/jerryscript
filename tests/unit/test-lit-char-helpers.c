@@ -74,7 +74,7 @@ main ()
   TEST_ASSERT (length == 3);
 
   ecma_finalize ();
-  jmem_finalize (true);
+  jmem_finalize ();
 
   return 0;
 } /* main */

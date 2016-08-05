@@ -385,7 +385,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
     {
       case RE_OP_MATCH:
       {
-        JERRY_DDLOG ("Execute RE_OP_MATCH: match\n");
+        JERRY_TRACE_MSG ("Execute RE_OP_MATCH: match\n");
         *out_str_p = str_curr_p;
         ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
         return ret_value; /* match */
@@ -400,15 +400,15 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         bool is_ignorecase = re_ctx_p->flags & RE_FLAG_IGNORE_CASE;
         ecma_char_t ch1 = (ecma_char_t) re_get_char (&bc_p); /* Already canonicalized. */
         ecma_char_t ch2 = re_canonicalize (lit_utf8_read_next (&str_curr_p), is_ignorecase);
-        JERRY_DDLOG ("Character matching %d to %d: ", ch1, ch2);
+        JERRY_TRACE_MSG ("Character matching %d to %d: ", ch1, ch2);
 
         if (ch1 != ch2)
         {
-          JERRY_DDLOG ("fail\n");
+          JERRY_TRACE_MSG ("fail\n");
           return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        JERRY_DDLOG ("match\n");
+        JERRY_TRACE_MSG ("match\n");
 
         break; /* tail merge */
       }
@@ -420,65 +420,65 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
 
         ecma_char_t ch = lit_utf8_read_next (&str_curr_p);
-        JERRY_DDLOG ("Period matching '.' to %d: ", (uint32_t) ch);
+        JERRY_TRACE_MSG ("Period matching '.' to %d: ", (uint32_t) ch);
 
         if (lit_char_is_line_terminator (ch))
         {
-          JERRY_DDLOG ("fail\n");
+          JERRY_TRACE_MSG ("fail\n");
           return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
-        JERRY_DDLOG ("match\n");
+        JERRY_TRACE_MSG ("match\n");
         break; /* tail merge */
       }
       case RE_OP_ASSERT_START:
       {
-        JERRY_DDLOG ("Execute RE_OP_ASSERT_START: ");
+        JERRY_TRACE_MSG ("Execute RE_OP_ASSERT_START: ");
 
         if (str_curr_p <= re_ctx_p->input_start_p)
         {
-          JERRY_DDLOG ("match\n");
+          JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
         }
 
         if (!(re_ctx_p->flags & RE_FLAG_MULTILINE))
         {
-          JERRY_DDLOG ("fail\n");
+          JERRY_TRACE_MSG ("fail\n");
           return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
         if (lit_char_is_line_terminator (lit_utf8_peek_prev (str_curr_p)))
         {
-          JERRY_DDLOG ("match\n");
+          JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
         }
 
-        JERRY_DDLOG ("fail\n");
+        JERRY_TRACE_MSG ("fail\n");
         return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
       }
       case RE_OP_ASSERT_END:
       {
-        JERRY_DDLOG ("Execute RE_OP_ASSERT_END: ");
+        JERRY_TRACE_MSG ("Execute RE_OP_ASSERT_END: ");
 
         if (str_curr_p >= re_ctx_p->input_end_p)
         {
-          JERRY_DDLOG ("match\n");
+          JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
         }
 
         if (!(re_ctx_p->flags & RE_FLAG_MULTILINE))
         {
-          JERRY_DDLOG ("fail\n");
+          JERRY_TRACE_MSG ("fail\n");
           return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
         if (lit_char_is_line_terminator (lit_utf8_peek_next (str_curr_p)))
         {
-          JERRY_DDLOG ("match\n");
+          JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
         }
 
-        JERRY_DDLOG ("fail\n");
+        JERRY_TRACE_MSG ("fail\n");
         return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
       }
       case RE_OP_ASSERT_WORD_BOUNDARY:
@@ -506,26 +506,26 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         if (op == RE_OP_ASSERT_WORD_BOUNDARY)
         {
-          JERRY_DDLOG ("Execute RE_OP_ASSERT_WORD_BOUNDARY: ");
+          JERRY_TRACE_MSG ("Execute RE_OP_ASSERT_WORD_BOUNDARY: ");
           if (is_wordchar_left == is_wordchar_right)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
         else
         {
           JERRY_ASSERT (op == RE_OP_ASSERT_NOT_WORD_BOUNDARY);
-          JERRY_DDLOG ("Execute RE_OP_ASSERT_NOT_WORD_BOUNDARY: ");
+          JERRY_TRACE_MSG ("Execute RE_OP_ASSERT_NOT_WORD_BOUNDARY: ");
 
           if (is_wordchar_left != is_wordchar_right)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
 
-        JERRY_DDLOG ("match\n");
+        JERRY_TRACE_MSG ("match\n");
         break; /* tail merge */
       }
       case RE_OP_LOOKAHEAD_POS:
@@ -558,17 +558,17 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         if (!ECMA_IS_VALUE_ERROR (match_value))
         {
-          JERRY_DDLOG ("Execute RE_OP_LOOKAHEAD_POS/NEG: ");
+          JERRY_TRACE_MSG ("Execute RE_OP_LOOKAHEAD_POS/NEG: ");
           ecma_free_value (match_value);
           if ((op == RE_OP_LOOKAHEAD_POS && sub_str_p)
               || (op == RE_OP_LOOKAHEAD_NEG && !sub_str_p))
           {
-            JERRY_DDLOG ("match\n");
+            JERRY_TRACE_MSG ("match\n");
             match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
           }
           else
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             match_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
@@ -596,10 +596,10 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         uint32_t num_of_ranges;
         bool is_match;
 
-        JERRY_DDLOG ("Execute RE_OP_CHAR_CLASS/RE_OP_INV_CHAR_CLASS, ");
+        JERRY_TRACE_MSG ("Execute RE_OP_CHAR_CLASS/RE_OP_INV_CHAR_CLASS, ");
         if (str_curr_p >= re_ctx_p->input_end_p)
         {
-          JERRY_DDLOG ("fail\n");
+          JERRY_TRACE_MSG ("fail\n");
           return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
         }
 
@@ -613,8 +613,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         {
           ecma_char_t ch1 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
           ecma_char_t ch2 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
-          JERRY_DDLOG ("num_of_ranges=%d, ch1=%d, ch2=%d, curr_ch=%d; ",
-                       num_of_ranges, ch1, ch2, curr_ch);
+          JERRY_TRACE_MSG ("num_of_ranges=%d, ch1=%d, ch2=%d, curr_ch=%d; ",
+                           num_of_ranges, ch1, ch2, curr_ch);
 
           if (curr_ch >= ch1 && curr_ch <= ch2)
           {
@@ -628,7 +628,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         {
           if (!is_match)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
@@ -637,11 +637,11 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           JERRY_ASSERT (op == RE_OP_INV_CHAR_CLASS);
           if (is_match)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
-        JERRY_DDLOG ("match\n");
+        JERRY_TRACE_MSG ("match\n");
         break; /* tail merge */
       }
       case RE_OP_BACKREFERENCE:
@@ -649,13 +649,13 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         uint32_t backref_idx;
 
         backref_idx = re_get_value (&bc_p);
-        JERRY_DDLOG ("Execute RE_OP_BACKREFERENCE (idx: %d): ", backref_idx);
+        JERRY_TRACE_MSG ("Execute RE_OP_BACKREFERENCE (idx: %d): ", backref_idx);
         backref_idx *= 2;  /* backref n -> saved indices [n*2, n*2+1] */
         JERRY_ASSERT (backref_idx >= 2 && backref_idx + 1 < re_ctx_p->num_of_captures);
 
         if (!re_ctx_p->saved_p[backref_idx] || !re_ctx_p->saved_p[backref_idx + 1])
         {
-          JERRY_DDLOG ("match\n");
+          JERRY_TRACE_MSG ("match\n");
           break; /* capture is 'undefined', always matches! */
         }
 
@@ -667,7 +667,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
           if (str_curr_p >= re_ctx_p->input_end_p)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
 
@@ -676,18 +676,18 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
           if (ch1 != ch2)
           {
-            JERRY_DDLOG ("fail\n");
+            JERRY_TRACE_MSG ("fail\n");
             return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE); /* fail */
           }
         }
-        JERRY_DDLOG ("match\n");
+        JERRY_TRACE_MSG ("match\n");
         break; /* tail merge */
       }
       case RE_OP_SAVE_AT_START:
       {
         uint8_t *old_bc_p;
 
-        JERRY_DDLOG ("Execute RE_OP_SAVE_AT_START\n");
+        JERRY_TRACE_MSG ("Execute RE_OP_SAVE_AT_START\n");
         const lit_utf8_byte_t *old_start_p = re_ctx_p->saved_p[RE_GLOBAL_START_IDX];
         re_ctx_p->saved_p[RE_GLOBAL_START_IDX] = str_curr_p;
 
@@ -718,7 +718,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_SAVE_AND_MATCH:
       {
-        JERRY_DDLOG ("End of pattern is reached: match\n");
+        JERRY_TRACE_MSG ("End of pattern is reached: match\n");
         re_ctx_p->saved_p[RE_GLOBAL_END_IDX] = str_curr_p;
         *out_str_p = str_curr_p;
         return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE); /* match */
@@ -729,18 +729,18 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         *  Alternatives should be jump over, when alternative opcode appears.
         */
         uint32_t offset = re_get_value (&bc_p);
-        JERRY_DDLOG ("Execute RE_OP_ALTERNATIVE");
+        JERRY_TRACE_MSG ("Execute RE_OP_ALTERNATIVE");
         bc_p += offset;
 
         while (*bc_p == RE_OP_ALTERNATIVE)
         {
-          JERRY_DDLOG (", jump: %d");
+          JERRY_TRACE_MSG (", jump: %d");
           bc_p++;
           offset = re_get_value (&bc_p);
           bc_p += offset;
         }
 
-        JERRY_DDLOG ("\n");
+        JERRY_TRACE_MSG ("\n");
         break; /* tail merge */
       }
       case RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
@@ -1057,8 +1057,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         max = re_get_value (&bc_p);
 
         offset = re_get_value (&bc_p);
-        JERRY_DDLOG ("Non-greedy iterator, min=%lu, max=%lu, offset=%ld\n",
-                     (unsigned long) min, (unsigned long) max, (long) offset);
+        JERRY_TRACE_MSG ("Non-greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                         (unsigned long) min, (unsigned long) max, (long) offset);
 
         num_of_iter = 0;
         while (num_of_iter <= max)
@@ -1104,8 +1104,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         max = re_get_value (&bc_p);
 
         offset = re_get_value (&bc_p);
-        JERRY_DDLOG ("Greedy iterator, min=%lu, max=%lu, offset=%ld\n",
-                     (unsigned long) min, (unsigned long) max, (long) offset);
+        JERRY_TRACE_MSG ("Greedy iterator, min=%lu, max=%lu, offset=%ld\n",
+                         (unsigned long) min, (unsigned long) max, (long) offset);
 
         num_of_iter = 0;
 
@@ -1153,7 +1153,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       }
       default:
       {
-        JERRY_DDLOG ("UNKNOWN opcode (%d)!\n", (uint32_t) op);
+        JERRY_TRACE_MSG ("UNKNOWN opcode (%d)!\n", (uint32_t) op);
         return ecma_raise_common_error (ECMA_ERR_MSG (""));
       }
     }
@@ -1278,10 +1278,10 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     re_ctx.flags &= (uint16_t) ~RE_FLAG_GLOBAL;
   }
 
-  JERRY_DDLOG ("Exec with flags [global: %d, ignoreCase: %d, multiline: %d]\n",
-               re_ctx.flags & RE_FLAG_GLOBAL,
-               re_ctx.flags & RE_FLAG_IGNORE_CASE,
-               re_ctx.flags & RE_FLAG_MULTILINE);
+  JERRY_TRACE_MSG ("Exec with flags [global: %d, ignoreCase: %d, multiline: %d]\n",
+                   re_ctx.flags & RE_FLAG_GLOBAL,
+                   re_ctx.flags & RE_FLAG_IGNORE_CASE,
+                   re_ctx.flags & RE_FLAG_MULTILINE);
 
   re_ctx.num_of_captures = bc_p->num_of_captures;
   JERRY_ASSERT (re_ctx.num_of_captures % 2 == 0);

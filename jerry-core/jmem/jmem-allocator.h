@@ -129,7 +129,7 @@ typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_seve
   } while (false);
 
 extern void jmem_init (void);
-extern void jmem_finalize (bool);
+extern void jmem_finalize (void);
 
 extern uintptr_t jmem_compress_pointer (const void *);
 extern void *jmem_decompress_pointer (uintptr_t);

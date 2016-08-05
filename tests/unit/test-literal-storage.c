@@ -129,6 +129,6 @@ main ()
   }
 
   ecma_finalize_lit_storage ();
-  jmem_finalize (true);
+  jmem_finalize ();
   return 0;
 } /* main */

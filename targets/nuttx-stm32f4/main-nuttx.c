@@ -209,9 +209,7 @@ int jerryscript_entry (int argc, char *argv[])
       flags |= JERRY_FLAG_ENABLE_LOG;
       if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
       {
-#ifdef JERRY_ENABLE_LOG
         jerry_debug_level = argv[i][0] - '0';
-#endif /* JERRY_ENABLE_LOG */
       }
       else
       {

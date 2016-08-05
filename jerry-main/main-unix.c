@@ -111,6 +111,7 @@ print_help (char *name)
                       "  --mem-stats-separate\n"
                       "  --parse-only\n"
                       "  --show-opcodes\n"
+                      "  --show-regexp-opcodes\n"
                       "  --save-snapshot-for-global FILE\n"
                       "  --save-snapshot-for-eval FILE\n"
                       "  --exec-snapshot FILE\n"
@@ -187,6 +188,11 @@ main (int argc,
       flags |= JERRY_INIT_SHOW_OPCODES;
       jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
+    else if (!strcmp ("--show-regexp-opcodes", argv[i]))
+    {
+      flags |= JERRY_INIT_SHOW_REGEXP_OPCODES;
+      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+    }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))
     {
@@ -237,10 +243,7 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-#ifdef JERRY_ENABLE_LOG
-      flags |= JERRY_INIT_ENABLE_LOG;
       jerry_port_default_set_log_level (argv[i][0] - '0');
-#endif /* JERRY_ENABLE_LOG */
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {

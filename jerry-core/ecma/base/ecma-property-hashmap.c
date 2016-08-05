@@ -42,7 +42,7 @@
 /**
  * Stepping values for searching items in the hashmap.
  */
-static const uint32_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS] =
+static const uint8_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS] JERRY_CONST_DATA =
 {
   3, 5, 7, 11, 13, 17, 19, 23
 };

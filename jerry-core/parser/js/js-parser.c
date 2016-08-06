@@ -20,7 +20,7 @@
 #include "js-parser-internal.h"
 
 #ifdef PARSER_DUMP_BYTE_CODE
-static int parser_show_instrs = PARSER_FALSE;
+static bool parser_show_instrs = false;
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 /** \addtogroup parser Parser
@@ -864,7 +864,7 @@ parse_print_literal (ecma_compiled_code_t *compiled_code_p, /**< compiled code *
 
   parser_list_iterator_init (literal_pool_p, &literal_iterator);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     lexer_literal_t *literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator);
 
@@ -1261,7 +1261,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   size_t initializers_length;
   uint8_t real_offset;
   uint8_t *byte_code_p;
-  int needs_uint16_arguments;
+  bool needs_uint16_arguments;
   cbc_opcode_t last_opcode = CBC_EXT_OPCODE;
   ecma_compiled_code_t *compiled_code_p;
   jmem_cpointer_t *literal_pool_p;
@@ -1394,7 +1394,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     if (flags & CBC_HAS_BRANCH_ARG)
     {
-      int prefix_zero = PARSER_TRUE;
+      bool prefix_zero = true;
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
       cbc_opcode_t jump_forward = CBC_JUMP_FORWARD_2;
 #else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
@@ -1412,7 +1412,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         uint8_t byte = page_p->bytes[offset];
         if (byte > 0 || !prefix_zero)
         {
-          prefix_zero = PARSER_FALSE;
+          prefix_zero = false;
           length++;
         }
         else
@@ -1451,13 +1451,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     length++;
   }
 
-  needs_uint16_arguments = PARSER_FALSE;
+  needs_uint16_arguments = false;
   total_size = sizeof (cbc_uint8_arguments_t);
 
   if ((context_p->register_count + context_p->stack_limit) > CBC_MAXIMUM_BYTE_VALUE
       || context_p->literal_count > CBC_MAXIMUM_BYTE_VALUE)
   {
-    needs_uint16_arguments = PARSER_TRUE;
+    needs_uint16_arguments = true;
     total_size = sizeof (cbc_uint16_arguments_t);
   }
 
@@ -1641,7 +1641,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     if (flags & CBC_HAS_BRANCH_ARG)
     {
-      int prefix_zero = PARSER_TRUE;
+      bool prefix_zero = true;
 
       /* The leading zeroes are dropped from the stream. */
       JERRY_ASSERT (branch_offset_length > 0 && branch_offset_length <= 3);
@@ -1651,7 +1651,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         uint8_t byte = page_p->bytes[offset];
         if (byte > 0 || !prefix_zero)
         {
-          prefix_zero = PARSER_FALSE;
+          prefix_zero = false;
           *dst_p++ = page_p->bytes[offset];
           real_offset++;
         }
@@ -2038,7 +2038,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   /* Argument parsing. */
   if (context_p->token.type != LEXER_RIGHT_PAREN)
   {
-    while (PARSER_TRUE)
+    while (true)
     {
       uint16_t literal_count = context_p->literal_count;
 

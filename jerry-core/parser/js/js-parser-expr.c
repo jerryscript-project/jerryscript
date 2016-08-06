@@ -213,7 +213,7 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
   parser_emit_cbc (context_p, CBC_CREATE_ARRAY);
   lexer_next_token (context_p);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
     {
@@ -279,7 +279,7 @@ parser_append_object_literal_item (parser_context_t *context_p, /**< context */
   iterator.current_p = context_p->stack.first_p;
   iterator.current_position = context_p->stack.last_position;
 
-  while (PARSER_TRUE)
+  while (true)
   {
     current_item_type_p = iterator.current_p->bytes + iterator.current_position - 1;
 
@@ -362,9 +362,9 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 
   parser_stack_push_uint8 (context_p, PARSER_OBJECT_PROPERTY_START);
 
-  while (PARSER_TRUE)
+  while (true)
   {
-    lexer_expect_object_literal_id (context_p, PARSER_FALSE);
+    lexer_expect_object_literal_id (context_p, false);
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
@@ -397,7 +397,7 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         status_flags |= PARSER_RESOLVE_THIS_FOR_CALLS;
       }
 
-      lexer_expect_object_literal_id (context_p, PARSER_TRUE);
+      lexer_expect_object_literal_id (context_p, true);
       literal_index = context_p->lit_object.index;
 
       parser_append_object_literal_item (context_p, literal_index, item_type);
@@ -463,7 +463,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
   int new_was_seen = 0;
 
   /* Collect unary operators. */
-  while (PARSER_TRUE)
+  while (true)
   {
     /* Convert plus and minus binary operators to unary operators. */
     if (context_p->token.type == LEXER_ADD)
@@ -513,7 +513,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       }
       else if (context_p->token.lit_location.type == LEXER_NUMBER_LITERAL)
       {
-        int is_negative_number = PARSER_FALSE;
+        bool is_negative_number = false;
 
         while (context_p->stack_top_uint8 == LEXER_PLUS
                || context_p->stack_top_uint8 == LEXER_NEGATE)
@@ -525,7 +525,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
           parser_stack_pop_uint8 (context_p);
         }
 
-        if (lexer_construct_number_object (context_p, PARSER_TRUE, is_negative_number))
+        if (lexer_construct_number_object (context_p, true, is_negative_number))
         {
           JERRY_ASSERT (context_p->lit_object.index <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
 
@@ -642,7 +642,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_DIVIDE:
     case LEXER_ASSIGN_DIVIDE:
     {
-      lexer_construct_regexp_object (context_p, PARSER_FALSE);
+      lexer_construct_regexp_object (context_p, false);
 
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {
@@ -702,7 +702,7 @@ static void
 parser_process_unary_expression (parser_context_t *context_p) /**< context */
 {
   /* Parse postfix part of a primary expression. */
-  while (PARSER_TRUE)
+  while (true)
   {
     /* Since break would only break the switch, we use
      * continue to continue this loop. Without continue,
@@ -772,7 +772,7 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
       {
         size_t call_arguments = 0;
         uint16_t opcode = CBC_CALL;
-        int is_eval = PARSER_FALSE;
+        bool is_eval = false;
 
         parser_push_result (context_p);
 
@@ -788,7 +788,7 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
           {
             JERRY_ASSERT (context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
             context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
-            is_eval = PARSER_TRUE;
+            is_eval = true;
           }
 
           if (context_p->last_cbc_opcode == CBC_PUSH_PROP)
@@ -844,7 +844,7 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)
         {
-          while (PARSER_TRUE)
+          while (true)
           {
             if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
             {
@@ -958,7 +958,7 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
   }
 
   /* Generate byte code for the unary operators. */
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t token = context_p->stack_top_uint8;
     if (!LEXER_IS_UNARY_OP_TOKEN (token))
@@ -1238,7 +1238,7 @@ static void
 parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
                                uint8_t min_prec_treshold) /**< minimal precedence of tokens */
 {
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t token = context_p->stack_top_uint8;
     cbc_opcode_t opcode;
@@ -1348,7 +1348,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     if (options & PARSE_EXPR_HAS_LITERAL)
     {
@@ -1361,7 +1361,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
       parser_parse_unary_expression (context_p, &grouping_level);
     }
 
-    while (PARSER_TRUE)
+    while (true)
     {
       parser_process_unary_expression (context_p);
 

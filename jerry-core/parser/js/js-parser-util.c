@@ -301,7 +301,7 @@ parser_emit_cbc_call (parser_context_t *context_p, /**< context */
  */
 void
 parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
-                             int is_negative_number) /**< sign is negative */
+                             bool is_negative_number) /**< sign is negative */
 {
   uint16_t value = context_p->lit_object.index;
 

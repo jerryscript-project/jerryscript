@@ -60,9 +60,9 @@ typedef enum
 /**
  * Scan primary expression.
  *
- * @return PARSER_TRUE for continue, PARSER_FALSE for break
+ * @return true for continue, false for break
  */
-static int
+static bool
 parser_scan_primary_expression (parser_context_t *context_p, /**< context */
                                 lexer_token_type_t type, /**< current token type */
                                 scan_stack_modes_t stack_top, /**< current stack top */
@@ -78,7 +78,7 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
     case LEXER_DIVIDE:
     case LEXER_ASSIGN_DIVIDE:
     {
-      lexer_construct_regexp_object (context_p, PARSER_TRUE);
+      lexer_construct_regexp_object (context_p, true);
       *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
       break;
     }
@@ -104,7 +104,7 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
       *mode = SCAN_MODE_PROPERTY_NAME;
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_LITERAL:
     case LEXER_KEYW_THIS:
@@ -164,15 +164,15 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_PRIMARY_EXP_EXPECTED);
     }
   }
-  return PARSER_FALSE;
+  return false;
 } /* parser_scan_primary_expression */
 
 /**
  * Scan the tokens after the primary expression.
  *
- * @return PARSER_TRUE for break, PARSER_FALSE for fall through
+ * @return true for break, false for fall through
  */
-static int
+static bool
 parser_scan_post_primary_expression (parser_context_t *context_p, /**< context */
                                      lexer_token_type_t type, /**< current token type */
                                      scan_modes_t *mode) /**< scan mode */
@@ -181,20 +181,20 @@ parser_scan_post_primary_expression (parser_context_t *context_p, /**< context *
   {
     case LEXER_DOT:
     {
-      lexer_scan_identifier (context_p, PARSER_FALSE);
-      return PARSER_TRUE;
+      lexer_scan_identifier (context_p, false);
+      return true;
     }
     case LEXER_LEFT_PAREN:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_LEFT_SQUARE:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_SQUARE_BRACKETED_EXPRESSION);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_INCREASE:
     case LEXER_DECREASE:
@@ -202,7 +202,7 @@ parser_scan_post_primary_expression (parser_context_t *context_p, /**< context *
       if (!context_p->token.was_newline)
       {
         *mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-        return PARSER_TRUE;
+        return true;
       }
       /* FALLTHRU */
     }
@@ -212,15 +212,15 @@ parser_scan_post_primary_expression (parser_context_t *context_p, /**< context *
     }
   }
 
-  return PARSER_FALSE;
+  return false;
 } /* parser_scan_post_primary_expression */
 
 /**
  * Scan the tokens after the primary expression.
  *
- * @return PARSER_TRUE for continue, PARSER_FALSE for break
+ * @return true for continue, false for break
  */
-static int
+static bool
 parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
                                     lexer_token_type_t type, /**< current token type */
                                     scan_stack_modes_t stack_top, /**< current stack top */
@@ -233,17 +233,17 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_COLON_EXPRESSION);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_COMMA:
     {
       if (stack_top == SCAN_STACK_OBJECT_LITERAL)
       {
         *mode = SCAN_MODE_PROPERTY_NAME;
-        return PARSER_TRUE;
+        return true;
       }
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_COLON:
     {
@@ -259,7 +259,7 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
           *mode = SCAN_MODE_STATEMENT;
         }
         parser_stack_pop_uint8 (context_p);
-        return PARSER_FALSE;
+        return false;
       }
       /* FALLTHRU */
     }
@@ -273,7 +273,7 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
       || (type == LEXER_SEMICOLON && stack_top == SCAN_STACK_PAREN_STATEMENT))
   {
     *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-    return PARSER_FALSE;
+    return false;
   }
 
   if ((type == LEXER_RIGHT_SQUARE && stack_top == SCAN_STACK_SQUARE_BRACKETED_EXPRESSION)
@@ -282,14 +282,14 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
   {
     parser_stack_pop_uint8 (context_p);
     *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-    return PARSER_FALSE;
+    return false;
   }
 
   *mode = SCAN_MODE_STATEMENT;
   if (type == LEXER_RIGHT_PAREN && stack_top == SCAN_STACK_PAREN_STATEMENT)
   {
     parser_stack_pop_uint8 (context_p);
-    return PARSER_FALSE;
+    return false;
   }
 
   /* Check whether we can enter to statement mode. */
@@ -303,7 +303,7 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
   if (type == LEXER_RIGHT_BRACE
       || context_p->token.was_newline)
   {
-    return PARSER_TRUE;
+    return true;
   }
 
   if (type != LEXER_SEMICOLON)
@@ -311,15 +311,15 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_INVALID_EXPRESSION);
   }
 
-  return PARSER_FALSE;
+  return false;
 } /* parser_scan_primary_expression_end */
 
 /**
  * Scan statements.
  *
- * @return PARSER_TRUE for continue, PARSER_FALSE for break
+ * @return true for continue, false for break
  */
-static int
+static bool
 parser_scan_statement (parser_context_t *context_p, /**< context */
                        lexer_token_type_t type, /**< current token type */
                        scan_stack_modes_t stack_top, /**< current stack top */
@@ -334,7 +334,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_FINALLY:
     case LEXER_KEYW_DEBUGGER:
     {
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_KEYW_IF:
     case LEXER_KEYW_WHILE:
@@ -350,7 +350,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
 
       parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_STATEMENT);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_KEYW_FOR:
     {
@@ -366,15 +366,15 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
 
       if (context_p->token.type == LEXER_KEYW_VAR)
       {
-        return PARSER_FALSE;
+        return false;
       }
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_KEYW_VAR:
     case LEXER_KEYW_THROW:
     {
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_KEYW_RETURN:
     {
@@ -384,7 +384,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
       {
         *mode = SCAN_MODE_PRIMARY_EXPRESSION;
       }
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_KEYW_BREAK:
     case LEXER_KEYW_CONTINUE:
@@ -394,9 +394,9 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
           && context_p->token.type == LEXER_LITERAL
           && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
       {
-        return PARSER_FALSE;
+        return false;
       }
-      return PARSER_TRUE;
+      return true;
     }
     case LEXER_KEYW_DEFAULT:
     {
@@ -405,13 +405,13 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
       {
         parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
       }
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_KEYW_CASE:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_COLON_STATEMENT);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_RIGHT_BRACE:
     {
@@ -434,22 +434,22 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
           {
             parser_raise_error (context_p, PARSER_ERR_OBJECT_ITEM_SEPARATOR_EXPECTED);
           }
-          return PARSER_TRUE;
+          return true;
         }
-        return PARSER_FALSE;
+        return false;
       }
       break;
     }
     case LEXER_LEFT_BRACE:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_STATEMENT);
-      return PARSER_FALSE;
+      return false;
     }
     case LEXER_KEYW_FUNCTION:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_STATEMENT);
       *mode = SCAN_MODE_FUNCTION_ARGUMENTS;
-      return PARSER_FALSE;
+      return false;
     }
     default:
     {
@@ -466,12 +466,12 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
     if (context_p->token.type == LEXER_COLON)
     {
       *mode = SCAN_MODE_STATEMENT;
-      return PARSER_FALSE;
+      return false;
     }
     *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
   }
 
-  return PARSER_TRUE;
+  return true;
 } /* parser_scan_statement */
 
 /**
@@ -514,7 +514,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
 
   parser_stack_push_uint8 (context_p, SCAN_STACK_HEAD);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     lexer_token_type_t type = (lexer_token_type_t) context_p->token.type;
     scan_stack_modes_t stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
@@ -603,7 +603,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)
         {
-          while (PARSER_TRUE)
+          while (true)
           {
             if (context_p->token.type != LEXER_LITERAL
                 || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
@@ -638,7 +638,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
       {
         JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL);
 
-        lexer_scan_identifier (context_p, PARSER_TRUE);
+        lexer_scan_identifier (context_p, true);
 
         if (context_p->token.type == LEXER_RIGHT_BRACE)
         {

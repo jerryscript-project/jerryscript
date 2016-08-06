@@ -303,7 +303,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_VAR);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
@@ -442,7 +442,7 @@ parser_parse_if_statement_start (parser_context_t *context_p) /**< context */
 /**
  * Parse if statement (ending part).
  */
-static int
+static bool
 parser_parse_if_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_if_else_statement_t if_statement;
@@ -459,7 +459,7 @@ parser_parse_if_statement_end (parser_context_t *context_p) /**< context */
 
     parser_set_branch_to_current_position (context_p, &if_statement.branch);
 
-    return PARSER_FALSE;
+    return false;
   }
 
   parser_stack_change_last_uint8 (context_p, PARSER_STATEMENT_ELSE);
@@ -476,7 +476,7 @@ parser_parse_if_statement_end (parser_context_t *context_p) /**< context */
   parser_stack_iterator_write (&iterator, &else_statement, sizeof (parser_if_else_statement_t));
 
   lexer_next_token (context_p);
-  return PARSER_TRUE;
+  return true;
 } /* parser_parse_if_statement_end */
 
 /**
@@ -534,7 +534,7 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 
   parser_stack_iterator_init (context_p, &iterator);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
 
@@ -961,8 +961,8 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   parser_stack_iterator_t iterator;
   lexer_range_t switch_body_start;
   lexer_range_t unused_range;
-  int switch_case_was_found;
-  int default_case_was_found;
+  bool switch_case_was_found;
+  bool default_case_was_found;
   parser_branch_node_t *cases_p = NULL;
 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_SWITCH);
@@ -1009,10 +1009,10 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   parser_stack_push_uint8 (context_p, PARSER_STATEMENT_SWITCH);
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 
-  switch_case_was_found = PARSER_FALSE;
-  default_case_was_found = PARSER_FALSE;
+  switch_case_was_found = false;
+  default_case_was_found = false;
 
-  while (PARSER_TRUE)
+  while (true)
   {
     parser_scan_until (context_p, &unused_range, LEXER_KEYW_CASE);
 
@@ -1029,7 +1029,7 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
         parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
       }
 
-      default_case_was_found = PARSER_TRUE;
+      default_case_was_found = true;
     }
     else if (context_p->token.type == LEXER_KEYW_CASE
              || context_p->token.type == LEXER_RIGHT_BRACE)
@@ -1072,7 +1072,7 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
       {
         parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
       }
-      switch_case_was_found = PARSER_TRUE;
+      switch_case_was_found = true;
     }
 
     lexer_next_token (context_p);
@@ -1305,7 +1305,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
     /* The label with the same name is searched on the stack. */
-    while (PARSER_TRUE)
+    while (true)
     {
       uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
       if (type == PARSER_STATEMENT_START)
@@ -1346,7 +1346,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
   }
 
   /* The first switch or loop statement is searched. */
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
     if (type == PARSER_STATEMENT_START)
@@ -1400,12 +1400,12 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
     parser_stack_iterator_t loop_iterator;
-    int for_in_was_seen = PARSER_FALSE;
+    bool for_in_was_seen = false;
 
     loop_iterator.current_p = NULL;
 
     /* The label with the same name is searched on the stack. */
-    while (PARSER_TRUE)
+    while (true)
     {
       uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
 
@@ -1448,7 +1448,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       }
       else if (type == PARSER_STATEMENT_FOR_IN)
       {
-        for_in_was_seen = PARSER_TRUE;
+        for_in_was_seen = true;
       }
 
       if (type == PARSER_STATEMENT_DO_WHILE
@@ -1468,7 +1468,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
   }
 
   /* The first loop statement is searched. */
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
     if (type == PARSER_STATEMENT_START)
@@ -1515,7 +1515,7 @@ parser_parse_label (parser_context_t *context_p, /**< context */
 
   parser_stack_iterator_init (context_p, &iterator);
 
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
     if (type == PARSER_STATEMENT_START)
@@ -1564,7 +1564,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     lexer_lit_location_t lit_location;
     uint32_t status_flags = context_p->status_flags;
 #ifdef PARSER_DUMP_BYTE_CODE
-    int switch_to_strict_mode = PARSER_FALSE;
+    bool switch_to_strict_mode = false;
 #endif /* PARSER_DUMP_BYTE_CODE */
 
     JERRY_ASSERT (context_p->stack_depth == 0);
@@ -1578,7 +1578,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       context_p->status_flags |= PARSER_IS_STRICT;
 
 #ifdef PARSER_DUMP_BYTE_CODE
-      switch_to_strict_mode = PARSER_TRUE;
+      switch_to_strict_mode = true;
 #endif /* PARSER_DUMP_BYTE_CODE */
     }
 
@@ -1942,7 +1942,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
     }
 
-    while (PARSER_TRUE)
+    while (true)
     {
       switch (context_p->stack_top_uint8)
       {
@@ -2063,7 +2063,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 void __attr_noinline___
 parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
 {
-  while (PARSER_TRUE)
+  while (true)
   {
     uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
     parser_branch_node_t *branch_list_p = NULL;

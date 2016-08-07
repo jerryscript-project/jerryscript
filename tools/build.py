@@ -19,10 +19,15 @@ import argparse
 import shutil
 import subprocess
 import sys
-from os import makedirs
+from os import makedirs, uname
 from settings import *
 
 BUILD_DIR = path.join(PROJECT_DIR, 'build')
+
+def default_toolchain():
+    (sysname, _, _, _, machine) = uname()
+    toolchain = path.join(PROJECT_DIR, 'cmake', 'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
+    return toolchain if path.isfile(toolchain) else None
 
 def add_build_args(parser):
     parser.add_argument('--verbose', '-v', action='store_const', const='ON', default='OFF', help='Increase verbosity')
@@ -45,7 +50,7 @@ def add_build_args(parser):
     parser.add_argument('--cmake-param', action='append', default=[], help='Add custom arguments to CMake')
     parser.add_argument('--compile-flag', action='append', default=[], help='Add custom compile flag')
     parser.add_argument('--linker-flag', action='append', default=[], help='Add custom linker flag')
-    parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
+    parser.add_argument('--toolchain', action='store', default=default_toolchain(), help='Add toolchain file (default: %(default)s)')
     parser.add_argument('--jerry-libc', choices=['on', 'off'], default='on', help='Use jerry-libc (default: %(default)s)')
     parser.add_argument('--compiler-default-libc', choices=['on', 'off'], default='off', help='Use compiler-default libc (default: %(default)s)')
     parser.add_argument('--jerry-core', choices=['on', 'off'], default='on', help='Use jerry-core (default: %(default)s)')

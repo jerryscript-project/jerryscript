@@ -40,7 +40,7 @@ all:
 	 -DENABLE_LTO=OFF \
 	 -DENABLE_VALGRIND=OFF \
 	 -DCMAKE_TOOLCHAIN_FILE=build/configs/toolchain_external.cmake \
-	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=armv7l-hf \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=armv7l \
 	 -DEXTERNAL_CMAKE_C_COMPILER=arm-none-eabi-gcc \
 	 -DEXTERNAL_CMAKE_C_COMPILER_ID=GNU \
 	 -DEXTERNAL_BUILD_ENTRY_FILE=./targets/nuttx-stm32f4/main-nuttx.c \

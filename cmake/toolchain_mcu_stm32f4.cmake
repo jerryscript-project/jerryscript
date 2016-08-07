@@ -15,7 +15,7 @@
 include(CMakeForceCompiler)
 
 set(CMAKE_SYSTEM_NAME MCU)
-set(CMAKE_SYSTEM_PROCESSOR armv7l-hf)
+set(CMAKE_SYSTEM_PROCESSOR armv7l)
 set(CMAKE_SYSTEM_VERSION STM32F4)
 
 set(FLAGS_COMMON_ARCH -mlittle-endian -mthumb -mcpu=cortex-m4 -march=armv7e-m -mfpu=fpv4-sp-d16 -mfloat-abi=hard)

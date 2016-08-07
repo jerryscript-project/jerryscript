@@ -16,7 +16,7 @@ script: "python tools/run-tests.py $OPTS"
 env:
   - OPTS="--check-signed-off --check-cppcheck --check-vera"
   - OPTS="--jerry-tests --jerry-test-suite"
-  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l-hf.cmake" TIMEOUT=300
+  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300
   - OPTS=--buildoption-test
   - OPTS=--unittests
 

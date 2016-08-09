@@ -44,6 +44,13 @@ endif()
 if("${PLATFORM}" STREQUAL "DARWIN")
   set(ENABLE_LTO "OFF")
   set(ENABLE_ALL_IN_ONE "ON")
+  set(JERRY_LIBC "OFF")
+  set(JERRY_LIBM "OFF")
+  set(COMPILER_DEFAULT_LIBC "ON")
+endif()
+
+if(JERRY_LIBC AND COMPILER_DEFAULT_LIBC)
+  message(FATAL_ERROR "JERRY_LIBC and COMPILER_DEFAULT_LIBC is enabled at the same time!")
 endif()
 
 # Status messages
@@ -105,11 +112,6 @@ set(CMAKE_C_FLAGS_RELEASE "-Os")
 # Architecture-specific compile/link flags
 jerry_add_compile_flags(${FLAGS_COMMON_ARCH})
 jerry_add_flags(CMAKE_EXE_LINKER_FLAGS ${FLAGS_COMMON_ARCH})
-
-# Use jerry libc
-if(JERRY_LIBC AND COMPILER_DEFAULT_LIBC)
-  message(FATAL_ERROR "JERRY_LIBC and COMPILER_DEFAULT_LIBC is enabled at the same time!")
-endif()
 
 # LTO
 if(ENABLE_LTO)

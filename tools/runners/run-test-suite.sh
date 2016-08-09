@@ -115,7 +115,7 @@ do
     if [ "$IS_SNAPSHOT" == true ]
     then
         # Testing snapshot
-        SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).XXXXXXXXXX.snapshot`
+        SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).snapshot.XXXXXXXXXX`
 
         cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
         ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP )

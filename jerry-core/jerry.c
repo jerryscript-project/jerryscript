@@ -854,6 +854,39 @@ jerry_create_number (double value) /**< double value from which a jerry_value_t 
 } /* jerry_create_number */
 
 /**
+ * Creates a jerry_value_t representing a positive or negative infinity value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry_value_t representing an infinity value.
+ */
+jerry_value_t
+jerry_create_number_infinity (bool sign) /**< true for negative Infinity
+                                          *   false for positive Infinity */
+{
+  jerry_assert_api_available ();
+
+  return ecma_make_number_value (ecma_number_make_infinity (sign));
+} /* jerry_create_number_infinity */
+
+/**
+ * Creates a jerry_value_t representing a not-a-number value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry_value_t representing a not-a-number value.
+ */
+jerry_value_t
+jerry_create_number_nan (void)
+{
+  jerry_assert_api_available ();
+
+  return ecma_make_nan_value ();
+} /* jerry_create_number_nan */
+
+/**
  * Creates and returns a jerry_value_t with type null object.
  *
  * @return jerry_value_t representing null

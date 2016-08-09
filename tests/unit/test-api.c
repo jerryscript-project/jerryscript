@@ -309,6 +309,7 @@ main (void)
   jerry_value_t throw_test_handler_val;
   jerry_value_t parsed_code_val, proto_val, prim_val;
   jerry_value_t res, args[2];
+  double number_val;
   char buffer[32];
 
   is_ok = test_run_simple ("print ('Hello, World!');");
@@ -700,8 +701,24 @@ main (void)
   // cleanup.
   jerry_release_value (global_obj_val);
 
-  // TEST: run gc.
+  // Test: run gc.
   jerry_gc ();
+
+  // Test: number
+  val_t = jerry_create_number (6.25);
+  number_val = jerry_get_number_value (val_t);
+  TEST_ASSERT (number_val * 3 == 18.75);
+  jerry_release_value (val_t);
+
+  val_t = jerry_create_number_infinity (true);
+  number_val = jerry_get_number_value (val_t);
+  TEST_ASSERT (number_val * 3 == number_val && number_val != 0.0);
+  jerry_release_value (val_t);
+
+  val_t = jerry_create_number_nan ();
+  number_val = jerry_get_number_value (val_t);
+  TEST_ASSERT (number_val != number_val);
+  jerry_release_value (val_t);
 
   jerry_cleanup ();
 

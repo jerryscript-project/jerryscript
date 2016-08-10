@@ -39,6 +39,7 @@
  *      3. Return x**y = 2**n*exp(y'*log2)
  *
  * Special cases:
+ *      0.  +1 ** (anything) is 1
  *      1.  (anything) ** 0  is 1
  *      2.  (anything) ** 1  is itself
  *      3.  (anything) ** NAN is NAN
@@ -47,7 +48,7 @@
  *      6.  +-(|x| > 1) **  -INF is +0
  *      7.  +-(|x| < 1) **  +INF is +0
  *      8.  +-(|x| < 1) **  -INF is +INF
- *      9.  +-1         ** +-INF is NAN
+ *      9.  -1          ** +-INF is 1
  *      10. +0 ** (+anything except 0, NAN)               is +0
  *      11. -0 ** (+anything except 0, NAN, odd integer)  is +0
  *      12. +0 ** (-anything except 0, NAN)               is +INF
@@ -133,6 +134,12 @@ pow (double x, double y)
   ix = hx & 0x7fffffff;
   iy = hy & 0x7fffffff;
 
+  /* x == one: 1**y = 1 */
+  if (((hx - 0x3ff00000) | lx) == 0)
+  {
+    return one;
+  }
+
   /* y == zero: x**0 = 1 */
   if ((iy | ly) == 0)
   {
@@ -184,9 +191,9 @@ pow (double x, double y)
   {
     if (iy == 0x7ff00000) /* y is +-inf */
     {
-      if (((ix - 0x3ff00000) | lx) == 0) /* inf**+-1 is NaN */
+      if (((ix - 0x3ff00000) | lx) == 0) /* +-1**+-inf is 1 */
       {
-        return y - y;
+        return one;
       }
       else if (ix >= 0x3ff00000) /* (|x|>1)**+-inf = inf,0 */
       {

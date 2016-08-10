@@ -465,13 +465,11 @@ main (int argc, char **args)
   GEN_DBL_TEST (pow (1.0, -1.0));
   GEN_DBL_TEST (pow (-1.0, 1.0));
   GEN_DBL_TEST (pow (-1.0, -1.0));
-  /* SKIPPED: reference libm implementation seems to (incorrectly?) result 1.0 instead of NAN
   GEN_DBL_TEST (pow (1.0, INFINITY));
   GEN_DBL_TEST (pow (1.0, -INFINITY));
   GEN_DBL_TEST (pow (-1.0, INFINITY));
   GEN_DBL_TEST (pow (-1.0, -INFINITY));
   GEN_DBL_TEST (pow (1.0, NAN));
-  */
   GEN_DBL_TEST (pow (-1.0, NAN));
   GEN_DBL_TEST (pow (INFINITY, 0.0));
   GEN_DBL_TEST (pow (INFINITY, -0.0));

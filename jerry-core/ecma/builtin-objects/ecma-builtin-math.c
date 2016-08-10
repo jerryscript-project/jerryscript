@@ -477,7 +477,16 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg, /**< 'this' argument */
   ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
 
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (pow (x, y)));
+  if (ecma_number_is_nan (y) ||
+      (ecma_number_is_infinity (y) && (x == 1.0 || x == -1.0)))
+  {
+    /* Handle differences between ES5.1 and ISO C standards for pow. */
+    ret_value = ecma_make_number_value (ecma_number_make_nan ());
+  }
+  else
+  {
+    ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (pow (x, y)));
+  }
 
   ECMA_OP_TO_NUMBER_FINALIZE (y);
   ECMA_OP_TO_NUMBER_FINALIZE (x);

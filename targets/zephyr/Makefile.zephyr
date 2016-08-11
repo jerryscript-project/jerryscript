@@ -80,6 +80,7 @@ EXT_CFLAGS += -Wall -Wno-format-zero-length -Wno-pointer-sign
 EXT_CFLAGS += -Werror=format -Werror=implicit-int -Wno-unused-but-set-variable
 EXT_CFLAGS += -Wno-main -Wno-strict-aliasing -Wno-old-style-declaration
 EXT_CFLAGS += -Wno-error=format=
+EXT_CFLAGS += -D_XOPEN_SOURCE
 
 # Pass2
 -include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)

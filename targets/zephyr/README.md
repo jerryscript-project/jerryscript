@@ -132,28 +132,21 @@ Test command line in a serial terminal.
 
 You should see something similar to this:
 ```
-Jerry Compilation May 26 2016 13:37:50
+JerryScript build: Aug 12 2016 17:12:55
+JerryScript API 1.0
+Zephyr version 1.4.0
 js>
 ```
 
 
 Run the example javascript command test function
 ```
-js> test
-Script [var test=0; for (t=100; t<1000; t++) test+=t; print ('Hi JS World! '+test);]
+js> var test=0; for (t=100; t<1000; t++) test+=t; print ('Hi JS World! '+test);
 Hi JS World! 494550
 ```
 
 
-Try more complex functions:
+Try a more complex function:
 ```
-js>function hello(t){t=t*10;return t}; print("result"+hello(10.5));
+js> function hello(t) {t=t*10;return t}; print("result"+hello(10.5));
 ```
-
-
-Help will provide a list of commands
-```
-> help
-```
-
-This program, is built in top of the Zephyr command line, so there is a limit of 10 spaces.

@@ -39,8 +39,9 @@ parser_malloc (parser_context_t *context_p, /**< context */
   void *result;
 
   JERRY_ASSERT (size > 0);
-  result = jmem_heap_alloc_block (size);
-  if (result == 0)
+  result = jmem_heap_alloc_block_null_on_error (size);
+
+  if (result == NULL)
   {
     parser_raise_error (context_p, PARSER_ERR_OUT_OF_MEMORY);
   }

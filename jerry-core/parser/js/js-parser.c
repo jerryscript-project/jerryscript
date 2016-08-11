@@ -2241,6 +2241,13 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
 
   if (!*bytecode_data_p)
   {
+    if (parse_error.error == PARSER_ERR_OUT_OF_MEMORY)
+    {
+      /* It is unlikely that memory can be allocated in an out-of-memory
+       * situation. However, a simple value can still be thrown. */
+      return ecma_make_error_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
+    }
+
     return ecma_raise_syntax_error (parser_error_to_string (parse_error.error));
   }
 

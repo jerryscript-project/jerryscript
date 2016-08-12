@@ -341,23 +341,6 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 } /* ecma_get_property_list */
 
 /**
- * Set object's/lexical environment's property list.
- *
- * See also:
- *          ecma_op_object_get_property_names
- */
-static inline void
-ecma_set_property_list (ecma_object_t *object_p, /**< object or lexical environment */
-                        ecma_property_header_t *property_list_p) /**< properties' list */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (!ecma_is_lexical_environment (object_p)
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
-
-  ECMA_SET_POINTER (object_p->property_list_or_bound_object_cp, property_list_p);
-} /* ecma_set_property_list */
-
-/**
  * Get lexical environment's 'provideThis' property
  */
 inline bool __attr_pure___

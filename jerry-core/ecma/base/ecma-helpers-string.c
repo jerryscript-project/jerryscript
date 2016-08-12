@@ -745,22 +745,6 @@ ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number i
 } /* ecma_string_get_number_in_desc_size */
 
 /**
- * Get size of container heap number of ecma-string
- *
- * Note: the number size and length are equal
- *
- * @return number of bytes in the buffer
- */
-static inline lit_utf8_size_t __attr_always_inline___
-ecma_string_get_heap_number_size (jmem_cpointer_t number_cp) /**< Compressed pointer to an ecma_number_t */
-{
-  const ecma_number_t *num_p = ECMA_GET_NON_NULL_POINTER (ecma_number_t, number_cp);
-  lit_utf8_byte_t buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-
-  return ecma_number_to_utf8_string (*num_p, buffer, sizeof (buffer));
-} /* ecma_string_get_heap_number_size */
-
-/**
  * Checks whether the given string is a sequence of ascii characters.
  */
 #define ECMA_STRING_IS_ASCII(char_p, size) ((size) == lit_utf8_string_length ((char_p), (size)))

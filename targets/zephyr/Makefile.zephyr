@@ -60,10 +60,14 @@ CONFIG_TOOLCHAIN_VARIANT = x86
 CPU = i686
 EXT_CFLAGS += -march=pentium
 EXT_CFLAGS += -mpreferred-stack-boundary=2 -mno-sse
-else ifeq ($(BOARD),$(filter $(BOARD),qemu_cortex_m3 frdm_k64f))
+else ifeq ($(BOARD),qemu_cortex_m3)
 CONFIG_TOOLCHAIN_VARIANT = arm
 CPU = arm7-m
 EXT_CFLAGS += -march=armv7-m -mthumb -mcpu=cortex-m3 -mabi=aapcs
+else ifeq ($(BOARD),frdm_k64f)
+CONFIG_TOOLCHAIN_VARIANT = arm
+CPU = arm7e-m
+EXT_CFLAGS += -march=armv7e-m -mthumb -mcpu=cortex-m4 -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
 else ifeq ($(BOARD),em_starterkit)
 # TODO: Tested only to build, untested to boot
 CONFIG_TOOLCHAIN_VARIANT = arc

@@ -226,3 +226,8 @@ endif()
 if(UNITTESTS)
   add_subdirectory(tests/unit)
 endif()
+
+# External target build
+if(EXTERNAL_BUILD)
+  add_subdirectory(${EXTERNAL_BUILD})
+endif()

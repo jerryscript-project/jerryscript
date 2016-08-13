@@ -174,22 +174,22 @@ def main():
     if script_args.all or script_args.check_signed_off:
         ret = run_check(SIGNED_OFF_SCRIPT)
 
-    if not ret and script_args.all or script_args.check_cppcheck:
+    if not ret and (script_args.all or script_args.check_cppcheck):
         ret = run_check(CPPCHECK_SCRIPT)
 
-    if not ret and script_args.all or script_args.check_vera:
+    if not ret and (script_args.all or script_args.check_vera):
         ret = run_check(VERA_SCRIPT)
 
-    if not ret and script_args.all or script_args.jerry_tests:
+    if not ret and (script_args.all or script_args.jerry_tests):
         ret = run_jerry_tests()
 
-    if not ret and script_args.all or script_args.jerry_test_suite:
+    if not ret and (script_args.all or script_args.jerry_test_suite):
         ret = run_jerry_test_suite()
 
-    if not ret and script_args.all or script_args.unittests:
+    if not ret and (script_args.all or script_args.unittests):
         ret = run_unittests()
 
-    if not ret and script_args.all or script_args.buildoption_test:
+    if not ret and (script_args.all or script_args.buildoption_test):
         ret = run_buildoption_test()
 
     sys.exit(ret)

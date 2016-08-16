@@ -16,7 +16,6 @@
 
 #include <stdio.h>
 
-#include "lit-magic-strings.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
@@ -36,7 +35,6 @@
 #include "jerry-snapshot.h"
 #include "js-parser.h"
 #include "re-compiler.h"
-#include "vm.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"

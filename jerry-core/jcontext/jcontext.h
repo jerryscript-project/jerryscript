@@ -23,7 +23,6 @@
 #include "ecma-builtins.h"
 #include "jmem-allocator.h"
 #include "jmem-config.h"
-#include "jrt.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
 
@@ -37,7 +36,7 @@
 /**
  * First member of the jerry context
  */
-#define JERRY_CONTEXT_FIRST_MEMBER jmem_heap_allocated_size
+#define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
 
 /**
  * JerryScript context
@@ -47,58 +46,45 @@
  */
 typedef struct
 {
-  /**
-   * Memory manager part.
-   */
-  size_t jmem_heap_allocated_size; /**< size of allocated regions */
-  size_t jmem_heap_limit; /**< current limit of heap usage, that is upon being reached,
-                           *   causes call of "try give memory back" callbacks */
+  /* Update JERRY_CONTEXT_FIRST_MEMBER if the first member changes */
+  ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+  const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+  ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT]; /**< List of marked (visited during
+                                                               *   current GC session) and umarked objects */
   jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
   jmem_pools_chunk_t *jmem_free_chunk_p; /**< list of free pool chunks */
   jmem_free_unused_memory_callback_t jmem_free_unused_memory_callback; /**< Callback for freeing up memory. */
-
-#ifdef JMEM_STATS
-  jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
-  jmem_pools_stats_t jmem_pools_stats; /**< pools' memory usage statistics */
-#endif /* MEM_STATS */
-
-#ifdef JERRY_VALGRIND_FREYA
-  bool valgrind_freya_mempool_request; /**< Tells whether a pool manager
-                                        *   allocator request is in progress */
-#endif /* JERRY_VALGRIND_FREYA */
-
-  /**
-   * Literal part.
-   */
   const lit_utf8_byte_t **lit_magic_string_ex_array; /**< array of external magic strings */
-  uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
-
-  /**
-   * Ecma part.
-   */
-  ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
-  ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT]; /**< List of marked (visited during
-                                                               *   current GC session) and umarked objects */
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
-  const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
-  uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
-
-  bool ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
-  bool is_direct_eval_form_call; /**< direct call from eval */
-  size_t ecma_gc_objects_number; /**< number of currently allocated objects */
-  size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
+  size_t ecma_gc_objects_number; /**< number of currently allocated objects */
+  size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
+  size_t jmem_heap_allocated_size; /**< size of allocated regions */
+  size_t jmem_heap_limit; /**< current limit of heap usage, that is upon being reached,
+                           *   causes call of "try give memory back" callbacks */
+  uint32_t lit_magic_string_ex_count; /**< external magic strings count */
+  uint32_t jerry_init_flags; /**< run-time configuration flags */
+  uint8_t ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
+  uint8_t is_direct_eval_form_call; /**< direct call from eval */
+  uint8_t jerry_api_available; /**< API availability flag */
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+  uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
-  /**
-   * API part.
-   */
-  jerry_init_flag_t jerry_init_flags; /**< run-time configuration flags */
-  bool jerry_api_available; /**< API availability flag */
+#ifdef JMEM_STATS
+  jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
+  jmem_pools_stats_t jmem_pools_stats; /**< pools' memory usage statistics */
+#endif /* JMEM_STATS */
+
+#ifdef JERRY_VALGRIND_FREYA
+  uint8_t valgrind_freya_mempool_request; /**< Tells whether a pool manager
+                                           *   allocator request is in progress */
+#endif /* JERRY_VALGRIND_FREYA */
 } jerry_context_t;
 
 /**

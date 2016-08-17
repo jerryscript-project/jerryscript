@@ -38,7 +38,7 @@ util_free_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
     {
-      jmem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
+      jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
     }
   }
   else if ((literal_p->type == LEXER_FUNCTION_LITERAL)

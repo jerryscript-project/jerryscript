@@ -409,26 +409,6 @@ jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory siz
 } /* jmem_heap_alloc_block_null_on_error */
 
 /**
- *  Allocate block and store block size.
- *
- * Note: block will only be aligned to 4 bytes.
- */
-inline void * __attr_always_inline___
-jmem_heap_alloc_block_store_size (size_t size) /**< required size */
-{
-  if (unlikely (size == 0))
-  {
-    return NULL;
-  }
-
-  size += sizeof (jmem_heap_free_t);
-
-  jmem_heap_free_t *const data_space_p = (jmem_heap_free_t *) jmem_heap_alloc_block (size);
-  data_space_p->size = (uint32_t) size;
-  return (void *) (data_space_p + 1);
-} /* jmem_heap_alloc_block_store_size */
-
-/**
  * Free the memory block.
  */
 void __attribute__((hot))
@@ -539,17 +519,6 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
 } /* jmem_heap_free_block */
-
-/**
- * Free block with stored size
- */
-inline void __attr_always_inline___
-jmem_heap_free_block_size_stored (void *ptr) /**< pointer to the memory block */
-{
-  jmem_heap_free_t *const original_p = ((jmem_heap_free_t *) ptr) - 1;
-  JERRY_ASSERT (original_p + 1 == ptr);
-  jmem_heap_free_block (original_p, original_p->size);
-} /* jmem_heap_free_block_size_stored */
 
 /**
  * Compress pointer

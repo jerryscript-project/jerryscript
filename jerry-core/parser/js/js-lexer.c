@@ -1202,7 +1202,7 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
 
   if (has_escape)
   {
-    literal_p->u.char_p = (uint8_t *) jmem_heap_alloc_block_store_size (length);
+    literal_p->u.char_p = (uint8_t *) jmem_heap_alloc_block (length);
     memcpy ((uint8_t *) literal_p->u.char_p, char_p, length);
   }
   else

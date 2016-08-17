@@ -61,7 +61,7 @@ test_heap_give_some_memory_back (jmem_free_unused_memory_severity_t severity)
           TEST_ASSERT (ptrs[i][k] == 0);
         }
 
-        jmem_heap_free_block_size_stored (ptrs[i]);
+        jmem_heap_free_block (ptrs[i], sizes[i]);
         ptrs[i] = NULL;
       }
     }
@@ -86,7 +86,7 @@ main ()
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
       size_t size = (size_t) rand () % test_threshold_block_size;
-      ptrs[j] = (uint8_t *) jmem_heap_alloc_block_store_size (size);
+      ptrs[j] = (uint8_t *) jmem_heap_alloc_block (size);
       sizes[j] = size;
 
       TEST_ASSERT (sizes[j] == 0 || ptrs[j] != NULL);
@@ -104,7 +104,7 @@ main ()
           TEST_ASSERT (ptrs[j][k] == 0);
         }
 
-        jmem_heap_free_block_size_stored (ptrs[j]);
+        jmem_heap_free_block (ptrs[j], sizes[j]);
 
         ptrs[j] = NULL;
       }

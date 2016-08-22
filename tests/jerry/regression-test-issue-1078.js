@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Array.prototype.push(Math.sin);
+Array.prototype.splice(Function.prototype, 1, this);
 Object.freeze(Array.prototype);
-String.prototype.match(String.prototype);
+var res = (new String("Hello")).split(new RegExp());
+assert(res.length == 5);

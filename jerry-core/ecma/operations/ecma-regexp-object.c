@@ -1434,15 +1434,13 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
           capture_value = ecma_make_string_value (capture_str_p);
         }
 
-        ECMA_TRY_CATCH (put_value,
-                        ecma_op_object_put (result_array_obj_p,
-                                            index_str_p,
-                                            capture_value,
-                                            true),
-                        ret_value);
-        ECMA_FINALIZE (put_value);
+        ecma_property_t *prop_p;
+        prop_p = ecma_create_named_data_property (result_array_obj_p,
+                                                  index_str_p,
+                                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+        ecma_set_named_data_property_value (prop_p, capture_value);
 
-        ecma_free_value (capture_value);
+        JERRY_ASSERT (!ecma_is_value_object (capture_value));
         ecma_deref_ecma_string (index_str_p);
       }
 

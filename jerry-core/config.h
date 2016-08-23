@@ -86,11 +86,6 @@
 #define CONFIG_ECMA_REFERENCE_COUNTER_LIMIT ((1u << CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1u)
 
 /**
- * Maximum length of strings' concatenation
- */
-#define CONFIG_ECMA_STRING_MAX_CONCATENATION_LENGTH (1048576)
-
-/**
  * Use 32-bit/64-bit float for ecma-numbers
  */
 #define CONFIG_ECMA_NUMBER_FLOAT32 (1u) /* 32-bit float */

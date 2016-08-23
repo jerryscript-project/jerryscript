@@ -164,7 +164,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
       JERRY_ASSERT ((prop_name_p->hash & ECMA_LCACHE_HASH_MASK) == (entry_prop_name_p->hash & ECMA_LCACHE_HASH_MASK));
 
       if (prop_name_p == entry_prop_name_p
-          || (prop_container != ECMA_STRING_CONTAINER_HEAP_UTF8_STRING
+          || (prop_container > ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING
               && prop_container == ECMA_STRING_GET_CONTAINER (entry_prop_name_p)
               && prop_name_p->u.common_field == entry_prop_name_p->u.common_field))
       {

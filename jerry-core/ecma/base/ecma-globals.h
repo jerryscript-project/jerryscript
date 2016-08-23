@@ -809,7 +809,10 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string */
+  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                           *   maximum size is 2^16. */
+  ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                                *   maximum size is 2^32. */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
@@ -872,30 +875,31 @@ typedef struct ecma_string_t
   union
   {
     /**
-    * Actual data of an utf-8 string type
-    */
+     * Actual data of an utf-8 string type
+     */
     struct
     {
-      uint16_t size; /**< Size of this utf-8 string in bytes */
-      uint16_t length; /**< Length of this utf-8 string in characters */
+      uint16_t size; /**< size of this utf-8 string in bytes */
+      uint16_t length; /**< length of this utf-8 string in characters */
     } utf8_string;
 
-    /** UInt32-represented number placed locally in the descriptor */
-    uint32_t uint32_number;
-
-    /** Identifier of magic string */
-    lit_magic_string_id_t magic_string_id;
-
-    /** Identifier of external magic string */
-    lit_magic_string_ex_id_t magic_string_ex_id;
-
-    /** Literal number */
-    ecma_value_t lit_number;
-
-    /** For zeroing and comparison in some cases */
-    uint32_t common_field;
+    lit_utf8_size_t long_utf8_string_size; /**< size of this long utf-8 string in bytes */
+    uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
+    lit_magic_string_id_t magic_string_id; /**< identifier of a magic string */
+    lit_magic_string_ex_id_t magic_string_ex_id; /**< identifier of an external magic string */
+    ecma_value_t lit_number; /**< literal number (note: not a regular string type) */
+    uint32_t common_field; /**< for zeroing and comparison in some cases */
   } u;
 } ecma_string_t;
+
+/**
+ * Long ECMA string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+  lit_utf8_size_t long_utf8_string_length; /**< length of this long utf-8 string in bytes */
+} ecma_long_string_t;
 
 /**
  * Compiled byte code data.

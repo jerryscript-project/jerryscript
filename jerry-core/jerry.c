@@ -187,9 +187,9 @@ jerry_cleanup (void)
 {
   jerry_assert_api_available ();
 
-  jerry_make_api_unavailable ();
   ecma_finalize ();
   jmem_finalize ();
+  jerry_make_api_unavailable ();
 } /* jerry_cleanup */
 
 /**

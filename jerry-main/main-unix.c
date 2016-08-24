@@ -121,6 +121,33 @@ print_help (char *name)
                       name);
 } /* print_help */
 
+static void
+print_unhandled_exception (jerry_value_t error_value)
+{
+  assert (jerry_value_has_error_flag (error_value));
+
+  jerry_value_clear_error_flag (&error_value);
+  jerry_value_t err_str_val = jerry_value_to_string (error_value);
+  jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+  jerry_char_t err_str_buf[256];
+
+  if (err_str_size >= 256)
+  {
+    const char msg[] = "[Error message too long]";
+    err_str_size = sizeof (msg) / sizeof (char) - 1;
+    memcpy (err_str_buf, msg, err_str_size);
+  }
+  else
+  {
+    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    assert (sz == err_str_size);
+  }
+  err_str_buf[err_str_size] = 0;
+
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: unhandled exception: %s\n", err_str_buf);
+  jerry_release_value (err_str_val);
+} /* print_unhandled_exception */
+
 int
 main (int argc,
       char **argv)
@@ -335,6 +362,7 @@ main (int argc,
       if (source_p == NULL)
       {
         ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
+        break;
       }
 
       if (is_save_snapshot_mode)
@@ -427,14 +455,21 @@ main (int argc,
         /* Evaluate the line */
         jerry_value_t ret_val_eval = jerry_eval (buffer, len, false);
 
-        /* Print return value */
-        const jerry_value_t args[] = { ret_val_eval };
-        jerry_value_t ret_val_print = jerry_call_function (print_function,
-                                                           jerry_create_undefined (),
-                                                           args,
-                                                           1);
+        if (!jerry_value_has_error_flag (ret_val_eval))
+        {
+          /* Print return value */
+          const jerry_value_t args[] = { ret_val_eval };
+          jerry_value_t ret_val_print = jerry_call_function (print_function,
+                                                             jerry_create_undefined (),
+                                                             args,
+                                                             1);
+          jerry_release_value (ret_val_print);
+        }
+        else
+        {
+          print_unhandled_exception (ret_val_eval);
+        }
 
-        jerry_release_value (ret_val_print);
         jerry_release_value (ret_val_eval);
       }
     }
@@ -447,20 +482,7 @@ main (int argc,
 
   if (jerry_value_has_error_flag (ret_value))
   {
-    jerry_value_clear_error_flag (&ret_value);
-    jerry_value_t err_str_val = jerry_value_to_string (ret_value);
-
-    jerry_char_t err_str_buf[256];
-    jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
-
-    assert (err_str_size < 256);
-    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-    assert (sz == err_str_size);
-    err_str_buf[err_str_size] = 0;
-
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: unhandled exception: %s\n", err_str_buf);
-
-    jerry_release_value (err_str_val);
+    print_unhandled_exception (ret_value);
 
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }

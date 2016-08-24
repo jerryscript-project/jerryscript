@@ -198,6 +198,13 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
     uint32_t new_len_uint32 = ecma_number_to_uint32 (new_len_num);
 
     // d.
+    if (ecma_is_value_object (property_desc_p->value))
+    {
+      ecma_value_t compared_num_val = ecma_op_to_number (property_desc_p->value);
+      new_len_num = ecma_get_number_from_value (compared_num_val);
+      ecma_free_value (compared_num_val);
+    }
+
     if (((ecma_number_t) new_len_uint32) != new_len_num)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG (""));

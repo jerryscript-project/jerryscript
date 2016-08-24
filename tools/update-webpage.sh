@@ -78,6 +78,13 @@ for docfile in $docs_dir/*.md; do
   sed -i -r -e 's/^!\[.*\]\(/&{{ site.baseurl }}\//' $gh_pages_dir/$docfile_base
   sed -i -r -e 's/^!\[.*\]\(\{\{ site\.baseurl \}\}\/img.*$/&{: class="thumbnail center-block img-responsive" }/' $gh_pages_dir/$docfile_base
 
+  # replace span tags to div
+  sed -i 's/<span class=/<div class=/g' $gh_pages_dir/$docfile_base
+  sed -i 's/<\/span>/<\/div>/g' $gh_pages_dir/$docfile_base
+
+  # remove table header separators
+  sed -i '/^| ---/d' $gh_pages_dir/$docfile_base
+
   # update images
   cp -Ru $docs_dir/img $gh_pages_dir
 done

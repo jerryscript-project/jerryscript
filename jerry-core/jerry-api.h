@@ -139,7 +139,7 @@ typedef struct
 /**
  * Type of an external function handler
  */
-typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_obj_p,
+typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_obj,
                                                    const jerry_value_t this_val,
                                                    const jerry_value_t args_p[],
                                                    const jerry_length_t args_count);
@@ -152,7 +152,7 @@ typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 /**
  * Function type applied for each data property of an object
  */
-typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name_p,
+typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
 
@@ -231,7 +231,7 @@ jerry_value_t jerry_value_to_string (const jerry_value_t);
 jerry_value_t jerry_acquire_value (jerry_value_t);
 
 /**
- * Relase the referenced values
+ * Release the referenced values
  */
 void jerry_release_value (jerry_value_t);
 

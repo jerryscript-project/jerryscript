@@ -196,14 +196,14 @@ jerry_cleanup (void)
  * Register external magic string array
  */
 void
-jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items, /**< character arrays, representing
-                                                                     *   external magic strings' contents */
+jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, /**< character arrays, representing
+                                                                       *   external magic strings' contents */
                               uint32_t count, /**< number of the strings */
-                              const jerry_length_t *str_lengths) /**< lengths of all strings */
+                              const jerry_length_t *str_lengths_p) /**< lengths of all strings */
 {
   jerry_assert_api_available ();
 
-  lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items, count, (const lit_utf8_size_t *) str_lengths);
+  lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items_p, count, (const lit_utf8_size_t *) str_lengths_p);
 } /* jerry_register_magic_strings */
 
 /**
@@ -236,7 +236,7 @@ jerry_gc (void)
  *         false - otherwise
  */
 bool
-jerry_run_simple (const jerry_char_t *script_source, /**< script source */
+jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
                   size_t script_source_size, /**< script source size */
                   jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
@@ -244,7 +244,7 @@ jerry_run_simple (const jerry_char_t *script_source, /**< script source */
 
   jerry_init (flags);
 
-  jerry_value_t parse_ret_val = jerry_parse (script_source, script_source_size, false);
+  jerry_value_t parse_ret_val = jerry_parse (script_source_p, script_source_size, false);
 
   if (!ECMA_IS_VALUE_ERROR (parse_ret_val))
   {
@@ -1695,7 +1695,7 @@ jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get 
  */
 void
 jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set handle in */
-                                uintptr_t handle, /**< handle value */
+                                uintptr_t handle_p, /**< handle value */
                                 jerry_object_free_callback_t freecb_p) /**< object free callback or NULL */
 {
   jerry_assert_api_available ();
@@ -1704,7 +1704,7 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 
   ecma_create_external_pointer_property (object_p,
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
-                                         handle);
+                                         handle_p);
 
   if (freecb_p != NULL)
   {
@@ -2051,7 +2051,7 @@ jerry_snapshot_set_offsets (uint8_t *buffer_p, /**< buffer */
  *
  * @return size of snapshot, if it was generated succesfully
  *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
- *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT),
+ *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
  *         0 - otherwise.
  */
 size_t

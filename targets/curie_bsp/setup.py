@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 # Copyright 2016 Intel Corporation
+# Copyright 2016 Samsung Electronics Co., Ltd.
+# Copyright 2016 University of Szeged
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,138 +16,147 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import sys
+import fnmatch
 import os
 
-project_name = 'curie_bsp_jerry'
+def build_soft_links(project_path, jerry_path):
+    """ Creates soft links into the @project_path. """
 
-# create soft link
-def build_soft_links(curie_path, jerry_path):
-    location_path = os.path.join(curie_path, 'wearable_device_sw/projects/' +
-                                project_name)
-    if not os.path.exists(location_path):
-        os.makedirs(location_path)
-    os.chdir(location_path)
-    # arc
-    if not os.path.islink(os.path.join(location_path, 'arc')):
-        os.symlink(os.path.join(jerry_path,
-                    'targets/curie_bsp/jerry_app/arc'), 'arc')
+    if not os.path.exists(project_path):
+        os.makedirs(project_path)
 
-    # include
-    if not os.path.islink(os.path.join(location_path, 'include')):
-        os.symlink(os.path.join(jerry_path,
-                    'targets/curie_bsp/jerry_app/include'), 'include')
-    # quark
-    if not os.path.islink(os.path.join(location_path, 'quark')):
-        os.symlink(os.path.join(jerry_path,
-                    'targets/curie_bsp/jerry_app/quark'), 'quark')
+    links = [
+        { # arc
+            'src': os.path.join('targets', 'curie_bsp', 'jerry_app', 'arc'),
+            'link_name': 'arc'
+        },
+        { # include
+            'src': os.path.join('targets', 'curie_bsp', 'jerry_app', 'include'),
+            'link_name': 'include'
+        },
+        { # quark
+            'src': os.path.join('targets', 'curie_bsp', 'jerry_app', 'quark'),
+            'link_name': 'quark'
+        },
+        { # quark/jerryscript
+            'src': jerry_path,
+            'link_name': os.path.join('quark', 'jerryscript')
+        }
+    ]
 
-    # jerryscript
-    location_path = os.path.join(location_path, 'quark')
-    os.chdir(location_path)
-    if not os.path.islink(os.path.join(location_path, 'jerryscript')):
-        os.symlink(jerry_path, 'jerryscript')
-
-
-# create Kbuild.mk
-def breadth_first_travel(root_dir):
-    out_put = ''
-    lists = os.listdir(root_dir)
-    dirs = []
-    for line in lists:
-        full_path = os.path.join(root_dir, line)
-        if os.path.isdir(full_path):
-            dirs.append(line)
-        else:
-            c_file = line.endswith('.c')
-            if c_file:
-                npos = line.find('.c')
-                out_put += 'obj-y += ' + line[0:npos] + '.o\n'
-                continue
-            asm_file = line.endswith('.S')
-            if asm_file:
-                npos = line.find('.S')
-                out_put += 'obj-y += ' + line[0:npos] + '.o\n'
-    for line in dirs:
-        out_put += 'obj-y += ' + line + '/\n'
-
-    file_path = os.path.join(root_dir, 'Kbuild.mk')
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
-    for line in dirs:
-        breadth_first_travel(os.path.join(root_dir, line))
+    for link in links:
+        src = os.path.join(jerry_path, link['src'])
+        link_name = os.path.join(project_path, link['link_name'])
+        if not os.path.islink(link_name):
+            os.symlink(src, link_name)
+            print("Created symlink '{link_name}' -> '{src}'".format(src=src, link_name=link_name))
 
 
-# create Kbuild.mk in jerryscript/
-def create_kbuild_in_jerryscript(jerry_path):
-    breadth_first_travel(os.path.join(jerry_path, 'jerry-core'))
-    breadth_first_travel(os.path.join(jerry_path, 'jerry-libm'))
-    #jerryscript/
-    out_put = '''
-obj-y += jerry-core/
-obj-y += jerry-libm/
-obj-y += targets/
-subdir-cflags-y += -DCONFIG_MEM_HEAP_AREA_SIZE=10*1024
-subdir-cflags-y += -DJERRY_NDEBUG
-subdir-cflags-y += -DJERRY_DISABLE_HEAVY_DEBUG
-subdir-cflags-y += -DCONFIG_DISABLE_NUMBER_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_STRING_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_BOOLEAN_BUILTIN
-#subdir-cflags-y += -DCONFIG_DISABLE_ERROR_BUILTINS
-subdir-cflags-y += -DCONFIG_DISABLE_ARRAY_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_MATH_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_JSON_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_DATE_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_REGEXP_BUILTIN
-subdir-cflags-y += -DCONFIG_DISABLE_ANNEXB_BUILTIN
-subdir-cflags-y += -DCONFIG_ECMA_LCACHE_DISABLE
-subdir-cflags-y += -DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-'''
+def find_sources(root_dir, sub_dir):
+    """
+    Find .c and .S files inside the @root_dir/@sub_dir directory.
+    Note: the returned paths will be relative to the @root_dir directory.
+    """
+    src_dir = os.path.join(root_dir, sub_dir)
 
-    file_path = os.path.join(jerry_path, 'Kbuild.mk')
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
+    matches = []
+    for root, dirnames, filenames in os.walk(src_dir):
+        for filename in fnmatch.filter(filenames, '*.[c|S]'):
+            file_path = os.path.join(root, filename)
+            relative_path = os.path.relpath(file_path, root_dir)
+            matches.append(relative_path)
 
-    # jerryscript/targets
-    out_put =  'obj-y += curie_bsp/'
-    file_path = os.path.join(jerry_path, 'targets/Kbuild.mk')
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
+    return matches
 
-    # jerryscript/targets/curie_bsp
-    out_put =  'obj-y += source/'
-    file_path = os.path.join(jerry_path, 'targets/curie_bsp/Kbuild.mk')
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
 
-    breadth_first_travel(os.path.join(jerry_path, 'targets/curie_bsp/source'))
+def build_jerry_data(jerry_path):
+    """
+    Build up a dictionary which contains the following items:
+     - sources: list of JerryScript sources which should be built.
+     - dirs: list of JerryScript dirs used.
+     - cflags: CFLAGS for the build.
+    """
+    jerry_sources = []
+    jerry_dirs = set()
+    for sub_dir in ['jerry-core', 'jerry-libm', os.path.join('targets', 'curie_bsp', 'source')]:
+        for file in find_sources(os.path.normpath(jerry_path), sub_dir):
+            path = os.path.join('jerryscript', file)
+            jerry_sources.append(path)
+            jerry_dirs.add(os.path.split(path)[0])
 
-# create Makefile in wearable_device_sw/projects/curie_bsp_jerry/
-def create_makefile_in_curie(curie_path):
+    jerry_cflags = [
+        '-DCONFIG_MEM_HEAP_AREA_SIZE=10*1024',
+        '-DJERRY_NDEBUG',
+        '-DJERRY_DISABLE_HEAVY_DEBUG',
+        '-DCONFIG_DISABLE_NUMBER_BUILTIN',
+        '-DCONFIG_DISABLE_STRING_BUILTIN',
+        '-DCONFIG_DISABLE_BOOLEAN_BUILTIN',
+        #'-DCONFIG_DISABLE_ERROR_BUILTINS',
+        '-DCONFIG_DISABLE_ARRAY_BUILTIN',
+        '-DCONFIG_DISABLE_MATH_BUILTIN',
+        '-DCONFIG_DISABLE_JSON_BUILTIN',
+        '-DCONFIG_DISABLE_DATE_BUILTIN',
+        '-DCONFIG_DISABLE_REGEXP_BUILTIN',
+        '-DCONFIG_DISABLE_ANNEXB_BUILTIN',
+        '-DCONFIG_ECMA_LCACHE_DISABLE',
+        '-DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE',
+    ]
 
-    # Kbuild.mk
-    out_put = '''
+    return {
+        'sources': jerry_sources,
+        'dirs': jerry_dirs,
+        'cflags': jerry_cflags,
+    }
+
+
+def write_file(path, content):
+    """ Writes @content into the file at specified by the @path. """
+    norm_path = os.path.normpath(path)
+    with open(norm_path, "w+") as f:
+        f.write(content)
+    print("Wrote file '{0}'".format(norm_path))
+
+
+def build_obj_y(source_list):
+    """
+    Build obj-y additions from the @source_list.
+    Note: the input sources should have their file extensions.
+    """
+    return '\n'.join(['obj-y += {0}.o'.format(os.path.splitext(fname)[0]) for fname in source_list])
+
+
+def build_cflags_y(cflags_list):
+    """
+    Build cflags-y additions from the @cflags_list.
+    Note: the input sources should have their file extensions.
+    """
+    return '\n'.join(['cflags-y += {0}'.format(cflag) for cflag in cflags_list])
+
+
+def build_mkdir(dir_list):
+    """ Build mkdir calls for each dir in the @dir_list. """
+    return '\n'.join(['\t$(AT)mkdir -p {0}'.format(os.path.join('$(OUT_SRC)', path)) for path in dir_list])
+
+
+def create_root_kbuild(project_path):
+    """ Creates @project_path/Kbuild.mk file. """
+
+    root_kbuild_path = os.path.join(project_path, 'Kbuild.mk')
+    root_kbuild_content = '''
 obj-$(CONFIG_QUARK_SE_ARC) += arc/
 obj-$(CONFIG_QUARK_SE_QUARK) += quark/
 '''
-    file_path = os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                        + project_name + '/Kbuild.mk')
+    write_file(root_kbuild_path, root_kbuild_content)
 
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
 
-    # Makefile
-    out_put = '''
+def create_root_makefile(project_path):
+    """ Creates @project_path/Makefile file. """
+
+    root_makefile_path = os.path.join(project_path, 'Makefile')
+    root_makefile_content = '''
 THIS_DIR   := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 T          := $(abspath $(THIS_DIR)/../..)
-'''
-    out_put += 'PROJECT      :=' + project_name
-    out_put += '''
+PROJECT    := {project_name}
 BOARD        := curie_101
 ifeq ($(filter curie_101, $(BOARD)),)
 $(error The curie jerry sample application can only run on the curie_101 Board)
@@ -159,62 +170,83 @@ VERSION_MAJOR  := 1
 VERSION_MINOR  := 0
 VERSION_PATCH  := 0
 include $(T)/build/project.mk
-'''
-    file_path = os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                        + project_name + '/Makefile')
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
+'''.format(project_name=project_name)
 
-    # Kbuild.mk in arc/
-    breadth_first_travel(os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                                + project_name + '/arc/'))
-    # Kbuild.mk in quark/
-    file_path = os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                        + project_name + '/quark/Kbuild.mk')
-    out_put = '''
-obj-y += jerryscript/
+    write_file(root_makefile_path, root_makefile_content)
+
+
+def create_arc_kbuild(project_path):
+    """ Creates @project_path/arc/Kbuild.mk file. """
+
+    arc_path = os.path.join(project_path, 'arc')
+    arc_kbuild_path = os.path.join(arc_path, 'Kbuild.mk')
+    arc_sources = find_sources(arc_path, '.')
+    arc_kbuild_content = build_obj_y(arc_sources)
+
+    write_file(arc_kbuild_path, arc_kbuild_content)
+
+
+def create_quark_kbuild(project_path, jerry_path):
+    """ Creates @project_path/quark/Kbuild.mk file. """
+    quark_kbuild_path = os.path.join(project_path, 'quark', 'Kbuild.mk')
+
+    # Extract a few JerryScript related data
+    jerry_data = build_jerry_data(jerry_path)
+    jerry_objects = build_obj_y(jerry_data['sources'])
+    jerry_defines = jerry_data['cflags']
+    jerry_build_dirs = build_mkdir(jerry_data['dirs'])
+
+    quark_include_paths = [
+        'include',
+        'jerryscript',
+        os.path.join('jerryscript', 'jerry-libm', 'include'),
+        os.path.join('jerryscript', 'targets' ,'curie_bsp', 'include')
+    ] + list(jerry_data['dirs'])
+
+    quark_includes = [
+        '-Wno-error',
+    ] + ['-I%s' % os.path.join(project_path, 'quark', path) for path in quark_include_paths]
+
+    quark_cflags = build_cflags_y(jerry_defines + quark_includes)
+
+    quark_kbuild_content = '''
+{cflags}
+
 obj-y += main.o
-subdir-cflags-y += -Wno-error
-subdir-cflags-y += -I$(PROJECT_PATH)/quark/include
-subdir-cflags-y += -I$(PROJECT_PATH)/quark/jerryscript
-subdir-cflags-y += -I$(PROJECT_PATH)/quark/jerryscript/targets/curie_bsp/include
-'''
-    jerry_core_path = os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                                + project_name \
-                                                + '/quark/jerryscript/jerry-core/')
-    for line in os.walk(jerry_core_path):
-        npos = line[0].find(project_name)
-        out_put += 'subdir-cflags-y += -I$(PROJECT_PATH)' \
-                + line[0][npos + len(project_name):] + '\n'
+{objects}
+
+build_dirs:
+{dirs}
+
+$(OUT_SRC): build_dirs
+'''.format(objects=jerry_objects, cflags=quark_cflags, dirs=jerry_build_dirs)
+
+    write_file(quark_kbuild_path, quark_kbuild_content)
 
 
-    jerry_libm_path = os.path.join(curie_path, 'wearable_device_sw/projects/' \
-                                                + project_name \
-                                                + '/quark/jerryscript/jerry-libm/')
+def main(curie_path, project_name, jerry_path):
+    project_path = os.path.join(curie_path, 'wearable_device_sw', 'projects', project_name)
 
-    for line in os.walk(jerry_libm_path):
-        npos = line[0].find(project_name)
-        out_put += 'subdir-cflags-y += -I$(PROJECT_PATH)' \
-                + line[0][npos + len(project_name):] + '\n'
+    build_soft_links(project_path, jerry_path)
 
-    file_to_be_created = open(file_path, 'w+')
-    file_to_be_created.write(out_put)
-    file_to_be_created.close()
-
-def main(curie_path, jerry_path):
-    build_soft_links(curie_path, jerry_path)
-    create_kbuild_in_jerryscript(jerry_path)
-    create_makefile_in_curie(curie_path)
-
+    create_root_kbuild(project_path)
+    create_root_makefile(project_path)
+    create_arc_kbuild(project_path)
+    create_quark_kbuild(project_path, jerry_path)
 
 
 if __name__ == '__main__':
+    import sys
+
     if len(sys.argv) != 2:
-        print 'Usage:'
-        print sys.argv[0] + ' [full or relative path of Curie_BSP]'
-    else:
-        file_dir = os.path.dirname(os.path.abspath(__file__))
-        jerry_path = os.path.join(file_dir, "..", "..")
-        curie_path = os.path.join(os.getcwd(), sys.argv[1])
-        main(curie_path, jerry_path)
+        print('Usage:')
+        print('{script_name} [full or relative path of Curie_BSP]'.format(script_name=sys.argv[0]))
+        sys.exit(1)
+
+    project_name = 'curie_bsp_jerry'
+
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    jerry_path = os.path.join(file_dir, "..", "..")
+    curie_path = os.path.join(os.getcwd(), sys.argv[1])
+
+    main(curie_path, project_name, jerry_path)

@@ -26,6 +26,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
@@ -650,6 +651,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   else
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+    JERRY_CONTEXT (is_direct_eval_form_call) = false;
 
     /* 2-3. */
     ecma_property_t *bound_this_prop_p;

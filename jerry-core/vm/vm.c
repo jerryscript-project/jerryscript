@@ -36,8 +36,6 @@
 #include "vm.h"
 #include "vm-stack.h"
 
-#include <alloca.h>
-
 /** \addtogroup vm Virtual machine
  * @{
  *
@@ -2635,9 +2633,7 @@ vm_run_with_alloca (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                     ecma_length_t arg_list_len, /**< length of arguments list */
                     uint32_t call_stack_size) /**< call stack size */
 {
-  size_t size = call_stack_size * sizeof (ecma_value_t);
-
-  ecma_value_t *stack = (ecma_value_t *) alloca (size);
+  ecma_value_t stack[call_stack_size];
 
   frame_ctx_p->registers_p = stack;
 

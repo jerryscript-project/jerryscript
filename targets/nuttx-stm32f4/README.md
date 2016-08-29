@@ -52,10 +52,12 @@ cd ..
 make menuconfig
 ```
 
-Change "Build Setup" -> "Build Host Platform" from "Windows" to "Linux"
-Enable "System Type" -> "FPU support"
-Enable "Library Routines" -> "Standard Math library"
-Enable "Application Configuration" -> "Interpreters->JerryScript"
+We must set the following options:
+
+* Change `Build Setup -> Build Host Platform` from _Windows_ to _Linux_
+* Enable `System Type -> FPU support`
+* Enable `Library Routines -> Standard Math library`
+* Enable `Application Configuration -> Interpreters -> JerryScript`
 
 #### 4. Build JerryScript for NuttX
 

@@ -131,6 +131,8 @@ jmem_pools_alloc (void)
 void __attribute__((hot))
 jmem_pools_free (void *chunk_p) /**< pointer to the chunk */
 {
+  JERRY_ASSERT (chunk_p != NULL);
+
   jmem_pools_chunk_t *const chunk_to_free_p = (jmem_pools_chunk_t *) chunk_p;
 
   VALGRIND_DEFINED_SPACE (chunk_to_free_p, JMEM_POOL_CHUNK_SIZE);

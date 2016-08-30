@@ -26,5 +26,3 @@ matrix:
       env: OPTS="--jerry-tests --jerry-test-suite"
     - os: osx
       env: OPTS=--unittests
-  allow_failures:
-    - os: osx

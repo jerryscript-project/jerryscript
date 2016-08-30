@@ -31,7 +31,7 @@ def default_toolchain():
 
 def add_build_args(parser):
     parser.add_argument('--verbose', '-v', action='store_const', const='ON', default='OFF', help='Increase verbosity')
-    parser.add_argument('--unittests', action='store_const', const='ON', default='OFF', help='Build unittests too')
+    parser.add_argument('--unittests', action='store_const', const='ON', default='OFF', help='Build unittests')
     parser.add_argument('--clean', action='store_true', default=False, help='Clean build')
     parser.add_argument('--builddir', action='store', default=BUILD_DIR, help='Specify output directory (default: %(default)s)')
     parser.add_argument('--strip', choices=['on', 'off'], default='on', help='Strip release binary (default: %(default)s)')
@@ -46,17 +46,16 @@ def add_build_args(parser):
     parser.add_argument('--show-regexp-opcodes', choices=['on', 'off'], default='off', help='Enable regexp byte-code dumps (default: %(default)s)')
     parser.add_argument('--mem-stats', choices=['on', 'off'], default='off', help='Enable memory statistics (default: %(default)s)')
     parser.add_argument('--mem-stress-test', choices=['on', 'off'], default='off', help='Enable mem-stress test (default: %(default)s)')
-    parser.add_argument('--snapshot-save', choices=['on', 'off'], default='on', help='Allow to save snapshot files (default: %(default)s)')
-    parser.add_argument('--snapshot-exec', choices=['on', 'off'], default='on', help='Allow to execute snapshot files (default: %(default)s)')
+    parser.add_argument('--snapshot-save', choices=['on', 'off'], default='on', help='Enable saving snapshot files (default: %(default)s)')
+    parser.add_argument('--snapshot-exec', choices=['on', 'off'], default='on', help='Enable executing snapshot files (default: %(default)s)')
     parser.add_argument('--cmake-param', action='append', default=[], help='Add custom arguments to CMake')
     parser.add_argument('--compile-flag', action='append', default=[], help='Add custom compile flag')
     parser.add_argument('--linker-flag', action='append', default=[], help='Add custom linker flag')
     parser.add_argument('--toolchain', action='store', default=default_toolchain(), help='Add toolchain file (default: %(default)s)')
-    parser.add_argument('--jerry-libc', choices=['on', 'off'], default='on', help='Use jerry-libc (default: %(default)s)')
+    parser.add_argument('--jerry-libc', choices=['on', 'off'], default='on', help='Build and use jerry-libc (default: %(default)s)')
     parser.add_argument('--compiler-default-libc', choices=['on', 'off'], default='off', help='Use compiler-default libc (default: %(default)s)')
-    parser.add_argument('--jerry-core', choices=['on', 'off'], default='on', help='Use jerry-core (default: %(default)s)')
-    parser.add_argument('--jerry-libm', choices=['on', 'off'], default='on', help='Use jerry-libm (default: %(default)s)')
-    parser.add_argument('--jerry-cmdline', choices=['on', 'off'], default='on', help='Use jerry commandline tool (default: %(default)s)')
+    parser.add_argument('--jerry-libm', choices=['on', 'off'], default='on', help='Build and use jerry-libm (default: %(default)s)')
+    parser.add_argument('--jerry-cmdline', choices=['on', 'off'], default='on', help='Build jerry command line tool (default: %(default)s)')
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -68,7 +67,6 @@ def generate_build_options(arguments):
     build_options = []
 
     build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc.upper())
-    build_options.append('-DJERRY_CORE=%s' % arguments.jerry_core.upper())
     build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm.upper())
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline.upper())
     build_options.append('-DCOMPILER_DEFAULT_LIBC=%s' % arguments.compiler_default_libc.upper())

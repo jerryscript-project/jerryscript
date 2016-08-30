@@ -27,7 +27,7 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l-el")
 elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "i686")
   set(DEFINES_LIBC ${DEFINES_LIBC} __TARGET_HOST_x86)
 else()
-  message(FATAL_ERROR "Unsupported machine architecture")
+  message(FATAL_ERROR "Machine architecture ${CMAKE_SYSTEM_PROCESSOR} isn't supported")
 endif()
 
 # Include directories

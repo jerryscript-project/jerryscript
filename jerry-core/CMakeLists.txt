@@ -26,8 +26,8 @@ set(FEATURE_MEM_STRESS_TEST OFF    CACHE BOOL   "Enable mem-stress test?")
 set(FEATURE_MEM_STATS       OFF    CACHE BOOL   "Enable memory statistics?")
 set(FEATURE_PARSER_DUMP     OFF    CACHE BOOL   "Enable parser byte-code dumps?")
 set(FEATURE_REGEXP_DUMP     OFF    CACHE BOOL   "Enable regexp byte-code dumps?")
-set(FEATURE_SNAPSHOT_SAVE   OFF    CACHE BOOL   "Allow to save snapshot files?")
-set(FEATURE_SNAPSHOT_EXEC   OFF    CACHE BOOL   "Allow to execute snapshot files?")
+set(FEATURE_SNAPSHOT_SAVE   OFF    CACHE BOOL   "Enable saving snapshot files?")
+set(FEATURE_SNAPSHOT_EXEC   OFF    CACHE BOOL   "Enable executing snapshot files?")
 set(MEM_HEAP_SIZE_KB        "512"  CACHE STRING "Size of memory heap, in kilobytes")
 
 # Status messages
@@ -157,7 +157,7 @@ if(FEATURE_PROFILE STREQUAL "minimal")
       CONFIG_DISABLE_REGEXP_BUILTIN
       CONFIG_DISABLE_ANNEXB_BUILTIN)
 elseif(NOT FEATURE_PROFILE STREQUAL "full")
-  message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' doesn't supported")
+  message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' isn't supported")
 endif()
 
 # Jerry heap-section
@@ -224,4 +224,3 @@ target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
 if (JERRY_LIBC)
   target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libc/include")
 endif()
-

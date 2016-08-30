@@ -24,18 +24,17 @@ string(TOUPPER "${PLATFORM}" PLATFORM)
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 
 # Components
-set(JERRY_CORE    ON  CACHE BOOL "Use jerry-core?")
-set(JERRY_LIBC    ON  CACHE BOOL "Use jerry-libc?")
-set(JERRY_LIBM    ON  CACHE BOOL "Use jerry-libm?")
-set(JERRY_CMDLINE ON  CACHE BOOL "Use jerry command line tool?")
-set(UNITTESTS     OFF CACHE BOOL "Use unit tests?")
+set(JERRY_LIBC    ON  CACHE BOOL "Build and use jerry-libc?")
+set(JERRY_LIBM    ON  CACHE BOOL "Build and use jerry-libm?")
+set(JERRY_CMDLINE ON  CACHE BOOL "Build jerry command line tool?")
+set(UNITTESTS     OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
-set(PORT_DIR                  "${CMAKE_SOURCE_DIR}/targets/default" CACHE STRING "Should we use default or external port?")
-set(COMPILER_DEFAULT_LIBC     OFF                                   CACHE BOOL   "Enable compiler default libc?")
+set(PORT_DIR                  "${CMAKE_SOURCE_DIR}/targets/default" CACHE STRING "Use default or external port?")
+set(COMPILER_DEFAULT_LIBC     OFF                                   CACHE BOOL   "Use compiler default libc?")
 set(ENABLE_LTO                OFF                                   CACHE BOOL   "Enable LTO build?")
 set(ENABLE_ALL_IN_ONE         ON                                    CACHE BOOL   "Enable all-in-one build?")
-set(ENABLE_STRIP              ON                                    CACHE BOOL   "Discards all symbols from object files?")
+set(ENABLE_STRIP              ON                                    CACHE BOOL   "Enable stripping all symbols from release binary?")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -50,14 +49,13 @@ if("${PLATFORM}" STREQUAL "DARWIN")
 endif()
 
 if(JERRY_LIBC AND COMPILER_DEFAULT_LIBC)
-  message(FATAL_ERROR "JERRY_LIBC and COMPILER_DEFAULT_LIBC is enabled at the same time!")
+  message(FATAL_ERROR "JERRY_LIBC and COMPILER_DEFAULT_LIBC cannot be enabled at the same time")
 endif()
 
 # Status messages
 message(STATUS "CMAKE_SYSTEM_NAME         " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR    " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
-message(STATUS "JERRY_CORE                " ${JERRY_CORE})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
@@ -215,11 +213,9 @@ if(JERRY_LIBM)
 endif()
 
 # Jerry's core
-if(JERRY_CORE)
-  add_subdirectory(jerry-core)
-endif()
+add_subdirectory(jerry-core)
 
-# Jerry commandline tool
+# Jerry command line tool
 if(JERRY_CMDLINE)
   add_subdirectory(jerry-main)
 endif()

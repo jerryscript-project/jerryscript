@@ -789,7 +789,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       }
       else if (opcode == CBC_PUSH_PROP_LITERAL)
       {
-        opcode = CBC_PUSH_PROP_LITERAL_REFERENCE;
+        opcode = CBC_ASSIGN_PROP_LITERAL;
         context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
       }
       else if (opcode == CBC_PUSH_PROP_LITERAL_LITERAL)

@@ -183,7 +183,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   endif()
   jerry_add_compile_warnings(logical-op)
 else()
-  jerry_add_compile_flags(-Wno-nested-anon-types)
+  jerry_add_compile_flags(-Wno-nested-anon-types -Wno-static-in-inline)
 endif()
 
 if(DEFINED EXTERNAL_COMPILE_FLAGS)

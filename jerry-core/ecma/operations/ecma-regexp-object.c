@@ -734,7 +734,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         while (*bc_p == RE_OP_ALTERNATIVE)
         {
-          JERRY_TRACE_MSG (", jump: %d");
+          JERRY_TRACE_MSG (", jump: %d", offset);
           bc_p++;
           offset = re_get_value (&bc_p);
           bc_p += offset;

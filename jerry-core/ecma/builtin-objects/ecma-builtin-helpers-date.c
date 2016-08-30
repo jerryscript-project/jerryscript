@@ -106,17 +106,17 @@ ecma_date_days_in_year (ecma_number_t year) /**< year value */
     return year; /* year is NaN */
   }
 
-  if (fmod (floor (year), 4))
+  if (fmod (floor (year), 4) != ECMA_NUMBER_ZERO)
   {
     return (ecma_number_t) 365;
   }
 
-  if (fmod (floor (year), 100))
+  if (fmod (floor (year), 100) != ECMA_NUMBER_ZERO)
   {
     return (ecma_number_t) 366;
   }
 
-  if (fmod (floor (year), 400))
+  if (fmod (floor (year), 400) != ECMA_NUMBER_ZERO)
   {
     return (ecma_number_t) 365;
   }

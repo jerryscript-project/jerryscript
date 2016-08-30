@@ -270,7 +270,7 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      jerry_port_default_set_log_level (argv[i][0] - '0');
+      jerry_port_default_set_log_level ((jerry_log_level_t) (argv[i][0] - '0'));
     }
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {

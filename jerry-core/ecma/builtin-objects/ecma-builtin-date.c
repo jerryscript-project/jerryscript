@@ -546,16 +546,16 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       prim_value_num = ecma_number_make_nan ();
     }
 
-    ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_CLASS);
-    ecma_set_internal_property_value (class_prop_p, LIT_MAGIC_STRING_DATE_UL);
+    ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p,
+                                                                ECMA_INTERNAL_PROPERTY_CLASS);
+    *class_prop_p = LIT_MAGIC_STRING_DATE_UL;
 
-    ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                        ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ecma_value_t *date_prop_p = ecma_create_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
-    ecma_number_t *prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = prim_value_num;
-    ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_num_p);
+    ecma_number_t *date_num_p = ecma_alloc_number ();
+    *date_num_p = prim_value_num;
+    ECMA_SET_INTERNAL_VALUE_POINTER (*date_prop_p, date_num_p);
 
     ret_value = ecma_make_object_value (obj_p);
   }

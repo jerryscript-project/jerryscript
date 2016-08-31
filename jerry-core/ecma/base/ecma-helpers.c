@@ -486,7 +486,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
  *
  * @return pointer to newly created property
  */
-ecma_property_t *
+ecma_value_t *
 ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
                                ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
@@ -498,7 +498,8 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
   ecma_property_value_t value;
   value.value = ECMA_NULL_POINTER;
 
-  return ecma_create_property (object_p, NULL, type_and_flags, value);
+  ecma_property_t *property_p = ecma_create_property (object_p, NULL, type_and_flags, value);
+  return &ECMA_PROPERTY_VALUE_PTR (property_p)->value;
 } /* ecma_create_internal_property */
 
 /**
@@ -507,7 +508,7 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
  * @return pointer to the property, if it is found,
  *         NULL - otherwise.
  */
-ecma_property_t *
+ecma_value_t *
 ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
                              ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
@@ -529,13 +530,15 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
     if (ECMA_PROPERTY_GET_TYPE (&prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_INTERNAL
         && ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_iter_p->types + 0) == property_id)
     {
-      return prop_iter_p->types + 0;
+      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+      return &prop_pair_p->values[0].value;
     }
 
     if (ECMA_PROPERTY_GET_TYPE (&prop_iter_p->types[1]) == ECMA_PROPERTY_TYPE_INTERNAL
         && ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_iter_p->types + 1) == property_id)
     {
-      return prop_iter_p->types + 1;
+      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+      return &prop_pair_p->values[1].value;
     }
 
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
@@ -553,11 +556,11 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
  *
  * @return pointer to the property
  */
-ecma_property_t *
+inline ecma_value_t * __attr_always_inline___
 ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
                             ecma_internal_property_id_t property_id) /**< internal property identifier */
 {
-  ecma_property_t *property_p = ecma_find_internal_property (object_p, property_id);
+  ecma_value_t *property_p = ecma_find_internal_property (object_p, property_id);
 
   JERRY_ASSERT (property_p != NULL);
 
@@ -1050,31 +1053,6 @@ ecma_set_named_data_property_value (ecma_property_t *prop_p, /**< property */
 
   ECMA_PROPERTY_VALUE_PTR (prop_p)->value = value;
 } /* ecma_set_named_data_property_value */
-
-/**
- * Get value field of an internal property
- *
- * @return ecma value
- */
-inline ecma_value_t __attr_always_inline___
-ecma_get_internal_property_value (const ecma_property_t *prop_p) /**< property */
-{
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_INTERNAL);
-
-  return ECMA_PROPERTY_VALUE_PTR (prop_p)->value;
-} /* ecma_get_internal_property_value */
-
-/**
- * Set value field of named data property
- */
-inline void __attr_always_inline___
-ecma_set_internal_property_value (ecma_property_t *prop_p, /**< property */
-                                  ecma_value_t value) /**< value to set */
-{
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_INTERNAL);
-
-  ECMA_PROPERTY_VALUE_PTR (prop_p)->value = value;
-} /* ecma_set_internal_property_value */
 
 /**
  * Assign value to named data property

@@ -519,13 +519,11 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     /* 1. */
-    ecma_property_t *target_function_prop_p;
+    ecma_value_t *target_function_prop_p;
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
 
     /* 3. */
     ret_value = ecma_op_object_has_instance (target_func_obj_p, value);
@@ -654,27 +652,22 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     JERRY_CONTEXT (is_direct_eval_form_call) = false;
 
     /* 2-3. */
-    ecma_property_t *bound_this_prop_p;
-    ecma_property_t *target_function_prop_p;
-
-    bound_this_prop_p = ecma_get_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
+    ecma_value_t *target_function_prop_p;
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
 
     /* 4. */
-    ecma_property_t *bound_args_prop_p;
-    ecma_value_t bound_this_value = ECMA_PROPERTY_VALUE_PTR (bound_this_prop_p)->value;
-    bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
+    ecma_value_t *bound_args_prop_p = ecma_find_internal_property (func_obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
+    ecma_value_t bound_this_value = *ecma_get_internal_property (func_obj_p,
+                                                                 ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
 
     if (bound_args_prop_p != NULL)
     {
       ecma_collection_header_t *bound_arg_list_p;
-      bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
-                                                          ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
+      bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, *bound_args_prop_p);
 
       JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 
@@ -843,13 +836,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     /* 1. */
-    ecma_property_t *target_function_prop_p;
+    ecma_value_t *target_function_prop_p;
     target_function_prop_p = ecma_get_internal_property (func_obj_p,
                                                          ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
-    ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                         ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value);
+    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
 
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
@@ -859,14 +850,13 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       /* 4. */
-      ecma_property_t *bound_args_prop_p;
+      ecma_value_t *bound_args_prop_p;
       bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
 
       if (bound_args_prop_p != NULL)
       {
         ecma_collection_header_t *bound_arg_list_p;
-        bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
-                                                            ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value);
+        bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, *bound_args_prop_p);
 
         JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
 

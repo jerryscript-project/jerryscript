@@ -45,18 +45,12 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
   JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
-  bool is_new;
-  ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
+  ecma_value_t *prop_p = ecma_find_internal_property (obj_p, id);
+  bool is_new = (prop_p == NULL);
 
-  if (prop_p == NULL)
+  if (is_new)
   {
     prop_p = ecma_create_internal_property (obj_p, id);
-
-    is_new = true;
-  }
-  else
-  {
-    is_new = false;
   }
 
   JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (ECMA_PROPERTY_VALUE_PTR (prop_p)->value),
@@ -64,7 +58,7 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-  ECMA_PROPERTY_VALUE_PTR (prop_p)->value = (ecma_value_t) ptr_value;
+  *prop_p = (ecma_value_t) ptr_value;
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
@@ -74,12 +68,11 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
   {
     handler_p = ecma_alloc_external_pointer ();
 
-    ECMA_SET_NON_NULL_POINTER (ECMA_PROPERTY_VALUE_PTR (prop_p)->value, handler_p);
+    ECMA_SET_NON_NULL_POINTER (*prop_p, handler_p);
   }
   else
   {
-    handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+    handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, *prop_p);
   }
 
   *handler_p = ptr_value;
@@ -109,7 +102,7 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
   JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
                 || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
 
-  ecma_property_t *prop_p = ecma_find_internal_property (obj_p, id);
+  ecma_value_t *prop_p = ecma_find_internal_property (obj_p, id);
 
   if (prop_p == NULL)
   {
@@ -120,13 +113,11 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-  *out_pointer_p = ECMA_PROPERTY_VALUE_PTR (prop_p)->value;
+  *out_pointer_p = *prop_p;
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
-  ecma_external_pointer_t *handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t,
-                                                                  ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-  *out_pointer_p = *handler_p;
+  *out_pointer_p = *ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, *prop_p);
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 

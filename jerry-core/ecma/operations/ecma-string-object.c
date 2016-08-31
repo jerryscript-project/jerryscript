@@ -94,9 +94,9 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
    * See also: ecma_object_get_class_name
    */
 
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_set_internal_property_value (prim_value_prop_p, ecma_make_string_value (prim_prop_str_value_p));
+  ecma_value_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
+                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  *prim_value_prop_p = ecma_make_string_value (prim_prop_str_value_p);
 
   // 15.5.5.1
   ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
@@ -168,10 +168,9 @@ ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String obje
   }
 
   // 4.
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p;
-  prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
+  ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
+                                                           ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
 
   // 6.
   ecma_length_t length = ecma_string_get_length (prim_value_str_p);
@@ -235,10 +234,9 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
   JERRY_UNUSED (for_non_enumerable_p);
 
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p;
-  prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
+  ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
+                                                           ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
 
   ecma_length_t length = ecma_string_get_length (prim_value_str_p);
 

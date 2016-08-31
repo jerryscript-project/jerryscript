@@ -899,13 +899,10 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+  ecma_value_t *date_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
-  ecma_number_t *prim_value_num_p;
-  prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                      ecma_get_internal_property_value (prim_value_prop_p));
-  *prim_value_num_p = value;
+  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_value_prop_p) = value;
 
   return ecma_make_number_value (value);
 } /* ecma_date_set_internal_property */
@@ -1302,14 +1299,13 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
   else
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-    ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                     ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    JERRY_ASSERT (prim_value_prop_p != NULL);
+    ecma_value_t *date_value_prop_p = ecma_get_internal_property (obj_p,
+                                                                  ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    JERRY_ASSERT (date_value_prop_p != NULL);
 
-    ecma_number_t prim_value_num;
-    prim_value_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                       ecma_get_internal_property_value (prim_value_prop_p));
-    ret_value = ecma_make_number_value (prim_value_num);
+    ecma_number_t date_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_value_prop_p);
+
+    ret_value = ecma_make_number_value (date_num);
   }
 
   return ret_value;

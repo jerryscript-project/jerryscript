@@ -245,27 +245,25 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     ecma_deref_object (prototype_obj_p);
 
     /* 7. */
-    ecma_property_t *target_function_prop_p;
+    ecma_value_t *target_function_prop_p;
     target_function_prop_p = ecma_create_internal_property (function_p,
                                                             ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
 
     ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
-    ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (target_function_prop_p)->value, this_arg_obj_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (*target_function_prop_p, this_arg_obj_p);
 
     /* 8. */
-    ecma_property_t *bound_this_prop_p;
+    ecma_value_t *bound_this_prop_p;
     bound_this_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
     const ecma_length_t arg_count = arguments_number;
 
     if (arg_count > 0)
     {
-      ecma_set_internal_property_value (bound_this_prop_p,
-                                        ecma_copy_value_if_not_object (arguments_list_p[0]));
+      *bound_this_prop_p = ecma_copy_value_if_not_object (arguments_list_p[0]);
     }
     else
     {
-      ecma_set_internal_property_value (bound_this_prop_p,
-                                        ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+      *bound_this_prop_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
 
     if (arg_count > 1)
@@ -273,9 +271,9 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       ecma_collection_header_t *bound_args_collection_p;
       bound_args_collection_p = ecma_new_values_collection (&arguments_list_p[1], arg_count - 1, false);
 
-      ecma_property_t *bound_args_prop_p;
+      ecma_value_t *bound_args_prop_p;
       bound_args_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (bound_args_prop_p)->value, bound_args_collection_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (*bound_args_prop_p, bound_args_collection_p);
     }
 
     /*

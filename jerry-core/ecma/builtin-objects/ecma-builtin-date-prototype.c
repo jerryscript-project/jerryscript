@@ -105,19 +105,18 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
                     ret_value);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                       ecma_get_internal_property_value (prim_prop_p));
+    ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
+                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
 
-    if (ecma_number_is_nan (*prim_value_num_p))
+    if (ecma_number_is_nan (*date_num_p))
     {
       ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
       ret_value = ecma_make_string_value (magic_str_p);
     }
     else
     {
-      ret_value = ecma_date_value_to_date_string (*prim_value_num_p);
+      ret_value = ecma_date_value_to_date_string (*date_num_p);
     }
 
     ECMA_FINALIZE (obj_this);
@@ -152,10 +151,9 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
                     ret_value);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                       ecma_get_internal_property_value (prim_prop_p));
+    ecma_value_t *prim_prop_p = ecma_get_internal_property (obj_p,
+                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *prim_prop_p);
 
     if (ecma_number_is_nan (*prim_value_num_p))
     {
@@ -250,14 +248,11 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
     {
-      ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+      ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
+                                                              ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
-      ecma_number_t *prim_value_num_p;
-      prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                          ecma_get_internal_property_value (prim_prop_p));
-
-      return ecma_make_number_value (*prim_value_num_p);
+      ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
+      return ecma_make_number_value (*date_num_p);
     }
   }
 
@@ -359,12 +354,11 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
     /* 2. */
     ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-    ecma_property_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
+                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
 
-    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                       ecma_get_internal_property_value (prim_prop_p));
-    *prim_value_num_p = value;
+    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
+    *date_num_p = value;
 
     /* 3. */
     ret_value = ecma_make_number_value (value);

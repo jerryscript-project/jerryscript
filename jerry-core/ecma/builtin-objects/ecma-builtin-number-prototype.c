@@ -433,12 +433,12 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
 
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_NUMBER_UL)
     {
-      ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
+                                                               ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-      JERRY_ASSERT (ecma_is_value_number (ecma_get_internal_property_value (prim_value_prop_p)));
+      JERRY_ASSERT (ecma_is_value_number (*prim_value_p));
 
-      return ecma_copy_value (ecma_get_internal_property_value (prim_value_prop_p));
+      return ecma_copy_value (*prim_value_p);
     }
   }
 

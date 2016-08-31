@@ -98,9 +98,9 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (new_error_obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_CLASS);
-  ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_ERROR_UL;
+  ecma_value_t *class_prop_p = ecma_create_internal_property (new_error_obj_p,
+                                                              ECMA_INTERNAL_PROPERTY_CLASS);
+  *class_prop_p = LIT_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */

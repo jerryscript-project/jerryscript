@@ -374,7 +374,8 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     bool is_retrieved = ecma_get_external_pointer_value (object_p,
                                                          ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
                                                          &freecb_p);
-    if (is_retrieved)
+
+    if (is_retrieved && ((jerry_object_free_callback_t) freecb_p) != NULL)
     {
       is_retrieved = ecma_get_external_pointer_value (object_p,
                                                       ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,

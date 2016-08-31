@@ -52,15 +52,13 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_BOOLEAN_UL;
+  ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  *class_prop_p = LIT_MAGIC_STRING_BOOLEAN_UL;
 
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                              ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
-  ecma_value_t prim_value = ecma_make_boolean_value (boolean_value);
-
-  ecma_set_internal_property_value (prim_value_prop_p, prim_value);
+  *prim_value_p = ecma_make_boolean_value (boolean_value);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_boolean_object */

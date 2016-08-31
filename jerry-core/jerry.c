@@ -1706,21 +1706,9 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
                                          ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
                                          handle_p);
 
-  if (freecb_p != NULL)
-  {
-    ecma_create_external_pointer_property (object_p,
-                                           ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
-                                           (uintptr_t) freecb_p);
-  }
-  else
-  {
-    ecma_property_t *prop_p = ecma_find_internal_property (object_p,
-                                                           ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
-    if (prop_p != NULL)
-    {
-      ecma_delete_property (object_p, prop_p);
-    }
-  }
+  ecma_create_external_pointer_property (object_p,
+                                         ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                         (uintptr_t) freecb_p);
 } /* jerry_set_object_native_handle */
 
 /**

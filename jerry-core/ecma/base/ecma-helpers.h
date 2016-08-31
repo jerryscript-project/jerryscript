@@ -266,9 +266,9 @@ extern ecma_property_header_t *ecma_get_property_list (const ecma_object_t *) __
 extern ecma_object_t *ecma_get_lex_env_binding_object (const ecma_object_t *) __attr_pure___;
 extern bool ecma_get_lex_env_provide_this (const ecma_object_t *) __attr_pure___;
 
-extern ecma_property_t *ecma_create_internal_property (ecma_object_t *, ecma_internal_property_id_t);
-extern ecma_property_t *ecma_find_internal_property (ecma_object_t *, ecma_internal_property_id_t);
-extern ecma_property_t *ecma_get_internal_property (ecma_object_t *, ecma_internal_property_id_t);
+extern ecma_value_t *ecma_create_internal_property (ecma_object_t *, ecma_internal_property_id_t);
+extern ecma_value_t *ecma_find_internal_property (ecma_object_t *, ecma_internal_property_id_t);
+extern ecma_value_t *ecma_get_internal_property (ecma_object_t *, ecma_internal_property_id_t);
 
 extern ecma_property_t *
 ecma_create_named_data_property (ecma_object_t *, ecma_string_t *, uint8_t);
@@ -288,9 +288,6 @@ extern void ecma_delete_property (ecma_object_t *, ecma_property_t *);
 extern ecma_value_t ecma_get_named_data_property_value (const ecma_property_t *);
 extern void ecma_set_named_data_property_value (ecma_property_t *, ecma_value_t);
 extern void ecma_named_data_property_assign_value (ecma_object_t *, ecma_property_t *, ecma_value_t);
-
-extern ecma_value_t ecma_get_internal_property_value (const ecma_property_t *);
-extern void ecma_set_internal_property_value (ecma_property_t *, ecma_value_t);
 
 extern ecma_object_t *ecma_get_named_accessor_property_getter (const ecma_property_t *);
 extern ecma_object_t *ecma_get_named_accessor_property_setter (const ecma_property_t *);

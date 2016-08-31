@@ -143,10 +143,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
     {
       ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-      ecma_property_t *prim_value_prop_p;
-      prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-      ecma_set_internal_property_value (prim_value_prop_p, ecma_make_string_value (prim_prop_str_value_p));
+      ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                                  ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      *prim_value_p = ecma_make_string_value (prim_prop_str_value_p);
       break;
     }
 #endif /* !CONFIG_DISABLE_STRING_BUILTIN */
@@ -154,10 +153,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 #ifndef CONFIG_DISABLE_NUMBER_BUILTIN
     case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
     {
-      ecma_property_t *prim_value_prop_p;
-      prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-      ecma_set_internal_property_value (prim_value_prop_p, ecma_make_integer_value (0));
+      ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                                  ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      *prim_value_p = ecma_make_integer_value (0);
       break;
     }
 #endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
@@ -165,10 +163,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 #ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     {
-      ecma_property_t *prim_value_prop_p;
-      prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-      ecma_set_internal_property_value (prim_value_prop_p, ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+      ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                                  ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      *prim_value_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
       break;
     }
 #endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
@@ -179,10 +176,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_number_t *prim_prop_num_value_p = ecma_alloc_number ();
       *prim_prop_num_value_p = ecma_number_make_nan ();
 
-      ecma_property_t *prim_value_prop_p;
-      prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-      ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_prop_num_value_p);
+      ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                                  ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+      ECMA_SET_INTERNAL_VALUE_POINTER (*prim_value_p, prim_prop_num_value_p);
       break;
     }
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
@@ -190,10 +186,9 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
     {
-      ecma_property_t *bytecode_prop_p;
-      bytecode_prop_p = ecma_create_internal_property (obj_p,
-                                                       ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-      ecma_set_internal_property_value (bytecode_prop_p, ECMA_NULL_POINTER);
+      ecma_value_t *bytecode_prop_p = ecma_create_internal_property (obj_p,
+                                                                     ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+      *bytecode_prop_p = ECMA_NULL_POINTER;
       break;
     }
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
@@ -409,8 +404,8 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   else
   {
     uint32_t bit_for_index = (uint32_t) 1u << (index - 32);
-    ecma_property_t *mask_prop_p = ecma_find_internal_property (object_p,
-                                                                ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63);
+    ecma_value_t *mask_prop_p = ecma_find_internal_property (object_p,
+                                                             ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63);
 
     uint32_t instantiated_bitset;
 
@@ -421,7 +416,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
     else
     {
-      instantiated_bitset = ecma_get_internal_property_value (mask_prop_p);
+      instantiated_bitset = *mask_prop_p;
 
       if (instantiated_bitset & bit_for_index)
       {
@@ -430,9 +425,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       }
     }
 
-    instantiated_bitset |= bit_for_index;
-
-    ecma_set_internal_property_value (mask_prop_p, instantiated_bitset);
+    *mask_prop_p = (instantiated_bitset | bit_for_index);
   }
 
   ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -597,8 +590,8 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       if (index == 32)
       {
-        ecma_property_t *mask_prop_p = ecma_find_internal_property (object_p,
-                                                                    ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63);
+        ecma_value_t *mask_prop_p = ecma_find_internal_property (object_p,
+                                                                 ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63);
 
         if (mask_prop_p == NULL)
         {
@@ -606,7 +599,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
         }
         else
         {
-          instantiated_bitset = ecma_get_internal_property_value (mask_prop_p);
+          instantiated_bitset = *mask_prop_p;
         }
       }
 

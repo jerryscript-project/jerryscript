@@ -940,8 +940,8 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       }
       else
       {
-        ecma_property_t *class_name_prop_p = ecma_find_internal_property (obj_p,
-                                                                          ECMA_INTERNAL_PROPERTY_CLASS);
+        ecma_value_t *class_name_prop_p = ecma_find_internal_property (obj_p,
+                                                                       ECMA_INTERNAL_PROPERTY_CLASS);
 
         if (class_name_prop_p == NULL)
         {
@@ -949,7 +949,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         }
         else
         {
-          return ECMA_PROPERTY_VALUE_PTR (class_name_prop_p)->value;
+          return *class_name_prop_p;
         }
       }
     }

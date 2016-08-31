@@ -60,14 +60,14 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
                                              ECMA_OBJECT_TYPE_GENERAL);
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_NUMBER_UL;
+  ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
+  *class_prop_p = LIT_MAGIC_STRING_NUMBER_UL;
 
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
+                                                              ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
 
   /* Pass reference (no need to free conv_to_num_completion). */
-  ecma_set_internal_property_value (prim_value_prop_p, conv_to_num_completion);
+  *prim_value_p = conv_to_num_completion;
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_number_object */

@@ -240,6 +240,9 @@ sqrt (double x)
   return z;
 } /* sqrt */
 
+#undef one
+#undef tiny
+
 /*
 Other methods  (use floating-point arithmetic)
 -------------

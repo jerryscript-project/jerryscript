@@ -232,3 +232,5 @@ fmod (double x, double y)
   }
   return x; /* exact output */
 } /* fmod */
+
+#undef one

@@ -205,3 +205,15 @@ exp (double x) /* default IEEE double exp */
     return y * twom1000;
   }
 } /* exp */
+
+#undef one
+#undef huge
+#undef twom1000
+#undef o_threshold
+#undef u_threshold
+#undef invln2
+#undef P1
+#undef P2
+#undef P3
+#undef P4
+#undef P5

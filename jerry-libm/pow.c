@@ -73,7 +73,6 @@
  * to produce the hexadecimal values shown.
  */
 
-static const double one = 1.0;
 static const double bp[] =
 {
   1.0,
@@ -91,6 +90,7 @@ static const double dp_l[] =
 };
 
 #define zero     0.0
+#define one      1.0
 #define two      2.0
 #define two53    9007199254740992.0 /* 0x43400000, 0x00000000 */
 #define huge     1.0e300
@@ -445,3 +445,31 @@ pow (double x, double y)
   }
   return s * z;
 } /* pow */
+
+#undef zero
+#undef one
+#undef two
+#undef two53
+#undef huge
+#undef tiny
+#undef L1
+#undef L2
+#undef L3
+#undef L4
+#undef L5
+#undef L6
+#undef P1
+#undef P2
+#undef P3
+#undef P4
+#undef P5
+#undef lg2
+#undef lg2_h
+#undef lg2_l
+#undef ovt
+#undef cp
+#undef cp_h
+#undef cp_l
+#undef ivln2
+#undef ivln2_h
+#undef ivln2_l

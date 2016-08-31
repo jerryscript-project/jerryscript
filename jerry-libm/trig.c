@@ -1055,3 +1055,43 @@ tan (double x)
     return __kernel_tan (y[0], y[1], 1 - ((n & 1) << 1)); /*   1 -- n even, -1 -- n odd */
   }
 } /* tan */
+
+#undef zero
+#undef half
+#undef one
+#undef two24
+#undef twon24
+#undef invpio2
+#undef pio2_1
+#undef pio2_1t
+#undef pio2_2
+#undef pio2_2t
+#undef pio2_3
+#undef pio2_3t
+#undef S1
+#undef S2
+#undef S3
+#undef S4
+#undef S5
+#undef S6
+#undef C1
+#undef C2
+#undef C3
+#undef C4
+#undef C5
+#undef C6
+#undef T0
+#undef T1
+#undef T2
+#undef T3
+#undef T4
+#undef T5
+#undef T6
+#undef T7
+#undef T8
+#undef T9
+#undef T10
+#undef T11
+#undef T12
+#undef pio4
+#undef pio4lo

@@ -160,3 +160,17 @@ atan (double x)
     return (hx < 0) ? -z : z;
   }
 } /* atan */
+
+#undef aT0
+#undef aT1
+#undef aT2
+#undef aT3
+#undef aT4
+#undef aT5
+#undef aT6
+#undef aT7
+#undef aT8
+#undef aT9
+#undef aT10
+#undef one
+#undef huge

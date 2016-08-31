@@ -185,3 +185,15 @@ log (double x)
     }
   }
 } /* log */
+
+#undef zero
+#undef ln2_hi
+#undef ln2_lo
+#undef two54
+#undef Lg1
+#undef Lg2
+#undef Lg3
+#undef Lg4
+#undef Lg5
+#undef Lg6
+#undef Lg7

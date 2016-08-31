@@ -127,3 +127,5 @@ floor (double x)
   __LO (x) = i1;
   return x;
 } /* floor */
+
+#undef huge

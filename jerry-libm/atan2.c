@@ -201,3 +201,10 @@ atan2 (double y, double x)
     }
   }
 } /* atan2 */
+
+#undef tiny
+#undef zero
+#undef pi_o_4
+#undef pi_o_2
+#undef pi
+#undef pi_lo

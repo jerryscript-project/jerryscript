@@ -89,3 +89,8 @@ scalbn (double x, int n)
   __HI (x) = (hx & 0x800fffff) | (k << 20);
   return x * twom54;
 } /* scalbn */
+
+#undef two54
+#undef twom54
+#undef huge
+#undef tiny

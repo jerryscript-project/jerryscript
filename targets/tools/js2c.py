@@ -21,8 +21,12 @@ import glob
 import os
 import re
 
+import argparse
+
+special_chars = re.compile(r'[-\\?\'".]')
+
 def extractName(path):
-    return os.path.splitext(os.path.basename(path))[0]
+    return special_chars.sub('_', os.path.splitext(os.path.basename(path))[0])
 
 def writeLine(fo, content, indent=0):
     buf = '  ' * indent + content + '\n'
@@ -77,10 +81,16 @@ FOOTER = '''
 OUT_PATH = './source/'
 SRC_PATH = './js/'
 
+parser = argparse.ArgumentParser(description="js2c")
+parser.add_argument('build_type', help='build type', default='release', nargs='?')
+parser.add_argument('--ignore', help='files to ignore', dest='ignore_files', default=[], action='append')
+parser.add_argument('--no-main', help='don\'t require a main.js file', dest='main', action='store_false', default=True)
+
+args = parser.parse_args()
+
 # argument processing
-buildtype = 'release'
-if len(sys.argv) >= 2:
-    buildtype = sys.argv[1]
+buildtype = args.build_type
+ignore_files = args.ignore_files
 
 fout = open(OUT_PATH + 'jerry_targetjs.h', 'w')
 fout.write(LICENSE);
@@ -115,7 +125,8 @@ def exportOneName(name):
 files = glob.glob(SRC_PATH + '*.js')
 for path in files:
     name = extractName(path)
-    exportOneFile(path, name)
+    if os.path.basename(path) not in ignore_files:
+        exportOneFile(path, name)
 
 
 NATIVE_STRUCT = '''
@@ -131,10 +142,11 @@ struct js_source_all js_codes[] = \\
 '''
 
 fout.write(NATIVE_STRUCT)
-exportOneName('main')
-filenames = map(extractName, files)
-for name in filenames:
-    if name != 'main':
+if args.main:
+    exportOneName('main')
+for filename in files:
+    name = extractName(filename)
+    if name != 'main' and os.path.basename(filename) not in ignore_files:
         exportOneName(name)
 
 writeLine(fout, '{ NULL, NULL, 0 } \\', 1)

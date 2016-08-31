@@ -1,0 +1,8 @@
+cmake/*
+docs/*
+jerry-libc/*
+jerry-main/*
+targets/*
+tests/*
+third-party/*
+tools/*

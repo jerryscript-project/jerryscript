@@ -1,5 +1,5 @@
 # Produced files
-
+.mbedignore
 build/*
 
 # IDE related files

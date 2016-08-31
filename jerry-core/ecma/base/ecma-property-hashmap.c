@@ -18,6 +18,7 @@
 #include "ecma-helpers.h"
 #include "ecma-property-hashmap.h"
 #include "jrt-libc-includes.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -77,6 +78,11 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
   JERRY_ASSERT (ecma_get_property_list (object_p) != NULL);
   JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (ecma_get_property_list (object_p)));
+
+  if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) != ECMA_PROP_HASHMAP_ALLOC_ON)
+  {
+    return;
+  }
 
   uint32_t named_property_count = 0;
 

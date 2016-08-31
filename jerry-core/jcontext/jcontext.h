@@ -72,6 +72,13 @@ typedef struct
   uint8_t ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
   uint8_t is_direct_eval_form_call; /**< direct call from eval */
   uint8_t jerry_api_available; /**< API availability flag */
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  uint8_t ecma_prop_hashmap_alloc_state; /**< property hashmap allocation state: 0-4,
+                                          *   if !0 property hashmap allocation is disabled */
+  bool ecma_prop_hashmap_alloc_last_is_hs_gc; /**< true, if and only if the last gc action was a high severity gc */
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

@@ -21,6 +21,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-literal-storage.h"
 #include "jmem-allocator.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -39,6 +40,12 @@ ecma_init (void)
   ecma_init_global_lex_env ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
+  JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = false;
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
 } /* ecma_init */
 
 /**

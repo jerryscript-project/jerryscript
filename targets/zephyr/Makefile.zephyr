@@ -84,7 +84,7 @@ EXT_CFLAGS += -Wall -Wno-format-zero-length -Wno-pointer-sign
 EXT_CFLAGS += -Werror=format -Werror=implicit-int -Wno-unused-but-set-variable
 EXT_CFLAGS += -Wno-main -Wno-strict-aliasing -Wno-old-style-declaration
 EXT_CFLAGS += -Wno-error=format=
-EXT_CFLAGS += -D_XOPEN_SOURCE
+EXT_CFLAGS += -D_XOPEN_SOURCE=700
 
 # Pass2
 -include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
@@ -94,9 +94,8 @@ CC = $(CROSS_COMPILE)gcc
 ZEPHYR_LIBC_INC = $(subst -I,,$(TOOLCHAIN_CFLAGS))
 LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)
 
-# TODO: Order of includes seems to have changed and time_t seems to be defined differently. Temporary disable the conversion and sign-conversion until we find what is happening
-# this will generate warnings on the default date port.
-EXT_CFLAGS += -Wno-error=conversion -Wno-error=sign-conversion
+# TODO: There is a warning when compiling in some architectures related to __sputc_r
+EXT_CFLAGS += -Wno-error=conversion
 EXT_CFLAGS += $(LIB_INCLUDE_DIR)
 EXT_CFLAGS += $(TOOLCHAIN_CFLAGS)
 

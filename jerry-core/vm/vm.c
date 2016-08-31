@@ -143,7 +143,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     ecma_value_t to_string = ecma_op_to_string (property);
     ecma_fast_free_value (property);
 
-    if (ECMA_IS_VALUE_ERROR (property))
+    if (ECMA_IS_VALUE_ERROR (to_string))
     {
       ecma_free_value (object);
       return to_string;

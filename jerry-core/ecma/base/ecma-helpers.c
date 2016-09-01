@@ -613,8 +613,16 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   ecma_ref_ecma_string (name_p);
 
   ecma_property_value_t value;
+#ifdef JERRY_CPOINTER_32_BIT
+  ecma_getter_setter_pointers_t *getter_setter_pair_p;
+  getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
+  ECMA_SET_POINTER (getter_setter_pair_p->getter_p, get_p);
+  ECMA_SET_POINTER (getter_setter_pair_p->setter_p, set_p);
+  ECMA_SET_POINTER (value.getter_setter_pair_cp, getter_setter_pair_p);
+#else /* !JERRY_CPOINTER_32_BIT */
   ECMA_SET_POINTER (value.getter_setter_pair.getter_p, get_p);
   ECMA_SET_POINTER (value.getter_setter_pair.setter_p, set_p);
+#endif /* JERRY_CPOINTER_32_BIT */
 
   return ecma_create_property (object_p, name_p, type_and_flags, value);
 } /* ecma_create_named_accessor_property */
@@ -764,20 +772,6 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 } /* ecma_get_named_data_property */
 
 /**
- * Free the named data property and values it references.
- */
-static void
-ecma_free_named_data_property (ecma_object_t *object_p, /**< object the property belongs to */
-                               ecma_property_t *property_p) /**< the property */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-
-  ecma_value_t v = ecma_get_named_data_property_value (property_p);
-  ecma_free_value_if_not_object (v);
-} /* ecma_free_named_data_property */
-
-/**
  * Free the internal property and values it references.
  */
 static void
@@ -873,7 +867,8 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      ecma_free_named_data_property (object_p, property_p);
+      ecma_free_value_if_not_object (ecma_get_named_data_property_value (property_p));
+
       if (ecma_is_property_lcached (property_p))
       {
         ecma_lcache_invalidate (object_p, name_p, property_p);
@@ -882,6 +877,13 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     }
     case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
     {
+#ifdef JERRY_CPOINTER_32_BIT
+      ecma_getter_setter_pointers_t *getter_setter_pair_p;
+      getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                               ECMA_PROPERTY_VALUE_PTR (property_p)->getter_setter_pair_cp);
+      jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
+#endif /* JERRY_CPOINTER_32_BIT */
+
       if (ecma_is_property_lcached (property_p))
       {
         ecma_lcache_invalidate (object_p, name_p, property_p);
@@ -1083,7 +1085,14 @@ ecma_get_named_accessor_property_getter (const ecma_property_t *prop_p) /**< nam
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
+#ifdef JERRY_CPOINTER_32_BIT
+  ecma_getter_setter_pointers_t *getter_setter_pair_p;
+  getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair_cp);
+  return ECMA_GET_POINTER (ecma_object_t, getter_setter_pair_p->getter_p);
+#else /* !JERRY_CPOINTER_32_BIT */
   return ECMA_GET_POINTER (ecma_object_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair.getter_p);
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* ecma_get_named_accessor_property_getter */
 
 /**
@@ -1096,7 +1105,14 @@ ecma_get_named_accessor_property_setter (const ecma_property_t *prop_p) /**< nam
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
+#ifdef JERRY_CPOINTER_32_BIT
+  ecma_getter_setter_pointers_t *getter_setter_pair_p;
+  getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair_cp);
+  return ECMA_GET_POINTER (ecma_object_t, getter_setter_pair_p->setter_p);
+#else /* !JERRY_CPOINTER_32_BIT */
   return ECMA_GET_POINTER (ecma_object_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair.setter_p);
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* ecma_get_named_accessor_property_setter */
 
 /**
@@ -1110,7 +1126,14 @@ ecma_set_named_accessor_property_getter (ecma_object_t *object_p, /**< the prope
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
+#ifdef JERRY_CPOINTER_32_BIT
+  ecma_getter_setter_pointers_t *getter_setter_pair_p;
+  getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair_cp);
+  ECMA_SET_POINTER (getter_setter_pair_p->getter_p, getter_p);
+#else /* !JERRY_CPOINTER_32_BIT */
   ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair.getter_p, getter_p);
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* ecma_set_named_accessor_property_getter */
 
 /**
@@ -1124,7 +1147,14 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
   ecma_assert_object_contains_the_property (object_p, prop_p);
 
+#ifdef JERRY_CPOINTER_32_BIT
+  ecma_getter_setter_pointers_t *getter_setter_pair_p;
+  getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
+                                           ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair_cp);
+  ECMA_SET_POINTER (getter_setter_pair_p->setter_p, setter_p);
+#else /* !JERRY_CPOINTER_32_BIT */
   ECMA_SET_POINTER (ECMA_PROPERTY_VALUE_PTR (prop_p)->getter_setter_pair.setter_p, setter_p);
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* ecma_set_named_accessor_property_setter */
 
 /**

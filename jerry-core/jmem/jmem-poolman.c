@@ -77,9 +77,6 @@ static void jmem_pools_stat_dealloc (void);
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */
 
-JERRY_STATIC_ASSERT (sizeof (jmem_pools_chunk_t) <= JMEM_POOL_CHUNK_SIZE,
-                     size_of_mem_pools_chunk_t_must_be_less_than_or_equal_to_MEM_POOL_CHUNK_SIZE);
-
 /**
  * Finalize pool manager
  */
@@ -88,7 +85,10 @@ jmem_pools_finalize (void)
 {
   jmem_pools_collect_empty ();
 
-  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_chunk_p) == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_8_byte_chunk_p) == NULL);
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_16_byte_chunk_p) == NULL);
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* jmem_pools_finalize */
 
 /**
@@ -98,49 +98,94 @@ jmem_pools_finalize (void)
  *         or NULL - if not enough memory.
  */
 inline void * __attribute__((hot)) __attr_always_inline___
-jmem_pools_alloc (void)
+jmem_pools_alloc (size_t size) /**< size of the chunk */
 {
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
 
-  if (JERRY_CONTEXT (jmem_free_chunk_p) != NULL)
+  if (size <= 8)
   {
-    const jmem_pools_chunk_t *const chunk_p = JERRY_CONTEXT (jmem_free_chunk_p);
+    if (JERRY_CONTEXT (jmem_free_8_byte_chunk_p) != NULL)
+    {
+      const jmem_pools_chunk_t *const chunk_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
+
+      JMEM_POOLS_STAT_REUSE ();
+
+      VALGRIND_DEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+
+      JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = chunk_p->next_p;
+
+      VALGRIND_UNDEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+
+      return (void *) chunk_p;
+    }
+    else
+    {
+      JMEM_POOLS_STAT_NEW_ALLOC ();
+      return (void *) jmem_heap_alloc_block (8);
+    }
+  }
+
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (size <= 16);
+
+  if (JERRY_CONTEXT (jmem_free_16_byte_chunk_p) != NULL)
+  {
+    const jmem_pools_chunk_t *const chunk_p = JERRY_CONTEXT (jmem_free_16_byte_chunk_p);
 
     JMEM_POOLS_STAT_REUSE ();
 
-    VALGRIND_DEFINED_SPACE (chunk_p, JMEM_POOL_CHUNK_SIZE);
+    VALGRIND_DEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
 
-    JERRY_CONTEXT (jmem_free_chunk_p) = chunk_p->next_p;
+    JERRY_CONTEXT (jmem_free_16_byte_chunk_p) = chunk_p->next_p;
 
-    VALGRIND_UNDEFINED_SPACE (chunk_p, JMEM_POOL_CHUNK_SIZE);
+    VALGRIND_UNDEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
 
     return (void *) chunk_p;
   }
   else
   {
     JMEM_POOLS_STAT_NEW_ALLOC ();
-    return (void *) jmem_heap_alloc_block (JMEM_POOL_CHUNK_SIZE);
+    return (void *) jmem_heap_alloc_block (16);
   }
+#else /* !JERRY_CPOINTER_32_BIT */
+  JERRY_UNREACHABLE ();
+  return NULL;
+#endif
 } /* jmem_pools_alloc */
 
 /**
  * Free the chunk
  */
-void __attribute__((hot))
-jmem_pools_free (void *chunk_p) /**< pointer to the chunk */
+inline void __attribute__((hot)) __attr_always_inline___
+jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
+                 size_t size) /**< size of the chunk */
 {
   JERRY_ASSERT (chunk_p != NULL);
 
   jmem_pools_chunk_t *const chunk_to_free_p = (jmem_pools_chunk_t *) chunk_p;
 
-  VALGRIND_DEFINED_SPACE (chunk_to_free_p, JMEM_POOL_CHUNK_SIZE);
+  VALGRIND_DEFINED_SPACE (chunk_to_free_p, size);
 
-  chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_chunk_p);
-  JERRY_CONTEXT (jmem_free_chunk_p) = chunk_to_free_p;
+  if (size <= 8)
+  {
+    chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
+    JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = chunk_to_free_p;
+  }
+  else
+  {
+#ifdef JERRY_CPOINTER_32_BIT
+    JERRY_ASSERT (size <= 16);
 
-  VALGRIND_NOACCESS_SPACE (chunk_to_free_p, JMEM_POOL_CHUNK_SIZE);
+    chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_16_byte_chunk_p);
+    JERRY_CONTEXT (jmem_free_16_byte_chunk_p) = chunk_to_free_p;
+#else /* !JERRY_CPOINTER_32_BIT */
+    JERRY_UNREACHABLE ();
+#endif /* JERRY_CPOINTER_32_BIT */
+  }
+
+  VALGRIND_NOACCESS_SPACE (chunk_to_free_p, size);
 
   JMEM_POOLS_STAT_FREE_POOL ();
 } /* jmem_pools_free */
@@ -151,16 +196,35 @@ jmem_pools_free (void *chunk_p) /**< pointer to the chunk */
 void
 jmem_pools_collect_empty ()
 {
-  while (JERRY_CONTEXT (jmem_free_chunk_p))
-  {
-    VALGRIND_DEFINED_SPACE (JERRY_CONTEXT (jmem_free_chunk_p), sizeof (jmem_pools_chunk_t));
-    jmem_pools_chunk_t *const next_p = JERRY_CONTEXT (jmem_free_chunk_p)->next_p;
-    VALGRIND_NOACCESS_SPACE (JERRY_CONTEXT (jmem_free_chunk_p), sizeof (jmem_pools_chunk_t));
+  jmem_pools_chunk_t *chunk_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
+  JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = NULL;
 
-    jmem_heap_free_block (JERRY_CONTEXT (jmem_free_chunk_p), JMEM_POOL_CHUNK_SIZE);
+  while (chunk_p)
+  {
+    VALGRIND_DEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+    jmem_pools_chunk_t *const next_p = chunk_p->next_p;
+    VALGRIND_NOACCESS_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+
+    jmem_heap_free_block (chunk_p, 8);
     JMEM_POOLS_STAT_DEALLOC ();
-    JERRY_CONTEXT (jmem_free_chunk_p) = next_p;
+    chunk_p = next_p;
   }
+
+#ifdef JERRY_CPOINTER_32_BIT
+  chunk_p = JERRY_CONTEXT (jmem_free_16_byte_chunk_p);
+  JERRY_CONTEXT (jmem_free_16_byte_chunk_p) = NULL;
+
+  while (chunk_p)
+  {
+    VALGRIND_DEFINED_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+    jmem_pools_chunk_t *const next_p = chunk_p->next_p;
+    VALGRIND_NOACCESS_SPACE (chunk_p, sizeof (jmem_pools_chunk_t));
+
+    jmem_heap_free_block (chunk_p, 16);
+    JMEM_POOLS_STAT_DEALLOC ();
+    chunk_p = next_p;
+  }
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* jmem_pools_collect_empty */
 
 #ifdef JMEM_STATS
@@ -193,12 +257,10 @@ jmem_pools_stats_print (void)
   jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
 
   JERRY_DEBUG_MSG ("Pools stats:\n"
-                   "  Chunk size: %zu\n"
                    "  Pool chunks: %zu\n"
                    "  Peak pool chunks: %zu\n"
                    "  Free chunks: %zu\n"
                    "  Pool reuse ratio: %zu.%04zu\n",
-                   JMEM_POOL_CHUNK_SIZE,
                    pools_stats->pools_count,
                    pools_stats->peak_pools_count,
                    pools_stats->free_chunks,

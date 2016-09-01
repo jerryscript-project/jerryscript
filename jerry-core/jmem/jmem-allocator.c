@@ -27,6 +27,14 @@
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
 
+#ifdef JERRY_CPOINTER_32_BIT
+
+/* This check will go away when we will support 64 bit compressed pointers. */
+JERRY_STATIC_ASSERT (sizeof (uintptr_t) <= sizeof (jmem_cpointer_t),
+                     size_of_uintpt_t_must_be_equal_to_jmem_cpointer_t);
+
+#endif
+
 /**
  * Initialize memory allocators.
  */
@@ -59,12 +67,29 @@ jmem_finalize ()
  *
  * @return packed pointer
  */
-uintptr_t
+inline jmem_cpointer_t __attr_always_inline___
 jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
 {
+  JERRY_ASSERT (pointer_p != NULL);
   JERRY_ASSERT (jmem_is_heap_pointer (pointer_p));
 
-  return jmem_heap_compress_pointer (pointer_p);
+  uintptr_t uint_ptr = (uintptr_t) pointer_p;
+
+  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
+
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
+#else /* !JERRY_CPOINTER_32_BIT */
+  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
+
+  uint_ptr -= heap_start;
+  uint_ptr >>= JMEM_ALIGNMENT_LOG;
+
+  JERRY_ASSERT (uint_ptr <= UINT16_MAX);
+  JERRY_ASSERT (uint_ptr != JMEM_CP_NULL);
+#endif /* JERRY_CPOINTER_32_BIT */
+
+  return (jmem_cpointer_t) uint_ptr;
 } /* jmem_compress_pointer */
 
 /**
@@ -72,10 +97,27 @@ jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
  *
  * @return unpacked pointer
  */
-void *
+inline void * __attr_always_inline___
 jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
-  return jmem_heap_decompress_pointer (compressed_pointer);
+  JERRY_ASSERT (compressed_pointer != JMEM_CP_NULL);
+
+  uintptr_t uint_ptr = compressed_pointer;
+
+  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
+
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
+#else /* !JERRY_CPOINTER_32_BIT */
+  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
+
+  uint_ptr <<= JMEM_ALIGNMENT_LOG;
+  uint_ptr += heap_start;
+
+  JERRY_ASSERT (jmem_is_heap_pointer ((void *) uint_ptr));
+#endif /* JERRY_CPOINTER_32_BIT */
+
+  return (void *) uint_ptr;
 } /* jmem_decompress_pointer */
 
 /**

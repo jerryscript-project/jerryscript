@@ -145,8 +145,10 @@ static void jmem_heap_stat_free_iter ();
 void
 jmem_heap_init (void)
 {
-  JERRY_STATIC_ASSERT ((1u << JMEM_HEAP_OFFSET_LOG) >= JMEM_HEAP_SIZE,
-                       two_pow_mem_heap_offset_should_not_be_less_than_mem_heap_size);
+#ifndef JERRY_CPOINTER_32_BIT
+  JERRY_STATIC_ASSERT (((UINT16_MAX + 1) << JMEM_ALIGNMENT_LOG) >= JMEM_HEAP_SIZE,
+                       maximum_heap_size_for_16_bit_compressed_pointers_is_512K);
+#endif /* !JERRY_CPOINTER_32_BIT */
 
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
@@ -520,52 +522,6 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
 } /* jmem_heap_free_block */
-
-/**
- * Compress pointer
- *
- * @return packed heap pointer
- */
-uintptr_t __attr_pure___ __attribute__((hot))
-jmem_heap_compress_pointer (const void *pointer_p) /**< pointer to compress */
-{
-  JERRY_ASSERT (pointer_p != NULL);
-  JERRY_ASSERT (jmem_is_heap_pointer (pointer_p));
-
-  uintptr_t int_ptr = (uintptr_t) pointer_p;
-  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
-
-  JERRY_ASSERT (int_ptr % JMEM_ALIGNMENT == 0);
-
-  int_ptr -= heap_start;
-  int_ptr >>= JMEM_ALIGNMENT_LOG;
-
-  JERRY_ASSERT ((int_ptr & ~((1u << JMEM_HEAP_OFFSET_LOG) - 1)) == 0);
-
-  JERRY_ASSERT (int_ptr != JMEM_CP_NULL);
-
-  return int_ptr;
-} /* jmem_heap_compress_pointer */
-
-/**
- * Decompress pointer
- *
- * @return unpacked heap pointer
- */
-void *  __attr_pure___ __attribute__((hot))
-jmem_heap_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
-{
-  JERRY_ASSERT (compressed_pointer != JMEM_CP_NULL);
-
-  uintptr_t int_ptr = compressed_pointer;
-  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
-
-  int_ptr <<= JMEM_ALIGNMENT_LOG;
-  int_ptr += heap_start;
-
-  JERRY_ASSERT (jmem_is_heap_pointer ((void *) int_ptr));
-  return (void *) int_ptr;
-} /* jmem_heap_decompress_pointer */
 
 #ifndef JERRY_NDEBUG
 /**

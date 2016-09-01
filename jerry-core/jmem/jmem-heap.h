@@ -34,8 +34,6 @@ extern void jmem_heap_finalize (void);
 extern void *jmem_heap_alloc_block (const size_t);
 extern void *jmem_heap_alloc_block_null_on_error (const size_t);
 extern void jmem_heap_free_block (void *, const size_t);
-extern uintptr_t jmem_heap_compress_pointer (const void *);
-extern void *jmem_heap_decompress_pointer (uintptr_t);
 extern bool jmem_is_heap_pointer (const void *);
 
 #ifdef JMEM_STATS

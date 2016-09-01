@@ -68,7 +68,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
     case VM_CONTEXT_FOR_IN:
     {
-      jmem_cpointer_t current = (uint16_t) vm_stack_top_p[-2];
+      jmem_cpointer_t current = (jmem_cpointer_t) vm_stack_top_p[-2];
 
       while (current != JMEM_CP_NULL)
       {

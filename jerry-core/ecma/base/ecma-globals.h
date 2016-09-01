@@ -361,9 +361,16 @@ typedef struct
  */
 typedef struct
 {
+#ifdef JERRY_CPOINTER_32_BIT
+  jmem_cpointer_t next_property_cp; /**< next cpointer */
+#endif /* JERRY_CPOINTER_32_BIT */
   ecma_property_t types[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< two property type slot. The first represent
                                                          *   the type of this property (e.g. property pair) */
+#ifdef JERRY_CPOINTER_32_BIT
+  uint16_t padding; /**< an unused value */
+#else /* !JERRY_CPOINTER_32_BIT */
   jmem_cpointer_t next_property_cp; /**< next cpointer */
+#endif /* JERRY_CPOINTER_32_BIT */
 } ecma_property_header_t;
 
 /**
@@ -381,7 +388,11 @@ typedef struct
 typedef union
 {
   ecma_value_t value; /**< value of a property */
+#ifdef JERRY_CPOINTER_32_BIT
+  jmem_cpointer_t getter_setter_pair_cp; /**< cpointer to getter setter pair */
+#else /* !JERRY_CPOINTER_32_BIT */
   ecma_getter_setter_pointers_t getter_setter_pair; /**< getter setter pair */
+#endif /* JERRY_CPOINTER_32_BIT */
 } ecma_property_value_t;
 
 /**

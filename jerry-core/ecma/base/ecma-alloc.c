@@ -25,22 +25,9 @@ JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
                      size_of_ecma_property_value_t_must_be_equal_to_size_of_ecma_value_t);
 JERRY_STATIC_ASSERT (((sizeof (ecma_property_value_t) - 1) & sizeof (ecma_property_value_t)) == 0,
                      size_of_ecma_property_value_t_must_be_power_of_2);
-JERRY_STATIC_ASSERT (sizeof (ecma_property_pair_t) == sizeof (uint64_t) * 2,
-                     size_of_ecma_property_pair_t_must_be_equal_to_16_bytes);
 
-JERRY_STATIC_ASSERT (sizeof (ecma_object_t) <= sizeof (uint64_t),
-                     size_of_ecma_object_t_must_be_less_than_or_equal_to_8_bytes);
-JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) <= sizeof (uint64_t) * 2,
-                     size_of_ecma_extended_object_t_must_be_less_than_or_equal_to_16_bytes);
-
-JERRY_STATIC_ASSERT (sizeof (ecma_collection_header_t) == sizeof (uint64_t),
-                     size_of_ecma_collection_header_t_must_be_less_than_or_equal_to_8_bytes);
-JERRY_STATIC_ASSERT (sizeof (ecma_collection_chunk_t) == sizeof (uint64_t),
-                     size_of_ecma_collection_chunk_t_must_be_less_than_or_equal_to_8_bytes);
 JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t),
                      size_of_ecma_string_t_must_be_less_than_or_equal_to_8_bytes);
-JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t),
-                     size_of_ecma_getter_setter_pointers_t_must_be_less_than_or_equal_to_8_bytes);
 
 /** \addtogroup ecma ECMA
  * @{
@@ -67,20 +54,21 @@ JERRY_STATIC_ASSERT (sizeof (ecma_getter_setter_pointers_t) <= sizeof (uint64_t)
 #define ALLOC(ecma_type) ecma_ ## ecma_type ## _t * \
   ecma_alloc_ ## ecma_type (void) \
 { \
-  ecma_ ## ecma_type ## _t *p ## ecma_type = (ecma_ ## ecma_type ## _t *) jmem_pools_alloc (); \
+  ecma_ ## ecma_type ## _t *ecma_type ## _p; \
+  ecma_type ## _p = (ecma_ ## ecma_type ## _t *) jmem_pools_alloc (sizeof (ecma_ ## ecma_type ## _t)); \
   \
-  JERRY_ASSERT (p ## ecma_type != NULL); \
+  JERRY_ASSERT (ecma_type ## _p != NULL); \
   \
-  return p ## ecma_type; \
+  return ecma_type ## _p; \
 }
 
 /**
  * Deallocation routine template
  */
 #define DEALLOC(ecma_type) void \
-  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *p ## ecma_type) \
+  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *ecma_type ## _p) \
 { \
-  jmem_pools_free ((uint8_t *) p ## ecma_type); \
+  jmem_pools_free ((uint8_t *) ecma_type ## _p, sizeof (ecma_ ## ecma_type ## _t)); \
 }
 
 /**

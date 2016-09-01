@@ -43,9 +43,8 @@ JERRY_STATIC_ASSERT ((ECMA_VALUE_FULL_MASK + 1) == (1 << ECMA_VALUE_SHIFT),
 JERRY_STATIC_ASSERT (ECMA_VALUE_SHIFT <= JMEM_ALIGNMENT_LOG,
                      ecma_value_shift_must_be_less_than_or_equal_than_mem_alignment_log);
 
-JERRY_STATIC_ASSERT ((sizeof (ecma_value_t) * JERRY_BITSINBYTE)
-                     >= (sizeof (jmem_cpointer_t) * JERRY_BITSINBYTE + ECMA_VALUE_SHIFT),
-                     ecma_value_must_be_large_enough_to_store_compressed_pointers);
+JERRY_STATIC_ASSERT (sizeof (jmem_cpointer_t) <= sizeof (ecma_value_t),
+                     size_of_jmem_cpointer_t_must_be_less_or_equal_to_the_size_of_ecma_value_t);
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 

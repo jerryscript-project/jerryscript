@@ -29,9 +29,42 @@
  */
 
 /**
+ * Compressed pointer representations
+ *
+ * 16 bit representation:
+ *   The jmem_cpointer_t is defined as uint16_t
+ *   and it can contain any sixteen bit value.
+ *
+ * 32 bit representation:
+ *   The jmem_cpointer_t is defined as uint32_t.
+ *   The lower JMEM_ALIGNMENT_LOG bits must be zero.
+ *   The other bits can have any value.
+ *
+ * The 16 bit representation always encodes an offset from
+ * a heap base. The 32 bit representation currently encodes
+ * raw 32 bit JMEM_ALIGNMENT aligned pointers on 32 bit systems.
+ * This can be extended to encode a 32 bit offset from a heap
+ * base on 64 bit systems in the future. There are no plans
+ * to support more than 4G address space for JerryScript.
+ */
+
+/**
  * Compressed pointer
  */
+#ifdef JERRY_CPOINTER_32_BIT
+typedef uint32_t jmem_cpointer_t;
+#else /* !JERRY_CPOINTER_32_BIT */
 typedef uint16_t jmem_cpointer_t;
+#endif /* JERRY_CPOINTER_32_BIT */
+
+/**
+ * Width of compressed memory pointer
+ */
+#ifdef JERRY_CPOINTER_32_BIT
+#define JMEM_CP_WIDTH 32
+#else /* !JERRY_CPOINTER_32_BIT */
+#define JMEM_CP_WIDTH 16
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Representation of NULL value for compressed pointers
@@ -42,16 +75,6 @@ typedef uint16_t jmem_cpointer_t;
  * Required alignment for allocated units/blocks
  */
 #define JMEM_ALIGNMENT (1u << JMEM_ALIGNMENT_LOG)
-
-/**
- * Width of compressed memory pointer
- */
-#define JMEM_CP_WIDTH (JMEM_HEAP_OFFSET_LOG - JMEM_ALIGNMENT_LOG)
-
-/**
- * Compressed pointer value mask
- */
-#define JMEM_CP_MASK ((1ull << JMEM_CP_WIDTH) - 1)
 
 /**
  * Severity of a 'try give memory back' request
@@ -107,7 +130,7 @@ typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_seve
  * to specified non_compressed_pointer
  */
 #define JMEM_CP_SET_NON_NULL_POINTER(cp_value, non_compressed_pointer) \
-  (cp_value) = (jmem_compress_pointer (non_compressed_pointer) & JMEM_CP_MASK)
+  (cp_value) = jmem_compress_pointer (non_compressed_pointer)
 
 /**
  * Set value of compressed pointer so that it will correspond
@@ -131,7 +154,7 @@ typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_seve
 extern void jmem_init (void);
 extern void jmem_finalize (void);
 
-extern uintptr_t jmem_compress_pointer (const void *);
+extern jmem_cpointer_t jmem_compress_pointer (const void *);
 extern void *jmem_decompress_pointer (uintptr_t);
 
 extern void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t);

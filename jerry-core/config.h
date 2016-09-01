@@ -39,8 +39,6 @@
  */
 #ifndef CONFIG_MEM_HEAP_AREA_SIZE
 # define CONFIG_MEM_HEAP_AREA_SIZE (512 * 1024)
-#elif CONFIG_MEM_HEAP_AREA_SIZE > (512 * 1024)
-# error "Currently, maximum 512 kilobytes heap size is supported"
 #endif /* !CONFIG_MEM_HEAP_AREA_SIZE */
 
 /**
@@ -52,18 +50,6 @@
  * Desired limit of heap usage
  */
 #define CONFIG_MEM_HEAP_DESIRED_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_AREA_SIZE / 32, CONFIG_MEM_HEAP_MAX_LIMIT))
-
-/**
- * Log2 of maximum possible offset in the heap
- *
- * The option affects size of compressed pointer that in turn
- * affects size of ECMA Object Model's data types.
- *
- * In any case size of any of the types should not exceed CONFIG_MEM_POOL_CHUNK_SIZE.
- *
- * On the other hand, value 2 ^ CONFIG_MEM_HEAP_OFFSET_LOG should not be less than CONFIG_MEM_HEAP_AREA_SIZE.
- */
-#define CONFIG_MEM_HEAP_OFFSET_LOG (19)
 
 /**
  * Number of lower bits in key of literal hash table.

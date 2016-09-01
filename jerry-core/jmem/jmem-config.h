@@ -19,19 +19,9 @@
 #include "config.h"
 
 /**
- * Log2 of maximum possible offset in the heap
- */
-#define JMEM_HEAP_OFFSET_LOG (CONFIG_MEM_HEAP_OFFSET_LOG)
-
-/**
  * Size of heap
  */
 #define JMEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
-
-/**
- * Size of pool chunk
- */
-#define JMEM_POOL_CHUNK_SIZE ((size_t) (CONFIG_MEM_POOL_CHUNK_SIZE))
 
 /**
  * Logarithm of required alignment for allocated units/blocks

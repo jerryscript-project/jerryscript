@@ -30,9 +30,10 @@ const uint32_t test_iters = 1024;
 
 // Subiterations count
 #define TEST_MAX_SUB_ITERS  1024
+#define TEST_CHUNK_SIZE 8
 
 uint8_t *ptrs[TEST_MAX_SUB_ITERS];
-uint8_t data[TEST_MAX_SUB_ITERS][JMEM_POOL_CHUNK_SIZE];
+uint8_t data[TEST_MAX_SUB_ITERS][TEST_CHUNK_SIZE];
 
 int
 main ()
@@ -47,16 +48,16 @@ main ()
 
     for (size_t j = 0; j < subiters; j++)
     {
-      ptrs[j] = (uint8_t *) jmem_pools_alloc ();
+      ptrs[j] = (uint8_t *) jmem_pools_alloc (TEST_CHUNK_SIZE);
 
       if (ptrs[j] != NULL)
       {
-        for (size_t k = 0; k < JMEM_POOL_CHUNK_SIZE; k++)
+        for (size_t k = 0; k < TEST_CHUNK_SIZE; k++)
         {
           ptrs[j][k] = (uint8_t) (rand () % 256);
         }
 
-        memcpy (data[j], ptrs[j], JMEM_POOL_CHUNK_SIZE);
+        memcpy (data[j], ptrs[j], TEST_CHUNK_SIZE);
       }
     }
 
@@ -71,9 +72,9 @@ main ()
 
       if (ptrs[j] != NULL)
       {
-        TEST_ASSERT (!memcmp (data[j], ptrs[j], JMEM_POOL_CHUNK_SIZE));
+        TEST_ASSERT (!memcmp (data[j], ptrs[j], TEST_CHUNK_SIZE));
 
-        jmem_pools_free (ptrs[j]);
+        jmem_pools_free (ptrs[j], TEST_CHUNK_SIZE);
       }
     }
   }

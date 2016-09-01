@@ -348,7 +348,7 @@ lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with cha
   lit_utf8_byte_t c = buf_p[0];
   if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
   {
-    *code_point = (lit_code_point_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
+    *code_point = (ecma_char_t) (c & LIT_UTF8_LAST_7_BITS_MASK);
     return 1;
   }
 

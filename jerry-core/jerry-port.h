@@ -80,7 +80,7 @@ void jerry_port_fatal (jerry_fatal_code_t code);
  *
  * Example: a libc-based port may implement this with vprintf().
  */
-void jerry_port_console (const char *format, ...);
+void jerry_port_console (const char *format, ...) __attribute__ ((format (printf, 1, 2)));
 
 /**
  * Jerry log levels. The levels are in severity order
@@ -110,7 +110,7 @@ typedef enum
  * Example: a libc-based port may implement this with vfprintf(stderr) or
  * vfprintf(logfile), or both, depending on log level.
  */
-void jerry_port_log (jerry_log_level_t level, const char *format, ...);
+void jerry_port_log (jerry_log_level_t level, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 
 /*
  * Date Port API

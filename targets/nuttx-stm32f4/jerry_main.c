@@ -156,9 +156,9 @@ read_sources (const char *script_file_names[],
 } /* read_sources */
 
 /**
- * JerryScript debug level (0-3).
+ * JerryScript log level
  */
-static int jerry_debug_level;
+static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 
 /**
  * Main program.
@@ -171,7 +171,7 @@ int main (int argc, FAR char *argv[])
 int jerry_main (int argc, char *argv[])
 #endif
 {
-  if (argc >= JERRY_MAX_COMMAND_LINE_ARGS)
+  if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR,
                     "Too many command line arguments. Current maximum is %d\n",
@@ -204,7 +204,7 @@ int jerry_main (int argc, char *argv[])
     {
       if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
       {
-        jerry_debug_level = argv[i][0] - '0';
+        jerry_log_level = argv[i][0] - '0';
       }
       else
       {
@@ -276,7 +276,7 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
                 const char *format, /**< format string */
                 ...)  /**< parameters */
 {
-  if (level >= jerry_debug_level)
+  if (level <= jerry_log_level)
   {
     va_list args;
     va_start (args, format);

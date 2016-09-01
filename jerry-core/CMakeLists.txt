@@ -231,3 +231,7 @@ target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
 if (JERRY_LIBC)
   target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libc/include")
 endif()
+
+if (JERRY_LIBM)
+  target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libm/include")
+endif()

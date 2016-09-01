@@ -27,6 +27,7 @@ GETTING_STARTED_MD="01.GETTING-STARTED.md"
 API_REFERENCE_MD="02.API-REFERENCE.md"
 API_EXAMPLES_MD="03.API-EXAMPLE.md"
 INTERNALS_MD="04.INTERNALS.md"
+PORT_API_MD="05.PORT-API.md"
 
 declare -A titles
 
@@ -34,6 +35,7 @@ titles[$GETTING_STARTED_MD]="Getting Started"
 titles[$API_REFERENCE_MD]="API Reference"
 titles[$API_EXAMPLES_MD]="API Examples"
 titles[$INTERNALS_MD]="Internals"
+titles[$PORT_API_MD]="Port API"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`

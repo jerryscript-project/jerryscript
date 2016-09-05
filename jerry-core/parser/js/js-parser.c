@@ -1803,7 +1803,7 @@ static ecma_compiled_code_t *
 parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t size, /**< size of the source code */
                      int strict_mode, /**< strict mode */
-                     parser_error_location *error_location) /**< error location */
+                     parser_error_location_t *error_location_p) /**< error location */
 {
   parser_context_t context;
   ecma_compiled_code_t *compiled_code;
@@ -1811,9 +1811,9 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
   context.error = PARSER_ERR_NO_ERROR;
   context.allocated_buffer_p = NULL;
 
-  if (error_location != NULL)
+  if (error_location_p != NULL)
   {
-    error_location->error = PARSER_ERR_NO_ERROR;
+    error_location_p->error = PARSER_ERR_NO_ERROR;
   }
 
   context.status_flags = PARSER_NO_REG_STORE | PARSER_LEXICAL_ENV_NEEDED | PARSER_ARGUMENTS_NOT_NEEDED;
@@ -1907,11 +1907,11 @@ parser_parse_source (const uint8_t *source_p, /**< valid UTF-8 source code */
                          context.allocated_buffer_size);
     }
 
-    if (error_location != NULL)
+    if (error_location_p != NULL)
     {
-      error_location->error = context.error;
-      error_location->line = context.token.line;
-      error_location->column = context.token.column;
+      error_location_p->error = context.error;
+      error_location_p->line = context.token.line;
+      error_location_p->column = context.token.column;
     }
 
     compiled_code = NULL;
@@ -2221,6 +2221,13 @@ parser_raise_error (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (0);
 } /* parser_raise_error */
 
+#define PARSE_ERR_POS_START       " [line: "
+#define PARSE_ERR_POS_START_SIZE  ((uint32_t) sizeof (PARSE_ERR_POS_START) - 1)
+#define PARSE_ERR_POS_MIDDLE      ", column: "
+#define PARSE_ERR_POS_MIDDLE_SIZE ((uint32_t) sizeof (PARSE_ERR_POS_MIDDLE) - 1)
+#define PARSE_ERR_POS_END         "]"
+#define PARSE_ERR_POS_END_SIZE    ((uint32_t) sizeof (PARSE_ERR_POS_END))
+
 /**
  * Parse EcamScript source code
  *
@@ -2236,19 +2243,67 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
                      bool is_strict, /**< strict mode */
                      ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
 {
-  parser_error_location parse_error;
-  *bytecode_data_p = parser_parse_source (source_p, size, is_strict, &parse_error);
+  parser_error_location_t parser_error;
+  *bytecode_data_p = parser_parse_source (source_p, size, is_strict, &parser_error);
 
   if (!*bytecode_data_p)
   {
-    if (parse_error.error == PARSER_ERR_OUT_OF_MEMORY)
+    if (parser_error.error == PARSER_ERR_OUT_OF_MEMORY)
     {
       /* It is unlikely that memory can be allocated in an out-of-memory
        * situation. However, a simple value can still be thrown. */
       return ecma_make_error_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
     }
+#if JERRY_ENABLE_ERROR_MESSAGES
+    const char *err_str_p = parser_error_to_string (parser_error.error);
+    uint32_t err_str_size = lit_zt_utf8_string_size ((const lit_utf8_byte_t *) err_str_p);
 
-    return ecma_raise_syntax_error (parser_error_to_string (parse_error.error));
+    char line_str_p[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+    uint32_t line_len = ecma_uint32_to_utf8_string (parser_error.line,
+                                                    (lit_utf8_byte_t *) line_str_p,
+                                                    ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+
+    char col_str_p[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+    uint32_t col_len = ecma_uint32_to_utf8_string (parser_error.column,
+                                                   (lit_utf8_byte_t *) col_str_p,
+                                                   ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+
+    uint32_t msg_size = (err_str_size
+                         + line_len
+                         + col_len
+                         + PARSE_ERR_POS_START_SIZE
+                         + PARSE_ERR_POS_MIDDLE_SIZE
+                         + PARSE_ERR_POS_END_SIZE);
+
+    ecma_value_t error_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+    JMEM_DEFINE_LOCAL_ARRAY (error_msg_p, msg_size, char);
+    char *err_msg_pos_p = error_msg_p;
+
+    strncpy (err_msg_pos_p, err_str_p, err_str_size);
+    err_msg_pos_p += err_str_size;
+
+    strncpy (err_msg_pos_p, PARSE_ERR_POS_START, PARSE_ERR_POS_START_SIZE);
+    err_msg_pos_p += PARSE_ERR_POS_START_SIZE;
+
+    strncpy (err_msg_pos_p, line_str_p, line_len);
+    err_msg_pos_p += line_len;
+
+    strncpy (err_msg_pos_p, PARSE_ERR_POS_MIDDLE, PARSE_ERR_POS_MIDDLE_SIZE);
+    err_msg_pos_p += PARSE_ERR_POS_MIDDLE_SIZE;
+
+    strncpy (err_msg_pos_p, col_str_p, col_len);
+    err_msg_pos_p += col_len;
+
+    strncpy (err_msg_pos_p, PARSE_ERR_POS_END, PARSE_ERR_POS_END_SIZE);
+
+    error_value = ecma_raise_syntax_error (error_msg_p);
+    JMEM_FINALIZE_LOCAL_ARRAY (error_msg_p);
+
+    return error_value;
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+    return ecma_raise_syntax_error ("");
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
 
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);

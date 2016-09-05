@@ -126,7 +126,7 @@ typedef struct
   parser_error_t error;                               /**< error code */
   parser_line_counter_t line;                         /**< line where the error occured */
   parser_line_counter_t column;                       /**< column where the error occured */
-} parser_error_location;
+} parser_error_location_t;
 
 /* Note: source must be a valid UTF-8 string */
 extern ecma_value_t parser_parse_script (const uint8_t *, size_t, bool, ecma_compiled_code_t **);

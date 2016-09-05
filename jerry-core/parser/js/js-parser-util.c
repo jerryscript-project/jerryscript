@@ -639,8 +639,9 @@ parser_set_continues_to_current_position (parser_context_t *context_p, /**< cont
   }
 } /* parser_set_continues_to_current_position */
 
+#if JERRY_ENABLE_ERROR_MESSAGES
 /**
- * Returns with the striong representation of the error
+ * Returns with the string representation of the error
  */
 const char *
 parser_error_to_string (parser_error_t error) /**< error code */
@@ -925,13 +926,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     default:
     {
-      break;
+      JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);
+      return "No error.";
     }
   }
-
-  JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);
-  return "No error.";
 } /* parser_error_to_string */
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
 /**
  * @}

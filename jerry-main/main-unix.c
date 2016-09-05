@@ -85,7 +85,7 @@ assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< f
   }
   else
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script error: assertion failed\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: assertion failed\n");
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
 } /* assert_handler */
@@ -144,7 +144,7 @@ print_unhandled_exception (jerry_value_t error_value)
   }
   err_str_buf[err_str_size] = 0;
 
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: unhandled exception: %s\n", err_str_buf);
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
   jerry_release_value (err_str_val);
 } /* print_unhandled_exception */
 

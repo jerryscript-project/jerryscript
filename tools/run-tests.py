@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import argparse
+import os
 import subprocess
 import sys
 from settings import *
@@ -26,6 +27,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
 parser.add_argument('--outdir', action='store', default=OUTPUT_DIR, help='Specify output directory (default: %(default)s)')
 parser.add_argument('--check-signed-off', action='store_true', default=False, help='Run signed-off check')
+parser.add_argument('--check-signed-off-tolerant', action='store_true', default=False, help='Run signed-off check in tolerant mode')
+parser.add_argument('--check-signed-off-travis', action='store_true', default=False, help='Run signed-off check in tolerant mode if on Travis CI and not checking a pull request')
 parser.add_argument('--check-cppcheck', action='store_true', default=False, help='Run cppcheck')
 parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
 parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
@@ -180,7 +183,14 @@ def run_buildoption_test():
 def main():
     ret = 0
 
-    if script_args.all or script_args.check_signed_off:
+    if script_args.check_signed_off_tolerant:
+        ret = run_check([SIGNED_OFF_SCRIPT, '--tolerant'])
+
+    if not ret and script_args.check_signed_off_travis:
+        runnable = SIGNED_OFF_SCRIPT if os.getenv('TRAVIS_PULL_REQUEST', '0') != 'false' else [SIGNED_OFF_SCRIPT, '--tolerant']
+        ret = run_check(runnable)
+
+    if not ret and (script_args.all or script_args.check_signed_off):
         ret = run_check(SIGNED_OFF_SCRIPT)
 
     if not ret and (script_args.all or script_args.check_cppcheck):

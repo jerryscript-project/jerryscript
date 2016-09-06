@@ -193,7 +193,7 @@ main (int argc,
     }
     else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
     {
-      jerry_port_console ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
+      jerry_port_console ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
       return JERRY_STANDALONE_EXIT_CODE_OK;
     }
     else if (!strcmp ("--mem-stats", argv[i]))

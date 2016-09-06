@@ -21,7 +21,7 @@ project (${JERRY_NAME} C)
 # Jerry standalone
 set(SOURCE_JERRY_STANDALONE_MAIN main-unix.c)
 
-# Generage map file
+# Generate map file
 if("${PLATFORM}" STREQUAL "DARWIN")
   set(MAP_FILE_FLAGS "-Xlinker -map")
 else()
@@ -35,6 +35,19 @@ set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} ${MAP_FILE_FLAGS}")
 if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
   set(LINKER_FLAGS_STATIC "-static")
 endif()
+
+# Get version information from git
+if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
+  execute_process(COMMAND git rev-parse --short HEAD
+                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                  OUTPUT_VARIABLE JERRY_COMMIT_HASH
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(JERRY_COMMIT_HASH " (${JERRY_COMMIT_HASH})")
+else()
+  set(JERRY_COMMIT_HASH "")
+endif()
+
+set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_COMMIT_HASH="${JERRY_COMMIT_HASH}")
 
 add_executable(${JERRY_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
 set_property(TARGET ${JERRY_NAME}

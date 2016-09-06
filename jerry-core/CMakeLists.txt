@@ -112,33 +112,6 @@ endif()
 # Valgrind
 set(INCLUDE_THIRD_PARTY_VALGRIND "${CMAKE_SOURCE_DIR}/third-party/valgrind")
 
-# Definitions
-# Get version information from git
-if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
-  execute_process(COMMAND git symbolic-ref -q HEAD
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                  OUTPUT_VARIABLE JERRY_GIT_BRANCH
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND git rev-parse HEAD
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                  OUTPUT_VARIABLE JERRY_GIT_COMMIT
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
-  set(JERRY_GIT_BRANCH "UNDEFINED")
-  set(JERRY_GIT_COMMIT "UNDEFINED")
-endif()
-
-# Get build date
-execute_process(COMMAND date +%d/%m/%Y
-                OUTPUT_VARIABLE JERRY_BUILD_DATE
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-set(DEFINES_JERRY
-    ${DEFINES_JERRY}
-    JERRY_BUILD_DATE="${JERRY_BUILD_DATE}"
-    JERRY_COMMIT_HASH="${JERRY_GIT_COMMIT}"
-    JERRY_BRANCH_NAME="${JERRY_GIT_BRANCH}")
-
 # build mode specific compile/link flags
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_NDEBUG)

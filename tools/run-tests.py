@@ -16,7 +16,8 @@
 # limitations under the License.
 
 import argparse
-from subprocess import CalledProcessError
+import subprocess
+import sys
 from settings import *
 
 OUTPUT_DIR = path.join(PROJECT_DIR, 'build', 'tests')
@@ -39,7 +40,7 @@ if len(sys.argv) == 1:
 
 script_args = parser.parse_args()
 
-if os.path.isabs(script_args.outdir):
+if path.isabs(script_args.outdir):
     OUTPUT_DIR = script_args.outdir
 else:
     OUTPUT_DIR = path.join(PROJECT_DIR, script_args.outdir)
@@ -50,7 +51,7 @@ class Options:
     test_args = []
 
     def __init__(self, name = '', build_args = [], test_args = []):
-        self.out_dir = os.path.join(OUTPUT_DIR, name)
+        self.out_dir = path.join(OUTPUT_DIR, name)
         self.build_args = build_args
         self.build_args.append('--builddir=%s' % self.out_dir)
         self.test_args = test_args
@@ -108,10 +109,18 @@ def create_binary(buildoptions):
 
     try:
         script_output = subprocess.check_output(build_cmd)
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         return e.returncode
 
     return 0
+
+def run_check(runnable):
+    try:
+        ret = subprocess.check_call(runnable)
+    except subprocess.CalledProcessError as e:
+        return e.returncode
+
+    return ret
 
 def run_jerry_tests():
     ret_build = ret_test = 0

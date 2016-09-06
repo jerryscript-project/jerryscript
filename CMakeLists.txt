@@ -178,12 +178,13 @@ jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign
 jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  if(JERRY_LIBC)
-    jerry_add_compile_flags(-Werror)
-  endif()
   jerry_add_compile_warnings(logical-op)
 else()
   jerry_add_compile_flags(-Wno-nested-anon-types -Wno-static-in-inline)
+endif()
+
+if(JERRY_LIBC)
+  jerry_add_compile_flags(-Werror)
 endif()
 
 if(DEFINED EXTERNAL_COMPILE_FLAGS)

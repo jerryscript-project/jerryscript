@@ -267,7 +267,7 @@ rand (void)
   libc_random_gen_state[3] ^= libc_random_gen_state[3] >> 19;
   libc_random_gen_state[3] ^= intermediate;
 
-  return libc_random_gen_state[3] % (RAND_MAX + 1u);
+  return (int) (libc_random_gen_state[3] % (RAND_MAX + 1));
 } /* rand */
 
 /**

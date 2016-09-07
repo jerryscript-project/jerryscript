@@ -102,15 +102,15 @@ def generate_build_options(arguments):
 def configure_output_dir(arguments):
     global BUILD_DIR
 
-    if os.path.isabs(arguments.builddir):
+    if path.isabs(arguments.builddir):
         BUILD_DIR = arguments.builddir
     else:
         BUILD_DIR = path.join(PROJECT_DIR, arguments.builddir)
 
-    if arguments.clean and os.path.exists(BUILD_DIR):
+    if arguments.clean and path.exists(BUILD_DIR):
         shutil.rmtree(BUILD_DIR)
 
-    if not os.path.exists(BUILD_DIR):
+    if not path.exists(BUILD_DIR):
         makedirs(BUILD_DIR)
 
 def configure_build(arguments):

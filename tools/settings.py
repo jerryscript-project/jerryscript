@@ -15,10 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import subprocess
-import sys
-from subprocess import CalledProcessError
 from os import path
 
 TOOLS_DIR = path.dirname(path.abspath(__file__))
@@ -33,11 +29,3 @@ SIGNED_OFF_SCRIPT = path.join(TOOLS_DIR, 'check-signed-off.sh')
 VERA_SCRIPT = path.join(TOOLS_DIR, 'check-vera.sh')
 TEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-test-suite.sh')
 UNITTEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-unittests.sh')
-
-def run_check(runnable):
-    try:
-        ret = subprocess.check_call(runnable)
-    except CalledProcessError as e:
-        return e.returncode
-
-    return ret

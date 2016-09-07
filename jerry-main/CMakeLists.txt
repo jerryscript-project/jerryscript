@@ -17,23 +17,34 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_NAME jerry)
 project (${JERRY_NAME} C)
 
+# Optional build settings
+set(ENABLE_LINK_MAP    OFF CACHE BOOL "Enable generating a link map file?")
+set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
+
+if("${PLATFORM}" STREQUAL "DARWIN")
+  set(ENABLE_STATIC_LINK "OFF")
+endif()
+
+# Status messages
+message(STATUS "ENABLE_LINK_MAP           " ${ENABLE_LINK_MAP})
+message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
+
 # Sources
 # Jerry standalone
 set(SOURCE_JERRY_STANDALONE_MAIN main-unix.c)
 
 # Generate map file
-if("${PLATFORM}" STREQUAL "DARWIN")
-  set(MAP_FILE_FLAGS "-Xlinker -map")
-else()
-  set(MAP_FILE_FLAGS "-Xlinker -Map")
+if(ENABLE_LINK_MAP)
+  if("${PLATFORM}" STREQUAL "DARWIN")
+    set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -Xlinker -map -Xlinker jerry.map")
+  else()
+    set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -Xlinker -Map -Xlinker jerry.map")
+  endif()
 endif()
 
-set(MAP_FILE_FLAGS "${MAP_FILE_FLAGS} -Xlinker jerry.map")
-set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} ${MAP_FILE_FLAGS}")
-
 # Disable static build
-if(NOT ("${PLATFORM}" STREQUAL "DARWIN"))
-  set(LINKER_FLAGS_STATIC "-static")
+if(ENABLE_STATIC_LINK)
+  set(LINKER_FLAGS_COMMON "-static ${LINKER_FLAGS_COMMON}")
 endif()
 
 # Get version information from git
@@ -51,7 +62,7 @@ set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_COMMIT_HASH="${JERRY_COMMIT_HASH}")
 
 add_executable(${JERRY_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
 set_property(TARGET ${JERRY_NAME}
-             PROPERTY LINK_FLAGS "${LINKER_FLAGS_STATIC} ${LINKER_FLAGS_COMMON}")
+             PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
 target_compile_definitions(${JERRY_NAME} PRIVATE ${DEFINES_JERRY})
 target_include_directories(${JERRY_NAME} PRIVATE ${PORT_DIR})
 link_directories(${CMAKE_BINARY_DIR})

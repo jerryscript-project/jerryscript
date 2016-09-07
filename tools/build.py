@@ -57,6 +57,8 @@ def add_build_args(parser):
     parser.add_argument('--compiler-default-libc', choices=['on', 'off'], default='off', help='Use compiler-default libc (default: %(default)s)')
     parser.add_argument('--jerry-libm', choices=['on', 'off'], default='on', help='Build and use jerry-libm (default: %(default)s)')
     parser.add_argument('--jerry-cmdline', choices=['on', 'off'], default='on', help='Build jerry command line tool (default: %(default)s)')
+    parser.add_argument('--static-link', choices=['on', 'off'], default='on', help='Enable static linking of jerry command line tool (default: %(default)s)')
+    parser.add_argument('--link-map', choices=['on', 'off'], default='off', help='Enable the generation of a link map file for jerry command line tool (default: %(default)s)')
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -88,6 +90,8 @@ def generate_build_options(arguments):
     build_options.append('-DENABLE_LTO=%s' % arguments.lto.upper())
     build_options.append('-DENABLE_STRIP=%s' % arguments.strip.upper())
     build_options.append('-DUNITTESTS=%s' % arguments.unittests)
+    build_options.append('-DENABLE_STATIC_LINK=%s' % arguments.static_link.upper())
+    build_options.append('-DENABLE_LINK_MAP=%s' % arguments.link_map.upper())
 
     build_options.extend(arguments.cmake_param)
 

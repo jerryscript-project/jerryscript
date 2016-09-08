@@ -1017,7 +1017,11 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
         previous_start = current_position + 1;
       }
 
-      current_position++;
+      /* if not a continuation byte */
+      if ((*replace_str_curr_p & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
+      {
+        current_position++;
+      }
     }
 
     if (ecma_is_value_empty (ret_value))

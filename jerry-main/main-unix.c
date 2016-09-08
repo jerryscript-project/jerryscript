@@ -325,7 +325,7 @@ main (int argc,
 
   if (!is_assert_added)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Warning: failed to register 'assert' method.");
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register 'assert' method.");
   }
 
   jerry_value_t ret_value = jerry_create_undefined ();

@@ -30,6 +30,7 @@ TARGET_ZEPHYR_SRC_DIR = $(TARGET_ZEPHYR)/src
 
 TYPE  ?= jerry-core
 JERRYHEAP ?= 16
+JERRYPROFILE ?= minimal
 
 # Include functionality like regular expressions
 # check Jerry script documentation
@@ -118,7 +119,8 @@ endif
 	cmake -B$(INTERM) -H./ \
  	 -DENABLE_LTO=OFF \
 	 -DFEATURE_VALGRIND=OFF \
-	 -DFEATURE_PROFILE=minimal \
+	 -DFEATURE_PROFILE=$(JERRYPROFILE) \
+	 -DFEATURE_ERROR_MESSAGES=ON \
 	 -DCMAKE_BUILD_TYPE=Release \
 	 -DCMAKE_VERBOSE_MAKEFILE=$(V) \
 	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) \
@@ -131,7 +133,8 @@ endif
 	 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_external.cmake \
 	 -DFEATURE_SNAPSHOT_EXEC=OFF \
 	 -DENABLE_ALL_IN_ONE=OFF \
-	 -DJERRY_LIBC=OFF
+	 -DJERRY_LIBC=OFF \
+	 $(EXT_JERRY_FLAGS)
 
 	make -C $(INTERM) $(TYPE)$(VARIETY) V=1
 

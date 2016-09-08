@@ -37,3 +37,6 @@ set_property(TARGET ${JERRY_LIBM_NAME}
 
 target_include_directories(${JERRY_LIBM_NAME} PRIVATE ${INCLUDE_LIBM})
 target_include_directories(${JERRY_LIBM_NAME} INTERFACE ${INCLUDE_LIBM})
+
+install(TARGETS ${JERRY_LIBM_NAME} DESTINATION lib)
+install(DIRECTORY ${INCLUDE_LIBM}/ DESTINATION include/jerry-libm)

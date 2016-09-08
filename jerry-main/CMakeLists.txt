@@ -80,3 +80,5 @@ endif()
 set(JERRY_LIBS ${JERRY_LIBS} ${IMPORTED_LIB})
 
 target_link_libraries(${JERRY_NAME} ${JERRY_LIBS})
+
+install(TARGETS ${JERRY_NAME} DESTINATION bin)

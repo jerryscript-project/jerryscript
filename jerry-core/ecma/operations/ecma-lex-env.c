@@ -104,7 +104,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    return (ecma_op_object_get_property (binding_obj_p, name_p) != NULL);
+    return ecma_op_object_has_property (binding_obj_p, name_p);
   }
 } /* ecma_op_has_binding */
 
@@ -270,19 +270,21 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    if (ecma_op_object_get_property (binding_obj_p, name_p) == NULL)
+    ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
+
+    if (!ecma_is_value_found (result))
     {
       if (is_strict)
       {
-        return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+        result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
       }
       else
       {
-        return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       }
     }
 
-    return ecma_op_object_get (binding_obj_p, name_p);
+    return result;
   }
 } /* ecma_op_get_binding_value */
 

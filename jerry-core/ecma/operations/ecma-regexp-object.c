@@ -1311,11 +1311,9 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   if (input_buffer_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
     ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-    ecma_property_t *lastindex_prop_p = ecma_op_object_get_property (regexp_object_p, magic_str_p);
+    ecma_value_t lastindex_value = ecma_op_object_get_own_data_prop (regexp_object_p, magic_str_p);
 
-    ECMA_OP_TO_NUMBER_TRY_CATCH (lastindex_num,
-                                 ecma_get_named_data_property_value (lastindex_prop_p),
-                                 ret_value)
+    ECMA_OP_TO_NUMBER_TRY_CATCH (lastindex_num, lastindex_value, ret_value)
 
     index = ecma_number_to_int32 (lastindex_num);
 
@@ -1330,6 +1328,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     }
 
     ECMA_OP_TO_NUMBER_FINALIZE (lastindex_num);
+
+    ecma_fast_free_value (lastindex_value);
 
     ecma_deref_ecma_string (magic_str_p);
   }

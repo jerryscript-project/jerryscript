@@ -210,8 +210,6 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   {
     if (entry_p->object_cp != ECMA_NULL_POINTER && entry_p->prop_p == prop_p)
     {
-      JERRY_ASSERT (ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                               entry_p->prop_name_cp) == prop_name_p);
       JERRY_ASSERT (entry_p->object_cp == object_cp);
 
       ecma_lcache_invalidate_entry (entry_p);

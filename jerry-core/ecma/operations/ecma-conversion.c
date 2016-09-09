@@ -582,17 +582,17 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     // 3.
     ecma_string_t *enumerable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE);
 
-    if (ecma_op_object_get_property (obj_p, enumerable_magic_string_p) != NULL)
-    {
-      ECMA_TRY_CATCH (enumerable_prop_value,
-                      ecma_op_object_get (obj_p, enumerable_magic_string_p),
-                      ret_value);
+    ECMA_TRY_CATCH (enumerable_prop_value,
+                    ecma_op_object_find (obj_p, enumerable_magic_string_p),
+                    ret_value);
 
+    if (ecma_is_value_found (enumerable_prop_value))
+    {
       prop_desc.is_enumerable_defined = true;
       prop_desc.is_enumerable = ecma_op_to_boolean (enumerable_prop_value);
-
-      ECMA_FINALIZE (enumerable_prop_value);
     }
+
+    ECMA_FINALIZE (enumerable_prop_value);
 
     ecma_deref_ecma_string (enumerable_magic_string_p);
 
@@ -603,17 +603,17 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 4.
       ecma_string_t *configurable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE);
 
-      if (ecma_op_object_get_property (obj_p, configurable_magic_string_p) != NULL)
-      {
-        ECMA_TRY_CATCH (configurable_prop_value,
-                        ecma_op_object_get (obj_p, configurable_magic_string_p),
-                        ret_value);
+      ECMA_TRY_CATCH (configurable_prop_value,
+                      ecma_op_object_find (obj_p, configurable_magic_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (configurable_prop_value))
+      {
         prop_desc.is_configurable_defined = true;
         prop_desc.is_configurable = ecma_op_to_boolean (configurable_prop_value);
-
-        ECMA_FINALIZE (configurable_prop_value);
       }
+
+      ECMA_FINALIZE (configurable_prop_value);
 
       ecma_deref_ecma_string (configurable_magic_string_p);
     }
@@ -625,17 +625,17 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 5.
       ecma_string_t *value_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUE);
 
-      if (ecma_op_object_get_property (obj_p, value_magic_string_p) != NULL)
-      {
-        ECMA_TRY_CATCH (value_prop_value,
-                        ecma_op_object_get (obj_p, value_magic_string_p),
-                        ret_value);
+      ECMA_TRY_CATCH (value_prop_value,
+                      ecma_op_object_find (obj_p, value_magic_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (value_prop_value))
+      {
         prop_desc.is_value_defined = true;
         prop_desc.value = ecma_copy_value (value_prop_value);
-
-        ECMA_FINALIZE (value_prop_value);
       }
+
+      ECMA_FINALIZE (value_prop_value);
 
       ecma_deref_ecma_string (value_magic_string_p);
     }
@@ -647,17 +647,17 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 6.
       ecma_string_t *writable_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE);
 
-      if (ecma_op_object_get_property (obj_p, writable_magic_string_p) != NULL)
-      {
-        ECMA_TRY_CATCH (writable_prop_value,
-                        ecma_op_object_get (obj_p, writable_magic_string_p),
-                        ret_value);
+      ECMA_TRY_CATCH (writable_prop_value,
+                      ecma_op_object_find (obj_p, writable_magic_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (writable_prop_value))
+      {
         prop_desc.is_writable_defined = true;
         prop_desc.is_writable = ecma_op_to_boolean (writable_prop_value);
-
-        ECMA_FINALIZE (writable_prop_value);
       }
+
+      ECMA_FINALIZE (writable_prop_value);
 
       ecma_deref_ecma_string (writable_magic_string_p);
     }
@@ -669,12 +669,12 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       // 7.
       ecma_string_t *get_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GET);
 
-      if (ecma_op_object_get_property (obj_p, get_magic_string_p) != NULL)
-      {
-        ECMA_TRY_CATCH (get_prop_value,
-                        ecma_op_object_get (obj_p, get_magic_string_p),
-                        ret_value);
+      ECMA_TRY_CATCH (get_prop_value,
+                      ecma_op_object_find (obj_p, get_magic_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (get_prop_value))
+      {
         if (!ecma_op_is_callable (get_prop_value)
             && !ecma_is_value_undefined (get_prop_value))
         {
@@ -698,9 +698,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
             prop_desc.get_p = get_p;
           }
         }
-
-        ECMA_FINALIZE (get_prop_value);
       }
+
+      ECMA_FINALIZE (get_prop_value);
 
       ecma_deref_ecma_string (get_magic_string_p);
     }
@@ -713,12 +713,12 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
       ecma_string_t *set_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SET);
 
-      if (ecma_op_object_get_property (obj_p, set_magic_string_p) != NULL)
-      {
-        ECMA_TRY_CATCH (set_prop_value,
-                        ecma_op_object_get (obj_p, set_magic_string_p),
-                        ret_value);
+      ECMA_TRY_CATCH (set_prop_value,
+                      ecma_op_object_find (obj_p, set_magic_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (set_prop_value))
+      {
         if (!ecma_op_is_callable (set_prop_value)
             && !ecma_is_value_undefined (set_prop_value))
         {
@@ -742,9 +742,9 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
             prop_desc.set_p = set_p;
           }
         }
-
-        ECMA_FINALIZE (set_prop_value);
       }
+
+      ECMA_FINALIZE (set_prop_value);
 
       ecma_deref_ecma_string (set_magic_string_p);
     }

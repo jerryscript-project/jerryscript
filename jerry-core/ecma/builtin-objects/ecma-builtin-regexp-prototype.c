@@ -72,7 +72,6 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   }
   else
   {
-    ecma_string_t *pattern_string_p = NULL;
     uint16_t flags = 0;
 
     if (ecma_is_value_object (pattern_arg)
@@ -89,38 +88,43 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         /* Get source. */
         ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
-        ecma_property_t *prop_p = ecma_op_object_get_property (target_p, magic_string_p);
-        pattern_string_p = ecma_get_string_from_value (ecma_get_named_data_property_value (prop_p));
+        ecma_value_t source_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
         ecma_deref_ecma_string (magic_string_p);
+        ecma_string_t *pattern_string_p = ecma_get_string_from_value (source_value);
 
         /* Get flags. */
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
-        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
+        ecma_value_t global_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
+        ecma_deref_ecma_string (magic_string_p);
 
-        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        JERRY_ASSERT (ecma_is_value_boolean (global_value));
+
+        if (ecma_is_value_true (global_value))
         {
           flags |= RE_FLAG_GLOBAL;
         }
 
-        ecma_deref_ecma_string (magic_string_p);
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
-        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
+        ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
+        ecma_deref_ecma_string (magic_string_p);
 
-        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
+
+        if (ecma_is_value_true (ignore_case_value))
         {
           flags |= RE_FLAG_IGNORE_CASE;
         }
 
-        ecma_deref_ecma_string (magic_string_p);
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
-        prop_p = ecma_op_object_get_property (target_p, magic_string_p);
+        ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
+        ecma_deref_ecma_string (magic_string_p);
 
-        if (ecma_is_value_true (ecma_get_named_data_property_value (prop_p)))
+        JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
+
+        if (ecma_is_value_true (multiline_value))
         {
           flags |= RE_FLAG_MULTILINE;
         }
-
-        ecma_deref_ecma_string (magic_string_p);
 
         ECMA_TRY_CATCH (obj_this, ecma_op_to_object (this_arg), ret_value);
         ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
@@ -135,6 +139,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         ecma_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
         /* Should always succeed, since we're compiling from a source that has been compiled previously. */
         JERRY_ASSERT (ecma_is_value_empty (bc_comp));
+
+        ecma_deref_ecma_string (pattern_string_p);
 
         re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, *bc_prop_p);
 
@@ -155,6 +161,8 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
     }
     else
     {
+      ecma_string_t *pattern_string_p = NULL;
+
       /* Get source string. */
       if (!ecma_is_value_undefined (pattern_arg))
       {
@@ -365,12 +373,13 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
     /* Get RegExp source from the source property */
     ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
-    ecma_property_t *source_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_value_t source_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
     ecma_string_t *src_sep_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SLASH_CHAR);
-    ecma_string_t *source_str_p = ecma_get_string_from_value (ecma_get_named_data_property_value (source_prop_p));
+    ecma_string_t *source_str_p = ecma_get_string_from_value (source_value);
     ecma_string_t *output_str_p = ecma_concat_ecma_strings (src_sep_str_p, source_str_p);
+    ecma_deref_ecma_string (source_str_p);
 
     ecma_string_t *concat_p = ecma_concat_ecma_strings (output_str_p, src_sep_str_p);
     ecma_deref_ecma_string (src_sep_str_p);
@@ -379,10 +388,12 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
     /* Check the global flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
-    ecma_property_t *global_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_value_t global_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (ecma_get_named_data_property_value (global_prop_p)))
+    JERRY_ASSERT (ecma_is_value_boolean (global_value));
+
+    if (ecma_is_value_true (global_value))
     {
       ecma_string_t *g_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_G_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, g_flag_str_p);
@@ -393,10 +404,12 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
     /* Check the ignoreCase flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
-    ecma_property_t *ignorecase_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (ecma_get_named_data_property_value (ignorecase_prop_p)))
+    JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
+
+    if (ecma_is_value_true (ignore_case_value))
     {
       ecma_string_t *ic_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_I_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, ic_flag_str_p);
@@ -405,12 +418,14 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
       output_str_p = concat_p;
     }
 
-    /* Check the global flag */
+    /* Check the multiline flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
-    ecma_property_t *multiline_prop_p = ecma_op_object_get_property (obj_p, magic_string_p);
+    ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
     ecma_deref_ecma_string (magic_string_p);
 
-    if (ecma_is_value_true (ecma_get_named_data_property_value (multiline_prop_p)))
+    JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
+
+    if (ecma_is_value_true (multiline_value))
     {
       ecma_string_t *m_flag_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_M_CHAR);
       concat_p = ecma_concat_ecma_strings (output_str_p, m_flag_str_p);

@@ -21,6 +21,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-arguments.h"
@@ -265,108 +266,43 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-static ecma_value_t
-ecma_arguments_get_mapped_arg_value (ecma_object_t *map_p, /**< [[ParametersMap]] object */
-                                     ecma_property_t *arg_name_prop_p) /**< property of [[ParametersMap]]
-                                                                            corresponding to index and value
-                                                                            equal to mapped argument's name */
+void
+ecma_arguments_update_mapped_arg_value (ecma_object_t *object_p, /**< the object */
+                                        ecma_string_t *property_name_p, /**< property name */
+                                        ecma_property_t *property_p) /**< property value */
 {
+  ecma_value_t *map_prop_p = ecma_get_internal_property (object_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
+  ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
+
+  ecma_value_t arg_name = ecma_op_object_find (map_p, property_name_p);
+
+  if (!ecma_is_value_found (arg_name))
+  {
+    return;
+  }
+
   ecma_value_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
   ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *scope_prop_p);
 
   JERRY_ASSERT (lex_env_p != NULL
                 && ecma_is_lexical_environment (lex_env_p));
 
-  ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (arg_name_prop_p);
+  ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name);
+  ecma_value_t value = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
+  ecma_deref_ecma_string (arg_name_p);
 
-  ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (value));
 
-  ecma_value_t completion = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion));
+  ecma_named_data_property_assign_value (object_p, property_p, value);
+  ecma_free_value (value);
 
-  return completion;
-} /* ecma_arguments_get_mapped_arg_value */
-
-/**
- * [[Get]] ecma Arguments object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 10.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_arguments_object_get (ecma_object_t *obj_p, /**< the object */
-                              ecma_string_t *property_name_p) /**< property name */
-{
-  // 1.
-  ecma_value_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
-
-  // 2.
-  ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
-
-  // 3.
-  if (mapped_prop_p == NULL)
+  /* These properties cannot be cached. This is a temporary
+   * workaround until the property management is fully rewritten. */
+  if (ecma_is_property_lcached (property_p))
   {
-    /* We don't check for 'caller' (item 3.b) here, because the 'caller' property is defined
-       as non-configurable and it's get/set are set to [[ThrowTypeError]] object */
-
-    return ecma_op_general_object_get (obj_p, property_name_p);
+    ecma_lcache_invalidate (object_p, property_name_p, property_p);
   }
-  else
-  {
-    // 4.
-    return ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
-  }
-} /* ecma_op_arguments_object_get */
-
-/**
- * [[GetOwnProperty]] ecma Arguments object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 10.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_property_t *
-ecma_op_arguments_object_get_own_property (ecma_object_t *obj_p, /**< the object */
-                                           ecma_string_t *property_name_p) /**< property name */
-{
-  // 1.
-  ecma_property_t *desc_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
-
-  // 2.
-  if (desc_p == NULL)
-  {
-    return desc_p;
-  }
-
-  // 3.
-  ecma_value_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
-  ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
-
-  // 4.
-  ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
-
-  // 5.
-  if (mapped_prop_p != NULL)
-  {
-    // a.
-    ecma_value_t completion = ecma_arguments_get_mapped_arg_value (map_p, mapped_prop_p);
-
-    ecma_named_data_property_assign_value (obj_p, desc_p, completion);
-
-    ecma_free_value (completion);
-  }
-
-  // 6.
-  return desc_p;
-} /* ecma_op_arguments_object_get_own_property */
+} /* ecma_arguments_update_mapped_arg_value */
 
 /**
  * [[DefineOwnProperty]] ecma Arguments object's operation
@@ -389,9 +325,6 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
   ecma_value_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
   ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
 
-  // 2.
-  ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
-
   // 3.
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -403,7 +336,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
                   ret_value);
 
   // 5.
-  if (mapped_prop_p != NULL)
+  if (ecma_op_object_has_own_property (map_p, property_name_p))
   {
     // a.
     if (property_desc_p->is_get_defined
@@ -485,9 +418,6 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
   ecma_value_t *map_prop_p = ecma_get_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
   ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
 
-  // 2.
-  ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
-
   // 3.
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -499,7 +429,7 @@ ecma_op_arguments_object_delete (ecma_object_t *obj_p, /**< the object */
 
   if (ecma_is_value_true (delete_in_args_ret))
   {
-    if (mapped_prop_p != NULL)
+    if (ecma_op_object_has_own_property (map_p, property_name_p))
     {
       ecma_value_t delete_in_map_completion = ecma_op_object_delete (map_p, property_name_p, false);
       JERRY_ASSERT (ecma_is_value_true (delete_in_map_completion));

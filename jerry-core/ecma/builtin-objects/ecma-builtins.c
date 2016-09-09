@@ -622,7 +622,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       ecma_string_t *name_p = ecma_get_magic_string (curr_property_p->magic_string_id);
 
-      if (!was_instantiated || ecma_op_object_get_own_property (object_p, name_p) != NULL)
+      if (!was_instantiated || ecma_op_object_has_own_property (object_p, name_p))
       {
         ecma_append_to_values_collection (for_non_enumerable_p,
                                           ecma_make_string_value (name_p),

@@ -2169,8 +2169,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             lit_utf8_byte_t *data_ptr = chunk_p->data;
             ecma_string_t *prop_name_p = ecma_get_string_from_value (*(ecma_value_t *) data_ptr);
 
-            if (ecma_op_object_get_property (ecma_get_object_from_value (stack_top_p[-3]),
-                                             prop_name_p) == NULL)
+            if (!ecma_op_object_has_property (ecma_get_object_from_value (stack_top_p[-3]),
+                                              prop_name_p))
             {
               stack_top_p[-2] = chunk_p->next_chunk_cp;
               ecma_deref_ecma_string (prop_name_p);

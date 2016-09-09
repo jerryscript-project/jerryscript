@@ -20,6 +20,7 @@
 #include "ecma-globals.h"
 #include "ecma-function-object.h"
 #include "ecma-lcache.h"
+#include "ecma-lex-env.h"
 #include "ecma-string-object.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
@@ -54,40 +55,6 @@
 #else /* JERRY_NDEBUG */
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type)
 #endif /* !JERRY_NDEBUG */
-
-/**
- * [[Get]] ecma object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_object_get (ecma_object_t *obj_p, /**< the object */
-                    ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT (property_name_p != NULL);
-
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-
-  if (unlikely (type == ECMA_OBJECT_TYPE_ARGUMENTS))
-  {
-    return ecma_op_arguments_object_get (obj_p, property_name_p);
-  }
-
-  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL
-                || type == ECMA_OBJECT_TYPE_FUNCTION
-                || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
-                || type == ECMA_OBJECT_TYPE_ARRAY
-                || type == ECMA_OBJECT_TYPE_STRING
-                || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
-
-  return ecma_op_general_object_get (obj_p, property_name_p);
-} /* ecma_op_object_get */
 
 /**
  * Long path for ecma_op_object_get_own_property
@@ -132,8 +99,12 @@ ecma_op_object_get_own_property_longpath (ecma_object_t *obj_p, /**< the object 
 
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      prop_p = ecma_op_arguments_object_get_own_property (obj_p, property_name_p);
+      prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
 
+      if (prop_p != NULL)
+      {
+        ecma_arguments_update_mapped_arg_value (obj_p, property_name_p, prop_p);
+      }
       break;
     }
 
@@ -178,10 +149,8 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
   {
     return prop_p;
   }
-  else
-  {
-    return ecma_op_object_get_own_property_longpath (obj_p, property_name_p);
-  }
+
+  return ecma_op_object_get_own_property_longpath (obj_p, property_name_p);
 } /* ecma_op_object_get_own_property */
 
 /**
@@ -194,33 +163,202 @@ ecma_op_object_get_own_property (ecma_object_t *obj_p, /**< the object */
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
 ecma_property_t *
-ecma_op_object_get_property (ecma_object_t *obj_p, /**< the object */
+ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
+  /* Circular reference is possible in JavaScript and testing it is complicated. */
+  int max_depth = 128;
+
+  do
+  {
+    ecma_property_t *property_p = ecma_op_object_get_own_property (object_p, property_name_p);
+
+    if (property_p != NULL)
+    {
+      return property_p;
+    }
+
+    if (--max_depth == 0)
+    {
+      break;
+    }
+
+    object_p = ecma_get_object_prototype (object_p);
+  }
+  while (object_p != NULL);
+
+  return NULL;
+} /* ecma_op_object_get_property */
+
+/**
+ * Checks whether an object (excluding prototypes) has a named property
+ *
+ * @return true if property is found
+ *         false otherwise
+ */
+inline bool __attr_always_inline___
+ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
+                                 ecma_string_t *property_name_p) /**< property name */
+{
+  return ecma_op_object_get_own_property (object_p, property_name_p) != NULL;
+} /* ecma_op_object_has_own_property */
+
+/**
+ * Checks whether an object (including prototypes) has a named property
+ *
+ * @return true if property is found
+ *         false otherwise
+ */
+inline bool __attr_always_inline___
+ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
+                             ecma_string_t *property_name_p) /**< property name */
+{
+  return ecma_op_object_get_property (object_p, property_name_p) != NULL;
+} /* ecma_op_object_has_property */
+
+/**
+ * Search the value corresponding to a property name
+ *
+ * Note: search includes prototypes
+ *
+ * @return ecma value if property is found
+ *         ECMA_SIMPLE_VALUE_NOT_FOUND if property is not found
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_find_own (ecma_object_t *object_p, /**< the object */
+                         ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT (object_p != NULL
+                && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
+  if (unlikely (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARGUMENTS))
+  {
+    ecma_value_t *map_prop_p = ecma_get_internal_property (object_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
+    ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
 
-  /*
-   * typedef ecma_property_t * (*get_property_ptr_t) (ecma_object_t *, ecma_string_t *);
-   * static const get_property_ptr_t get_property [ECMA_OBJECT_TYPE__COUNT] =
-   * {
-   *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_get_property,
-   *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_get_property
-   * };
-   *
-   * return get_property[type] (obj_p, property_name_p);
-   */
+    ecma_value_t arg_name = ecma_op_object_find_own (map_p, property_name_p);
 
-  return ecma_op_general_object_get_property (obj_p, property_name_p);
-} /* ecma_op_object_get_property */
+    if (ecma_is_value_found (arg_name))
+    {
+      ecma_value_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
+      ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *scope_prop_p);
+
+      JERRY_ASSERT (lex_env_p != NULL
+                    && ecma_is_lexical_environment (lex_env_p));
+
+      ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name);
+      ecma_value_t result = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
+      ecma_deref_ecma_string (arg_name_p);
+      return result;
+    }
+  }
+
+  ecma_property_t *property_p = ecma_op_object_get_own_property (object_p, property_name_p);
+
+  if (property_p == NULL)
+  {
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+  }
+
+  if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+  {
+    return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+  }
+
+  ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (property_p);
+
+  if (getter_p == NULL)
+  {
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  return ecma_op_function_call (getter_p, ecma_make_object_value (object_p), NULL, 0);
+} /* ecma_op_object_find_own */
+
+/**
+ * Search the value corresponding to a property name
+ *
+ * Note: search includes prototypes
+ *
+ * @return ecma value if property is found
+ *         ECMA_SIMPLE_VALUE_NOT_FOUND if property is not found
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_find (ecma_object_t *object_p, /**< the object */
+                     ecma_string_t *property_name_p) /**< property name */
+{
+  /* Circular reference is possible in JavaScript and testing it is complicated. */
+  int max_depth = 128;
+
+  do
+  {
+    ecma_value_t value = ecma_op_object_find_own (object_p, property_name_p);
+
+    if (ecma_is_value_found (value))
+    {
+      return value;
+    }
+
+    if (--max_depth == 0)
+    {
+      break;
+    }
+
+    object_p = ecma_get_object_prototype (object_p);
+  }
+  while (object_p != NULL);
+
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+} /* ecma_op_object_find */
+
+/**
+ * Get own property by name
+ *
+ * Note: property must be an existing data property
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+inline ecma_value_t __attr_always_inline___
+ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
+                                  ecma_string_t *property_name_p) /**< property name */
+{
+#ifndef JERRY_NDEBUG
+  ecma_property_t *property_p = ecma_op_object_get_own_property (object_p, property_name_p);
+
+  JERRY_ASSERT (property_p != NULL
+                && ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+                && !ecma_is_property_configurable (property_p));
+#endif /* !JERRY_NDEBUG */
+
+  return ecma_op_object_find (object_p, property_name_p);
+} /* ecma_op_object_get_own_data_prop */
+
+/**
+ * [[Get]] ecma object's operation
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get (ecma_object_t *object_p, /**< the object */
+                    ecma_string_t *property_name_p) /**< property name */
+{
+  ecma_value_t value = ecma_op_object_find (object_p, property_name_p);
+
+  if (!ecma_is_value_found (value))
+  {
+    value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  return value;
+} /* ecma_op_object_get */
 
 /**
  * [[Put]] ecma object's operation

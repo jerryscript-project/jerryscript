@@ -120,6 +120,7 @@ extern bool ecma_is_value_null (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_boolean (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_true (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_false (ecma_value_t) __attr_pure___;
+extern bool ecma_is_value_found (ecma_value_t) __attr_pure___;
 extern bool ecma_is_value_array_hole (ecma_value_t) __attr_pure___;
 
 extern bool ecma_is_value_integer_number (ecma_value_t) __attr_pure___;

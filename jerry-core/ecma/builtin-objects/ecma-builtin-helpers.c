@@ -353,16 +353,15 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
       ecma_string_t *array_index_string_p = ecma_new_ecma_string_from_uint32 (array_index);
 
       /* 5.b.iii.2 */
-      if (ecma_op_object_get_property (ecma_get_object_from_value (value),
-                                       array_index_string_p) != NULL)
-      {
-        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
+      ECMA_TRY_CATCH (get_value,
+                      ecma_op_object_find (ecma_get_object_from_value (value),
+                                           array_index_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (get_value))
+      {
         /* 5.b.iii.3.a */
-        ECMA_TRY_CATCH (get_value,
-                        ecma_op_object_get (ecma_get_object_from_value (value),
-                                            array_index_string_p),
-                        ret_value);
+        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
 
         /* 5.b.iii.3.b */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
@@ -375,10 +374,10 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
                                                               false); /* Failure handling */
 
         JERRY_ASSERT (ecma_is_value_true (put_comp));
-
-        ECMA_FINALIZE (get_value);
         ecma_deref_ecma_string (new_array_index_string_p);
       }
+
+      ECMA_FINALIZE (get_value);
 
       ecma_deref_ecma_string (array_index_string_p);
     }

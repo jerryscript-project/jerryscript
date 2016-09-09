@@ -228,7 +228,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
     ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (str_left_value);
     ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
 
-    if (ecma_op_object_get_property (right_value_obj_p, left_value_prop_name_p) != NULL)
+    if (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p))
     {
       ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
     }

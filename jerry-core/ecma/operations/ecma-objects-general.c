@@ -130,60 +130,6 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
 } /* ecma_op_create_object_object_noarg_and_set_prototype */
 
 /**
- * [[Get]] ecma general object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 8.12.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_general_object_get (ecma_object_t *obj_p, /**< the object */
-                            ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT (property_name_p != NULL);
-
-  // 1.
-  const ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, property_name_p);
-
-  // 2.
-  if (prop_p == NULL)
-  {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-
-  // 3.
-  if (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
-  {
-    return ecma_copy_value (ecma_get_named_data_property_value (prop_p));
-  }
-  else
-  {
-    // 4.
-    ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (prop_p);
-
-    // 5.
-    if (getter_p == NULL)
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-    }
-    else
-    {
-      return ecma_op_function_call (getter_p,
-                                    ecma_make_object_value (obj_p),
-                                    NULL,
-                                    0);
-    }
-  }
-
-  JERRY_UNREACHABLE ();
-} /* ecma_op_general_object_get */
-
-/**
  * [[GetOwnProperty]] ecma general object's operation
  *
  * See also:
@@ -203,47 +149,6 @@ ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object *
 
   return ecma_find_named_property (obj_p, property_name_p);
 } /* ecma_op_general_object_get_own_property */
-
-/**
- * [[GetProperty]] ecma general object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 8.12.2
- *
- * @return pointer to a property - if it exists,
- *         NULL (i.e. ecma-undefined) - otherwise.
- */
-ecma_property_t *
-ecma_op_general_object_get_property (ecma_object_t *obj_p, /**< the object */
-                                     ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT (property_name_p != NULL);
-
-  // 1.
-  ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, property_name_p);
-
-  // 2.
-  if (prop_p != NULL)
-  {
-    return prop_p;
-  }
-
-  // 3.
-  ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
-
-  // 4., 5.
-  if (prototype_p != NULL)
-  {
-    return ecma_op_object_get_property (prototype_p, property_name_p);
-  }
-  else
-  {
-    return NULL;
-  }
-} /* ecma_op_general_object_get_property */
 
 /**
  * [[Put]] ecma general object's operation

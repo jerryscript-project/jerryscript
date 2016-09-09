@@ -222,6 +222,18 @@ ecma_is_value_false (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_false */
 
 /**
+ * Check if the value is not found.
+ *
+ * @return true - if the value contains ecma-not-found simple value,
+ *         false - otherwise.
+ */
+inline bool __attr_pure___ __attr_always_inline___
+ecma_is_value_found (ecma_value_t value) /**< ecma value */
+{
+  return value != ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+} /* ecma_is_value_found */
+
+/**
  * Check if the value is array hole.
  *
  * @return true - if the value contains ecma-array-hole simple value,

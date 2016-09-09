@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import argparse
+import multiprocessing
 import shutil
 import subprocess
 import sys
@@ -43,6 +44,7 @@ def get_arguments():
     parser = argparse.ArgumentParser(parents=[devhelp_preparser])
     parser.add_argument('-v', '--verbose', action='store_const', const='ON', default='OFF', help='increase verbosity')
     parser.add_argument('--clean', action='store_true', default=False, help='clean build')
+    parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1, help='Allowed N build jobs at once (default: %(default)s)')
     parser.add_argument('--debug', action='store_const', const='Debug', default='Release', dest='build_type', help='debug build')
     parser.add_argument('--builddir', metavar='DIR', action='store', default=BUILD_DIR, help='specify output directory (default: %(default)s)')
     parser.add_argument('--lto', metavar='X', choices=['on', 'off'], default='on', help='enable link-time optimizations (%(choices)s; default: %(default)s)')
@@ -142,7 +144,7 @@ def configure_build(arguments):
     return subprocess.call(cmake_cmd)
 
 def build_jerry(arguments):
-    return subprocess.call(['make', '--no-print-directory','-j', '-C', BUILD_DIR])
+    return subprocess.call(['make', '--no-print-directory','-j', str(arguments.jobs), '-C', BUILD_DIR])
 
 def print_result(ret):
     print('=' * 30)

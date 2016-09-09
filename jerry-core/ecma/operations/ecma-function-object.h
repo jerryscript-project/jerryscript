@@ -37,6 +37,9 @@ ecma_op_function_list_lazy_property_names (bool,
                                            ecma_collection_header_t *,
                                            ecma_collection_header_t *);
 
+extern ecma_property_t *
+ecma_op_function_try_lazy_instantiate_property (ecma_object_t *, ecma_string_t *);
+
 extern ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_pointer_t);
 

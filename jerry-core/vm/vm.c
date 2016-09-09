@@ -85,7 +85,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       }
 
       /* There is no need to free the name. */
-      return ecma_op_get_value_object_base (object, property_name_p);
+      return ecma_op_object_get (ecma_get_object_from_value (object), property_name_p);
     }
   }
 

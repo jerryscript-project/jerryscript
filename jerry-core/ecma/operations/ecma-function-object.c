@@ -277,7 +277,7 @@ ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true -
  * @return pointer to newly instantiated property, if a property was instantiated,
  *         NULL - otherwise
  */
-static ecma_property_t *
+ecma_property_t *
 ecma_op_function_try_lazy_instantiate_property (ecma_object_t *obj_p, /**< the function object */
                                                 ecma_string_t *property_name_p) /**< property name */
 {

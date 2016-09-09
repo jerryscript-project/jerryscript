@@ -208,3 +208,6 @@ endif()
 if (JERRY_LIBM)
   target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libm/include")
 endif()
+
+install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
+install(FILES jerry-api.h jerry-port.h DESTINATION include)

@@ -91,8 +91,7 @@ jerry_buildoptions = [
                       Options('buildoption_test-mem_stats', ['--mem-stats=on']),
                       Options('buildoption_test-show_opcodes', ['--show-opcodes=on']),
                       Options('buildoption_test-show_regexp_opcodes', ['--show-regexp-opcodes=on']),
-                      Options('buildoption_test-jerry_libc', ['--jerry-libc=on', '--compiler-default-libc=off']),
-                      Options('buildoption_test-compiler_default_libc', ['--compiler-default-libc=on', '--jerry-libc=off']),
+                      Options('buildoption_test-compiler_default_libc', ['--jerry-libc=off']),
                      ]
 
 def get_bin_dir_path(out_dir):

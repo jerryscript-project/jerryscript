@@ -36,19 +36,7 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
 
   link_directories(${CMAKE_BINARY_DIR})
 
-  set(JERRY_LIBS jerry-core)
-
-  if(JERRY_LIBM)
-    set(JERRY_LIBS ${JERRY_LIBS} jerry-libm)
-  endif()
-
-  if(JERRY_LIBC)
-    set(JERRY_LIBS ${JERRY_LIBS} jerry-libc)
-  endif()
-
-  set(JERRY_LIBS ${JERRY_LIBS} ${IMPORTED_LIB})
-
-  target_link_libraries(${TARGET_NAME} ${JERRY_LIBS})
+  target_link_libraries(${TARGET_NAME} jerry-core)
 
   add_dependencies(unittests ${TARGET_NAME})
 endforeach()

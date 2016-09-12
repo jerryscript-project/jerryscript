@@ -187,8 +187,7 @@ def main():
         ret = run_check([SIGNED_OFF_SCRIPT, '--tolerant'])
 
     if not ret and script_args.check_signed_off_travis:
-        runnable = SIGNED_OFF_SCRIPT if os.getenv('TRAVIS_PULL_REQUEST', '0') != 'false' else [SIGNED_OFF_SCRIPT, '--tolerant']
-        ret = run_check(runnable)
+        ret = run_check([SIGNED_OFF_SCRIPT, '--travis'])
 
     if not ret and (script_args.all or script_args.check_signed_off):
         ret = run_check(SIGNED_OFF_SCRIPT)

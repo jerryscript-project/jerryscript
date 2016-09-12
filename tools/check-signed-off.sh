@@ -18,7 +18,7 @@
 # Usage
 function print_usage
 {
- echo "Usage: $0 [--help] [--tolerant]"
+ echo "Usage: $0 [--help] [--tolerant] [--travis]"
 }
 
 function print_help
@@ -32,6 +32,8 @@ function print_help
  echo "  --tolerant        check the existence of the message only but don't"
  echo "                    require the name and email address to match the author"
  echo "                    of the commit"
+ echo "  --travis          perform check in tolerant mode if on Travis CI and not"
+ echo "                    checking a pull request, perform strict check otherwise"
  echo ""
  echo "The last line of every commit message must follow the form of:"
  echo "'JerryScript-DCO-1.0-Signed-off-by: NAME EMAIL', where NAME and EMAIL must"
@@ -50,6 +52,18 @@ do
  elif [ "$1" == "--tolerant" ]
  then
   TOLERANT="yes"
+  shift
+ elif [ "$1" == "--travis" ]
+ then
+  if [ "$TRAVIS_PULL_REQUEST" == "" ]
+  then
+   echo -e "\e[1;33mWarning! Travis-tolerant mode requested but not running on Travis CI! \e[0m"
+  elif [ "$TRAVIS_PULL_REQUEST" == "false" ]
+  then
+   TOLERANT="yes"
+  else
+   TOLERANT="no"
+  fi
   shift
  else
   print_usage

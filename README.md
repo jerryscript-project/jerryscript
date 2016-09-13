@@ -13,7 +13,7 @@ Key characteristics of JerryScript:
 * Snapshot support for precompiling JavaScript source code to byte code
 * Mature C API, easy to embed in applications
 
-Additional information can be found on our [project page](http://samsung.github.io/jerryscript) and [Wiki](https://github.com/Samsung/jerryscript/wiki).
+Additional information can be found on our [project page](http://jerryscript.net) and [Wiki](https://github.com/Samsung/jerryscript/wiki).
 
 IRC channel: #jerryscript on [freenode](https://freenode.net)  
 Mailing list: jerryscript-dev@gna.org, you can subscribe [here](https://mail.gna.org/listinfo/jerryscript-dev) and access the mailing list archive [here](https://mail.gna.org/public/jerryscript-dev).
@@ -38,8 +38,11 @@ For additional information see [Getting Started](docs/01.GETTING-STARTED.md).
 - [API Example](docs/03.API-EXAMPLE.md)
 - [Internals](docs/04.INTERNALS.md)
 
+## Contributing
+The project can only accept contributions which are licensed under the [Apache License 2.0](LICENSE) and are signed according to the JerryScript [Developer's Certificate of Origin](DCO.md). For further information please see our [Contribution Guidelines](CONTRIBUTING.md).
+
 ## License
-JerryScript is Open Source software under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Complete license and copyright information can be found in the source code.
+JerryScript is Open Source software under the [Apache License 2.0](LICENSE). Complete license and copyright information can be found in the source code.
 
 > Copyright 2015 Samsung Electronics Co., Ltd.
 

@@ -227,7 +227,8 @@ ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_object_find_own (ecma_object_t *object_p, /**< the object */
+ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
+                         ecma_object_t *object_p, /**< target object */
                          ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (object_p != NULL
@@ -241,7 +242,7 @@ ecma_op_object_find_own (ecma_object_t *object_p, /**< the object */
     ecma_value_t *map_prop_p = ecma_get_internal_property (object_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
     ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
 
-    ecma_value_t arg_name = ecma_op_object_find_own (map_p, property_name_p);
+    ecma_value_t arg_name = ecma_op_object_find_own (*map_prop_p, map_p, property_name_p);
 
     if (ecma_is_value_found (arg_name))
     {
@@ -333,7 +334,7 @@ ecma_op_object_find_own (ecma_object_t *object_p, /**< the object */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 
-  return ecma_op_function_call (getter_p, ecma_make_object_value (object_p), NULL, 0);
+  return ecma_op_function_call (getter_p, base_value, NULL, 0);
 } /* ecma_op_object_find_own */
 
 /**
@@ -352,9 +353,10 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
   /* Circular reference is possible in JavaScript and testing it is complicated. */
   int max_depth = 128;
 
+  ecma_value_t base_value = ecma_make_object_value (object_p);
   do
   {
-    ecma_value_t value = ecma_op_object_find_own (object_p, property_name_p);
+    ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
     if (ecma_is_value_found (value))
     {
@@ -455,7 +457,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
     ecma_value_t *map_prop_p = ecma_get_internal_property (object_p, ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP);
     ecma_object_t *map_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *map_prop_p);
 
-    ecma_value_t arg_name = ecma_op_object_find_own (map_p, property_name_p);
+    ecma_value_t arg_name = ecma_op_object_find_own (*map_prop_p, map_p, property_name_p);
 
     if (ecma_is_value_found (arg_name))
     {

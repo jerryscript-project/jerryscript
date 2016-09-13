@@ -30,7 +30,7 @@ extern ecma_property_t *ecma_op_object_get_own_property (ecma_object_t *, ecma_s
 extern ecma_property_t *ecma_op_object_get_property (ecma_object_t *, ecma_string_t *);
 extern bool ecma_op_object_has_own_property (ecma_object_t *, ecma_string_t *);
 extern bool ecma_op_object_has_property (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_find_own (ecma_object_t *, ecma_string_t *);
+extern ecma_value_t ecma_op_object_find_own (ecma_value_t, ecma_object_t *, ecma_string_t *);
 extern ecma_value_t ecma_op_object_find (ecma_object_t *, ecma_string_t *);
 extern ecma_value_t ecma_op_object_get_own_data_prop (ecma_object_t *, ecma_string_t *);
 extern ecma_value_t ecma_op_object_get (ecma_object_t *, ecma_string_t *);

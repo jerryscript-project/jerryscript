@@ -4,19 +4,10 @@ os: linux
 dist: trusty
 sudo: required
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-qemu-arm.sh; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
-
-install:
-
-script: "python tools/run-tests.py $OPTS"
-
 env:
   - OPTS="--check-signed-off-travis --check-cppcheck --check-vera"
   - OPTS="--jerry-tests --jerry-test-suite"
-  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300
+  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300 INSTALL_QEMU_ARM=yes
   - OPTS=--buildoption-test
   - OPTS=--unittests
 
@@ -26,3 +17,12 @@ matrix:
       env: OPTS="--jerry-tests --jerry-test-suite"
     - os: osx
       env: OPTS=--unittests
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$INSTALL_QEMU_ARM" == "yes" ]]; then tools/apt-get-install-qemu-arm.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
+
+install:
+
+script: "python tools/run-tests.py $OPTS"

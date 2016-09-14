@@ -18,7 +18,7 @@
 brew update
 
 PKGS="
-    cmake ninja
+    cmake
     cppcheck vera++
     "
 

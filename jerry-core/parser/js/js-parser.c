@@ -1037,7 +1037,7 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   }
 
   JERRY_DEBUG_MSG ("\nFinal byte code dump:\n\n  Maximum stack depth: %d\n  Flags: [",
-                   (int) stack_limit);
+                   (int) (stack_limit + register_end));
 
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
   {
@@ -1450,7 +1450,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   needs_uint16_arguments = false;
   total_size = sizeof (cbc_uint8_arguments_t);
 
-  if ((context_p->register_count + context_p->stack_limit) > CBC_MAXIMUM_BYTE_VALUE
+  if (context_p->stack_limit > CBC_MAXIMUM_BYTE_VALUE
+      || context_p->register_count > CBC_MAXIMUM_BYTE_VALUE
       || context_p->literal_count > CBC_MAXIMUM_BYTE_VALUE)
   {
     needs_uint16_arguments = true;
@@ -1471,7 +1472,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) compiled_code_p;
 
-    args_p->stack_limit = (uint16_t) (context_p->register_count + context_p->stack_limit);
+    args_p->stack_limit = context_p->stack_limit;
     args_p->argument_end = context_p->argument_count;
     args_p->register_end = context_p->register_count;
     args_p->ident_end = ident_end;
@@ -1485,7 +1486,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) compiled_code_p;
 
-    args_p->stack_limit = (uint8_t) (context_p->register_count + context_p->stack_limit);
+    args_p->stack_limit = (uint8_t) context_p->stack_limit;
     args_p->argument_end = (uint8_t) context_p->argument_count;
     args_p->register_end = (uint8_t) context_p->register_count;
     args_p->ident_end = (uint8_t) ident_end;

@@ -55,15 +55,15 @@ def get_arguments():
     parser.add_argument('--snapshot-exec', metavar='X', choices=['on', 'off'], default='on', help='enable executing snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--cpointer-32bit', metavar='X', choices=['on', 'off'], default='off', help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
     parser.add_argument('--toolchain', metavar='FILE', action='store', default=default_toolchain(), help='add toolchain file (default: %(default)s)')
-    parser.add_argument('--cmake-param', metavar='OPTS', action='append', default=[], help='add custom arguments to CMake')
-    parser.add_argument('--compile-flag', metavar='OPTS', action='append', default=[], help='add custom compile flags')
-    parser.add_argument('--linker-flag', metavar='OPTS', action='append', default=[], help='add custom linker flags')
+    parser.add_argument('--cmake-param', metavar='OPT', action='append', default=[], help='add custom argument to CMake')
+    parser.add_argument('--compile-flag', metavar='OPT', action='append', default=[], help='add custom compile flag')
+    parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[], help='add custom linker flag')
+    parser.add_argument('--link-lib', metavar='OPT', action='append', default=[], help='add custom library to be linked')
     parser.add_argument('--jerry-libc', metavar='X', choices=['on', 'off'], default='on', help='build and use jerry-libc (%(choices)s; default: %(default)s)')
-    parser.add_argument('--compiler-default-libc', metavar='X', choices=['on', 'off'], default='off', help='use compiler-default libc (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-libm', metavar='X', choices=['on', 'off'], default='on', help='build and use jerry-libm (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['on', 'off'], default='on', help='build jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--static-link', metavar='X', choices=['on', 'off'], default='on', help='enable static linking of jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--strip', metavar='X', choices=['on', 'off'], default='on', help='strip release binary (%(choices)s; default: %(default)s)')
+    parser.add_argument('--static-link', metavar='X', choices=['on', 'off'], default='on', help='enable static linking of binaries (%(choices)s; default: %(default)s)')
+    parser.add_argument('--strip', metavar='X', choices=['on', 'off'], default='on', help='strip release binaries (%(choices)s; default: %(default)s)')
     parser.add_argument('--unittests', action='store_const', const='ON', default='OFF', help='build unittests')
 
     devgroup = parser.add_argument_group('developer options')
@@ -88,7 +88,6 @@ def generate_build_options(arguments):
     build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc.upper())
     build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm.upper())
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline.upper())
-    build_options.append('-DCOMPILER_DEFAULT_LIBC=%s' % arguments.compiler_default_libc.upper())
     build_options.append('-DCMAKE_VERBOSE_MAKEFILE=%s' % arguments.verbose)
     build_options.append('-DCMAKE_BUILD_TYPE=%s' % arguments.build_type)
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
@@ -113,6 +112,7 @@ def generate_build_options(arguments):
 
     build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
     build_options.append('-DEXTERNAL_LINKER_FLAGS=' + ' '.join(arguments.linker_flag))
+    build_options.append('-DEXTERNAL_LINK_LIBS=' + ' '.join(arguments.link_lib))
 
     if arguments.toolchain:
         build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)

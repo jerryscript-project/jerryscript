@@ -18,16 +18,10 @@ set(JERRY_NAME jerry)
 project (${JERRY_NAME} C)
 
 # Optional build settings
-set(ENABLE_LINK_MAP    OFF CACHE BOOL "Enable generating a link map file?")
-set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
-
-if("${PLATFORM}" STREQUAL "DARWIN")
-  set(ENABLE_STATIC_LINK "OFF")
-endif()
+set(ENABLE_LINK_MAP OFF CACHE BOOL "Enable generating a link map file?")
 
 # Status messages
 message(STATUS "ENABLE_LINK_MAP           " ${ENABLE_LINK_MAP})
-message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
 
 # Sources
 # Jerry standalone
@@ -40,11 +34,6 @@ if(ENABLE_LINK_MAP)
   else()
     set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -Xlinker -Map -Xlinker jerry.map")
   endif()
-endif()
-
-# Disable static build
-if(ENABLE_STATIC_LINK)
-  set(LINKER_FLAGS_COMMON "-static ${LINKER_FLAGS_COMMON}")
 endif()
 
 # Get version information from git
@@ -67,18 +56,6 @@ target_compile_definitions(${JERRY_NAME} PRIVATE ${DEFINES_JERRY})
 target_include_directories(${JERRY_NAME} PRIVATE ${PORT_DIR})
 link_directories(${CMAKE_BINARY_DIR})
 
-set(JERRY_LIBS jerry-core)
-
-if(JERRY_LIBM)
-  set(JERRY_LIBS ${JERRY_LIBS} jerry-libm)
-endif()
-
-if(JERRY_LIBC)
-  set(JERRY_LIBS ${JERRY_LIBS} jerry-libc)
-endif()
-
-set(JERRY_LIBS ${JERRY_LIBS} ${IMPORTED_LIB})
-
-target_link_libraries(${JERRY_NAME} ${JERRY_LIBS})
+target_link_libraries(${JERRY_NAME} jerry-core)
 
 install(TARGETS ${JERRY_NAME} DESTINATION bin)

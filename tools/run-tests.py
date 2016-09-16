@@ -31,6 +31,7 @@ parser.add_argument('--check-signed-off-tolerant', action='store_true', default=
 parser.add_argument('--check-signed-off-travis', action='store_true', default=False, help='Run signed-off check in tolerant mode if on Travis CI and not checking a pull request')
 parser.add_argument('--check-cppcheck', action='store_true', default=False, help='Run cppcheck')
 parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
+parser.add_argument('--check-license', action='store_true', default=False, help='Run license check')
 parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
 parser.add_argument('--jerry-tests', action='store_true', default=False, help='Run jerry-tests')
 parser.add_argument('--jerry-test-suite', action='store_true', default=False, help='Run jerry-test-suite')
@@ -196,6 +197,9 @@ def main():
 
     if not ret and (script_args.all or script_args.check_vera):
         ret = run_check(VERA_SCRIPT)
+
+    if not ret and (script_args.all or script_args.check_license):
+        ret = run_check(LICENSE_SCRIPT)
 
     if not ret and (script_args.all or script_args.jerry_tests):
         ret = run_jerry_tests()

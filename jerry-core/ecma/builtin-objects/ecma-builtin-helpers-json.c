@@ -22,7 +22,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * \addtogroup ecmabuiltinhelpers ECMA builtin helper operations
  * @{
  */
 

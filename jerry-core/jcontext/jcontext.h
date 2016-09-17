@@ -26,10 +26,7 @@
 #include "re-bytecode.h"
 #include "vm-defines.h"
 
-/** \addtogroup context Jerry context
- * @{
- *
- * \addtogroup context Context
+/** \addtogroup context Context
  * @{
  */
 
@@ -167,7 +164,6 @@ extern jerry_hash_table_t jerry_global_hash_table;
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
- * @}
  * @}
  */
 

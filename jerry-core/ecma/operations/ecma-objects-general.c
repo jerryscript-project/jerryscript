@@ -27,7 +27,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmageneralobjectsinternalops General ECMA objects' operations
+ * \addtogroup ecmaobjectsinternalops ECMA objects' operations
  * @{
  */
 

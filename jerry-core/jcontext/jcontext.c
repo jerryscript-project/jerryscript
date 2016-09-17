@@ -16,10 +16,7 @@
 
 #include "jcontext.h"
 
-/** \addtogroup context Jerry context
- * @{
- *
- * \addtogroup context Context
+/** \addtogroup context Context
  * @{
  */
 
@@ -52,6 +49,5 @@ jerry_hash_table_t jerry_global_hash_table;
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
- * @}
  * @}
  */

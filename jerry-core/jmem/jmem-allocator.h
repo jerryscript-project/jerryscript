@@ -103,9 +103,9 @@ typedef struct
 /**
  * Node for free chunk list
  */
-typedef struct mem_pools_chunk
+typedef struct jmem_pools_chunk_t
 {
-  struct mem_pools_chunk *next_p; /* pointer to next pool chunk */
+  struct jmem_pools_chunk_t *next_p; /* pointer to next pool chunk */
 } jmem_pools_chunk_t;
 
 /**

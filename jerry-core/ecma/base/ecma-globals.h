@@ -533,7 +533,7 @@ typedef enum
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
-typedef struct ecma_object_t
+typedef struct
 {
   /** type : 3 bit : ecma_object_type_t or ecma_lexical_environment_type_t
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
@@ -891,7 +891,7 @@ typedef enum
 /**
  * ECMA string-value descriptor
  */
-typedef struct ecma_string_t
+typedef struct
 {
   /** Reference counter for the string */
   uint16_t refs_and_container;

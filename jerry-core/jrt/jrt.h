@@ -30,6 +30,7 @@
 #define __noreturn __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
 #define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
+#define __attr_hot___ __attribute__((hot))
 #ifndef __attr_always_inline___
 # define __attr_always_inline___ __attribute__((always_inline))
 #endif /* !__attr_always_inline___ */

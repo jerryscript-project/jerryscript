@@ -31,8 +31,8 @@ set(UNITTESTS     OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
 set(PORT_DIR                  "${CMAKE_SOURCE_DIR}/targets/default" CACHE STRING "Use default or external port?")
-set(ENABLE_LTO                OFF                                   CACHE BOOL   "Enable LTO build?")
-set(ENABLE_ALL_IN_ONE         ON                                    CACHE BOOL   "Enable all-in-one build?")
+set(ENABLE_LTO                ON                                    CACHE BOOL   "Enable LTO build?")
+set(ENABLE_ALL_IN_ONE         OFF                                   CACHE BOOL   "Enable all-in-one build?")
 set(ENABLE_STRIP              ON                                    CACHE BOOL   "Enable stripping all symbols from release binary?")
 set(ENABLE_STATIC_LINK        ON                                    CACHE BOOL   "Enable static linking?")
 

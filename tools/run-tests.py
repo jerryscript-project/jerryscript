@@ -62,8 +62,8 @@ class Options:
 
 # Test options for unittests
 jerry_unittests_options = [
-                           Options('unittests', ['--unittests', '--error-messages=on']),
-                           Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on']),
+                           Options('unittests', ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+                           Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
                           ]
 
 # Test options for jerry-tests

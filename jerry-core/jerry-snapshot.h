@@ -17,8 +17,6 @@
 #ifndef JERRY_SNAPSHOT_H
 #define JERRY_SNAPSHOT_H
 
-#include "ecma-globals.h"
-
 /**
  * Snapshot header
  */

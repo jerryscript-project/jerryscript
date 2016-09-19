@@ -187,7 +187,7 @@ void jmem_heap_finalize (void)
  * @return pointer to allocated memory block - if allocation is successful,
  *         NULL - if there is not enough memory.
  */
-static __attribute__((hot))
+static __attr_hot___
 void *jmem_heap_alloc_block_internal (const size_t size)
 {
   // Align size
@@ -389,7 +389,7 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
  * @return NULL, if the required memory is 0
  *         pointer to allocated memory block, otherwise
  */
-void * __attribute__((hot)) __attr_always_inline___
+void * __attr_hot___ __attr_always_inline___
 jmem_heap_alloc_block (const size_t size)  /**< required memory size */
 {
   return jmem_heap_gc_and_alloc_block (size, false);
@@ -405,7 +405,7 @@ jmem_heap_alloc_block (const size_t size)  /**< required memory size */
  *         also NULL, if the allocation has failed
  *         pointer to the allocated memory block, otherwise
  */
-void * __attribute__((hot)) __attr_always_inline___
+void * __attr_hot___ __attr_always_inline___
 jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory size */
 {
   return jmem_heap_gc_and_alloc_block (size, true);
@@ -414,7 +414,7 @@ jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory siz
 /**
  * Free the memory block.
  */
-void __attribute__((hot))
+void __attr_hot___
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */
                       const size_t size) /**< size of allocated region */
 {

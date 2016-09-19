@@ -104,24 +104,33 @@ ecma_op_get_value_object_base (ecma_value_t base, /**< base value */
                 && !ecma_is_lexical_environment (obj_p));
 
   // 2.
-  ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, property_name_p);
+  ecma_property_ref_t property_ref;
+  ecma_property_t property = ecma_op_object_get_property (obj_p,
+                                                          property_name_p,
+                                                          &property_ref,
+                                                          ECMA_PROPERTY_GET_VALUE);
 
-  if (prop_p == NULL)
+  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND)
   {
     // 3.
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
-  else if (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+  else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
   {
     // 4.
-    ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
+    ret_value = ecma_copy_value (property_ref.value_p->value);
+  }
+  else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_VIRTUAL)
+  {
+    // 4.
+    ret_value = property_ref.virtual_value;
   }
   else
   {
     // 5.
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-    ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
+    ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (property_ref.value_p);
 
     // 6.
     if (obj_p == NULL)

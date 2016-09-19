@@ -79,9 +79,9 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
       if (property_p != NULL &&
-          ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+          ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
-        return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+        return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
 
       /* There is no need to free the name. */
@@ -481,8 +481,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
                                                               literal_start_p[literal_index]); \
         result = ecma_op_resolve_reference_value (frame_ctx_p->lex_env_p, \
-                                                  name_p, \
-                                                  is_strict); \
+                                                  name_p); \
         \
         if (ECMA_IS_VALUE_ERROR (result)) \
         { \
@@ -618,10 +617,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (self_reference == literal_start_p[value_index])
           {
-            ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p);
-            ecma_op_initialize_immutable_binding (frame_ctx_p->lex_env_p,
-                                                  name_p,
-                                                  lit_value);
+            ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
           }
           else
           {
@@ -947,20 +943,28 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           property_p = ecma_find_named_property (object_p, prop_name_p);
 
-          if (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
+          if (property_p != NULL
+              && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
           {
-            ecma_delete_property (object_p, property_p);
+            ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
             property_p = NULL;
           }
 
+          ecma_property_value_t *prop_value_p;
+
           if (property_p == NULL)
           {
-            property_p = ecma_create_named_data_property (object_p,
-                                                          prop_name_p,
-                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+            prop_value_p = ecma_create_named_data_property (object_p,
+                                                            prop_name_p,
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            NULL);
+          }
+          else
+          {
+            prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
           }
 
-          ecma_named_data_property_assign_value (object_p, property_p, left_value);
+          ecma_named_data_property_assign_value (object_p, prop_value_p, left_value);
 
           if (!ecma_is_value_string (right_value))
           {
@@ -1000,7 +1004,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_object_t *array_obj_p;
           ecma_string_t length_str;
-          ecma_property_t *length_prop_p;
+          ecma_property_value_t *length_prop_value_p;
           uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
 
@@ -1008,11 +1012,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
           ecma_init_ecma_length_string (&length_str);
-          length_prop_p = ecma_get_named_property (array_obj_p, &length_str);
+          length_prop_value_p = ecma_get_named_data_property (array_obj_p, &length_str);
 
-          JERRY_ASSERT (length_prop_p != NULL);
-
-          left_value = ecma_get_named_data_property_value (length_prop_p);
+          left_value = length_prop_value_p->value;
           length_num = ecma_get_uint32_from_value (left_value);
 
           for (uint32_t i = 0; i < values_length; i++)
@@ -1021,14 +1023,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
-              ecma_property_t *prop_p;
-              prop_p = ecma_create_named_data_property (array_obj_p,
-                                                        index_str_p,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+              ecma_property_value_t *prop_value_p;
+              prop_value_p = ecma_create_named_data_property (array_obj_p,
+                                                              index_str_p,
+                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                              NULL);
 
-              JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
-
-              ecma_set_named_data_property_value (prop_p, stack_top_p[i]);
+              JERRY_ASSERT (ecma_is_value_undefined (prop_value_p->value));
+              prop_value_p->value = stack_top_p[i];
 
               /* The reference is moved so no need to free stack_top_p[i] except for objects. */
               if (ecma_is_value_object (stack_top_p[i]))
@@ -1042,8 +1044,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             length_num++;
           }
 
-          ecma_value_assign_uint32 (&ECMA_PROPERTY_VALUE_PTR (length_prop_p)->value,
-                                    length_num);
+          ecma_value_assign_uint32 (&length_prop_value_p->value, length_num);
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:

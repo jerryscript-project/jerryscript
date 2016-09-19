@@ -157,9 +157,10 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
   ecma_string_t *accessor_name_p = ecma_get_string_from_value (ecma_op_to_string (accessor_name));
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
-  if (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+  if (property_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
   {
-    ecma_delete_property (object_p, property_p);
+    ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
     property_p = NULL;
   }
 
@@ -188,7 +189,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
     ecma_object_t *getter_func_p = ecma_get_object_from_value (accessor);
 
     ecma_set_named_accessor_property_getter (object_p,
-                                             property_p,
+                                             ECMA_PROPERTY_VALUE_PTR (property_p),
                                              getter_func_p);
   }
   else
@@ -196,7 +197,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
     ecma_object_t *setter_func_p = ecma_get_object_from_value (accessor);
 
     ecma_set_named_accessor_property_setter (object_p,
-                                             property_p,
+                                             ECMA_PROPERTY_VALUE_PTR (property_p),
                                              setter_func_p);
   }
 

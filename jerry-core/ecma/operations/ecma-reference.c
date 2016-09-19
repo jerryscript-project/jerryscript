@@ -66,8 +66,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
  */
 ecma_value_t
 ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical environment */
-                                 ecma_string_t *name_p, /**< identifier's name */
-                                 bool is_strict) /**< strict mode */
+                                 ecma_string_t *name_p) /**< identifier's name */
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
@@ -79,23 +78,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       if (property_p != NULL)
       {
-        ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);
-
-        /* is the binding mutable? */
-        if (unlikely (!ecma_is_property_writable (property_p)
-                      && ecma_is_value_empty (prop_value)))
-        {
-          /* unitialized mutable binding */
-          if (is_strict)
-          {
-            return ecma_raise_reference_error (ECMA_ERR_MSG (""));
-          }
-          else
-          {
-            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-          }
-        }
-        return ecma_fast_copy_value (prop_value);
+        return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
     }
     else

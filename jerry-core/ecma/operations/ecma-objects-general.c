@@ -129,27 +129,6 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
 } /* ecma_op_create_object_object_noarg_and_set_prototype */
 
 /**
- * [[GetOwnProperty]] ecma general object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 8.12.2
- *
- * @return pointer to a property - if it exists,
- *         NULL (i.e. ecma-undefined) - otherwise.
- */
-ecma_property_t *
-ecma_op_general_object_get_own_property (ecma_object_t *obj_p, /**< the object */
-                                         ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
-  JERRY_ASSERT (property_name_p != NULL);
-
-  return ecma_find_named_property (obj_p, property_name_p);
-} /* ecma_op_general_object_get_own_property */
-
-/**
  * [[Delete]] ecma general object's operation
  *
  * See also:
@@ -169,19 +148,24 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (property_name_p != NULL);
 
   // 1.
-  ecma_property_t *desc_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+  ecma_property_ref_t property_ref;
+
+  ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                              property_name_p,
+                                                              &property_ref,
+                                                              ECMA_PROPERTY_GET_NO_OPTIONS);
 
   // 2.
-  if (desc_p == NULL)
+  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND)
   {
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
 
   // 3.
-  if (ecma_is_property_configurable (desc_p))
+  if (ecma_is_property_configurable (property))
   {
     // a.
-    ecma_delete_property (obj_p, desc_p);
+    ecma_delete_property (obj_p, property_ref.value_p);
 
     // b.
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
@@ -330,9 +314,14 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   JERRY_ASSERT (property_desc_p->is_writable_defined || !property_desc_p->is_writable);
 
   // 1.
-  ecma_property_t *current_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+  ecma_property_ref_t property_ref;
 
-  if (current_p == NULL)
+  ecma_property_t current_prop = ecma_op_object_get_own_property (obj_p,
+                                                                  property_name_p,
+                                                                  &property_ref,
+                                                                  ECMA_PROPERTY_GET_VALUE);
+
+  if (current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND)
   {
     // 3.
     if (!ecma_get_object_extensible (obj_p))
@@ -365,14 +354,15 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
         prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_WRITABLE);
       }
 
-      ecma_property_t *new_prop_p = ecma_create_named_data_property (obj_p,
-                                                                     property_name_p,
-                                                                     prop_attributes);
+      ecma_property_value_t *new_prop_value_p = ecma_create_named_data_property (obj_p,
+                                                                                 property_name_p,
+                                                                                 prop_attributes,
+                                                                                 NULL);
 
       JERRY_ASSERT (property_desc_p->is_value_defined
                     || ecma_is_value_undefined (property_desc_p->value));
 
-      ecma_named_data_property_assign_value (obj_p, new_prop_p, property_desc_p->value);
+      new_prop_value_p->value = ecma_copy_value_if_not_object (property_desc_p->value);
     }
     else
     {
@@ -400,19 +390,43 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
 
   // 6.
-  ecma_property_types_t current_property_type = ECMA_PROPERTY_GET_TYPE (current_p);
-  const bool is_current_configurable = ecma_is_property_configurable (current_p);
+  ecma_property_types_t current_property_type = ECMA_PROPERTY_GET_TYPE (current_prop);
+  const bool is_current_configurable = ecma_is_property_configurable (current_prop);
 
   JERRY_ASSERT (current_property_type == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || current_property_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || current_property_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || current_property_type == ECMA_PROPERTY_TYPE_VIRTUAL);
 
   // 7. a., b.
   if (!is_current_configurable
       && (property_desc_p->is_configurable
           || (property_desc_p->is_enumerable_defined
-              && (property_desc_p->is_enumerable != ecma_is_property_enumerable (current_p)))))
+              && (property_desc_p->is_enumerable != ecma_is_property_enumerable (current_prop)))))
   {
+    if (current_property_type == ECMA_PROPERTY_TYPE_VIRTUAL)
+    {
+      ecma_free_value (property_ref.virtual_value);
+    }
     return ecma_reject (is_throw);
+  }
+
+  if (current_property_type == ECMA_PROPERTY_TYPE_VIRTUAL)
+  {
+    JERRY_ASSERT (!is_current_configurable && !ecma_is_property_writable (current_prop));
+
+    ecma_value_t result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+
+    if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+        || property_desc_p->is_writable
+        || (property_desc_p->is_value_defined
+            && !ecma_op_same_value (property_desc_p->value,
+                                    property_ref.virtual_value)))
+    {
+      result = ecma_reject (is_throw);
+    }
+
+    ecma_free_value (property_ref.virtual_value);
+    return result;
   }
 
   // 8.
@@ -428,11 +442,11 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
       if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
         // 10. a. i. & ii.
-        if (!ecma_is_property_writable (current_p)
+        if (!ecma_is_property_writable (current_prop)
             && (property_desc_p->is_writable
                 || (property_desc_p->is_value_defined
                     && !ecma_op_same_value (property_desc_p->value,
-                                            ecma_get_named_data_property_value (current_p)))))
+                                            property_ref.value_p->value))))
         {
           return ecma_reject (is_throw);
         }
@@ -443,9 +457,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
 
         // a.
         if ((property_desc_p->is_get_defined
-             && property_desc_p->get_p != ecma_get_named_accessor_property_getter (current_p))
+             && property_desc_p->get_p != ecma_get_named_accessor_property_getter (property_ref.value_p))
             || (property_desc_p->is_set_defined
-                && property_desc_p->set_p != ecma_get_named_accessor_property_setter (current_p)))
+                && property_desc_p->set_p != ecma_get_named_accessor_property_setter (property_ref.value_p)))
         {
           // i., ii.
           return ecma_reject (is_throw);
@@ -466,41 +480,46 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
      * the fields of current_p if this code path is performance critical. */
     uint8_t prop_attributes = ECMA_PROPERTY_FLAG_CONFIGURABLE;
 
-    if (ecma_is_property_enumerable (current_p))
+    if (ecma_is_property_enumerable (current_prop))
     {
       prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_ENUMERABLE);
     }
 
-    ecma_delete_property (obj_p, current_p);
+    ecma_delete_property (obj_p, property_ref.value_p);
 
     if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
     {
       // b.
 
-      current_p = ecma_create_named_accessor_property (obj_p,
-                                                       property_name_p,
-                                                       NULL,
-                                                       NULL,
-                                                       prop_attributes);
+      property_ref.value_p = ecma_create_named_accessor_property (obj_p,
+                                                                  property_name_p,
+                                                                  NULL,
+                                                                  NULL,
+                                                                  prop_attributes);
     }
     else
     {
       // c.
 
-      current_p = ecma_create_named_data_property (obj_p,
-                                                   property_name_p,
-                                                   prop_attributes);
+      property_ref.value_p = ecma_create_named_data_property (obj_p,
+                                                              property_name_p,
+                                                              prop_attributes,
+                                                              NULL);
     }
   }
+
+  ecma_property_t *current_p = ecma_find_named_property (obj_p, property_name_p);
+
+  JERRY_ASSERT (ECMA_PROPERTY_VALUE_PTR (current_p) == property_ref.value_p);
 
   // 12.
   if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDDATA)
   {
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (current_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*current_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
     if (property_desc_p->is_value_defined)
     {
-      ecma_named_data_property_assign_value (obj_p, current_p, property_desc_p->value);
+      ecma_named_data_property_assign_value (obj_p, property_ref.value_p, property_desc_p->value);
     }
 
     if (property_desc_p->is_writable_defined)
@@ -510,16 +529,16 @@ ecma_op_general_object_define_own_property (ecma_object_t *obj_p, /**< the objec
   }
   else if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
   {
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (current_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*current_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
     if (property_desc_p->is_get_defined)
     {
-      ecma_set_named_accessor_property_getter (obj_p, current_p, property_desc_p->get_p);
+      ecma_set_named_accessor_property_getter (obj_p, property_ref.value_p, property_desc_p->get_p);
     }
 
     if (property_desc_p->is_set_defined)
     {
-      ecma_set_named_accessor_property_setter (obj_p, current_p, property_desc_p->set_p);
+      ecma_set_named_accessor_property_setter (obj_p, property_ref.value_p, property_desc_p->set_p);
     }
   }
 

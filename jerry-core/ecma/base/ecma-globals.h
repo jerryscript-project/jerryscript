@@ -273,6 +273,10 @@ typedef enum
   ECMA_PROPERTY_TYPE_HASHMAP, /**< hash map for fast property access */
 
   ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_HASHMAP, /**< highest value for property types. */
+
+  /* Property type aliases. */
+  ECMA_PROPERTY_TYPE_NOT_FOUND = ECMA_PROPERTY_TYPE_DELETED, /**< property is not found */
+  ECMA_PROPERTY_TYPE_VIRTUAL = ECMA_PROPERTY_TYPE_HASHMAP, /**< property is virtual */
 } ecma_property_types_t;
 
 /**
@@ -347,10 +351,7 @@ typedef enum
  * from the property address. However, property pointers cannot be compressed
  * anymore.
  */
-typedef struct
-{
-  uint8_t type_and_flags; /**< ecma_property_types_t (3 bit) and ecma_property_flags_t */
-} ecma_property_t;
+typedef uint8_t ecma_property_t; /**< ecma_property_types_t (3 bit) and ecma_property_flags_t */
 
 /**
  * Number of items in a property pair.
@@ -409,20 +410,20 @@ typedef struct
 /**
  * Get property type.
  */
-#define ECMA_PROPERTY_GET_TYPE(property_p) \
-  ((ecma_property_types_t) ((property_p)->type_and_flags & ECMA_PROPERTY_TYPE_MASK))
+#define ECMA_PROPERTY_GET_TYPE(property) \
+  ((ecma_property_types_t) ((property) & ECMA_PROPERTY_TYPE_MASK))
 
 /**
  * Returns true if the property pointer is a property pair.
  */
 #define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
-  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types + 0) <= ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX)
+  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) <= ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX)
 
 /**
  * Returns the internal property type
  */
 #define ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE(property_p) \
-  ((ecma_internal_property_id_t) ((property_p)->type_and_flags >> ECMA_PROPERTY_FLAG_SHIFT))
+  ((ecma_internal_property_id_t) (*(property_p) >> ECMA_PROPERTY_FLAG_SHIFT))
 
 /**
  * Computing the data offset of a property.
@@ -443,12 +444,30 @@ typedef struct
   (ECMA_PROPERTY_VALUE_BASE_PTR (property_p) + ECMA_PROPERTY_VALUE_OFFSET (property_p))
 
 /**
+ * Property reference.
+ */
+typedef union
+{
+  ecma_property_value_t *value_p; /**< direct pointer to property value */
+  ecma_value_t virtual_value; /**< property value */
+} ecma_property_ref_t;
+
+/**
+ * Option flags for ecma_op_object_get_property
+ */
+typedef enum
+{
+  ECMA_PROPERTY_GET_NO_OPTIONS = 0, /**< no option flags for ecma_op_object_get_property */
+  ECMA_PROPERTY_GET_VALUE = 1u << 0, /**< fill virtual_value field for virtual properties */
+} ecma_property_get_option_bits_t;
+
+/**
  * Internal object types
  */
 typedef enum
 {
-  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5), Function (15.3),
-                                 Arguments (10.6), Array (15.4) specification-defined objects */
+  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5),
+                                 *   Function (15.3), Arguments (10.6), Array (15.4) objects */
   ECMA_OBJECT_TYPE_FUNCTION = 1, /**< Function objects (15.3), created through 13.2 routine */
   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 2, /**< External (host) function object */
   ECMA_OBJECT_TYPE_ARRAY = 3, /**< Array object (15.4) */

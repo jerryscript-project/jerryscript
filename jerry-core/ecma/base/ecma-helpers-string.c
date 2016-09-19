@@ -913,6 +913,8 @@ ecma_string_is_empty (const ecma_string_t *str_p) /**< ecma-string */
 inline bool __attr_always_inline___
 ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
 {
+  static const char length_str_p[] = "length";
+
   ecma_string_container_t container = ECMA_STRING_GET_CONTAINER (string_p);
 
   if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
@@ -921,13 +923,13 @@ ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
   }
 
   if (container != ECMA_STRING_CONTAINER_HEAP_UTF8_STRING
-      || string_p->u.utf8_string.size != 6
+      || string_p->u.utf8_string.size != (sizeof (length_str_p) - 1)
       || string_p->hash != LIT_STRING_LENGTH_HASH)
   {
     return false;
   }
 
-  return !strncmp ((char *) (string_p + 1), "length", 6);
+  return !strncmp ((char *) (string_p + 1), length_str_p, (sizeof (length_str_p) - 1));
 } /* ecma_string_is_length */
 
 /**

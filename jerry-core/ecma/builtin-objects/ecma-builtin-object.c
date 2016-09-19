@@ -202,16 +202,17 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg, /**< 'this' argument */
            && ecma_is_value_empty (ret_value))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
-      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
       // 2.a
-      ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
+      ecma_property_descriptor_t prop_desc;
+
+      if (!ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc))
+      {
+        continue;
+      }
 
       // 2.b
-      if (ecma_is_property_configurable (property_p))
-      {
-        prop_desc.is_configurable = false;
-      }
+      prop_desc.is_configurable = false;
 
       // 2.c
       ECMA_TRY_CATCH (define_own_prop_ret,
@@ -276,23 +277,23 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument *
            && ecma_is_value_empty (ret_value))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
-      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
       // 2.a
-      ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (property_p);
+      ecma_property_descriptor_t prop_desc;
+
+      if (!ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc))
+      {
+        continue;
+      }
 
       // 2.b
-      if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-          && ecma_is_property_writable (property_p))
+      if (prop_desc.is_writable_defined && prop_desc.is_writable)
       {
         prop_desc.is_writable = false;
       }
 
       // 2.c
-      if (ecma_is_property_configurable (property_p))
-      {
-        prop_desc.is_configurable = false;
-      }
+      prop_desc.is_configurable = false;
 
       // 2.d
       ECMA_TRY_CATCH (define_own_prop_ret,
@@ -400,10 +401,13 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
         ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
         // 2.a
-        ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
+        ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                                    property_name_p,
+                                                                    NULL,
+                                                                    ECMA_PROPERTY_GET_NO_OPTIONS);
 
         // 2.b
-        if (ecma_is_property_configurable (property_p))
+        if (ecma_is_property_configurable (property))
         {
           is_sealed = false;
           break;
@@ -468,21 +472,21 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argumen
         ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
         // 2.a
-        ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
-
-        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                      || ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+        ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                                    property_name_p,
+                                                                    NULL,
+                                                                    ECMA_PROPERTY_GET_NO_OPTIONS);
 
         // 2.b
-        if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-            && ecma_is_property_writable (property_p))
+        if (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+            && ecma_is_property_writable (property))
         {
           is_frozen = false;
           break;
         }
 
         // 2.c
-        if (ecma_is_property_configurable (property_p))
+        if (ecma_is_property_configurable (property))
         {
           is_frozen = false;
           break;
@@ -598,12 +602,10 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /
   ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
 
   // 3.
-  ecma_property_t *prop_p = ecma_op_object_get_own_property (obj_p, name_str_p);
+  ecma_property_descriptor_t prop_desc;
 
-  if (prop_p != NULL)
+  if (ecma_op_object_get_own_property_descriptor (obj_p, name_str_p, &prop_desc))
   {
-    ecma_property_descriptor_t prop_desc = ecma_get_property_descriptor_from_property (prop_p);
-
     // 4.
     ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
 

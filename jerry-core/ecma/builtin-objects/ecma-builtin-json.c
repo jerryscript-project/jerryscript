@@ -668,9 +668,9 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
     arguments_list[0] = ecma_make_string_value (name_p);
     arguments_list[1] = value_get;
 
-   /*
-    * The completion value can be anything including exceptions.
-    */
+    /*
+     * The completion value can be anything including exceptions.
+     */
     ret_value = ecma_op_function_call (reviver_p,
                                        ecma_make_object_value (holder_p),
                                        arguments_list,
@@ -746,12 +746,13 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
       ecma_object_t *object_p = ecma_op_create_object_object_noarg ();
       ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-      ecma_property_t *property_p;
-      property_p = ecma_create_named_data_property (object_p,
-                                                    name_p,
-                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      ecma_property_value_t *prop_value_p;
+      prop_value_p = ecma_create_named_data_property (object_p,
+                                                      name_p,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                      NULL);
 
-      ecma_named_data_property_assign_value (object_p, property_p, final_result);
+      ecma_named_data_property_assign_value (object_p, prop_value_p, final_result);
       ecma_free_value (final_result);
 
       ret_value = ecma_builtin_json_walk (ecma_get_object_from_value (arg2),
@@ -1445,11 +1446,15 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     while (ecma_collection_iterator_next (&iter))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
-      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
-      JERRY_ASSERT (ecma_is_property_enumerable (property_p));
+      ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                                  property_name_p,
+                                                                  NULL,
+                                                                  ECMA_PROPERTY_GET_NO_OPTIONS);
 
-      if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      JERRY_ASSERT (ecma_is_property_enumerable (property));
+
+      if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
         ecma_append_to_values_collection (property_keys_p, *iter.current_value_p, true);
       }

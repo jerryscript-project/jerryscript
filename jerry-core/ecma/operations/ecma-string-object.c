@@ -100,114 +100,19 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   // 15.5.5.1
   ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
-  ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
-                                                                    length_magic_string_p,
-                                                                    ECMA_PROPERTY_FIXED);
-
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_value));
+  ecma_property_value_t *length_prop_value_p = ecma_create_named_data_property (obj_p,
+                                                                                length_magic_string_p,
+                                                                                ECMA_PROPERTY_FIXED,
+                                                                                NULL);
   ecma_deref_ecma_string (length_magic_string_p);
+
+  length_prop_value_p->value = ecma_make_number_value (length_value);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_string_object */
 
 /**
- * [[GetOwnProperty]] ecma String object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 15.5.5.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_property_t *
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String object */
-                                        ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
-
-  // 1.
-  ecma_property_t *prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
-
-  // 2.
-  if (prop_p != NULL)
-  {
-    return prop_p;
-  }
-
-  // 3., 5.
-  uint32_t uint32_index;
-  ecma_string_t *new_prop_name_p;
-
-  if (ECMA_STRING_GET_CONTAINER (property_name_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-  {
-    uint32_index = property_name_p->u.uint32_number;
-
-    new_prop_name_p = property_name_p;
-    ecma_ref_ecma_string (new_prop_name_p);
-  }
-  else
-  {
-    ecma_number_t index = ecma_string_to_number (property_name_p);
-    uint32_index = ecma_number_to_uint32 (index);
-
-    ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (uint32_index);
-
-    bool are_equal = ecma_compare_ecma_strings (to_str_p, property_name_p);
-
-    if (!are_equal)
-    {
-      ecma_deref_ecma_string (to_str_p);
-
-      return NULL;
-    }
-    else
-    {
-      new_prop_name_p = to_str_p;
-    }
-  }
-
-  // 4.
-  ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
-                                                           ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-
-  // 6.
-  ecma_length_t length = ecma_string_get_length (prim_value_str_p);
-
-  ecma_property_t *new_prop_p;
-
-  if (uint32_index >= (uint32_t) length)
-  {
-    // 7.
-    new_prop_p = NULL;
-  }
-  else
-  {
-    // 8.
-    ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
-
-    // 9.
-    ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string_from_code_unit (c);
-
-    new_prop_p = ecma_create_named_data_property (obj_p,
-                                                  new_prop_name_p,
-                                                  ECMA_PROPERTY_FLAG_ENUMERABLE);
-
-    ecma_set_named_data_property_value (new_prop_p,
-                                        ecma_make_string_value (new_prop_str_value_p));
-  }
-
-  ecma_deref_ecma_string (new_prop_name_p);
-
-  return new_prop_p;
-} /* ecma_op_string_object_get_own_property */
-
-/**
  * List names of a String object's lazy instantiated properties
- *
- * See also:
- *          ecma_op_string_object_get_own_property
  *
  * @return string values collection
  */

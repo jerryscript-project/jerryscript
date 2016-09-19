@@ -271,34 +271,30 @@ extern ecma_value_t *ecma_create_internal_property (ecma_object_t *, ecma_intern
 extern ecma_value_t *ecma_find_internal_property (ecma_object_t *, ecma_internal_property_id_t);
 extern ecma_value_t *ecma_get_internal_property (ecma_object_t *, ecma_internal_property_id_t);
 
-extern ecma_property_t *
-ecma_create_named_data_property (ecma_object_t *, ecma_string_t *, uint8_t);
-extern ecma_property_t *
+extern ecma_property_value_t *
+ecma_create_named_data_property (ecma_object_t *, ecma_string_t *, uint8_t, ecma_property_t **);
+extern ecma_property_value_t *
 ecma_create_named_accessor_property (ecma_object_t *, ecma_string_t *, ecma_object_t *, ecma_object_t *, uint8_t);
 extern ecma_property_t *
 ecma_find_named_property (ecma_object_t *, ecma_string_t *);
-extern ecma_property_t *
-ecma_get_named_property (ecma_object_t *, ecma_string_t *);
-extern ecma_property_t *
+extern ecma_property_value_t *
 ecma_get_named_data_property (ecma_object_t *, ecma_string_t *);
 
 extern void ecma_free_property (ecma_object_t *, ecma_string_t *, ecma_property_t *);
 
-extern void ecma_delete_property (ecma_object_t *, ecma_property_t *);
+extern void ecma_delete_property (ecma_object_t *, ecma_property_value_t *);
 
-extern ecma_value_t ecma_get_named_data_property_value (const ecma_property_t *);
-extern void ecma_set_named_data_property_value (ecma_property_t *, ecma_value_t);
-extern void ecma_named_data_property_assign_value (ecma_object_t *, ecma_property_t *, ecma_value_t);
+extern void ecma_named_data_property_assign_value (ecma_object_t *, ecma_property_value_t *, ecma_value_t);
 
-extern ecma_object_t *ecma_get_named_accessor_property_getter (const ecma_property_t *);
-extern ecma_object_t *ecma_get_named_accessor_property_setter (const ecma_property_t *);
-extern void ecma_set_named_accessor_property_getter (ecma_object_t *, ecma_property_t *, ecma_object_t *);
-extern void ecma_set_named_accessor_property_setter (ecma_object_t *, ecma_property_t *, ecma_object_t *);
-extern bool ecma_is_property_writable (ecma_property_t *);
+extern ecma_object_t *ecma_get_named_accessor_property_getter (const ecma_property_value_t *);
+extern ecma_object_t *ecma_get_named_accessor_property_setter (const ecma_property_value_t *);
+extern void ecma_set_named_accessor_property_getter (ecma_object_t *, ecma_property_value_t *, ecma_object_t *);
+extern void ecma_set_named_accessor_property_setter (ecma_object_t *, ecma_property_value_t *, ecma_object_t *);
+extern bool ecma_is_property_writable (ecma_property_t);
 extern void ecma_set_property_writable_attr (ecma_property_t *, bool);
-extern bool ecma_is_property_enumerable (ecma_property_t *);
+extern bool ecma_is_property_enumerable (ecma_property_t);
 extern void ecma_set_property_enumerable_attr (ecma_property_t *, bool);
-extern bool ecma_is_property_configurable (ecma_property_t *);
+extern bool ecma_is_property_configurable (ecma_property_t);
 extern void ecma_set_property_configurable_attr (ecma_property_t *, bool);
 
 extern bool ecma_is_property_lcached (ecma_property_t *);
@@ -306,7 +302,6 @@ extern void ecma_set_property_lcached (ecma_property_t *, bool);
 
 extern ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 extern void ecma_free_property_descriptor (ecma_property_descriptor_t *);
-extern ecma_property_descriptor_t ecma_get_property_descriptor_from_property (ecma_property_t *);
 
 extern ecma_property_t *ecma_get_next_property_pair (ecma_property_pair_t *);
 

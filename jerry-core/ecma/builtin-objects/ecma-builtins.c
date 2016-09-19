@@ -127,11 +127,13 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
     {
       ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
 
-      ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
-                                                                        length_str_p,
-                                                                        ECMA_PROPERTY_FLAG_WRITABLE);
+      ecma_property_value_t *length_prop_value_p;
+      length_prop_value_p = ecma_create_named_data_property (obj_p,
+                                                             length_str_p,
+                                                             ECMA_PROPERTY_FLAG_WRITABLE,
+                                                             NULL);
 
-      ecma_set_named_data_property_value (length_prop_p, ecma_make_integer_value (0));
+      length_prop_value_p->value = ecma_make_integer_value (0);
 
       ecma_deref_ecma_string (length_str_p);
       break;
@@ -346,14 +348,14 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
        *      as it is non-configurable and so can't be deleted
        */
 
-      ecma_property_t *len_prop_p = ecma_create_named_data_property (object_p,
-                                                                     string_p,
-                                                                     ECMA_PROPERTY_FIXED);
+      ecma_property_t *len_prop_p;
+      ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
+                                                                                 string_p,
+                                                                                 ECMA_PROPERTY_FIXED,
+                                                                                 &len_prop_p);
 
-      ecma_set_named_data_property_value (len_prop_p,
-                                          ecma_make_integer_value (ext_obj_p->u.built_in.length));
+      len_prop_value_p->value = ecma_make_integer_value (ext_obj_p->u.built_in.length);
 
-      JERRY_ASSERT (!ecma_is_property_configurable (len_prop_p));
       return len_prop_p;
     }
 
@@ -519,11 +521,13 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
   }
 
-  ecma_property_t *prop_p = ecma_create_named_data_property (object_p,
-                                                             string_p,
-                                                             curr_property_p->attributes);
+  ecma_property_t *prop_p;
+  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (object_p,
+                                                                         string_p,
+                                                                         curr_property_p->attributes,
+                                                                         &prop_p);
 
-  ecma_set_named_data_property_value (prop_p, value);
+  prop_value_p->value = value;
 
   /* Reference count of objects must be decreased. */
   if (ecma_is_value_object (value))

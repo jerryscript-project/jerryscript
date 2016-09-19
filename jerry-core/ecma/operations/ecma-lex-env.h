@@ -52,8 +52,7 @@ extern ecma_value_t ecma_op_delete_binding (ecma_object_t *, ecma_string_t *);
 extern ecma_value_t ecma_op_implicit_this_value (ecma_object_t *);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern void ecma_op_create_immutable_binding (ecma_object_t *, ecma_string_t *);
-extern void ecma_op_initialize_immutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t);
+extern void ecma_op_create_immutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t);
 
 extern ecma_object_t *ecma_op_create_global_environment (ecma_object_t *);
 

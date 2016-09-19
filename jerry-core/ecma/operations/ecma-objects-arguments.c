@@ -233,10 +233,9 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   if (is_strict)
   {
-    ecma_op_create_immutable_binding (lex_env_p, arguments_string_p);
-    ecma_op_initialize_immutable_binding (lex_env_p,
-                                          arguments_string_p,
-                                          ecma_make_object_value (obj_p));
+    ecma_op_create_immutable_binding (lex_env_p,
+                                      arguments_string_p,
+                                      ecma_make_object_value (obj_p));
   }
   else
   {
@@ -293,7 +292,7 @@ ecma_arguments_update_mapped_arg_value (ecma_object_t *object_p, /**< the object
 
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (value));
 
-  ecma_named_data_property_assign_value (object_p, property_p, value);
+  ecma_named_data_property_assign_value (object_p, ECMA_PROPERTY_VALUE_PTR (property_p), value);
   ecma_free_value (value);
 
   /* These properties cannot be cached. This is a temporary
@@ -362,15 +361,13 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *obj_p, /**< the obj
         ecma_value_t *scope_prop_p = ecma_get_internal_property (map_p, ECMA_INTERNAL_PROPERTY_SCOPE);
         ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *scope_prop_p);
 
-        ecma_property_t *mapped_prop_p = ecma_op_object_get_own_property (map_p, property_name_p);
-        ecma_value_t arg_name_prop_value = ecma_get_named_data_property_value (mapped_prop_p);
-
-        ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_name_prop_value);
+        ecma_property_value_t *arg_name_value_p = ecma_get_named_data_property (map_p, property_name_p);
 
         completion = ecma_op_set_mutable_binding (lex_env_p,
-                                                  arg_name_p,
+                                                  ecma_get_string_from_value (arg_name_value_p->value),
                                                   property_desc_p->value,
                                                   true);
+
         JERRY_ASSERT (ecma_is_value_empty (completion));
       }
 

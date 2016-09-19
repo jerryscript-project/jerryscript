@@ -105,11 +105,13 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
   ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
 
-  ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
-                                                                    length_magic_string_p,
-                                                                    ECMA_PROPERTY_FLAG_WRITABLE);
+  ecma_property_value_t *length_prop_value_p;
+  length_prop_value_p = ecma_create_named_data_property (obj_p,
+                                                         length_magic_string_p,
+                                                         ECMA_PROPERTY_FLAG_WRITABLE,
+                                                         NULL);
 
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value ((ecma_number_t) length));
+  length_prop_value_p->value = ecma_make_number_value ((ecma_number_t) length);
 
   ecma_deref_ecma_string (length_magic_string_p);
 
@@ -158,11 +160,13 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
   // 1.
   ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
-  ecma_property_t *len_prop_p = ecma_op_object_get_own_property (obj_p, magic_string_length_p);
-  JERRY_ASSERT (len_prop_p != NULL && ECMA_PROPERTY_GET_TYPE (len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+  ecma_property_t *len_prop_p = ecma_find_named_property (obj_p, magic_string_length_p);
+
+  JERRY_ASSERT (len_prop_p != NULL
+                && ECMA_PROPERTY_GET_TYPE (*len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
   // 2.
-  ecma_value_t old_len_value = ecma_get_named_data_property_value (len_prop_p);
+  ecma_value_t old_len_value = ECMA_PROPERTY_VALUE_PTR (len_prop_p)->value;
 
   uint32_t old_len_uint32 = ecma_get_uint32_from_value (old_len_value);
 
@@ -231,7 +235,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
       else
       {
         // g.
-        if (!ecma_is_property_writable (len_prop_p))
+        if (!ecma_is_property_writable (*len_prop_p))
         {
           ret_value = ecma_reject (is_throw);
         }
@@ -410,7 +414,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
     // b.
     if (index >= old_len_uint32
-        && !ecma_is_property_writable (len_prop_p))
+        && !ecma_is_property_writable (*len_prop_p))
     {
       return ecma_reject (is_throw);
     }

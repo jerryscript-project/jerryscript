@@ -332,17 +332,10 @@ typedef enum
  * a packed struct would only consume sizeof(ecma_value_t)+1 memory
  * bytes, accessing such structure is inefficient from the CPU viewpoint
  * because the value is not naturally aligned. To improve performance,
- * multiple type bytes and values are packed together. The maximum
- * number of packed items is sizeof(ecma_value_t). The memory layout is
- * the following when the maximum number of items is present:
+ * two type bytes and values are packed together. The memory layout is
+ * the following:
  *
- *  [type 1, type 2, type 3, type 4][value 1][value 2][value 3][value 4]
- *
- * This way no memory is wasted and values are naturally aligned.
- *
- * For property pairs, only two values are used:
- *
- *  [type 1, type 2, unused 1, unused 2][value 1][value 2]
+ *  [type 1, type 2, unused byte 1, unused byte 2][value 1][value 2]
  *
  * The unused two bytes are used to store a compressed pointer for the
  * next property pair.
@@ -426,22 +419,23 @@ typedef struct
   ((ecma_internal_property_id_t) (*(property_p) >> ECMA_PROPERTY_FLAG_SHIFT))
 
 /**
- * Computing the data offset of a property.
+ * Add the offset part to a property for computing its property data pointer.
  */
-#define ECMA_PROPERTY_VALUE_OFFSET(property_p) \
-  ((((uintptr_t) (property_p)) & (sizeof (ecma_property_value_t) - 1)) + 1)
+#define ECMA_PROPERTY_VALUE_ADD_OFFSET(property_p) \
+  ((uintptr_t) ((((uint8_t *) (property_p)) + (sizeof (ecma_property_value_t) * 2 - 1))))
 
 /**
- * Computing the base address of property data list.
+ * Align the property for computing its property data pointer.
  */
-#define ECMA_PROPERTY_VALUE_BASE_PTR(property_p) \
-  ((ecma_property_value_t *) (((uintptr_t) (property_p)) & ~(sizeof (ecma_property_value_t) - 1)))
+#define ECMA_PROPERTY_VALUE_DATA_PTR(property_p) \
+  (ECMA_PROPERTY_VALUE_ADD_OFFSET (property_p) & ~(sizeof (ecma_property_value_t) - 1))
 
 /**
- * Pointer to property data.
+ * Compute the property data pointer of a property.
+ * The property must be part of a property pair.
  */
 #define ECMA_PROPERTY_VALUE_PTR(property_p) \
-  (ECMA_PROPERTY_VALUE_BASE_PTR (property_p) + ECMA_PROPERTY_VALUE_OFFSET (property_p))
+  ((ecma_property_value_t *) ECMA_PROPERTY_VALUE_DATA_PTR (property_p))
 
 /**
  * Property reference.

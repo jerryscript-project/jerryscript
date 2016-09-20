@@ -75,76 +75,55 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_get_value_object_base (ecma_value_t base, /**< base value */
+ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
                                ecma_string_t *property_name_p) /**< property name */
 {
-  // 4.a
-  if (ecma_is_value_object (base))
+  if (ecma_is_value_object (base_value))
   {
-    // 4.b case 1
-    ecma_object_t *obj_p = ecma_get_object_from_value (base);
+    ecma_object_t *obj_p = ecma_get_object_from_value (base_value);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
     return ecma_op_object_get (obj_p, property_name_p);
   }
 
-  JERRY_ASSERT (ecma_is_value_boolean (base)
-                || ecma_is_value_number (base)
-                || ecma_is_value_string (base));
+  JERRY_ASSERT (ecma_is_value_boolean (base_value)
+                || ecma_is_value_number (base_value)
+                || ecma_is_value_string (base_value));
 
-  // 4.b case 2
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  // 1.
-  ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
+  ECMA_TRY_CATCH (object_base, ecma_op_to_object (base_value), ret_value);
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
+  ecma_object_t *object_p = ecma_get_object_from_value (object_base);
+  JERRY_ASSERT (object_p != NULL
+                && !ecma_is_lexical_environment (object_p));
 
-  // 2.
-  ecma_property_ref_t property_ref;
-  ecma_property_t property = ecma_op_object_get_property (obj_p,
-                                                          property_name_p,
-                                                          &property_ref,
-                                                          ECMA_PROPERTY_GET_VALUE);
+  ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND)
+  /* Circular reference is possible in JavaScript and testing it is complicated. */
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
+
+  do
   {
-    // 3.
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-  else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
-  {
-    // 4.
-    ret_value = ecma_copy_value (property_ref.value_p->value);
-  }
-  else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_VIRTUAL)
-  {
-    // 4.
-    ret_value = property_ref.virtual_value;
-  }
-  else
-  {
-    // 5.
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+    ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
-    ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (property_ref.value_p);
-
-    // 6.
-    if (obj_p == NULL)
+    if (ecma_is_value_found (value))
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = value;
+      break;
     }
-    else
-    {
-      // 7.
-      ret_value = ecma_op_function_call (obj_p, base, NULL, 0);
-    }
-  }
 
-  ECMA_FINALIZE (obj_base);
+    if (--max_depth == 0)
+    {
+      break;
+    }
+
+    object_p = ecma_get_object_prototype (object_p);
+  }
+  while (object_p != NULL);
+
+  ECMA_FINALIZE (object_base);
 
   return ret_value;
 } /* ecma_op_get_value_object_base */

@@ -202,7 +202,7 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
                              uint32_t options) /**< option bits */
 {
   /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = 128;
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
 
   do
   {
@@ -400,7 +400,7 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
                      ecma_string_t *property_name_p) /**< property name */
 {
   /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = 128;
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
 
   ecma_value_t base_value = ecma_make_object_value (object_p);
   do
@@ -468,7 +468,7 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
   /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = 128;
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
 
   ecma_value_t base_value = ecma_make_object_value (object_p);
   do

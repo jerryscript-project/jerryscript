@@ -135,7 +135,8 @@ static inline lit_utf8_size_t __attr_always_inline___
 ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,out] number as a string in decimal
                                                                         *   form */
                                             lit_utf8_size_t num_digits, /**< length of the string representation */
-                                            int32_t round_num) /**< number of digits to keep */
+                                            int32_t round_num, /**< number of digits to keep */
+                                            int32_t *exponent_p) /**< [in, out] decimal exponent */
 {
   if (round_num < 1)
   {
@@ -149,8 +150,29 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
 
   if (digits_p[round_num] >= '5')
   {
-    digits_p[round_num - 1]++;
+    digits_p[round_num] = '0';
+
+    int i = 1;
+
+    /* Handle curry number. */
+    for (; i < (int) num_digits; i++)
+    {
+      if (++digits_p[round_num - i] <= '9')
+      {
+        break;
+      }
+      digits_p[round_num - i] = '0';
+    }
+
+    /* Prepend highest digit */
+    if (i >= (int) num_digits)
+    {
+      memmove (digits_p + 1, digits_p, num_digits);
+      digits_p[0] = '1';
+      *exponent_p += 1;
+    }
   }
+
   return (lit_utf8_size_t) round_num;
 } /* ecma_builtin_number_prototype_helper_round */
 
@@ -535,7 +557,10 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           /* 1. */
           int32_t frac_digits = ecma_number_to_int32 (arg_num);
 
-          num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, exponent + frac_digits);
+          num_digits = ecma_builtin_number_prototype_helper_round (digits,
+                                                                   num_digits,
+                                                                   exponent + frac_digits,
+                                                                   &exponent);
 
           /* Buffer that is used to construct the string. */
           int buffer_size = (exponent > 0) ? exponent + frac_digits + 2 : frac_digits + 3;
@@ -670,7 +695,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
           frac_digits = ecma_number_to_int32 (arg_num);
         }
 
-        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, frac_digits + 1);
+        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, frac_digits + 1, &exponent);
 
         /* frac_digits + 2 characters for number, 5 characters for exponent, 1 for \0. */
         int buffer_size = frac_digits + 2 + 5 + 1;
@@ -814,7 +839,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
 
         int32_t precision = ecma_number_to_int32 (arg_num);
 
-        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision);
+        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision, &exponent);
 
         int buffer_size;
         if (exponent  < -5 || exponent > precision)

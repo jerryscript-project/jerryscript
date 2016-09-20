@@ -438,6 +438,11 @@ typedef struct
   ((ecma_property_value_t *) ECMA_PROPERTY_VALUE_DATA_PTR (property_p))
 
 /**
+ * Depth limit for property search (maximum prototype chain depth).
+ */
+#define ECMA_PROPERTY_SEARCH_DEPTH_LIMIT 128
+
+/**
  * Property reference.
  */
 typedef union

@@ -5,7 +5,7 @@ dist: trusty
 sudo: required
 
 env:
-  - OPTS="--check-signed-off-travis --check-cppcheck --check-vera"
+  - OPTS="--check-signed-off-travis --check-cppcheck --check-vera --check-license"
   - OPTS="--jerry-tests --jerry-test-suite"
   - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300 INSTALL_QEMU_ARM=yes
   - OPTS=--buildoption-test

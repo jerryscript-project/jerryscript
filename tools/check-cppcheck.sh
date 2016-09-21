@@ -35,9 +35,11 @@ do
 done
 
 cppcheck -j$CPPCHECK_JOBS --force \
- --language=c++ --std=c++11 \
+ --language=c --std=c99 \
  --enable=warning,style,performance,portability,information \
+ --quiet --template="{file}:{line}: {severity}({id}): {message}" \
  --error-exitcode=1 \
  --exitcode-suppressions=tools/cppcheck/suppressions-list \
+ --suppressions-list=tools/cppcheck/suppressions-list \
  "${INCLUDE_DIRS[@]}" \
  jerry-core targets/default jerry-libc jerry-libm *.c *h tests/unit

@@ -65,7 +65,7 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
 
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
-/** \addtogroup jerry_extension Jerry engine extension interface
+/** \addtogroup jerry Jerry engine interface
  * @{
  */
 

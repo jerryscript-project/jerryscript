@@ -31,7 +31,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmaoperations ECMA-defined operations
+ * \addtogroup lexicalenvironment Lexical environment
  * @{
  */
 

@@ -29,7 +29,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmabuiltinhelpers
+ * \addtogroup ecmabuiltinhelpers ECMA builtin helper operations
  * @{
  */
 

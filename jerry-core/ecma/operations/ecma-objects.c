@@ -43,7 +43,7 @@
 /**
  * Assert that specified object type value is valid
  *
- * @param object's implementation-defined type
+ * @param type object's implementation-defined type
  */
 #ifndef JERRY_NDEBUG
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type) \

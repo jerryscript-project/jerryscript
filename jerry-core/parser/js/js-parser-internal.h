@@ -273,6 +273,18 @@ typedef struct
 #endif /* PARSER_DUMP_BYTE_CODE */
 } parser_context_t;
 
+/**
+ * @}
+ * @}
+ * @}
+ *
+ * \addtogroup mem Memory allocation
+ * @{
+ *
+ * \addtogroup mem_parser Parser memory manager
+ * @{
+ */
+
 /* Memory management.
  * Note: throws an error if unsuccessful. */
 void *parser_malloc (parser_context_t *, size_t);
@@ -311,6 +323,20 @@ void parser_stack_iterator_skip (parser_stack_iterator_t *, size_t);
 void parser_stack_iterator_read (parser_stack_iterator_t *, void *, size_t);
 void parser_stack_iterator_write (parser_stack_iterator_t *, const void *, size_t);
 
+/**
+ * @}
+ * @}
+ *
+ * \addtogroup parser Parser
+ * @{
+ *
+ * \addtogroup jsparser JavaScript
+ * @{
+ *
+ * \addtogroup jsparser_utils Utility
+ * @{
+ */
+
 /* Compact byte code emitting functions. */
 
 void parser_flush_cbc (parser_context_t *);
@@ -338,6 +364,13 @@ void parser_set_continues_to_current_position (parser_context_t *, parser_branch
 #define parser_emit_cbc_ext_backward_branch(context_p, opcode, offset) \
   parser_emit_cbc_backward_branch ((context_p), PARSER_TO_EXT_OPCODE (opcode), (offset))
 
+/**
+ * @}
+ *
+ * \addtogroup jsparser_lexer Lexer
+ * @{
+ */
+
 /* Lexer functions */
 
 void lexer_next_token (parser_context_t *);
@@ -351,13 +384,44 @@ void lexer_construct_function_object (parser_context_t *, uint32_t);
 void lexer_construct_regexp_object (parser_context_t *, bool);
 bool lexer_compare_identifier_to_current (parser_context_t *, const lexer_lit_location_t *);
 
+/**
+ * @}
+ *
+ * \addtogroup jsparser_expr Expression parser
+ * @{
+ */
+
 /* Parser functions. */
 
 void parser_parse_expression (parser_context_t *, int);
-void parser_parse_statements (parser_context_t *);
+
+/**
+ * @}
+ *
+ * \addtogroup jsparser_scanner Scanner
+ * @{
+ */
+
 void parser_scan_until (parser_context_t *, lexer_range_t *, lexer_token_type_t);
-ecma_compiled_code_t *parser_parse_function (parser_context_t *, uint32_t);
+
+/**
+ * @}
+ *
+ * \addtogroup jsparser_stmt Statement parser
+ * @{
+ */
+
+void parser_parse_statements (parser_context_t *);
 void parser_free_jumps (parser_stack_iterator_t);
+
+/**
+ * @}
+ *
+ * \addtogroup jsparser_parser Parser
+ * @{
+ */
+
+ecma_compiled_code_t *parser_parse_function (parser_context_t *, uint32_t);
 
 /* Error management. */
 

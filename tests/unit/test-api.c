@@ -71,7 +71,8 @@ handler (const jerry_value_t func_obj_val, /**< function object */
   char buffer[32];
   jerry_size_t sz;
 
-  printf ("ok %d %d %p %d\n", func_obj_val, this_val, args_p, args_cnt);
+  printf ("ok %u %u %p %u\n",
+          (unsigned int) func_obj_val, (unsigned int) this_val, (void *) args_p, (unsigned int) args_cnt);
 
   TEST_ASSERT (args_cnt == 2);
 
@@ -95,7 +96,8 @@ handler_throw_test (const jerry_value_t func_obj_val, /**< function object */
                     const jerry_value_t args_p[], /**< arguments list */
                     const jerry_length_t args_cnt) /**< arguments length */
 {
-  printf ("ok %d %d %p %d\n", func_obj_val, this_val, args_p, args_cnt);
+  printf ("ok %u %u %p %u\n",
+          (unsigned int) func_obj_val, (unsigned int) this_val, (void *) args_p, (unsigned int) args_cnt);
 
   return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "error");
 } /* handler_throw_test */
@@ -115,7 +117,8 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
                    const jerry_value_t args_p[], /**< arguments list */
                    const jerry_length_t args_cnt) /**< arguments length */
 {
-  printf ("ok construct %d %d %p %d\n", func_obj_val, this_val, args_p, args_cnt);
+  printf ("ok construct %u %u %p %u\n",
+          (unsigned int) func_obj_val, (unsigned int) this_val, (void *) args_p, (unsigned int) args_cnt);
 
   TEST_ASSERT (jerry_value_is_object (this_val));
 

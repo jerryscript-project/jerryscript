@@ -118,6 +118,8 @@ def create_binary(buildoptions):
     return 0
 
 def run_check(runnable):
+    sys.stderr.write('Test command: %s\n' % ' '.join(runnable))
+
     try:
         ret = subprocess.check_call(runnable)
     except subprocess.CalledProcessError as e:
@@ -190,16 +192,16 @@ def main():
         ret = run_check([SIGNED_OFF_SCRIPT, '--travis'])
 
     if not ret and (script_args.all or script_args.check_signed_off):
-        ret = run_check(SIGNED_OFF_SCRIPT)
+        ret = run_check([SIGNED_OFF_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_cppcheck):
-        ret = run_check(CPPCHECK_SCRIPT)
+        ret = run_check([CPPCHECK_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_vera):
-        ret = run_check(VERA_SCRIPT)
+        ret = run_check([VERA_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_license):
-        ret = run_check(LICENSE_SCRIPT)
+        ret = run_check([LICENSE_SCRIPT])
 
     if not ret and (script_args.all or script_args.jerry_tests):
         ret = run_jerry_tests()

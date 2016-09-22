@@ -237,7 +237,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       case RE_TOK_START_CAPTURE_GROUP:
       {
         idx = re_ctx_p->num_of_captures++;
-        JERRY_TRACE_MSG ("Compile a capture group start (idx: %d)\n", idx);
+        JERRY_TRACE_MSG ("Compile a capture group start (idx: %u)\n", (unsigned int) idx);
 
         ret_value = re_parse_alternative (re_ctx_p, false);
 
@@ -251,7 +251,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       case RE_TOK_START_NON_CAPTURE_GROUP:
       {
         idx = re_ctx_p->num_of_non_captures++;
-        JERRY_TRACE_MSG ("Compile a non-capture group start (idx: %d)\n", idx);
+        JERRY_TRACE_MSG ("Compile a non-capture group start (idx: %u)\n", (unsigned int) idx);
 
         ret_value = re_parse_alternative (re_ctx_p, false);
 
@@ -264,8 +264,9 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       }
       case RE_TOK_CHAR:
       {
-        JERRY_TRACE_MSG ("Compile character token: %c, qmin: %d, qmax: %d\n",
-                         re_ctx_p->current_token.value, re_ctx_p->current_token.qmin, re_ctx_p->current_token.qmax);
+        JERRY_TRACE_MSG ("Compile character token: %c, qmin: %u, qmax: %u\n",
+                         (char) re_ctx_p->current_token.value, (unsigned int) re_ctx_p->current_token.qmin,
+                         (unsigned int) re_ctx_p->current_token.qmax);
 
         re_append_opcode (bc_ctx_p, RE_OP_CHAR);
         re_append_char (bc_ctx_p, re_canonicalize ((ecma_char_t) re_ctx_p->current_token.value,
@@ -364,7 +365,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
           re_ctx_p->highest_backref = backref;
         }
 
-        JERRY_TRACE_MSG ("Compile a backreference: %d\n", backref);
+        JERRY_TRACE_MSG ("Compile a backreference: %u\n", (unsigned int) backref);
         re_append_opcode (bc_ctx_p, RE_OP_BACKREFERENCE);
         re_append_u32 (bc_ctx_p, backref);
 

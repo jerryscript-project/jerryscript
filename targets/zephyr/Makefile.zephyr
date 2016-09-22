@@ -96,10 +96,9 @@ CC = $(CROSS_COMPILE)gcc
 ZEPHYR_LIBC_INC = $(subst -I,,$(TOOLCHAIN_CFLAGS))
 LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)
 
-# TODO: There is a warning when compiling in some architectures related to __sputc_r
 EXT_CFLAGS += -Wno-error=conversion
 EXT_CFLAGS += $(LIB_INCLUDE_DIR)
-EXT_CFLAGS += $(TOOLCHAIN_CFLAGS)
+EXT_CFLAGS += $(subst -I,-isystem,$(TOOLCHAIN_CFLAGS))
 
 EXTERNAL_LIB = $(INTERM)/lib/libjerry-core.a
 ZEPHYR_BIN = $(OUTPUT)/zephyr/zephyr.strip

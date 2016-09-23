@@ -443,13 +443,24 @@ typedef struct
 #define ECMA_PROPERTY_SEARCH_DEPTH_LIMIT 128
 
 /**
- * Property reference.
+ * Property reference. It contains the value pointer
+ * for real, and the value itself for virtual properties.
  */
 typedef union
 {
-  ecma_property_value_t *value_p; /**< direct pointer to property value */
-  ecma_value_t virtual_value; /**< property value */
+  ecma_property_value_t *value_p; /**< property value pointer for real properties */
+  ecma_value_t virtual_value; /**< property value for virtual properties */
 } ecma_property_ref_t;
+
+/**
+ * Extended property reference, which also contains the
+ * property descriptor pointer for real properties.
+ */
+typedef struct
+{
+  ecma_property_ref_t property_ref; /**< property reference */
+  ecma_property_t *property_p; /**< property descriptor pointer for real properties */
+} ecma_extended_property_ref_t;
 
 /**
  * Option flags for ecma_op_object_get_property
@@ -458,6 +469,7 @@ typedef enum
 {
   ECMA_PROPERTY_GET_NO_OPTIONS = 0, /**< no option flags for ecma_op_object_get_property */
   ECMA_PROPERTY_GET_VALUE = 1u << 0, /**< fill virtual_value field for virtual properties */
+  ECMA_PROPERTY_GET_EXT_REFERENCE = 1u << 1, /**< get extended reference to the property */
 } ecma_property_get_option_bits_t;
 
 /**

@@ -415,7 +415,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
 
         ecma_char_t ch = lit_utf8_read_next (&str_curr_p);
-        JERRY_TRACE_MSG ("Period matching '.' to %d: ", (uint32_t) ch);
+        JERRY_TRACE_MSG ("Period matching '.' to %u: ", (unsigned int) ch);
 
         if (lit_char_is_line_terminator (ch))
         {
@@ -608,8 +608,9 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         {
           ecma_char_t ch1 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
           ecma_char_t ch2 = re_canonicalize (re_get_char (&bc_p), is_ignorecase);
-          JERRY_TRACE_MSG ("num_of_ranges=%d, ch1=%d, ch2=%d, curr_ch=%d; ",
-                           num_of_ranges, ch1, ch2, curr_ch);
+          JERRY_TRACE_MSG ("num_of_ranges=%u, ch1=%u, ch2=%u, curr_ch=%u; ",
+                           (unsigned int) num_of_ranges, (unsigned int) ch1,
+                           (unsigned int) ch2, (unsigned int) curr_ch);
 
           if (curr_ch >= ch1 && curr_ch <= ch2)
           {
@@ -644,7 +645,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         uint32_t backref_idx;
 
         backref_idx = re_get_value (&bc_p);
-        JERRY_TRACE_MSG ("Execute RE_OP_BACKREFERENCE (idx: %d): ", backref_idx);
+        JERRY_TRACE_MSG ("Execute RE_OP_BACKREFERENCE (idx: %u): ", (unsigned int) backref_idx);
         backref_idx *= 2;  /* backref n -> saved indices [n*2, n*2+1] */
         JERRY_ASSERT (backref_idx >= 2 && backref_idx + 1 < re_ctx_p->num_of_captures);
 
@@ -729,7 +730,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         while (*bc_p == RE_OP_ALTERNATIVE)
         {
-          JERRY_TRACE_MSG (", jump: %d", offset);
+          JERRY_TRACE_MSG (", jump: %u", (unsigned int) offset);
           bc_p++;
           offset = re_get_value (&bc_p);
           bc_p += offset;
@@ -1148,7 +1149,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       }
       default:
       {
-        JERRY_TRACE_MSG ("UNKNOWN opcode (%d)!\n", (uint32_t) op);
+        JERRY_TRACE_MSG ("UNKNOWN opcode (%u)!\n", (unsigned int) op);
         return ecma_raise_common_error (ECMA_ERR_MSG (""));
       }
     }

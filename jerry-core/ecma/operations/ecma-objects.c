@@ -76,6 +76,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (property_name_p != NULL);
+  JERRY_ASSERT (options == ECMA_PROPERTY_GET_NO_OPTIONS || property_ref_p != NULL);
 
   ecma_object_type_t type = ecma_get_object_type (object_p);
 
@@ -176,6 +177,11 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
                                              binding_value);
       ecma_free_value (binding_value);
     }
+  }
+
+  if (options & ECMA_PROPERTY_GET_EXT_REFERENCE)
+  {
+    ((ecma_extended_property_ref_t *) property_ref_p)->property_p = property_p;
   }
 
   if (property_ref_p != NULL)

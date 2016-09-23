@@ -26,3 +26,20 @@ before_install:
 install:
 
 script: "python tools/run-tests.py $OPTS"
+
+# The channel name "chat.freenode.net#jerryscript"
+# is encrypted against Samsung/jerryscript
+# to prevent IRC spam of forks
+#
+# travis encrypt -r "Samsung/jerryscript" "chat.freenode.net#jerryscript"
+notifications:
+  irc:
+    channels:
+      - secure: "4kML4uZywOPaT3r/bHCvZCeQWooyzZumESmKuHG2Y8/B29WtMBobsoRQZRfOmlUP5kshfjh0Itp5WFpdACiBCoorHch/8z3VT7fIbKF4UnxrAvNiFArqxXC0OWGIu93e7uyyXJCsQ/JiOXU7bD31Mh8LbnfS1z3wBAMXi+AwcaGiVVH4VTL6O8sR3ij5WmsqpECWhyWTgTP3MiLquZ+09Lv9mp5GGciEemq4p8VnaQt2BdyEBmUJJ1EAyMCJlKNObQudegOzYsY3CVON9C87dCuHf7DYstsxb8AzwRAKn8LHiaWhYaWLfvHqoXmc4w1ZgN0HZ5Qyx8KMkZkXKUiHxuCSoXDxNAHWTGQBsTDid5drZeqOFucOHEKJzkqaWSUKUF3pY/hq/h2kjAn230DlBNkJt+ikSxwy6Mm8GG8LnH5gRMl37zHDHrtyRsKR8GIst9B1B95LAOLA5t8U/ucGKXqLsohS8glXaM4jjh69it3GeHj6NhB8NbC/LsmRrhjKzV+VnjPI6gZvN+5tDiuxMbsMal+0DdWVNCst/aO3Jz0iaA5ahyo2ZwBb2efw3CekRLMKmHtnjqB0SWWXT3/t2+5zNoM6gBjo4RPOg7k5eTOXcfk8okWtQ5d3n8UtvZ5rSiDl3rssHwp1yHuuC8rGGov74DLvyDlpM6p/dmtu2o8="
+    on_success: always
+    on_failure: always
+    use_notice: true
+    template:
+      - "%{repository_name} (%{branch}@%{commit}): %{author} - %{commit_subject} [%{result}]"
+      - "Commit: %{compare_url}"
+      - "Build: %{build_url}"

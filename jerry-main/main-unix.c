@@ -45,11 +45,19 @@ static const uint8_t *
 read_file (const char *file_name,
            size_t *out_size_p)
 {
-  FILE *file = fopen (file_name, "r");
-  if (file == NULL)
+  FILE *file;
+  if (!strcmp ("-", file_name))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name);
-    return NULL;
+    file = stdin;
+  }
+  else
+  {
+    file = fopen (file_name, "r");
+    if (file == NULL)
+    {
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name);
+      return NULL;
+    }
   }
 
   size_t bytes_read = fread (buffer, 1u, sizeof (buffer), file);
@@ -117,6 +125,7 @@ print_help (char *name)
                       "  --exec-snapshot FILE\n"
                       "  --log-level [0-3]\n"
                       "  --abort-on-fail\n"
+                      "  --no-prompt\n"
                       "\n",
                       name);
 } /* print_help */
@@ -183,6 +192,7 @@ main (int argc,
   const char *save_snapshot_file_name_p = NULL;
 
   bool is_repl_mode = false;
+  bool no_prompt = false;
 
   for (i = 1; i < argc; i++)
   {
@@ -275,6 +285,14 @@ main (int argc,
     else if (!strcmp ("--abort-on-fail", argv[i]))
     {
       jerry_port_default_set_abort_on_fail (true);
+    }
+    else if (!strcmp ("--no-prompt", argv[i]))
+    {
+      no_prompt = true;
+    }
+    else if (!strcmp ("-", argv[i]))
+    {
+      file_names[files_counter++] = argv[i];
     }
     else if (!strncmp ("-", argv[i], 1))
     {
@@ -407,7 +425,7 @@ main (int argc,
 
   if (is_repl_mode)
   {
-    const char *prompt = "jerry> ";
+    const char *prompt = !no_prompt ? "jerry> " : "";
     bool is_done = false;
 
     jerry_value_t global_obj_val = jerry_get_global_object ();

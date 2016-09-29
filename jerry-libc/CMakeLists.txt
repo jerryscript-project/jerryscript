@@ -47,6 +47,7 @@ add_library(${JERRY_LIBC_NAME} STATIC ${SOURCE_LIBC} ${TARGET_SPECIFIC_LIBC_SOUR
 target_compile_definitions(${JERRY_LIBC_NAME} PRIVATE ${DEFINES_LIBC})
 target_include_directories(${JERRY_LIBC_NAME} PRIVATE ${INCLUDE_LIBC})
 target_include_directories(${JERRY_LIBC_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/jerry-libc/include")
+target_link_libraries(${JERRY_LIBC_NAME} -lgcc)
 
 install(TARGETS ${JERRY_LIBC_NAME} DESTINATION lib)
 install(DIRECTORY ${INCLUDE_LIBC}/include/ DESTINATION include/jerry-libc)

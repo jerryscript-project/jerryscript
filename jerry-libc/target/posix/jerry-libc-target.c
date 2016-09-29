@@ -134,13 +134,13 @@ fopen (const char *path, /**< file path */
       create_if_not_exist = true;
       if (mode[1] == '+')
       {
-        assert (!"unsupported mode a+");
+        assert (false && "unsupported mode a+");
       }
       break;
     }
     default:
     {
-      assert (!"unsupported mode");
+      assert (false && "unsupported mode");
     }
   }
 

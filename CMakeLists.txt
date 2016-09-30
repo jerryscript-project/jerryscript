@@ -131,31 +131,6 @@ if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND NOT JERRY_LIBC
   set(DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE)
 endif()
 
-# Imported targets prefix
-set(PREFIX_IMPORTED_LIB imported_)
-
-# Imported libraries
-if(("${PLATFORM}" STREQUAL "DARWIN") AND (NOT CMAKE_COMPILER_IS_GNUCC))
-  # libclang_rt.osx
-  set(IMPORTED_LIB "${PREFIX_IMPORTED_LIB}libclang_rt.osx")
-  add_library(${IMPORTED_LIB} STATIC IMPORTED)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=
-                  OUTPUT_VARIABLE IMPORTED_LIBCLANG_RT_LOCATION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(IMPORTED_LIBCLANG_RT_LOCATION "${IMPORTED_LIBCLANG_RT_LOCATION}/lib/darwin/libclang_rt.osx.a")
-  set_property(TARGET ${IMPORTED_LIB}
-               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBCLANG_RT_LOCATION})
-else()
-  # libgcc
-  set(IMPORTED_LIB "${PREFIX_IMPORTED_LIB}libgcc")
-  add_library(${IMPORTED_LIB} STATIC IMPORTED)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} ${FLAGS_COMMON_ARCH} -print-file-name=libgcc.a
-                  OUTPUT_VARIABLE IMPORTED_LIBGCC_LOCATION
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set_property(TARGET ${IMPORTED_LIB}
-               PROPERTY IMPORTED_LOCATION ${IMPORTED_LIBGCC_LOCATION})
-endif()
-
 # Compiler / Linker flags
 jerry_add_compile_flags(-fno-builtin)
 if(("${PLATFORM}" STREQUAL "DARWIN"))

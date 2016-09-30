@@ -690,6 +690,13 @@ jmem_heap_stat_free_iter ()
 } /* jmem_heap_stat_free_iter */
 #endif /* JMEM_STATS */
 
+#undef VALGRIND_NOACCESS_SPACE
+#undef VALGRIND_UNDEFINED_SPACE
+#undef VALGRIND_DEFINED_SPACE
+#undef VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST
+#undef VALGRIND_FREYA_MALLOCLIKE_SPACE
+#undef VALGRIND_FREYA_FREELIKE_SPACE
+
 /**
  * @}
  * @}

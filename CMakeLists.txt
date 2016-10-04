@@ -148,7 +148,7 @@ endif()
 jerry_add_compile_flags(-fno-stack-protector)
 
 # Debug information
-jerry_add_compile_flags(-g -gdwarf-4)
+jerry_add_compile_flags(-g)
 
 jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
 jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)

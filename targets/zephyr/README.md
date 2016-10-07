@@ -69,19 +69,19 @@ make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 qemu
 ```
 # assume you are in harmony folder
 cd jerryscript
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
 ```
 
 This will generate the following libraries:
 ```
-./build/arduino_101_factory/librelease-cp_minimal.jerry-core.a
-./build/arduino_101_factory/librelease-cp_minimal.jerry-libm.lib.a
-./build/arduino_101_factory/librelease.external-cp_minimal-entry.a
+./build/arduino_101/librelease-cp_minimal.jerry-core.a
+./build/arduino_101/librelease-cp_minimal.jerry-libm.lib.a
+./build/arduino_101/librelease.external-cp_minimal-entry.a
 ```
 
 The final Zephyr image will be located here:
 ```
-./build/arduino_101_factory/zephyr/zephyr.strip
+./build/arduino_101/zephyr/zephyr.strip
 ```
 
 #### 5. Flashing
@@ -106,7 +106,7 @@ You can follow the Zephyr instructions to flash using the dfu-util command
 or use this helper:
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory dfu-x86
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 dfu-x86
 ```
 
 Make sure you have the factory bootloader in your device to use this method or it will not flash.
@@ -118,7 +118,7 @@ There is a helper function to flash using the JTAG and Flywatter2
 ![alt tag](docs/arduino_101.jpg?raw=true "Example")
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory flash
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 flash
 ```
 
 <warning> Careful if you flash the BOARD arduino_101, you will lose the bootloader

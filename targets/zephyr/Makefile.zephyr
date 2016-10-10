@@ -18,7 +18,7 @@ ifeq ($(.DEFAULT_GOAL),)
   $(warning no default goal is set)
 endif
 
-BOARD ?= arduino_101_factory
+BOARD ?= arduino_101
 BOARD_NAME ?= arduino_101
 
 ifeq ($(BOARD),qemu_x86)

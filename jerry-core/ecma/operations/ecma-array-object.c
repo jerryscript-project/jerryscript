@@ -142,6 +142,111 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 } /* ecma_op_create_array_object */
 
 /**
+ * Update the length of an array to a new length
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+extern ecma_value_t
+ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object */
+                                 ecma_value_t new_value, /**< new length value */
+                                 uint32_t flags) /**< configuration options */
+{
+  bool is_throw = (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW);
+
+  ecma_value_t completion = ecma_op_to_number (new_value);
+
+  if (ECMA_IS_VALUE_ERROR (completion))
+  {
+    return completion;
+  }
+
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion)
+                && ecma_is_value_number (completion));
+
+  ecma_number_t new_len_num = ecma_get_number_from_value (completion);
+
+  ecma_free_value (completion);
+
+  if (ecma_is_value_object (new_value))
+  {
+    ecma_value_t compared_num_val = ecma_op_to_number (new_value);
+
+    if (ECMA_IS_VALUE_ERROR (completion))
+    {
+      return compared_num_val;
+    }
+
+    new_len_num = ecma_get_number_from_value (compared_num_val);
+    ecma_free_value (compared_num_val);
+  }
+
+  uint32_t new_len_uint32 = ecma_number_to_uint32 (new_len_num);
+
+  if (((ecma_number_t) new_len_uint32) != new_len_num)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
+  }
+
+  if (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT)
+  {
+    return ecma_reject (is_throw);
+  }
+
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
+
+  ecma_property_t *len_prop_p = ecma_find_named_property (object_p, &magic_string_length);
+  JERRY_ASSERT (len_prop_p != NULL
+                && ECMA_PROPERTY_GET_TYPE (*len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+
+  ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
+  uint32_t old_len_uint32 = ecma_get_uint32_from_value (len_prop_value_p->value);
+
+  if (new_len_num == old_len_uint32)
+  {
+    /* Only the writable flag must be updated. */
+    if (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED)
+    {
+      if (!(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
+      {
+        ecma_set_property_writable_attr (len_prop_p, false);
+      }
+      else if (!ecma_is_property_writable (*len_prop_p))
+      {
+        return ecma_reject (is_throw);
+      }
+    }
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
+  else if (!ecma_is_property_writable (*len_prop_p))
+  {
+    return ecma_reject (is_throw);
+  }
+
+  uint32_t current_len_uint32 = new_len_uint32;
+
+  if (new_len_uint32 < old_len_uint32)
+  {
+    current_len_uint32 = ecma_delete_array_properties (object_p, new_len_uint32, old_len_uint32);
+  }
+
+  ecma_value_assign_uint32 (&len_prop_value_p->value, current_len_uint32);
+
+  if ((flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED)
+      && !(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
+  {
+    ecma_set_property_writable_attr (len_prop_p, false);
+  }
+
+  if (current_len_uint32 == new_len_uint32)
+  {
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  }
+  return ecma_reject (is_throw);
+} /* ecma_op_array_object_set_length */
+
+/**
  * [[DefineOwnProperty]] ecma array object's operation
  *
  * See also:
@@ -152,303 +257,90 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array object */
+ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the array object */
                                           ecma_string_t *property_name_p, /**< property name */
                                           const ecma_property_descriptor_t *property_desc_p, /**< property descriptor */
                                           bool is_throw) /**< flag that controls failure handling */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+  if (ecma_string_is_length (property_name_p))
+  {
+    if (!property_desc_p->is_value_defined)
+    {
+      return ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p, is_throw);
+    }
 
-  // 1.
-  ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
-  ecma_property_t *len_prop_p = ecma_find_named_property (obj_p, magic_string_length_p);
+    JERRY_ASSERT (property_desc_p->is_configurable_defined || !property_desc_p->is_configurable);
+    JERRY_ASSERT (property_desc_p->is_enumerable_defined || !property_desc_p->is_enumerable);
+    JERRY_ASSERT (property_desc_p->is_writable_defined || !property_desc_p->is_writable);
 
+    uint32_t flags = 0;
+
+    if (is_throw)
+    {
+      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW;
+    }
+
+    /* Only the writable and data properties can be modified. */
+    if (property_desc_p->is_configurable
+        || property_desc_p->is_enumerable
+        || property_desc_p->is_get_defined
+        || property_desc_p->is_set_defined)
+    {
+      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT;
+    }
+
+    if (property_desc_p->is_writable_defined)
+    {
+      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED;
+    }
+
+    if (property_desc_p->is_writable)
+    {
+      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE;
+    }
+
+    return ecma_op_array_object_set_length (object_p, property_desc_p->value, flags);
+  }
+
+  uint32_t index;
+
+  if (!ecma_string_get_array_index (property_name_p, &index))
+  {
+    return ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p, is_throw);
+  }
+
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
+
+  ecma_property_t *len_prop_p = ecma_find_named_property (object_p, &magic_string_length);
   JERRY_ASSERT (len_prop_p != NULL
                 && ECMA_PROPERTY_GET_TYPE (*len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
-  // 2.
-  ecma_value_t old_len_value = ECMA_PROPERTY_VALUE_PTR (len_prop_p)->value;
+  ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
 
-  uint32_t old_len_uint32 = ecma_get_uint32_from_value (old_len_value);
+  bool update_length = (index >= ecma_get_uint32_from_value (len_prop_value_p->value));
 
-  // 3.
-  bool is_property_name_equal_length = ecma_compare_ecma_strings (property_name_p,
-                                                                  magic_string_length_p);
-
-  ecma_deref_ecma_string (magic_string_length_p);
-
-  if (is_property_name_equal_length)
+  if (update_length && !ecma_is_property_writable (*len_prop_p))
   {
-    // a.
-    if (!property_desc_p->is_value_defined)
-    {
-      // i.
-      return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p, is_throw);
-    }
-
-    // c.
-    ecma_value_t completion = ecma_op_to_number (property_desc_p->value);
-    if (ECMA_IS_VALUE_ERROR (completion))
-    {
-      return completion;
-    }
-
-    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion)
-                  && ecma_is_value_number (completion));
-
-    ecma_number_t new_len_num = ecma_get_number_from_value (completion);
-
-    ecma_free_value (completion);
-
-    uint32_t new_len_uint32 = ecma_number_to_uint32 (new_len_num);
-
-    // d.
-    if (ecma_is_value_object (property_desc_p->value))
-    {
-      ecma_value_t compared_num_val = ecma_op_to_number (property_desc_p->value);
-      new_len_num = ecma_get_number_from_value (compared_num_val);
-      ecma_free_value (compared_num_val);
-    }
-
-    if (((ecma_number_t) new_len_uint32) != new_len_num)
-    {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
-    }
-    else
-    {
-      // b., e.
-      ecma_property_descriptor_t new_len_property_desc = *property_desc_p;
-      new_len_property_desc.value = ecma_make_number_value (new_len_num);
-
-      ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-      // f.
-      if (new_len_uint32 >= old_len_uint32)
-      {
-        // i.
-        magic_string_length_p = ecma_new_ecma_length_string ();
-        ret_value = ecma_op_general_object_define_own_property (obj_p,
-                                                                magic_string_length_p,
-                                                                &new_len_property_desc,
-                                                                is_throw);
-        ecma_deref_ecma_string (magic_string_length_p);
-      }
-      else
-      {
-        // g.
-        if (!ecma_is_property_writable (*len_prop_p))
-        {
-          ret_value = ecma_reject (is_throw);
-        }
-        else
-        {
-          // h.
-          bool new_writable;
-          if (!new_len_property_desc.is_writable_defined
-              || new_len_property_desc.is_writable)
-          {
-            new_writable = true;
-          }
-          else
-          {
-            // ii.
-            new_writable = false;
-
-            // iii.
-            new_len_property_desc.is_writable_defined = true;
-            new_len_property_desc.is_writable = true;
-          }
-
-          // j.
-          magic_string_length_p = ecma_new_ecma_length_string ();
-          ecma_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
-                                                                               magic_string_length_p,
-                                                                               &new_len_property_desc,
-                                                                               is_throw);
-          ecma_deref_ecma_string (magic_string_length_p);
-
-          /* Handling normal false and throw values */
-          if (!ecma_is_value_true (succeeded))
-          {
-            JERRY_ASSERT (ecma_is_value_false (succeeded)
-                          || ECMA_IS_VALUE_ERROR (succeeded));
-
-            // k.
-            ret_value = succeeded;
-          }
-          else
-          {
-            // l
-            JERRY_ASSERT (new_len_uint32 < old_len_uint32);
-
-            /*
-             * Item i. is replaced with faster iteration: only indices that actually exist in the array, are iterated
-             */
-            bool is_reduce_succeeded = true;
-
-            ecma_collection_header_t *array_index_props_p = ecma_op_object_get_property_names (obj_p,
-                                                                                               true,
-                                                                                               false,
-                                                                                               false);
-
-            ecma_length_t array_index_props_num = array_index_props_p->unit_number;
-
-            JMEM_DEFINE_LOCAL_ARRAY (array_index_values_p, array_index_props_num, uint32_t);
-
-            ecma_collection_iterator_t iter;
-            ecma_collection_iterator_init (&iter, array_index_props_p);
-
-            uint32_t array_index_values_pos = 0;
-
-            while (ecma_collection_iterator_next (&iter))
-            {
-              ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
-
-              uint32_t index;
-              bool is_index = ecma_string_get_array_index (property_name_p, &index);
-              JERRY_ASSERT (is_index);
-              JERRY_ASSERT (index < old_len_uint32);
-
-              array_index_values_p[array_index_values_pos++] = index;
-            }
-
-            JERRY_ASSERT (array_index_values_pos == array_index_props_num);
-
-            while (array_index_values_pos != 0
-                   && array_index_values_p[--array_index_values_pos] >= new_len_uint32)
-            {
-              uint32_t index = array_index_values_p[array_index_values_pos];
-
-              // ii.
-              ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-              ecma_value_t delete_succeeded = ecma_op_object_delete (obj_p, index_string_p, false);
-              ecma_deref_ecma_string (index_string_p);
-
-              if (ecma_is_value_false (delete_succeeded))
-              {
-                // iii.
-                new_len_uint32 = (index + 1u);
-
-                // 1.
-                ecma_number_t new_len_num = ((ecma_number_t) index + 1u);
-                ecma_value_assign_number (&new_len_property_desc.value, new_len_num);
-
-                // 2.
-                if (!new_writable)
-                {
-                  new_len_property_desc.is_writable_defined = true;
-                  new_len_property_desc.is_writable = false;
-                }
-
-                // 3.
-                ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
-                ecma_value_t completion = ecma_op_general_object_define_own_property (obj_p,
-                                                                                      magic_string_length_p,
-                                                                                      &new_len_property_desc,
-                                                                                      false);
-                ecma_deref_ecma_string (magic_string_length_p);
-
-                JERRY_ASSERT (ecma_is_value_boolean (completion));
-
-                is_reduce_succeeded = false;
-
-                break;
-              }
-            }
-
-            JMEM_FINALIZE_LOCAL_ARRAY (array_index_values_p);
-
-            ecma_free_values_collection (array_index_props_p, true);
-
-            if (!is_reduce_succeeded)
-            {
-              ret_value = ecma_reject (is_throw);
-            }
-            else
-            {
-              // m.
-              if (!new_writable)
-              {
-                ecma_property_descriptor_t prop_desc_not_writable = ecma_make_empty_property_descriptor ();
-
-                prop_desc_not_writable.is_writable_defined = true;
-                prop_desc_not_writable.is_writable = false;
-
-                ecma_value_t completion_set_not_writable;
-                magic_string_length_p = ecma_new_ecma_length_string ();
-                completion_set_not_writable = ecma_op_general_object_define_own_property (obj_p,
-                                                                                          magic_string_length_p,
-                                                                                          &prop_desc_not_writable,
-                                                                                          false);
-                ecma_deref_ecma_string (magic_string_length_p);
-                JERRY_ASSERT (ecma_is_value_true (completion_set_not_writable));
-              }
-
-              ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-            }
-          }
-        }
-      }
-
-      ecma_free_value (new_len_property_desc.value);
-
-      return ret_value;
-    }
-
-    JERRY_UNREACHABLE ();
-  }
-  else
-  {
-    // 4.a.
-    uint32_t index;
-
-    if (!ecma_string_get_array_index (property_name_p, &index))
-    {
-      // 5.
-      return ecma_op_general_object_define_own_property (obj_p,
-                                                         property_name_p,
-                                                         property_desc_p,
-                                                         is_throw);
-    }
-
-    // 4.
-
-    // b.
-    if (index >= old_len_uint32
-        && !ecma_is_property_writable (*len_prop_p))
-    {
-      return ecma_reject (is_throw);
-    }
-
-    // c.
-    ecma_value_t succeeded = ecma_op_general_object_define_own_property (obj_p,
-                                                                         property_name_p,
-                                                                         property_desc_p,
-                                                                         false);
-    // d.
-    JERRY_ASSERT (ecma_is_value_boolean (succeeded));
-
-    if (ecma_is_value_false (succeeded))
-    {
-      return ecma_reject (is_throw);
-    }
-
-    // e.
-    if (index < UINT32_MAX
-        && index >= old_len_uint32)
-    {
-      ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
-
-      // i., ii.
-      /* Setting the length property is always successful. */
-      ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
-    }
-
-    // f.
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ecma_reject (is_throw);
   }
 
-  JERRY_UNREACHABLE ();
+  ecma_value_t completition = ecma_op_general_object_define_own_property (object_p,
+                                                                          property_name_p,
+                                                                          property_desc_p,
+                                                                          false);
+  JERRY_ASSERT (ecma_is_value_boolean (completition));
+
+  if (ecma_is_value_false (completition))
+  {
+    return ecma_reject (is_throw);
+  }
+
+  if (update_length)
+  {
+    ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
+  }
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_op_array_object_define_own_property */
 
 /**

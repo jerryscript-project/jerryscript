@@ -945,9 +945,8 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
           }
 
           ecma_deref_ecma_string (name_p);
+          prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
         }
-
-        prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
 
         JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
@@ -978,6 +977,143 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
                                    cur_prop_p->next_property_cp);
   }
 } /* ecma_delete_property */
+
+/**
+ * Low level delete of array items from new_length to old_length
+ *
+ * Note: new_length must be less than old_length
+ *
+ * @return the updated value of new_length
+ */
+uint32_t
+ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
+                              uint32_t new_length, /**< new length */
+                              uint32_t old_length) /**< old length */
+{
+  JERRY_ASSERT (new_length < old_length);
+
+  /* First the minimum value of new_length is updated. */
+  ecma_property_header_t *current_prop_p = ecma_get_property_list (object_p);
+
+  if (current_prop_p == NULL)
+  {
+    return new_length;
+  }
+
+  if (ECMA_PROPERTY_GET_TYPE (current_prop_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                       current_prop_p->next_property_cp);
+  }
+
+  while (current_prop_p != NULL)
+  {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (current_prop_p));
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) current_prop_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      if (prop_pair_p->names_cp[i] != ECMA_NULL_POINTER
+          && !ecma_is_property_configurable (current_prop_p->types[i]))
+      {
+        ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                    prop_pair_p->names_cp[i]);
+
+        uint32_t index;
+        if (ecma_string_get_array_index (property_name_p, &index))
+        {
+          if (index < old_length && index >= new_length)
+          {
+            new_length = index + 1;
+
+            if (new_length == old_length)
+            {
+              /* Early return. */
+              return new_length;
+            }
+          }
+        }
+      }
+    }
+
+    current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                       current_prop_p->next_property_cp);
+  }
+
+  /* Second all properties between new_length and old_length are deleted. */
+  current_prop_p = ecma_get_property_list (object_p);
+  ecma_property_header_t *prev_prop_p = NULL;
+  bool has_hashmap = false;
+
+  if (ECMA_PROPERTY_GET_TYPE (current_prop_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prev_prop_p = current_prop_p;
+    current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                       current_prop_p->next_property_cp);
+    has_hashmap = true;
+  }
+
+  while (current_prop_p != NULL)
+  {
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) current_prop_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      if (prop_pair_p->names_cp[i] != ECMA_NULL_POINTER
+          && ecma_is_property_configurable (current_prop_p->types[i]))
+      {
+        ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                    prop_pair_p->names_cp[i]);
+
+        uint32_t index;
+        if (ecma_string_get_array_index (property_name_p, &index))
+        {
+          if (index < old_length && index >= new_length)
+          {
+            ecma_free_property (object_p, property_name_p, current_prop_p->types + i);
+
+            if (has_hashmap)
+            {
+              ecma_property_hashmap_delete (object_p, property_name_p, current_prop_p->types + i);
+            }
+
+            JERRY_ASSERT (current_prop_p->types[i] == ECMA_PROPERTY_TYPE_DELETED);
+
+            ecma_deref_ecma_string (property_name_p);
+            prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
+          }
+        }
+      }
+    }
+
+    if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_DELETED
+        && current_prop_p->types[1] == ECMA_PROPERTY_TYPE_DELETED)
+    {
+      if (prev_prop_p == NULL)
+      {
+        object_p->property_list_or_bound_object_cp = current_prop_p->next_property_cp;
+      }
+      else
+      {
+        prev_prop_p->next_property_cp = current_prop_p->next_property_cp;
+      }
+
+      ecma_property_header_t *next_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                                              current_prop_p->next_property_cp);
+      ecma_dealloc_property_pair ((ecma_property_pair_t *) current_prop_p);
+      current_prop_p = next_prop_p;
+    }
+    else
+    {
+      prev_prop_p = current_prop_p;
+      current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                         current_prop_p->next_property_cp);
+    }
+  }
+
+  return new_length;
+} /* ecma_delete_array_properties */
 
 /**
  * Check whether the object contains a property

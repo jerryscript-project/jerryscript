@@ -25,8 +25,25 @@
  * @{
  */
 
+/**
+ * Flags for ecma_op_array_object_set_length
+ */
+typedef enum
+{
+  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW = 1u << 0, /**< is_throw flag is set */
+  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT = 1u << 1, /**< reject later because the descriptor flags
+                                                       *   contains an unallowed combination */
+  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED = 1u << 2, /**< writable flag defined
+                                                                 *   in the property descriptor */
+  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE = 1u << 3, /**< writable flag enabled
+                                                         *   in the property descriptor */
+} ecma_array_object_set_length_flags_t;
+
 extern ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *, ecma_length_t, bool);
+
+extern ecma_value_t
+ecma_op_array_object_set_length (ecma_object_t *, ecma_value_t, uint32_t);
 
 extern ecma_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *, ecma_string_t *, const ecma_property_descriptor_t *, bool);

@@ -624,16 +624,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       {
         if (type == ECMA_OBJECT_TYPE_ARRAY && ecma_string_is_length (property_name_p))
         {
-          /* These cases cannot be optimized. */
-          ecma_property_descriptor_t value_desc = ecma_make_empty_property_descriptor ();
-
-          value_desc.is_value_defined = true;
-          value_desc.value = value;
-
-          return ecma_op_object_define_own_property (object_p,
-                                                     property_name_p,
-                                                     &value_desc,
-                                                     is_throw);
+          return ecma_op_array_object_set_length (object_p, value, 0);
         }
 
         /* There is no need for special casing arrays here because changing the

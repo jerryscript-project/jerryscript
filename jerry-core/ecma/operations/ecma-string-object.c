@@ -49,12 +49,9 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   ecma_string_t *prim_prop_str_value_p;
 
-  ecma_number_t length_value;
-
   if (arguments_list_len == 0)
   {
     prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-    length_value = ECMA_NUMBER_ZERO;
   }
   else
   {
@@ -70,9 +67,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
       JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
 
       prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);
-
-      ecma_length_t string_len = ecma_string_get_length (prim_prop_str_value_p);
-      length_value = ((ecma_number_t) (uint32_t) string_len);
     }
   }
 
@@ -97,16 +91,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_value_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
                                                                    ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
   *prim_value_prop_p = ecma_make_string_value (prim_prop_str_value_p);
-
-  // 15.5.5.1
-  ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
-  ecma_property_value_t *length_prop_value_p = ecma_create_named_data_property (obj_p,
-                                                                                length_magic_string_p,
-                                                                                ECMA_PROPERTY_FIXED,
-                                                                                NULL);
-  ecma_deref_ecma_string (length_magic_string_p);
-
-  length_prop_value_p->value = ecma_make_number_value (length_value);
 
   return ecma_make_object_value (obj_p);
 } /* ecma_op_create_string_object */
@@ -136,8 +120,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
 
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
-  JERRY_UNUSED (for_non_enumerable_p);
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
   ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
                                                            ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
@@ -154,6 +137,10 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
 
     ecma_deref_ecma_string (name_p);
   }
+
+  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), true);
+  ecma_deref_ecma_string (length_str_p);
 } /* ecma_op_string_list_lazy_property_names */
 
 /**

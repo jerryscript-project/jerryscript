@@ -86,6 +86,22 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
   {
     if (type == ECMA_OBJECT_TYPE_STRING)
     {
+      if (ecma_string_is_length (property_name_p))
+      {
+        if (options & ECMA_PROPERTY_GET_VALUE)
+        {
+          ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
+                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+
+          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
+          ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+
+          property_ref_p->virtual_value = ecma_make_uint32_value (length);
+        }
+
+        return ECMA_PROPERTY_TYPE_VIRTUAL;
+      }
+
       uint32_t index;
 
       if (ecma_string_get_array_index (property_name_p, &index))
@@ -316,6 +332,17 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
   {
     if (type == ECMA_OBJECT_TYPE_STRING)
     {
+      if (ecma_string_is_length (property_name_p))
+      {
+        ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
+                                                                 ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+
+        ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
+        ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+
+        return ecma_make_uint32_value (length);
+      }
+
       uint32_t index;
 
       if (ecma_string_get_array_index (property_name_p, &index))

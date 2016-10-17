@@ -151,14 +151,7 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /*
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
   /* 3. */
-  if (ecma_op_object_has_own_property (obj_p, property_name_string_p))
-  {
-    return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-  }
-  else
-  {
-    return_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
+  return_value = ecma_make_boolean_value (ecma_op_object_has_own_property (obj_p, property_name_string_p));
 
   ECMA_FINALIZE (obj_val);
 

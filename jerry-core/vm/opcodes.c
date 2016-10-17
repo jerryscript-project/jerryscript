@@ -79,14 +79,7 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 ecma_value_t
 opfunc_logical_not (ecma_value_t left_value) /**< left value */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-
-  if (ecma_op_to_boolean (left_value))
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-
-  return ret_value;
+  return ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
 } /* opfunc_logical_not */
 
 /**

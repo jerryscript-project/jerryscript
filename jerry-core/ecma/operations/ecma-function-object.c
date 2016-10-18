@@ -406,7 +406,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     if (ecma_get_object_is_builtin (func_obj_p)
         && ecma_builtin_function_is_routine (func_obj_p))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (""));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Function parameter cannot be built-in a function."));
     }
 
     if (!ecma_is_value_object (value))
@@ -424,7 +424,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (!ecma_is_value_object (prototype_obj_value))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
     }
     else
     {
@@ -456,7 +456,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   }
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
   }
   else
   {
@@ -789,7 +789,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
     }
     else
     {

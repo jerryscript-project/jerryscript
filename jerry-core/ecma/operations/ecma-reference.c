@@ -99,7 +99,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
 
-  return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+  return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
 } /* ecma_op_resolve_reference_value */
 
 /**

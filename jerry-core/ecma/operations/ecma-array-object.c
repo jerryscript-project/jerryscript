@@ -66,9 +66,10 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
   {
     ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
     uint32_t num_uint32 = ecma_number_to_uint32 (num);
+
     if (num != ((ecma_number_t) num_uint32))
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG (""));
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
     }
     else
     {
@@ -211,7 +212,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *obj_p, /**< the array o
 
     if (((ecma_number_t) new_len_uint32) != new_len_num)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG (""));
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
     }
     else
     {

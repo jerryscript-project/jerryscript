@@ -53,7 +53,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   // 3.
   if (unlikely (is_unresolvable_reference))
   {
-    return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+    return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
   }
 
   // 5.
@@ -150,7 +150,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     // 3.a.
     if (is_strict)
     {
-      return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+      return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
     }
     else
     {

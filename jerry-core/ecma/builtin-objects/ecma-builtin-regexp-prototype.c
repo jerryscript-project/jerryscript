@@ -330,14 +330,7 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                   ecma_builtin_regexp_prototype_exec (this_arg, arg),
                   ret_value);
 
-  if (ecma_is_value_null (match_value))
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-  else
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-  }
+  ret_value = ecma_make_boolean_value (!ecma_is_value_null (match_value));
 
   ECMA_FINALIZE (match_value);
 

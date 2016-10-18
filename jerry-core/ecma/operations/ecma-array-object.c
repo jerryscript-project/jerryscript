@@ -92,8 +92,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 
   ecma_object_t *obj_p = ecma_create_object (array_prototype_obj_p,
-                                             false,
-                                             true,
+                                             0,
                                              ECMA_OBJECT_TYPE_ARRAY);
 
   ecma_deref_object (array_prototype_obj_p);

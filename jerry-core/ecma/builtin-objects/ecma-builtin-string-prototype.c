@@ -72,14 +72,15 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
   }
   else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_STRING_UL)
+    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_STRING_UL))
     {
-      ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      return ecma_copy_value (*prim_value_p);
+      JERRY_ASSERT (ecma_is_value_string (ext_object_p->u.class_prop.value));
+
+      return ecma_copy_value (ext_object_p->u.class_prop.value);
     }
   }
 
@@ -408,7 +409,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
   ecma_value_t regexp_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   /* 3. */
   if (ecma_is_value_object (arg)
-      && ecma_object_get_class_name (ecma_get_object_from_value (arg)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (arg), LIT_MAGIC_STRING_REGEXP_UL))
   {
     regexp_value = ecma_copy_value (arg);
   }
@@ -1245,7 +1246,7 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
   ecma_builtin_replace_search_ctx_t context;
 
   if (ecma_is_value_object (search_value)
-      && ecma_object_get_class_name (ecma_get_object_from_value (search_value)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (search_value), LIT_MAGIC_STRING_REGEXP_UL))
   {
     ecma_object_t *regexp_obj_p = ecma_get_object_from_value (search_value);
     ecma_string_t *global_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
@@ -1337,7 +1338,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
 
   /* 3. */
   if (ecma_is_value_object (regexp_arg)
-      && ecma_object_get_class_name (ecma_get_object_from_value (regexp_arg)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (regexp_arg), LIT_MAGIC_STRING_REGEXP_UL))
   {
     regexp_value = ecma_copy_value (regexp_arg);
   }
@@ -1500,7 +1501,7 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
 
   /* 1. */
   if (ecma_is_value_object (separator)
-      && ecma_object_get_class_name (ecma_get_object_from_value (separator)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (separator), LIT_MAGIC_STRING_REGEXP_UL))
   {
     ecma_value_t regexp_value = ecma_copy_value_if_not_object (separator);
 
@@ -1687,7 +1688,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
         ecma_value_t separator = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
         if (ecma_is_value_object (arg1)
-            && ecma_object_get_class_name (ecma_get_object_from_value (arg1)) == LIT_MAGIC_STRING_REGEXP_UL)
+            && ecma_object_class_is (ecma_get_object_from_value (arg1), LIT_MAGIC_STRING_REGEXP_UL))
         {
           separator = ecma_copy_value (arg1);
         }

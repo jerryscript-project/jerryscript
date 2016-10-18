@@ -153,7 +153,9 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   // 1., 4., 13.
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-  ecma_object_t *func_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_FUNCTION);
+  ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
+                                              sizeof (ecma_extended_object_t),
+                                              ECMA_OBJECT_TYPE_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
@@ -355,7 +357,9 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
   ecma_object_t *function_obj_p;
-  function_obj_p = ecma_create_object (prototype_obj_p, true, true, ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  function_obj_p = ecma_create_object (prototype_obj_p,
+                                       sizeof (ecma_extended_object_t),
+                                       ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
   ecma_deref_object (prototype_obj_p);
 
@@ -679,8 +683,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   {
     //  6.
     obj_p = ecma_create_object (ecma_get_object_from_value (func_obj_prototype_prop_value),
-                                false,
-                                true,
+                                0,
                                 ECMA_OBJECT_TYPE_GENERAL);
   }
   else
@@ -688,7 +691,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
     // 7.
     ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-    obj_p = ecma_create_object (prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+    obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
 
     ecma_deref_object (prototype_p);
   }

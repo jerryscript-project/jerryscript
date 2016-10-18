@@ -100,16 +100,15 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
   }
   else if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_BOOLEAN_UL)
+    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_BOOLEAN_UL))
     {
-      ecma_value_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                    ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      JERRY_ASSERT (ecma_is_value_boolean (*prim_value_prop_p));
+      JERRY_ASSERT (ecma_is_value_boolean (ext_object_p->u.class_prop.value));
 
-      return *prim_value_prop_p;
+      return ext_object_p->u.class_prop.value;
     }
   }
 

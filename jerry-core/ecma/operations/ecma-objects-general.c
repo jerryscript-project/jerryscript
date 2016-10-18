@@ -115,7 +115,7 @@ ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prot
                                                                                               the object
                                                                                               (can be NULL) */
 {
-  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
 
   /*
    * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
@@ -203,7 +203,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
-    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
+    if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_DATE_UL))
     {
       hint = ECMA_PREFERRED_TYPE_STRING;
     }

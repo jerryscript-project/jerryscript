@@ -897,12 +897,10 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
 
   ecma_number_t value = ecma_date_time_clip (date);
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  ecma_value_t *date_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-
-  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_value_prop_p) = value;
+  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.value) = value;
 
   return ecma_make_number_value (value);
 } /* ecma_date_set_internal_property */
@@ -1292,18 +1290,17 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
-      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
   else
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-    ecma_value_t *date_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                  ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    JERRY_ASSERT (date_value_prop_p != NULL);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-    ecma_number_t date_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_value_prop_p);
+    ecma_number_t date_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                               ext_object_p->u.class_prop.value);
 
     ret_value = ecma_make_number_value (date_num);
   }

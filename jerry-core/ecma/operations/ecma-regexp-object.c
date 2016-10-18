@@ -223,24 +223,27 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *object_p = ecma_create_object (re_prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (re_prototype_obj_p);
 
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
   /* Set the internal [[Class]] property */
-  ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  *class_prop_p = LIT_MAGIC_STRING_REGEXP_UL;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
 
   /* Set bytecode internal property. */
-  ecma_value_t *bytecode_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-  ECMA_SET_INTERNAL_VALUE_POINTER (*bytecode_prop_p, bytecode_p);
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.value, bytecode_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_p);
 
   /* Initialize RegExp object properties */
-  re_initialize_props (obj_p,
+  re_initialize_props (object_p,
                        ECMA_GET_NON_NULL_POINTER (ecma_string_t, bytecode_p->pattern_cp),
                        bytecode_p->header.status_flags);
 
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_regexp_object_from_bytecode */
 
 /**
@@ -274,31 +277,32 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (re_prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *object_p = ecma_create_object (re_prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (re_prototype_obj_p);
 
-  /* Set the internal [[Class]] property */
-  ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  *class_prop_p = LIT_MAGIC_STRING_REGEXP_UL;
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
 
-  re_initialize_props (obj_p, pattern_p, flags);
-
-  /* Set bytecode internal property. */
-  ecma_value_t *bytecode_prop_p = ecma_create_internal_property (obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
+  re_initialize_props (object_p, pattern_p, flags);
 
   /* Compile bytecode. */
   const re_compiled_code_t *bc_p = NULL;
   ECMA_TRY_CATCH (empty, re_compile_bytecode (&bc_p, pattern_p, flags), ret_value);
 
-  ECMA_SET_INTERNAL_VALUE_POINTER (*bytecode_prop_p, bc_p);
-  ret_value = ecma_make_object_value (obj_p);
+  /* Set [[Class]] and bytecode internal properties. */
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.value, bc_p);
+
+  ret_value = ecma_make_object_value (object_p);
 
   ECMA_FINALIZE (empty);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_deref_object (obj_p);
+    ecma_deref_object (object_p);
   }
 
   return ret_value;
@@ -1235,11 +1239,11 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   ecma_object_t *regexp_object_p = ecma_get_object_from_value (regexp_value);
 
-  JERRY_ASSERT (ecma_object_get_class_name (regexp_object_p) == LIT_MAGIC_STRING_REGEXP_UL);
+  JERRY_ASSERT (ecma_object_class_is (regexp_object_p, LIT_MAGIC_STRING_REGEXP_UL));
 
-  ecma_value_t *bytecode_prop_p = ecma_get_internal_property (regexp_object_p,
-                                                              ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE);
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, *bytecode_prop_p);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
+                                                              ext_object_p->u.class_prop.value);
 
   if (bc_p == NULL)
   {

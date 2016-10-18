@@ -76,23 +76,17 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* !CONFIG_DISABLE_STRING_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             false,
-                                             true,
-                                             ECMA_OBJECT_TYPE_STRING);
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (prototype_obj_p);
 
-  /*
-   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_STRING type.
-   *
-   * See also: ecma_object_get_class_name
-   */
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
+  ext_object_p->u.class_prop.value = ecma_make_string_value (prim_prop_str_value_p);
 
-  ecma_value_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  *prim_value_prop_p = ecma_make_string_value (prim_prop_str_value_p);
-
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_string_object */
 
 /**
@@ -116,15 +110,16 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
                                                                                            *   collection
                                                                                                         */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
 
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
 
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
-  ecma_value_t *prim_value_p = ecma_get_internal_property (obj_p,
-                                                           ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL);
+
+  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (ext_object_p->u.class_prop.value);
 
   ecma_length_t length = ecma_string_get_length (prim_value_str_p);
 

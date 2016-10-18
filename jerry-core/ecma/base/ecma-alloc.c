@@ -92,18 +92,19 @@ DECLARE_ROUTINES_FOR (external_pointer)
  * @return pointer to allocated memory
  */
 inline ecma_extended_object_t * __attr_always_inline___
-ecma_alloc_extended_object (void)
+ecma_alloc_extended_object (size_t size) /**< size of object */
 {
-  return jmem_heap_alloc_block (sizeof (ecma_extended_object_t));
+  return jmem_heap_alloc_block (size);
 } /* ecma_alloc_extended_object */
 
 /**
  * Dealloc memory of an extended object
  */
 inline void __attr_always_inline___
-ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p) /**< property pair to be freed */
+ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p, /**< property pair to be freed */
+                              size_t size) /**< size of object */
 {
-  jmem_heap_free_block (ext_object_p, sizeof (ecma_extended_object_t));
+  jmem_heap_free_block (ext_object_p, size);
 } /* ecma_dealloc_extended_object */
 
 /**

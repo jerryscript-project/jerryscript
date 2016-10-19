@@ -283,6 +283,7 @@ ecma_get_named_data_property (ecma_object_t *, ecma_string_t *);
 extern void ecma_free_property (ecma_object_t *, ecma_string_t *, ecma_property_t *);
 
 extern void ecma_delete_property (ecma_object_t *, ecma_property_value_t *);
+extern uint32_t ecma_delete_array_properties (ecma_object_t *, uint32_t, uint32_t);
 
 extern void ecma_named_data_property_assign_value (ecma_object_t *, ecma_property_value_t *, ecma_value_t);
 

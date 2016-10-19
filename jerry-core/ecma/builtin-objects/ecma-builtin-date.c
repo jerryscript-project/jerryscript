@@ -481,9 +481,12 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             false,
-                                             true,
-                                             ECMA_OBJECT_TYPE_GENERAL);
+                                             sizeof (ecma_extended_object_t),
+                                             ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
+
   ecma_deref_object (prototype_obj_p);
 
   if (arguments_list_len == 0)
@@ -546,16 +549,11 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       prim_value_num = ecma_number_make_nan ();
     }
 
-    ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p,
-                                                                ECMA_INTERNAL_PROPERTY_CLASS);
-    *class_prop_p = LIT_MAGIC_STRING_DATE_UL;
-
-    ecma_value_t *date_prop_p = ecma_create_internal_property (obj_p,
-                                                               ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
 
     ecma_number_t *date_num_p = ecma_alloc_number ();
     *date_num_p = prim_value_num;
-    ECMA_SET_INTERNAL_VALUE_POINTER (*date_prop_p, date_num_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.value, date_num_p);
 
     ret_value = ecma_make_object_value (obj_p);
   }

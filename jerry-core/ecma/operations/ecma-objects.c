@@ -48,10 +48,10 @@
 #ifndef JERRY_NDEBUG
 #define JERRY_ASSERT_OBJECT_TYPE_IS_VALID(type) \
   JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL \
+                || type == ECMA_OBJECT_TYPE_CLASS \
                 || type == ECMA_OBJECT_TYPE_FUNCTION \
                 || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION \
                 || type == ECMA_OBJECT_TYPE_ARRAY \
-                || type == ECMA_OBJECT_TYPE_STRING \
                 || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION \
                 || type == ECMA_OBJECT_TYPE_ARGUMENTS);
 #else /* JERRY_NDEBUG */
@@ -84,43 +84,44 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
   if (property_p == NULL)
   {
-    if (type == ECMA_OBJECT_TYPE_STRING)
+    if (type == ECMA_OBJECT_TYPE_CLASS)
     {
-      if (ecma_string_is_length (property_name_p))
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
       {
-        if (options & ECMA_PROPERTY_GET_VALUE)
-        {
-          ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-
-          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-          ecma_length_t length = ecma_string_get_length (prim_value_str_p);
-
-          property_ref_p->virtual_value = ecma_make_uint32_value (length);
-        }
-
-        return ECMA_PROPERTY_TYPE_VIRTUAL;
-      }
-
-      uint32_t index;
-
-      if (ecma_string_get_array_index (property_name_p, &index))
-      {
-        ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
-                                                                 ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-
-        ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-
-        if (index < ecma_string_get_length (prim_value_str_p))
+        if (ecma_string_is_length (property_name_p))
         {
           if (options & ECMA_PROPERTY_GET_VALUE)
           {
-            ecma_char_t char_at_idx = ecma_string_get_char_at_pos (prim_value_str_p, index);
-            ecma_string_t *char_str_p = ecma_new_ecma_string_from_code_unit (char_at_idx);
-            property_ref_p->virtual_value = ecma_make_string_value (char_str_p);
+            ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+            ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+
+            ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+            property_ref_p->virtual_value = ecma_make_uint32_value (length);
           }
 
-          return ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
+          return ECMA_PROPERTY_TYPE_VIRTUAL;
+        }
+
+        uint32_t index;
+
+        if (ecma_string_get_array_index (property_name_p, &index))
+        {
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+
+          if (index < ecma_string_get_length (prim_value_str_p))
+          {
+            if (options & ECMA_PROPERTY_GET_VALUE)
+            {
+              ecma_char_t char_at_idx = ecma_string_get_char_at_pos (prim_value_str_p, index);
+              ecma_string_t *char_str_p = ecma_new_ecma_string_from_code_unit (char_at_idx);
+              property_ref_p->virtual_value = ecma_make_string_value (char_str_p);
+            }
+
+            return ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
+          }
         }
       }
     }
@@ -330,32 +331,35 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
   if (property_p == NULL)
   {
-    if (type == ECMA_OBJECT_TYPE_STRING)
+    if (type == ECMA_OBJECT_TYPE_CLASS)
     {
-      if (ecma_string_is_length (property_name_p))
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
       {
-        ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
-                                                                 ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-
-        ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-        ecma_length_t length = ecma_string_get_length (prim_value_str_p);
-
-        return ecma_make_uint32_value (length);
-      }
-
-      uint32_t index;
-
-      if (ecma_string_get_array_index (property_name_p, &index))
-      {
-        ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
-                                                                 ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-
-        ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-
-        if (index < ecma_string_get_length (prim_value_str_p))
+        if (ecma_string_is_length (property_name_p))
         {
-          ecma_char_t char_at_idx = ecma_string_get_char_at_pos (prim_value_str_p, index);
-          return ecma_make_string_value (ecma_new_ecma_string_from_code_unit (char_at_idx));
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+
+          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+          ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+
+          return ecma_make_uint32_value (length);
+        }
+
+        uint32_t index;
+
+        if (ecma_string_get_array_index (property_name_p, &index))
+        {
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+
+          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+
+          if (index < ecma_string_get_length (prim_value_str_p))
+          {
+            ecma_char_t char_at_idx = ecma_string_get_char_at_pos (prim_value_str_p, index);
+            return ecma_make_string_value (ecma_new_ecma_string_from_code_unit (char_at_idx));
+          }
         }
       }
     }
@@ -582,20 +586,23 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
   if (property_p == NULL)
   {
-    if (type == ECMA_OBJECT_TYPE_STRING)
+    if (type == ECMA_OBJECT_TYPE_CLASS)
     {
-      uint32_t index;
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      if (ecma_string_get_array_index (property_name_p, &index))
+      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
       {
-        ecma_value_t *prim_value_p = ecma_get_internal_property (object_p,
-                                                                 ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+        uint32_t index;
 
-        ecma_string_t *prim_value_str_p = ecma_get_string_from_value (*prim_value_p);
-
-        if (index < ecma_string_get_length (prim_value_str_p))
+        if (ecma_string_get_array_index (property_name_p, &index))
         {
-          return ecma_reject (is_throw);
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
+
+          if (index < ecma_string_get_length (prim_value_str_p))
+          {
+            return ecma_reject (is_throw);
+          }
         }
       }
     }
@@ -776,10 +783,10 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_CLASS:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     case ECMA_OBJECT_TYPE_ARRAY:
-    case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_general_object_delete (obj_p,
@@ -825,10 +832,10 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
    * static const default_value_ptr_t default_value [ECMA_OBJECT_TYPE__COUNT] =
    * {
    *   [ECMA_OBJECT_TYPE_GENERAL]           = &ecma_op_general_object_default_value,
+   *   [ECMA_OBJECT_TYPE_CLASS]             = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_FUNCTION]          = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_STRING]            = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_ARGUMENTS]         = &ecma_op_general_object_default_value
    * };
@@ -864,9 +871,9 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_CLASS:
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
       return ecma_op_general_object_define_own_property (obj_p,
@@ -994,8 +1001,8 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
   switch (type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_CLASS:
     case ECMA_OBJECT_TYPE_ARRAY:
-    case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function object."));
@@ -1100,6 +1107,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     {
       switch (type)
       {
+        case ECMA_OBJECT_TYPE_GENERAL:
+        case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+        case ECMA_OBJECT_TYPE_ARRAY:
+        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+        case ECMA_OBJECT_TYPE_ARGUMENTS:
+        {
+          break;
+        }
         case ECMA_OBJECT_TYPE_FUNCTION:
         {
           ecma_op_function_list_lazy_property_names (is_enumerable_only,
@@ -1107,22 +1122,17 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                                      skipped_non_enumerable_p);
           break;
         }
-
-        case ECMA_OBJECT_TYPE_STRING:
+        case ECMA_OBJECT_TYPE_CLASS:
         {
-          ecma_op_string_list_lazy_property_names (obj_p,
-                                                   is_enumerable_only,
-                                                   prop_names_p,
-                                                   skipped_non_enumerable_p);
-          break;
-        }
+          ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-        case ECMA_OBJECT_TYPE_GENERAL:
-        case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-        case ECMA_OBJECT_TYPE_ARRAY:
-        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-        case ECMA_OBJECT_TYPE_ARGUMENTS:
-        {
+          if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
+          {
+            ecma_op_string_list_lazy_property_names (obj_p,
+                                                     is_enumerable_only,
+                                                     prop_names_p,
+                                                     skipped_non_enumerable_p);
+          }
           break;
         }
         default:
@@ -1413,9 +1423,10 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     {
       return LIT_MAGIC_STRING_ARRAY_UL;
     }
-    case ECMA_OBJECT_TYPE_STRING:
+    case ECMA_OBJECT_TYPE_CLASS:
     {
-      return LIT_MAGIC_STRING_STRING_UL;
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+      return ext_object_p->u.class_prop.class_id;
     }
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
@@ -1441,24 +1452,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           {
             return LIT_MAGIC_STRING_OBJECT_UL;
           }
-#ifndef CONFIG_DISABLE_STRING_BUILTIN
-          case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_STRING_UL;
-          }
-#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
-#ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
-          case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_BOOLEAN_UL;
-          }
-#endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
-#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
-          case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_NUMBER_UL;
-          }
-#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
 #ifndef CONFIG_DISABLE_MATH_BUILTIN
           case ECMA_BUILTIN_ID_MATH:
           {
@@ -1483,18 +1476,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           {
             return LIT_MAGIC_STRING_ERROR_UL;
           }
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
-          case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_DATE_UL;
-          }
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
-          case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_REGEXP_UL;
-          }
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
           default:
           {
             JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL));
@@ -1505,21 +1486,34 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       }
       else
       {
-        ecma_value_t *class_name_prop_p = ecma_find_internal_property (obj_p,
-                                                                       ECMA_INTERNAL_PROPERTY_CLASS);
-
-        if (class_name_prop_p == NULL)
-        {
-          return LIT_MAGIC_STRING_OBJECT_UL;
-        }
-        else
-        {
-          return *class_name_prop_p;
-        }
+        return LIT_MAGIC_STRING_OBJECT_UL;
       }
     }
   }
 } /* ecma_object_get_class_name */
+
+/**
+ * Get value of an object if the class matches
+ *
+ * @return value of the object if the class matches
+ *         ECMA_SIMPLE_VALUE_NOT_FOUND otherwise
+ */
+inline bool __attr_always_inline___
+ecma_object_class_is (ecma_object_t *object_p, /**< object */
+                      uint32_t class_id) /**< class id */
+{
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+  {
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+    if (ext_object_p->u.class_prop.class_id == class_id)
+    {
+      return true;
+    }
+  }
+
+  return false;
+} /* ecma_object_class_is */
 
 /**
  * @}

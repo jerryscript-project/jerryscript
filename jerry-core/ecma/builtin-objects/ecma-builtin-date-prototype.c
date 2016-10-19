@@ -94,7 +94,7 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
-      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
@@ -104,10 +104,10 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
                     ecma_op_to_object (this_arg),
                     ret_value);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
-                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
+    ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                 ext_object_p->u.class_prop.value);
 
     if (ecma_number_is_nan (*date_num_p))
     {
@@ -140,7 +140,7 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
-      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
@@ -150,10 +150,10 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
                     ecma_op_to_object (this_arg),
                     ret_value);
 
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-    ecma_value_t *prim_prop_p = ecma_get_internal_property (obj_p,
-                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *prim_prop_p);
+    ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                       ext_object_p->u.class_prop.value);
 
     if (ecma_number_is_nan (*prim_value_num_p))
     {
@@ -245,13 +245,14 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
 {
   if (ecma_is_value_object (this_arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_DATE_UL)
-    {
-      ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
-                                                              ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-      ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
+    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_DATE_UL))
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                   ext_object_p->u.class_prop.value);
       return ecma_make_number_value (*date_num_p);
     }
   }
@@ -341,7 +342,7 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   if (!ecma_is_value_object (this_arg)
-      || ecma_object_get_class_name (ecma_get_object_from_value (this_arg)) != LIT_MAGIC_STRING_DATE_UL)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
@@ -352,12 +353,11 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
     ecma_number_t value = ecma_date_time_clip (t);
 
     /* 2. */
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                 ext_object_p->u.class_prop.value);
 
-    ecma_value_t *date_prop_p = ecma_get_internal_property (obj_p,
-                                                            ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-
-    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, *date_prop_p);
     *date_num_p = value;
 
     /* 3. */

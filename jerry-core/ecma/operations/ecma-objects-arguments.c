@@ -49,10 +49,46 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                  ecma_length_t arguments_number, /**< length of arguments list */
                                  const ecma_compiled_code_t *bytecode_data_p) /**< byte code */
 {
+  bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+
+  ecma_length_t formal_params_number;
+  jmem_cpointer_t *literal_p;
+
+  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
+    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
+
+    formal_params_number = args_p->argument_end;
+    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
+    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
+
+    formal_params_number = args_p->argument_end;
+    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+  }
+
+  bool class_not_required = (!is_strict && arguments_number > 0 && formal_params_number > 0);
+
   // 2., 3., 6.
   ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *obj_p;
+
+  if (class_not_required)
+  {
+    obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+  }
+  else
+  {
+    obj_p = ecma_create_object (prototype_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
+
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_ARGUMENTS_UL;
+  }
 
   ecma_deref_object (prototype_p);
 
@@ -77,10 +113,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ecma_deref_ecma_string (indx_string_p);
   }
 
-  bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
-
-  // 1.
-
   // 7.
   ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
   ecma_value_t completion = ecma_builtin_helper_def_prop (obj_p,
@@ -96,29 +128,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-  ecma_length_t formal_params_number;
-  jmem_cpointer_t *literal_p;
-
-  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-  {
-    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
-
-    formal_params_number = args_p->argument_end;
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
-  }
-  else
-  {
-    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
-
-    formal_params_number = args_p->argument_end;
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
-  }
-
-  if (!is_strict
-      && arguments_number > 0
-      && formal_params_number > 0)
+  if (class_not_required)
   {
     // 8.
     ecma_object_t *map_p = ecma_op_create_object_object_noarg ();
@@ -164,12 +174,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ECMA_SET_INTERNAL_VALUE_POINTER (*scope_prop_p, lex_env_p);
 
     ecma_deref_object (map_p);
-  }
-  else
-  {
-    // 4.
-    ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-    *class_prop_p = LIT_MAGIC_STRING_ARGUMENTS_UL;
   }
 
   // 13.

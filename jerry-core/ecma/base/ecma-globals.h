@@ -197,15 +197,11 @@ typedef uintptr_t ecma_external_pointer_t;
  */
 typedef enum
 {
-  ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
   ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
   ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE, /**< pointer to RegExp bytecode array */
 
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-  ECMA_INTERNAL_PROPERTY_ECMA_VALUE, /**< [[Primitive value]] for String, Number, and Boolean */
-  ECMA_INTERNAL_PROPERTY_DATE_FLOAT, /**< float number value type for date objects */
 
   /** Bound function internal properties **/
   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION,
@@ -479,10 +475,10 @@ typedef enum
 {
   ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5),
                                  *   Function (15.3), Arguments (10.6), Array (15.4) objects */
-  ECMA_OBJECT_TYPE_FUNCTION = 1, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 2, /**< External (host) function object */
-  ECMA_OBJECT_TYPE_ARRAY = 3, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_STRING = 4, /**< String objects (15.5) */
+  ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
+  ECMA_OBJECT_TYPE_FUNCTION = 2, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 3, /**< External (host) function object */
+  ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_ARGUMENTS = 6, /**< Arguments object (10.6) */
 
@@ -566,6 +562,17 @@ typedef struct
 } ecma_object_t;
 
 /**
+ * Description of built-in properties of an object.
+ */
+typedef struct
+{
+  uint8_t id; /**< built-in id */
+  uint8_t length; /**< length for built-in functions */
+  uint16_t routine_id; /**< routine id for built-in functions */
+  uint32_t instantiated_bitset; /**< bit set for instantiated properties */
+} ecma_built_in_props_t;
+
+/**
  * Description of extended ECMA-object.
  *
  * The extended object is an object with extra fields.
@@ -579,16 +586,16 @@ typedef struct
    */
   union
   {
+    ecma_built_in_props_t built_in; /**< built-in object part */
+
     /*
-     * Description of built-in objects.
+     * Description of objects with class.
      */
     struct
     {
-      uint8_t id; /**< built-in id */
-      uint8_t length; /**< length for built-in functions */
-      uint16_t routine_id; /**< routine id for built-in functions */
-      uint32_t instantiated_bitset; /**< bit set for instantiated properties */
-    } built_in;
+      uint16_t class_id; /**< class id of the object */
+      ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+    } class_prop;
 
     /*
      * Description of function objects.
@@ -602,6 +609,15 @@ typedef struct
     ecma_external_pointer_t external_function; /**< external function */
   } u;
 } ecma_extended_object_t;
+
+/**
+ * Description of built-in extended ECMA-object.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  ecma_built_in_props_t built_in; /**< built-in object part */
+} ecma_extended_built_in_object_t;
 
 /**
  * Description of ECMA property descriptor

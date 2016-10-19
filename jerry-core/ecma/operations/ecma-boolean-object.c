@@ -49,18 +49,17 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, false, true, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (prototype_obj_p);
 
-  ecma_value_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  *class_prop_p = LIT_MAGIC_STRING_BOOLEAN_UL;
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
+  ext_object_p->u.class_prop.value = ecma_make_boolean_value (boolean_value);
 
-  ecma_value_t *prim_value_p = ecma_create_internal_property (obj_p,
-                                                              ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-
-  *prim_value_p = ecma_make_boolean_value (boolean_value);
-
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_boolean_object */
 
 /**

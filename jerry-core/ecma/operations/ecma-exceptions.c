@@ -92,15 +92,12 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
   ecma_object_t *new_error_obj_p = ecma_create_object (prototype_obj_p,
-                                                       false,
-                                                       true,
-                                                       ECMA_OBJECT_TYPE_GENERAL);
+                                                       sizeof (ecma_extended_object_t),
+                                                       ECMA_OBJECT_TYPE_CLASS);
 
   ecma_deref_object (prototype_obj_p);
 
-  ecma_value_t *class_prop_p = ecma_create_internal_property (new_error_obj_p,
-                                                              ECMA_INTERNAL_PROPERTY_CLASS);
-  *class_prop_p = LIT_MAGIC_STRING_ERROR_UL;
+  ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */

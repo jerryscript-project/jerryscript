@@ -90,21 +90,21 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF | (ECMA_OBJECT_REF_ONE - 1)) == UINT16
  */
 ecma_object_t *
 ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe of the object (or NULL) */
-                    bool is_extended, /**< extended object */
-                    bool is_extensible, /**< value of extensible attribute */
+                    size_t ext_object_size, /**< size of extended objects */
                     ecma_object_type_t type) /**< object type */
 {
-  ecma_object_t *new_object_p = (is_extended ? ((ecma_object_t *) ecma_alloc_extended_object ())
-                                             : ecma_alloc_object ());
+  ecma_object_t *new_object_p;
 
-  uint16_t type_flags = (uint16_t) type;
-
-  if (is_extensible)
+  if (ext_object_size > 0)
   {
-    type_flags = (uint16_t) (type_flags | ECMA_OBJECT_FLAG_EXTENSIBLE);
+    new_object_p = (ecma_object_t *) ecma_alloc_extended_object (ext_object_size);
+  }
+  else
+  {
+    new_object_p = ecma_alloc_object ();
   }
 
-  new_object_p->type_flags_refs = type_flags;
+  new_object_p->type_flags_refs = (uint16_t) (type | ECMA_OBJECT_FLAG_EXTENSIBLE);
 
   ecma_init_gc_info (new_object_p);
 
@@ -775,22 +775,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
   switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
   {
-    case ECMA_INTERNAL_PROPERTY_ECMA_VALUE: /* ecma-value property except object */
-    {
-      JERRY_ASSERT (!ecma_is_value_object (property_value));
-      ecma_free_value (property_value);
-
-      break;
-    }
-
-    case ECMA_INTERNAL_PROPERTY_DATE_FLOAT: /* pointer to a ecma_number_t */
-    {
-      ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, property_value);
-      ecma_dealloc_number (num_p);
-
-      break;
-    }
-
     case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
     case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an external pointer */
     {
@@ -801,7 +785,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
     case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
     case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
-    case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
     case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
     {
@@ -829,17 +812,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
                                          * but number of the real internal property types */
     {
       JERRY_UNREACHABLE ();
-      break;
-    }
-
-    case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* compressed pointer to a regexp bytecode array */
-    {
-      ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, property_value);
-
-      if (bytecode_p != NULL)
-      {
-        ecma_bytecode_deref (bytecode_p);
-      }
       break;
     }
   }

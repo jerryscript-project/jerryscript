@@ -48,6 +48,7 @@ extern bool ecma_op_object_is_prototype_of (ecma_object_t *, ecma_object_t *);
 extern ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *, bool, bool, bool);
 
 extern lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *);
+extern bool ecma_object_class_is (ecma_object_t *, uint32_t);
 
 /**
  * @}

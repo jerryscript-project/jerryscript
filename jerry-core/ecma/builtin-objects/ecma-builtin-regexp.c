@@ -81,7 +81,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
 
   if (ecma_is_value_object (pattern_value)
-      && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (pattern_value), LIT_MAGIC_STRING_REGEXP_UL))
   {
     if (ecma_is_value_undefined (flags_value))
     {

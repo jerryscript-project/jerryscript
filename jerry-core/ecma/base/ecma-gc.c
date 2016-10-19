@@ -203,10 +203,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
 
       switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
       {
-        case ECMA_INTERNAL_PROPERTY_ECMA_VALUE: /* an ecma_value_t except object */
-        case ECMA_INTERNAL_PROPERTY_DATE_FLOAT: /* pointer to a ecma_number_t */
-        case ECMA_INTERNAL_PROPERTY_CLASS: /* an enum */
-        case ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE: /* pointer to a regexp bytecode array */
         case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
         case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
         case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
@@ -440,10 +436,64 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 
   if (!ecma_is_lexical_environment (object_p))
   {
+    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      switch (ext_object_p->u.class_prop.class_id)
+      {
+        /* The undefined id represents an uninitialized class. */
+        case LIT_MAGIC_STRING_UNDEFINED:
+        case LIT_MAGIC_STRING_ARGUMENTS_UL:
+        case LIT_MAGIC_STRING_BOOLEAN_UL:
+        case LIT_MAGIC_STRING_ERROR_UL:
+        {
+          break;
+        }
+
+        case LIT_MAGIC_STRING_STRING_UL:
+        case LIT_MAGIC_STRING_NUMBER_UL:
+        {
+          ecma_free_value (ext_object_p->u.class_prop.value);
+          break;
+        }
+
+        case LIT_MAGIC_STRING_DATE_UL:
+        {
+          ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                  ext_object_p->u.class_prop.value);
+          ecma_dealloc_number (num_p);
+          break;
+        }
+
+        case LIT_MAGIC_STRING_REGEXP_UL:
+        {
+          ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                              ext_object_p->u.class_prop.value);
+          if (bytecode_p != NULL)
+          {
+            ecma_bytecode_deref (bytecode_p);
+          }
+          break;
+        }
+
+        default:
+        {
+          JERRY_UNREACHABLE ();
+          break;
+        }
+      }
+
+      size_t size = (ecma_get_object_is_builtin (object_p) ? sizeof (ecma_extended_built_in_object_t)
+                                                           : sizeof (ecma_extended_object_t));
+      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, size);
+      return;
+    }
+
     if (ecma_get_object_is_builtin (object_p)
         || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
     {
-      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p);
+      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, sizeof (ecma_extended_object_t));
       return;
     }
 
@@ -455,7 +505,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                             ext_func_p->u.function.bytecode_cp));
 
-      ecma_dealloc_extended_object (ext_func_p);
+      ecma_dealloc_extended_object (ext_func_p, sizeof (ecma_extended_object_t));
       return;
     }
   }

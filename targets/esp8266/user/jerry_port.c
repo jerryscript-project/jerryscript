@@ -18,6 +18,7 @@
 #include <stdarg.h>
 
 #include "jerry-core/jerry-port.h"
+extern int ets_putc (int);
 
 /**
  * Provide console message implementation for the engine.
@@ -28,8 +29,7 @@ jerry_port_console (const char *format, /**< format string */
 {
   va_list args;
   va_start (args, format);
-  /* TODO, uncomment when vprint link is ok */
-  /* vfprintf (stdout, format, args); */
+  ets_vprintf (ets_putc, format, args);
   va_end (args);
 } /* jerry_port_console */
 

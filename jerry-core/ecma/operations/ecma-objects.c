@@ -1007,7 +1007,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     case ECMA_OBJECT_TYPE_STRING:
     case ECMA_OBJECT_TYPE_ARGUMENTS:
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (""));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function object."));
     }
 
     case ECMA_OBJECT_TYPE_FUNCTION:

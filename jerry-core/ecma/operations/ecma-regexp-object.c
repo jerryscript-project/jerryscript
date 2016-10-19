@@ -1150,7 +1150,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
       default:
       {
         JERRY_TRACE_MSG ("UNKNOWN opcode (%u)!\n", (unsigned int) op);
-        return ecma_raise_common_error (ECMA_ERR_MSG (""));
+        return ecma_raise_common_error (ECMA_ERR_MSG ("Unknown RegExp opcode."));
       }
     }
   }

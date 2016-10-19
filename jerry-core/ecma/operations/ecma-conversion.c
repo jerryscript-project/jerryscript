@@ -57,7 +57,7 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma value */
   if (ecma_is_value_undefined (value)
       || ecma_is_value_null (value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
   }
   else
   {
@@ -413,7 +413,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     if (ecma_is_value_undefined (value)
         || ecma_is_value_null (value))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (""));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
     }
     else
     {
@@ -570,7 +570,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   // 1.
   if (!ecma_is_value_object (obj_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
   }
   else
   {
@@ -678,7 +678,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (!ecma_op_is_callable (get_prop_value)
             && !ecma_is_value_undefined (get_prop_value))
         {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
         }
         else
         {
@@ -722,7 +722,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (!ecma_op_is_callable (set_prop_value)
             && !ecma_is_value_undefined (set_prop_value))
         {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
         }
         else
         {
@@ -760,7 +760,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         if (prop_desc.is_value_defined
             || prop_desc.is_writable_defined)
         {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
         }
       }
     }

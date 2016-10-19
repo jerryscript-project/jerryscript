@@ -199,7 +199,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     }
     else if (is_strict)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG (""));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));
     }
   }
   else
@@ -263,7 +263,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       if (is_strict)
       {
-        result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
+        result = ecma_raise_reference_error (ECMA_ERR_MSG ("Binding does not exist or is uninitialised."));
       }
       else
       {

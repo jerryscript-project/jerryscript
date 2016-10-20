@@ -130,8 +130,81 @@ print_help (char *name)
                       name);
 } /* print_help */
 
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+
+/**
+ * Check whether an error is a SyntaxError or not
+ *
+ * @return true  - if param is SyntaxError
+ *         false - otherwise
+ */
+static bool
+jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
+{
+  if (!jerry_value_is_object (error_value))
+  {
+    return false;
+  }
+
+  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *)"name");
+  jerry_value_t error_name = jerry_get_property (error_value, prop_name);
+  jerry_release_value (prop_name);
+
+  if (jerry_value_has_error_flag (error_name)
+      || !jerry_value_is_string (error_name))
+  {
+    return false;
+  }
+
+  jerry_size_t err_str_size = jerry_get_string_size (error_name);
+  jerry_char_t err_str_buf[err_str_size];
+
+  jerry_size_t sz = jerry_string_to_char_buffer (error_name, err_str_buf, err_str_size);
+  jerry_release_value (error_name);
+
+  if (sz == 0)
+  {
+    return false;
+  }
+
+  if (!strcmp ((char *) err_str_buf, "SyntaxError"))
+  {
+    return true;
+  }
+
+  return false;
+} /* jerry_value_is_syntax_error */
+
+/**
+ * Convert string into unsigned integer
+ *
+ * @return converted number
+ */
+static uint32_t
+str_to_uint (const char *num_str_p) /**< string to convert */
+{
+  uint32_t result = 0;
+
+  while (*num_str_p != '\0')
+  {
+    assert (*num_str_p >= '0' && *num_str_p <= '9');
+
+    result *= 10;
+    result += (uint32_t) (*num_str_p - '0');
+    num_str_p++;
+  }
+
+  return result;
+} /* str_to_uint */
+
+#define SYNTAX_ERROR_CONTEXT_SIZE 2
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+
+/**
+ * Print error value
+ */
 static void
-print_unhandled_exception (jerry_value_t error_value)
+print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
   assert (jerry_value_has_error_flag (error_value));
 
@@ -150,8 +223,103 @@ print_unhandled_exception (jerry_value_t error_value)
   {
     jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
     assert (sz == err_str_size);
+    err_str_buf[err_str_size] = 0;
+
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+    if (jerry_value_is_syntax_error (error_value))
+    {
+      uint32_t err_line = 0;
+      uint32_t err_col = 0;
+
+      /* 1. parse column and line information */
+      for (uint32_t i = 0; i < sz; i++)
+      {
+        if (!strncmp ((char *) (err_str_buf + i), "[line: ", 7))
+        {
+          i += 7;
+
+          char num_str[8];
+          uint32_t j = 0;
+
+          while (i < sz && err_str_buf[i] != ',')
+          {
+            num_str[j] = (char) err_str_buf[i];
+            j++;
+            i++;
+          }
+          num_str[j] = '\0';
+
+          err_line = str_to_uint (num_str);
+
+          if (strncmp ((char *) (err_str_buf + i), ", column: ", 10))
+          {
+            break; /* wrong position info format */
+          }
+
+          i += 10;
+          j = 0;
+
+          while (i < sz && err_str_buf[i] != ']')
+          {
+            num_str[j] = (char) err_str_buf[i];
+            j++;
+            i++;
+          }
+          num_str[j] = '\0';
+
+          err_col = str_to_uint (num_str);
+          break;
+        }
+      } /* for */
+
+      if (err_line != 0 && err_col != 0)
+      {
+        uint32_t curr_line = 1;
+
+        bool is_printing_context = false;
+        uint32_t pos = 0;
+
+        /* 2. seek and print */
+        while (buffer[pos] != '\0')
+        {
+          if (buffer[pos] == '\n')
+          {
+            curr_line++;
+          }
+
+          if (err_line < SYNTAX_ERROR_CONTEXT_SIZE
+              || (err_line >= curr_line
+                  && (err_line - curr_line) <= SYNTAX_ERROR_CONTEXT_SIZE))
+          {
+            /* context must be printed */
+            is_printing_context = true;
+          }
+
+          if (curr_line > err_line)
+          {
+            break;
+          }
+
+          if (is_printing_context)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", buffer[pos]);
+          }
+
+          pos++;
+        }
+
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+
+        while (--err_col)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
+        }
+
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n");
+      }
+    }
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
-  err_str_buf[err_str_size] = 0;
 
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
   jerry_release_value (err_str_val);

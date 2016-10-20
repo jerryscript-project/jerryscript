@@ -46,8 +46,8 @@ $(error Missing Zephyr base, did you source zephyr-env.sh? )
 endif
 
 INTERM     = build/$(BOARD)/obj-$(BOARD)
-OUTPUT     = build/$(BOARD)
-DOTCONFIG  = $(OUTPUT)/zephyr/.config
+OUTPUT     = build/$(BOARD)/zephyr
+DOTCONFIG  = $(OUTPUT)/.config
 
 include $(DOTCONFIG)
 override ARCH = $(subst ",,$(CONFIG_ARCH))
@@ -112,18 +112,18 @@ EXT_CFLAGS += -nostdlib
 CC = $(CROSS_COMPILE)gcc
 
 ZEPHYR_LIBC_INC = $(subst -I,,$(TOOLCHAIN_CFLAGS))
-LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)
+LIB_INCLUDE_DIR += -L $(CURDIR)/$(OUTPUT)/..
 
 EXT_CFLAGS += -Wno-error=conversion
 EXT_CFLAGS += $(LIB_INCLUDE_DIR)
 EXT_CFLAGS += $(subst -I,-isystem,$(TOOLCHAIN_CFLAGS))
 
 EXTERNAL_LIB = $(INTERM)/lib/libjerry-core.a
-ZEPHYR_BIN = $(OUTPUT)/zephyr/zephyr.strip
+ZEPHYR_BIN = $(OUTPUT)/zephyr.strip
 
 LIBS = jerry-core
 
-BUILD_CONFIG = O="$(OUTPUT)/zephyr" V=$(V) USER_LIBS="$(LIBS)" USER_LIB_INCLUDE_DIR="-L $(CURDIR)/$(INTERM)/lib" TARGET_ZEPHYR=$(TARGET_ZEPHYR)
+BUILD_CONFIG = O="$(OUTPUT)" V=$(V) USER_LIBS="$(LIBS)" USER_LIB_INCLUDE_DIR="-L $(CURDIR)/$(INTERM)/lib" TARGET_ZEPHYR=$(TARGET_ZEPHYR)
 
 .PHONY: all
 all: jerry zephyr
@@ -164,8 +164,8 @@ ifdef V
 endif
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG)
 	@echo "Finished"
-	@file $(OUTPUT)/zephyr/zephyr.strip
-	@size $(OUTPUT)/zephyr/zephyr.strip
+	@file $(OUTPUT)/zephyr.strip
+	@size $(OUTPUT)/zephyr.strip
 
 jerry: $(EXTERNAL_LIB)
 	@touch $(EXTERNAL_LIB)
@@ -176,7 +176,7 @@ zephyr:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
 qemu:	$(EXTERNAL_LIB) $(ZEPHYR_BIN)
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) qemu
 
-flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr/zephyr.strip
+flash:	$(EXTERNAL_LIB) $(OUTPUT)/zephyr.strip
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) flash
 
 debugserver:

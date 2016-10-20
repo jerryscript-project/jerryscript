@@ -247,8 +247,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
         }
 
         case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION: /* an object */
-        case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
-        case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
         {
           ecma_object_t *obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, property_value);
 
@@ -308,8 +306,17 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       ecma_gc_set_object_visited (proto_p, true);
     }
 
-    if (!ecma_get_object_is_builtin (object_p)
-        && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
+    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARGUMENTS)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                  ext_object_p->u.arguments.lex_env_cp);
+
+      ecma_gc_set_object_visited (lex_env_p, true);
+    }
+    else if (!ecma_get_object_is_builtin (object_p)
+             && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
     {
       ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
@@ -436,7 +443,9 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 
   if (!ecma_is_lexical_environment (object_p))
   {
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    ecma_object_type_t object_type = ecma_get_object_type (object_p);
+
+    if (object_type == ECMA_OBJECT_TYPE_CLASS)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -491,13 +500,13 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     }
 
     if (ecma_get_object_is_builtin (object_p)
-        || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+        || object_type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
     {
       ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, sizeof (ecma_extended_object_t));
       return;
     }
 
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
+    if (object_type == ECMA_OBJECT_TYPE_FUNCTION)
     {
       /* Function with byte-code (not a built-in function). */
       ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
@@ -506,6 +515,27 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                                                             ext_func_p->u.function.bytecode_cp));
 
       ecma_dealloc_extended_object (ext_func_p, sizeof (ecma_extended_object_t));
+      return;
+    }
+
+    if (object_type == ECMA_OBJECT_TYPE_ARGUMENTS)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      ecma_length_t formal_params_number = ext_object_p->u.arguments.length;
+      jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+
+      for (ecma_length_t i = 0; i < formal_params_number; i++)
+      {
+        if (arg_Literal_p[i] != JMEM_CP_NULL)
+        {
+          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[i]);
+          ecma_deref_ecma_string (name_p);
+        }
+      }
+
+      size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
+      ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
       return;
     }
   }

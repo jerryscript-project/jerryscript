@@ -625,11 +625,11 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
 
-            /* TODO: check the return value */
-            ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                            name_p,
-                                            is_strict,
-                                            lit_value);
+            ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+                                                                            name_p,
+                                                                            is_strict,
+                                                                            lit_value);
+            ecma_free_value (put_value_result);
           }
 
           if (value_index >= register_end)

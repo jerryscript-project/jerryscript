@@ -518,12 +518,11 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
  *
  * @return ecma value
  */
-static ecma_value_t
+static void
 vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
-  ecma_value_t result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
@@ -654,12 +653,10 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       default:
       {
         frame_ctx_p->byte_code_p = byte_code_p;
-        return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        return;
       }
     }
   }
-
-  return result;
 } /* vm_init_loop */
 
 /**
@@ -2581,28 +2578,25 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p;
 
-  completion_value = vm_init_loop (frame_ctx_p);
+  vm_init_loop (frame_ctx_p);
 
-  if (!ECMA_IS_VALUE_ERROR (completion_value))
+  while (true)
   {
-    while (true)
+    completion_value = vm_loop (frame_ctx_p);
+
+    if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
     {
-      completion_value = vm_loop (frame_ctx_p);
+      break;
+    }
 
-      if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
-      {
-        break;
-      }
-
-      if (frame_ctx_p->call_operation == VM_EXEC_CALL)
-      {
-        opfunc_call (frame_ctx_p);
-      }
-      else
-      {
-        JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
-        opfunc_construct (frame_ctx_p);
-      }
+    if (frame_ctx_p->call_operation == VM_EXEC_CALL)
+    {
+      opfunc_call (frame_ctx_p);
+    }
+    else
+    {
+      JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
+      opfunc_construct (frame_ctx_p);
     }
   }
 

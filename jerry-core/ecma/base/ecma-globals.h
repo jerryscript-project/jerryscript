@@ -197,9 +197,6 @@ typedef uintptr_t ecma_external_pointer_t;
  */
 typedef enum
 {
-  ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
-  ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
 
@@ -605,6 +602,15 @@ typedef struct
       ecma_value_t scope_cp; /**< function scope */
       ecma_value_t bytecode_cp; /**< function byte code */
     } function;
+
+    /*
+     * Description of arguments objects.
+     */
+    struct
+    {
+      ecma_value_t lex_env_cp; /**< lexical environment */
+      uint32_t length; /**< length of names */
+    } arguments;
 
     ecma_external_pointer_t external_function; /**< external function */
   } u;

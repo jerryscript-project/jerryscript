@@ -783,8 +783,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_SCOPE: /* a lexical environment */
-    case ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP: /* an object */
     case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
     case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
     {

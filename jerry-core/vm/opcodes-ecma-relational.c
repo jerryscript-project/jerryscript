@@ -185,7 +185,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'instanceof' check."));
   }
   else
   {
@@ -219,7 +219,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
   else
   {

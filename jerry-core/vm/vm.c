@@ -91,7 +91,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Base object cannot be null or undefined."));
   }
 
   ecma_value_t prop_to_string_result = ecma_op_to_string (property);
@@ -371,7 +371,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_op_is_callable (func_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
   }
   else
   {
@@ -429,7 +429,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_is_constructor (constructor_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
   }
   else
   {
@@ -1082,7 +1082,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
             else
             {
-              result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
+              result = ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
             }
 
             if (ECMA_IS_VALUE_ERROR (result))
@@ -1340,7 +1340,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_REFERENCE_ERROR:
         {
-          result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
+          result = ecma_raise_reference_error (ECMA_ERR_MSG ("Undefined reference."));
           goto error;
         }
         case VM_OC_EVAL:

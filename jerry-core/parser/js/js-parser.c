@@ -338,11 +338,11 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
       if (!(literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME))
       {
-        literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator);
+        lexer_literal_t *func_literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator);
 
-        JERRY_ASSERT (literal_p != NULL
-                      && literal_p->type == LEXER_FUNCTION_LITERAL);
-        literal_p->prop.index = init_index;
+        JERRY_ASSERT (func_literal_p != NULL
+                      && func_literal_p->type == LEXER_FUNCTION_LITERAL);
+        func_literal_p->prop.index = init_index;
       }
     }
 

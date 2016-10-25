@@ -237,42 +237,42 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
   {
     /* 4. 11. 18. */
     ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+
+    ecma_length_t args_length = (arguments_number >= 1) ? arguments_number : 1;
+
+    size_t obj_size = sizeof (ecma_extended_object_t) + (args_length * sizeof (ecma_value_t));
+
     ecma_object_t *function_p = ecma_create_object (prototype_obj_p,
-                                                    0,
+                                                    obj_size,
                                                     ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     ecma_deref_object (prototype_obj_p);
 
-    /* 7. */
-    ecma_value_t *target_function_prop_p;
-    target_function_prop_p = ecma_create_internal_property (function_p,
-                                                            ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) function_p;
 
+    /* 7. */
     ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
-    ECMA_SET_INTERNAL_VALUE_POINTER (*target_function_prop_p, this_arg_obj_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
+                                     this_arg_obj_p);
 
     /* 8. */
-    ecma_value_t *bound_this_prop_p;
-    bound_this_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
-    const ecma_length_t arg_count = arguments_number;
+    ext_function_p->u.bound_function.args_length = args_length;
+    ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
-    if (arg_count > 0)
+    *args_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+    if (arguments_number > 0)
     {
-      *bound_this_prop_p = ecma_copy_value_if_not_object (arguments_list_p[0]);
-    }
-    else
-    {
-      *bound_this_prop_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      *args_p = ecma_copy_value_if_not_object (arguments_list_p[0]);
     }
 
-    if (arg_count > 1)
+    if (arguments_number > 1)
     {
-      ecma_collection_header_t *bound_args_collection_p;
-      bound_args_collection_p = ecma_new_values_collection (&arguments_list_p[1], arg_count - 1, false);
-
-      ecma_value_t *bound_args_prop_p;
-      bound_args_prop_p = ecma_create_internal_property (function_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-      ECMA_SET_INTERNAL_VALUE_POINTER (*bound_args_prop_p, bound_args_collection_p);
+      for (ecma_length_t i = 1; i < arguments_number; i++)
+      {
+        ++args_p;
+        *args_p = ecma_copy_value_if_not_object (arguments_list_p[i]);
+      }
     }
 
     /*
@@ -292,10 +292,8 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
       JERRY_ASSERT (ecma_is_value_number (get_len_value));
 
-      const ecma_length_t bound_arg_count = arg_count > 1 ? arg_count - 1 : 0;
-
       /* 15.a */
-      length = ecma_get_number_from_value (get_len_value) - ((ecma_number_t) bound_arg_count);
+      length = ecma_get_number_from_value (get_len_value) - ((ecma_number_t) (args_length - 1));
       ecma_free_value (get_len_value);
 
       /* 15.b */

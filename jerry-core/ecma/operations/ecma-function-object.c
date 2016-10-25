@@ -94,44 +94,6 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
 } /* ecma_is_constructor */
 
 /**
- * Helper function to merge argument lists
- *
- * See also:
- *          ECMA-262 v5, 15.3.4.5.1 step 4
- *          ECMA-262 v5, 15.3.4.5.2 step 4
- *
- * Used by:
- *         - [[Call]] implementation for Function objects.
- *         - [[Construct]] implementation for Function objects.
- */
-static void
-ecma_function_bind_merge_arg_lists (ecma_value_t *merged_args_list_p, /**< destination argument list */
-                                    ecma_collection_header_t *bound_arg_list_p, /**< bound argument list */
-                                    const ecma_value_t *arguments_list_p, /**< source arguments list */
-                                    ecma_length_t arguments_list_len) /**< length of source arguments list */
-{
-  /* Performance optimization: only the values are copied. This is
-   * enough, since the original references keep these objects alive. */
-
-  ecma_collection_iterator_t bound_args_iterator;
-  ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
-
-  for (ecma_length_t i = bound_arg_list_p->unit_number; i > 0; i--)
-  {
-    bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
-    JERRY_ASSERT (is_moved);
-
-    *merged_args_list_p++ = *bound_args_iterator.current_value_p;
-  }
-
-  while (arguments_list_len > 0)
-  {
-    *merged_args_list_p++ = *arguments_list_p++;
-    arguments_list_len--;
-  }
-} /* ecma_function_bind_merge_arg_lists */
-
-/**
  * Function object creation operation.
  *
  * See also: ECMA-262 v5, 13.2
@@ -467,11 +429,11 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     /* 1. */
-    ecma_value_t *target_function_prop_p;
-    target_function_prop_p = ecma_get_internal_property (func_obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ext_function_p->u.bound_function.target_function);
 
     /* 3. */
     ret_value = ecma_op_object_has_instance (target_func_obj_p, value);
@@ -600,33 +562,29 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     JERRY_CONTEXT (is_direct_eval_form_call) = false;
 
     /* 2-3. */
-    ecma_value_t *target_function_prop_p;
-    target_function_prop_p = ecma_get_internal_property (func_obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ext_function_p->u.bound_function.target_function);
 
     /* 4. */
-    ecma_value_t *bound_args_prop_p = ecma_find_internal_property (func_obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
-    ecma_value_t bound_this_value = *ecma_get_internal_property (func_obj_p,
-                                                                 ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS);
+    ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
-    if (bound_args_prop_p != NULL)
+    ecma_value_t bound_this_value = *args_p;
+    ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+
+    JERRY_ASSERT (args_length > 0);
+
+    if (args_length > 1)
     {
-      ecma_collection_header_t *bound_arg_list_p;
-      bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, *bound_args_prop_p);
-
-      JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
-
-      ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
+      args_length--;
+      ecma_length_t merged_args_list_len = args_length + arguments_list_len;
 
       JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
 
-      ecma_function_bind_merge_arg_lists (merged_args_list_p,
-                                          bound_arg_list_p,
-                                          arguments_list_p,
-                                          arguments_list_len);
+      memcpy (merged_args_list_p, args_p + 1, args_length * sizeof (ecma_value_t));
+      memcpy (merged_args_list_p + args_length, arguments_list_p, arguments_list_len * sizeof (ecma_value_t));
 
       /* 5. */
       ret_value = ecma_op_function_call (target_func_obj_p,
@@ -783,11 +741,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     /* 1. */
-    ecma_value_t *target_function_prop_p;
-    target_function_prop_p = ecma_get_internal_property (func_obj_p,
-                                                         ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION);
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
-    ecma_object_t *target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, *target_function_prop_p);
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ext_function_p->u.bound_function.target_function);
 
     /* 2. */
     if (!ecma_is_constructor (ecma_make_object_value (target_func_obj_p)))
@@ -797,24 +755,21 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       /* 4. */
-      ecma_value_t *bound_args_prop_p;
-      bound_args_prop_p = ecma_find_internal_property (func_obj_p, ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS);
+      ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
 
-      if (bound_args_prop_p != NULL)
+      JERRY_ASSERT (args_length > 0);
+
+      if (args_length > 1)
       {
-        ecma_collection_header_t *bound_arg_list_p;
-        bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, *bound_args_prop_p);
+        ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
-        JERRY_ASSERT (bound_arg_list_p->unit_number > 0);
-
-        ecma_length_t merged_args_list_len = bound_arg_list_p->unit_number + arguments_list_len;
+        args_length--;
+        ecma_length_t merged_args_list_len = args_length + arguments_list_len;
 
         JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
 
-        ecma_function_bind_merge_arg_lists (merged_args_list_p,
-                                            bound_arg_list_p,
-                                            arguments_list_p,
-                                            arguments_list_len);
+        memcpy (merged_args_list_p, args_p + 1, args_length * sizeof (ecma_value_t));
+        memcpy (merged_args_list_p + args_length, arguments_list_p, arguments_list_len * sizeof (ecma_value_t));
 
         /* 5. */
         ret_value = ecma_op_function_construct (target_func_obj_p,

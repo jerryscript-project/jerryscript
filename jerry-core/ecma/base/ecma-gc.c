@@ -199,8 +199,6 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
     }
     case ECMA_PROPERTY_TYPE_INTERNAL:
     {
-      uint32_t property_value = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
-
       switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
       {
         case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
@@ -210,52 +208,7 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
           break;
         }
 
-        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS: /* an ecma value */
-        {
-          if (ecma_is_value_object (property_value))
-          {
-            ecma_object_t *obj_p = ecma_get_object_from_value (property_value);
-
-            ecma_gc_set_object_visited (obj_p, true);
-          }
-
-          break;
-        }
-
-        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS: /* a collection of ecma values */
-        {
-          ecma_collection_header_t *bound_arg_list_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t,
-                                                                                        property_value);
-
-          ecma_collection_iterator_t bound_args_iterator;
-          ecma_collection_iterator_init (&bound_args_iterator, bound_arg_list_p);
-
-          for (ecma_length_t i = 0; i < bound_arg_list_p->unit_number; i++)
-          {
-            bool is_moved = ecma_collection_iterator_next (&bound_args_iterator);
-            JERRY_ASSERT (is_moved);
-
-            if (ecma_is_value_object (*bound_args_iterator.current_value_p))
-            {
-              ecma_object_t *obj_p = ecma_get_object_from_value (*bound_args_iterator.current_value_p);
-
-              ecma_gc_set_object_visited (obj_p, true);
-            }
-          }
-
-          break;
-        }
-
-        case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION: /* an object */
-        {
-          ecma_object_t *obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, property_value);
-
-          ecma_gc_set_object_visited (obj_p, true);
-
-          break;
-        }
-        case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
-                                             * but number of the real internal property types */
+        default:
         {
           JERRY_UNREACHABLE ();
           break;
@@ -306,24 +259,52 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       ecma_gc_set_object_visited (proto_p, true);
     }
 
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARGUMENTS)
+    switch (ecma_get_object_type (object_p))
     {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+      case ECMA_OBJECT_TYPE_ARGUMENTS:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                  ext_object_p->u.arguments.lex_env_cp);
+        ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                    ext_object_p->u.arguments.lex_env_cp);
 
-      ecma_gc_set_object_visited (lex_env_p, true);
-    }
-    else if (!ecma_get_object_is_builtin (object_p)
-             && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
-    {
-      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+        ecma_gc_set_object_visited (lex_env_p, true);
+        break;
+      }
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+      {
+        ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+        ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+        ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
-      ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                ext_func_p->u.function.scope_cp);
+        JERRY_ASSERT (args_length > 0);
 
-      ecma_gc_set_object_visited (scope_p, true);
+        for (ecma_length_t i = 0; i < args_length; i++)
+        {
+          if (ecma_is_value_object (args_p[i]))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (args_p[i]), true);
+          }
+        }
+        break;
+      }
+      case ECMA_OBJECT_TYPE_FUNCTION:
+      {
+        if (!ecma_get_object_is_builtin (object_p))
+        {
+          ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+          ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                    ext_func_p->u.function.scope_cp);
+
+          ecma_gc_set_object_visited (scope_p, true);
+        }
+        break;
+      }
+      default:
+      {
+        break;
+      }
     }
   }
 
@@ -536,6 +517,22 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 
       size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
       ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
+      return;
+    }
+
+    if (object_type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+    {
+      ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+      ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+      ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+
+      for (ecma_length_t i = 0; i < args_length; i++)
+      {
+        ecma_free_value_if_not_object (args_p[i]);
+      }
+
+      size_t args_size = args_length * sizeof (ecma_value_t);
+      ecma_dealloc_extended_object (ext_function_p, sizeof (ecma_extended_object_t) + args_size);
       return;
     }
   }

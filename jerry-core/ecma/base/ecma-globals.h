@@ -199,12 +199,6 @@ typedef enum
 {
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-
-  /** Bound function internal properties **/
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION,
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS,
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS,
-
   ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63, /**< Bit-mask of non-instantiated
                                                    *   built-in's properties (bits 32-63) */
 
@@ -611,6 +605,15 @@ typedef struct
       ecma_value_t lex_env_cp; /**< lexical environment */
       uint32_t length; /**< length of names */
     } arguments;
+
+    /*
+     * Description of bound function object.
+     */
+    struct
+    {
+      ecma_value_t target_function; /**< target function */
+      ecma_length_t args_length; /**< length of arguments */
+    } bound_function;
 
     ecma_external_pointer_t external_function; /**< external function */
   } u;

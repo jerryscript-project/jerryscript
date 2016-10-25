@@ -771,8 +771,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 {
   JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
-  uint32_t property_value = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
-
   switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
   {
     case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
@@ -784,30 +782,11 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
     }
 
     case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
-    case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION:
     {
       break;
     }
 
-    case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS:
-    {
-      ecma_free_value_if_not_object (property_value);
-      break;
-    }
-
-    case ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS:
-    {
-      if (property_value != ECMA_NULL_POINTER)
-      {
-        ecma_free_values_collection (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_header_t, property_value),
-                                     false);
-      }
-
-      break;
-    }
-
-    case ECMA_INTERNAL_PROPERTY__COUNT: /* not a real internal property type,
-                                         * but number of the real internal property types */
+    default:
     {
       JERRY_UNREACHABLE ();
       break;

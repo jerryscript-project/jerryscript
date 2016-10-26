@@ -16,6 +16,8 @@
 #ifndef BYTE_CODE_H
 #define BYTE_CODE_H
 
+#include "ecma-globals.h"
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -204,6 +206,20 @@
 /* PARSER_TRY_CONTEXT_STACK_ALLOCATION must be <= 3 */
 #define PARSER_TRY_CONTEXT_STACK_ALLOCATION 2
 
+#ifdef JERRY_DEBUGGER
+
+#define CBC_BREAKPOINT_OPCODES \
+  CBC_OPCODE (CBC_BREAKPOINT_ENABLED, CBC_NO_FLAG, 0, \
+              VM_OC_BREAKPOINT_ENABLED) \
+  CBC_OPCODE (CBC_BREAKPOINT_DISABLED, CBC_NO_FLAG, 0, \
+              VM_OC_BREAKPOINT_DISABLED) \
+
+#else /* !JERRY_DEBUGGER */
+
+#define CBC_BREAKPOINT_OPCODES
+
+#endif /* JERRY_DEBUGGER */
+
 /**
  * Opcode definitions.
  */
@@ -315,6 +331,7 @@
               VM_OC_RET) \
   CBC_OPCODE (CBC_RETURN_WITH_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_RET | VM_OC_GET_LITERAL) \
+  CBC_BREAKPOINT_OPCODES \
   \
   /* Unary opcodes. */ \
   CBC_UNARY_OPERATION (CBC_PLUS, \

@@ -18,6 +18,7 @@ project (${JERRY_CORE_NAME} C)
 
 # Optional features
 set(FEATURE_CPOINTER_32_BIT  OFF     CACHE BOOL   "Enable 32 bit compressed pointers?")
+set(FEATURE_DEBUGGER         OFF     CACHE BOOL   "Enable JerryScript debugger?")
 set(FEATURE_ERROR_MESSAGES   OFF     CACHE BOOL   "Enable error messages?")
 set(FEATURE_JS_PARSER        ON      CACHE BOOL   "Enable js-parser?")
 set(FEATURE_MEM_STATS        OFF     CACHE BOOL   "Enable memory statistics?")
@@ -38,6 +39,7 @@ endif()
 
 # Status messages
 message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT})
+message(STATUS "FEATURE_DEBUGGER          " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
 message(STATUS "FEATURE_JS_PARSER         " ${FEATURE_JS_PARSER})
 message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
@@ -55,6 +57,7 @@ message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
 # Include directories
 set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/base"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
@@ -70,6 +73,7 @@ set(INCLUDE_CORE
 # Sources
 # Jerry core
 file(GLOB SOURCE_CORE_API                       *.c)
+file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
 file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
@@ -95,6 +99,10 @@ set(SOURCE_CORE_FILES
     ${SOURCE_CORE_PARSER_JS}
     ${SOURCE_CORE_PARSER_REGEXP}
     ${SOURCE_CORE_VM})
+
+if(FEATURE_DEBUGGER)
+  set(SOURCE_CORE_FILES ${SOURCE_CORE_FILES} ${SOURCE_CORE_DEBUGGER})
+endif()
 
 # Jerry port
 file(GLOB SOURCE_PORT_FILES "${PORT_DIR}/*.c")
@@ -162,6 +170,11 @@ if(FEATURE_MEM_STATS)
   set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_STATS)
 endif()
 
+# Enable debugger
+if(FEATURE_DEBUGGER)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
+endif()
+
 # Memory management stress-test mode
 if(FEATURE_MEM_STRESS_TEST)
   set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_GC_BEFORE_EACH_ALLOC)
@@ -183,6 +196,10 @@ if(EXISTS ${FEATURE_PROFILE})
   set(DEFINES_JERRY ${DEFINES_JERRY} ${PROFILE_SETTINGS})
 else()
   MESSAGE(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
+endif()
+
+if(JERRY_LIBC AND FEATURE_DEBUGGER)
+  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
 endif()
 
 # RegExp byte-code dumps

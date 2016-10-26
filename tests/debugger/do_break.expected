@@ -1,0 +1,8 @@
+Address setup: localhost:5001
+Stopped at tests/debugger/do_break.js:15
+(jerry-debugger) Breakpoint not found
+(jerry-debugger) (jerry-debugger) Breakpoint not found
+(jerry-debugger) Error: Breakpoint 1 not found
+(jerry-debugger) Stopped at tests/debugger/do_break.js:42
+(jerry-debugger) Stopped at tests/debugger/do_break.js:43
+(jerry-debugger) Connection closed.

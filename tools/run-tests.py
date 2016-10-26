@@ -34,6 +34,7 @@ parser.add_argument('--check-doxygen', action='store_true', default=False, help=
 parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
 parser.add_argument('--check-license', action='store_true', default=False, help='Run license check')
 parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
+parser.add_argument('--jerry-debugger', action='store_true', default=False, help='Run jerry-debugger tests')
 parser.add_argument('--jerry-tests', action='store_true', default=False, help='Run jerry-tests')
 parser.add_argument('--jerry-test-suite', action='store_true', default=False, help='Run jerry-test-suite')
 parser.add_argument('--unittests', action='store_true', default=False, help='Run unittests')
@@ -96,6 +97,11 @@ test262_test_suite_options = [
                                Options('test262_tests'),
                              ]
 
+# Test options for jerry-debugger
+debugger_test_options = [
+                          Options('jerry_debugger_tests', ['--debug', '--jerry-debugger=on', '--jerry-libc=off']),
+                        ]
+
 # Test options for buildoption-test
 jerry_buildoptions = [
                       Options('buildoption_test-lto', ['--lto=on']),
@@ -144,6 +150,30 @@ def run_check(runnable):
         return e.returncode
 
     return ret
+
+def run_jerry_debugger_tests():
+    ret_build = ret_test = 0
+    for job in debugger_test_options:
+        ret_build = create_binary(job.build_args)
+        if ret_build:
+            break
+
+        for file in os.listdir(DEBUGGER_TESTS_DIR):
+            if file.endswith(".js"):
+                test_case, _ = os.path.splitext(file)
+                test_case_path = os.path.join (DEBUGGER_TESTS_DIR, test_case)
+                test_cmd = [
+                              DEBUGGER_TEST_RUNNER_SCRIPT,
+                              get_binary_path(job.out_dir),
+                              DEBUGGER_CLIENT_SCRIPT,
+                              os.path.relpath (test_case_path, PROJECT_DIR),
+                            ]
+                if job.test_args:
+                    test_cmd.extend(job.test_args)
+
+                ret_test |= run_check(test_cmd)
+
+    return ret_build | ret_test
 
 def run_jerry_tests():
     ret_build = ret_test = 0
@@ -241,6 +271,9 @@ def main():
 
     if not ret and (script_args.all or script_args.check_license):
         ret = run_check([LICENSE_SCRIPT])
+
+    if not ret and (script_args.all or script_args.jerry_debugger):
+        ret = run_jerry_debugger_tests()
 
     if not ret and (script_args.all or script_args.jerry_tests):
         ret = run_jerry_tests()

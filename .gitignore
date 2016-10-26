@@ -27,7 +27,7 @@ tags
 ID
 
 # targets
-jerry_targetjs.h
+jerry-targetjs.h
 targets/mbedk64f/libjerry
 targets/mbedk64f/build
 targets/mbedk64f/yotta_modules

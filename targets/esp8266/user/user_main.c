@@ -43,7 +43,7 @@ void show_free_mem(int idx) {
 
 //-----------------------------------------------------------------------------
 
-#include "jerry_targetjs.h"
+#include "jerry-targetjs.h"
 
 
 static int jerry_task_init(void) {

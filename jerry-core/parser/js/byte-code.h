@@ -316,6 +316,8 @@
               VM_OC_RET) \
   CBC_OPCODE (CBC_RETURN_WITH_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_RET | VM_OC_GET_LITERAL) \
+  CBC_OPCODE (CBC_BREAKPOINT, CBC_NO_FLAG, 0, \
+              VM_OC_BREAKPOINT) \
   \
   /* Unary opcodes. */ \
   CBC_UNARY_OPERATION (CBC_PLUS, \

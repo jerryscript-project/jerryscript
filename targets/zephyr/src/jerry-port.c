@@ -1,4 +1,5 @@
 /* Copyright 2016 Intel Corporation
+ * Copyright 2016 Linaro Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +15,8 @@
  */
 
 #include <stdarg.h>
+
+#include <zephyr.h>
 
 #include "jerry-port.h"
 
@@ -46,3 +49,40 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
   vfprintf (stderr, format, args);
   va_end (args);
 } /* jerry_port_log */
+
+
+/**
+ * Provide fatal message implementation for the engine.
+ */
+void jerry_port_fatal (jerry_fatal_code_t code)
+{
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Jerry Fatal Error!\n");
+  while (true);
+} /* jerry_port_fatal */
+
+/**
+ * Implementation of jerry_port_get_current_time.
+ *
+ * @return current timer's counter value in microseconds
+ */
+double
+jerry_port_get_current_time ()
+{
+  int64_t us = sys_tick_get() * sys_clock_us_per_tick;
+  return (double) us / 1000;
+} /* jerry_port_get_current_time */
+
+/**
+ * Dummy function to get the time zone.
+ *
+ * @return true
+ */
+bool
+jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+{
+  /* We live in UTC. */
+  tz_p->offset = 0;
+  tz_p->daylight_saving_time = 0;
+
+  return true;
+} /* jerry_port_get_time_zone */

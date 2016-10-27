@@ -19,4 +19,4 @@ endif
 # Adding path for jerry script APIs
 ZEPHYRINCLUDE += -I$(JERRY_INCLUDE)
 
-obj-y += main-zephyr.o getline-zephyr.o
+obj-y += main-zephyr.o getline-zephyr.o jerry-port.o

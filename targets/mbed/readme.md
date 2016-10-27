@@ -43,7 +43,7 @@ Basically, you can create a new target in this way (If the mbed OS support your 
   You can run this rule with the following command: 
   - `make -f targets/mbed/Makefile.mbed board=$(TARGET) jerry`
 
-2. The next rule is the `js2c`. This rule calls a `js2c.py` python script from the `jerryscript/targets/tools` and creates the JavaScript builtin file into the `targets/mbed/source/` folder. This file is the `jerry_targetjs.h`. You can run this rule with the follwoing command:
+2. The next rule is the `js2c`. This rule calls a `js2c.py` python script from the `jerryscript/targets/tools` and creates the JavaScript builtin file into the `targets/mbed/source/` folder. This file is the `jerry-targetjs.h`. You can run this rule with the follwoing command:
 
   - `make -f targets/mbed/Makefile.mbed board=$(TARGET) js2c`
 

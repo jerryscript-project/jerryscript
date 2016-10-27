@@ -5,4 +5,4 @@ mbed-events
 mbed_settings.py
 js/pins.js
 source/pins.cpp
-source/jerry_targetjs.h
+source/jerry-targetjs.h

@@ -52,13 +52,13 @@ MBED_CLI_FLAGS += -D "CONFIG_MEM_HEAP_AREA_SIZE=(1024*$(HEAPSIZE))"
 MBED_CLI_FLAGS += -t GCC_ARM
 
 .PHONY: all js2c getlibs rebuild library
-all: source/jerry_targetjs.h source/pins.cpp .mbed ../../.mbedignore
+all: source/jerry-targetjs.h source/pins.cpp .mbed ../../.mbedignore
 	mbed target $(BOARD)
 	mbed compile $(MBED_CLI_FLAGS)
 
 library: .mbed ../../.mbedignore
 	# delete encoded js code if it exists
-	rm -f source/jerry_targetjs.h
+	rm -f source/jerry-targetjs.h
 	mbed target $(BOARD)
 	mbed compile $(MBED_CLI_FLAGS) --library
 
@@ -68,13 +68,13 @@ clean:
 js2c: js/main.js js/flash_leds.js
 	python ../tools/js2c.py --ignore pins.js
 
-source/pins.cpp: 
+source/pins.cpp:
 	python tools/generate_pins.py ${BOARD}
 
 ifeq ($(NO_JS),0)
-source/jerry_targetjs.h: js2c
+source/jerry-targetjs.h: js2c
 else
-source/jerry_targetjs.h: ;
+source/jerry-targetjs.h: ;
 endif
 
 getlibs: .mbed

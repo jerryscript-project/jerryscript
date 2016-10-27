@@ -14,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#  This file converts ./js/*.js to a C-array in ./source/jerry_targetjs.h file
+#  This file converts ./js/*.js to a C-array in ./source/jerry-targetjs.h file
 
-import sys
+import argparse
 import glob
 import os
 import re
-
-import argparse
+import sys
 
 special_chars = re.compile(r'[-\\?\'".]')
 
@@ -78,21 +77,20 @@ FOOTER = '''
 
 '''
 
-OUT_PATH = './source/'
-SRC_PATH = './js/'
-
 parser = argparse.ArgumentParser(description="js2c")
-parser.add_argument('build_type', help='build type', default='release', nargs='?')
+parser.add_argument('--build-type', help='build type', default='release', choices=['release', 'debug'])
 parser.add_argument('--ignore', help='files to ignore', dest='ignore_files', default=[], action='append')
-parser.add_argument('--no-main', help='don\'t require a main.js file', dest='main', action='store_false', default=True)
+parser.add_argument('--no-main', help="don't require a 'main.js' file", dest='main', action='store_false', default=True)
+parser.add_argument('--js-source', dest='js_source_path', default='./js', help='Source directory of JavaScript files" (default: %(default)s)')
+parser.add_argument('--dest', dest='output_path', default='./source', help="Destination directory of 'jerry-targetjs.h' (default: %(default)s)")
 
 args = parser.parse_args()
 
 # argument processing
-buildtype = args.build_type
+build_type = args.build_type
 ignore_files = args.ignore_files
 
-fout = open(OUT_PATH + 'jerry_targetjs.h', 'w')
+fout = open(os.path.join(args.output_path, 'jerry-targetjs.h'), 'w')
 fout.write(LICENSE);
 fout.write(HEADER);
 
@@ -104,7 +102,7 @@ def exportOneFile(path, name):
     code = fin.read() + '\0'
 
     # minimize code when release mode
-    if buildtype != 'debug':
+    if build_type != 'debug':
         code = removeComments(code)
         code = removeWhitespaces(code)
 
@@ -122,7 +120,7 @@ def exportOneFile(path, name):
 def exportOneName(name):
     writeLine(fout, '{ ' + name + '_n, ' + name + '_s, ' + name + '_l }, \\', 1)
 
-files = glob.glob(SRC_PATH + '*.js')
+files = glob.glob(os.path.join(args.js_source_path, '*.js'))
 for path in files:
     name = extractName(path)
     if os.path.basename(path) not in ignore_files:

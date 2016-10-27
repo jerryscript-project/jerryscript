@@ -25,14 +25,14 @@
 #include "jerryscript-mbed-launcher/launcher.h"
 #include "jerryscript-mbed-launcher/setup.h"
 
-#include "jerry_targetjs.h"
+#include "jerry-targetjs.h"
 
 DECLARE_JS_CODES;
 
 /**
  * load_javascript
  *
- * Parse and run javascript files specified in jerry_targetjs.h
+ * Parse and run javascript files specified in jerry-targetjs.h
  */
 static int load_javascript() {
     for (int src = 0; js_codes[src].source; src++) {

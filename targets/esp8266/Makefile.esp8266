@@ -34,7 +34,7 @@ ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
 MFORCE32 = `xtensa-lx106-elf-gcc --help=target | grep mforce-l32`
 
 ifneq ($(MFORCE32),)
-    # Your compiler supports the -mforce-l32 flag which means that 
+    # Your compiler supports the -mforce-l32 flag which means that
     # constants can be placed in ROM to free additional RAM
     ESP_CFLAGS += -DJERRY_CONST_DATA="__attribute__((aligned(4))) __attribute__((section(\".irom.text\")))"
 endif

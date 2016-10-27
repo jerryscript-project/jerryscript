@@ -95,7 +95,7 @@ LINKFLAGS_eagle.app.v6 =				\
 DEPENDS_eagle.app.v6 =					\
 	$(LD_FILE)					\
 	$(LDDIR)/eagle.rom.addr.v6.ld			\
-	./source/jerry_targetjs.h			\
+	./source/jerry-targetjs.h			\
 	./libs/libjerrylibm.a				\
 	./libs/libjerrycore.a				\
 	./libs/libjerryentry.a

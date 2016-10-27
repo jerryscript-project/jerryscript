@@ -19,7 +19,7 @@
 #include "jerry-core/jerry-api.h"
 #include "jerry_run.h"
 
-#include "jerry_targetjs.h"
+#include "jerry-targetjs.h"
 
 static Serial pc (USBTX, USBRX); //tx, rx
 

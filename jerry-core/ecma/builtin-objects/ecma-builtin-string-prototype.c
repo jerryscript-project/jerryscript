@@ -875,55 +875,65 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
     {
       ecma_char_t action = LIT_CHAR_NULL;
 
-      if (*replace_str_curr_p++ == LIT_CHAR_DOLLAR_SIGN)
+      if (*replace_str_curr_p != LIT_CHAR_DOLLAR_SIGN)
       {
-        if (replace_str_curr_p < replace_str_end_p)
+        /* if not a continuation byte */
+        if ((*replace_str_curr_p & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
         {
-          action = *replace_str_curr_p;
+          current_position++;
+        }
+        replace_str_curr_p++;
+        continue;
+      }
 
-          if (action == LIT_CHAR_DOLLAR_SIGN)
-          {
-            current_position++;
-          }
-          else if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
-          {
-            uint32_t index = 0;
+      replace_str_curr_p++;
 
-            index = (uint32_t) (action - LIT_CHAR_0);
+      if (replace_str_curr_p < replace_str_end_p)
+      {
+        action = *replace_str_curr_p;
 
-            if (index >= match_length)
-            {
-              action = LIT_CHAR_NULL;
-            }
-            else if (index == 0 || match_length > 10)
-            {
-              replace_str_curr_p++;
+        if (action == LIT_CHAR_DOLLAR_SIGN)
+        {
+          current_position++;
+        }
+        else if (action >= LIT_CHAR_0 && action <= LIT_CHAR_9)
+        {
+          uint32_t index = 0;
 
-              ecma_char_t next_character = *replace_str_curr_p;
+          index = (uint32_t) (action - LIT_CHAR_0);
 
-              if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
-              {
-                uint32_t full_index = index * 10 + (uint32_t) (next_character - LIT_CHAR_0);
-                if (full_index > 0 && full_index < match_length)
-                {
-                  index = match_length;
-                }
-              }
-
-              replace_str_curr_p--;
-
-              if (index == 0)
-              {
-                action = LIT_CHAR_NULL;
-              }
-            }
-          }
-          else if (action != LIT_CHAR_AMPERSAND
-                   && action != LIT_CHAR_GRAVE_ACCENT
-                   && action != LIT_CHAR_SINGLE_QUOTE)
+          if (index >= match_length)
           {
             action = LIT_CHAR_NULL;
           }
+          else if (index == 0 || match_length > 10)
+          {
+            replace_str_curr_p++;
+
+            ecma_char_t next_character = *replace_str_curr_p;
+
+            if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
+            {
+              uint32_t full_index = index * 10 + (uint32_t) (next_character - LIT_CHAR_0);
+              if (full_index > 0 && full_index < match_length)
+              {
+                index = match_length;
+              }
+            }
+
+            replace_str_curr_p--;
+
+            if (index == 0)
+            {
+              action = LIT_CHAR_NULL;
+            }
+          }
+        }
+        else if (action != LIT_CHAR_AMPERSAND
+                 && action != LIT_CHAR_GRAVE_ACCENT
+                 && action != LIT_CHAR_SINGLE_QUOTE)
+        {
+          action = LIT_CHAR_NULL;
         }
       }
 
@@ -935,6 +945,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                                                                                       current_position,
                                                                                       true);
         replace_str_curr_p++;
+        current_position++;
 
         if (action == LIT_CHAR_DOLLAR_SIGN)
         {
@@ -1015,11 +1026,9 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
         }
 
         current_position++;
-        previous_start = current_position + 1;
+        previous_start = current_position;
       }
-
-      /* if not a continuation byte */
-      if ((*replace_str_curr_p & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
+      else
       {
         current_position++;
       }

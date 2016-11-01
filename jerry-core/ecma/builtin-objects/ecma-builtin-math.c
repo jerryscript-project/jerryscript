@@ -507,28 +507,11 @@ static ecma_value_t
 ecma_builtin_math_object_random (ecma_value_t this_arg) /**< 'this' argument */
 {
   JERRY_UNUSED (this_arg);
-  uint32_t rnd = 1;
-  uint32_t reps_count;
-#if RAND_MAX < 0x100
-  reps_count = 4;
-#elif RAND_MAX < 0x10000
-  reps_count = 2;
-#else /* RAND_MAX >= 0x10000 */
-  reps_count = 1;
-#endif /* RAND_MAX < 0x100 */
 
-  for (uint32_t i = 0; i < reps_count; i++)
-  {
-    uint32_t next_rand = (uint32_t) rand ();
-    rnd *= next_rand;
-  }
+  const ecma_number_t rand_max = (ecma_number_t) RAND_MAX;
+  const ecma_number_t rand_max_min_1 = (ecma_number_t) (RAND_MAX - 1);
 
-  const uint32_t max_uint32 = (uint32_t) -1;
-  ecma_number_t rand = (ecma_number_t) rnd;
-  rand /= (ecma_number_t) max_uint32;
-  rand *= (ecma_number_t) (max_uint32 - 1) / (ecma_number_t) max_uint32;
-
-  return ecma_make_number_value (rand);
+  return ecma_make_number_value (((ecma_number_t) rand ()) / rand_max * rand_max_min_1 / rand_max);
 } /* ecma_builtin_math_object_random */
 
 /**

@@ -120,7 +120,7 @@ KCONFIG_TARGETS = \
 	oldconfig silentoldconfig defconfig savedefconfig \
 	allnoconfig allyesconfig alldefconfig randconfig \
 	listnewconfig olddefconfig
-CLEAN_TARGETS = pristine mrproper
+CLEAN_TARGETS = mrproper
 
 $(GENERIC_TARGETS): jerry
 $(CLEAN_TARGETS): clean
@@ -166,3 +166,9 @@ ifdef V
 	@echo "- CLEANING ZEPHYR ----------------------------------------------"
 endif
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) clean
+
+pristine: clean
+ifdef V
+	@echo "- CLEANING BUILD DIRECTORY -------------------------------------"
+endif
+	rm -rf build/

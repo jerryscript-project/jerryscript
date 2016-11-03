@@ -50,6 +50,26 @@ jshint is used to statically check your JavaScript code, as part of the build pr
 This ensures that pins you are using in your code are available on your chosen target
 platform.
 
+### Python modules
+
+There are multiple Python module dependencies which can be installed with the
+following command invoked from your jerryscript/targets/mbedos5/tools directory:
+
+```bash
+pip install -r requirements.txt
+```
+
+If you have no pip installed but your are on an apt-managed system (e.g.,
+Ubuntu), issue the following command first:
+
+```bash
+apt-get -y install python-pip
+```
+
+(Otherwise, visit 
+[pip documentation](https://pip.pypa.io/en/stable/installing/) for more 
+information on how to install pip.)
+
 ## Quick Start
 
 Once you have all of your dependencies installed, you can build the project as follows:

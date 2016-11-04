@@ -28,6 +28,7 @@ API_REFERENCE_MD="02.API-REFERENCE.md"
 API_EXAMPLES_MD="03.API-EXAMPLE.md"
 INTERNALS_MD="04.INTERNALS.md"
 PORT_API_MD="05.PORT-API.md"
+REFERENCE_COUNTING_MD="06.REFERENCE-COUNTING.md"
 
 declare -A titles
 
@@ -36,6 +37,7 @@ titles[$API_REFERENCE_MD]="API Reference"
 titles[$API_EXAMPLES_MD]="API Examples"
 titles[$INTERNALS_MD]="Internals"
 titles[$PORT_API_MD]="Port API"
+titles[$REFERENCE_COUNTING_MD]="Reference counting"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`
@@ -77,8 +79,8 @@ for docfile in $docs_dir/*.md; do
   ' $docfile                                             >> $gh_pages_dir/$docfile_base
 
   # fix image links
-  sed -i -r -e 's/^!\[.*\]\(/&{{ site.baseurl }}\//' $gh_pages_dir/$docfile_base
-  sed -i -r -e 's/^!\[.*\]\(\{\{ site\.baseurl \}\}\/img.*$/&{: class="thumbnail center-block img-responsive" }/' $gh_pages_dir/$docfile_base
+  sed -i -r -e 's/^!\[.*\]\(/&{{ site.github.url }}\//' $gh_pages_dir/$docfile_base
+  sed -i -r -e 's/^!\[.*\]\(\{\{ site\.github\.url \}\}\/img.*$/&{: class="thumbnail center-block img-responsive" }/' $gh_pages_dir/$docfile_base
 
   # replace span tags to div
   sed -i 's/<span class=/<div class=/g' $gh_pages_dir/$docfile_base

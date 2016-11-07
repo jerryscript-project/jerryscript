@@ -104,9 +104,9 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           return ECMA_PROPERTY_TYPE_VIRTUAL;
         }
 
-        uint32_t index;
+        uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (ecma_string_get_array_index (property_name_p, &index))
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
@@ -173,9 +173,9 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
   else if (type == ECMA_OBJECT_TYPE_ARGUMENTS
            && property_ref_p != NULL)
   {
-    uint32_t index;
+    uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (ecma_string_get_array_index (property_name_p, &index))
+    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -316,9 +316,9 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
   if (unlikely (type == ECMA_OBJECT_TYPE_ARGUMENTS))
   {
-    uint32_t index;
+    uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (ecma_string_get_array_index (property_name_p, &index))
+    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -363,9 +363,9 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           return ecma_make_uint32_value (length);
         }
 
-        uint32_t index;
+        uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (ecma_string_get_array_index (property_name_p, &index))
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
 
@@ -578,9 +578,9 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
   if (type == ECMA_OBJECT_TYPE_ARGUMENTS)
   {
-    uint32_t index;
+    uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (ecma_string_get_array_index (property_name_p, &index))
+    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -616,9 +616,9 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
       if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
       {
-        uint32_t index;
+        uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (ecma_string_get_array_index (property_name_p, &index))
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
@@ -717,10 +717,10 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                                              is_throw); /* Failure handling */
       }
 
-      uint32_t index;
+      uint32_t index = ecma_string_get_array_index (property_name_p);
 
       if (type == ECMA_OBJECT_TYPE_ARRAY
-          && ecma_string_get_array_index (property_name_p, &index))
+          && index != ECMA_STRING_NOT_ARRAY_INDEX)
       {
         /* Since the length of an array is a non-configurable named data
          * property, the property_p must be a non-NULL pointer for all arrays. */
@@ -1272,11 +1272,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     {
       ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-      uint32_t index;
+      uint32_t index = ecma_string_get_array_index (name_p);
 
-      if (ecma_string_get_array_index (name_p, &index))
+      if (index != ECMA_STRING_NOT_ARRAY_INDEX)
       {
-        /* name_p is a valid array index */
+        /* The name is a valid array index. */
         array_index_named_properties_count++;
       }
       else if (!is_array_indices_only)
@@ -1299,9 +1299,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     {
       ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-      uint32_t index;
+      uint32_t index = ecma_string_get_array_index (name_p);
 
-      if (ecma_string_get_array_index (name_p, &index))
+      if (index != ECMA_STRING_NOT_ARRAY_INDEX)
       {
         JERRY_ASSERT (array_index_name_pos < array_index_named_properties_count);
 

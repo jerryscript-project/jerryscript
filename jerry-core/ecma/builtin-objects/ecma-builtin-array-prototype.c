@@ -1229,9 +1229,8 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-    uint32_t index;
-    bool is_index = ecma_string_get_array_index (property_name_p, &index);
-    JERRY_ASSERT (is_index);
+    uint32_t index = ecma_string_get_array_index (property_name_p);
+    JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
     if (index < len)
     {
@@ -1249,9 +1248,8 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-    uint32_t index;
-    bool is_index = ecma_string_get_array_index (property_name_p, &index);
-    JERRY_ASSERT (is_index);
+    uint32_t index = ecma_string_get_array_index (property_name_p);
+    JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
     if (index >= len)
     {
@@ -1309,9 +1307,8 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
 
-    uint32_t index;
-    bool is_index = ecma_string_get_array_index (property_name_p, &index);
-    JERRY_ASSERT (is_index);
+    uint32_t index = ecma_string_get_array_index (property_name_p);
+    JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
     if (index >= copied_num && index < len)
     {

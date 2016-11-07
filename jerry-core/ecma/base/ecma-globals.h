@@ -845,6 +845,11 @@ typedef double ecma_number_t;
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 10
 
 /**
+ * String is not a valid array index.
+ */
+#define ECMA_STRING_NOT_ARRAY_INDEX UINT32_MAX
+
+/**
  * Description of a collection's header.
  */
 typedef struct

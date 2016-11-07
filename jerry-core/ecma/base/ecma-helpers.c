@@ -969,18 +969,18 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
         ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                     prop_pair_p->names_cp[i]);
 
-        uint32_t index;
-        if (ecma_string_get_array_index (property_name_p, &index))
-        {
-          if (index < old_length && index >= new_length)
-          {
-            new_length = index + 1;
+        uint32_t index = ecma_string_get_array_index (property_name_p);
 
-            if (new_length == old_length)
-            {
-              /* Early return. */
-              return new_length;
-            }
+        if (index < old_length && index >= new_length)
+        {
+          JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
+
+          new_length = index + 1;
+
+          if (new_length == old_length)
+          {
+            /* Early return. */
+            return new_length;
           }
         }
       }
@@ -1015,23 +1015,23 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
         ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
                                                                     prop_pair_p->names_cp[i]);
 
-        uint32_t index;
-        if (ecma_string_get_array_index (property_name_p, &index))
+        uint32_t index = ecma_string_get_array_index (property_name_p);
+
+        if (index < old_length && index >= new_length)
         {
-          if (index < old_length && index >= new_length)
+          JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
+
+          ecma_free_property (object_p, property_name_p, current_prop_p->types + i);
+
+          if (has_hashmap)
           {
-            ecma_free_property (object_p, property_name_p, current_prop_p->types + i);
-
-            if (has_hashmap)
-            {
-              ecma_property_hashmap_delete (object_p, property_name_p, current_prop_p->types + i);
-            }
-
-            JERRY_ASSERT (current_prop_p->types[i] == ECMA_PROPERTY_TYPE_DELETED);
-
-            ecma_deref_ecma_string (property_name_p);
-            prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
+            ecma_property_hashmap_delete (object_p, property_name_p, current_prop_p->types + i);
           }
+
+          JERRY_ASSERT (current_prop_p->types[i] == ECMA_PROPERTY_TYPE_DELETED);
+
+          ecma_deref_ecma_string (property_name_p);
+          prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
         }
       }
     }

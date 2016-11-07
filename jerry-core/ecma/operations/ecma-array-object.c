@@ -301,9 +301,9 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
     return ecma_op_array_object_set_length (object_p, property_desc_p->value, flags);
   }
 
-  uint32_t index;
+  uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (!ecma_string_get_array_index (property_name_p, &index))
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX)
   {
     return ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p, is_throw);
   }

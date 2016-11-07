@@ -174,7 +174,7 @@ extern ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *, ecma_string_t *
 extern void ecma_ref_ecma_string (ecma_string_t *);
 extern void ecma_deref_ecma_string (ecma_string_t *);
 extern ecma_number_t ecma_string_to_number (const ecma_string_t *);
-extern bool ecma_string_get_array_index (const ecma_string_t *, uint32_t *);
+extern uint32_t ecma_string_get_array_index (const ecma_string_t *);
 
 extern lit_utf8_size_t __attr_return_value_should_be_checked___
 ecma_string_copy_to_utf8_buffer (const ecma_string_t *, lit_utf8_byte_t *, lit_utf8_size_t);

@@ -255,9 +255,9 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
     return ret_value;
   }
 
-  uint32_t index;
+  uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (!ecma_string_get_array_index (property_name_p, &index))
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX)
   {
     return ret_value;
   }
@@ -338,9 +338,9 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
 
   if (ecma_is_value_true (ret_value))
   {
-    uint32_t index;
+    uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (ecma_string_get_array_index (property_name_p, &index))
+    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 

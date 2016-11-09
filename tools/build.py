@@ -62,6 +62,7 @@ def get_arguments():
     parser.add_argument('--jerry-libc', metavar='X', choices=['on', 'off'], default='on', help='build and use jerry-libc (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-libm', metavar='X', choices=['on', 'off'], default='on', help='build and use jerry-libm (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['on', 'off'], default='on', help='build jerry command line tool (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-emscripten-simulator', metavar='X', choices=['on', 'off'], default='off', help='build and use jerry-emscripten-simulator (%(choices)s; default: %(default)s)')
     parser.add_argument('--static-link', metavar='X', choices=['on', 'off'], default='on', help='enable static linking of binaries (%(choices)s; default: %(default)s)')
     parser.add_argument('--strip', metavar='X', choices=['on', 'off'], default='on', help='strip release binaries (%(choices)s; default: %(default)s)')
     parser.add_argument('--unittests', action='store_const', const='ON', default='OFF', help='build unittests')
@@ -88,6 +89,7 @@ def generate_build_options(arguments):
     build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc.upper())
     build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm.upper())
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline.upper())
+    build_options.append('-DJERRY_EMSCRIPTEN_SIMULATOR=%s' % arguments.jerry_emscripten_simulator.upper())
     build_options.append('-DCMAKE_VERBOSE_MAKEFILE=%s' % arguments.verbose)
     build_options.append('-DCMAKE_BUILD_TYPE=%s' % arguments.build_type)
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
@@ -113,6 +115,12 @@ def generate_build_options(arguments):
     build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
     build_options.append('-DEXTERNAL_LINKER_FLAGS=' + ' '.join(arguments.linker_flag))
     build_options.append('-DEXTERNAL_LINK_LIBS=' + ' '.join(arguments.link_lib))
+
+    if arguments.jerry_emscripten_simulator == 'on':
+        if arguments.toolchain:
+            print('Cannot use --toolchain when using --jerry-emscripten-simulator')
+            sys.exit(-1)
+        build_options.append('-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_emscripten.cmake')
 
     if arguments.toolchain:
         build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)

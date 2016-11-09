@@ -27,6 +27,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 set(JERRY_LIBC    ON  CACHE BOOL "Build and use jerry-libc?")
 set(JERRY_LIBM    ON  CACHE BOOL "Build and use jerry-libm?")
 set(JERRY_CMDLINE ON  CACHE BOOL "Build jerry command line tool?")
+set(JERRY_EMSCRIPTEN_SIMULATOR ON CACHE BOOL "Build and use jerry-emscripten-simulator?")
 set(UNITTESTS     OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
@@ -49,18 +50,19 @@ if("${PLATFORM}" STREQUAL "DARWIN")
 endif()
 
 # Status messages
-message(STATUS "CMAKE_SYSTEM_NAME         " ${CMAKE_SYSTEM_NAME})
-message(STATUS "CMAKE_SYSTEM_PROCESSOR    " ${CMAKE_SYSTEM_PROCESSOR})
-message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
-message(STATUS "JERRY_LIBC                " ${JERRY_LIBC})
-message(STATUS "JERRY_LIBM                " ${JERRY_LIBM})
-message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
-message(STATUS "UNITTESTS                 " ${UNITTESTS})
-message(STATUS "PORT_DIR                  " ${PORT_DIR})
-message(STATUS "ENABLE_LTO                " ${ENABLE_LTO})
-message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE})
-message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP})
-message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
+message(STATUS "CMAKE_SYSTEM_NAME          " ${CMAKE_SYSTEM_NAME})
+message(STATUS "CMAKE_SYSTEM_PROCESSOR     " ${CMAKE_SYSTEM_PROCESSOR})
+message(STATUS "CMAKE_BUILD_TYPE           " ${CMAKE_BUILD_TYPE})
+message(STATUS "JERRY_LIBC                 " ${JERRY_LIBC})
+message(STATUS "JERRY_LIBM                 " ${JERRY_LIBM})
+message(STATUS "JERRY_CMDLINE              " ${JERRY_CMDLINE})
+message(STATUS "JERRY_EMSCRIPTEN_SIMULATOR " ${JERRY_EMSCRIPTEN_SIMULATOR})
+message(STATUS "UNITTESTS                  " ${UNITTESTS})
+message(STATUS "PORT_DIR                   " ${PORT_DIR})
+message(STATUS "ENABLE_LTO                 " ${ENABLE_LTO})
+message(STATUS "ENABLE_ALL_IN_ONE          " ${ENABLE_ALL_IN_ONE})
+message(STATUS "ENABLE_STRIP               " ${ENABLE_STRIP})
+message(STATUS "ENABLE_STATIC_LINK         " ${ENABLE_STATIC_LINK})
 
 # Setup directories
 # Project binary dir
@@ -127,16 +129,18 @@ if(ENABLE_LTO)
 endif()
 
 # Define _BSD_SOURCE if we use default port and compiler default libc
-if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND NOT JERRY_LIBC)
+if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND (NOT JERRY_LIBC OR JERRY_EMSCRIPTEN_SIMULATOR))
   set(DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE)
 endif()
 
 # Compiler / Linker flags
 jerry_add_compile_flags(-fno-builtin)
-if(("${PLATFORM}" STREQUAL "DARWIN"))
-  jerry_add_link_flags(-lSystem)
-else()
-  jerry_add_link_flags(-Wl,-z,noexecstack)
+if(NOT JERRY_EMSCRIPTEN_SIMULATOR)
+  if(("${PLATFORM}" STREQUAL "DARWIN"))
+    jerry_add_link_flags(-lSystem)
+  else()
+    jerry_add_link_flags(-Wl,-z,noexecstack)
+  endif()
 endif()
 
 # Turn off linking to compiler's default libc, in case jerry-libc is used
@@ -167,7 +171,7 @@ endif()
 jerry_add_compile_flags(-std=c99 -pedantic)
 
 # Strip binary
-if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT JERRY_EMSCRIPTEN_SIMULATOR)
   jerry_add_link_flags(-s)
 endif()
 
@@ -180,18 +184,22 @@ if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
 endif()
 
-# Jerry's libc
-if(JERRY_LIBC)
-  add_subdirectory(jerry-libc)
-endif()
+if(NOT JERRY_EMSCRIPTEN_SIMULATOR)
+  # Jerry's libc
+  if(JERRY_LIBC)
+    add_subdirectory(jerry-libc)
+  endif()
 
-# Jerry's libm
-if(JERRY_LIBM)
-  add_subdirectory(jerry-libm)
-endif()
+  # Jerry's libm
+  if(JERRY_LIBM)
+    add_subdirectory(jerry-libm)
+  endif()
 
-# Jerry's core
-add_subdirectory(jerry-core)
+  # Jerry's core
+  add_subdirectory(jerry-core)
+else()
+  add_subdirectory(jerry-emscripten-simulator)
+endif()
 
 # Jerry command line tool
 if(JERRY_CMDLINE)

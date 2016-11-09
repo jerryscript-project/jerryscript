@@ -1,0 +1,33 @@
+* {
+    font-family: sans-serif;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    clear: both;
+    margin-bottom: 0px;
+    font-size: 1em;
+}
+
+#gpios div {
+    float: left;
+    padding: 20px;
+    margin: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.gpio-on {
+    background-color: green;
+}
+
+.gpio-off {
+    background-color: darkgray;
+}
+
+#uart-rx {
+    width: 30%;
+}

@@ -23,8 +23,22 @@ if(${FEATURE_PROFILE} STREQUAL "${CMAKE_SOURCE_DIR}/jerry-core/profiles/minimal.
   message(FATAL_ERROR "minimal profile isn't supported in unit-core")
 endif()
 
-# Unit tests main modules
-file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES *.c)
+# Unit tests main modules that exercise the API:
+file(GLOB SOURCE_UNIT_TEST_MAIN_API_MODULES api/*.c)
+
+if(EMSCRIPTEN_SIMULATED_JERRY_API)
+  list(REMOVE_ITEM SOURCE_UNIT_TEST_MAIN_API_MODULES ${CMAKE_SOURCE_DIR}/tests/unit-core/api/test-snapshot.c)
+endif()
+
+# Unit tests main modules that exercise engine internals:
+if(NOT EMSCRIPTEN_SIMULATED_JERRY_API)
+  file(GLOB SOURCE_UNIT_TEST_MAIN_INTERNAL_MODULES internal/*.c)
+endif()
+
+# All unit test main modules:
+set(SOURCE_UNIT_TEST_MAIN_MODULES
+  ${SOURCE_UNIT_TEST_MAIN_API_MODULES}
+  ${SOURCE_UNIT_TEST_MAIN_INTERNAL_MODULES})
 
 # Unit tests declaration
 add_custom_target(unittests-core)
@@ -38,6 +52,7 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
                PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
 
   target_link_libraries(${TARGET_NAME} jerry-core jerry-port-default-minimal)
+  target_compile_options(${TARGET_NAME} PUBLIC -Wno-unused-variable -Wno-unused-function)
 
   add_dependencies(unittests-core ${TARGET_NAME})
 endforeach()

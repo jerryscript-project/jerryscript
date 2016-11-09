@@ -38,15 +38,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Optional components
-set(JERRY_CMDLINE           ON  CACHE BOOL "Build jerry command line tool?")
-set(JERRY_CMDLINE_TEST      OFF CACHE BOOL "Build jerry test command line tool?")
-set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
-set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
-set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
-set(JERRY_LIBC              ON  CACHE BOOL "Build and use jerry-libc?")
-set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
-set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
-set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
+set(EMSCRIPTEN_SIMULATED_JERRY_API OFF CACHE BOOL "Build and use emscripten-simulated-jerry-api?")
+set(JERRY_CMDLINE                  ON  CACHE BOOL "Build jerry command line tool?")
+set(JERRY_CMDLINE_MINIMAL          OFF CACHE BOOL "Build jerry minimal command line tool?")
+set(JERRY_CMDLINE_SNAPSHOT         OFF CACHE BOOL "Build jerry snapshot command line tool?")
+set(JERRY_PORT_DEFAULT             ON  CACHE BOOL "Build default jerry port implementation?")
+set(JERRY_EXT                      ON  CACHE BOOL "Build jerry-ext?")
+set(JERRY_LIBC                     ON  CACHE BOOL "Build and use jerry-libc?")
+set(JERRY_LIBM                     ON  CACHE BOOL "Build and use jerry-libm?")
+set(UNITTESTS                      OFF CACHE BOOL "Build unit tests?")
+set(DOCTESTS                       OFF CACHE BOOL "Build doc tests?")
 
 # Optional build settings
 set(ENABLE_ALL_IN_ONE  OFF CACHE BOOL "Enable all-in-one build?")
@@ -70,7 +71,7 @@ if(JERRY_CMDLINE OR DOCTESTS)
   set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE OR TESTS)")
 endif()
 
-if("${PLATFORM}" STREQUAL "DARWIN")
+if(PLATFORM STREQUAL "DARWIN")
   set(JERRY_LIBC         OFF)
   set(JERRY_LIBM         OFF)
   set(ENABLE_ALL_IN_ONE  ON)
@@ -186,12 +187,14 @@ endif()
 if (USING_GCC OR USING_CLANG)
   jerry_add_compile_flags(-fno-builtin)
 endif()
-if(("${PLATFORM}" STREQUAL "DARWIN"))
-  jerry_add_link_flags(-lSystem)
-  set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
-  set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
-else()
-  jerry_add_link_flags(-Wl,-z,noexecstack)
+if(NOT EMSCRIPTEN_SIMULATED_JERRY_API)
+  if(("${PLATFORM}" STREQUAL "DARWIN"))
+    jerry_add_link_flags(-lSystem)
+    set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
+    set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+  else()
+    jerry_add_link_flags(-Wl,-z,noexecstack)
+  endif()
 endif()
 
 # Turn off linking to compiler's default libc, in case jerry-libc is used
@@ -227,7 +230,7 @@ elseif(USING_TI)
 endif()
 
 # Strip binary
-if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT EMSCRIPTEN_SIMULATED_JERRY_API)
   jerry_add_link_flags(-s)
 endif()
 
@@ -246,18 +249,22 @@ if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
 endif()
 
-# Jerry's libc
-if(JERRY_LIBC)
-  add_subdirectory(jerry-libc)
-endif()
+if(NOT EMSCRIPTEN_SIMULATED_JERRY_API)
+  # Jerry's libc
+  if(JERRY_LIBC)
+    add_subdirectory(jerry-libc)
+  endif()
 
-# Jerry's libm
-if(JERRY_LIBM)
-  add_subdirectory(jerry-libm)
-endif()
+  # Jerry's libm
+  if(JERRY_LIBM)
+    add_subdirectory(jerry-libm)
+  endif()
 
-# Jerry's core
-add_subdirectory(jerry-core)
+  # Jerry's core
+  add_subdirectory(jerry-core)
+else()
+  add_subdirectory(emscripten-simulated-jerry-api)
+endif()
 
 # Jerry's default port implementation
 if(JERRY_PORT_DEFAULT)
@@ -277,7 +284,10 @@ endif()
 # Unittests
 if(UNITTESTS)
   add_subdirectory(tests/unit-core)
-  if(JERRY_LIBM)
+  if(JERRY_LIBC AND NOT EMSCRIPTEN_SIMULATED_JERRY_API)
+    add_subdirectory(tests/unit-libc)
+  endif()
+  if(JERRY_LIBM AND NOT EMSCRIPTEN_SIMULATED_JERRY_API)
     add_subdirectory(tests/unit-libm)
   endif()
   if(JERRY_EXT)
@@ -285,7 +295,11 @@ if(UNITTESTS)
   endif()
 endif()
 
+if(EMSCRIPTEN_SIMULATED_JERRY_API AND NOT UNITTESTS AND NOT DOCTESTS)
+  add_subdirectory(targets/emx-demo)
+endif()
+
 # Doctests
-if(DOCTESTS)
+if(DOCTESTS AND NOT EMSCRIPTEN_SIMULATED_JERRY_API)
   add_subdirectory(tests/unit-doc)
 endif()

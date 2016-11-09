@@ -1,0 +1,6 @@
+.git
+.DS_Store
+.idea
+build
+cmake-build*
+node_modules

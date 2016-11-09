@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Emscripten JerryScript Demo</title>
+        <link rel="stylesheet" href="style.css" type="text/css">
+    </head>
+    <body>
+        <h1>Emscripten JerryScript Demo</h1>
+        <div id="container">
+            <div id="gpios">
+                <h2>GPIOs</h2>
+                <div id="gpio-0" class="gpio-off">0</div>
+                <div id="gpio-1" class="gpio-off">1</div>
+                <div id="gpio-2" class="gpio-off">2</div>
+                <div id="gpio-3" class="gpio-off">3</div>
+            </div>
+            <div id="uart">
+                <h2>UART RX</h2>
+                <input type="text" id="uart-rx" />
+                <input type="button" id="uart-send" value="Send Message" />
+            </div>
+        </div>
+        <script src="browser-ui.js"></script>
+        <script src="emx_demo.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>

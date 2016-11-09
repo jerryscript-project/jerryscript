@@ -29,8 +29,16 @@ UNITTEST_OK=$DIR/unittests.passed
 
 rm -f $UNITTEST_ERROR $UNITTEST_OK
 
-UNITTESTS=$(ls $DIR/unit-*)
-total=$(ls $DIR/unit-* | wc -l)
+find_executables_opt='-perm /111'  # Assume Linux
+unamestr=`uname`
+if [[ "$unamestr" == 'Darwin' ]]; then
+   find_executables_opt='-perm +111'
+fi
+
+# Find unit test executables.
+# Also find .js files, when using --emscripten-simulated-jerry-api, the unit tests are transpiled to .js files.
+UNITTESTS=$(find $DIR -iname "unit-*" $find_executables_opt -type f -or -iname "*.js")
+total=$(echo $UNITTESTS | wc -w)
 
 if [ "$total" -eq 0 ]
 then
@@ -66,7 +74,12 @@ UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
 for unit_test in $UNITTESTS
 do
     cmd_line="${unit_test#$ROOT_DIR}"
-    $unit_test &>$UNITTEST_TEMP
+    runtime=
+    if [[ $unit_test =~ \.js$ ]]
+    then
+        runtime="node --expose-gc"
+    fi
+    $runtime $unit_test &>$UNITTEST_TEMP
     status_code=$?
 
     if [ $status_code -ne 0 ]

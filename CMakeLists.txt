@@ -126,9 +126,9 @@ if(ENABLE_LTO)
   endif()
 endif()
 
-# Define _BSD_SOURCE if we use default port and compiler default libc
+# Define _BSD_SOURCE and _DEFAULT_SOURCE if we use default port and compiler default libc
 if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND NOT JERRY_LIBC)
-  set(DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE)
+  set(DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE _DEFAULT_SOURCE)
 endif()
 
 # Compiler / Linker flags

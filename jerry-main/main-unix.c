@@ -500,18 +500,21 @@ main (int argc,
   jerry_value_t assert_value = jerry_create_external_function (assert_handler);
 
   jerry_value_t assert_func_name_val = jerry_create_string ((jerry_char_t *) "assert");
-  bool is_assert_added = jerry_set_property (global_obj_val, assert_func_name_val, assert_value);
+  jerry_value_t ret_value = jerry_set_property (global_obj_val, assert_func_name_val, assert_value);
 
   jerry_release_value (assert_func_name_val);
   jerry_release_value (assert_value);
   jerry_release_value (global_obj_val);
 
-  if (!is_assert_added)
+  if (jerry_value_has_error_flag (ret_value))
   {
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register 'assert' method.");
+    print_unhandled_exception (ret_value);
   }
 
-  jerry_value_t ret_value = jerry_create_undefined ();
+  jerry_release_value (ret_value);
+
+  ret_value = jerry_create_undefined ();
 
   for (int i = 0; i < exec_snapshots_count; i++)
   {
@@ -674,5 +677,4 @@ main (int argc,
   jerry_cleanup ();
 
   return ret_code;
-
 } /* main */

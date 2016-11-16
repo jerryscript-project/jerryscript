@@ -664,6 +664,15 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
 {
   if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW)
   {
+
+ #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+    if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) > ECMA_PROP_HASHMAP_ALLOC_ON)
+    {
+      --JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
+    }
+    JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = false;
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
     /*
      * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
      * Otherwise, probability to free sufficient space is considered to be low.
@@ -678,6 +687,18 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
   else
   {
     JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+    if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc))
+    {
+      JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_MAX;
+    }
+    else if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) < ECMA_PROP_HASHMAP_ALLOC_MAX)
+    {
+      ++JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
+      JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = true;
+    }
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
     /* Freeing as much memory as we currently can */
     ecma_gc_run (severity);

@@ -1002,6 +1002,22 @@ typedef enum
   ECMA_GC_COLOR__COUNT /**< number of colors */
 } ecma_gc_color_t;
 
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+
+/**
+ * The lowest state of the ecma_prop_hashmap_alloc_state counter.
+ * If ecma_prop_hashmap_alloc_state other other than this value, it is
+ * disabled.
+ */
+#define ECMA_PROP_HASHMAP_ALLOC_ON 0
+
+/**
+ * The highest state of the ecma_prop_hashmap_alloc_state counter.
+ */
+#define ECMA_PROP_HASHMAP_ALLOC_MAX 4
+
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
 /**
  * Number of values in a literal storage item
  */

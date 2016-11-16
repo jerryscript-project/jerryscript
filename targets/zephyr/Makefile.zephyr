@@ -106,7 +106,7 @@ zephyr: jerry
 ifdef V
 	@echo "- ZEPHYR -------------------------------------------------------"
 endif
-	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG)
+	+make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG)
 	@echo "Finished"
 	@file $(OUTPUT)/zephyr.strip
 	@size $(OUTPUT)/zephyr.strip

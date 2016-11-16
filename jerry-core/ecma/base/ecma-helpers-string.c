@@ -216,6 +216,120 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
 } /* ecma_new_ecma_string_from_utf8 */
 
 /**
+ * Allocate a new ecma-string and initialize it from the utf8 string argument.
+ * All 4-bytes long unicode sequences are converted into two 3-bytes long sequences.
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string_p, /**< utf-8 string */
+                                                   lit_utf8_size_t string_size) /**< utf-8 string size */
+{
+  JERRY_ASSERT (string_p != NULL || string_size == 0);
+
+  ecma_string_t *string_desc_p = NULL;
+
+  ecma_length_t string_length = 0;
+  lit_utf8_size_t converted_string_size = 0;
+  lit_utf8_size_t pos = 0;
+
+  /* Calculate the required length and size information of the converted cesu-8 encoded string */
+  while (pos < string_size)
+  {
+    if ((string_p[pos] & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
+    {
+      pos++;
+    }
+    else if ((string_p[pos] & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
+    {
+      pos += 2;
+    }
+    else if ((string_p[pos] & LIT_UTF8_3_BYTE_MASK) == LIT_UTF8_3_BYTE_MARKER)
+    {
+      pos += 3;
+    }
+    else
+    {
+      JERRY_ASSERT ((string_p[pos] & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER);
+      pos += 4;
+      converted_string_size += 2;
+    }
+
+    string_length++;
+  }
+
+  JERRY_ASSERT (pos == string_size);
+
+  if (converted_string_size == 0)
+  {
+    return ecma_new_ecma_string_from_utf8 (string_p, string_size);
+  }
+  else
+  {
+    converted_string_size += string_size;
+
+    JERRY_ASSERT (lit_is_utf8_string_valid (string_p, string_size));
+
+    lit_utf8_byte_t *data_p;
+
+    if (likely (string_size <= UINT16_MAX))
+    {
+      string_desc_p = jmem_heap_alloc_block (sizeof (ecma_string_t) + converted_string_size);
+
+      string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
+      string_desc_p->u.common_field = 0;
+      string_desc_p->u.utf8_string.size = (uint16_t) converted_string_size;
+      string_desc_p->u.utf8_string.length = (uint16_t) string_length;
+
+      data_p = (lit_utf8_byte_t *) (string_desc_p + 1);
+    }
+    else
+    {
+      string_desc_p = jmem_heap_alloc_block (sizeof (ecma_long_string_t) + converted_string_size);
+
+      string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING | ECMA_STRING_REF_ONE;
+      string_desc_p->u.common_field = 0;
+      string_desc_p->u.long_utf8_string_size = converted_string_size;
+
+      ecma_long_string_t *long_string_desc_p = (ecma_long_string_t *) string_desc_p;
+      long_string_desc_p->long_utf8_string_length = string_length;
+
+      data_p = (lit_utf8_byte_t *) (long_string_desc_p + 1);
+    }
+
+    pos = 0;
+
+    while (pos < string_size)
+    {
+      if ((string_p[pos] & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
+      {
+        /* Processing 4 byte unicode sequence. Always converted to two 3 byte long sequence. */
+        uint32_t character = ((((uint32_t) string_p[pos++]) & 0x7) << 18);
+        character |= ((((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK) << 12);
+        character |= ((((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK) << 6);
+        character |= (((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK);
+
+        JERRY_ASSERT (character >= 0x10000);
+        character -= 0x10000;
+
+        data_p += lit_char_to_utf8_bytes (data_p, (ecma_char_t) (0xd800 | (character >> 10)));
+        data_p += lit_char_to_utf8_bytes (data_p, (ecma_char_t) (0xdc00 | (character & LIT_UTF16_LAST_10_BITS_MASK)));
+      }
+      else
+      {
+        *data_p++ = string_p[pos++];
+      }
+    }
+
+    JERRY_ASSERT (pos == string_size);
+
+    string_desc_p->hash = lit_utf8_string_calc_hash (data_p, converted_string_size);
+  }
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_utf8_converted_to_cesu8 */
+
+/**
  * Allocate new ecma-string and fill it with cesu-8 character which represents specified code unit
  *
  * @return pointer to ecma-string descriptor

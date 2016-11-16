@@ -248,6 +248,8 @@ jerry_value_t jerry_create_number_infinity (bool);
 jerry_value_t jerry_create_number_nan (void);
 jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
+jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *);
+jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *, jerry_size_t);
 jerry_value_t jerry_create_string (const jerry_char_t *);
 jerry_value_t jerry_create_string_sz (const jerry_char_t *, jerry_size_t);
 jerry_value_t jerry_create_undefined (void);

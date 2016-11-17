@@ -268,7 +268,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 /**
  * Special type for ecma_op_general_object_define_own_property.
  */
-#define ECMA_PROPERTY_TYPE_GENERIC ECMA_PROPERTY_TYPE_DELETED
+#define ECMA_PROPERTY_TYPE_GENERIC ECMA_PROPERTY_TYPE_SPECIAL
 
 /**
  * [[DefineOwnProperty]] ecma general object's operation

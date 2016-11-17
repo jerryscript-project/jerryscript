@@ -197,6 +197,12 @@ typedef uintptr_t ecma_external_pointer_t;
  */
 typedef enum
 {
+  ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
+
+  /* Note: when new special types are added
+   * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
+  ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
+
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
   ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63, /**< Bit-mask of non-instantiated
@@ -249,32 +255,44 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_TYPE_DELETED, /**< deleted property */
-  ECMA_PROPERTY_TYPE_INTERNAL, /**< internal property */
+  ECMA_PROPERTY_TYPE_SPECIAL, /**< internal property */
   ECMA_PROPERTY_TYPE_NAMEDDATA, /**< property is named data */
   ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< property is named accessor */
+  ECMA_PROPERTY_TYPE_VIRTUAL, /**< property is virtual */
 
-  ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for
-                                                                             *   property pair types. */
-
-  ECMA_PROPERTY_TYPE_HASHMAP, /**< hash map for fast property access */
-
-  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_HASHMAP, /**< highest value for property types. */
-
-  /* Property type aliases. */
-  ECMA_PROPERTY_TYPE_NOT_FOUND = ECMA_PROPERTY_TYPE_DELETED, /**< property is not found */
-  ECMA_PROPERTY_TYPE_VIRTUAL = ECMA_PROPERTY_TYPE_HASHMAP, /**< property is virtual */
+  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_VIRTUAL, /**< highest value for property types. */
 } ecma_property_types_t;
 
 /**
  * Property type mask.
  */
-#define ECMA_PROPERTY_TYPE_MASK 0x7
+#define ECMA_PROPERTY_TYPE_MASK 0x3
 
 /**
  * Property flags base shift.
  */
-#define ECMA_PROPERTY_FLAG_SHIFT 3
+#define ECMA_PROPERTY_FLAG_SHIFT 2
+
+/**
+ * Define special property type.
+ */
+#define ECMA_SPECIAL_PROPERTY_VALUE(type) \
+  ((uint8_t) (ECMA_PROPERTY_TYPE_SPECIAL | ((type) << ECMA_PROPERTY_FLAG_SHIFT)))
+
+/**
+ * Type of deleted property.
+ */
+#define ECMA_PROPERTY_TYPE_DELETED ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_DELETED)
+
+/**
+ * Type of hash-map property.
+ */
+#define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
+
+/**
+ * Type of property not found.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND ECMA_PROPERTY_TYPE_DELETED
 
 /**
  * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -397,7 +415,8 @@ typedef struct
  * Returns true if the property pointer is a property pair.
  */
 #define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
-  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) <= ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX)
+  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) != ECMA_PROPERTY_TYPE_VIRTUAL \
+   && (property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
 
 /**
  * Returns the internal property type

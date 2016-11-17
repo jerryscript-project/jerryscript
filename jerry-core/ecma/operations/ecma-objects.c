@@ -1189,8 +1189,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     ecma_property_header_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
 
-    if (prop_iter_p != NULL
-        && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+    if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
     {
       prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                       prop_iter_p->next_property_cp);

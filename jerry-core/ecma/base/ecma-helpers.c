@@ -394,7 +394,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
                                                                           *property_list_head_p);
     bool has_hashmap = false;
 
-    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+    if (first_property_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
     {
       property_list_head_p = &first_property_p->next_property_cp;
       first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
@@ -452,7 +452,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
     ecma_property_header_t *first_property_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
                                                                           *property_list_head_p);
 
-    if (ECMA_PROPERTY_GET_TYPE (first_property_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+    if (first_property_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
     {
       property_list_head_p = &first_property_p->next_property_cp;
       has_hashmap = true;
@@ -504,8 +504,7 @@ ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
 {
   JERRY_ASSERT (ecma_find_internal_property (object_p, property_id) == NULL);
 
-  uint8_t id_byte = (uint8_t) (property_id << ECMA_PROPERTY_FLAG_SHIFT);
-  uint8_t type_and_flags = (uint8_t) (ECMA_PROPERTY_TYPE_INTERNAL | id_byte);
+  uint8_t type_and_flags = ECMA_SPECIAL_PROPERTY_VALUE (property_id);
 
   ecma_property_value_t value;
   value.value = ECMA_NULL_POINTER;
@@ -528,26 +527,20 @@ ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
 
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
 
-  if (prop_iter_p != NULL
-      && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
-  {
-    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                    prop_iter_p->next_property_cp);
-  }
+  uint8_t value = ECMA_SPECIAL_PROPERTY_VALUE (property_id);
 
   while (prop_iter_p != NULL)
   {
-    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+    JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP
+                  || ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
-    if (ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_INTERNAL
-        && ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_iter_p->types + 0) == property_id)
+    if (prop_iter_p->types[0] == value)
     {
       ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
       return &prop_pair_p->values[0].value;
     }
 
-    if (ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[1]) == ECMA_PROPERTY_TYPE_INTERNAL
-        && ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_iter_p->types + 1) == property_id)
+    if (prop_iter_p->types[1] == value)
     {
       ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
       return &prop_pair_p->values[1].value;
@@ -664,8 +657,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_p);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-  if (prop_iter_p != NULL
-      && ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     ecma_string_t *property_real_name_p;
     property_p = ecma_property_hashmap_find ((ecma_property_hashmap_t *) prop_iter_p,
@@ -769,7 +761,7 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 static void
 ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 {
-  JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
+  JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_SPECIAL);
 
   switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
   {
@@ -831,9 +823,10 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       }
       break;
     }
-    case ECMA_PROPERTY_TYPE_INTERNAL:
+    case ECMA_PROPERTY_TYPE_SPECIAL:
     {
       JERRY_ASSERT (name_p == NULL);
+
       ecma_free_internal_property (property_p);
       break;
     }
@@ -860,8 +853,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
   ecma_property_header_t *prev_prop_p = NULL;
   bool has_hashmap = false;
 
-  if (cur_prop_p != NULL
-      && ECMA_PROPERTY_GET_TYPE (cur_prop_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  if (cur_prop_p != NULL && cur_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     prev_prop_p = cur_prop_p;
     cur_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
@@ -949,7 +941,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     return new_length;
   }
 
-  if (ECMA_PROPERTY_GET_TYPE (current_prop_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
                                        current_prop_p->next_property_cp);
@@ -995,7 +987,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
   ecma_property_header_t *prev_prop_p = NULL;
   bool has_hashmap = false;
 
-  if (ECMA_PROPERTY_GET_TYPE (current_prop_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     prev_prop_p = current_prop_p;
     current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
@@ -1077,7 +1069,7 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
 
   JERRY_ASSERT (prop_iter_p != NULL);
 
-  if (ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP)
+  if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                     prop_iter_p->next_property_cp);

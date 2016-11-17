@@ -126,6 +126,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
   memset (hashmap_p, 0, total_size);
 
   hashmap_p->header.types[0] = ECMA_PROPERTY_TYPE_HASHMAP;
+  hashmap_p->header.types[1] = ECMA_PROPERTY_TYPE_DELETED;
   hashmap_p->header.next_property_cp = object_p->property_list_or_bound_object_cp;
   hashmap_p->max_property_count = max_property_count;
   hashmap_p->null_count = max_property_count - named_property_count;
@@ -230,8 +231,7 @@ ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
   /* Property hash must be exists and must be the first property. */
   ecma_property_header_t *property_p = ecma_get_property_list (object_p);
 
-  JERRY_ASSERT (property_p != NULL
-                && ECMA_PROPERTY_GET_TYPE (property_p->types[0]) == ECMA_PROPERTY_TYPE_HASHMAP);
+  JERRY_ASSERT (property_p != NULL && property_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP);
 
   ecma_property_hashmap_t *hashmap_p = (ecma_property_hashmap_t *) property_p;
 
@@ -257,7 +257,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   ecma_property_hashmap_t *hashmap_p = ECMA_GET_NON_NULL_POINTER (ecma_property_hashmap_t,
                                                                   object_p->property_list_or_bound_object_cp);
 
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (hashmap_p->header.types[0]) == ECMA_PROPERTY_TYPE_HASHMAP);
+  JERRY_ASSERT (hashmap_p->header.types[0] == ECMA_PROPERTY_TYPE_HASHMAP);
 
   /* The NULLs are reduced below 1/8 of the hashmap. */
   if (hashmap_p->null_count < (hashmap_p->max_property_count >> 3))
@@ -340,7 +340,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   ecma_property_hashmap_t *hashmap_p = ECMA_GET_NON_NULL_POINTER (ecma_property_hashmap_t,
                                                                   object_p->property_list_or_bound_object_cp);
 
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (hashmap_p->header.types[0]) == ECMA_PROPERTY_TYPE_HASHMAP);
+  JERRY_ASSERT (hashmap_p->header.types[0] == ECMA_PROPERTY_TYPE_HASHMAP);
 
   uint32_t entry_index = name_p->hash;
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];

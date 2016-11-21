@@ -178,7 +178,7 @@ fopen (const char *path, /**< file path */
 
   long int ret = syscall_3 (SYSCALL_NO (open), (long int) path, flags, access);
 
-  return (void *) (uintptr_t) (ret);
+  return ((ret < 0) ? NULL : (void *) (uintptr_t) (ret));
 } /* fopen */
 
 /**

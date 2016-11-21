@@ -48,6 +48,10 @@ ecma_op_array_object_set_length (ecma_object_t *, ecma_value_t, uint32_t);
 extern ecma_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *, ecma_string_t *, const ecma_property_descriptor_t *, bool);
 
+extern void
+ecma_op_array_list_lazy_property_names (ecma_object_t *, bool,
+                                        ecma_collection_header_t *, ecma_collection_header_t *);
+
 /**
  * @}
  * @}

@@ -104,8 +104,11 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
                           ecma_object_type_t obj_type, /**< object's type */
                           bool is_extensible) /**< value of object's [[Extensible]] property */
 {
-  size_t ext_object_size = (obj_type == ECMA_OBJECT_TYPE_CLASS ? sizeof (ecma_extended_built_in_object_t)
-                                                               : sizeof (ecma_extended_object_t));
+  bool is_extended_built_in = (obj_type == ECMA_OBJECT_TYPE_CLASS
+                               || obj_type == ECMA_OBJECT_TYPE_ARRAY);
+
+  size_t ext_object_size = (is_extended_built_in ? sizeof (ecma_extended_built_in_object_t)
+                                                 : sizeof (ecma_extended_object_t));
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, ext_object_size, obj_type);
 
@@ -123,7 +126,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
   ecma_set_object_is_builtin (obj_p);
   ecma_built_in_props_t *built_in_props_p;
 
-  if (obj_type == ECMA_OBJECT_TYPE_CLASS)
+  if (is_extended_built_in)
   {
     built_in_props_p = &((ecma_extended_built_in_object_t *) obj_p)->built_in;
   }
@@ -142,18 +145,11 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 #ifndef CONFIG_DISABLE_ARRAY_BUILTIN
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_CLASS);
-      ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_ARRAY);
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ecma_property_value_t *length_prop_value_p;
-      length_prop_value_p = ecma_create_named_data_property (obj_p,
-                                                             length_str_p,
-                                                             ECMA_PROPERTY_FLAG_WRITABLE,
-                                                             NULL);
-
-      length_prop_value_p->value = ecma_make_integer_value (0);
-
-      ecma_deref_ecma_string (length_str_p);
+      ext_object_p->u.array.length = 0;
+      ext_object_p->u.array.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
       break;
     }
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
@@ -399,8 +395,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   }
 
   ecma_built_in_props_t *built_in_props_p;
+  ecma_object_type_t object_type = ecma_get_object_type (object_p);
 
-  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+  if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
   {
     built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
   }
@@ -614,8 +611,9 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
   else
   {
     ecma_built_in_props_t *built_in_props_p;
+    ecma_object_type_t object_type = ecma_get_object_type (object_p);
 
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
     {
       built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
     }

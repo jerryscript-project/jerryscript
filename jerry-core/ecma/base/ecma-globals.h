@@ -617,6 +617,15 @@ typedef struct
     } function;
 
     /*
+     * Description of array objects.
+     */
+    struct
+    {
+      uint32_t length; /**< length property value */
+      ecma_property_t length_prop; /**< length property */
+    } array;
+
+    /*
      * Description of arguments objects.
      */
     struct

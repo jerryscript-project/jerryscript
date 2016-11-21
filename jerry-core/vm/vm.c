@@ -1000,19 +1000,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_APPEND_ARRAY:
         {
           ecma_object_t *array_obj_p;
-          ecma_string_t length_str;
-          ecma_property_value_t *length_prop_value_p;
           uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
 
           stack_top_p -= values_length;
 
           array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
-          ecma_init_ecma_length_string (&length_str);
-          length_prop_value_p = ecma_get_named_data_property (array_obj_p, &length_str);
+          ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
 
-          left_value = length_prop_value_p->value;
-          length_num = ecma_get_uint32_from_value (left_value);
+          length_num = ext_array_obj_p->u.array.length;
 
           for (uint32_t i = 0; i < values_length; i++)
           {
@@ -1041,7 +1037,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             length_num++;
           }
 
-          ecma_value_assign_uint32 (&length_prop_value_p->value, length_num);
+          ext_array_obj_p->u.array.length = length_num;
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:

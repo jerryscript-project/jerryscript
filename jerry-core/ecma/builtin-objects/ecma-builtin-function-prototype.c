@@ -60,7 +60,7 @@ ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< th
 
   if (!ecma_op_is_callable (this_arg))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
   else
   {
@@ -89,7 +89,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
   /* 1. */
   if (!ecma_op_is_callable (this_arg))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
   else
   {
@@ -105,7 +105,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
       /* 3. */
       if (!ecma_is_value_object (arg2))
       {
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
       }
       else
       {
@@ -188,7 +188,7 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this ar
 {
   if (!ecma_op_is_callable (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
   else
   {
@@ -231,7 +231,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
   /* 2. */
   if (!ecma_op_is_callable (this_arg))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
   else
   {
@@ -387,7 +387,7 @@ ecma_builtin_function_prototype_dispatch_construct (const ecma_value_t *argument
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG (""));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("'Function.prototype' is not a constructor."));
 } /* ecma_builtin_function_prototype_dispatch_construct */
 
 /**

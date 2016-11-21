@@ -84,7 +84,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG (""));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a String or a String object."));
 } /* ecma_builtin_string_prototype_object_to_string */
 
 /**

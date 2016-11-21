@@ -774,7 +774,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
     {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
       break;
     }
 
@@ -830,7 +830,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
 
       if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
         break;
       }
 
@@ -868,7 +868,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         }
         else
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 character."));
           break;
         }
 
@@ -902,7 +902,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         if (!is_valid
             || !lit_is_utf8_string_valid (octets, bytes_count))
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string."));
           break;
         }
 
@@ -912,7 +912,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         if (lit_is_code_point_utf16_high_surrogate (cp)
             || lit_is_code_point_utf16_low_surrogate (cp))
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 codepoint."));
           break;
         }
 
@@ -931,7 +931,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
       }
       else
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid CESU8 string."));
       }
     }
 
@@ -1042,7 +1042,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
       break;
     }
 
@@ -1052,7 +1052,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     {
       if (input_char_p == input_end_p)
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
         break;
       }
 
@@ -1066,7 +1066,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
       }
       else
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
         break;
       }
     }

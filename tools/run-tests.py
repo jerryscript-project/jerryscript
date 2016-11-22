@@ -37,6 +37,7 @@ parser.add_argument('--jerry-tests', action='store_true', default=False, help='R
 parser.add_argument('--jerry-test-suite', action='store_true', default=False, help='Run jerry-test-suite')
 parser.add_argument('--unittests', action='store_true', default=False, help='Run unittests')
 parser.add_argument('--precommit', action='store_true', default=False, dest='all', help='Run all test')
+parser.add_argument('--test262', action='store_true', default=False, help='Run test262')
 
 if len(sys.argv) == 1:
     parser.print_help()
@@ -50,11 +51,13 @@ else:
     OUTPUT_DIR = path.join(PROJECT_DIR, script_args.outdir)
 
 class Options:
-    out_dir = ''
-    build_args = []
-    test_args = []
+    def __init__(self, name = '', build_args = None, test_args = None):
+        if build_args is None:
+            build_args = []
 
-    def __init__(self, name = '', build_args = [], test_args = []):
+        if test_args is None:
+            test_args = []
+
         self.out_dir = path.join(OUTPUT_DIR, name)
         self.build_args = build_args
         self.build_args.append('--builddir=%s' % self.out_dir)
@@ -63,15 +66,15 @@ class Options:
 
 # Test options for unittests
 jerry_unittests_options = [
-                           Options('unittests', ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
-                           Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+                            Options('unittests', ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+                            Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
                           ]
 
 # Test options for jerry-tests
 jerry_tests_options = [
                         Options('jerry_tests'),
-                        Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                         Options('jerry_tests-debug', ['--debug']),
+                        Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                         Options('jerry_tests-debug-snapshot', ['--debug', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                       ]
 
@@ -81,6 +84,11 @@ jerry_test_suite_options.append(Options('jerry_test_suite-minimal', ['--profile=
 jerry_test_suite_options.append(Options('jerry_test_suite-minimal-snapshot', ['--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
 jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug', ['--debug', '--profile=minimal']))
 jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug-snapshot', ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
+
+# Test options for test262
+test262_test_suite_options = [
+                               Options('test262_tests'),
+                             ]
 
 # Test options for buildoption-test
 jerry_buildoptions = [
@@ -163,6 +171,22 @@ def run_jerry_test_suite():
 
     return ret_build | ret_test
 
+def run_test262_test_suite():
+    ret_build = ret_test = 0
+    for job in test262_test_suite_options:
+        ret_build = create_binary(job.build_args)
+        if ret_build:
+            break
+
+        test_cmd = [TEST262_RUNNER_SCRIPT, get_binary_path(job.out_dir), TEST262_TEST_SUITE_DIR]
+
+        if job.test_args:
+            test_cmd.extend(job.test_args)
+
+        ret_test |= run_check(test_cmd)
+
+    return ret_build | ret_test
+
 def run_unittests():
     ret_build = ret_test = 0
     for job in jerry_unittests_options:
@@ -208,6 +232,9 @@ def main():
 
     if not ret and (script_args.all or script_args.jerry_test_suite):
         ret = run_jerry_test_suite()
+
+    if not ret and (script_args.all or script_args.test262):
+        ret = run_test262_test_suite()
 
     if not ret and (script_args.all or script_args.unittests):
         ret = run_unittests()

@@ -112,7 +112,7 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG (""));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Boolean object."));
 } /* ecma_builtin_boolean_prototype_object_value_of */
 
 /**

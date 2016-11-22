@@ -257,7 +257,7 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG (""));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object."));
 } /* ecma_builtin_date_prototype_get_time */
 
 /**
@@ -1137,7 +1137,7 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
 
   if (ecma_number_is_nan (prim_num) || ecma_number_is_infinity (prim_num))
   {
-    ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Time must be a finite number."));
   }
   else
   {
@@ -1199,7 +1199,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
     /* 5. */
     if (!ecma_op_is_callable (to_iso))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toISOString' is missing or not a function."));
     }
     /* 6. */
     else

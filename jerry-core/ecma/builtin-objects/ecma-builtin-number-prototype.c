@@ -221,7 +221,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
     if (radix < 2 || radix > 36)
     {
-      ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Radix must be between 2 and 36."));
     }
     else if (radix == 10)
     {
@@ -463,7 +463,7 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG (""));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Number or a Number object."));
 } /* ecma_builtin_number_prototype_object_value_of */
 
 /**
@@ -489,7 +489,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
   /* 2. */
   if (arg_num <= -1 || arg_num >= 21)
   {
-    ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 20."));
   }
   else
   {
@@ -628,7 +628,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
   /* 7. */
   if (arg_num <= -1.0 || arg_num >= 21.0)
   {
-    ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 20."));
   }
   else
   {
@@ -816,7 +816,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
       /* 8. */
       else if (arg_num < 1.0 || arg_num >= 22.0)
       {
-        ret_value = ecma_raise_range_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Precision must be between 1 and 21."));
       }
       else
       {

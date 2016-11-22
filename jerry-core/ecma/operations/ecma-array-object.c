@@ -86,16 +86,16 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
   }
 
 #ifndef CONFIG_DISABLE_ARRAY_BUILTIN
-  ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
+  ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
 #else /* CONFIG_DISABLE_ARRAY_BUILTIN */
-  ecma_object_t *array_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (array_prototype_obj_p,
-                                             0,
-                                             ECMA_OBJECT_TYPE_ARRAY);
+  ecma_object_t *object_p = ecma_create_object (array_prototype_object_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_deref_object (array_prototype_obj_p);
+  ecma_deref_object (array_prototype_object_p);
 
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_ARRAY type.
@@ -103,17 +103,9 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
    * See also: ecma_object_get_class_name
    */
 
-  ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
-
-  ecma_property_value_t *length_prop_value_p;
-  length_prop_value_p = ecma_create_named_data_property (obj_p,
-                                                         length_magic_string_p,
-                                                         ECMA_PROPERTY_FLAG_WRITABLE,
-                                                         NULL);
-
-  length_prop_value_p->value = ecma_make_number_value ((ecma_number_t) length);
-
-  ecma_deref_ecma_string (length_magic_string_p);
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+  ext_obj_p->u.array.length = length;
+  ext_obj_p->u.array.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
 
   for (uint32_t index = 0;
        index < array_items_count;
@@ -126,7 +118,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
     ecma_string_t *item_name_string_p = ecma_new_ecma_string_from_uint32 (index);
 
-    ecma_builtin_helper_def_prop (obj_p,
+    ecma_builtin_helper_def_prop (object_p,
                                   item_name_string_p,
                                   array_items_p[index],
                                   true, /* Writable */
@@ -137,7 +129,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     ecma_deref_ecma_string (item_name_string_p);
   }
 
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_array_object */
 
 /**
@@ -192,15 +184,9 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
     return ecma_reject (is_throw);
   }
 
-  ecma_string_t magic_string_length;
-  ecma_init_ecma_length_string (&magic_string_length);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  ecma_property_t *len_prop_p = ecma_find_named_property (object_p, &magic_string_length);
-  JERRY_ASSERT (len_prop_p != NULL
-                && ECMA_PROPERTY_GET_TYPE (*len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-
-  ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
-  uint32_t old_len_uint32 = ecma_get_uint32_from_value (len_prop_value_p->value);
+  uint32_t old_len_uint32 = ext_object_p->u.array.length;
 
   if (new_len_num == old_len_uint32)
   {
@@ -209,16 +195,17 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
     {
       if (!(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
       {
-        ecma_set_property_writable_attr (len_prop_p, false);
+        uint8_t new_prop_value = (uint8_t) (ext_object_p->u.array.length_prop & ~ECMA_PROPERTY_FLAG_WRITABLE);
+        ext_object_p->u.array.length_prop = new_prop_value;
       }
-      else if (!ecma_is_property_writable (*len_prop_p))
+      else if (!ecma_is_property_writable (ext_object_p->u.array.length_prop))
       {
         return ecma_reject (is_throw);
       }
     }
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
-  else if (!ecma_is_property_writable (*len_prop_p))
+  else if (!ecma_is_property_writable (ext_object_p->u.array.length_prop))
   {
     return ecma_reject (is_throw);
   }
@@ -230,12 +217,13 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
     current_len_uint32 = ecma_delete_array_properties (object_p, new_len_uint32, old_len_uint32);
   }
 
-  ecma_value_assign_uint32 (&len_prop_value_p->value, current_len_uint32);
+  ext_object_p->u.array.length = current_len_uint32;
 
   if ((flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED)
       && !(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
   {
-    ecma_set_property_writable_attr (len_prop_p, false);
+    uint8_t new_prop_value = (uint8_t) (ext_object_p->u.array.length_prop & ~ECMA_PROPERTY_FLAG_WRITABLE);
+    ext_object_p->u.array.length_prop = new_prop_value;
   }
 
   if (current_len_uint32 == new_len_uint32)
@@ -263,11 +251,6 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 {
   if (ecma_string_is_length (property_name_p))
   {
-    if (!property_desc_p->is_value_defined)
-    {
-      return ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p, is_throw);
-    }
-
     JERRY_ASSERT (property_desc_p->is_configurable_defined || !property_desc_p->is_configurable);
     JERRY_ASSERT (property_desc_p->is_enumerable_defined || !property_desc_p->is_enumerable);
     JERRY_ASSERT (property_desc_p->is_writable_defined || !property_desc_p->is_writable);
@@ -298,7 +281,18 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
       flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE;
     }
 
-    return ecma_op_array_object_set_length (object_p, property_desc_p->value, flags);
+    if (property_desc_p->is_value_defined)
+    {
+      return ecma_op_array_object_set_length (object_p, property_desc_p->value, flags);
+    }
+
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    ecma_value_t length_value = ecma_make_uint32_value (ext_object_p->u.array.length);
+
+    ecma_value_t result = ecma_op_array_object_set_length (object_p, length_value, flags);
+
+    ecma_fast_free_value (length_value);
+    return result;
   }
 
   uint32_t index = ecma_string_get_array_index (property_name_p);
@@ -308,18 +302,11 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
     return ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p, is_throw);
   }
 
-  ecma_string_t magic_string_length;
-  ecma_init_ecma_length_string (&magic_string_length);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  ecma_property_t *len_prop_p = ecma_find_named_property (object_p, &magic_string_length);
-  JERRY_ASSERT (len_prop_p != NULL
-                && ECMA_PROPERTY_GET_TYPE (*len_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+  bool update_length = (index >= ext_object_p->u.array.length);
 
-  ecma_property_value_t *len_prop_value_p = ECMA_PROPERTY_VALUE_PTR (len_prop_p);
-
-  bool update_length = (index >= ecma_get_uint32_from_value (len_prop_value_p->value));
-
-  if (update_length && !ecma_is_property_writable (*len_prop_p))
+  if (update_length && !ecma_is_property_writable (ext_object_p->u.array.length_prop))
   {
     return ecma_reject (is_throw);
   }
@@ -337,10 +324,40 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 
   if (update_length)
   {
-    ecma_value_assign_uint32 (&len_prop_value_p->value, index + 1);
+    ext_object_p->u.array.length = index + 1;
   }
+
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
 } /* ecma_op_array_object_define_own_property */
+
+/**
+ * List names of a String object's lazy instantiated properties
+ *
+ * @return string values collection
+ */
+void
+ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */
+                                        bool separate_enumerable, /**< true -  list enumerable properties
+                                                                   *           into main collection,
+                                                                   *           and non-enumerable to collection of
+                                                                   *           'skipped non-enumerable' properties,
+                                                                   *   false - list all properties into main
+                                                                   *           collection.
+                                                                   */
+                                        ecma_collection_header_t *main_collection_p, /**< 'main'
+                                                                                      *   collection */
+                                        ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                          *   'non-enumerable'
+                                                                                          *   collection */
+{
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), true);
+  ecma_deref_ecma_string (length_str_p);
+} /* ecma_op_array_list_lazy_property_names */
 
 /**
  * @}

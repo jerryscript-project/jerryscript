@@ -107,8 +107,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
                                                                                        *   collection */
                                          ecma_collection_header_t *non_enum_collection_p) /**< skipped
                                                                                            *   'non-enumerable'
-                                                                                           *   collection
-                                                                                                        */
+                                                                                           *   collection */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
 

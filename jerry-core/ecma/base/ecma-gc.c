@@ -467,6 +467,15 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       return;
     }
 
+    if (object_type == ECMA_OBJECT_TYPE_ARRAY)
+    {
+      size_t size = (ecma_get_object_is_builtin (object_p) ? sizeof (ecma_extended_built_in_object_t)
+                                                           : sizeof (ecma_extended_object_t));
+
+      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, size);
+      return;
+    }
+
     if (ecma_get_object_is_builtin (object_p)
         || object_type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
     {

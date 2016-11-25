@@ -208,6 +208,7 @@ double jerry_get_number_value (const jerry_value_t);
  * Functions for string values
  */
 jerry_size_t jerry_get_string_size (const jerry_value_t);
+jerry_size_t jerry_get_utf8_string_size (const jerry_value_t);
 jerry_length_t jerry_get_string_length (const jerry_value_t);
 jerry_size_t jerry_string_to_char_buffer (const jerry_value_t, jerry_char_t *, jerry_size_t);
 

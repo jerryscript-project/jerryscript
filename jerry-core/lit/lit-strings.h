@@ -95,6 +95,7 @@ bool lit_is_code_point_utf16_high_surrogate (lit_code_point_t);
 
 /* size */
 lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *);
+lit_utf8_size_t lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* length */
 ecma_length_t lit_utf8_string_length (const lit_utf8_byte_t *, lit_utf8_size_t);

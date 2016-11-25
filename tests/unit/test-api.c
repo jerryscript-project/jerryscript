@@ -304,7 +304,8 @@ main (void)
   TEST_INIT ();
 
   bool is_ok;
-  jerry_size_t sz;
+  jerry_size_t sz, utf8_sz, cesu8_sz;
+  jerry_length_t cesu8_length;
   jerry_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_value_t val_call_external;
   jerry_value_t global_obj_val, obj_val;
@@ -339,17 +340,20 @@ main (void)
   TEST_ASSERT (sz == 0);
   jerry_release_value (args[0]);
 
-  // Test create_jerry_string_from_utf8 with 4-byte long unicode sequences
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a\xf0\x90\x90\x80");
-  args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a\xed\xa0\x81\xed\xb0\x80");
+  /* Test create_jerry_string_from_utf8 with 4-byte long unicode sequences,
+   * test string: 'str: {DESERET CAPITAL LETTER LONG I}'
+   */
+  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
+  args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
 
-  jerry_size_t utf8_sz = jerry_get_string_size (args[0]);
-  jerry_size_t cesu8_sz =  jerry_get_string_size (args[1]);
+  /* these size must be equal */
+  utf8_sz = jerry_get_string_size (args[0]);
+  cesu8_sz = jerry_get_string_size (args[1]);
 
   char string_from_utf8[utf8_sz];
   char string_from_cesu8[cesu8_sz];
 
-  jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_from_utf8, utf8_sz);
+  jerry_string_to_char_buffer (args[0], (jerry_char_t *) string_from_utf8, utf8_sz);
   jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_from_cesu8, cesu8_sz);
 
   TEST_ASSERT (utf8_sz == cesu8_sz);
@@ -357,11 +361,41 @@ main (void)
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
 
-  // Test create_jerry_string_from_utf8 with 4-byte long unicode sequences
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a\xf0\x9d\x94\xa3\xf0\x9d\x94\xa4");
-  jerry_length_t cesu8_length = jerry_get_string_length (args[0]);
+  /* Test string: 'str: {MATHEMATICAL FRAKTUR SMALL F}{MATHEMATICAL FRAKTUR SMALL G}' */
+  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4");
 
-  TEST_ASSERT (cesu8_length == 8);
+  cesu8_length = jerry_get_string_length (args[0]);
+  cesu8_sz = jerry_get_string_size (args[0]);
+  utf8_sz =  jerry_get_utf8_string_size (args[0]);
+
+  TEST_ASSERT (cesu8_length == 10);
+  TEST_ASSERT (cesu8_sz != utf8_sz);
+  TEST_ASSERT (utf8_sz == 14 && cesu8_sz == 18);
+  jerry_release_value (args[0]);
+
+  /* Test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
+  args[0] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+
+  cesu8_length = jerry_get_string_length (args[0]);
+  cesu8_sz = jerry_get_string_size (args[0]);
+  utf8_sz =  jerry_get_utf8_string_size (args[0]);
+
+  TEST_ASSERT (cesu8_length == 7);
+  TEST_ASSERT (cesu8_sz != utf8_sz);
+  TEST_ASSERT (utf8_sz == 9 && cesu8_sz == 11);
+
+  jerry_release_value (args[0]);
+
+  /* Test string: 'price: 10{EURO SIGN}' */
+  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x70\x72\x69\x63\x65\x3a \x31\x30\xe2\x82\xac");
+
+  cesu8_length = jerry_get_string_length (args[0]);
+  cesu8_sz = jerry_get_string_size (args[0]);
+  utf8_sz =  jerry_get_utf8_string_size (args[0]);
+
+  TEST_ASSERT (cesu8_length == 10);
+  TEST_ASSERT (cesu8_sz == utf8_sz);
+  TEST_ASSERT (utf8_sz == 12);
   jerry_release_value (args[0]);
 
   // Get global.boo (non-existing field)

@@ -196,6 +196,7 @@ extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *, const ecma_string_t *);
 extern ecma_length_t ecma_string_get_length (const ecma_string_t *);
 extern lit_utf8_size_t ecma_string_get_size (const ecma_string_t *);
+extern lit_utf8_size_t ecma_string_get_utf8_size (const ecma_string_t *);
 extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *, ecma_length_t);
 
 extern ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t);

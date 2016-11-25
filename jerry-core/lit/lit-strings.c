@@ -282,6 +282,40 @@ lit_utf8_string_length (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
 } /* lit_utf8_string_length */
 
 /**
+ * Calculate the required size of an utf-8 encoded string from cesu-8 encoded string
+ *
+ * @return size of an utf-8 encoded string
+ */
+lit_utf8_size_t
+lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu-8 string */
+                                   lit_utf8_size_t cesu8_buf_size) /**< string size */
+{
+  lit_utf8_size_t offset = 0;
+  lit_utf8_size_t utf8_buf_size = cesu8_buf_size;
+
+  while (offset < cesu8_buf_size)
+  {
+    ecma_char_t ch;
+    offset += lit_read_code_unit_from_utf8 (cesu8_buf_p + offset, &ch);
+
+    if (lit_is_code_point_utf16_high_surrogate (ch) && (offset < cesu8_buf_size))
+    {
+      ecma_char_t next_ch;
+      offset += lit_read_code_unit_from_utf8 (cesu8_buf_p + offset, &next_ch);
+
+      if (lit_is_code_point_utf16_low_surrogate (next_ch))
+      {
+        utf8_buf_size -= 2;
+      }
+    }
+  }
+
+  JERRY_ASSERT (offset == cesu8_buf_size);
+
+  return utf8_buf_size;
+} /* lit_get_utf8_size_of_cesu8_string */
+
+/**
  * Decodes a unicode code point from non-empty utf-8-encoded buffer
  *
  * @return number of bytes occupied by code point in the string

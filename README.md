@@ -1,4 +1,4 @@
-![](https://github.com/Samsung/jerryscript/blob/master/LOGO.png)
+![](https://github.com/jerryscript-project/jerryscript/blob/master/LOGO.png)
 # JerryScript: JavaScript engine for the Internet of Things
 [![License](https://img.shields.io/badge/licence-Apache%202.0-brightgreen.svg?style=flat)](LICENSE)
 [![Build Status](https://travis-ci.org/Samsung/jerryscript.svg?branch=master)](https://travis-ci.org/Samsung/jerryscript)
@@ -13,7 +13,7 @@ Key characteristics of JerryScript:
 * Snapshot support for precompiling JavaScript source code to byte code
 * Mature C API, easy to embed in applications
 
-Additional information can be found on our [project page](http://jerryscript.net) and [Wiki](https://github.com/Samsung/jerryscript/wiki).
+Additional information can be found on our [project page](http://jerryscript.net) and [Wiki](https://github.com/jerryscript-project/jerryscript/wiki).
 
 IRC channel: #jerryscript on [freenode](https://freenode.net)  
 Mailing list: jerryscript-dev@gna.org, you can subscribe [here](https://mail.gna.org/listinfo/jerryscript-dev) and access the mailing list archive [here](https://mail.gna.org/public/jerryscript-dev).
@@ -21,7 +21,7 @@ Mailing list: jerryscript-dev@gna.org, you can subscribe [here](https://mail.gna
 ## Quick Start
 ### Getting the sources
 ```bash
-git clone https://github.com/Samsung/jerryscript.git
+git clone https://github.com/jerryscript-project/jerryscript.git
 cd jerryscript
 ```
 

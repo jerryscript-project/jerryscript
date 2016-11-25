@@ -75,7 +75,7 @@ information on how to install pip.)
 Once you have all of your dependencies installed, you can build the project as follows:
 
 ```bash
-git clone https://github.com/Samsung/jerryscript
+git clone https://github.com/jerryscript-project/jerryscript
 cd jerryscript/targets/mbedos5
 make getlibs
 # NRF52 Development Kit:

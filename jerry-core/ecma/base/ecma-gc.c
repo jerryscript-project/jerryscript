@@ -384,14 +384,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       {
         if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
         {
-          ecma_string_t *name_p = ECMA_GET_POINTER (ecma_string_t, prop_pair_p->names_cp[i]);
-
-          ecma_free_property (object_p, name_p, prop_iter_p->types + i);
-
-          if (name_p != NULL)
-          {
-            ecma_deref_ecma_string (name_p);
-          }
+          ecma_free_property (object_p, prop_pair_p->names_cp[i], prop_iter_p->types + i);
         }
       }
 

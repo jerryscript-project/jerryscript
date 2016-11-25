@@ -186,7 +186,12 @@ extern void ecma_init_ecma_length_string (ecma_string_t *);
 extern bool ecma_string_is_empty (const ecma_string_t *);
 extern bool ecma_string_is_length (const ecma_string_t *);
 
-extern bool ecma_compare_ecma_strings_equal_hashes (const ecma_string_t *, const ecma_string_t *);
+extern jmem_cpointer_t ecma_string_to_property_name (ecma_string_t *, ecma_property_t *);
+extern ecma_string_t *ecma_string_from_property_name (ecma_property_t, jmem_cpointer_t);
+extern lit_string_hash_t ecma_string_get_property_name_hash (ecma_property_t, jmem_cpointer_t);
+extern uint32_t ecma_string_get_property_index (ecma_property_t, jmem_cpointer_t);
+extern bool ecma_string_compare_to_property_name (ecma_property_t, jmem_cpointer_t, const ecma_string_t *);
+
 extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_t *);
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *, const ecma_string_t *);
 extern ecma_length_t ecma_string_get_length (const ecma_string_t *);
@@ -195,7 +200,7 @@ extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *, ecma_leng
 
 extern ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t);
 extern ecma_string_t *ecma_get_magic_string_ex (lit_magic_string_ex_id_t);
-extern bool ecma_is_string_magic (const ecma_string_t *, lit_magic_string_id_t *);
+extern lit_magic_string_id_t ecma_get_string_magic (const ecma_string_t *);
 
 extern lit_string_hash_t ecma_string_hash (const ecma_string_t *);
 extern ecma_string_t *ecma_string_substr (const ecma_string_t *, ecma_length_t, ecma_length_t);
@@ -281,7 +286,7 @@ ecma_find_named_property (ecma_object_t *, ecma_string_t *);
 extern ecma_property_value_t *
 ecma_get_named_data_property (ecma_object_t *, ecma_string_t *);
 
-extern void ecma_free_property (ecma_object_t *, ecma_string_t *, ecma_property_t *);
+extern void ecma_free_property (ecma_object_t *, jmem_cpointer_t, ecma_property_t *);
 
 extern void ecma_delete_property (ecma_object_t *, ecma_property_value_t *);
 extern uint32_t ecma_delete_array_properties (ecma_object_t *, uint32_t, uint32_t);

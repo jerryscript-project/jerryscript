@@ -56,10 +56,10 @@ typedef struct
 extern void ecma_property_hashmap_create (ecma_object_t *);
 extern void ecma_property_hashmap_free (ecma_object_t *);
 extern void ecma_property_hashmap_insert (ecma_object_t *, ecma_string_t *, ecma_property_pair_t *, int);
-extern void ecma_property_hashmap_delete (ecma_object_t *, ecma_string_t *, ecma_property_t *);
+extern void ecma_property_hashmap_delete (ecma_object_t *, jmem_cpointer_t, ecma_property_t *);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-extern ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *, ecma_string_t *, ecma_string_t **);
+extern ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *, ecma_string_t *, jmem_cpointer_t *);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
 /**

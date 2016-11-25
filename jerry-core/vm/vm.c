@@ -62,7 +62,13 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     {
       ecma_integer_value_t int_value = ecma_get_integer_from_value (property);
 
-      if (int_value >= 0)
+#ifdef JERRY_CPOINTER_32_BIT
+      bool limit_check = (int_value >= 0);
+#else /* !JERRY_CPOINTER_32_BIT */
+      bool limit_check = (int_value >= 0 && int_value < (UINT16_MAX + 1));
+#endif
+
+      if (limit_check)
       {
         /* Statically allocated string for searching. */
         ecma_init_ecma_string_from_uint32 (&uint32_string, (uint32_t) int_value);

@@ -406,10 +406,21 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
 
     if (first_property_p->types[0] == ECMA_PROPERTY_TYPE_DELETED)
     {
-      first_property_p->types[0] = type_and_flags;
-
       ecma_property_pair_t *first_property_pair_p = (ecma_property_pair_t *) first_property_p;
-      ECMA_SET_POINTER (first_property_pair_p->names_cp[0], name_p);
+
+      if (name_p == NULL)
+      {
+        first_property_pair_p->names_cp[0] = ECMA_NULL_POINTER;
+      }
+      else
+      {
+        ecma_property_t name_type;
+        first_property_pair_p->names_cp[0] = ecma_string_to_property_name (name_p,
+                                                                           &name_type);
+        type_and_flags = (ecma_property_t) (type_and_flags | name_type);
+      }
+
+      first_property_p->types[0] = type_and_flags;
 
       ecma_property_t *property_p = first_property_p->types + 0;
 
@@ -462,9 +473,21 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   /* Just copy the previous value (no need to decompress, compress). */
   first_property_pair_p->header.next_property_cp = *property_list_head_p;
   first_property_pair_p->header.types[0] = ECMA_PROPERTY_TYPE_DELETED;
-  first_property_pair_p->header.types[1] = type_and_flags;
   first_property_pair_p->names_cp[0] = ECMA_NULL_POINTER;
-  ECMA_SET_POINTER (first_property_pair_p->names_cp[1], name_p);
+
+  if (name_p == NULL)
+  {
+    first_property_pair_p->names_cp[1] = ECMA_NULL_POINTER;
+  }
+  else
+  {
+    ecma_property_t name_type;
+    first_property_pair_p->names_cp[1] = ecma_string_to_property_name (name_p,
+                                                                       &name_type);
+    type_and_flags = (ecma_property_t) (type_and_flags | name_type);
+  }
+
+  first_property_pair_p->header.types[1] = type_and_flags;
 
   ECMA_SET_NON_NULL_POINTER (*property_list_head_p, &first_property_pair_p->header);
 
@@ -591,8 +614,6 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
 
   uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDDATA | prop_attributes;
 
-  ecma_ref_ecma_string (name_p);
-
   ecma_property_value_t value;
   value.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
@@ -616,8 +637,6 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE) == 0);
 
   uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDACCESSOR | prop_attributes;
-
-  ecma_ref_ecma_string (name_p);
 
   ecma_property_value_t value;
 #ifdef JERRY_CPOINTER_32_BIT
@@ -659,15 +678,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
   if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
-    ecma_string_t *property_real_name_p;
+    jmem_cpointer_t property_real_name_cp;
     property_p = ecma_property_hashmap_find ((ecma_property_hashmap_t *) prop_iter_p,
                                              name_p,
-                                             &property_real_name_p);
+                                             &property_real_name_cp);
 
     if (property_p != NULL
         && !ecma_is_property_lcached (property_p))
     {
-      ecma_lcache_insert (obj_p, property_real_name_p, property_p);
+      ecma_lcache_insert (obj_p, property_real_name_cp, property_p);
     }
 
     return property_p;
@@ -675,7 +694,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
   property_p = NULL;
-  ecma_string_t *property_name_p = NULL;
+  jmem_cpointer_t property_name_cp = ECMA_NULL_POINTER;
 
   uint32_t steps = 0;
 
@@ -687,25 +706,25 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 
     JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
-    if (prop_pair_p->names_cp[0] != ECMA_NULL_POINTER)
+    if (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[0]))
     {
-      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   prop_pair_p->names_cp[0]);
-
-      if (ecma_compare_ecma_strings (name_p, property_name_p))
+      if (ecma_string_compare_to_property_name (prop_iter_p->types[0],
+                                                prop_pair_p->names_cp[0],
+                                                name_p))
       {
+        property_name_cp = prop_pair_p->names_cp[0];
         property_p = prop_iter_p->types + 0;
         break;
       }
     }
 
-    if (prop_pair_p->names_cp[1] != ECMA_NULL_POINTER)
+    if (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[1]))
     {
-      property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                   prop_pair_p->names_cp[1]);
-
-      if (ecma_compare_ecma_strings (name_p, property_name_p))
+      if (ecma_string_compare_to_property_name (prop_iter_p->types[1],
+                                                prop_pair_p->names_cp[1],
+                                                name_p))
       {
+        property_name_cp = prop_pair_p->names_cp[1];
         property_p = prop_iter_p->types + 1;
         break;
       }
@@ -725,7 +744,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   if (property_p != NULL
       && !ecma_is_property_lcached (property_p))
   {
-    ecma_lcache_insert (obj_p, property_name_p, property_p);
+    ecma_lcache_insert (obj_p, property_name_cp, property_p);
   }
 
   return property_p;
@@ -791,7 +810,7 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
  */
 void
 ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to */
-                    ecma_string_t *name_p, /**< name of the property or NULL */
+                    jmem_cpointer_t name_cp, /**< name of the property or ECMA_NULL_POINTER */
                     ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (object_p != NULL && property_p != NULL);
@@ -801,11 +820,6 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
       ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-
-      if (ecma_is_property_lcached (property_p))
-      {
-        ecma_lcache_invalidate (object_p, name_p, property_p);
-      }
       break;
     }
     case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
@@ -816,25 +830,28 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
                                                ECMA_PROPERTY_VALUE_PTR (property_p)->getter_setter_pair_cp);
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* JERRY_CPOINTER_32_BIT */
-
-      if (ecma_is_property_lcached (property_p))
-      {
-        ecma_lcache_invalidate (object_p, name_p, property_p);
-      }
-      break;
-    }
-    case ECMA_PROPERTY_TYPE_SPECIAL:
-    {
-      JERRY_ASSERT (name_p == NULL);
-
-      ecma_free_internal_property (property_p);
       break;
     }
     default:
     {
-      JERRY_UNREACHABLE ();
-      break;
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_SPECIAL);
+      JERRY_ASSERT (name_cp == ECMA_NULL_POINTER);
+
+      ecma_free_internal_property (property_p);
+      *property_p = ECMA_PROPERTY_TYPE_DELETED;
+      return;
     }
+  }
+
+  if (ecma_is_property_lcached (property_p))
+  {
+    ecma_lcache_invalidate (object_p, name_cp, property_p);
+  }
+
+  if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_PROPERTY_NAME_TYPE_STRING)
+  {
+    ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, name_cp);
+    ecma_deref_ecma_string (prop_name_p);
   }
 
   *property_p = ECMA_PROPERTY_TYPE_DELETED;
@@ -872,22 +889,16 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
     {
       if ((prop_pair_p->values + i) == prop_value_p)
       {
-        ecma_string_t *name_p = ECMA_GET_POINTER (ecma_string_t, prop_pair_p->names_cp[i]);
+        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (cur_prop_p->types[i]) != ECMA_PROPERTY_TYPE_SPECIAL);
 
-        ecma_free_property (object_p, name_p, cur_prop_p->types + i);
-
-        if (name_p != NULL)
+        if (has_hashmap)
         {
-          if (has_hashmap)
-          {
-            ecma_property_hashmap_delete (object_p,
-                                          name_p,
-                                          cur_prop_p->types + i);
-          }
-
-          ecma_deref_ecma_string (name_p);
-          prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
+          ecma_property_hashmap_delete (object_p,
+                                        prop_pair_p->names_cp[i],
+                                        cur_prop_p->types + i);
         }
+
+        ecma_free_property (object_p, prop_pair_p->names_cp[i], cur_prop_p->types + i);
 
         JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
@@ -955,13 +966,11 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      if (prop_pair_p->names_cp[i] != ECMA_NULL_POINTER
+      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (current_prop_p->types[i])
           && !ecma_is_property_configurable (current_prop_p->types[i]))
       {
-        ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                    prop_pair_p->names_cp[i]);
-
-        uint32_t index = ecma_string_get_array_index (property_name_p);
+        uint32_t index = ecma_string_get_property_index (current_prop_p->types[i],
+                                                         prop_pair_p->names_cp[i]);
 
         if (index < old_length && index >= new_length)
         {
@@ -1001,29 +1010,24 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      if (prop_pair_p->names_cp[i] != ECMA_NULL_POINTER
+      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (current_prop_p->types[i])
           && ecma_is_property_configurable (current_prop_p->types[i]))
       {
-        ecma_string_t *property_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                    prop_pair_p->names_cp[i]);
-
-        uint32_t index = ecma_string_get_array_index (property_name_p);
+        uint32_t index = ecma_string_get_property_index (current_prop_p->types[i],
+                                                         prop_pair_p->names_cp[i]);
 
         if (index < old_length && index >= new_length)
         {
           JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
-          ecma_free_property (object_p, property_name_p, current_prop_p->types + i);
-
           if (has_hashmap)
           {
-            ecma_property_hashmap_delete (object_p, property_name_p, current_prop_p->types + i);
+            ecma_property_hashmap_delete (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
           }
 
-          JERRY_ASSERT (current_prop_p->types[i] == ECMA_PROPERTY_TYPE_DELETED);
+          ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
 
-          ecma_deref_ecma_string (property_name_p);
-          prop_pair_p->names_cp[i] = ECMA_NULL_POINTER;
+          JERRY_ASSERT (current_prop_p->types[i] == ECMA_PROPERTY_TYPE_DELETED);
         }
       }
     }

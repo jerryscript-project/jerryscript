@@ -740,26 +740,6 @@ lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surrogate, /**< high 
 } /* lit_convert_surrogate_pair_to_code_point */
 
 /**
- * Compare cesu-8 string to cesu-8 string
- *
- * @return  true - if strings are equal;
- *          false - otherwise.
- */
-bool
-lit_compare_utf8_strings (const lit_utf8_byte_t *string1_p, /**< utf-8 string */
-                          lit_utf8_size_t string1_size, /**< string size */
-                          const lit_utf8_byte_t *string2_p, /**< utf-8 string */
-                          lit_utf8_size_t string2_size) /**< string size */
-{
-  if (string1_size != string2_size)
-  {
-    return false;
-  }
-
-  return memcmp (string1_p, string2_p, string1_size) == 0;
-} /* lit_compare_utf8_strings */
-
-/**
  * Relational compare of cesu-8 strings
  *
  * First string is less than second string if:

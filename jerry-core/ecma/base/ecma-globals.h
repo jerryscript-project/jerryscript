@@ -330,6 +330,16 @@ typedef enum
 #define ECMA_PROPERTY_FIXED 0
 
 /**
+ * Shift for property name part.
+ */
+#define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
+
+/**
+ * Property name is a generic string.
+ */
+#define ECMA_PROPERTY_NAME_TYPE_STRING 3
+
+/**
  * Abstract property representation.
  *
  * A property is a type_and_flags byte and an ecma_value_t value pair.
@@ -412,11 +422,23 @@ typedef struct
   ((ecma_property_types_t) ((property) & ECMA_PROPERTY_TYPE_MASK))
 
 /**
+ * Get property name type.
+ */
+#define ECMA_PROPERTY_GET_NAME_TYPE(property) \
+  ((property) >> ECMA_PROPERTY_NAME_TYPE_SHIFT)
+
+/**
  * Returns true if the property pointer is a property pair.
  */
 #define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
   (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) != ECMA_PROPERTY_TYPE_VIRTUAL \
    && (property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
+
+/**
+ * Returns true if the property is named property.
+ */
+#define ECMA_PROPERTY_IS_NAMED_PROPERTY(property) \
+  (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_SPECIAL)
 
 /**
  * Returns the internal property type
@@ -909,14 +931,14 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
-                                           *   maximum size is 2^16. */
-  ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
-                                                *   maximum size is 2^32. */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
+  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                           *   maximum size is 2^16. */
+  ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                                *   maximum size is 2^32. */
 
   ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
                                *   so no string processing function supports this type except
@@ -985,10 +1007,10 @@ typedef struct
 
     lit_utf8_size_t long_utf8_string_size; /**< size of this long utf-8 string in bytes */
     uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
-    lit_magic_string_id_t magic_string_id; /**< identifier of a magic string */
-    lit_magic_string_ex_id_t magic_string_ex_id; /**< identifier of an external magic string */
+    uint32_t magic_string_id; /**< identifier of a magic string (lit_magic_string_id_t) */
+    uint32_t magic_string_ex_id; /**< identifier of an external magic string (lit_magic_string_ex_id_t) */
     ecma_value_t lit_number; /**< literal number (note: not a regular string type) */
-    uint32_t common_field; /**< for zeroing and comparison in some cases */
+    uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
   } u;
 } ecma_string_t;
 

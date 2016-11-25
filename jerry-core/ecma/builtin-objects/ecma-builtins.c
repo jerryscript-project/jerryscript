@@ -387,9 +387,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     return NULL;
   }
 
-  lit_magic_string_id_t magic_string_id;
+  lit_magic_string_id_t magic_string_id = ecma_get_string_magic (string_p);
 
-  if (!ecma_is_string_magic (string_p, &magic_string_id))
+  if (magic_string_id == LIT_MAGIC_STRING__COUNT)
   {
     return NULL;
   }

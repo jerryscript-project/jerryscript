@@ -357,6 +357,13 @@ main (void)
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
 
+  // Test create_jerry_string_from_utf8 with 4-byte long unicode sequences
+  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a\xf0\x9d\x94\xa3\xf0\x9d\x94\xa4");
+  jerry_length_t cesu8_length = jerry_get_string_length (args[0]);
+
+  TEST_ASSERT (cesu8_length == 8);
+  jerry_release_value (args[0]);
+
   // Get global.boo (non-existing field)
   val_t = get_property (global_obj_val, "boo");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));

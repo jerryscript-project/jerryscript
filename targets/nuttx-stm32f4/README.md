@@ -12,7 +12,7 @@ Clone JerryScript and NuttX into jerry-nuttx directory
 ```
 mkdir jerry-nuttx
 cd jerry-nuttx
-git clone https://github.com/Samsung/jerryscript.git
+git clone https://github.com/jerryscript-project/jerryscript.git
 git clone https://bitbucket.org/nuttx/nuttx.git
 git clone https://bitbucket.org/nuttx/apps.git
 git clone https://github.com/texane/stlink.git

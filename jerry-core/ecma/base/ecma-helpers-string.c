@@ -229,7 +229,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
   ecma_string_t *string_desc_p = NULL;
 
-  ecma_length_t string_length = 0;
+  ecma_length_t converted_string_length = 0;
   lit_utf8_size_t converted_string_size = 0;
   lit_utf8_size_t pos = 0;
 
@@ -253,9 +253,10 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
       JERRY_ASSERT ((string_p[pos] & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER);
       pos += 4;
       converted_string_size += 2;
+      converted_string_length++;
     }
 
-    string_length++;
+    converted_string_length++;
   }
 
   JERRY_ASSERT (pos == string_size);
@@ -279,7 +280,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
       string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
       string_desc_p->u.common_field = 0;
       string_desc_p->u.utf8_string.size = (uint16_t) converted_string_size;
-      string_desc_p->u.utf8_string.length = (uint16_t) string_length;
+      string_desc_p->u.utf8_string.length = (uint16_t) converted_string_length;
 
       data_p = (lit_utf8_byte_t *) (string_desc_p + 1);
     }
@@ -292,7 +293,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
       string_desc_p->u.long_utf8_string_size = converted_string_size;
 
       ecma_long_string_t *long_string_desc_p = (ecma_long_string_t *) string_desc_p;
-      long_string_desc_p->long_utf8_string_length = string_length;
+      long_string_desc_p->long_utf8_string_length = converted_string_length;
 
       data_p = (lit_utf8_byte_t *) (long_string_desc_p + 1);
     }

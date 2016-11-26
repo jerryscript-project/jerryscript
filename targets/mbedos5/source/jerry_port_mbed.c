@@ -33,6 +33,11 @@ jerry_port_console (const char *format, /**< format string */
   va_start (args, format);
   vfprintf (stdout, format, args);
   va_end (args);
+
+  if (strlen (format) == 1 && format[0] == 0x0a) /* line feed (\n) */
+  {
+    printf ("\r"); /* add CR for proper display in serial monitors */
+  }
 } /* jerry_port_console */
 
 /**
@@ -49,6 +54,11 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
   va_start (args, format);
   vfprintf (stderr, format, args);
   va_end (args);
+
+  if (strlen (format) == 1 && format[0] == 0x0a) /* line feed (\n) */
+  {
+    printf ("\r"); /* add CR for proper display in serial monitors */
+  } 
 } /* jerry_port_log */
 
 /**
@@ -62,7 +72,7 @@ jerry_port_fatal (jerry_fatal_code_t code) /**< fatal code enum item */
 
 /**
  * Implementation of jerry_port_get_time_zone.
- * 
+ *
  * @return true - if success
  */
 bool
@@ -76,7 +86,7 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< timezone pointer */
 /**
  * Implementation of jerry_port_get_current_time.
  *
- * @return current timer's counter value in microseconds 
+ * @return current timer's counter value in microseconds
  */
 double
 jerry_port_get_current_time ()

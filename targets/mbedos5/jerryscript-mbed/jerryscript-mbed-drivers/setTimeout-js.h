@@ -18,5 +18,6 @@
 #include "jerryscript-mbed-library-registry/wrap_tools.h"
 
 DECLARE_GLOBAL_FUNCTION(setTimeout);
+DECLARE_GLOBAL_FUNCTION(clearTimeout);
 
 #endif  // _JERRYSCRIPT_MBED_DRIVERS_SET_TIMEOUT_H

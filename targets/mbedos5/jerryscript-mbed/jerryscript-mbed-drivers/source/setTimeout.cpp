@@ -31,7 +31,25 @@ DECLARE_GLOBAL_FUNCTION(setTimeout) {
     jerry_acquire_value(args[0]);
     int interval = int(jerry_get_number_value(args[1]));
 
-    mbed::js::EventLoop::getInstance().getQueue().call_in(interval, jerry_call_function, args[0], jerry_create_null(), (jerry_value_t*)NULL, 0);
+    int id = mbed::js::EventLoop::getInstance().getQueue().call_in(interval, jerry_call_function, args[0], jerry_create_null(), (jerry_value_t*)NULL, 0);
+
+    return jerry_create_number(id);
+}
+
+/**
+ * clearTimeout (native JavaScript function)
+ *
+ * Cancel an event that was previously scheduled via setTimeout.
+ *
+ * @param id ID of the timeout event, returned by setTimeout.
+ */
+DECLARE_GLOBAL_FUNCTION(clearTimeout) {
+    CHECK_ARGUMENT_COUNT(global, clearTimeout, (args_count == 1));
+    CHECK_ARGUMENT_TYPE_ALWAYS(global, clearTimeout, 0, number);
+
+    int id = int(jerry_get_number_value(args[0]));
+
+    mbed::js::EventLoop::getInstance().getQueue().cancel(id);
 
     return jerry_create_undefined();
 }

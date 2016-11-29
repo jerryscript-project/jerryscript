@@ -18,13 +18,13 @@
 #include "ecma-literal-storage.h"
 #include "test-common.h"
 
-// Iterations count
+/* Iterations count. */
 #define test_iters 64
 
-// Subiterations count
+/* Subiterations count. */
 #define test_sub_iters 64
 
-// Max characters in a string
+/* Max characters in a string. */
 #define max_characters_in_string 256
 
 static void
@@ -100,7 +100,7 @@ main ()
       }
     }
 
-    // Add empty string
+    /* Add empty string. */
     ecma_find_or_create_literal_string (NULL, 0);
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
@@ -124,7 +124,7 @@ main ()
       TEST_ASSERT (lit1 == lit2);
     }
 
-    // Check empty string exists
+    /* Check empty string exists. */
     TEST_ASSERT (ecma_find_or_create_literal_string (NULL, 0) != JMEM_CP_NULL);
   }
 

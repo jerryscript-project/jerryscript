@@ -50,17 +50,17 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 {
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
-  // 3.
+  /* 3. */
   if (unlikely (is_unresolvable_reference))
   {
     return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
   }
 
-  // 5.
+  /* 5. */
   JERRY_ASSERT (ref_base_lex_env_p != NULL
                 && ecma_is_lexical_environment (ref_base_lex_env_p));
 
-  // 5.a
+  /* 5.a */
   return ecma_op_get_binding_value (ref_base_lex_env_p,
                                     var_name_string_p,
                                     is_strict);
@@ -144,17 +144,17 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 {
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
-  // 3.
+  /* 3. */
   if (unlikely (is_unresolvable_reference))
   {
-    // 3.a.
+    /* 3.a. */
     if (is_strict)
     {
       return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
     }
     else
     {
-      // 3.b.
+      /* 3.b. */
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_value_t completion = ecma_op_object_put (global_object_p,
@@ -170,11 +170,11 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     }
   }
 
-  // 5.
+  /* 5. */
   JERRY_ASSERT (ref_base_lex_env_p != NULL
                 && ecma_is_lexical_environment (ref_base_lex_env_p));
 
-  // 5.a
+  /* 5.a */
   return ecma_op_set_mutable_binding (ref_base_lex_env_p,
                                       var_name_string_p,
                                       value,

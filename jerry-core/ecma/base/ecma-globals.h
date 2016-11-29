@@ -1041,9 +1041,9 @@ typedef struct
  * An object's GC color
  *
  * Tri-color marking:
- *   WHITE_GRAY, unvisited -> WHITE // not referenced by a live object or the reference not found yet
- *   WHITE_GRAY, visited   -> GRAY  // referenced by some live object
- *   BLACK                 -> BLACK // all referenced objects are gray or black
+ *   WHITE_GRAY, unvisited -> WHITE: not referenced by a live object or the reference not found yet
+ *   WHITE_GRAY, visited   -> GRAY: referenced by some live object
+ *   BLACK                 -> BLACK: all referenced objects are gray or black
  */
 typedef enum
 {

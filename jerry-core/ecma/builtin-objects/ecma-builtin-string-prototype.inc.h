@@ -39,7 +39,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_STRING_PROTOTYPE)
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.5.4.1
+/* ECMA-262 v5, 15.5.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_STRING,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
@@ -47,7 +47,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 /* Number properties:
  *  (property name, number value) */
 
-// 15.5.4 (String.prototype is itself a String object whose value is an empty String), 15.5.5.1
+/* ECMA-262 v5, 15.5.4 (String.prototype is itself a String object whose value is an empty String), 15.5.5.1 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_FIXED)

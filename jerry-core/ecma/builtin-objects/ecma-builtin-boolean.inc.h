@@ -39,7 +39,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_BOOLEAN)
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.6.3.1
+/* ECMA-262 v5, 15.6.3.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
@@ -47,7 +47,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 /* Number properties:
  *  (property name, object pointer getter) */
 
-// 15.6.3
+/* ECMA-262 v5, 15.6.3 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FIXED)

@@ -334,7 +334,7 @@ main (void)
 
   global_obj_val = jerry_get_global_object ();
 
-  // Test corner case for jerry_string_to_char_buffer
+  /* Test corner case for jerry_string_to_char_buffer */
   args[0] = jerry_create_string ((jerry_char_t *) "");
   sz = jerry_get_string_size (args[0]);
   TEST_ASSERT (sz == 0);
@@ -398,24 +398,24 @@ main (void)
   TEST_ASSERT (utf8_sz == 12);
   jerry_release_value (args[0]);
 
-  // Get global.boo (non-existing field)
+  /* Get global.boo (non-existing field) */
   val_t = get_property (global_obj_val, "boo");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
   TEST_ASSERT (jerry_value_is_undefined (val_t));
 
-  // Get global.t
+  /* Get global.t */
   val_t = get_property (global_obj_val, "t");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
   TEST_ASSERT (jerry_value_is_number (val_t)
                 && jerry_get_number_value (val_t) == 1.0);
   jerry_release_value (val_t);
 
-  // Get global.foo
+  /* Get global.foo */
   val_foo = get_property (global_obj_val, "foo");
   TEST_ASSERT (!jerry_value_has_error_flag (val_foo));
   TEST_ASSERT (jerry_value_is_object (val_foo));
 
-  // Call foo (4, 2)
+  /* Call foo (4, 2) */
   args[0] = jerry_create_number (4);
   args[1] = jerry_create_number (2);
   res = jerry_call_function (val_foo, jerry_create_undefined (), args, 2);
@@ -424,12 +424,12 @@ main (void)
                 && jerry_get_number_value (res) == 1.0);
   jerry_release_value (res);
 
-  // Get global.bar
+  /* Get global.bar */
   val_bar = get_property (global_obj_val, "bar");
   TEST_ASSERT (!jerry_value_has_error_flag (val_bar));
   TEST_ASSERT (jerry_value_is_object (val_bar));
 
-  // Call bar (4, 2)
+  /* Call bar (4, 2) */
   res = jerry_call_function (val_bar, jerry_create_undefined (), args, 2);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
@@ -437,7 +437,7 @@ main (void)
   jerry_release_value (res);
   jerry_release_value (val_bar);
 
-  // Set global.t = "abcd"
+  /* Set global.t = "abcd" */
   jerry_release_value (args[0]);
   args[0] = jerry_create_string ((jerry_char_t *) "abcd");
   res = set_property (global_obj_val, "t", args[0]);
@@ -445,7 +445,7 @@ main (void)
   TEST_ASSERT (jerry_get_boolean_value (res));
   jerry_release_value (res);
 
-  // Call foo (4, 2)
+  /* Call foo (4, 2) */
   res = jerry_call_function (val_foo, jerry_create_undefined (), args, 2);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_string (res));
@@ -458,12 +458,12 @@ main (void)
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
 
-  // Get global.A
+  /* Get global.A */
   val_A = get_property (global_obj_val, "A");
   TEST_ASSERT (!jerry_value_has_error_flag (val_A));
   TEST_ASSERT (jerry_value_is_object (val_A));
 
-  // Get A.prototype
+  /* Get A.prototype */
   is_ok = jerry_value_is_constructor (val_A);
   TEST_ASSERT (is_ok);
   val_A_prototype = get_property (val_A, "prototype");
@@ -471,7 +471,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_object (val_A_prototype));
   jerry_release_value (val_A);
 
-  // Set A.prototype.foo = global.foo
+  /* Set A.prototype.foo = global.foo */
   res = set_property (val_A_prototype, "foo", val_foo);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_get_boolean_value (res));
@@ -479,42 +479,42 @@ main (void)
   jerry_release_value (val_A_prototype);
   jerry_release_value (val_foo);
 
-  // Get global.a
+  /* Get global.a */
   val_a = get_property (global_obj_val, "a");
   TEST_ASSERT (!jerry_value_has_error_flag (val_a));
   TEST_ASSERT (jerry_value_is_object (val_a));
 
-  // Get a.t
+  /* Get a.t */
   res = get_property (val_a, "t");
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
                 && jerry_get_number_value (res) == 12.0);
   jerry_release_value (res);
 
-  // foreach properties
+  /* foreach properties */
   val_p = get_property (global_obj_val, "p");
   is_ok = jerry_foreach_object_property (val_p, foreach, (void *) "user_data");
   TEST_ASSERT (is_ok);
 
-  // break foreach at third element
+  /* break foreach at third element */
   int count = 0;
   is_ok = jerry_foreach_object_property (val_p, foreach_subset, &count);
   TEST_ASSERT (is_ok);
   TEST_ASSERT (count == 3);
   jerry_release_value (val_p);
 
-  // foreach with throw test
+  /* foreach with throw test */
   val_np = get_property (global_obj_val, "np");
   is_ok = !jerry_foreach_object_property (val_np, foreach_exception, NULL);
   TEST_ASSERT (is_ok);
   jerry_release_value (val_np);
 
-  // Get a.foo
+  /* Get a.foo */
   val_a_foo = get_property (val_a, "foo");
   TEST_ASSERT (!jerry_value_has_error_flag (val_a_foo));
   TEST_ASSERT (jerry_value_is_object (val_a_foo));
 
-  // Call a.foo ()
+  /* Call a.foo () */
   res = jerry_call_function (val_a_foo, val_a, NULL, 0);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
@@ -524,7 +524,7 @@ main (void)
 
   jerry_release_value (val_a);
 
-  // Create native handler bound function object and set it to 'external' variable
+  /* Create native handler bound function object and set it to 'external' variable */
   external_func_val = jerry_create_external_function (handler);
   TEST_ASSERT (jerry_value_is_function (external_func_val)
                 && jerry_value_is_constructor (external_func_val));
@@ -534,7 +534,7 @@ main (void)
   TEST_ASSERT (jerry_get_boolean_value (res));
   jerry_release_value (external_func_val);
 
-  // Call 'call_external' function that should call external function created above
+  /* Call 'call_external' function that should call external function created above */
   val_call_external = get_property (global_obj_val, "call_external");
   TEST_ASSERT (!jerry_value_has_error_flag (val_call_external));
   TEST_ASSERT (jerry_value_is_object (val_call_external));
@@ -549,7 +549,7 @@ main (void)
   jerry_release_value (res);
   TEST_ASSERT (!strncmp (buffer, "string from handler", (size_t) sz));
 
-  // Create native handler bound function object and set it to 'external_construct' variable
+  /* Create native handler bound function object and set it to 'external_construct' variable */
   external_construct_val = jerry_create_external_function (handler_construct);
   TEST_ASSERT (jerry_value_is_function (external_construct_val)
                 && jerry_value_is_constructor (external_construct_val));
@@ -559,14 +559,14 @@ main (void)
   TEST_ASSERT (jerry_get_boolean_value (res));
   jerry_release_value (res);
 
-  // Call external function created above, as constructor
+  /* Call external function created above, as constructor */
   args[0] = jerry_create_boolean (true);
   res = jerry_construct_object (external_construct_val, args, 1);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_object (res));
   val_value_field = get_property (res, "value_field");
 
-  // Get 'value_field' of constructed object
+  /* Get 'value_field' of constructed object */
   TEST_ASSERT (!jerry_value_has_error_flag (val_value_field));
   TEST_ASSERT (jerry_value_is_boolean (val_value_field)
                 && jerry_get_boolean_value (val_value_field));
@@ -580,7 +580,7 @@ main (void)
 
   jerry_release_value (res);
 
-  // Test: Throwing exception from native handler.
+  /* Test: Throwing exception from native handler. */
   throw_test_handler_val = jerry_create_external_function (handler_throw_test);
   TEST_ASSERT (jerry_value_is_function (throw_test_handler_val));
 
@@ -599,7 +599,7 @@ main (void)
   jerry_release_value (val_t);
   jerry_release_value (res);
 
-  // Test: Unhandled exception in called function
+  /* Test: Unhandled exception in called function */
   val_t = get_property (global_obj_val, "throw_reference_error");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
@@ -609,22 +609,22 @@ main (void)
   TEST_ASSERT (jerry_value_has_error_flag (res));
   jerry_release_value (val_t);
 
-  // 'res' should contain exception object
+  /* 'res' should contain exception object */
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
-  // Test: Call of non-function
+  /* Test: Call of non-function */
   obj_val = jerry_create_object ();
   res = jerry_call_function (obj_val, global_obj_val, NULL, 0);
   TEST_ASSERT (jerry_value_has_error_flag (res));
 
-  // 'res' should contain exception object
+  /* 'res' should contain exception object */
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   jerry_release_value (obj_val);
 
-  // Test: Unhandled exception in function called, as constructor
+  /* Test: Unhandled exception in function called, as constructor */
   val_t = get_property (global_obj_val, "throw_reference_error");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
@@ -633,22 +633,22 @@ main (void)
   TEST_ASSERT (jerry_value_has_error_flag (res));
   jerry_release_value (val_t);
 
-  // 'res' should contain exception object
+  /* 'res' should contain exception object */
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
-  // Test: Call of non-function as constructor
+  /* Test: Call of non-function as constructor */
   obj_val = jerry_create_object ();
   res = jerry_construct_object (obj_val, NULL, 0);
   TEST_ASSERT (jerry_value_has_error_flag (res));
 
-  // 'res' should contain exception object
+  /* 'res' should contain exception object */
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
   jerry_release_value (obj_val);
 
-  // Test: Array Object API
+  /* Test: Array Object API */
   jerry_value_t array_obj_val = jerry_create_array (10);
   TEST_ASSERT (jerry_value_is_array (array_obj_val));
   TEST_ASSERT (jerry_get_array_length (array_obj_val) == 10);
@@ -664,7 +664,7 @@ main (void)
   jerry_release_value (v_out);
   jerry_release_value (array_obj_val);
 
-  // Test: init property descriptor
+  /* Test: init property descriptor */
   jerry_property_descriptor_t prop_desc;
   jerry_init_property_descriptor_fields (&prop_desc);
   TEST_ASSERT (prop_desc.is_value_defined == false);
@@ -680,7 +680,7 @@ main (void)
   TEST_ASSERT (prop_desc.is_set_defined == false);
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
 
-  // Test: define own properties
+  /* Test: define own properties */
   jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "my_defined_property");
   prop_desc.is_value_defined = true;
   prop_desc.value = jerry_acquire_value (prop_name);
@@ -691,7 +691,7 @@ main (void)
   jerry_release_value (res);
   jerry_free_property_descriptor_fields (&prop_desc);
 
-  // Test: get own property descriptor
+  /* Test: get own property descriptor */
   is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
   TEST_ASSERT (is_ok);
   TEST_ASSERT (prop_desc.is_value_defined == true);
@@ -706,13 +706,13 @@ main (void)
   jerry_release_value (prop_name);
   jerry_free_property_descriptor_fields (&prop_desc);
 
-  // Test: object keys
+  /* Test: object keys */
   res = jerry_get_object_keys (global_obj_val);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_array (res));
   jerry_release_value (res);
 
-  // Test: jerry_value_to_primitive
+  /* Test: jerry_value_to_primitive */
   obj_val = jerry_eval ((jerry_char_t *) "new String ('hello')", 20, false);
   TEST_ASSERT (!jerry_value_has_error_flag (obj_val));
   TEST_ASSERT (jerry_value_is_object (obj_val));
@@ -722,13 +722,13 @@ main (void)
   TEST_ASSERT (jerry_value_is_string (prim_val));
   jerry_release_value (prim_val);
 
-  // Test: jerry_get_prototype
+  /* Test: jerry_get_prototype */
   proto_val = jerry_get_prototype (obj_val);
   TEST_ASSERT (!jerry_value_has_error_flag (proto_val));
   TEST_ASSERT (jerry_value_is_object (proto_val));
   jerry_release_value (obj_val);
 
-  // Test: jerry_set_prototype
+  /* Test: jerry_set_prototype */
   obj_val = jerry_create_object ();
   res = jerry_set_prototype (obj_val, jerry_create_null ());
   TEST_ASSERT (!jerry_value_has_error_flag (res));
@@ -745,7 +745,7 @@ main (void)
   jerry_release_value (proto_val);
   jerry_release_value (obj_val);
 
-  // Test: eval
+  /* Test: eval */
   const char *eval_code_src_p = "(function () { return 123; })";
   val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), true);
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
@@ -760,13 +760,13 @@ main (void)
 
   jerry_release_value (val_t);
 
-  // cleanup.
+  /* cleanup. */
   jerry_release_value (global_obj_val);
 
-  // Test: run gc.
+  /* Test: run gc. */
   jerry_gc ();
 
-  // Test: number
+  /* Test: number */
   val_t = jerry_create_number (6.25);
   number_val = jerry_get_number_value (val_t);
   TEST_ASSERT (number_val * 3 == 18.75);
@@ -786,7 +786,7 @@ main (void)
 
   TEST_ASSERT (test_api_is_free_callback_was_called);
 
-  // Test: parser error location
+  /* Test: parser error location */
   jerry_init (JERRY_INIT_SHOW_OPCODES);
 
   const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
@@ -808,7 +808,7 @@ main (void)
                         "SyntaxError: Primary expression expected. [line: 2, column: 10]"));
   jerry_cleanup ();
 
-  // External Magic String
+  /* External Magic String */
   jerry_init (JERRY_INIT_SHOW_OPCODES);
 
   uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_char_ptr_t));
@@ -827,7 +827,7 @@ main (void)
 
   jerry_cleanup ();
 
-  // Dump / execute snapshot
+  /* Dump / execute snapshot */
   if (true)
   {
     static uint8_t global_mode_snapshot_buffer[1024];

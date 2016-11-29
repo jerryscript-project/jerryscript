@@ -18,16 +18,16 @@
 
 #include "test-common.h"
 
-// Heap size is 32K
+/* Heap size is 32K. */
 #define test_heap_size (32 * 1024)
 
-// Iterations count
+/* Iterations count. */
 #define test_iters (4 * 1024)
 
-// Subiterations count
+/* Subiterations count. */
 #define test_sub_iters 32
 
-// Threshold size of block to allocate
+/* Threshold size of block to allocate. */
 #define test_threshold_block_size 8192
 
 uint8_t *ptrs[test_sub_iters];

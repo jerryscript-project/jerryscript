@@ -228,7 +228,7 @@ lit_char_is_identifier_start (const uint8_t *src_p) /**< pointer to a vaild UTF8
 bool
 lit_char_is_identifier_start_character (uint16_t chr) /**< EcmaScript character */
 {
-  // Fast path for ASCII-defined letters
+  /* Fast path for ASCII-defined letters. */
   if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
     return ((LEXER_TO_ASCII_LOWERCASE (chr) >= LIT_CHAR_LOWERCASE_A
@@ -264,7 +264,7 @@ lit_char_is_identifier_part (const uint8_t *src_p) /**< pointer to a vaild UTF8 
 bool
 lit_char_is_identifier_part_character (uint16_t chr) /**< EcmaScript character */
 {
-  // Fast path for ASCII-defined letters
+  /* Fast path for ASCII-defined letters. */
   if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
     return ((LEXER_TO_ASCII_LOWERCASE (chr) >= LIT_CHAR_LOWERCASE_A

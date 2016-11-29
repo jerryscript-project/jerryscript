@@ -819,7 +819,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   const bool sign = ecma_number_is_negative (num);
   const ecma_number_t abs_num = sign ? ecma_number_negate (num) : num;
 
-  // 2 ^ 32
+  /* 2 ^ 32 */
   const uint64_t uint64_2_pow_32 = (1ull << 32);
 
   const ecma_number_t num_2_pow_32 = (float) uint64_2_pow_32;
@@ -836,7 +836,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
     num_in_uint32_range = abs_num;
   }
 
-  // Check that the floating point value can be represented with uint32_t
+  /* Check that the floating point value can be represented with uint32_t. */
   JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
   uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
@@ -870,10 +870,10 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 {
   uint32_t uint32_num = ecma_number_to_uint32 (num);
 
-  // 2 ^ 32
+  /* 2 ^ 32 */
   const int64_t int64_2_pow_32 = (1ll << 32);
 
-  // 2 ^ 31
+  /* 2 ^ 31 */
   const uint32_t uint32_2_pow_31 = (1ull << 31);
 
   int32_t ret;
@@ -945,14 +945,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (ecma_number_is_nan (num))
   {
-    // 1.
+    /* 1. */
     dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_NAN, buffer_p, buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
   if (ecma_number_is_zero (num))
   {
-    // 2.
+    /* 2. */
     *buffer_p = LIT_CHAR_0;
     JERRY_ASSERT (1 <= buffer_size);
     return 1;
@@ -962,14 +962,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (ecma_number_is_negative (num))
   {
-    // 3.
+    /* 3. */
     *dst_p++ = LIT_CHAR_MINUS;
     num = ecma_number_negate (num);
   }
 
   if (ecma_number_is_infinity (num))
   {
-    // 4.
+    /* 4. */
     dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_INFINITY_UL, dst_p,
                                              (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
@@ -978,7 +978,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   JERRY_ASSERT (ecma_number_get_next (ecma_number_get_prev (num)) == num);
 
-  // 5.
+  /* 5. */
   uint32_t num_uint32 = ecma_number_to_uint32 (num);
 
   if (((ecma_number_t) num_uint32) == num)
@@ -997,7 +997,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (k <= n && n <= 21)
   {
-    // 6.
+    /* 6. */
     dst_p += k;
 
     memset (dst_p, LIT_CHAR_0, (size_t) (n - k));
@@ -1009,7 +1009,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (0 < n && n <= 21)
   {
-    // 7.
+    /* 7. */
     memmove (dst_p + n + 1, dst_p + n, (size_t) (k - n));
     *(dst_p + n) = LIT_CHAR_DOT;
     dst_p += k + 1;
@@ -1020,7 +1020,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (-6 < n && n <= 0)
   {
-    // 8.
+    /* 8. */
     memmove (dst_p + 2 - n, dst_p, (size_t) k);
     memset (dst_p + 2, LIT_CHAR_0, (size_t) -n);
     *dst_p = LIT_CHAR_0;
@@ -1033,18 +1033,18 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (k == 1)
   {
-    // 9.
+    /* 9. */
     dst_p++;
   }
   else
   {
-    // 10.
+    /* 10. */
     memmove (dst_p + 2, dst_p + 1, (size_t) (k - 1));
     *(dst_p + 1) = LIT_CHAR_DOT;
     dst_p += k + 1;
   }
 
-  // 9., 10.
+  /* 9., 10. */
   *dst_p++ = LIT_CHAR_LOWERCASE_E;
   *dst_p++ = (n >= 1) ? LIT_CHAR_PLUS : LIT_CHAR_MINUS;
   uint32_t t = (uint32_t) (n >= 1 ? (n - 1) : -(n - 1));

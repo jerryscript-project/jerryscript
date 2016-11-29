@@ -35,7 +35,7 @@ OBJECT_ID (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE)
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.2.4.1
+/* ECMA-262 v5, 15.2.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_OBJECT,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)

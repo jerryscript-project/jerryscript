@@ -56,7 +56,7 @@ CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
  *
  * @return @a s
  */
-void * __attr_used___ // FIXME
+void * __attr_used___
 memset (void *s,  /**< area to set values in */
         int c,    /**< value to set */
         size_t n) /**< area size */
@@ -98,7 +98,7 @@ memcmp (const void *s1, /**< first area */
 /**
  * memcpy
  */
-void *  __attr_used___ // FIXME
+void *  __attr_used___
 memcpy (void *s1, /**< destination */
         const void *s2, /**< source */
         size_t n) /**< bytes number */
@@ -137,7 +137,7 @@ memcpy (void *s1, /**< destination */
  *
  * @return the dest pointer's value
  */
-void * __attr_used___ // FIXME
+void * __attr_used___
 memmove (void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
@@ -216,7 +216,7 @@ strncmp (const char *s1, const char *s2, size_t n)
 /** Copy a string. At most n bytes of src are copied.  Warning: If there is no
      null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
      @return a pointer to the destination string dest.  */
-char * __attr_used___ // FIXME
+char * __attr_used___
 strncpy (char *dest, const char *src, size_t n)
 {
   while (n--)

@@ -541,7 +541,7 @@ lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, /**< hash to be comb
 
   for (uint32_t i = 0; i < utf8_buf_size; i++)
   {
-    // 16777619 is 32 bit FNV_prime = 2^24 + 2^8 + 0x93 = 16777619
+    /* 16777619 is 32 bit FNV_prime = 2^24 + 2^8 + 0x93 = 16777619 */
     hash = (hash ^ utf8_buf_p[i]) * 16777619;
   }
 
@@ -559,7 +559,7 @@ lit_utf8_string_calc_hash (const lit_utf8_byte_t *utf8_buf_p, /**< characters bu
 {
   JERRY_ASSERT (utf8_buf_p != NULL || utf8_buf_size == 0);
 
-  // 32 bit offset_basis for FNV = 2166136261
+  /* 32 bit offset_basis for FNV = 2166136261 */
   return lit_utf8_string_hash_combine ((lit_string_hash_t) 2166136261, utf8_buf_p, utf8_buf_size);
 } /* lit_utf8_string_calc_hash */
 

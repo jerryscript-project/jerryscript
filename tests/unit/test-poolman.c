@@ -25,10 +25,10 @@
 
 #include "test-common.h"
 
-// Iterations count
+/* Iterations count. */
 const uint32_t test_iters = 1024;
 
-// Subiterations count
+/* Subiterations count. */
 #define TEST_MAX_SUB_ITERS  1024
 #define TEST_CHUNK_SIZE 8
 

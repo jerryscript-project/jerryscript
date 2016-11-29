@@ -112,7 +112,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
     is_strict_mode_code = true;
   }
 
-  // 1., 4., 13.
+  /* 1., 4., 13. */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
   ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
@@ -121,14 +121,14 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   ecma_deref_object (prototype_obj_p);
 
-  // 2., 6., 7., 8.
+  /* 2., 6., 7., 8. */
   /*
    * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
    * Instead we set the object's type to ECMA_OBJECT_TYPE_FUNCTION
    * that defines which version of the routine should be used on demand.
    */
 
-  // 3.
+  /* 3. */
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
    *
@@ -137,21 +137,21 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
 
-  // 9.
+  /* 9. */
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.scope_cp, scope_p);
 
-  // 10., 11., 12.
+  /* 10., 11., 12. */
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
 
-  // 14., 15., 16., 17., 18.
+  /* 14., 15., 16., 17., 18. */
   /*
    * 'length' and 'prototype' properties are instantiated lazily
    *
    * See also: ecma_op_function_try_lazy_instantiate_property
    */
 
-  // 19.
+  /* 19. */
   if (is_strict_mode_code)
   {
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
@@ -481,7 +481,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                                 ext_func_p->u.function.scope_cp);
 
-      // 8.
+      /* 8. */
       ecma_value_t this_binding;
       bool is_strict;
       bool is_no_lex_env;
@@ -493,7 +493,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
       is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
 
-      // 1.
+      /* 1. */
       if (is_strict)
       {
         this_binding = ecma_copy_value (this_arg_value);
@@ -501,18 +501,18 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       else if (ecma_is_value_undefined (this_arg_value)
                || ecma_is_value_null (this_arg_value))
       {
-        // 2.
+        /* 2. */
         this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
       }
       else
       {
-        // 3., 4.
+        /* 3., 4. */
         this_binding = ecma_op_to_object (this_arg_value);
 
         JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));
       }
 
-      // 5.
+      /* 5. */
       ecma_object_t *local_env_p;
       if (is_no_lex_env)
       {
@@ -629,24 +629,24 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
 
   ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
 
-  // 5.
+  /* 5. */
   ECMA_TRY_CATCH (func_obj_prototype_prop_value,
                   ecma_op_object_get (func_obj_p,
                                       prototype_magic_string_p),
                   ret_value);
 
-  // 1., 2., 4.
+  /* 1., 2., 4. */
   ecma_object_t *obj_p;
   if (ecma_is_value_object (func_obj_prototype_prop_value))
   {
-    //  6.
+    /* 6. */
     obj_p = ecma_create_object (ecma_get_object_from_value (func_obj_prototype_prop_value),
                                 0,
                                 ECMA_OBJECT_TYPE_GENERAL);
   }
   else
   {
-    // 7.
+    /* 7. */
     ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
     obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
@@ -654,7 +654,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
     ecma_deref_object (prototype_p);
   }
 
-  // 3.
+  /* 3. */
   /*
    * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
    * without ECMA_INTERNAL_PROPERTY_CLASS internal property
@@ -663,7 +663,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
    * See also: ecma_object_get_class_name.
    */
 
-  // 8.
+  /* 8. */
   ECMA_TRY_CATCH (call_completion,
                   ecma_op_function_call (func_obj_p,
                                          ecma_make_object_value (obj_p),
@@ -671,14 +671,14 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
                                          arguments_list_len),
                   ret_value);
 
-  // 9.
+  /* 9. */
   if (ecma_is_value_object (call_completion))
   {
     ret_value = ecma_copy_value (call_completion);
   }
   else
   {
-    // 10.
+    /* 10. */
     ecma_ref_object (obj_p);
     ret_value = ecma_make_object_value (obj_p);
   }

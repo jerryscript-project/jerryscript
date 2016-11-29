@@ -114,7 +114,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_property_value_t *prop_value_p;
 
-  // 11.a, 11.b
+  /* 11.a, 11.b */
   for (ecma_length_t indx = 0;
        indx < arguments_number;
        indx++)
@@ -131,7 +131,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ecma_deref_ecma_string (indx_string_p);
   }
 
-  // 7.
+  /* 7. */
   ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
 
   prop_value_p = ecma_create_named_data_property (obj_p,
@@ -145,7 +145,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-  // 13.
+  /* 13. */
   if (!is_strict)
   {
     ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
@@ -163,7 +163,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   {
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
-    // 14.
+    /* 14. */
     prop_desc = ecma_make_empty_property_descriptor ();
     {
       prop_desc.is_get_defined = true;
@@ -244,7 +244,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
                                                                                                   *   descriptor */
                                               bool is_throw) /**< flag that controls failure handling */
 {
-  // 3.
+  /* 3. */
   ecma_value_t ret_value = ecma_op_general_object_define_own_property (object_p,
                                                                        property_name_p,
                                                                        property_desc_p,
@@ -326,7 +326,7 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
                                  ecma_string_t *property_name_p, /**< property name */
                                  bool is_throw) /**< flag that controls failure handling */
 {
-  // 3.
+  /* 3. */
   ecma_value_t ret_value = ecma_op_general_object_delete (object_p, property_name_p, is_throw);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))

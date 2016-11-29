@@ -525,7 +525,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         assert (false && "unsupported width field *");
       }
 
-      // If there is a number, recognize it as field width
+      /* If there is a number, recognize it as field width. */
       while (*format_iter_p >= '0' && *format_iter_p <= '9')
       {
         width = width * 10u + (uint32_t) (*format_iter_p - '0');

@@ -272,7 +272,7 @@ gettimeofday (void *tp,  /**< struct timeval */
   return (int) syscall_2 (SYSCALL_NO (gettimeofday), (long int) tp, (long int) tzp);
 } /* gettimeofday */
 
-// FIXME
+/* FIXME */
 #if 0
 /**
  * Setup new memory limits

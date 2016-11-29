@@ -20,13 +20,13 @@
 
 #include "test-common.h"
 
-// Iterations count
+/* Iterations count. */
 #define test_iters (1024)
 
-// Sub iterations count
+/* Sub iterations count. */
 #define test_subiters (128)
 
-// Max bytes in string
+/* Max bytes in string. */
 #define max_bytes_in_string (16 * 1024)
 #define max_code_units_in_string (max_bytes_in_string)
 

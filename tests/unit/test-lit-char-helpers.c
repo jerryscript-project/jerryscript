@@ -43,7 +43,7 @@ main ()
 
   size_t length;
 
-  // test 1-byte-long unicode sequences
+  /* Test 1-byte-long unicode sequences. */
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long1 + 2, 4));
   TEST_ASSERT (length == 1);
 
@@ -53,7 +53,7 @@ main ()
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long3 + 2, 4));
   TEST_ASSERT (length == 1);
 
-  // test 2-byte-long unicode sequences
+  /* Test 2-byte-long unicode sequences. */
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long1 + 2, 4));
   TEST_ASSERT (length == 2);
 
@@ -63,7 +63,7 @@ main ()
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long3 + 2, 4));
   TEST_ASSERT (length == 2);
 
-  // test 3-byte-long unicode sequences
+  /* Test 3-byte-long unicode sequences. */
   length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long1 + 2, 4));
   TEST_ASSERT (length != 2);
 

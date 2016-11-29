@@ -190,13 +190,13 @@ void jmem_heap_finalize (void)
 static __attr_hot___
 void *jmem_heap_alloc_block_internal (const size_t size)
 {
-  // Align size
+  /* Align size. */
   const size_t required_size = ((size + JMEM_ALIGNMENT - 1) / JMEM_ALIGNMENT) * JMEM_ALIGNMENT;
   jmem_heap_free_t *data_space_p = NULL;
 
   VALGRIND_DEFINED_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
 
-  // Fast path for 8 byte chunks, first region is guaranteed to be sufficient
+  /* Fast path for 8 byte chunks, first region is guaranteed to be sufficient. */
   if (required_size == JMEM_ALIGNMENT
       && likely (JERRY_HEAP_CONTEXT (first).next_offset != JMEM_HEAP_END_OF_LIST))
   {
@@ -233,7 +233,7 @@ void *jmem_heap_alloc_block_internal (const size_t size)
       JERRY_CONTEXT (jmem_heap_list_skip_p) = JMEM_HEAP_GET_ADDR_FROM_OFFSET (JERRY_HEAP_CONTEXT (first).next_offset);
     }
   }
-  // Slow path for larger regions
+  /* Slow path for larger regions. */
   else
   {
     uint32_t current_offset = JERRY_HEAP_CONTEXT (first).next_offset;
@@ -252,31 +252,31 @@ void *jmem_heap_alloc_block_internal (const size_t size)
 
       if (current_p->size >= required_size)
       {
-        // Region is sufficiently big, store address
+        /* Region is sufficiently big, store address. */
         data_space_p = current_p;
         JERRY_CONTEXT (jmem_heap_allocated_size) += required_size;
 
-        // Region was larger than necessary
+        /* Region was larger than necessary. */
         if (current_p->size > required_size)
         {
-          // Get address of remaining space
+          /* Get address of remaining space. */
           jmem_heap_free_t *const remaining_p = (jmem_heap_free_t *) ((uint8_t *) current_p + required_size);
 
-          // Update metadata
+          /* Update metadata. */
           VALGRIND_DEFINED_SPACE (remaining_p, sizeof (jmem_heap_free_t));
           remaining_p->size = current_p->size - (uint32_t) required_size;
           remaining_p->next_offset = next_offset;
           VALGRIND_NOACCESS_SPACE (remaining_p, sizeof (jmem_heap_free_t));
 
-          // Update list
+          /* Update list. */
           VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
           prev_p->next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (remaining_p);
           VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
         }
-        // Block is an exact fit
+        /* Block is an exact fit. */
         else
         {
-          // Remove the region from the list
+          /* Remove the region from the list. */
           VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
           prev_p->next_offset = next_offset;
           VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
@@ -284,12 +284,12 @@ void *jmem_heap_alloc_block_internal (const size_t size)
 
         JERRY_CONTEXT (jmem_heap_list_skip_p) = prev_p;
 
-        // Found enough space
+        /* Found enough space. */
         break;
       }
 
       VALGRIND_NOACCESS_SPACE (current_p, sizeof (jmem_heap_free_t));
-      // Next in list
+      /* Next in list. */
       prev_p = current_p;
       current_offset = next_offset;
     }
@@ -450,7 +450,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   const uint32_t block_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (block_p);
 
   VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
-  // Find position of region in the list
+  /* Find position of region in the list. */
   while (prev_p->next_offset < block_offset)
   {
     jmem_heap_free_t *const next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
@@ -471,10 +471,10 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
 
   VALGRIND_DEFINED_SPACE (block_p, sizeof (jmem_heap_free_t));
   VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
-  // Update prev
+  /* Update prev. */
   if (jmem_heap_get_region_end (prev_p) == block_p)
   {
-    // Can be merged
+    /* Can be merged. */
     prev_p->size += (uint32_t) aligned_size;
     VALGRIND_NOACCESS_SPACE (block_p, sizeof (jmem_heap_free_t));
     block_p = prev_p;
@@ -486,7 +486,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   }
 
   VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
-  // Update next
+  /* Update next. */
   if (jmem_heap_get_region_end (block_p) == next_p)
   {
     if (unlikely (next_p == JERRY_CONTEXT (jmem_heap_list_skip_p)))
@@ -494,7 +494,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
       JERRY_CONTEXT (jmem_heap_list_skip_p) = block_p;
     }
 
-    // Can be merged
+    /* Can be merged. */
     block_p->size += next_p->size;
     block_p->next_offset = next_p->next_offset;
 

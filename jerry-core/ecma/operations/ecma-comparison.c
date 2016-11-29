@@ -53,7 +53,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   {
     if (ecma_is_value_number (y))
     {
-      // 1.c
+      /* 1.c */
       ecma_number_t x_num = ecma_get_number_from_value (x);
       ecma_number_t y_num = ecma_get_number_from_value (y);
 
@@ -94,7 +94,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   {
     if (ecma_is_value_string (y))
     {
-      // 1., d.
+      /* 1., d. */
       ecma_string_t *x_str_p = ecma_get_string_from_value (x);
       ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
@@ -105,7 +105,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
     if (ecma_is_value_number (y))
     {
-      // 4.
+      /* 4. */
       ecma_value_t x_num_value = ecma_op_to_number (x);
 
       if (ECMA_IS_VALUE_ERROR (x_num_value))
@@ -129,12 +129,12 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   {
     if (ecma_is_value_boolean (x))
     {
-      // 1., e.
+      /* 1., e. */
       /* Note: the (x == y) comparison captures the true case. */
       return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
     }
 
-    // 7.
+    /* 7. */
     return ecma_op_abstract_equality_compare (x, ecma_make_integer_value (ecma_is_value_true (y) ? 1 : 0));
   }
 
@@ -143,7 +143,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     if (ecma_is_value_string (y)
         || ecma_is_value_number (y))
     {
-      // 9.
+      /* 9. */
       ecma_value_t x_prim_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO);
 
       if (ECMA_IS_VALUE_ERROR (x_prim_value))
@@ -157,22 +157,22 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       return compare_result;
     }
 
-    // 1., f.
+    /* 1., f. */
     /* Note: the (x == y) comparison captures the true case. */
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
   }
 
   if (ecma_is_value_boolean (x))
   {
-    // 6.
+    /* 6. */
     return ecma_op_abstract_equality_compare (ecma_make_integer_value (ecma_is_value_true (x) ? 1 : 0), y);
   }
 
   if (ecma_is_value_undefined (x)
       || ecma_is_value_null (x))
   {
-    // 1. a., b.
-    // 2., 3.
+    /* 1. a., b. */
+    /* 2., 3. */
     bool is_equal = ecma_is_value_undefined (y) || ecma_is_value_null (y);
 
     return ecma_make_boolean_value (is_equal);
@@ -285,7 +285,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  // 1., 2.
+  /* 1., 2. */
   ECMA_TRY_CATCH (prim_first_converted_value,
                   ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NUMBER),
                   ret_value);
@@ -301,17 +301,17 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 
   if (!(is_px_string && is_py_string))
   {
-    // 3.
+    /* 3. */
 
-    // a.
+    /* a. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (nx, px, ret_value);
     ECMA_OP_TO_NUMBER_TRY_CATCH (ny, py, ret_value);
 
-    // b.
+    /* b. */
     if (ecma_number_is_nan (nx)
         || ecma_number_is_nan (ny))
     {
-      // c., d.
+      /* c., d. */
       ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
     }
     else
@@ -325,36 +325,36 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
           || (ecma_number_is_zero (nx)
               && ecma_number_is_zero (ny)))
       {
-        // e., f., g.
+        /* e., f., g. */
         is_x_less_than_y_check = false;
       }
       else if (ecma_number_is_infinity (nx)
                && !ecma_number_is_negative (nx))
       {
-        // h.
+        /* h. */
         is_x_less_than_y_check = false;
       }
       else if (ecma_number_is_infinity (ny)
                && !ecma_number_is_negative (ny))
       {
-        // i.
+        /* i. */
         is_x_less_than_y_check = true;
       }
       else if (ecma_number_is_infinity (ny)
                && ecma_number_is_negative (ny))
       {
-        // j.
+        /* j. */
         is_x_less_than_y_check = false;
       }
       else if (ecma_number_is_infinity (nx)
                && ecma_number_is_negative (nx))
       {
-        // k.
+        /* k. */
         is_x_less_than_y_check = true;
       }
       else
       {
-        // l.
+        /* l. */
         JERRY_ASSERT (!ecma_number_is_nan (nx)
                       && !ecma_number_is_infinity (nx));
         JERRY_ASSERT (!ecma_number_is_nan (ny)
@@ -382,7 +382,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ECMA_OP_TO_NUMBER_FINALIZE (nx);
   }
   else
-  { // 4.
+  { /* 4. */
     JERRY_ASSERT (is_px_string && is_py_string);
 
     ecma_string_t *str_x_p = ecma_get_string_from_value (px);

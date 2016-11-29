@@ -1514,6 +1514,55 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
 } /* ecma_string_get_size */
 
 /**
+ * Get the UTF-8 encoded string size from ecma-string
+ *
+ * @return number of bytes in the buffer needed to represent an UTF-8 encoded string
+ */
+lit_utf8_size_t
+ecma_string_get_utf8_size (const ecma_string_t *string_p) /**< ecma-string */
+{
+  switch (ECMA_STRING_GET_CONTAINER (string_p))
+  {
+    case ECMA_STRING_CONTAINER_HEAP_UTF8_STRING:
+    {
+      if (string_p->u.utf8_string.size == (lit_utf8_size_t) string_p->u.utf8_string.length)
+      {
+        return (lit_utf8_size_t) string_p->u.utf8_string.size;
+      }
+
+      return lit_get_utf8_size_of_cesu8_string ((const lit_utf8_byte_t *) (string_p + 1),
+                                                (lit_utf8_size_t) string_p->u.utf8_string.size);
+    }
+    case ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING:
+    {
+      ecma_long_string_t *long_string_p = (ecma_long_string_t *) string_p;
+      if (string_p->u.long_utf8_string_size == (lit_utf8_size_t) long_string_p->long_utf8_string_length)
+      {
+        return (lit_utf8_size_t) string_p->u.long_utf8_string_size;
+      }
+
+      return lit_get_utf8_size_of_cesu8_string ((const lit_utf8_byte_t *) (string_p + 1),
+                                                (lit_utf8_size_t) string_p->u.long_utf8_string_size);
+    }
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      return (lit_utf8_size_t) ecma_string_get_number_in_desc_size (string_p->u.uint32_number);
+    }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      return lit_get_magic_string_size (string_p->u.magic_string_id);
+    }
+    default:
+    {
+      JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX);
+
+      return lit_get_utf8_size_of_cesu8_string (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
+                                                lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+    }
+  }
+} /* ecma_string_get_utf8_size */
+
+/**
  * Get character from specified position in the ecma-string.
  *
  * @return character value

@@ -195,6 +195,7 @@ extern bool ecma_string_compare_to_property_name (ecma_property_t, jmem_cpointer
 extern bool ecma_compare_ecma_strings (const ecma_string_t *, const ecma_string_t *);
 extern bool ecma_compare_ecma_strings_relational (const ecma_string_t *, const ecma_string_t *);
 extern ecma_length_t ecma_string_get_length (const ecma_string_t *);
+extern ecma_length_t ecma_string_get_utf8_length (const ecma_string_t *);
 extern lit_utf8_size_t ecma_string_get_size (const ecma_string_t *);
 extern lit_utf8_size_t ecma_string_get_utf8_size (const ecma_string_t *);
 extern ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *, ecma_length_t);

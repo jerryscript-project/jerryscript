@@ -151,8 +151,8 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
  */
 #define JERRY_MAGIC_STRING_ITEMS \
   JERRY_MAGIC_STRING_DEF (GLOBAL, global) \
-  JERRY_MAGIC_STRING_DEF (CONSOLE, console)
-
+  JERRY_MAGIC_STRING_DEF (CONSOLE, console) \
+  JERRY_MAGIC_STRING_DEF (GREEK_ZERO_SIGN, \xed\xa0\x80\xed\xb6\x8a)
 
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
   static const char jerry_magic_string_ex_ ## NAME[] = # STRING;
@@ -831,6 +831,34 @@ main (void)
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
+
+  /* call jerry_create_string functions which will returns with the registered external magic strings */
+  args[0] = jerry_create_string ((jerry_char_t *) "console");
+  args[1] = jerry_create_string ((jerry_char_t *) "\xed\xa0\x80\xed\xb6\x8a"); /**< greek zero sign */
+
+  cesu8_length = jerry_get_string_length (args[0]);
+  cesu8_sz = jerry_get_string_size (args[0]);
+
+  char string_console[cesu8_sz];
+  jerry_string_to_char_buffer (args[0], (jerry_char_t *) string_console, cesu8_sz);
+
+  TEST_ASSERT (!strncmp (string_console, "console", cesu8_sz));
+  TEST_ASSERT (cesu8_length == 7);
+  TEST_ASSERT (cesu8_length == cesu8_sz);
+
+  jerry_release_value (args[0]);
+
+  cesu8_length = jerry_get_string_length (args[1]);
+  cesu8_sz = jerry_get_string_size (args[1]);
+
+  char string_greek_zero_sign[cesu8_sz];
+  jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_greek_zero_sign, cesu8_sz);
+
+  TEST_ASSERT (!strncmp (string_greek_zero_sign, "\xed\xa0\x80\xed\xb6\x8a", cesu8_sz));
+  TEST_ASSERT (cesu8_length == 2);
+  TEST_ASSERT (cesu8_sz == 6);
+
+  jerry_release_value (args[1]);
 
   jerry_cleanup ();
 

@@ -63,13 +63,13 @@ void jerry_port_fatal (jerry_fatal_code_t code)
 /**
  * Implementation of jerry_port_get_current_time.
  *
- * @return current timer's counter value in microseconds
+ * @return current timer's counter value in milliseconds
  */
 double
 jerry_port_get_current_time ()
 {
-  int64_t us = sys_tick_get() * sys_clock_us_per_tick;
-  return (double) us / 1000;
+  int64_t ms = k_uptime_get();
+  return (double) ms;
 } /* jerry_port_get_current_time */
 
 /**

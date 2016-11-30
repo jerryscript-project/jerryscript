@@ -343,9 +343,6 @@ main (int argc,
   int i;
   int files_counter = 0;
 
-  size_t max_data_bss_size, max_stack_size;
-  jerry_get_memory_limits (&max_data_bss_size, &max_stack_size);
-
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
   const char *exec_snapshot_file_names[JERRY_MAX_COMMAND_LINE_ARGS];

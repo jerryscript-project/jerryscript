@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Copyright 2014-2016 Samsung Electronics Co., Ltd.
-# Copyright 2016 University of Szeged
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

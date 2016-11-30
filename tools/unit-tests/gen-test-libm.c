@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +32,7 @@
 int
 main (int argc, char **args)
 {
-  printf ("/* Copyright 2016 Samsung Electronics Co., Ltd.\n"
-          " * Copyright 2016 University of Szeged.\n"
+  printf ("/* Copyright JS Foundation and other contributors, http://js.foundation
           " *\n"
           " * Licensed under the Apache License, Version 2.0 (the \"License\");\n"
           " * you may not use this file except in compliance with the License.\n"

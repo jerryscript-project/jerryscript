@@ -162,6 +162,8 @@ main ()
   TEST_ASSERT (ecma_date_make_day (1970, 1, 35) == 65);
   TEST_ASSERT (ecma_date_make_day (1970, 13, 35) == 430);
   TEST_ASSERT (ecma_date_make_day (2016, 2, 1) == 16861);
+  TEST_ASSERT (ecma_date_make_day (2016, 8, 31) == 17075);
+  TEST_ASSERT (ecma_date_make_day (2016, 9, 1) == 17075);
 
   /* ecma_number_t ecma_date_make_date (day, time) */
 

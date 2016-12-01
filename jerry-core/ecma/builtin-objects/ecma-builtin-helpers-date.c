@@ -432,7 +432,8 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
     return time; /* time is NaN */
   }
 
-  return (ecma_number_t) fmod ((ecma_date_day (time) + 4), 7);
+  ecma_number_t week_day = (ecma_number_t) fmod ((ecma_date_day (time) + 4), 7);
+  return (week_day < 0) ? 7 + week_day : week_day;
 } /* ecma_date_week_day */
 
 /**
@@ -752,45 +753,19 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
 
   /* 7. */
   ecma_number_t time = ecma_date_time_from_year (ym);
-  int32_t step = 182;
-  int32_t delta = step;
 
   /**
    * The algorithm below searches the following date: ym-mn-1
    * To find this time it starts from the beggining of the year (ym)
-   * then increase it by ECMA_DATE_MS_PER_DAY until it reaches the
-   * right date.
+   * then find the first day of the month.
    */
   if (ecma_date_year_from_time (time) == ym)
   {
-    /**
-     * Binary search to get the closest day in the previous month.
-     * It has to use integer days so sometimes the found time
-     * needs some more increasing which is done day by day below.
-     */
-    while (delta)
-    {
-      if (ecma_date_month_from_time (time + step * ECMA_DATE_MS_PER_DAY) < mn)
-      {
-        step += delta;
-      }
-      else
-      {
-        step -= delta;
-      }
-      delta = delta / 2;
-    }
-
-    if (ecma_date_month_from_time (time + step) < mn)
-    {
-      time += step * ECMA_DATE_MS_PER_DAY;
-    }
+    /* Get the month */
+    time += 31 * mn * ECMA_DATE_MS_PER_DAY;
 
     /* Get the month's first day */
-    while (ecma_date_month_from_time (time) < mn)
-    {
-      time += ECMA_DATE_MS_PER_DAY;
-    }
+    time += ((ecma_number_t) 1.0 - ecma_date_date_from_time (time)) * ECMA_DATE_MS_PER_DAY;
 
     if (ecma_date_month_from_time (time) == mn && ecma_date_date_from_time (time) == 1)
     {

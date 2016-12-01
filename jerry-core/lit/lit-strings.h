@@ -99,6 +99,7 @@ lit_utf8_size_t lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *, lit_
 
 /* length */
 ecma_length_t lit_utf8_string_length (const lit_utf8_byte_t *, lit_utf8_size_t);
+ecma_length_t lit_get_utf8_length_of_cesu8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
 
 /* hash */
 lit_string_hash_t lit_utf8_string_calc_hash (const lit_utf8_byte_t *, lit_utf8_size_t);

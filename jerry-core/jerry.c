@@ -1087,6 +1087,27 @@ jerry_get_string_length (const jerry_value_t value) /**< input string */
 } /* jerry_get_string_length */
 
 /**
+ * Get UTF-8 string length from Jerry string
+ *
+ * Note:
+ *      Returns 0, if the value parameter is not a string.
+ *
+ * @return number of characters in the string
+ */
+jerry_length_t
+jerry_get_utf8_string_length (const jerry_value_t value) /**< input string */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_string (value))
+  {
+    return 0;
+  }
+
+  return ecma_string_get_utf8_length (ecma_get_string_from_value (value));
+} /* jerry_get_utf8_string_length */
+
+/**
  * Copy the characters of a string into a specified buffer.
  *
  * Note:

@@ -292,28 +292,56 @@ lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu
 {
   lit_utf8_size_t offset = 0;
   lit_utf8_size_t utf8_buf_size = cesu8_buf_size;
+  ecma_char_t prev_ch = 0;
 
   while (offset < cesu8_buf_size)
   {
     ecma_char_t ch;
     offset += lit_read_code_unit_from_utf8 (cesu8_buf_p + offset, &ch);
 
-    if (lit_is_code_point_utf16_high_surrogate (ch) && (offset < cesu8_buf_size))
+    if (lit_is_code_point_utf16_low_surrogate (ch) && lit_is_code_point_utf16_high_surrogate (prev_ch))
     {
-      ecma_char_t next_ch;
-      offset += lit_read_code_unit_from_utf8 (cesu8_buf_p + offset, &next_ch);
-
-      if (lit_is_code_point_utf16_low_surrogate (next_ch))
-      {
-        utf8_buf_size -= 2;
-      }
+      utf8_buf_size -= 2;
     }
+
+    prev_ch = ch;
   }
 
   JERRY_ASSERT (offset == cesu8_buf_size);
 
   return utf8_buf_size;
 } /* lit_get_utf8_size_of_cesu8_string */
+
+/**
+ * Calculate length of an utf-8 encoded string from cesu-8 encoded string
+ *
+ * @return length of an utf-8 encoded string
+ */
+ecma_length_t
+lit_get_utf8_length_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu-8 string */
+                                     lit_utf8_size_t cesu8_buf_size) /**< string size */
+{
+  lit_utf8_size_t offset = 0;
+  ecma_length_t utf8_length = 0;
+  ecma_char_t prev_ch = 0;
+
+  while (offset < cesu8_buf_size)
+  {
+    ecma_char_t ch;
+    offset += lit_read_code_unit_from_utf8 (cesu8_buf_p + offset, &ch);
+
+    if (!lit_is_code_point_utf16_low_surrogate (ch) || !lit_is_code_point_utf16_high_surrogate (prev_ch))
+    {
+      utf8_length++;
+    }
+
+    prev_ch = ch;
+  }
+
+  JERRY_ASSERT (offset == cesu8_buf_size);
+
+  return utf8_length;
+} /* lit_get_utf8_length_of_cesu8_string */
 
 /**
  * Decodes a unicode code point from non-empty utf-8-encoded buffer

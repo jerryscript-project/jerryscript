@@ -22,8 +22,8 @@
    buffer to accumulate more console input. */
 static struct uart_console_input line_bufs[2];
 
-static struct nano_fifo free_queue;
-static struct nano_fifo used_queue;
+static struct k_fifo free_queue;
+static struct k_fifo used_queue;
 
 char *zephyr_getline(void)
 {
@@ -32,10 +32,10 @@ char *zephyr_getline(void)
   /* Recycle cmd buffer returned previous time */
   if (cmd != NULL)
   {
-    nano_fifo_put(&free_queue, cmd);
+    k_fifo_put(&free_queue, cmd);
   }
 
-  cmd = nano_fifo_get(&used_queue, TICKS_UNLIMITED);
+  cmd = k_fifo_get(&used_queue, K_FOREVER);
   return cmd->line;
 }
 
@@ -43,11 +43,11 @@ void zephyr_getline_init(void)
 {
   int i;
 
-  nano_fifo_init(&used_queue);
-  nano_fifo_init(&free_queue);
+  k_fifo_init(&used_queue);
+  k_fifo_init(&free_queue);
   for (i = 0; i < sizeof(line_bufs) / sizeof(*line_bufs); i++)
   {
-    nano_fifo_put(&free_queue, &line_bufs[i]);
+    k_fifo_put(&free_queue, &line_bufs[i]);
   }
 
   /* Zephyr UART handler takes an empty buffer from free_queue,

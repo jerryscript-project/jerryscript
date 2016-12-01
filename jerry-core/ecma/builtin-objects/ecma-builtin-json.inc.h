@@ -52,3 +52,5 @@ ROUTINE (LIT_MAGIC_STRING_STRINGIFY, ecma_builtin_json_stringify, 3, 3)
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

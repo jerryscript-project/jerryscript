@@ -62,4 +62,5 @@ ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ecma_builtin_array_object_is_array, 1, 1)
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
-
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

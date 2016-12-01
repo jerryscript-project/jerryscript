@@ -55,3 +55,5 @@ ROUTINE (LIT_MAGIC_STRING_TO_PRECISION_UL, ecma_builtin_number_prototype_object_
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

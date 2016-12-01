@@ -16,7 +16,7 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (Unittest C)
 
-if(NOT FEATURE_PROFILE STREQUAL "full")
+if(NOT FEATURE_PROFILE STREQUAL "es5.1")
   message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' isn't supported with UNITTESTS=ON")
 endif()
 

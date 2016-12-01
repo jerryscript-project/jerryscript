@@ -281,7 +281,8 @@ extern ecma_value_t *ecma_get_internal_property (ecma_object_t *, ecma_internal_
 extern ecma_property_value_t *
 ecma_create_named_data_property (ecma_object_t *, ecma_string_t *, uint8_t, ecma_property_t **);
 extern ecma_property_value_t *
-ecma_create_named_accessor_property (ecma_object_t *, ecma_string_t *, ecma_object_t *, ecma_object_t *, uint8_t);
+ecma_create_named_accessor_property (ecma_object_t *, ecma_string_t *, ecma_object_t *,
+                                     ecma_object_t *, uint8_t, ecma_property_t **);
 extern ecma_property_t *
 ecma_find_named_property (ecma_object_t *, ecma_string_t *);
 extern ecma_property_value_t *

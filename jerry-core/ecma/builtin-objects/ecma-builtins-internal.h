@@ -33,6 +33,8 @@ typedef enum
   ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
   ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
   ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */
+  ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, /**< full accessor property */
+  ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, /**< read-only accessor property */
   ECMA_BUILTIN_PROPERTY_END, /**< last property */
 } ecma_builtin_property_type_t;
 

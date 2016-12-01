@@ -42,6 +42,11 @@
   const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   static ecma_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+  static ecma_value_t c_getter_func_name (ROUTINE_ARG_LIST_0); \
+  static ecma_value_t c_setter_func_name (ROUTINE_ARG_LIST_1);
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  static ecma_value_t c_getter_func_name (ROUTINE_ARG_LIST_0);
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_NON_FIXED
 #undef ROUTINE_ARG_LIST_3
@@ -55,6 +60,11 @@ enum
   PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   ECMA_ROUTINE_ ## name ## c_function_name,
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+  ECMA_ACCESSOR_ ## name ## c_getter_func_name, \
+  ECMA_ACCESSOR_ ## name ## c_setter_func_name,
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  ECMA_ACCESSOR_ ## name ## c_getter_func_name,
 #include BUILTIN_INC_HEADER_NAME
 };
 
@@ -97,6 +107,20 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_BUILTIN_PROPERTY_STRING, \
     prop_attributes, \
     magic_string_id \
+  },
+#define ACCESSOR_READ_WRITE(name, c_getter_name, c_setter_name, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, \
+    prop_attributes, \
+    ECMA_ACCESSOR_READ_WRITE (ECMA_ACCESSOR_ ## name ## c_getter_name, ECMA_ACCESSOR_ ## name ## c_setter_name) \
+  },
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, \
+    prop_attributes, \
+    ECMA_ACCESSOR_ ## name ## c_getter_func_name \
   },
 #include BUILTIN_INC_HEADER_NAME
   {
@@ -141,6 +165,20 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
        case ECMA_ROUTINE_ ## name ## c_function_name: \
        { \
          return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
+       }
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+       case ECMA_ACCESSOR_ ## name ## c_getter_func_name: \
+       { \
+         return c_getter_func_name(this_arg_value); \
+       } \
+       case ECMA_ACCESSOR_ ## name ## c_setter_func_name: \
+       { \
+         return c_setter_func_name(this_arg_value ROUTINE_ARG_LIST_1); \
+       }
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+       case ECMA_ACCESSOR_ ## name ## c_getter_func_name: \
+       { \
+         return c_getter_func_name(this_arg_value); \
        }
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG

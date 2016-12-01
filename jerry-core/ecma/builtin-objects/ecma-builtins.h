@@ -49,6 +49,21 @@ typedef enum
  */
 #define ECMA_GET_ROUTINE_ID(value) ((uint16_t) ((value) >> 4))
 
+/**
+ * Construct a fully accessor value
+ */
+#define ECMA_ACCESSOR_READ_WRITE(getter, setter) (((getter) << 8) | (setter))
+
+/**
+ * Get accessor setter ID
+ */
+#define ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID(value) ((uint16_t) ((value) & 0xff))
+
+/**
+ * Get accessor getter ID
+ */
+#define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint16_t) ((value) >> 8))
+
 /* ecma-builtins.c */
 extern void ecma_finalize_builtins (void);
 

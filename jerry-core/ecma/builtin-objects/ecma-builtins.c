@@ -162,7 +162,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
       ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-      ext_object_p->u.class_prop.value = ecma_make_string_value (prim_prop_str_value_p);
+      ext_object_p->u.class_prop.u.value = ecma_make_string_value (prim_prop_str_value_p);
       break;
     }
 #endif /* !CONFIG_DISABLE_STRING_BUILTIN */
@@ -174,7 +174,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_NUMBER_UL;
-      ext_object_p->u.class_prop.value = ecma_make_integer_value (0);
+      ext_object_p->u.class_prop.u.value = ecma_make_integer_value (0);
       break;
     }
 #endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
@@ -186,7 +186,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
-      ext_object_p->u.class_prop.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      ext_object_p->u.class_prop.u.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
       break;
     }
 #endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
@@ -201,7 +201,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 
       ecma_number_t *prim_prop_num_value_p = ecma_alloc_number ();
       *prim_prop_num_value_p = ecma_number_make_nan ();
-      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.value, prim_prop_num_value_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, prim_prop_num_value_p);
       break;
     }
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
@@ -213,7 +213,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
-      ext_object_p->u.class_prop.value = ECMA_NULL_POINTER;
+      ext_object_p->u.class_prop.u.value = ECMA_NULL_POINTER;
       break;
     }
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
@@ -330,6 +330,32 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
 
   return func_obj_p;
 } /* ecma_builtin_make_function_object_for_routine */
+
+/**
+ * Construct a Function object for specified built-in accessor getter
+ *
+ * @return pointer to constructed accessor getter Function object
+ */
+static ecma_object_t *
+ecma_builtin_make_function_object_for_getter_accessor (ecma_builtin_id_t builtin_id, /**< id of built-in object */
+                                                       uint16_t routine_id) /**< builtin-wide id of the built-in
+                                                                            *   object's routine property */
+{
+  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, 0);
+} /* ecma_builtin_make_function_object_for_getter_accessor */
+
+/**
+ * Construct a Function object for specified built-in accessor setter
+ *
+ * @return pointer to constructed accessor getter Function object
+ */
+static ecma_object_t *
+ecma_builtin_make_function_object_for_setter_accessor (ecma_builtin_id_t builtin_id, /**< id of built-in object */
+                                                       uint16_t routine_id) /**< builtin-wide id of the built-in
+                                                                            *   object's routine property */
+{
+  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, 1);
+} /* ecma_builtin_make_function_object_for_setter_accessor */
 
 typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_reference_t;
 
@@ -468,6 +494,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   }
 
   ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  bool is_accessor = false;
+  ecma_object_t *getter_p = NULL;
+  ecma_object_t *setter_p = NULL;
 
   switch (curr_property_p->type)
   {
@@ -551,6 +580,22 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_object_value (func_obj_p);
       break;
     }
+    case ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE:
+    {
+      is_accessor = true;
+      uint16_t getter_id = ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID (curr_property_p->value);
+      uint16_t setter_id = ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID (curr_property_p->value);
+      getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id, getter_id);
+      setter_p = ecma_builtin_make_function_object_for_setter_accessor (builtin_id, setter_id);
+      break;
+    }
+    case ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY:
+    {
+      is_accessor = true;
+      getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id,
+                                                                        curr_property_p->value);
+      break;
+    }
     default:
     {
       JERRY_UNREACHABLE ();
@@ -559,17 +604,38 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   }
 
   ecma_property_t *prop_p;
-  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (object_p,
-                                                                         string_p,
-                                                                         curr_property_p->attributes,
-                                                                         &prop_p);
 
-  prop_value_p->value = value;
-
-  /* Reference count of objects must be decreased. */
-  if (ecma_is_value_object (value))
+  if (is_accessor)
   {
-    ecma_free_value (value);
+    ecma_create_named_accessor_property (object_p,
+                                         string_p,
+                                         getter_p,
+                                         setter_p,
+                                         curr_property_p->attributes,
+                                         &prop_p);
+
+    if (setter_p)
+    {
+      ecma_deref_object (setter_p);
+    }
+    if (getter_p)
+    {
+      ecma_deref_object (getter_p);
+    }
+  }
+  else
+  {
+    ecma_property_value_t *prop_value_p = ecma_create_named_data_property (object_p,
+                                                                           string_p,
+                                                                           curr_property_p->attributes,
+                                                                           &prop_p);
+    prop_value_p->value = value;
+
+    /* Reference count of objects must be decreased. */
+    if (ecma_is_value_object (value))
+    {
+      ecma_free_value (value);
+    }
   }
 
   return prop_p;

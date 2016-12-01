@@ -51,3 +51,5 @@ ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_va
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

@@ -18,7 +18,7 @@ set(JERRY_CORE_NAME jerry-core)
 project (${JERRY_CORE_NAME} C)
 
 # Optional features
-set(FEATURE_PROFILE         "full" CACHE STRING "Profile types: full, minimal")
+set(FEATURE_PROFILE         "es5.1" CACHE STRING "Profile types: es5.1, minimal, es2015-subset")
 set(FEATURE_ERROR_MESSAGES  OFF    CACHE BOOL   "Enable error messages?")
 set(FEATURE_VALGRIND        OFF    CACHE BOOL   "Enable Valgrind support?")
 set(FEATURE_VALGRIND_FREYA  OFF    CACHE BOOL   "Enable Valgrind-Freya support?")
@@ -118,9 +118,12 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 # Profile modes
+set(CONFIG_DISABLE_ES2015
+    CONFIG_DISABLE_ARRAYBUFFER_BUILTIN)
 # Minimal profile
 if(FEATURE_PROFILE STREQUAL "minimal")
   set(DEFINES_JERRY ${DEFINES_JERRY}
+      ${CONFIG_DISABLE_ES2015}
       CONFIG_DISABLE_NUMBER_BUILTIN
       CONFIG_DISABLE_STRING_BUILTIN
       CONFIG_DISABLE_BOOLEAN_BUILTIN
@@ -131,7 +134,10 @@ if(FEATURE_PROFILE STREQUAL "minimal")
       CONFIG_DISABLE_DATE_BUILTIN
       CONFIG_DISABLE_REGEXP_BUILTIN
       CONFIG_DISABLE_ANNEXB_BUILTIN)
-elseif(NOT FEATURE_PROFILE STREQUAL "full")
+elseif(FEATURE_PROFILE STREQUAL "es5.1")
+  set(DEFINES_JERRY ${DEFINES_JERRY}
+      ${CONFIG_DISABLE_ES2015})
+elseif(NOT FEATURE_PROFILE STREQUAL "es2015-subset")
   message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' isn't supported")
 endif()
 

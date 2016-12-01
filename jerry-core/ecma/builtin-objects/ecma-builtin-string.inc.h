@@ -62,3 +62,5 @@ ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_cha
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

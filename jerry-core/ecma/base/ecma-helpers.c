@@ -630,7 +630,9 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
                                      ecma_string_t *name_p, /**< property name */
                                      ecma_object_t *get_p, /**< getter */
                                      ecma_object_t *set_p, /**< setter */
-                                     uint8_t prop_attributes) /**< property attributes */
+                                     uint8_t prop_attributes, /**< property attributes */
+                                     ecma_property_t **out_prop_p) /**< [out] the property is also returned
+                                                                    *         if this field is non-NULL */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
@@ -650,7 +652,7 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   ECMA_SET_POINTER (value.getter_setter_pair.setter_p, set_p);
 #endif /* JERRY_CPOINTER_32_BIT */
 
-  return ecma_create_property (object_p, name_p, type_and_flags, value, NULL);
+  return ecma_create_property (object_p, name_p, type_and_flags, value, out_prop_p);
 } /* ecma_create_named_accessor_property */
 
 /**

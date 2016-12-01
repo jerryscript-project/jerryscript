@@ -27,6 +27,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 set(JERRY_LIBC    ON  CACHE BOOL "Build and use jerry-libc?")
 set(JERRY_LIBM    ON  CACHE BOOL "Build and use jerry-libm?")
 set(JERRY_CMDLINE ON  CACHE BOOL "Build jerry command line tool?")
+set(JERRY_DEBUGGER ON  CACHE BOOL "Build and use jerry-debugger?")
 set(UNITTESTS     OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
@@ -35,6 +36,7 @@ set(ENABLE_LTO                ON                                    CACHE BOOL  
 set(ENABLE_ALL_IN_ONE         OFF                                   CACHE BOOL   "Enable all-in-one build?")
 set(ENABLE_STRIP              ON                                    CACHE BOOL   "Enable stripping all symbols from release binary?")
 set(ENABLE_STATIC_LINK        ON                                    CACHE BOOL   "Enable static linking?")
+set(BUILD_JERRY_DEBUGGER      ON                                    CACHE BOOL    "Enable jerry-debugger?")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -55,6 +57,7 @@ message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
+message(STATUS "JERRY_DEBUGGER            " ${JERRY_DEBUGGER})
 message(STATUS "UNITTESTS                 " ${UNITTESTS})
 message(STATUS "PORT_DIR                  " ${PORT_DIR})
 message(STATUS "ENABLE_LTO                " ${ENABLE_LTO})

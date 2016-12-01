@@ -204,6 +204,7 @@ typedef enum
   VM_OC_FINALLY,                 /**< finally */
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
+  VM_OC_BREAKPOINT,              /**< breakpoint for debugger*/
 } vm_oc_types;
 
 /**

@@ -48,6 +48,7 @@ message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
 # Include directories
 set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/base"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
@@ -62,6 +63,7 @@ set(INCLUDE_CORE
 # Sources
 # Jerry core
 file(GLOB SOURCE_CORE_API                   *.c)
+file(GLOB SOURCE_CORE_DEBUGGER              debugger/*.c)
 file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
 file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.c)
@@ -75,6 +77,7 @@ file(GLOB SOURCE_CORE_VM                    vm/*.c)
 
 set(SOURCE_CORE_FILES
     ${SOURCE_CORE_API}
+    ${SOURCE_CORE_DEBUGGER}
     ${SOURCE_CORE_ECMA_BASE}
     ${SOURCE_CORE_ECMA_BUILTINS}
     ${SOURCE_CORE_ECMA_OPERATIONS}

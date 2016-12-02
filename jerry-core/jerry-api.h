@@ -230,6 +230,9 @@ jerry_size_t jerry_get_utf8_string_size (const jerry_value_t value);
 jerry_length_t jerry_get_string_length (const jerry_value_t value);
 jerry_length_t jerry_get_utf8_string_length (const jerry_value_t value);
 jerry_size_t jerry_string_to_char_buffer (const jerry_value_t value, jerry_char_t *buffer_p, jerry_size_t buffer_size);
+jerry_size_t jerry_string_to_utf8_char_buffer (const jerry_value_t value,
+                                               jerry_char_t *buffer_p,
+                                               jerry_size_t buffer_size);
 
 /**
  * Functions for array object values

@@ -1160,10 +1160,44 @@ jerry_string_to_char_buffer (const jerry_value_t value, /**< input string value 
     return 0;
   }
 
+  return ecma_string_copy_to_cesu8_buffer (str_p,
+                                           (lit_utf8_byte_t *) buffer_p,
+                                           buffer_size);
+} /* jerry_string_to_char_buffer */
+
+/**
+ * Copy the characters of an utf-8 encoded string into a specified buffer.
+ *
+ * Note:
+ *      The '\0' character could occur anywhere in the returned string
+ *      Returns 0, if the value parameter is not a string or the buffer
+ *      is not large enough for the whole string.
+ *
+ * @return number of bytes copied to the buffer.
+ */
+jerry_size_t
+jerry_string_to_utf8_char_buffer (const jerry_value_t value, /**< input string value */
+                                  jerry_char_t *buffer_p, /**< [out] output characters buffer */
+                                  jerry_size_t buffer_size) /**< size of output buffer */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_string (value) || buffer_p == NULL)
+  {
+    return 0;
+  }
+
+  ecma_string_t *str_p = ecma_get_string_from_value (value);
+
+  if (ecma_string_get_utf8_size (str_p) > buffer_size)
+  {
+    return 0;
+  }
+
   return ecma_string_copy_to_utf8_buffer (str_p,
                                           (lit_utf8_byte_t *) buffer_p,
                                           buffer_size);
-} /* jerry_string_to_char_buffer */
+} /* jerry_string_to_utf8_char_buffer */
 
 /**
  * Checks whether the object or it's prototype objects have the given property.

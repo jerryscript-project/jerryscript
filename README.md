@@ -32,6 +32,21 @@ python tools/build.py
 
 For additional information see [Getting Started](docs/01.GETTING-STARTED.md).
 
+#### `Dockerfile`
+
+See [./docker/README.md](./targets/docker/README.md)
+
+```sh
+( \
+  REPOS_DIR="/tmp/repos/ghub" && \
+  mkdir -p $REPOS_DIR && cd $REPOS_DIR && \
+  git@github.com:jerryscript-project/jerryscript.git && \
+  cd jerryscript && \
+  git checkout dockerfile && \
+  ./targets/docker/build.sh \
+)
+```
+
 ## Documentation
 - [Getting Started](docs/01.GETTING-STARTED.md)
 - [API Reference](docs/02.API-REFERENCE.md)

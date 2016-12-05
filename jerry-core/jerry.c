@@ -519,6 +519,41 @@ jerry_value_is_undefined (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_undefined */
 
 /**
+ * Check if the specified feature is enabled.
+ *
+ * @return true  - if the specified feature is enabled,
+ *         false - otherwise.
+ */
+bool jerry_is_feature_enabled (const jerry_feature_t feature)
+{
+  JERRY_ASSERT (feature < JERRY_FEATURE__COUNT);
+
+  return (false
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+          || feature == JERRY_FEATURE_ERROR_MESSAGES
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+#ifdef JERRY_CPOINTER_32_BIT
+          || feature == JERRY_FEATURE_CPOINTER_32_BIT
+#endif /* JERRY_CPOINTER_32_BIT */
+#ifdef JMEM_STATS
+          || feature == JERRY_FEATURE_MEM_STATS
+#endif /* JMEM_STATS */
+#ifdef PARSER_DUMP_BYTE_CODE
+          || feature == JERRY_FEATURE_PARSER_DUMP
+#endif /* PARSER_DUMP_BYTE_CODE */
+#ifdef REGEXP_DUMP_BYTE_CODE
+          || feature == JERRY_FEATURE_REGEXP_DUMP
+#endif /* REGEXP_DUMP_BYTE_CODE */
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+          || feature == JERRY_FEATURE_SNAPSHOT_SAVE
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+          || feature == JERRY_FEATURE_SNAPSHOT_EXEC
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+          );
+} /* jerry_is_feature_enabled */
+
+/**
  * Check if the specified value is an error value.
  *
  * @return true  - if the error flag of the specified value is true,

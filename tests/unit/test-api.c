@@ -794,26 +794,29 @@ main (void)
   TEST_ASSERT (test_api_is_free_callback_was_called);
 
   /* Test: parser error location */
-  jerry_init (JERRY_INIT_SHOW_OPCODES);
+  if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES))
+  {
+    jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-  const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
-  parsed_code_val = jerry_parse ((jerry_char_t *) parser_err_src_p,
-                                 strlen (parser_err_src_p),
-                                 false);
-  TEST_ASSERT (jerry_value_has_error_flag (parsed_code_val));
-  jerry_value_clear_error_flag (&parsed_code_val);
-  jerry_value_t err_str_val = jerry_value_to_string (parsed_code_val);
-  jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
-  jerry_char_t err_str_buf[256];
-  sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-  err_str_buf[sz] = 0;
+    const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
+    parsed_code_val = jerry_parse ((jerry_char_t *) parser_err_src_p,
+                                   strlen (parser_err_src_p),
+                                   false);
+    TEST_ASSERT (jerry_value_has_error_flag (parsed_code_val));
+    jerry_value_clear_error_flag (&parsed_code_val);
+    jerry_value_t err_str_val = jerry_value_to_string (parsed_code_val);
+    jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+    jerry_char_t err_str_buf[256];
+    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    err_str_buf[sz] = 0;
 
-  jerry_release_value (err_str_val);
-  jerry_release_value (parsed_code_val);
+    jerry_release_value (err_str_val);
+    jerry_release_value (parsed_code_val);
+    TEST_ASSERT (!strcmp ((char *) err_str_buf,
+                          "SyntaxError: Primary expression expected. [line: 2, column: 10]"));
 
-  TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                        "SyntaxError: Primary expression expected. [line: 2, column: 10]"));
-  jerry_cleanup ();
+    jerry_cleanup ();
+  }
 
   /* External Magic String */
   jerry_init (JERRY_INIT_SHOW_OPCODES);
@@ -863,7 +866,7 @@ main (void)
   jerry_cleanup ();
 
   /* Dump / execute snapshot */
-  if (true)
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint8_t global_mode_snapshot_buffer[1024];
     static uint8_t eval_mode_snapshot_buffer[1024];

@@ -49,7 +49,7 @@ def get_arguments():
     parser.add_argument('--builddir', metavar='DIR', action='store', default=BUILD_DIR, help='specify output directory (default: %(default)s)')
     parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable link-time optimizations (%(choices)s; default: %(default)s)')
     parser.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='all-in-one build (%(choices)s; default: %(default)s)')
-    parser.add_argument('--profile', metavar='PROFILE', choices=['full', 'minimal'], default='full', type=str.lower, help='specify the profile (%(choices)s; default: %(default)s)')
+    parser.add_argument('--profile', metavar='PROFILE', choices=['es5.1', 'minimal', 'es2015-subset'], default='es5.1', type=str.lower, help='specify the profile (%(choices)s; default: %(default)s)')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable error messages (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable saving snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable executing snapshot files (%(choices)s; default: %(default)s)')

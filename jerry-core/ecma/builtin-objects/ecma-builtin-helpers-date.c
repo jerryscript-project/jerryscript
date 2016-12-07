@@ -875,7 +875,7 @@ ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.value) = value;
+  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = value;
 
   return ecma_make_number_value (value);
 } /* ecma_date_set_internal_property */
@@ -1275,7 +1275,7 @@ ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
     ecma_number_t date_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                               ext_object_p->u.class_prop.value);
+                                                               ext_object_p->u.class_prop.u.value);
 
     ret_value = ecma_make_number_value (date_num);
   }

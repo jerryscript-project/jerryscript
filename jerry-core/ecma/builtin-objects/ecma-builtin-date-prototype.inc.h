@@ -95,3 +95,5 @@ ROUTINE (LIT_MAGIC_STRING_TO_GMT_STRING_UL, ecma_builtin_date_prototype_to_utc_s
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

@@ -83,4 +83,5 @@ ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_r
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
-
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

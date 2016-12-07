@@ -92,7 +92,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
         {
           if (options & ECMA_PROPERTY_GET_VALUE)
           {
-            ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+            ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
             ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
             ecma_length_t length = ecma_string_get_length (prim_value_str_p);
@@ -106,7 +106,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
         if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
           if (index < ecma_string_get_length (prim_value_str_p))
@@ -347,7 +347,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       {
         if (ecma_string_is_length (property_name_p))
         {
-          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
 
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
           ecma_length_t length = ecma_string_get_length (prim_value_str_p);
@@ -359,7 +359,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
         if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
 
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
@@ -684,7 +684,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
         if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          ecma_value_t prim_value_p = ext_object_p->u.class_prop.value;
+          ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
           if (index < ecma_string_get_length (prim_value_str_p))

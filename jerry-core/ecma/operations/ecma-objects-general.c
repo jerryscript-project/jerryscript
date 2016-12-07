@@ -384,7 +384,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                            property_name_p,
                                            property_desc_p->get_p,
                                            property_desc_p->set_p,
-                                           prop_attributes);
+                                           prop_attributes,
+                                           NULL);
     }
 
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);

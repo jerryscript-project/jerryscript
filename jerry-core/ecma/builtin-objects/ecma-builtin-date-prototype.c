@@ -107,7 +107,7 @@ ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this arg
     ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
     ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.value);
+                                                                 ext_object_p->u.class_prop.u.value);
 
     if (ecma_number_is_nan (*date_num_p))
     {
@@ -153,7 +153,7 @@ ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this arg
     ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
     ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                       ext_object_p->u.class_prop.value);
+                                                                       ext_object_p->u.class_prop.u.value);
 
     if (ecma_number_is_nan (*prim_value_num_p))
     {
@@ -252,7 +252,7 @@ ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument 
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
       ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                   ext_object_p->u.class_prop.value);
+                                                                   ext_object_p->u.class_prop.u.value);
       return ecma_make_number_value (*date_num_p);
     }
   }
@@ -356,7 +356,7 @@ ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument 
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
     ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.value);
+                                                                 ext_object_p->u.class_prop.u.value);
 
     *date_num_p = value;
 

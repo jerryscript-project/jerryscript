@@ -106,9 +106,9 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      JERRY_ASSERT (ecma_is_value_boolean (ext_object_p->u.class_prop.value));
+      JERRY_ASSERT (ecma_is_value_boolean (ext_object_p->u.class_prop.u.value));
 
-      return ext_object_p->u.class_prop.value;
+      return ext_object_p->u.class_prop.u.value;
     }
   }
 

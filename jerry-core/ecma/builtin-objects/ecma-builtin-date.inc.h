@@ -56,3 +56,5 @@ ROUTINE (LIT_MAGIC_STRING_NOW, ecma_builtin_date_now, 0, 0)
 #undef STRING_VALUE
 #undef OBJECT_VALUE
 #undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

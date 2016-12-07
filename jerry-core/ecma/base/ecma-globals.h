@@ -626,7 +626,14 @@ typedef struct
     struct
     {
       uint16_t class_id; /**< class id of the object */
-      ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+      /*
+       * Description of extra fields. These extra fields depends on the class_id.
+       */
+      union
+      {
+        ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
+      } u;
     } class_prop;
 
     /*

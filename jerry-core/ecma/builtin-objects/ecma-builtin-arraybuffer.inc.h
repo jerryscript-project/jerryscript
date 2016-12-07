@@ -1,4 +1,4 @@
-/* Copyright 2014 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
  */
 
 /*
- * [[ThrowTypeError]] description
- *
- * See also: ECMA-262 v5, 13.2.3
+ * ArrayBuffer built-in description
  */
 
 #ifndef OBJECT_ID
@@ -27,15 +25,36 @@
 # define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
 
+#ifndef OBJECT_VALUE
+# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
+#endif /* !OBJECT_VALUE */
+
+#ifndef ROUTINE
+# define ROUTINE(name, c_function_name, args_number, length_prop_value)
+#endif /* !ROUTINE */
+
 /* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER)
+OBJECT_ID (ECMA_BUILTIN_ID_ARRAYBUFFER)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              0,
+              1,
               ECMA_PROPERTY_FIXED)
+
+/* Object properties:
+ *  (property name, object pointer getter) */
+
+OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
+              ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE,
+              ECMA_PROPERTY_FIXED)
+
+/* Routine properties:
+ *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
+
+/* ES2015 24.1.3.1 */
+ROUTINE (LIT_MAGIC_STRING_IS_VIEW_UL, ecma_builtin_arraybuffer_object_is_view, 1, 1)
 
 #undef OBJECT_ID
 #undef SIMPLE_VALUE

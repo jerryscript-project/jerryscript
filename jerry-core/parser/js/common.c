@@ -16,6 +16,8 @@
 #include "common.h"
 #include "ecma-helpers.h"
 
+#ifndef JERRY_DISABLE_PARSER
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -133,3 +135,5 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
  * @}
  * @}
  */
+
+#endif /* !JERRY_DISABLE_PARSER */

@@ -23,10 +23,11 @@ string(TOUPPER "${PLATFORM}" PLATFORM)
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 
 # Components
-set(JERRY_CMDLINE ON  CACHE BOOL "Build jerry command line tool?")
-set(JERRY_LIBC    ON  CACHE BOOL "Build and use jerry-libc?")
-set(JERRY_LIBM    ON  CACHE BOOL "Build and use jerry-libm?")
-set(UNITTESTS     OFF CACHE BOOL "Build unit tests?")
+set(JERRY_CMDLINE         ON  CACHE BOOL "Build jerry command line tool?")
+set(JERRY_CMDLINE_MINIMAL OFF CACHE BOOL "Build jerry minimal command line tool?")
+set(JERRY_LIBC            ON  CACHE BOOL "Build and use jerry-libc?")
+set(JERRY_LIBM            ON  CACHE BOOL "Build and use jerry-libm?")
+set(UNITTESTS             OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
 set(ENABLE_ALL_IN_ONE         OFF                                   CACHE BOOL   "Enable all-in-one build?")
@@ -56,6 +57,7 @@ message(STATUS "ENABLE_LTO                " ${ENABLE_LTO})
 message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
 message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
+message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM})
 message(STATUS "PORT_DIR                  " ${PORT_DIR})
@@ -193,7 +195,7 @@ endif()
 add_subdirectory(jerry-core)
 
 # Jerry command line tool
-if(JERRY_CMDLINE)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
   add_subdirectory(jerry-main)
 endif()
 

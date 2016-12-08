@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2016 ARM Limited
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     out_file = '\r\n'.join(['var %s = %s;' % pin for pin in pins.iteritems()])
     args.o.write(out_file)
 
-    LICENSE = '''/* Copyright 2016 ARM, Ltd.
+    LICENSE = '''/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the \"License\");
  * you may not use this file except in compliance with the License.

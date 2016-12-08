@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2015-2016 Samsung Electronics Co., Ltd.
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ def removeWhitespaces(code):
     return re.sub('\n+', '\n', re.sub('\n +', '\n', code))
 
 
-LICENSE = '''/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+LICENSE = '''/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the \"License\");
  * you may not use this file except in compliance with the License.

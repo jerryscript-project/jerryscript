@@ -54,6 +54,9 @@
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG
 
+/**
+ * List of built-in routine identifiers.
+ */
 enum
 {
   PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,

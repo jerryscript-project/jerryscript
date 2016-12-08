@@ -192,7 +192,7 @@ typedef int32_t ecma_integer_value_t;
 typedef uintptr_t ecma_external_pointer_t;
 
 /**
- * Internal properties' identifiers.
+ * Special property identifiers.
  */
 typedef enum
 {
@@ -204,10 +204,8 @@ typedef enum
 
   ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
   ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-  ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63, /**< Bit-mask of non-instantiated
-                                                   *   built-in's properties (bits 32-63) */
 
-  ECMA_INTERNAL_PROPERTY__COUNT /**< Number of internal properties' types */
+  ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
 } ecma_internal_property_id_t;
 
 /**
@@ -598,10 +596,16 @@ typedef struct
 typedef struct
 {
   uint8_t id; /**< built-in id */
-  uint8_t length; /**< length for built-in functions */
+  uint8_t length_and_bitset_size; /**< length for built-in functions and
+                                   *   bit set size for all built-ins */
   uint16_t routine_id; /**< routine id for built-in functions */
-  uint32_t instantiated_bitset; /**< bit set for instantiated properties */
+  uint32_t instantiated_bitset[1]; /**< bit set for instantiated properties */
 } ecma_built_in_props_t;
+
+/**
+ * Start position of bit set size in length_and_bitset_size field.
+ */
+#define ECMA_BUILT_IN_BITSET_SHIFT 5
 
 /**
  * Description of extended ECMA-object.

@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifndef JERRY_DISABLE_PARSER
+#ifdef JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -678,4 +678,4 @@ parser_scan_until (parser_context_t *context_p, /**< context */
  * @}
  */
 
-#endif /* !JERRY_DISABLE_PARSER */
+#endif /* JERRY_JS_PARSER */

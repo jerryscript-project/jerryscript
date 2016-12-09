@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifndef JERRY_DISABLE_PARSER
+#ifdef JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -78,4 +78,4 @@ const char * const cbc_ext_names[] =
  * @}
  */
 
-#endif /* !JERRY_DISABLE_PARSER */
+#endif /* JERRY_JS_PARSER */

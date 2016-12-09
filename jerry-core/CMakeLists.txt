@@ -21,6 +21,7 @@ set(FEATURE_CPOINTER_32_BIT OFF    CACHE BOOL   "Enable 32 bit compressed pointe
 set(FEATURE_ERROR_MESSAGES  OFF    CACHE BOOL   "Enable error messages?")
 set(FEATURE_MEM_STATS       OFF    CACHE BOOL   "Enable memory statistics?")
 set(FEATURE_MEM_STRESS_TEST OFF    CACHE BOOL   "Enable mem-stress test?")
+set(FEATURE_PARSER_DISABLE  OFF    CACHE BOOL   "Disable the parser and 'eval' and use only snapshots?")
 set(FEATURE_PARSER_DUMP     OFF    CACHE BOOL   "Enable parser byte-code dumps?")
 set(FEATURE_PROFILE         "es5.1" CACHE STRING "Profile types: es5.1, minimal, es2015-subset")
 set(FEATURE_REGEXP_DUMP     OFF    CACHE BOOL   "Enable regexp byte-code dumps?")
@@ -35,6 +36,7 @@ message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT})
 message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
 message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
 message(STATUS "FEATURE_MEM_STRESS_TEST   " ${FEATURE_MEM_STRESS_TEST})
+message(STATUS "FEATURE_PARSER_DISABLE    " ${FEATURE_PARSER_DISABLE})
 message(STATUS "FEATURE_PARSER_DUMP       " ${FEATURE_PARSER_DUMP})
 message(STATUS "FEATURE_PROFILE           " ${FEATURE_PROFILE})
 message(STATUS "FEATURE_REGEXP_DUMP       " ${FEATURE_REGEXP_DUMP})
@@ -140,6 +142,15 @@ endif()
 # Memory management stress-test mode
 if(FEATURE_MEM_STRESS_TEST)
   set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_GC_BEFORE_EACH_ALLOC)
+endif()
+
+# Disable parser and enable snapshots
+if(FEATURE_PARSER_DISABLE)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DISABLE_PARSER)
+  if(NOT FEATURE_SNAPSHOT_EXEC MATCHES ON)
+    set(FEATURE_SNAPSHOT_EXEC ON)
+	message(STATUS "Parser has been disabled, snapshot is now on")
+  endif()
 endif()
 
 # Parser byte-code dumps

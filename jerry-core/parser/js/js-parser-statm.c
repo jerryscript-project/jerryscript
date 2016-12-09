@@ -15,6 +15,8 @@
 
 #include "js-parser-internal.h"
 
+#ifndef JERRY_DISABLE_PARSER
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -2143,3 +2145,5 @@ parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
  * @}
  * @}
  */
+
+#endif /* !JERRY_DISABLE_PARSER */

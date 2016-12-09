@@ -139,34 +139,9 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
   /* Zero out all members. */
   memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
 
-  if (flags & (JERRY_INIT_MEM_STATS | JERRY_INIT_MEM_STATS_SEPARATE))
+  if (flags & JERRY_INIT_MEM_STATS_SEPARATE)
   {
-#ifndef JMEM_STATS
-    flags &= (jerry_init_flag_t) ~(JERRY_INIT_MEM_STATS | JERRY_INIT_MEM_STATS_SEPARATE);
-
-    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_MEM_STATS flag because of !JMEM_STATS configuration.\n");
-#else /* JMEM_STATS */
     flags |= JERRY_INIT_MEM_STATS;
-#endif /* !JMEM_STATS */
-  }
-
-  if (flags & JERRY_INIT_SHOW_OPCODES)
-  {
-#ifndef PARSER_DUMP_BYTE_CODE
-    flags &= (jerry_init_flag_t) ~JERRY_INIT_SHOW_OPCODES;
-
-    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_SHOW_OPCODES flag because of !PARSER_DUMP_BYTE_CODE configuration.\n");
-#endif /* !PARSER_DUMP_BYTE_CODE */
-  }
-
-  if (flags & JERRY_INIT_SHOW_REGEXP_OPCODES)
-  {
-#ifndef REGEXP_DUMP_BYTE_CODE
-    flags &= (jerry_init_flag_t) ~JERRY_INIT_SHOW_REGEXP_OPCODES;
-
-    JERRY_WARNING_MSG ("Ignoring JERRY_INIT_SHOW_REGEXP_OPCODES flag "
-                       "because of !REGEXP_DUMP_BYTE_CODE configuration.\n");
-#endif /* !REGEXP_DUMP_BYTE_CODE */
   }
 
   JERRY_CONTEXT (jerry_init_flags) = flags;

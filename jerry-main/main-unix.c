@@ -38,6 +38,11 @@
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
+/**
+ * Context size of the SYNTAX_ERROR
+ */
+#define SYNTAX_ERROR_CONTEXT_SIZE 2
+
 static uint8_t buffer[ JERRY_BUFFER_SIZE ];
 
 static const uint8_t *
@@ -129,8 +134,6 @@ print_help (char *name)
                       name);
 } /* print_help */
 
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
-
 /**
  * Check whether an error is a SyntaxError or not
  *
@@ -140,6 +143,8 @@ print_help (char *name)
 static bool
 jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
 {
+  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
+
   if (!jerry_value_is_object (error_value))
   {
     return false;
@@ -182,6 +187,8 @@ jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
 static uint32_t
 str_to_uint (const char *num_str_p) /**< string to convert */
 {
+  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
+
   uint32_t result = 0;
 
   while (*num_str_p != '\0')
@@ -195,9 +202,6 @@ str_to_uint (const char *num_str_p) /**< string to convert */
 
   return result;
 } /* str_to_uint */
-
-#define SYNTAX_ERROR_CONTEXT_SIZE 2
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
 /**
  * Print error value
@@ -224,8 +228,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
     assert (sz == err_str_size);
     err_str_buf[err_str_size] = 0;
 
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
-    if (jerry_value_is_syntax_error (error_value))
+    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES) && jerry_value_is_syntax_error (error_value))
     {
       uint32_t err_line = 0;
       uint32_t err_col = 0;
@@ -317,7 +320,6 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
         jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n");
       }
     }
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
 
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
@@ -369,13 +371,31 @@ main (int argc,
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
-      flags |= JERRY_INIT_MEM_STATS;
-      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+      if (jerry_is_feature_enabled (JERRY_FEATURE_MEM_STATS))
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+        flags |= JERRY_INIT_MEM_STATS;
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'mem-stats' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
-      flags |= JERRY_INIT_MEM_STATS_SEPARATE;
-      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+      if (jerry_is_feature_enabled (JERRY_FEATURE_MEM_STATS))
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+        flags |= JERRY_INIT_MEM_STATS_SEPARATE;
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'mem-stats-separate' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--parse-only", argv[i]))
     {
@@ -383,27 +403,35 @@ main (int argc,
     }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
-      flags |= JERRY_INIT_SHOW_OPCODES;
-      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+      if (jerry_is_feature_enabled (JERRY_FEATURE_PARSER_DUMP))
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+        flags |= JERRY_INIT_SHOW_OPCODES;
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'show-opcodes' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--show-regexp-opcodes", argv[i]))
     {
-      flags |= JERRY_INIT_SHOW_REGEXP_OPCODES;
-      jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+      if (jerry_is_feature_enabled (JERRY_FEATURE_PARSER_DUMP))
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+        flags |= JERRY_INIT_SHOW_REGEXP_OPCODES;
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'show-regexp-opcodes' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))
     {
-      is_save_snapshot_mode = true;
-      is_save_snapshot_mode_for_global_or_eval = !strcmp ("--save-snapshot-for-global", argv[i]);
-
-      if (save_snapshot_file_name_p != NULL)
-      {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: snapshot file name already specified\n");
-        print_usage (argv[0]);
-        return JERRY_STANDALONE_EXIT_CODE_FAIL;
-      }
-
       if (++i >= argc)
       {
         jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: no file specified for %s\n", argv[i - 1]);
@@ -411,7 +439,27 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      save_snapshot_file_name_p = argv[i];
+      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE))
+      {
+        is_save_snapshot_mode = true;
+        is_save_snapshot_mode_for_global_or_eval = !strcmp ("--save-snapshot-for-global", argv[i - 1]);
+
+        if (save_snapshot_file_name_p != NULL)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: snapshot file name already specified\n");
+          print_usage (argv[0]);
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+
+        save_snapshot_file_name_p = argv[i];
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'save-snapshot' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--exec-snapshot", argv[i]))
     {
@@ -422,8 +470,20 @@ main (int argc,
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      assert (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
-      exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
+      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+
+        assert (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
+        exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'exec-snapshot' option because this feature isn't enabled!\n");
+      }
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
@@ -467,7 +527,7 @@ main (int argc,
     }
   }
 
-  if (is_save_snapshot_mode)
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && is_save_snapshot_mode)
   {
     if (files_counter != 1)
     {
@@ -512,25 +572,28 @@ main (int argc,
 
   ret_value = jerry_create_undefined ();
 
-  for (int i = 0; i < exec_snapshots_count; i++)
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    size_t snapshot_size;
-    const uint8_t *snapshot_p = read_file (exec_snapshot_file_names[i], &snapshot_size);
+    for (int i = 0; i < exec_snapshots_count; i++)
+    {
+      size_t snapshot_size;
+      const uint8_t *snapshot_p = read_file (exec_snapshot_file_names[i], &snapshot_size);
 
-    if (snapshot_p == NULL)
-    {
-      ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
-    }
-    else
-    {
-      ret_value = jerry_exec_snapshot ((void *) snapshot_p,
-                                       snapshot_size,
-                                       true);
-    }
+      if (snapshot_p == NULL)
+      {
+        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Snapshot file load error");
+      }
+      else
+      {
+        ret_value = jerry_exec_snapshot ((void *) snapshot_p,
+                                         snapshot_size,
+                                         true);
+      }
 
-    if (jerry_value_has_error_flag (ret_value))
-    {
-      break;
+      if (jerry_value_has_error_flag (ret_value))
+      {
+        break;
+      }
     }
   }
 
@@ -543,11 +606,11 @@ main (int argc,
 
       if (source_p == NULL)
       {
-        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
+        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Source file load error");
         break;
       }
 
-      if (is_save_snapshot_mode)
+      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && is_save_snapshot_mode)
       {
         static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
 

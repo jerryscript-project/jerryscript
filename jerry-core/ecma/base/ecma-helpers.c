@@ -792,12 +792,6 @@ ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
 
       break;
     }
-
-    case ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63: /* an integer (bit-mask) */
-    {
-      break;
-    }
-
     default:
     {
       JERRY_UNREACHABLE ();

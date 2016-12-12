@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifndef JERRY_DISABLE_PARSER
+#ifdef JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -940,4 +940,4 @@ parser_error_to_string (parser_error_t error) /**< error code */
  * @}
  */
 
-#endif /* !JERRY_DISABLE_PARSER */
+#endif /* JERRY_JS_PARSER */

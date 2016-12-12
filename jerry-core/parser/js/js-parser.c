@@ -19,7 +19,7 @@
 #include "jcontext.h"
 #include "js-parser-internal.h"
 
-#ifndef JERRY_DISABLE_PARSER
+#ifdef JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -2230,7 +2230,7 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #define PARSE_ERR_POS_END         "]"
 #define PARSE_ERR_POS_END_SIZE    ((uint32_t) sizeof (PARSE_ERR_POS_END))
 
-#endif /* !JERRY_DISABLE_PARSER */
+#endif /* JERRY_JS_PARSER */
 
 /**
  * Parse EcamScript source code
@@ -2247,7 +2247,7 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
                      bool is_strict, /**< strict mode */
                      ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
 {
-#ifndef JERRY_DISABLE_PARSER
+#ifdef JERRY_JS_PARSER
   parser_error_location_t parser_error;
   *bytecode_data_p = parser_parse_source (source_p, size, is_strict, &parser_error);
 
@@ -2311,14 +2311,14 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-#else /* !JERRY_DISABLE_PARSER */
+#else /* !JERRY_JS_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (size);
   JERRY_UNUSED (is_strict);
   JERRY_UNUSED (bytecode_data_p);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
-#endif /* JERRY_DISABLE_PARSER */
+#endif /* JERRY_JS_PARSER */
 } /* parser_parse_script */
 
 /**

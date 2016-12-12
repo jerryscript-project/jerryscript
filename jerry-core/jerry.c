@@ -49,6 +49,10 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
                      ecma_standard_error_t_must_be_equal_to_jerry_error_t);
 
+#if !defined (JERRY_JS_PARSER) && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
+#error JERRY_JS_PARSER or JERRY_ENABLE_SNAPSHOT_EXEC must be defined!
+#endif /* !JERRY_JS_PARSER && !JERRY_ENABLE_SNAPSHOT_EXEC */
+
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
 
 /**
@@ -249,6 +253,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
              bool is_strict) /**< strict mode */
 {
+#ifdef JERRY_JS_PARSER
   jerry_assert_api_available ();
 
   ecma_compiled_code_t *bytecode_data_p;
@@ -282,6 +287,13 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);
+#else /* !JERRY_JS_PARSER */
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (is_strict);
+
+  return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+#endif /* JERRY_JS_PARSER */
 } /* jerry_parse */
 
 /**

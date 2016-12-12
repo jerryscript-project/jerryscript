@@ -22,6 +22,7 @@
 
 #include "us_ticker_api.h"
 
+#ifndef JSMBED_OVERRIDE_JERRY_PORT_CONSOLE
 /**
  * Provide console message implementation for the engine.
  */
@@ -39,7 +40,9 @@ jerry_port_console (const char *format, /**< format string */
     printf ("\r"); /* add CR for proper display in serial monitors */
   }
 } /* jerry_port_console */
+#endif /* JSMBED_OVERRIDE_JERRY_PORT_CONSOLE */
 
+#ifndef JSMBED_OVERRIDE_JERRY_PORT_LOG
 /**
  * Provide log message implementation for the engine.
  */
@@ -58,8 +61,9 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
   if (strlen (format) == 1 && format[0] == 0x0a) /* line feed (\n) */
   {
     printf ("\r"); /* add CR for proper display in serial monitors */
-  } 
+  }
 } /* jerry_port_log */
+#endif /* JSMBED_OVERRIDE_JERRY_PORT_LOG */
 
 /**
  * Implementation of jerry_port_fatal.

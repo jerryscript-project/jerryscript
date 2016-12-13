@@ -515,12 +515,15 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
   JERRY_ASSERT (feature < JERRY_FEATURE__COUNT);
 
   return (false
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
-          || feature == JERRY_FEATURE_ERROR_MESSAGES
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 #ifdef JERRY_CPOINTER_32_BIT
           || feature == JERRY_FEATURE_CPOINTER_32_BIT
 #endif /* JERRY_CPOINTER_32_BIT */
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+          || feature == JERRY_FEATURE_ERROR_MESSAGES
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+#ifdef JERRY_JS_PARSER
+          || feature == JERRY_FEATURE_JS_PARSER
+#endif /* JERRY_JS_PARSER */
 #ifdef JMEM_STATS
           || feature == JERRY_FEATURE_MEM_STATS
 #endif /* JMEM_STATS */

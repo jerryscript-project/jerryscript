@@ -646,8 +646,8 @@ lit_get_unicode_char_size_by_utf8_first_byte (const lit_utf8_byte_t first_byte) 
  */
 lit_utf8_size_t
 lit_code_unit_to_utf8 (ecma_char_t code_unit, /**< code unit */
-                       lit_utf8_byte_t *buf_p) /**< buffer where to store the result,
-                                                *   its size should be at least MAX_BYTES_IN_CODE_UNIT */
+                       lit_utf8_byte_t *buf_p) /**< buffer where to store the result and its size
+                                                *   should be at least LIT_UTF8_MAX_BYTES_IN_CODE_UNIT */
 {
   if (code_unit <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {

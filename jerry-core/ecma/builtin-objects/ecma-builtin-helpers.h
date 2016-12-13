@@ -117,15 +117,12 @@ extern ecma_number_t ecma_date_make_day (ecma_number_t, ecma_number_t, ecma_numb
 extern ecma_number_t ecma_date_make_date (ecma_number_t, ecma_number_t);
 extern ecma_number_t ecma_date_time_clip (ecma_number_t);
 extern ecma_number_t ecma_date_timezone_offset (ecma_number_t);
-extern ecma_value_t ecma_date_set_internal_property (ecma_value_t, ecma_number_t,
-                                                     ecma_number_t, ecma_date_timezone_t);
 
 extern ecma_value_t ecma_date_value_to_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_utc_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_iso_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_date_string (ecma_number_t);
 extern ecma_value_t ecma_date_value_to_time_string (ecma_number_t);
-extern ecma_value_t ecma_date_get_primitive_value (ecma_value_t);
 
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
 

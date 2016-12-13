@@ -32,6 +32,8 @@
 #define DISPATCH_ROUTINE_ROUTINE_NAME \
   PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _dispatch_routine)
 
+#ifndef BUILTIN_CUSTOM_DISPATCH
+
 #define ROUTINE_ARG(n) , ecma_value_t arg ## n
 #define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
 #define ROUTINE_ARG_LIST_1 ROUTINE_ARG_LIST_0 ROUTINE_ARG(1)
@@ -70,11 +72,14 @@ enum
 #include BUILTIN_INC_HEADER_NAME
 };
 
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
+
 /**
  * Built-in property list of the built-in object.
  */
 const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
 {
+#ifndef BUILTIN_CUSTOM_DISPATCH
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   { \
     name, \
@@ -82,6 +87,15 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
+#else /* BUILTIN_CUSTOM_DISPATCH */
+#define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ROUTINE, \
+    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
+  },
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
   { \
     name, \
@@ -132,6 +146,8 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     0
   }
 };
+
+#ifndef BUILTIN_CUSTOM_DISPATCH
 
 /**
  * Dispatcher of the built-in's routines
@@ -197,11 +213,14 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
   }
 } /* DISPATCH_ROUTINE_ROUTINE_NAME */
 
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
+
+#undef BUILTIN_INC_HEADER_NAME
+#undef BUILTIN_CUSTOM_DISPATCH
+#undef BUILTIN_UNDERSCORED_ID
+#undef DISPATCH_ROUTINE_ROUTINE_NAME
+#undef ECMA_BUILTIN_PROPERTY_NAME_INDEX
 #undef PASTE__
 #undef PASTE_
 #undef PASTE
 #undef PROPERTY_DESCRIPTOR_LIST_NAME
-#undef DISPATCH_ROUTINE_ROUTINE_NAME
-#undef BUILTIN_UNDERSCORED_ID
-#undef BUILTIN_INC_HEADER_NAME
-#undef ECMA_BUILTIN_PROPERTY_NAME_INDEX

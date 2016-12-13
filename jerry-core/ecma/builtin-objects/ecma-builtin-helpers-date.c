@@ -807,7 +807,7 @@ ecma_date_make_date (ecma_number_t day, /**< day value */
  *
  * Used by:
  *         - The Date.prototype.setTime routine.
- *         - The ecma_date_set_internal_property helper function.
+ *         - The ecma_builtin_date_prototype_dispatch_set helper function.
  *
  * @return  number of milliseconds
  */
@@ -845,39 +845,6 @@ ecma_date_timezone_offset (ecma_number_t time) /**< time value */
 
   return (time - ecma_date_local_time (time)) / ECMA_DATE_MS_PER_MINUTE;
 } /* ecma_date_timezone_offset */
-
-/**
- * Helper function to set Date internal property.
- *
- * Used by:
- *         - All Date.prototype.set *routine except Date.prototype.setTime.
- *
- * @return ecma value containing the new internal time value
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_date_set_internal_property (ecma_value_t this_arg, /**< this argument */
-                                 ecma_number_t day, /**< day */
-                                 ecma_number_t time, /**< time */
-                                 ecma_date_timezone_t is_utc) /**< input is utc */
-{
-  JERRY_ASSERT (ecma_is_value_object (this_arg));
-
-  ecma_number_t date = ecma_date_make_date (day, time);
-  if (is_utc != ECMA_DATE_UTC)
-  {
-    date = ecma_date_utc (date);
-  }
-
-  ecma_number_t value = ecma_date_time_clip (date);
-
-  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = value;
-
-  return ecma_make_number_value (value);
-} /* ecma_date_set_internal_property */
 
 /**
  * Common function to copy utf8 characters.
@@ -1246,41 +1213,6 @@ ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
 
   return ecma_make_string_value (time_string_p);
 } /* ecma_date_value_to_time_string */
-
-/**
- * Common function to get the primitive value of the Date object.
- *
- * Used by:
- *        - The Date.prototype.toString routine.
- *        - The Date.prototype.toISOString routine.
- *        - The Date.prototype.toUTCString routine.
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_date_get_primitive_value (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
-  }
-  else
-  {
-    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-    ecma_number_t date_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                               ext_object_p->u.class_prop.u.value);
-
-    ret_value = ecma_make_number_value (date_num);
-  }
-
-  return ret_value;
-} /* ecma_date_get_primitive_value */
 
 /**
  * @}

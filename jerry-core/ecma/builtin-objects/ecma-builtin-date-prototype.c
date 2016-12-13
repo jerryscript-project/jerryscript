@@ -29,6 +29,77 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * Checks whether the function uses UTC time zone.
+ */
+#define BUILTIN_DATE_FUNCTION_IS_UTC(builtin_routine_id) \
+  (((builtin_routine_id) - ECMA_DATE_PROTOTYPE_GET_FULL_YEAR) & 0x1)
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_DATE_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+
+  ECMA_DATE_PROTOTYPE_GET_FULL_YEAR, /* ECMA-262 v5 15.9.5.10 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR, /* ECMA-262 v5 15.9.5.11 */
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+  ECMA_DATE_PROTOTYPE_GET_YEAR, /* ECMA-262 v5, AnnexB.B.2.4 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_YEAR, /* has no UTC variant */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+  ECMA_DATE_PROTOTYPE_GET_MONTH, /* ECMA-262 v5 15.9.5.12 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_MONTH, /* ECMA-262 v5 15.9.5.13 */
+  ECMA_DATE_PROTOTYPE_GET_DATE, /* ECMA-262 v5 15.9.5.14 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_DATE, /* ECMA-262 v5 15.9.5.15 */
+  ECMA_DATE_PROTOTYPE_GET_DAY, /* ECMA-262 v5 15.9.5.16 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_DAY, /* ECMA-262 v5 15.9.5.17 */
+  ECMA_DATE_PROTOTYPE_GET_HOURS, /* ECMA-262 v5 15.9.5.18 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_HOURS, /* ECMA-262 v5 15.9.5.19 */
+  ECMA_DATE_PROTOTYPE_GET_MINUTES, /* ECMA-262 v5 15.9.5.20 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_MINUTES, /* ECMA-262 v5 15.9.5.21 */
+  ECMA_DATE_PROTOTYPE_GET_SECONDS, /* ECMA-262 v5 15.9.5.22 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_SECONDS, /* ECMA-262 v5 15.9.5.23 */
+  ECMA_DATE_PROTOTYPE_GET_MILLISECONDS, /* ECMA-262 v5 15.9.5.24 */
+  ECMA_DATE_PROTOTYPE_GET_UTC_MILLISECONDS, /* ECMA-262 v5 15.9.5.25 */
+  ECMA_DATE_PROTOTYPE_GET_TIMEZONE_OFFSET, /* has no local time zone variant */
+  ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET, /* ECMA-262 v5 15.9.5.26 */
+
+  ECMA_DATE_PROTOTYPE_SET_FULL_YEAR, /* ECMA-262 v5, 15.9.5.40 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR, /* ECMA-262 v5, 15.9.5.41 */
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+  ECMA_DATE_PROTOTYPE_SET_YEAR, /* ECMA-262 v5, ECMA-262 v5, AnnexB.B.2.5 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_YEAR, /* has no UTC variant */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+  ECMA_DATE_PROTOTYPE_SET_MONTH, /* ECMA-262 v5, 15.9.5.38 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_MONTH, /* ECMA-262 v5, 15.9.5.39 */
+  ECMA_DATE_PROTOTYPE_SET_DATE, /* ECMA-262 v5, 15.9.5.36 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_DATE, /* ECMA-262 v5, 15.9.5.37 */
+  ECMA_DATE_PROTOTYPE_SET_HOURS, /* ECMA-262 v5, 15.9.5.34 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_HOURS, /* ECMA-262 v5, 15.9.5.35 */
+  ECMA_DATE_PROTOTYPE_SET_MINUTES, /* ECMA-262 v5, 15.9.5.32 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_MINUTES, /* ECMA-262 v5, 15.9.5.33 */
+  ECMA_DATE_PROTOTYPE_SET_SECONDS, /* ECMA-262 v5, 15.9.5.30 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_SECONDS, /* ECMA-262 v5, 15.9.5.31 */
+  ECMA_DATE_PROTOTYPE_SET_MILLISECONDS, /* ECMA-262 v5, 15.9.5.28 */
+  ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS, /* ECMA-262 v5, 15.9.5.29 */
+
+  ECMA_DATE_PROTOTYPE_TO_STRING, /* ECMA-262 v5, 15.9.5.2 */
+  ECMA_DATE_PROTOTYPE_TO_DATE_STRING, /* ECMA-262 v5, 15.9.5.3 */
+  ECMA_DATE_PROTOTYPE_TO_TIME_STRING, /* ECMA-262 v5, 15.9.5.4 */
+  ECMA_DATE_PROTOTYPE_TO_UTC_STRING, /* ECMA-262 v5, 15.9.5.42 */
+  ECMA_DATE_PROTOTYPE_TO_ISO_STRING, /* ECMA-262 v5, 15.9.5.43 */
+
+  ECMA_DATE_PROTOTYPE_GET_TIME, /* ECMA-262 v5, 15.9.5.9 */
+  ECMA_DATE_PROTOTYPE_SET_TIME, /* ECMA-262 v5, 15.9.5.27 */
+  ECMA_DATE_PROTOTYPE_TO_JSON, /* ECMA-262 v5, 15.9.5.44 */
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID date_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -44,1111 +115,6 @@
  */
 
 /**
- * The Date.prototype object's 'toString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_TRY_CATCH (prim_value,
-                  ecma_date_get_primitive_value (this_arg),
-                  ret_value);
-
-  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
-
-  if (ecma_number_is_nan (prim_num))
-  {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-    ret_value = ecma_make_string_value (magic_str_p);
-  }
-  else
-  {
-    ret_value = ecma_date_value_to_string (prim_num);
-  }
-
-  ECMA_FINALIZE (prim_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_to_string */
-
-/**
- * The Date.prototype object's 'toDateString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_date_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
-  }
-  else
-  {
-    ECMA_TRY_CATCH (obj_this,
-                    ecma_op_to_object (this_arg),
-                    ret_value);
-
-    ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.u.value);
-
-    if (ecma_number_is_nan (*date_num_p))
-    {
-      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-      ret_value = ecma_make_string_value (magic_str_p);
-    }
-    else
-    {
-      ret_value = ecma_date_value_to_date_string (*date_num_p);
-    }
-
-    ECMA_FINALIZE (obj_this);
-  }
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_to_date_string */
-
-/**
- * The Date.prototype object's 'toTimeString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_time_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
-  }
-  else
-  {
-    ECMA_TRY_CATCH (obj_this,
-                    ecma_op_to_object (this_arg),
-                    ret_value);
-
-    ecma_object_t *object_p = ecma_get_object_from_value (obj_this);
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-    ecma_number_t *prim_value_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                       ext_object_p->u.class_prop.u.value);
-
-    if (ecma_number_is_nan (*prim_value_num_p))
-    {
-      ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-      ret_value = ecma_make_string_value (magic_str_p);
-    }
-    else
-    {
-      ret_value = ecma_date_value_to_time_string (*prim_value_num_p);
-    }
-
-    ECMA_FINALIZE (obj_this);
-  }
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_to_time_string */
-
-/**
- * The Date.prototype object's 'toLocaleString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_locale_string (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_builtin_date_prototype_to_string (this_arg);
-} /* ecma_builtin_date_prototype_to_locale_string */
-
-/**
- * The Date.prototype object's 'toLocaleDateString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_locale_date_string (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_builtin_date_prototype_to_date_string (this_arg);
-} /* ecma_builtin_date_prototype_to_locale_date_string */
-
-/**
- * The Date.prototype object's 'toLocaleTimeString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.7
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_locale_time_string (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_builtin_date_prototype_to_time_string (this_arg);
-} /* ecma_builtin_date_prototype_to_locale_time_string */
-
-/**
- * The Date.prototype object's 'valueOf' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_value_of (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_builtin_date_prototype_get_time (this_arg);
-} /* ecma_builtin_date_prototype_value_of */
-
-/**
- * The Date.prototype object's 'getTime' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_get_time (ecma_value_t this_arg) /**< this argument */
-{
-  if (ecma_is_value_object (this_arg))
-  {
-    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-
-    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_DATE_UL))
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                   ext_object_p->u.class_prop.u.value);
-      return ecma_make_number_value (*date_num_p);
-    }
-  }
-
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object."));
-} /* ecma_builtin_date_prototype_get_time */
-
-/**
- * Helper macro, define the getter function argument to use
- * UTC time, passing the argument as is.
- */
-#define DEFINE_GETTER_ARGUMENT_utc(this_num) (this_num)
-
-/**
- * Helper macro, define the getter function argument to use
- * local time, passing the argument to 'ecma_date_local_time' function.
- */
-#define DEFINE_GETTER_ARGUMENT_local(this_num) (ecma_date_local_time (this_num))
-
-/**
- * Implementation of Data.prototype built-in's getter routines
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-#define DEFINE_GETTER(_ecma_paragraph, _routine_name, _getter_name, _timezone) \
-static ecma_value_t \
-ecma_builtin_date_prototype_get_ ## _routine_name (ecma_value_t this_arg) /**< this argument */ \
-{ \
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY); \
- \
-  /* 1. */ \
-  ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value); \
-  ecma_number_t this_num = ecma_get_number_from_value (value); \
-  /* 2. */ \
-  if (ecma_number_is_nan (this_num)) \
-  { \
-    ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN); \
-    ret_value = ecma_make_string_value (nan_str_p); \
-  } \
-  else \
-  { \
-    /* 3. */ \
-    ecma_number_t ret_num = _getter_name (DEFINE_GETTER_ARGUMENT_ ## _timezone (this_num)); \
-    ret_value = ecma_make_number_value (ret_num); \
-  } \
-  ECMA_FINALIZE (value); \
-  \
-  return ret_value; \
-}
-
-DEFINE_GETTER (ECMA-262 v5 15.9.5.10, full_year, ecma_date_year_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.11, utc_full_year, ecma_date_year_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.12, month, ecma_date_month_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.13, utc_month, ecma_date_month_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.14, date, ecma_date_date_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.15, utc_date, ecma_date_date_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.16, day, ecma_date_week_day, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.17, utc_day, ecma_date_week_day, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.18, hours, ecma_date_hour_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.19, utc_hours, ecma_date_hour_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.20, minutes, ecma_date_min_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.21, utc_minutes, ecma_date_min_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.22, seconds, ecma_date_sec_from_time, local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.23, utc_seconds, ecma_date_sec_from_time, utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.24, milliseconds, ecma_date_ms_from_time , local)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.25, utc_milliseconds, ecma_date_ms_from_time , utc)
-DEFINE_GETTER (ECMA-262 v5 15.9.5.26, timezone_offset, ecma_date_timezone_offset, utc)
-
-#undef DEFINE_GETTER_ARGUMENT_utc
-#undef DEFINE_GETTER_ARGUMENT_local
-#undef DEFINE_GETTER
-
-/**
- * The Date.prototype object's 'setTime' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.27
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_time (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t time) /**< time */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
-  }
-  else
-  {
-    /* 1. */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (t, time, ret_value);
-    ecma_number_t value = ecma_date_time_clip (t);
-
-    /* 2. */
-    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-    ecma_number_t *date_num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.u.value);
-
-    *date_num_p = value;
-
-    /* 3. */
-    ret_value = ecma_make_number_value (value);
-    ECMA_OP_TO_NUMBER_FINALIZE (t);
-  }
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_time */
-
-/**
- * The Date.prototype object's 'setMilliseconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.28
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_milliseconds (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t ms) /**< millisecond */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
-
-  /* 3-5. */
-  ecma_number_t hour = ecma_date_hour_from_time (t);
-  ecma_number_t min = ecma_date_min_from_time (t);
-  ecma_number_t sec = ecma_date_sec_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_day (t),
-                                               ecma_date_make_time (hour, min, sec, milli),
-                                               ECMA_DATE_LOCAL);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (milli);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_milliseconds */
-
-/**
- * The Date.prototype object's 'setUTCMilliseconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.29
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_milliseconds (ecma_value_t this_arg, /**< this argument */
-                                                  ecma_value_t ms) /**< millisecond */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
-
-  /* 3-5. */
-  ecma_number_t hour = ecma_date_hour_from_time (t);
-  ecma_number_t min = ecma_date_min_from_time (t);
-  ecma_number_t sec = ecma_date_sec_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_day (t),
-                                               ecma_date_make_time (hour, min, sec, milli),
-                                               ECMA_DATE_UTC);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (milli);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_milliseconds */
-
-/**
- * The Date.prototype object's 'setSeconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.30
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_seconds (ecma_value_t this_arg, /**< this argument */
-                                         ecma_value_t sec, /**< second */
-                                         ecma_value_t ms) /**< millisecond */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
-
-  /* 3. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
-  if (ecma_is_value_undefined (ms))
-  {
-    milli = ecma_date_ms_from_time (t);
-  }
-
-  /* 4-7. */
-  ecma_number_t hour = ecma_date_hour_from_time (t);
-  ecma_number_t min = ecma_date_min_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_day (t),
-                                               ecma_date_make_time (hour, min, s, milli),
-                                               ECMA_DATE_LOCAL);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (milli);
-  ECMA_OP_TO_NUMBER_FINALIZE (s);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_seconds */
-
-/**
- * The Date.prototype object's 'setUTCSeconds' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.31
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_seconds (ecma_value_t this_arg, /**< this argument */
-                                             ecma_value_t sec, /**< second */
-                                             ecma_value_t ms) /**< millisecond */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (s, sec, ret_value);
-
-  /* 3. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (milli, ms, ret_value);
-  if (ecma_is_value_undefined (ms))
-  {
-    milli = ecma_date_ms_from_time (t);
-  }
-
-  /* 4-7. */
-  ecma_number_t hour = ecma_date_hour_from_time (t);
-  ecma_number_t min = ecma_date_min_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_day (t),
-                                               ecma_date_make_time (hour, min, s, milli),
-                                               ECMA_DATE_UTC);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (milli);
-  ECMA_OP_TO_NUMBER_FINALIZE (s);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_seconds */
-
-/**
- * The Date.prototype object's 'setMinutes' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.32
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_minutes (ecma_value_t this_arg, /**< this argument */
-                                         const ecma_value_t args[], /**< arguments list */
-                                         ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ecma_number_t m = ecma_number_make_nan ();
-  ecma_number_t s = ecma_date_sec_from_time (t);
-  ecma_number_t milli = ecma_date_ms_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[0], ret_value);
-    m = min;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[1], ret_value);
-      s = sec;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[2], ret_value);
-        milli = ms;
-        ECMA_OP_TO_NUMBER_FINALIZE (ms);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (sec);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (min);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 5-8. */
-    ecma_number_t hour = ecma_date_hour_from_time (t);
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_day (t),
-                                                 ecma_date_make_time (hour, m, s, milli),
-                                                 ECMA_DATE_LOCAL);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_minutes */
-
-/**
- * The Date.prototype object's 'setUTCMinutes' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.33
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_minutes (ecma_value_t this_arg, /**< this argument */
-                                             const ecma_value_t args[], /**< arguments list */
-                                             ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ecma_number_t m = ecma_number_make_nan ();
-  ecma_number_t s = ecma_date_sec_from_time (t);
-  ecma_number_t milli = ecma_date_ms_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[0], ret_value);
-    m = min;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[1], ret_value);
-      s = sec;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[2], ret_value);
-        milli = ms;
-        ECMA_OP_TO_NUMBER_FINALIZE (ms);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (sec);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (min);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 5-8. */
-    ecma_number_t hour = ecma_date_hour_from_time (t);
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_day (t),
-                                                 ecma_date_make_time (hour, m, s, milli),
-                                                 ECMA_DATE_UTC);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_minutes */
-
-/**
- * The Date.prototype object's 'setHours' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.34
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_hours (ecma_value_t this_arg, /**< this argument */
-                                       const ecma_value_t args[], /**< arguments list */
-                                       ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ecma_number_t h = ecma_number_make_nan ();
-  ecma_number_t m = ecma_date_min_from_time (t);
-  ecma_number_t s = ecma_date_sec_from_time (t);
-  ecma_number_t milli = ecma_date_ms_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (hour, args[0], ret_value);
-    h = hour;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[1], ret_value);
-      m = min;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[2], ret_value);
-        s = sec;
-
-        /* 5. */
-        if (args_number > 3 && !ecma_is_value_undefined (args[3]))
-        {
-          ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[3], ret_value);
-          milli = ms;
-          ECMA_OP_TO_NUMBER_FINALIZE (ms);
-        }
-        ECMA_OP_TO_NUMBER_FINALIZE (sec);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (min);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (hour);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 6-9. */
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_day (t),
-                                                 ecma_date_make_time (h, m, s, milli),
-                                                 ECMA_DATE_LOCAL);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_hours */
-
-/**
- * The Date.prototype object's 'setUTCHours' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.35
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_hours (ecma_value_t this_arg, /**< this argument */
-                                           const ecma_value_t args[], /**< arguments list */
-                                           ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ecma_number_t h = ecma_number_make_nan ();
-  ecma_number_t m = ecma_date_min_from_time (t);
-  ecma_number_t s = ecma_date_sec_from_time (t);
-  ecma_number_t milli = ecma_date_ms_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (hour, args[0], ret_value);
-    h = hour;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (min, args[1], ret_value);
-      m = min;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (sec, args[2], ret_value);
-        s = sec;
-
-        /* 5. */
-        if (args_number > 3 && !ecma_is_value_undefined (args[3]))
-        {
-          ECMA_OP_TO_NUMBER_TRY_CATCH (ms, args[3], ret_value);
-          milli = ms;
-          ECMA_OP_TO_NUMBER_FINALIZE (ms);
-        }
-        ECMA_OP_TO_NUMBER_FINALIZE (sec);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (min);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (hour);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 6-9. */
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_day (t),
-                                                 ecma_date_make_time (h, m, s, milli),
-                                                 ECMA_DATE_UTC);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_hours */
-
-/**
- * The Date.prototype object's 'setDate' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.36
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_date (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t date) /**< date */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
-
-  /* 3-6. */
-  ecma_number_t year = ecma_date_year_from_time (t);
-  ecma_number_t month = ecma_date_month_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_make_day (year, month, dt),
-                                               ecma_date_time_within_day (t),
-                                               ECMA_DATE_LOCAL);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (dt);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_date */
-
-/**
- * The Date.prototype object's 'setUTCDate' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.37
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_date (ecma_value_t this_arg, /**< this argument */
-                                          ecma_value_t date) /**< date */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
-
-  /* 3-6. */
-  ecma_number_t year = ecma_date_year_from_time (t);
-  ecma_number_t month = ecma_date_month_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_make_day (year, month, dt),
-                                               ecma_date_time_within_day (t),
-                                               ECMA_DATE_UTC);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (dt);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_date */
-
-/**
- * The Date.prototype object's 'setMonth' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.38
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_month (ecma_value_t this_arg, /**< this argument */
-                                       ecma_value_t month, /**< month */
-                                       ecma_value_t date) /**< date */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
-
-  /* 3. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
-  if (ecma_is_value_undefined (date))
-  {
-    dt = ecma_date_date_from_time (t);
-  }
-
-  /* 4-7. */
-  ecma_number_t year = ecma_date_year_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_make_day (year, m, dt),
-                                               ecma_date_time_within_day (t),
-                                               ECMA_DATE_LOCAL);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (dt);
-  ECMA_OP_TO_NUMBER_FINALIZE (m);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_month */
-
-/**
- * The Date.prototype object's 'setUTCMonth' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.39
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_month (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t month, /**< month */
-                                           ecma_value_t date) /**< date */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-
-  /* 2. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (m, month, ret_value);
-
-  /* 3. */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (dt, date, ret_value);
-  if (ecma_is_value_undefined (date))
-  {
-    dt = ecma_date_date_from_time (t);
-  }
-
-  /* 4-7. */
-  ecma_number_t year = ecma_date_year_from_time (t);
-  ret_value = ecma_date_set_internal_property (this_arg,
-                                               ecma_date_make_day (year, m, dt),
-                                               ecma_date_time_within_day (t),
-                                               ECMA_DATE_UTC);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (dt);
-  ECMA_OP_TO_NUMBER_FINALIZE (m);
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_month */
-
-/**
- * The Date.prototype object's 'setFullYear' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.40
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_full_year (ecma_value_t this_arg, /**< this argument */
-                                           const ecma_value_t args[], /**< arguments list */
-                                           ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-  if (ecma_number_is_nan (t))
-  {
-    t = ECMA_NUMBER_ZERO;
-  }
-
-  /* 2. */
-  ecma_number_t y = ecma_number_make_nan ();
-  ecma_number_t m = ecma_date_month_from_time (t);
-  ecma_number_t dt = ecma_date_date_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (year, args[0], ret_value);
-    y = year;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (month, args[1], ret_value);
-      m = month;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (date, args[2], ret_value);
-        dt = date;
-        ECMA_OP_TO_NUMBER_FINALIZE (date);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (month);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (year);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 5-8. */
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_make_day (y, m, dt),
-                                                 ecma_date_time_within_day (t),
-                                                 ECMA_DATE_LOCAL);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_full_year */
-
-/**
- * The Date.prototype object's 'setUTCFullYear' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.41
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_utc_full_year (ecma_value_t this_arg, /**< this argument */
-                                               const ecma_value_t args[], /**< arguments list */
-                                               ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_get_number_from_value (this_time_value);
-  if (ecma_number_is_nan (t))
-  {
-    t = ECMA_NUMBER_ZERO;
-  }
-
-  /* 2. */
-  ecma_number_t y = ecma_number_make_nan ();
-  ecma_number_t m = ecma_date_month_from_time (t);
-  ecma_number_t dt = ecma_date_date_from_time (t);
-  if (args_number > 0 && !ecma_is_value_undefined (args[0]))
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (year, args[0], ret_value);
-    y = year;
-
-    /* 3. */
-    if (args_number > 1 && !ecma_is_value_undefined (args[1]))
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (month, args[1], ret_value);
-      m = month;
-
-      /* 4. */
-      if (args_number > 2 && !ecma_is_value_undefined (args[2]))
-      {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (date, args[2], ret_value);
-        dt = date;
-        ECMA_OP_TO_NUMBER_FINALIZE (date);
-      }
-      ECMA_OP_TO_NUMBER_FINALIZE (month);
-    }
-    ECMA_OP_TO_NUMBER_FINALIZE (year);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 5-8. */
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_make_day (y, m, dt),
-                                                 ecma_date_time_within_day (t),
-                                                 ECMA_DATE_UTC);
-  }
-  ECMA_FINALIZE (this_time_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_utc_full_year */
-
-/**
- * The Date.prototype object's 'toUTCString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.42
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_utc_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_TRY_CATCH (prim_value,
-                  ecma_date_get_primitive_value (this_arg),
-                  ret_value);
-
-  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
-
-  if (ecma_number_is_nan (prim_num))
-  {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-    ret_value = ecma_make_string_value (magic_str_p);
-  }
-  else
-  {
-    ret_value = ecma_date_value_to_utc_string (prim_num);
-  }
-
-  ECMA_FINALIZE (prim_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_to_utc_string */
-
-/**
- * The Date.prototype object's 'toISOString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.43
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_TRY_CATCH (prim_value,
-                  ecma_date_get_primitive_value (this_arg),
-                  ret_value);
-
-  ecma_number_t prim_num = ecma_get_number_from_value (prim_value);
-
-  if (ecma_number_is_nan (prim_num) || ecma_number_is_infinity (prim_num))
-  {
-    ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Time must be a finite number."));
-  }
-  else
-  {
-    ret_value = ecma_date_value_to_iso_string (prim_num);
-  }
-
-  ECMA_FINALIZE (prim_value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_to_iso_string */
-
-/**
  * The Date.prototype object's 'toJSON' routine
  *
  * See also:
@@ -1158,10 +124,8 @@ ecma_builtin_date_prototype_to_iso_string (ecma_value_t this_arg) /**< this argu
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument */
-                                     ecma_value_t arg) /**< key */
+ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument */
 {
-  JERRY_UNUSED (arg);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   /* 1. */
@@ -1218,103 +182,465 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg, /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
-#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
-
 /**
- * The Date.prototype object's 'getYear' routine
- *
- * See also:
- *          ECMA-262 v5, AnnexB.B.2.4
+ * Dispatch get date functions
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_date_prototype_get_year (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                        *   identifier */
+                                          ecma_number_t date_num) /* date converted to number */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t this_num = ecma_get_number_from_value (value);
-  /* 2. */
-  if (ecma_number_is_nan (this_num))
+  if (ecma_number_is_nan (date_num))
   {
     ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-    ret_value = ecma_make_string_value (nan_str_p);
-  }
-  else
-  {
-    /* 3. */
-    ecma_number_t ret_num = ecma_date_year_from_time (ecma_date_local_time (this_num)) - 1900;
-    ret_value = ecma_make_number_value (ret_num);
-  }
-  ECMA_FINALIZE (value);
-
-  return ret_value;
-} /* ecma_builtin_date_prototype_get_year */
-
-/**
- * The Date.prototype object's 'setYear' routine
- *
- * See also:
- *          ECMA-262 v5, AnnexB.B.2.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_date_prototype_set_year (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t year) /**< year argument */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* 1. */
-  ECMA_TRY_CATCH (this_time_value, ecma_builtin_date_prototype_get_time (this_arg), ret_value);
-  ecma_number_t t = ecma_date_local_time (ecma_get_number_from_value (this_time_value));
-  if (ecma_number_is_nan (t))
-  {
-    t = ECMA_NUMBER_ZERO;
+    return ecma_make_string_value (nan_str_p);
   }
 
-  /* 2. */
-  ecma_number_t y = ecma_number_make_nan ();
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (year_value, year, ret_value);
-  y = year_value;
-
-  /* 3. */
-  if (ecma_number_is_nan (y))
+  switch (builtin_routine_id)
   {
-    ret_value = ecma_date_set_internal_property (this_arg, 0, y, ECMA_DATE_UTC);
-  }
-  else
-  {
-    /* 4. */
-    if (y >= 0 && y <= 99)
+    case ECMA_DATE_PROTOTYPE_GET_FULL_YEAR:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR:
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+    case ECMA_DATE_PROTOTYPE_GET_YEAR:
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
     {
-      y += 1900;
+      date_num = ecma_date_year_from_time (date_num);
+
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+      if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_YEAR)
+      {
+        date_num -= 1900;
+      }
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_MONTH:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_MONTH:
+    {
+      date_num = ecma_date_month_from_time (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_DATE:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_DATE:
+    {
+      date_num = ecma_date_date_from_time (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_DAY:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_DAY:
+    {
+      date_num = ecma_date_week_day (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_HOURS:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_HOURS:
+    {
+      date_num = ecma_date_hour_from_time (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_MINUTES:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_MINUTES:
+    {
+      date_num = ecma_date_min_from_time (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_SECONDS:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_SECONDS:
+    {
+      date_num = ecma_date_sec_from_time (date_num);
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_GET_MILLISECONDS:
+    case ECMA_DATE_PROTOTYPE_GET_UTC_MILLISECONDS:
+    {
+      date_num = ecma_date_ms_from_time (date_num);
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET);
+      date_num = ecma_date_timezone_offset (date_num);
+      break;
     }
   }
 
-  ECMA_OP_TO_NUMBER_FINALIZE (year_value);
+  return ecma_make_number_value (date_num);
+} /* ecma_builtin_date_prototype_dispatch_get */
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    /* 5-8. */
-    ecma_number_t m = ecma_date_month_from_time (t);
-    ecma_number_t dt = ecma_date_date_from_time (t);
-    ret_value = ecma_date_set_internal_property (this_arg,
-                                                 ecma_date_make_day (y, m, dt),
-                                                 ecma_date_time_within_day (t),
-                                                 ECMA_DATE_UTC);
-  }
-  ECMA_FINALIZE (this_time_value);
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
-  return ret_value;
-} /* ecma_builtin_date_prototype_set_year */
+/**
+ * Returns true, if the built-in id sets a year.
+ */
+#define ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE(builtin_routine_id) \
+  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR \
+   || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR \
+   || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_YEAR)
+
+#else /* CONFIG_DISABLE_ANNEXB_BUILTIN */
+
+/**
+ * Returns true, if the built-in id sets a year.
+ */
+#define ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE(builtin_routine_id) \
+  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR \
+   || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR)
 
 #endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+
+/**
+ * Dispatch set date functions
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                        *   identifier */
+                                          ecma_extended_object_t *ext_object_p, /**< date extended object */
+                                          ecma_number_t date_num, /* date converted to number */
+                                          const ecma_value_t arguments_list[], /**< list of arguments
+                                                                                *   passed to routine */
+                                          ecma_length_t arguments_number) /**< length of arguments' list */
+{
+  ecma_number_t converted_number[4];
+  ecma_length_t conversions = 0;
+
+  /* If the first argument is not specified, it is always converted to NaN. */
+  converted_number[0] = ecma_number_make_nan ();
+
+  switch (builtin_routine_id)
+  {
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+    case ECMA_DATE_PROTOTYPE_SET_YEAR:
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+    case ECMA_DATE_PROTOTYPE_SET_DATE:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_DATE:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS:
+    case ECMA_DATE_PROTOTYPE_SET_MILLISECONDS:
+    {
+      conversions = 1;
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_SET_MONTH:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_MONTH:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_SECONDS:
+    case ECMA_DATE_PROTOTYPE_SET_SECONDS:
+    {
+      conversions = 2;
+      break;
+    }
+    case ECMA_DATE_PROTOTYPE_SET_FULL_YEAR:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR:
+    case ECMA_DATE_PROTOTYPE_SET_MINUTES:
+    case ECMA_DATE_PROTOTYPE_SET_UTC_MINUTES:
+    {
+      conversions = 3;
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_HOURS
+                    || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_HOURS);
+      conversions = 4;
+      break;
+    }
+  }
+
+  if (conversions > arguments_number)
+  {
+    conversions = arguments_number;
+  }
+
+  for (ecma_length_t i = 0; i < conversions; i++)
+  {
+    ecma_value_t value = ecma_op_to_number (arguments_list[i]);
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      return value;
+    }
+
+    converted_number[i] = ecma_get_number_from_value (value);
+    ecma_free_value (value);
+  }
+
+  ecma_number_t day_part;
+  ecma_number_t time_part;
+
+  if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_DATE)
+  {
+    if (ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE (builtin_routine_id)
+        && ecma_number_is_nan (date_num))
+    {
+      date_num = ECMA_NUMBER_ZERO;
+    }
+
+    time_part = ecma_date_time_within_day (date_num);
+
+    ecma_number_t year = ecma_date_year_from_time (date_num);
+    ecma_number_t month = ecma_date_month_from_time (date_num);
+    ecma_number_t day = ecma_date_date_from_time (date_num);
+
+    switch (builtin_routine_id)
+    {
+      case ECMA_DATE_PROTOTYPE_SET_FULL_YEAR:
+      case ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR:
+      {
+        year = converted_number[0];
+        if (conversions >= 2)
+        {
+          month = converted_number[1];
+        }
+        if (conversions >= 3)
+        {
+          day = converted_number[2];
+        }
+        break;
+      }
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+      case ECMA_DATE_PROTOTYPE_SET_YEAR:
+      {
+        year = converted_number[0];
+        if (year >= 0 && year <= 99)
+        {
+          year += 1900;
+        }
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+      case ECMA_DATE_PROTOTYPE_SET_MONTH:
+      case ECMA_DATE_PROTOTYPE_SET_UTC_MONTH:
+      {
+        month = converted_number[0];
+        if (conversions >= 2)
+        {
+          day = converted_number[1];
+        }
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_DATE
+                      || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_DATE);
+        day = converted_number[0];
+        break;
+      }
+    }
+
+    day_part = ecma_date_make_day (year, month, day);
+
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+    if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_YEAR)
+    {
+      builtin_routine_id = ECMA_DATE_PROTOTYPE_SET_UTC_YEAR;
+
+      if (ecma_number_is_nan (converted_number[0]))
+      {
+        day_part = 0;
+        time_part = converted_number[0];
+      }
+    }
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+  }
+  else
+  {
+    day_part = ecma_date_day (date_num);
+
+    ecma_number_t hour = ecma_date_hour_from_time (date_num);
+    ecma_number_t min = ecma_date_min_from_time (date_num);
+    ecma_number_t sec = ecma_date_sec_from_time (date_num);
+    ecma_number_t ms = ecma_date_ms_from_time (date_num);
+
+    switch (builtin_routine_id)
+    {
+      case ECMA_DATE_PROTOTYPE_SET_HOURS:
+      case ECMA_DATE_PROTOTYPE_SET_UTC_HOURS:
+      {
+        hour = converted_number[0];
+        if (conversions >= 2)
+        {
+          min = converted_number[1];
+        }
+        if (conversions >= 3)
+        {
+          sec = converted_number[2];
+        }
+        if (conversions >= 4)
+        {
+          ms = converted_number[3];
+        }
+        break;
+      }
+      case ECMA_DATE_PROTOTYPE_SET_MINUTES:
+      case ECMA_DATE_PROTOTYPE_SET_UTC_MINUTES:
+      {
+        min = converted_number[0];
+        if (conversions >= 2)
+        {
+          sec = converted_number[1];
+        }
+        if (conversions >= 3)
+        {
+          ms = converted_number[2];
+        }
+        break;
+      }
+      case ECMA_DATE_PROTOTYPE_SET_UTC_SECONDS:
+      case ECMA_DATE_PROTOTYPE_SET_SECONDS:
+      {
+        sec = converted_number[0];
+        if (conversions >= 2)
+        {
+          ms = converted_number[1];
+        }
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS
+                      || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_MILLISECONDS);
+        ms = converted_number[0];
+        break;
+      }
+    }
+
+    time_part = ecma_date_make_time (hour, min, sec, ms);
+  }
+
+  bool is_utc = BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id);
+
+  ecma_number_t full_date = ecma_date_make_date (day_part, time_part);
+
+  if (!is_utc)
+  {
+    full_date = ecma_date_utc (full_date);
+  }
+
+  full_date = ecma_date_time_clip (full_date);
+
+  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = full_date;
+
+  return ecma_make_number_value (full_date);
+} /* ecma_builtin_date_prototype_dispatch_set */
+
+#undef ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                            *   identifier */
+                                              ecma_value_t this_arg, /**< 'this' argument value */
+                                              const ecma_value_t arguments_list[], /**< list of arguments
+                                                                                    *   passed to routine */
+                                              ecma_length_t arguments_number) /**< length of arguments' list */
+{
+  if (unlikely (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_JSON))
+  {
+    return ecma_builtin_date_prototype_to_json (this_arg);
+  }
+
+  if (!ecma_is_value_object (this_arg)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Date object expected"));
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ecma_number_t *prim_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                 ext_object_p->u.class_prop.u.value);
+
+  if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_TIME)
+  {
+    return ecma_make_number_value (*prim_value_p);
+  }
+
+  if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_TIME)
+  {
+    ecma_value_t time = (arguments_number >= 1 ? arguments_list[0]
+                                               : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+
+    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+    /* 1. */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (time_num, time, ret_value);
+    *prim_value_p = ecma_date_time_clip (time_num);
+
+    ret_value = ecma_make_number_value (time_num);
+    ECMA_OP_TO_NUMBER_FINALIZE (time_num);
+
+    return ret_value;
+  }
+
+  if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS)
+  {
+    ecma_number_t this_num = *prim_value_p;
+
+    if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
+    {
+      this_num = ecma_date_local_time (this_num);
+    }
+
+    if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)
+    {
+      return ecma_builtin_date_prototype_dispatch_get (builtin_routine_id, this_num);
+    }
+
+    return ecma_builtin_date_prototype_dispatch_set (builtin_routine_id,
+                                                     ext_object_p,
+                                                     this_num,
+                                                     arguments_list,
+                                                     arguments_number);
+  }
+
+  if (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_ISO_STRING)
+  {
+    if (ecma_number_is_nan (*prim_value_p) || ecma_number_is_infinity (*prim_value_p))
+    {
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Date must be a finite number."));
+    }
+
+    return ecma_date_value_to_iso_string (*prim_value_p);
+  }
+
+  if (ecma_number_is_nan (*prim_value_p))
+  {
+    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
+    return ecma_make_string_value (magic_str_p);
+  }
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_DATE_PROTOTYPE_TO_STRING:
+    {
+      return ecma_date_value_to_string (*prim_value_p);
+    }
+    case ECMA_DATE_PROTOTYPE_TO_DATE_STRING:
+    {
+      return ecma_date_value_to_date_string (*prim_value_p);
+    }
+    case ECMA_DATE_PROTOTYPE_TO_TIME_STRING:
+    {
+      return ecma_date_value_to_time_string (*prim_value_p);
+    }
+    default:
+    {
+      JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_UTC_STRING);
+      return ecma_date_value_to_utc_string (*prim_value_p);
+    }
+  }
+} /* ecma_builtin_date_prototype_dispatch_routine */
 
 /**
  * @}

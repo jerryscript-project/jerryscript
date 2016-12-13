@@ -59,6 +59,20 @@ We must set the following options:
 * Enable `Library Routines -> Standard Math library`
 * Enable `Application Configuration -> Interpreters -> JerryScript`
 
+If you get `kconfig-mconf: not found` error when you run `make menuconfig` you may have to install kconfig-frontends:
+
+```
+# assume you are in jerry-nuttx folder
+sudo apt-get install gperf flex bison libncurses-dev
+git clone https://github.com/jameswalmsley/kconfig-frontends.git
+cd kconfig-frontends
+./bootstrap
+./configure --enable-mconf
+make
+sudo make install
+sudo ldconfig
+```
+
 #### 4. Build JerryScript for NuttX
 
 ```

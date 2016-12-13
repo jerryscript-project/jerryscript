@@ -22,7 +22,7 @@
 #include "Callback.h"
 #include "mbed_assert.h"
 
-#include "mbed-events/EventQueue.h"
+#include "events/EventQueue.h"
 
 #include "jerryscript-mbed-util/logging.h"
 #include "jerryscript-mbed-event-loop/BoundCallback.h"

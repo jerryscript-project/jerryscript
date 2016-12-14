@@ -23,6 +23,7 @@ from os import makedirs, uname
 from settings import *
 
 BUILD_DIR = path.join(PROJECT_DIR, 'build')
+DEFAULT_PORT_DIR = path.join(PROJECT_DIR, 'targets/default')
 
 def default_toolchain():
     (sysname, _, _, _, machine) = uname()
@@ -58,6 +59,7 @@ def get_arguments():
     parser.add_argument('--link-lib', metavar='OPT', action='append', default=[], help='add custom library to be linked')
     parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[], help='add custom linker flag')
     parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable link-time optimizations (%(choices)s; default: %(default)s)')
+    parser.add_argument('--port-dir', metavar='DIR', action='store', default=DEFAULT_PORT_DIR, help='add port directory (default: %(default)s)')
     parser.add_argument('--profile', metavar='PROFILE', choices=['es5.1', 'minimal', 'es2015-subset'], default='es5.1', type=str.lower, help='specify the profile (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable executing snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable saving snapshot files (%(choices)s; default: %(default)s)')
@@ -100,6 +102,7 @@ def generate_build_options(arguments):
     build_options.append('-DEXTERNAL_LINK_LIBS=' + ' '.join(arguments.link_lib))
     build_options.append('-DEXTERNAL_LINKER_FLAGS=' + ' '.join(arguments.linker_flag))
     build_options.append('-DENABLE_LTO=%s' % arguments.lto)
+    build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)

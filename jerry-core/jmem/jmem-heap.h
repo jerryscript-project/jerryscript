@@ -28,12 +28,12 @@
  * @{
  */
 
-extern void jmem_heap_init (void);
-extern void jmem_heap_finalize (void);
-extern void *jmem_heap_alloc_block (const size_t);
-extern void *jmem_heap_alloc_block_null_on_error (const size_t);
-extern void jmem_heap_free_block (void *, const size_t);
-extern bool jmem_is_heap_pointer (const void *);
+void jmem_heap_init (void);
+void jmem_heap_finalize (void);
+void *jmem_heap_alloc_block (const size_t);
+void *jmem_heap_alloc_block_null_on_error (const size_t);
+void jmem_heap_free_block (void *, const size_t);
+bool jmem_is_heap_pointer (const void *);
 
 #ifdef JMEM_STATS
 /**
@@ -62,9 +62,9 @@ typedef struct
   size_t free_iter_count;
 } jmem_heap_stats_t;
 
-extern void jmem_heap_get_stats (jmem_heap_stats_t *);
-extern void jmem_heap_stats_reset_peak (void);
-extern void jmem_heap_stats_print (void);
+void jmem_heap_get_stats (jmem_heap_stats_t *);
+void jmem_heap_stats_reset_peak (void);
+void jmem_heap_stats_print (void);
 #endif /* JMEM_STATS */
 
 #ifdef JERRY_VALGRIND_FREYA
@@ -73,7 +73,7 @@ extern void jmem_heap_stats_print (void);
 #error Valgrind and valgrind-freya modes are not compatible.
 #endif /* JERRY_VALGRIND */
 
-extern void jmem_heap_valgrind_freya_mempool_request (void);
+void jmem_heap_valgrind_freya_mempool_request (void);
 
 #define JMEM_HEAP_VALGRIND_FREYA_MEMPOOL_REQUEST() jmem_heap_valgrind_freya_mempool_request ()
 

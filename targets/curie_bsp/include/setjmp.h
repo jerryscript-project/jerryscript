@@ -19,7 +19,7 @@
 
 typedef uint64_t jmp_buf[14];
 
-extern  int setjmp (jmp_buf env);
-extern  void longjmp (jmp_buf env, int val);
+int setjmp (jmp_buf env);
+void longjmp (jmp_buf env, int val);
 
 #endif /* !SETJMP_H */

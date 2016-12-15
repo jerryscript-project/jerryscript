@@ -26,24 +26,24 @@
  * @{
  */
 
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *, uint32_t);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_object_get_properties (ecma_object_t *, bool);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *, uint32_t *, ecma_value_t);
-extern uint32_t
+uint32_t
 ecma_builtin_helper_array_index_normalize (ecma_number_t, uint32_t);
-extern uint32_t
+uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t, uint32_t, bool);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t, ecma_value_t,
                                                       ecma_value_t, bool);
-extern bool
+bool
 ecma_builtin_helper_string_find_index (ecma_string_t *, ecma_string_t *, bool, ecma_length_t, ecma_length_t *);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *, ecma_string_t *, ecma_value_t,
                               bool, bool, bool, bool);
 
@@ -93,36 +93,36 @@ typedef enum
 } ecma_date_timezone_t;
 
 /* ecma-builtin-helpers-date.c */
-extern ecma_number_t ecma_date_day (ecma_number_t);
-extern ecma_number_t ecma_date_time_within_day (ecma_number_t);
-extern ecma_number_t ecma_date_days_in_year (ecma_number_t);
-extern ecma_number_t ecma_date_day_from_year (ecma_number_t);
-extern ecma_number_t ecma_date_time_from_year (ecma_number_t);
-extern ecma_number_t ecma_date_year_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_in_leap_year (ecma_number_t);
-extern ecma_number_t ecma_date_day_within_year (ecma_number_t);
-extern ecma_number_t ecma_date_month_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_date_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_week_day (ecma_number_t);
-extern ecma_number_t ecma_date_local_tza ();
-extern ecma_number_t ecma_date_daylight_saving_ta (ecma_number_t);
-extern ecma_number_t ecma_date_local_time (ecma_number_t);
-extern ecma_number_t ecma_date_utc (ecma_number_t);
-extern ecma_number_t ecma_date_hour_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_min_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_sec_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_ms_from_time (ecma_number_t);
-extern ecma_number_t ecma_date_make_time (ecma_number_t, ecma_number_t, ecma_number_t, ecma_number_t);
-extern ecma_number_t ecma_date_make_day (ecma_number_t, ecma_number_t, ecma_number_t);
-extern ecma_number_t ecma_date_make_date (ecma_number_t, ecma_number_t);
-extern ecma_number_t ecma_date_time_clip (ecma_number_t);
-extern ecma_number_t ecma_date_timezone_offset (ecma_number_t);
+ecma_number_t ecma_date_day (ecma_number_t);
+ecma_number_t ecma_date_time_within_day (ecma_number_t);
+ecma_number_t ecma_date_days_in_year (ecma_number_t);
+ecma_number_t ecma_date_day_from_year (ecma_number_t);
+ecma_number_t ecma_date_time_from_year (ecma_number_t);
+ecma_number_t ecma_date_year_from_time (ecma_number_t);
+ecma_number_t ecma_date_in_leap_year (ecma_number_t);
+ecma_number_t ecma_date_day_within_year (ecma_number_t);
+ecma_number_t ecma_date_month_from_time (ecma_number_t);
+ecma_number_t ecma_date_date_from_time (ecma_number_t);
+ecma_number_t ecma_date_week_day (ecma_number_t);
+ecma_number_t ecma_date_local_tza ();
+ecma_number_t ecma_date_daylight_saving_ta (ecma_number_t);
+ecma_number_t ecma_date_local_time (ecma_number_t);
+ecma_number_t ecma_date_utc (ecma_number_t);
+ecma_number_t ecma_date_hour_from_time (ecma_number_t);
+ecma_number_t ecma_date_min_from_time (ecma_number_t);
+ecma_number_t ecma_date_sec_from_time (ecma_number_t);
+ecma_number_t ecma_date_ms_from_time (ecma_number_t);
+ecma_number_t ecma_date_make_time (ecma_number_t, ecma_number_t, ecma_number_t, ecma_number_t);
+ecma_number_t ecma_date_make_day (ecma_number_t, ecma_number_t, ecma_number_t);
+ecma_number_t ecma_date_make_date (ecma_number_t, ecma_number_t);
+ecma_number_t ecma_date_time_clip (ecma_number_t);
+ecma_number_t ecma_date_timezone_offset (ecma_number_t);
 
-extern ecma_value_t ecma_date_value_to_string (ecma_number_t);
-extern ecma_value_t ecma_date_value_to_utc_string (ecma_number_t);
-extern ecma_value_t ecma_date_value_to_iso_string (ecma_number_t);
-extern ecma_value_t ecma_date_value_to_date_string (ecma_number_t);
-extern ecma_value_t ecma_date_value_to_time_string (ecma_number_t);
+ecma_value_t ecma_date_value_to_string (ecma_number_t);
+ecma_value_t ecma_date_value_to_utc_string (ecma_number_t);
+ecma_value_t ecma_date_value_to_iso_string (ecma_number_t);
+ecma_value_t ecma_date_value_to_date_string (ecma_number_t);
+ecma_value_t ecma_date_value_to_time_string (ecma_number_t);
 
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
 
@@ -149,22 +149,22 @@ typedef struct
   ecma_object_t *replacer_function_p;
 } ecma_json_stringify_context_t;
 
-extern bool ecma_has_object_value_in_collection (ecma_collection_header_t *, ecma_value_t);
-extern bool ecma_has_string_value_in_collection (ecma_collection_header_t *, ecma_value_t);
+bool ecma_has_object_value_in_collection (ecma_collection_header_t *, ecma_value_t);
+bool ecma_has_string_value_in_collection (ecma_collection_header_t *, ecma_value_t);
 
-extern ecma_string_t *
+ecma_string_t *
 ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t);
-extern ecma_string_t *
+ecma_string_t *
 ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *, ecma_string_t *);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_json_create_formatted_json (ecma_string_t *, ecma_string_t *, ecma_string_t *,
                                                 ecma_collection_header_t *, ecma_json_stringify_context_t *);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *, ecma_string_t *, ecma_collection_header_t *);
 
 /* ecma-builtin-helper-error.c */
 
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t, const ecma_value_t *, ecma_length_t);
 
 /**

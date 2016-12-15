@@ -18,7 +18,7 @@
 #include <stdarg.h>
 
 #include "jerry-core/jerry-port.h"
-extern int ets_putc (int);
+int ets_putc (int);
 
 /**
  * Provide console message implementation for the engine.

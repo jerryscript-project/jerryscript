@@ -151,18 +151,18 @@ typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_seve
     } \
   } while (false);
 
-extern void jmem_init (void);
-extern void jmem_finalize (void);
+void jmem_init (void);
+void jmem_finalize (void);
 
-extern jmem_cpointer_t jmem_compress_pointer (const void *);
-extern void *jmem_decompress_pointer (uintptr_t);
+jmem_cpointer_t jmem_compress_pointer (const void *);
+void *jmem_decompress_pointer (uintptr_t);
 
-extern void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
-extern void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
+void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
+void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
 
 #ifdef JMEM_STATS
-extern void jmem_stats_reset_peak (void);
-extern void jmem_stats_print (void);
+void jmem_stats_reset_peak (void);
+void jmem_stats_print (void);
 #endif /* JMEM_STATS */
 
 /**

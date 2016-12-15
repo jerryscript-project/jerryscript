@@ -28,10 +28,10 @@
  * @{
  */
 
-extern void jmem_pools_finalize (void);
-extern void *jmem_pools_alloc (size_t);
-extern void jmem_pools_free (void *, size_t);
-extern void jmem_pools_collect_empty (void);
+void jmem_pools_finalize (void);
+void *jmem_pools_alloc (size_t);
+void jmem_pools_free (void *, size_t);
+void jmem_pools_collect_empty (void);
 
 #ifdef JMEM_STATS
 /**
@@ -58,9 +58,9 @@ typedef struct
   size_t reused_count;
 } jmem_pools_stats_t;
 
-extern void jmem_pools_get_stats (jmem_pools_stats_t *);
-extern void jmem_pools_stats_reset_peak (void);
-extern void jmem_pools_stats_print (void);
+void jmem_pools_get_stats (jmem_pools_stats_t *);
+void jmem_pools_stats_reset_peak (void);
+void jmem_pools_stats_print (void);
 #endif /* JMEM_STATS */
 
 /**

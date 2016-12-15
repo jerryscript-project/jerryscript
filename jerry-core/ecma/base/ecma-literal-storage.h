@@ -36,19 +36,19 @@ typedef struct
   jmem_cpointer_t literal_offset; /**< literal offset */
 } lit_mem_to_snapshot_id_map_entry_t;
 
-extern void ecma_finalize_lit_storage (void);
+void ecma_finalize_lit_storage (void);
 
-extern jmem_cpointer_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *, lit_utf8_size_t);
-extern jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t);
+jmem_cpointer_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *, lit_utf8_size_t);
+jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t);
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-extern bool
+bool
 ecma_save_literals_for_snapshot (uint8_t *, size_t, size_t *,
                                  lit_mem_to_snapshot_id_map_entry_t **, uint32_t *, uint32_t *);
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
-extern bool
+bool
 ecma_load_literals_from_snapshot (const uint8_t *, uint32_t,
                                   lit_mem_to_snapshot_id_map_entry_t **, uint32_t *);
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */

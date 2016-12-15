@@ -23,8 +23,8 @@
  * @{
  */
 
-extern void ecma_init (void);
-extern void ecma_finalize (void);
+void ecma_init (void);
+void ecma_finalize (void);
 
 /**
  * @}

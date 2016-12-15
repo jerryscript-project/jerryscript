@@ -65,26 +65,26 @@ typedef enum
 #define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint16_t) ((value) >> 8))
 
 /* ecma-builtins.c */
-extern void ecma_finalize_builtins (void);
+void ecma_finalize_builtins (void);
 
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_dispatch_call (ecma_object_t *, ecma_value_t,
                             const ecma_value_t *, ecma_length_t);
-extern ecma_value_t
+ecma_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *,
                                  const ecma_value_t *, ecma_length_t);
-extern ecma_property_t *
+ecma_property_t *
 ecma_builtin_try_to_instantiate_property (ecma_object_t *, ecma_string_t *);
-extern void
+void
 ecma_builtin_list_lazy_property_names (ecma_object_t *,
                                        bool,
                                        ecma_collection_header_t *,
                                        ecma_collection_header_t *);
-extern bool
+bool
 ecma_builtin_is (ecma_object_t *, ecma_builtin_id_t);
-extern ecma_object_t *
+ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t);
-extern bool
+bool
 ecma_builtin_function_is_routine (ecma_object_t *);
 
 #endif /* !ECMA_BUILTINS_H */

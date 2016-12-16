@@ -65,7 +65,7 @@ def enumerate_includes(root_dir, directories):
     """
     for root, dirs, files in os.walk(root_dir, topdown=True):
         # modify dirs in place
-        dirs[:] = filter(lambda x: x in directory_labels 
+        dirs[:] = filter(lambda x: x in directory_labels
                                 or (    not x.startswith('TARGET_')
                                     and not x.startswith('TOOLCHAIN_')), dirs)
         yield root
@@ -118,8 +118,8 @@ def enumerate_pins(c_source_file, include_dirs, definitions):
     """
     definitions += ['__attribute(x)__=', '__extension__(x)=', 'register=', '__IO=', 'uint32_t=unsigned int']
 
-    gcc_args = ['-E', '-fmerge-all-constants'] 
-    gcc_args += ['-I' + directory for directory in include_dirs] 
+    gcc_args = ['-E', '-fmerge-all-constants']
+    gcc_args += ['-I' + directory for directory in include_dirs]
 
     gcc_args += ['-D' + definition for definition in definitions]
     ast = parse_file(c_source_file,
@@ -159,15 +159,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     board_name = args.board.upper()
 
-    target = Target(board_name)
+    target = Target.get_target(board_name)
 
-    directory_labels = ['TARGET_' + label for label in target.get_labels()] + target.macros
+    directory_labels = ['TARGET_' + label for label in target.labels] + target.macros
 
-    targets_dir = os.path.join('.', 'mbed-os', 'hal', 'targets')
-    hal_dir = os.path.join(targets_dir, 'hal')
+    targets_dir = os.path.join('.', 'mbed-os', 'targets')
 
-    pins_file = find_file(hal_dir, directory_labels, 'PinNames.h')
-
+    pins_file = find_file(targets_dir, directory_labels, 'PinNames.h')
 
     includes = enumerate_includes(targets_dir, directory_labels)
     defines = list(directory_labels)

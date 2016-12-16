@@ -26,29 +26,29 @@
  * @{
  */
 
-extern ecma_property_t ecma_op_object_get_own_property (ecma_object_t *, ecma_string_t *,
-                                                        ecma_property_ref_t *, uint32_t);
-extern ecma_property_t ecma_op_object_get_property (ecma_object_t *, ecma_string_t *,
-                                                    ecma_property_ref_t *, uint32_t);
-extern bool ecma_op_object_has_own_property (ecma_object_t *, ecma_string_t *);
-extern bool ecma_op_object_has_property (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_find_own (ecma_value_t, ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_find (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_get_own_data_prop (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_get (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
-extern ecma_value_t ecma_op_object_delete (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
-extern ecma_value_t ecma_op_object_define_own_property (ecma_object_t *, ecma_string_t *,
-                                                        const ecma_property_descriptor_t *, bool);
-extern bool ecma_op_object_get_own_property_descriptor (ecma_object_t *, ecma_string_t *,
-                                                        ecma_property_descriptor_t *);
-extern ecma_value_t ecma_op_object_has_instance (ecma_object_t *, ecma_value_t);
-extern bool ecma_op_object_is_prototype_of (ecma_object_t *, ecma_object_t *);
-extern ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *, bool, bool, bool);
+ecma_property_t ecma_op_object_get_own_property (ecma_object_t *, ecma_string_t *,
+                                                 ecma_property_ref_t *, uint32_t);
+ecma_property_t ecma_op_object_get_property (ecma_object_t *, ecma_string_t *,
+                                             ecma_property_ref_t *, uint32_t);
+bool ecma_op_object_has_own_property (ecma_object_t *, ecma_string_t *);
+bool ecma_op_object_has_property (ecma_object_t *, ecma_string_t *);
+ecma_value_t ecma_op_object_find_own (ecma_value_t, ecma_object_t *, ecma_string_t *);
+ecma_value_t ecma_op_object_find (ecma_object_t *, ecma_string_t *);
+ecma_value_t ecma_op_object_get_own_data_prop (ecma_object_t *, ecma_string_t *);
+ecma_value_t ecma_op_object_get (ecma_object_t *, ecma_string_t *);
+ecma_value_t ecma_op_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
+ecma_value_t ecma_op_object_delete (ecma_object_t *, ecma_string_t *, bool);
+ecma_value_t ecma_op_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
+ecma_value_t ecma_op_object_define_own_property (ecma_object_t *, ecma_string_t *,
+                                                 const ecma_property_descriptor_t *, bool);
+bool ecma_op_object_get_own_property_descriptor (ecma_object_t *, ecma_string_t *,
+                                                 ecma_property_descriptor_t *);
+ecma_value_t ecma_op_object_has_instance (ecma_object_t *, ecma_value_t);
+bool ecma_op_object_is_prototype_of (ecma_object_t *, ecma_object_t *);
+ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *, bool, bool, bool);
 
-extern lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *);
-extern bool ecma_object_class_is (ecma_object_t *, uint32_t);
+lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *);
+bool ecma_object_class_is (ecma_object_t *, uint32_t);
 
 /**
  * @}

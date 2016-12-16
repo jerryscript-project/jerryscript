@@ -137,7 +137,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-extern ecma_value_t
+ecma_value_t
 ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object */
                                  ecma_value_t new_value, /**< new length value */
                                  uint32_t flags) /**< configuration options */

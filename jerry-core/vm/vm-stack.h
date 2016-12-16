@@ -66,9 +66,9 @@ typedef enum
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
 } vm_stack_context_type_t;
 
-extern ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *, ecma_value_t *);
-extern bool vm_stack_find_finally (vm_frame_ctx_t *, ecma_value_t **,
-                                   vm_stack_context_type_t, uint32_t);
+ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *, ecma_value_t *);
+bool vm_stack_find_finally (vm_frame_ctx_t *, ecma_value_t **,
+                            vm_stack_context_type_t, uint32_t);
 
 /**
  * @}

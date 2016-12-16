@@ -324,7 +324,7 @@ lit_is_ex_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first u
  *
  * @return pointer to the byte next to the last copied in the buffer
  */
-extern lit_utf8_byte_t *
+lit_utf8_byte_t *
 lit_copy_magic_string_to_buffer (lit_magic_string_id_t id, /**< magic string id */
                                  lit_utf8_byte_t *buffer_p, /**< destination buffer */
                                  lit_utf8_size_t buffer_size) /**< size of buffer */

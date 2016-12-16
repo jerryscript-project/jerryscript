@@ -81,8 +81,8 @@
   enum { JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) = 1 / (!!(x)) }
 
 #ifndef JERRY_NDEBUG
-extern void __noreturn jerry_assert_fail (const char *, const char *, const char *, const uint32_t);
-extern void __noreturn jerry_unreachable (const char *, const char *, const uint32_t);
+void __noreturn jerry_assert_fail (const char *, const char *, const char *, const uint32_t);
+void __noreturn jerry_unreachable (const char *, const char *, const uint32_t);
 
 #define JERRY_ASSERT(x) \
   do \
@@ -114,7 +114,7 @@ extern void __noreturn jerry_unreachable (const char *, const char *, const uint
 /**
  * Exit on fatal error
  */
-extern void __noreturn jerry_fatal (jerry_fatal_code_t);
+void __noreturn jerry_fatal (jerry_fatal_code_t);
 
 /*
  * Logging

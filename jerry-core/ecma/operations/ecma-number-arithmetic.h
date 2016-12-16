@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_number_t ecma_op_number_remainder (ecma_number_t, ecma_number_t);
+ecma_number_t ecma_op_number_remainder (ecma_number_t, ecma_number_t);
 
 /**
  * @}

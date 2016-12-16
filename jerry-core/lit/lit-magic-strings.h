@@ -42,25 +42,25 @@ typedef enum
  */
 typedef uint32_t lit_magic_string_ex_id_t;
 
-extern uint32_t lit_get_magic_string_ex_count (void);
+uint32_t lit_get_magic_string_ex_count (void);
 
-extern const lit_utf8_byte_t *lit_get_magic_string_utf8 (lit_magic_string_id_t);
-extern lit_utf8_size_t lit_get_magic_string_size (lit_magic_string_id_t);
-extern lit_magic_string_id_t lit_get_magic_string_size_block_start (lit_utf8_size_t);
+const lit_utf8_byte_t *lit_get_magic_string_utf8 (lit_magic_string_id_t);
+lit_utf8_size_t lit_get_magic_string_size (lit_magic_string_id_t);
+lit_magic_string_id_t lit_get_magic_string_size_block_start (lit_utf8_size_t);
 
-extern const lit_utf8_byte_t *lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t);
-extern lit_utf8_size_t lit_get_magic_string_ex_size (lit_magic_string_ex_id_t);
+const lit_utf8_byte_t *lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t);
+lit_utf8_size_t lit_get_magic_string_ex_size (lit_magic_string_ex_id_t);
 
-extern void lit_magic_strings_ex_set (const lit_utf8_byte_t **, uint32_t, const lit_utf8_size_t *);
+void lit_magic_strings_ex_set (const lit_utf8_byte_t **, uint32_t, const lit_utf8_size_t *);
 
-extern lit_magic_string_id_t lit_is_utf8_string_magic (const lit_utf8_byte_t *, lit_utf8_size_t);
-extern lit_magic_string_id_t lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *, lit_utf8_size_t,
-                                                            const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_magic_string_id_t lit_is_utf8_string_magic (const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_magic_string_id_t lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *, lit_utf8_size_t,
+                                                     const lit_utf8_byte_t *, lit_utf8_size_t);
 
-extern lit_magic_string_ex_id_t lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *, lit_utf8_size_t);
-extern lit_magic_string_ex_id_t lit_is_ex_utf8_string_pair_magic (const lit_utf8_byte_t *, lit_utf8_size_t,
-                                                                  const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_magic_string_ex_id_t lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_magic_string_ex_id_t lit_is_ex_utf8_string_pair_magic (const lit_utf8_byte_t *, lit_utf8_size_t,
+                                                           const lit_utf8_byte_t *, lit_utf8_size_t);
 
-extern lit_utf8_byte_t *lit_copy_magic_string_to_buffer (lit_magic_string_id_t, lit_utf8_byte_t *, lit_utf8_size_t);
+lit_utf8_byte_t *lit_copy_magic_string_to_buffer (lit_magic_string_id_t, lit_utf8_byte_t *, lit_utf8_size_t);
 
 #endif /* !LIT_MAGIC_STRINGS_H */

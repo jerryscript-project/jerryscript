@@ -25,17 +25,17 @@
  * @{
  */
 
-extern ecma_value_t
+ecma_value_t
 ecma_op_create_arraybuffer_object (const ecma_value_t *, ecma_length_t);
 
 /**
  * Helper functions for arraybuffer.
  */
-extern ecma_object_t *
+ecma_object_t *
 ecma_arraybuffer_new_object (ecma_length_t);
-extern lit_utf8_byte_t *
+lit_utf8_byte_t *
 ecma_arraybuffer_get_buffer (ecma_object_t *) __attr_pure___;
-extern ecma_length_t
+ecma_length_t
 ecma_arraybuffer_get_length (ecma_object_t *) __attr_pure___;
 
 /**

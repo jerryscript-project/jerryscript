@@ -52,13 +52,15 @@ typedef struct
    */
 } ecma_property_hashmap_t;
 
-void ecma_property_hashmap_create (ecma_object_t *);
-void ecma_property_hashmap_free (ecma_object_t *);
-void ecma_property_hashmap_insert (ecma_object_t *, ecma_string_t *, ecma_property_pair_t *, int);
-void ecma_property_hashmap_delete (ecma_object_t *, jmem_cpointer_t, ecma_property_t *);
+void ecma_property_hashmap_create (ecma_object_t *object_p);
+void ecma_property_hashmap_free (ecma_object_t *object_p);
+void ecma_property_hashmap_insert (ecma_object_t *object_p, ecma_string_t *name_p,
+                                   ecma_property_pair_t *property_pair_p, int property_index);
+void ecma_property_hashmap_delete (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *property_p);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *, ecma_string_t *, jmem_cpointer_t *);
+ecma_property_t *ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, ecma_string_t *name_p,
+                                             jmem_cpointer_t *property_real_name_cp);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
 /**

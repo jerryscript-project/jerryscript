@@ -30,11 +30,11 @@ extern "C"
  * @{
  */
 
-void jerry_port_default_set_abort_on_fail (bool);
+void jerry_port_default_set_abort_on_fail (bool flag);
 bool jerry_port_default_is_abort_on_fail (void);
 
 jerry_log_level_t jerry_port_default_get_log_level (void);
-void jerry_port_default_set_log_level (jerry_log_level_t);
+void jerry_port_default_set_log_level (jerry_log_level_t level);
 
 /**
  * @}

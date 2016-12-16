@@ -27,7 +27,7 @@
 #define LIT_CHAR_ZWJ  ((ecma_char_t) 0x200D) /* zero width joiner */
 #define LIT_CHAR_BOM  ((ecma_char_t) 0xFEFF) /* byte order mark */
 
-bool lit_char_is_format_control (ecma_char_t);
+bool lit_char_is_format_control (ecma_char_t c);
 
 /*
  * Whitespace characters (ECMA-262 v5, Table 2)
@@ -39,7 +39,7 @@ bool lit_char_is_format_control (ecma_char_t);
 #define LIT_CHAR_NBSP ((ecma_char_t) 0x00A0) /* no-break space */
 /* LIT_CHAR_BOM is defined above */
 
-bool lit_char_is_white_space (ecma_char_t);
+bool lit_char_is_white_space (ecma_char_t c);
 
 /*
  * Line terminator characters (ECMA-262 v5, Table 3)
@@ -49,7 +49,7 @@ bool lit_char_is_white_space (ecma_char_t);
 #define LIT_CHAR_LS ((ecma_char_t) 0x2028) /* line separator */
 #define LIT_CHAR_PS ((ecma_char_t) 0x2029) /* paragraph separator */
 
-bool lit_char_is_line_terminator (ecma_char_t);
+bool lit_char_is_line_terminator (ecma_char_t c);
 
 /*
  * String Single Character Escape Sequences (ECMA-262 v5, Table 4)
@@ -77,10 +77,10 @@ bool lit_char_is_line_terminator (ecma_char_t);
 #define LIT_CHAR_UNDERSCORE  ((ecma_char_t) '_')  /* low line (underscore) */
 /* LIT_CHAR_BACKSLASH defined above */
 
-bool lit_char_is_identifier_start (const uint8_t *);
-bool lit_char_is_identifier_part (const uint8_t *);
-bool lit_char_is_identifier_start_character (ecma_char_t);
-bool lit_char_is_identifier_part_character (ecma_char_t);
+bool lit_char_is_identifier_start (const uint8_t *src_p);
+bool lit_char_is_identifier_part (const uint8_t *src_p);
+bool lit_char_is_identifier_start_character (ecma_char_t chr);
+bool lit_char_is_identifier_part_character (ecma_char_t chr);
 
 /*
  * Punctuator characters (ECMA-262 v5, 7.7)
@@ -213,15 +213,16 @@ bool lit_char_is_identifier_part_character (ecma_char_t);
 
 #define LEXER_TO_ASCII_LOWERCASE(character) ((character) | LIT_CHAR_SP)
 
-bool lit_char_is_octal_digit (ecma_char_t);
-bool lit_char_is_decimal_digit (ecma_char_t);
-bool lit_char_is_hex_digit (ecma_char_t);
-uint32_t lit_char_hex_to_int (ecma_char_t);
-size_t lit_char_to_utf8_bytes (uint8_t *, ecma_char_t);
-size_t lit_char_get_utf8_length (ecma_char_t);
+bool lit_char_is_octal_digit (ecma_char_t c);
+bool lit_char_is_decimal_digit (ecma_char_t c);
+bool lit_char_is_hex_digit (ecma_char_t c);
+uint32_t lit_char_hex_to_int (ecma_char_t c);
+size_t lit_char_to_utf8_bytes (uint8_t *dst_p, ecma_char_t chr);
+size_t lit_char_get_utf8_length (ecma_char_t chr);
 
 /* read a hex encoded code point from a zero terminated buffer */
-bool lit_read_code_unit_from_hex (const lit_utf8_byte_t *, lit_utf8_size_t, ecma_char_ptr_t);
+bool lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, lit_utf8_size_t number_of_characters,
+                                  ecma_char_ptr_t out_code_unit_p);
 
 /**
  * Null character
@@ -231,7 +232,7 @@ bool lit_read_code_unit_from_hex (const lit_utf8_byte_t *, lit_utf8_size_t, ecma
 /*
  * Part of IsWordChar abstract operation (ECMA-262 v5, 15.10.2.6, step 3)
  */
-bool lit_char_is_word_char (ecma_char_t);
+bool lit_char_is_word_char (ecma_char_t c);
 
 /*
  * Utility functions for uppercasing / lowercasing
@@ -242,7 +243,7 @@ bool lit_char_is_word_char (ecma_char_t);
  */
 #define LIT_MAXIMUM_OTHER_CASE_LENGTH (3)
 
-ecma_length_t lit_char_to_lower_case (ecma_char_t, ecma_char_t *, ecma_length_t);
-ecma_length_t lit_char_to_upper_case (ecma_char_t, ecma_char_t *, ecma_length_t);
+ecma_length_t lit_char_to_lower_case (ecma_char_t character, ecma_char_t *output_buffer_p, ecma_length_t buffer_size);
+ecma_length_t lit_char_to_upper_case (ecma_char_t character, ecma_char_t *output_buffer_p, ecma_length_t buffer_size);
 
 #endif /* !LIT_CHAR_HELPERS_H */

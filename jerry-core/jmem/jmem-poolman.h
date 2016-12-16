@@ -29,8 +29,8 @@
  */
 
 void jmem_pools_finalize (void);
-void *jmem_pools_alloc (size_t);
-void jmem_pools_free (void *, size_t);
+void *jmem_pools_alloc (size_t size);
+void jmem_pools_free (void *chunk_p, size_t size);
 void jmem_pools_collect_empty (void);
 
 #ifdef JMEM_STATS

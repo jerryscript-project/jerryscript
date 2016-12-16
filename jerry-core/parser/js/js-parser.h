@@ -128,7 +128,8 @@ typedef struct
 } parser_error_location_t;
 
 /* Note: source must be a valid UTF-8 string */
-ecma_value_t parser_parse_script (const uint8_t *, size_t, bool, ecma_compiled_code_t **);
+ecma_value_t parser_parse_script (const uint8_t *source_p, size_t size, bool is_strict,
+                                  ecma_compiled_code_t **bytecode_data_p);
 
 const char *parser_error_to_string (parser_error_t);
 

@@ -30,10 +30,10 @@
 
 void jmem_heap_init (void);
 void jmem_heap_finalize (void);
-void *jmem_heap_alloc_block (const size_t);
-void *jmem_heap_alloc_block_null_on_error (const size_t);
-void jmem_heap_free_block (void *, const size_t);
-bool jmem_is_heap_pointer (const void *);
+void *jmem_heap_alloc_block (const size_t size);
+void *jmem_heap_alloc_block_null_on_error (const size_t size);
+void jmem_heap_free_block (void *ptr, const size_t size);
+bool jmem_is_heap_pointer (const void *pointer);
 
 #ifdef JMEM_STATS
 /**

@@ -85,52 +85,55 @@
 #define LIT_UTF8_FIRST_BYTE_MAX LIT_UTF8_5_BYTE_MARKER
 
 /* validation */
-bool lit_is_utf8_string_valid (const lit_utf8_byte_t *, lit_utf8_size_t);
-bool lit_is_cesu8_string_valid (const lit_utf8_byte_t *, lit_utf8_size_t);
+bool lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
+bool lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
 
 /* checks */
-bool lit_is_code_point_utf16_low_surrogate (lit_code_point_t);
-bool lit_is_code_point_utf16_high_surrogate (lit_code_point_t);
+bool lit_is_code_point_utf16_low_surrogate (lit_code_point_t code_point);
+bool lit_is_code_point_utf16_high_surrogate (lit_code_point_t code_point);
 
 /* size */
-lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *);
-lit_utf8_size_t lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_utf8_size_t lit_zt_utf8_string_size (const lit_utf8_byte_t *utf8_str_p);
+lit_utf8_size_t lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, lit_utf8_size_t cesu8_buf_size);
 
 /* length */
-ecma_length_t lit_utf8_string_length (const lit_utf8_byte_t *, lit_utf8_size_t);
-ecma_length_t lit_get_utf8_length_of_cesu8_string (const lit_utf8_byte_t *, lit_utf8_size_t);
+ecma_length_t lit_utf8_string_length (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t utf8_buf_size);
+ecma_length_t lit_get_utf8_length_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, lit_utf8_size_t cesu8_buf_size);
 
 /* hash */
-lit_string_hash_t lit_utf8_string_calc_hash (const lit_utf8_byte_t *, lit_utf8_size_t);
-lit_string_hash_t lit_utf8_string_hash_combine (lit_string_hash_t, const lit_utf8_byte_t *, lit_utf8_size_t);
+lit_string_hash_t lit_utf8_string_calc_hash (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t utf8_buf_size);
+lit_string_hash_t lit_utf8_string_hash_combine (lit_string_hash_t hash_basis, const lit_utf8_byte_t *utf8_buf_p,
+                                                lit_utf8_size_t utf8_buf_size);
 
 /* code unit access */
-ecma_char_t lit_utf8_string_code_unit_at (const lit_utf8_byte_t *, lit_utf8_size_t, ecma_length_t);
-lit_utf8_size_t lit_get_unicode_char_size_by_utf8_first_byte (lit_utf8_byte_t);
+ecma_char_t lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t utf8_buf_size,
+                                          ecma_length_t code_unit_offset);
+lit_utf8_size_t lit_get_unicode_char_size_by_utf8_first_byte (lit_utf8_byte_t first_byte);
 
 /* conversion */
-lit_utf8_size_t lit_code_unit_to_utf8 (ecma_char_t, lit_utf8_byte_t *);
-lit_utf8_size_t lit_code_point_to_utf8 (lit_code_point_t, lit_utf8_byte_t *);
-lit_utf8_size_t lit_code_point_to_cesu8 (lit_code_point_t, lit_utf8_byte_t *);
-lit_code_point_t lit_convert_surrogate_pair_to_code_point (ecma_char_t, ecma_char_t);
+lit_utf8_size_t lit_code_unit_to_utf8 (ecma_char_t code_unit, lit_utf8_byte_t *buf_p);
+lit_utf8_size_t lit_code_point_to_utf8 (lit_code_point_t code_point, lit_utf8_byte_t *buf);
+lit_utf8_size_t lit_code_point_to_cesu8 (lit_code_point_t code_point, lit_utf8_byte_t *buf);
+lit_code_point_t lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surrogate, ecma_char_t low_surrogate);
 
-bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, lit_utf8_size_t,
-                                          const lit_utf8_byte_t *string2_p, lit_utf8_size_t);
+bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, lit_utf8_size_t string1_size,
+                                          const lit_utf8_byte_t *string2_p, lit_utf8_size_t string2_size);
 
 /* read code point from buffer */
-lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *, lit_utf8_size_t, lit_code_point_t *);
+lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, lit_utf8_size_t buf_size,
+                                               lit_code_point_t *code_point);
 
-lit_utf8_size_t lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *,
-                                              ecma_char_t *);
+lit_utf8_size_t lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
+                                              ecma_char_t *code_point);
 
-lit_utf8_size_t lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *,
-                                                   ecma_char_t *);
+lit_utf8_size_t lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
+                                                   ecma_char_t *code_point);
 
-ecma_char_t lit_utf8_read_next (const lit_utf8_byte_t **);
-ecma_char_t lit_utf8_read_prev (const lit_utf8_byte_t **);
-ecma_char_t lit_utf8_peek_next (const lit_utf8_byte_t *);
-ecma_char_t lit_utf8_peek_prev (const lit_utf8_byte_t *);
-void lit_utf8_incr (const lit_utf8_byte_t **);
-void lit_utf8_decr (const lit_utf8_byte_t **);
+ecma_char_t lit_utf8_read_next (const lit_utf8_byte_t **buf_p);
+ecma_char_t lit_utf8_read_prev (const lit_utf8_byte_t **buf_p);
+ecma_char_t lit_utf8_peek_next (const lit_utf8_byte_t *buf_p);
+ecma_char_t lit_utf8_peek_prev (const lit_utf8_byte_t *buf_p);
+void lit_utf8_incr (const lit_utf8_byte_t **buf_p);
+void lit_utf8_decr (const lit_utf8_byte_t **buf_p);
 
 #endif /* !LIT_STRINGS_H */

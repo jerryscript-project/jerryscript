@@ -52,64 +52,64 @@ typedef enum
 } number_bitwise_logic_op;
 
 ecma_value_t
-vm_var_decl (vm_frame_ctx_t *, ecma_string_t *);
+vm_var_decl (vm_frame_ctx_t *frame_ctx_p, ecma_string_t *var_name_str_p);
 
 ecma_value_t
-opfunc_equal_value (ecma_value_t, ecma_value_t);
+opfunc_equal_value (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_not_equal_value (ecma_value_t, ecma_value_t);
+opfunc_not_equal_value (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-do_number_arithmetic (number_arithmetic_op, ecma_value_t, ecma_value_t);
+do_number_arithmetic (number_arithmetic_op op, ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_unary_plus (ecma_value_t);
+opfunc_unary_plus (ecma_value_t left_value);
 
 ecma_value_t
-opfunc_unary_minus (ecma_value_t);
+opfunc_unary_minus (ecma_value_t left_value);
 
 ecma_value_t
-do_number_bitwise_logic (number_bitwise_logic_op, ecma_value_t, ecma_value_t);
+do_number_bitwise_logic (number_bitwise_logic_op op, ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_addition (ecma_value_t, ecma_value_t);
+opfunc_addition (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_less_than (ecma_value_t, ecma_value_t);
+opfunc_less_than (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_greater_than (ecma_value_t, ecma_value_t);
+opfunc_greater_than (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_less_or_equal_than (ecma_value_t, ecma_value_t);
+opfunc_less_or_equal_than (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_greater_or_equal_than (ecma_value_t, ecma_value_t);
+opfunc_greater_or_equal_than (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_in (ecma_value_t, ecma_value_t);
+opfunc_in (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_instanceof (ecma_value_t, ecma_value_t);
+opfunc_instanceof (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_logical_not (ecma_value_t);
+opfunc_logical_not (ecma_value_t left_value);
 
 ecma_value_t
-opfunc_typeof (ecma_value_t);
+opfunc_typeof (ecma_value_t left_value);
 
 void
-opfunc_set_accessor (bool, ecma_value_t, ecma_value_t, ecma_value_t);
+opfunc_set_accessor (bool is_getter, ecma_value_t object, ecma_value_t accessor_name, ecma_value_t accessor);
 
 ecma_value_t
-vm_op_delete_prop (ecma_value_t, ecma_value_t, bool);
+vm_op_delete_prop (ecma_value_t object, ecma_value_t property, bool is_strict);
 
 ecma_value_t
-vm_op_delete_var (jmem_cpointer_t, ecma_object_t *);
+vm_op_delete_var (jmem_cpointer_t name_literal, ecma_object_t *lex_env_p);
 
 ecma_collection_header_t *
-opfunc_for_in (ecma_value_t, ecma_value_t *);
+opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
 /**
  * @}

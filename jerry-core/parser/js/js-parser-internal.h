@@ -286,41 +286,41 @@ typedef struct
 
 /* Memory management.
  * Note: throws an error if unsuccessful. */
-void *parser_malloc (parser_context_t *, size_t);
-void parser_free (void *, size_t);
-void *parser_malloc_local (parser_context_t *, size_t);
-void parser_free_local (void *, size_t);
+void *parser_malloc (parser_context_t *context_p, size_t size);
+void parser_free (void *ptr, size_t size);
+void *parser_malloc_local (parser_context_t *context_p, size_t size);
+void parser_free_local (void *ptr, size_t size);
 
 /* Parser byte stream. */
 
-void parser_cbc_stream_init (parser_mem_data_t *);
-void parser_cbc_stream_free (parser_mem_data_t *);
-void parser_cbc_stream_alloc_page (parser_context_t *, parser_mem_data_t *);
+void parser_cbc_stream_init (parser_mem_data_t *data_p);
+void parser_cbc_stream_free (parser_mem_data_t *data_p);
+void parser_cbc_stream_alloc_page (parser_context_t *context_p, parser_mem_data_t *data_p);
 
 /* Parser list. Ensures pointer alignment. */
 
-void parser_list_init (parser_list_t *, uint32_t, uint32_t);
-void parser_list_free (parser_list_t *);
-void parser_list_reset (parser_list_t *);
-void *parser_list_append (parser_context_t *, parser_list_t *);
-void *parser_list_get (parser_list_t *, size_t);
-void parser_list_iterator_init (parser_list_t *, parser_list_iterator_t *);
-void *parser_list_iterator_next (parser_list_iterator_t *);
+void parser_list_init (parser_list_t *list_p, uint32_t item_size, uint32_t item_count);
+void parser_list_free (parser_list_t *list_p);
+void parser_list_reset (parser_list_t *list_p);
+void *parser_list_append (parser_context_t *context_p, parser_list_t *list_p);
+void *parser_list_get (parser_list_t *list_p, size_t index);
+void parser_list_iterator_init (parser_list_t *list_p, parser_list_iterator_t *iterator_p);
+void *parser_list_iterator_next (parser_list_iterator_t *iterator_p);
 
 /* Parser stack. Optimized for pushing bytes.
  * Pop functions never throws error. */
 
-void parser_stack_init (parser_context_t *);
-void parser_stack_free (parser_context_t *);
-void parser_stack_push_uint8 (parser_context_t *, uint8_t);
-void parser_stack_pop_uint8 (parser_context_t *);
-void parser_stack_push_uint16 (parser_context_t *, uint16_t);
-uint16_t parser_stack_pop_uint16 (parser_context_t *);
-void parser_stack_push (parser_context_t *, const void *, uint32_t);
-void parser_stack_pop (parser_context_t *, void *, uint32_t);
-void parser_stack_iterator_skip (parser_stack_iterator_t *, size_t);
-void parser_stack_iterator_read (parser_stack_iterator_t *, void *, size_t);
-void parser_stack_iterator_write (parser_stack_iterator_t *, const void *, size_t);
+void parser_stack_init (parser_context_t *context_p);
+void parser_stack_free (parser_context_t *context_p);
+void parser_stack_push_uint8 (parser_context_t *context_p, uint8_t uint8_value);
+void parser_stack_pop_uint8 (parser_context_t *context_p);
+void parser_stack_push_uint16 (parser_context_t *context_p, uint16_t uint16_value);
+uint16_t parser_stack_pop_uint16 (parser_context_t *context_p);
+void parser_stack_push (parser_context_t *context_p, const void *data_p, uint32_t length);
+void parser_stack_pop (parser_context_t *context_p, void *data_p, uint32_t length);
+void parser_stack_iterator_skip (parser_stack_iterator_t *iterator, size_t length);
+void parser_stack_iterator_read (parser_stack_iterator_t *iterator, void *data_p, size_t length);
+void parser_stack_iterator_write (parser_stack_iterator_t *iterator, const void *data_p, size_t length);
 
 /**
  * @}
@@ -338,18 +338,19 @@ void parser_stack_iterator_write (parser_stack_iterator_t *, const void *, size_
 
 /* Compact byte code emitting functions. */
 
-void parser_flush_cbc (parser_context_t *);
-void parser_emit_cbc (parser_context_t *, uint16_t);
-void parser_emit_cbc_literal (parser_context_t *, uint16_t, uint16_t);
-void parser_emit_cbc_literal_from_token (parser_context_t *, uint16_t);
-void parser_emit_cbc_call (parser_context_t *, uint16_t, size_t);
-void parser_emit_cbc_push_number (parser_context_t *, bool);
-void parser_emit_cbc_forward_branch (parser_context_t *, uint16_t, parser_branch_t *);
-parser_branch_node_t *parser_emit_cbc_forward_branch_item (parser_context_t *, uint16_t, parser_branch_node_t *);
-void parser_emit_cbc_backward_branch (parser_context_t *, uint16_t, uint32_t);
-void parser_set_branch_to_current_position (parser_context_t *, parser_branch_t *);
-void parser_set_breaks_to_current_position (parser_context_t *, parser_branch_node_t *);
-void parser_set_continues_to_current_position (parser_context_t *, parser_branch_node_t *);
+void parser_flush_cbc (parser_context_t *context_p);
+void parser_emit_cbc (parser_context_t *context_p, uint16_t opcode);
+void parser_emit_cbc_literal (parser_context_t *context_p, uint16_t opcode, uint16_t literal_index);
+void parser_emit_cbc_literal_from_token (parser_context_t *context_p, uint16_t opcode);
+void parser_emit_cbc_call (parser_context_t *context_p, uint16_t opcode, size_t call_arguments);
+void parser_emit_cbc_push_number (parser_context_t *context_p, bool is_negative_number);
+void parser_emit_cbc_forward_branch (parser_context_t *context_p, uint16_t opcode, parser_branch_t *branch_p);
+parser_branch_node_t *parser_emit_cbc_forward_branch_item (parser_context_t *context_p, uint16_t opcode,
+                                                           parser_branch_node_t *next_p);
+void parser_emit_cbc_backward_branch (parser_context_t *context_p, uint16_t opcode, uint32_t offset);
+void parser_set_branch_to_current_position (parser_context_t *context_p, parser_branch_t *branch_p);
+void parser_set_breaks_to_current_position (parser_context_t *context_p, parser_branch_node_t *current_p);
+void parser_set_continues_to_current_position (parser_context_t *context_p, parser_branch_node_t *current_p);
 
 /* Convenience macros. */
 #define parser_emit_cbc_ext(context_p, opcode) \
@@ -372,16 +373,17 @@ void parser_set_continues_to_current_position (parser_context_t *, parser_branch
 
 /* Lexer functions */
 
-void lexer_next_token (parser_context_t *);
-void lexer_expect_identifier (parser_context_t *, uint8_t);
-void lexer_scan_identifier (parser_context_t *, bool);
+void lexer_next_token (parser_context_t *context_p);
+void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
+void lexer_scan_identifier (parser_context_t *context_p, bool propety_name);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
-void lexer_expect_object_literal_id (parser_context_t *, bool);
-void lexer_construct_literal_object (parser_context_t *, lexer_lit_location_t *, uint8_t);
-bool lexer_construct_number_object (parser_context_t *, bool, bool);
-void lexer_construct_function_object (parser_context_t *, uint32_t);
-void lexer_construct_regexp_object (parser_context_t *, bool);
-bool lexer_compare_identifier_to_current (parser_context_t *, const lexer_lit_location_t *);
+void lexer_expect_object_literal_id (parser_context_t *context_p, bool must_be_identifier);
+void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
+                                     uint8_t literal_type);
+bool lexer_construct_number_object (parser_context_t *context_p, bool push_number_allowed, bool is_negative_number);
+void lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
+void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
+bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right);
 
 /**
  * @}
@@ -392,7 +394,7 @@ bool lexer_compare_identifier_to_current (parser_context_t *, const lexer_lit_lo
 
 /* Parser functions. */
 
-void parser_parse_expression (parser_context_t *, int);
+void parser_parse_expression (parser_context_t *context_p, int options);
 
 /**
  * @}
@@ -401,7 +403,7 @@ void parser_parse_expression (parser_context_t *, int);
  * @{
  */
 
-void parser_scan_until (parser_context_t *, lexer_range_t *, lexer_token_type_t);
+void parser_scan_until (parser_context_t *context_p, lexer_range_t *range_p, lexer_token_type_t end_type);
 
 /**
  * @}
@@ -410,8 +412,8 @@ void parser_scan_until (parser_context_t *, lexer_range_t *, lexer_token_type_t)
  * @{
  */
 
-void parser_parse_statements (parser_context_t *);
-void parser_free_jumps (parser_stack_iterator_t);
+void parser_parse_statements (parser_context_t *context_p);
+void parser_free_jumps (parser_stack_iterator_t iterator);
 
 /**
  * @}
@@ -420,11 +422,11 @@ void parser_free_jumps (parser_stack_iterator_t);
  * @{
  */
 
-ecma_compiled_code_t *parser_parse_function (parser_context_t *, uint32_t);
+ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
 
 /* Error management. */
 
-void parser_raise_error (parser_context_t *, parser_error_t);
+void parser_raise_error (parser_context_t *context_p, parser_error_t error);
 
 /**
  * @}

@@ -49,34 +49,34 @@
 /*
  * ANSI/POSIX
  */
-double acos (double);
-double asin (double);
-double atan (double);
-double atan2 (double, double);
-double cos (double);
-double sin (double);
-double tan (double);
+double acos (double x);
+double asin (double x);
+double atan (double x);
+double atan2 (double y, double x);
+double cos (double x);
+double sin (double x);
+double tan (double x);
 
-double exp (double);
-double log (double);
+double exp (double x);
+double log (double x);
 
-double pow (double, double);
-double sqrt (double);
+double pow (double x, double y);
+double sqrt (double x);
 
-double ceil (double);
-double fabs (double);
-double floor (double);
-double fmod (double, double);
+double ceil (double x);
+double fabs (double x);
+double floor (double x);
+double fmod (double x, double y);
 
-int isnan (double);
-int finite (double);
+int isnan (double x);
+int finite (double x);
 
-double nextafter (double, double);
+double nextafter (double x, double y);
 
 /*
  * Functions callable from C, intended to support IEEE arithmetic.
  */
-double copysign (double, double);
-double scalbn (double, int);
+double copysign (double x, double y);
+double scalbn (double x, int n);
 
 #endif /* !JERRY_LIBM_INTERNAL_H */

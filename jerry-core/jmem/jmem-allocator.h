@@ -154,11 +154,11 @@ typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_seve
 void jmem_init (void);
 void jmem_finalize (void);
 
-jmem_cpointer_t jmem_compress_pointer (const void *);
-void *jmem_decompress_pointer (uintptr_t);
+jmem_cpointer_t jmem_compress_pointer (const void *pointer_p);
+void *jmem_decompress_pointer (uintptr_t compressed_pointer);
 
-void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
-void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t);
+void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback);
+void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback);
 
 #ifdef JMEM_STATS
 void jmem_stats_reset_peak (void);

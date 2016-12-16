@@ -274,12 +274,12 @@ typedef enum
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 
-ecma_value_t vm_run_global (const ecma_compiled_code_t *);
-ecma_value_t vm_run_eval (ecma_compiled_code_t *, bool);
+ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
+ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, bool is_direct);
 
-ecma_value_t vm_run (const ecma_compiled_code_t *, ecma_value_t,
-                     ecma_object_t *, bool, const ecma_value_t *,
-                     ecma_length_t);
+ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
+                     ecma_object_t *lex_env_p, bool is_eval_code, const ecma_value_t *arg_list_p,
+                     ecma_length_t arg_list_len);
 
 bool vm_is_strict_mode (void);
 bool vm_is_direct_eval_form_call (void);

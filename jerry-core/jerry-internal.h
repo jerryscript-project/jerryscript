@@ -24,13 +24,13 @@
 #include "jerry-api.h"
 
 ecma_value_t
-jerry_dispatch_external_function (ecma_object_t *,
-                                  ecma_external_pointer_t,
-                                  ecma_value_t,
-                                  const ecma_value_t *,
-                                  ecma_length_t);
+jerry_dispatch_external_function (ecma_object_t *function_object_p,
+                                  ecma_external_pointer_t handler_p,
+                                  ecma_value_t this_arg_value,
+                                  const ecma_value_t *arguments_list_p,
+                                  ecma_length_t arguments_list_len);
 
 void
-jerry_dispatch_object_free_callback (ecma_external_pointer_t, ecma_external_pointer_t);
+jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, ecma_external_pointer_t native_p);
 
 #endif /* !JERRY_INTERNAL_H */

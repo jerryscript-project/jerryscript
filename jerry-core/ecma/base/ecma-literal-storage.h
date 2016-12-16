@@ -38,8 +38,8 @@ typedef struct
 
 void ecma_finalize_lit_storage (void);
 
-jmem_cpointer_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *, lit_utf8_size_t);
-jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t);
+jmem_cpointer_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, lit_utf8_size_t size);
+jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t number_arg);
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 bool

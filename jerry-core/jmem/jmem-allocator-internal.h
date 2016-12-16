@@ -24,7 +24,7 @@
  * @{
  */
 
-void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t);
+void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity);
 
 /**
  * @}

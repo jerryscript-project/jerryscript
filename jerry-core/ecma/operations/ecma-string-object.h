@@ -26,13 +26,13 @@
  */
 
 ecma_value_t
-ecma_op_create_string_object (const ecma_value_t *, ecma_length_t);
+ecma_op_create_string_object (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 
 void
-ecma_op_string_list_lazy_property_names (ecma_object_t *,
-                                         bool,
-                                         ecma_collection_header_t *,
-                                         ecma_collection_header_t *);
+ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p,
+                                         bool separate_enumerable,
+                                         ecma_collection_header_t *main_collection_p,
+                                         ecma_collection_header_t *non_enum_collection_p);
 
 
 /**

@@ -99,7 +99,7 @@ typedef struct
   uint8_t status_flags;                  /**< status flags */
 } lexer_literal_t;
 
-void util_free_literal (lexer_literal_t *);
+void util_free_literal (lexer_literal_t *literal_p);
 
 #ifdef PARSER_DUMP_BYTE_CODE
 void util_print_literal (lexer_literal_t *);

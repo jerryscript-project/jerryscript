@@ -34,6 +34,41 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_MATH_OBJECT_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+
+  ECMA_MATH_OBJECT_ABS, /* ECMA-262 v5, 15.8.2.1 */
+  ECMA_MATH_OBJECT_ACOS, /* ECMA-262 v5, 15.8.2.2 */
+  ECMA_MATH_OBJECT_ASIN, /* ECMA-262 v5, 15.8.2.3 */
+  ECMA_MATH_OBJECT_ATAN, /* ECMA-262 v5, 15.8.2.4 */
+  ECMA_MATH_OBJECT_CEIL, /* ECMA-262 v5, 15.8.2.6 */
+  ECMA_MATH_OBJECT_COS, /* ECMA-262 v5, 15.8.2.7 */
+  ECMA_MATH_OBJECT_EXP, /* ECMA-262 v5, 15.8.2.8 */
+  ECMA_MATH_OBJECT_FLOOR, /* ECMA-262 v5, 15.8.2.9 */
+  ECMA_MATH_OBJECT_LOG, /* ECMA-262 v5, 15.8.2.10 */
+  ECMA_MATH_OBJECT_ROUND, /* ECMA-262 v5, 15.8.2.15 */
+  ECMA_MATH_OBJECT_SIN, /* ECMA-262 v5, 15.8.2.16 */
+  ECMA_MATH_OBJECT_SQRT, /* ECMA-262 v5, 15.8.2.17 */
+  ECMA_MATH_OBJECT_TAN, /* ECMA-262 v5, 15.8.2.18 */
+
+  ECMA_MATH_OBJECT_ATAN2, /* ECMA-262 v5, 15.8.2.5 */
+  ECMA_MATH_OBJECT_POW, /* ECMA-262 v5, 15.8.2.13 */
+
+  ECMA_MATH_OBJECT_MAX, /* ECMA-262 v5, 15.8.2.11 */
+  ECMA_MATH_OBJECT_MIN, /* ECMA-262 v5, 15.8.2.12 */
+
+  ECMA_MATH_OBJECT_RANDOM, /* ECMA-262 v5, 15.8.2.14 */
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-math.inc.h"
 #define BUILTIN_UNDERSCORED_ID math
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -49,452 +84,77 @@
  */
 
 /**
- * The Math object's 'abs' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.1
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_abs (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (fabs (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
-} /* ecma_builtin_math_object_abs */
-
-/**
- * The Math object's 'acos' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_acos (ecma_value_t this_arg, /**< 'this' argument */
-                               ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (acos (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_acos */
-
-/**
- * The Math object's 'asin' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_asin (ecma_value_t this_arg, /**< 'this' argument */
-                               ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (asin (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_asin */
-
-/**
- * The Math object's 'atan' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_atan (ecma_value_t this_arg, /**< 'this' argument */
-                               ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (atan (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_atan */
-
-/**
- * The Math object's 'atan2' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_atan2 (ecma_value_t this_arg, /**< 'this' argument */
-                                ecma_value_t arg1, /**< first routine's argument */
-                                ecma_value_t arg2) /**< second routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (atan2 (x, y)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (y);
-  ECMA_OP_TO_NUMBER_FINALIZE (x);
-  return ret_value;
-} /* ecma_builtin_math_object_atan2 */
-
-/**
- * The Math object's 'ceil' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_ceil (ecma_value_t this_arg, /**< 'this' argument */
-                               ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (ceil (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_ceil */
-
-/**
- * The Math object's 'cos' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.7
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_cos (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (cos (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_cos */
-
-/**
- * The Math object's 'exp' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_exp (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (exp (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
-} /* ecma_builtin_math_object_exp */
-
-/**
- * The Math object's 'floor' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_floor (ecma_value_t this_arg, /**< 'this' argument */
-                                ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (floor (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_floor */
-
-/**
- * The Math object's 'log' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.10
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_log (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (log (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-
-  return ret_value;
-} /* ecma_builtin_math_object_log */
-
-/**
- * The Math object's 'max' routine
+ * The Math object's 'max' 'min' routines.
  *
  * See also:
  *          ECMA-262 v5, 15.8.2.11
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_max (ecma_value_t this_arg, /**< 'this' argument */
-                              const ecma_value_t args[], /**< arguments list */
-                              ecma_length_t args_number) /**< number of arguments */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ecma_number_t ret_num = ecma_number_make_infinity (true);
-
-  bool is_NaN = false;
-
-  for (ecma_length_t arg_index = 0;
-       arg_index < args_number && ecma_is_value_empty (ret_value);
-       arg_index++)
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
-
-    if (!is_NaN)
-    {
-      if (unlikely (ecma_number_is_nan (arg_num)))
-      {
-        ret_num = arg_num;
-        is_NaN = true;
-      }
-      else if (ecma_number_is_zero (arg_num) /* both numbers are zeroes */
-               && ecma_number_is_zero (ret_num))
-      {
-        if (!ecma_number_is_negative (arg_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else if (ecma_number_is_infinity (arg_num))
-      {
-        if (!ecma_number_is_negative (arg_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else if (ecma_number_is_infinity (ret_num))
-      {
-        if (ecma_number_is_negative (ret_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else
-      {
-        JERRY_ASSERT (!ecma_number_is_nan (arg_num)
-                      && !ecma_number_is_infinity (arg_num));
-        JERRY_ASSERT (!ecma_number_is_nan (ret_num)
-                      && !ecma_number_is_infinity (ret_num));
-
-        if (arg_num > ret_num)
-        {
-          ret_num = arg_num;
-        }
-      }
-    }
-
-    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_number_value (ret_num);
-  }
-
-  return ret_value;
-} /* ecma_builtin_math_object_max */
-
-/**
- * The Math object's 'min' routine
- *
- * See also:
  *          ECMA-262 v5, 15.8.2.12
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_min (ecma_value_t this_arg, /**< 'this' argument */
-                              const ecma_value_t args[], /**< arguments list */
-                              ecma_length_t args_number) /**< number of arguments */
+ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
+                                  const ecma_value_t *arg, /**< arguments list */
+                                  ecma_length_t args_number) /**< number of arguments */
 {
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_number_t result_num = ecma_number_make_infinity (is_max);
 
-  ecma_number_t ret_num = ecma_number_make_infinity (false);
-
-  bool is_NaN = false;
-
-  for (ecma_length_t arg_index = 0;
-       arg_index < args_number && ecma_is_value_empty (ret_value);
-       arg_index++)
+  while (args_number > 0)
   {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
+    ecma_number_t arg_num;
 
-    if (!is_NaN)
+    if (ecma_is_value_number (*arg))
     {
-      if (unlikely (ecma_number_is_nan (arg_num)))
-      {
-        ret_num = arg_num;
-        is_NaN = true;
-      }
-      else if (ecma_number_is_zero (arg_num) /* both numbers are zeroes */
-               && ecma_number_is_zero (ret_num))
-      {
-        if (ecma_number_is_negative (arg_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else if (ecma_number_is_infinity (arg_num))
-      {
-        if (ecma_number_is_negative (arg_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else if (ecma_number_is_infinity (ret_num))
-      {
-        if (!ecma_number_is_negative (ret_num))
-        {
-          ret_num = arg_num;
-        }
-      }
-      else
-      {
-        JERRY_ASSERT (!ecma_number_is_nan (arg_num)
-                      && !ecma_number_is_infinity (arg_num));
-        JERRY_ASSERT (!ecma_number_is_nan (ret_num)
-                      && !ecma_number_is_infinity (ret_num));
+      arg_num = ecma_get_number_from_value (*arg);
+    }
+    else
+    {
+      ecma_value_t value = ecma_op_to_number (*arg);
 
-        if (arg_num < ret_num)
-        {
-          ret_num = arg_num;
-        }
+      if (ECMA_IS_VALUE_ERROR (value))
+      {
+        return value;
+      }
+
+      arg_num = ecma_get_number_from_value (value);
+
+      ecma_fast_free_value (value);
+    }
+
+    if (unlikely (ecma_number_is_nan (arg_num)))
+    {
+      result_num = arg_num;
+      break;
+    }
+
+    if (ecma_number_is_zero (arg_num)
+        && ecma_number_is_zero (result_num))
+    {
+      bool is_negative = ecma_number_is_negative (arg_num);
+
+      if (is_max ? !is_negative : is_negative)
+      {
+        result_num = arg_num;
+      }
+    }
+    else
+    {
+      if (is_max ? (arg_num > result_num) : (arg_num < result_num))
+      {
+        result_num = arg_num;
       }
     }
 
-    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
+    arg++;
+    args_number--;
   }
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_number_value (ret_num);
-  }
-
-  return ret_value;
-} /* ecma_builtin_math_object_min */
+  return ecma_make_number_value (result_num);
+} /* ecma_builtin_math_object_max_min */
 
 /**
- * The Math object's 'pow' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.13
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_pow (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg1, /**< first routine's argument */
-                              ecma_value_t arg2) /**< second routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (x, arg1, ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (y, arg2, ret_value);
-
-  if (ecma_number_is_nan (y) ||
-      (ecma_number_is_infinity (y) && (x == 1.0 || x == -1.0)))
-  {
-    /* Handle differences between ES5.1 and ISO C standards for pow. */
-    ret_value = ecma_make_number_value (ecma_number_make_nan ());
-  }
-  else
-  {
-    ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (pow (x, y)));
-  }
-
-  ECMA_OP_TO_NUMBER_FINALIZE (y);
-  ECMA_OP_TO_NUMBER_FINALIZE (x);
-
-  return ret_value;
-} /* ecma_builtin_math_object_pow */
-
-/**
- * The Math object's 'random' routine
+ * The Math object's 'random' routine.
  *
  * See also:
  *          ECMA-262 v5, 15.8.2.14
@@ -503,10 +163,8 @@ ecma_builtin_math_object_pow (ecma_value_t this_arg, /**< 'this' argument */
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_math_object_random (ecma_value_t this_arg) /**< 'this' argument */
+ecma_builtin_math_object_random (void)
 {
-  JERRY_UNUSED (this_arg);
-
   const ecma_number_t rand_max = (ecma_number_t) RAND_MAX;
   const ecma_number_t rand_max_min_1 = (ecma_number_t) (RAND_MAX - 1);
 
@@ -514,131 +172,200 @@ ecma_builtin_math_object_random (ecma_value_t this_arg) /**< 'this' argument */
 } /* ecma_builtin_math_object_random */
 
 /**
- * The Math object's 'round' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.15
+ * Dispatcher for the built-in's routines.
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_math_object_round (ecma_value_t this_arg, /**< 'this' argument */
-                                ecma_value_t arg) /**< routine's argument */
+ecma_value_t
+ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                  *   identifier */
+                                    ecma_value_t this_arg, /**< 'this' argument value */
+                                    const ecma_value_t arguments_list[], /**< list of arguments
+                                                                          *   passed to routine */
+                                    ecma_length_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ecma_number_t num = ECMA_NUMBER_ZERO;
-
-  if (ecma_number_is_nan (arg_num)
-      || ecma_number_is_zero (arg_num)
-      || ecma_number_is_infinity (arg_num))
+  if (builtin_routine_id <= ECMA_MATH_OBJECT_POW)
   {
-    num = arg_num;
-  }
-  else if (ecma_number_is_negative (arg_num)
-           && arg_num >= -ECMA_NUMBER_HALF)
-  {
-    num = ecma_number_negate (ECMA_NUMBER_ZERO);
-  }
-  else
-  {
-    const ecma_number_t up_half = arg_num + ECMA_NUMBER_HALF;
-    const ecma_number_t down_half = arg_num - ECMA_NUMBER_HALF;
-    const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, ECMA_NUMBER_ONE);
-    const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, ECMA_NUMBER_ONE);
+    ecma_number_t x = ecma_number_make_nan ();
+    ecma_number_t y = ecma_number_make_nan ();
 
-    if (up_rounded - arg_num <= arg_num - down_rounded)
+    if (arguments_number >= 1)
     {
-      num = up_rounded;
+      if (ecma_is_value_number (arguments_list[0]))
+      {
+        x = ecma_get_number_from_value (arguments_list[0]);
+      }
+      else
+      {
+        ecma_value_t value = ecma_op_to_number (arguments_list[0]);
+
+        if (ECMA_IS_VALUE_ERROR (value))
+        {
+          return value;
+        }
+
+        x = ecma_get_number_from_value (value);
+
+        ecma_fast_free_value (value);
+      }
     }
-    else
+
+    if (builtin_routine_id >= ECMA_MATH_OBJECT_ATAN2)
     {
-      num = down_rounded;
+      if (arguments_number >= 2)
+      {
+        if (ecma_is_value_number (arguments_list[1]))
+        {
+          y = ecma_get_number_from_value (arguments_list[1]);
+        }
+        else
+        {
+          ecma_value_t value = ecma_op_to_number (arguments_list[1]);
+
+          if (ECMA_IS_VALUE_ERROR (value))
+          {
+            return value;
+          }
+
+          y = ecma_get_number_from_value (value);
+
+          ecma_fast_free_value (value);
+        }
+      }
     }
+
+    switch (builtin_routine_id)
+    {
+      case ECMA_MATH_OBJECT_ABS:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (fabs (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_ACOS:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (acos (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_ASIN:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (asin (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_ATAN:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (atan (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_CEIL:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (ceil (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_COS:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (cos (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_EXP:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (exp (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_FLOOR:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (floor (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_LOG:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (log (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_ROUND:
+      {
+        if (ecma_number_is_nan (x)
+            || ecma_number_is_zero (x)
+            || ecma_number_is_infinity (x))
+        {
+          /* Do nothing. */
+        }
+        else if (ecma_number_is_negative (x)
+                 && x >= -ECMA_NUMBER_HALF)
+        {
+          x = ecma_number_negate (ECMA_NUMBER_ZERO);
+        }
+        else
+        {
+          const ecma_number_t up_half = x + ECMA_NUMBER_HALF;
+          const ecma_number_t down_half = x - ECMA_NUMBER_HALF;
+          const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, ECMA_NUMBER_ONE);
+          const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, ECMA_NUMBER_ONE);
+
+          if (up_rounded - x <= x - down_rounded)
+          {
+            x = up_rounded;
+          }
+          else
+          {
+            x = down_rounded;
+          }
+        }
+        break;
+      }
+      case ECMA_MATH_OBJECT_SIN:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (sin (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_SQRT:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (sqrt (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_TAN:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (tan (x));
+        break;
+      }
+      case ECMA_MATH_OBJECT_ATAN2:
+      {
+        x = DOUBLE_TO_ECMA_NUMBER_T (atan2 (x, y));
+        break;
+      }
+      case ECMA_MATH_OBJECT_POW:
+      {
+        if (ecma_number_is_nan (y) ||
+            (ecma_number_is_infinity (y) && (x == 1.0 || x == -1.0)))
+        {
+          /* Handle differences between ES5.1 and ISO C standards for pow. */
+          x = ecma_number_make_nan ();
+        }
+        else
+        {
+          x = DOUBLE_TO_ECMA_NUMBER_T (pow (x, y));
+        }
+        break;
+      }
+    }
+
+    return ecma_make_number_value (x);
   }
 
-  ret_value = ecma_make_number_value (num);
+  if (builtin_routine_id <= ECMA_MATH_OBJECT_MIN)
+  {
+    return ecma_builtin_math_object_max_min (builtin_routine_id == ECMA_MATH_OBJECT_MAX,
+                                             arguments_list,
+                                             arguments_number);
+  }
 
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
-  return ret_value;
-} /* ecma_builtin_math_object_round */
+  JERRY_ASSERT (builtin_routine_id == ECMA_MATH_OBJECT_RANDOM);
 
-/**
- * The Math object's 'sin' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.16
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_sin (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (sin (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_sin */
-
-/**
- * The Math object's 'sqrt' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.17
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_sqrt (ecma_value_t this_arg, /**< 'this' argument */
-                               ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (sqrt (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_sqrt */
-
-/**
- * The Math object's 'tan' routine
- *
- * See also:
- *          ECMA-262 v5, 15.8.2.18
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_math_object_tan (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
-
-  ret_value = ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (tan (arg_num)));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-  return ret_value;
-} /* ecma_builtin_math_object_tan */
+  return ecma_builtin_math_object_random ();
+} /* ecma_builtin_math_dispatch_routine */
 
 /**
  * @}

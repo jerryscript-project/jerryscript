@@ -157,6 +157,24 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
     lit_utf8_size_t string_size = lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id));
     JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] == string_size);
     JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+
+    /**
+     * Check whether the strings are sorted by size and lexicographically,
+     * e.g., "Bb" < "aa" < "aaa" < "xyz0".
+     */
+    if (id > 0)
+    {
+      const lit_magic_string_ex_id_t prev_id = id - 1;
+      const lit_utf8_size_t prev_string_size = lit_get_magic_string_ex_size (prev_id);
+      JERRY_ASSERT (prev_string_size <= string_size);
+
+      if (prev_string_size == string_size)
+      {
+        const lit_utf8_byte_t *prev_ex_string_p = lit_get_magic_string_ex_utf8 (prev_id);
+        const lit_utf8_byte_t *curr_ex_string_p = lit_get_magic_string_ex_utf8 (id);
+        JERRY_ASSERT (memcmp (prev_ex_string_p, curr_ex_string_p, string_size) < 0);
+      }
+    }
   }
 #endif /* !JERRY_NDEBUG */
 } /* lit_magic_strings_ex_set */
@@ -264,22 +282,51 @@ lit_magic_string_ex_id_t
 lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
                              lit_utf8_size_t string_size) /**< string size in bytes */
 {
-  /* TODO: Improve performance of search */
+  const uint32_t magic_string_ex_count = lit_get_magic_string_ex_count ();
 
-  for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < JERRY_CONTEXT (lit_magic_string_ex_count);
-       id = (lit_magic_string_ex_id_t) (id + 1))
+  if (magic_string_ex_count == 0
+      || string_size > lit_get_magic_string_ex_size (magic_string_ex_count - 1))
   {
-    if (string_size == lit_get_magic_string_ex_size (id))
+    return (lit_magic_string_ex_id_t) magic_string_ex_count;
+  }
+
+  lit_magic_string_ex_id_t first = 0;
+  lit_magic_string_ex_id_t last = (lit_magic_string_ex_id_t) magic_string_ex_count;
+
+  while (first < last)
+  {
+    const lit_magic_string_ex_id_t middle = (first + last) / 2;
+    const lit_utf8_byte_t *ext_string_p = lit_get_magic_string_ex_utf8 (middle);
+    const lit_utf8_size_t ext_string_size = lit_get_magic_string_ex_size (middle);
+
+    if (string_size == ext_string_size)
     {
-      if (memcmp (string_p, lit_get_magic_string_ex_utf8 (id), string_size) == 0)
+      const int string_compare = memcmp (ext_string_p, string_p, string_size);
+
+      if (string_compare == 0)
       {
-        return id;
+        return middle;
       }
+      else if (string_compare < 0)
+      {
+        first = middle + 1;
+      }
+      else
+      {
+        last = middle;
+      }
+    }
+    else if (string_size > ext_string_size)
+    {
+      first = middle + 1;
+    }
+    else
+    {
+      last = middle;
     }
   }
 
-  return JERRY_CONTEXT (lit_magic_string_ex_count);
+  return (lit_magic_string_ex_id_t) magic_string_ex_count;
 } /* lit_is_ex_utf8_string_magic */
 
 /**
@@ -294,26 +341,57 @@ lit_is_ex_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first u
                                   const lit_utf8_byte_t *string2_p, /**< second utf-8 string */
                                   lit_utf8_size_t string2_size) /**< second string size in bytes */
 {
-  /* TODO: Improve performance of search */
-  lit_utf8_size_t total_string_size = string1_size + string2_size;
+  const uint32_t magic_string_ex_count = lit_get_magic_string_ex_count ();
+  const lit_utf8_size_t total_string_size = string1_size + string2_size;
 
-  for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < JERRY_CONTEXT (lit_magic_string_ex_count);
-       id = (lit_magic_string_ex_id_t) (id + 1))
+  if (magic_string_ex_count == 0
+      || total_string_size > lit_get_magic_string_ex_size (magic_string_ex_count - 1))
   {
-    if (total_string_size == lit_get_magic_string_ex_size (id))
-    {
-      const lit_utf8_byte_t *ex_magic_string_p = lit_get_magic_string_ex_utf8 (id);
+    return (lit_magic_string_ex_id_t) magic_string_ex_count;
+  }
 
-      if (memcmp (string1_p, ex_magic_string_p, string1_size) == 0
-          && memcmp (string2_p, ex_magic_string_p + string1_size, string2_size) == 0)
+  lit_magic_string_ex_id_t first = 0;
+  lit_magic_string_ex_id_t last = (lit_magic_string_ex_id_t) magic_string_ex_count;
+
+  while (first < last)
+  {
+    const lit_magic_string_ex_id_t middle = (first + last) / 2;
+    const lit_utf8_byte_t *ext_string_p = lit_get_magic_string_ex_utf8 (middle);
+    const lit_utf8_size_t ext_string_size = lit_get_magic_string_ex_size (middle);
+
+    if (total_string_size == ext_string_size)
+    {
+      int string_compare = memcmp (ext_string_p, string1_p, string1_size);
+
+      if (string_compare == 0)
       {
-        return id;
+        string_compare = memcmp (ext_string_p + string1_size, string2_p, string2_size);
       }
+
+      if (string_compare == 0)
+      {
+        return middle;
+      }
+      else if (string_compare < 0)
+      {
+        first = middle + 1;
+      }
+      else
+      {
+        last = middle;
+      }
+    }
+    else if (total_string_size > ext_string_size)
+    {
+      first = middle + 1;
+    }
+    else
+    {
+      last = middle;
     }
   }
 
-  return JERRY_CONTEXT (lit_magic_string_ex_count);
+  return (lit_magic_string_ex_id_t) magic_string_ex_count;
 } /* lit_is_ex_utf8_string_pair_magic */
 
 /**

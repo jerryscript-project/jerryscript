@@ -48,13 +48,35 @@ if("${PLATFORM}" STREQUAL "DARWIN")
   set(ENABLE_STATIC_LINK "OFF")
 endif()
 
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+  set(USING_GCC 1)
+endif()
+
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  set(USING_CLANG 1)
+endif()
+
+if(CMAKE_C_COMPILER_ID MATCHES "TI")
+  set(USING_TI 1)
+endif()
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
 message(STATUS "CMAKE_SYSTEM_NAME         " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR    " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE})
 message(STATUS "ENABLE_LTO                " ${ENABLE_LTO})
-message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
+
+if(USING_TI)
+# If using a compiler that _only_ does static linking, inform the user
+# of the discrepancy in settings.
+  set(ENABLE_STATIC_LINK "ON")
+  message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} " (ONLY OPTION FOR THIS COMPILER)")
+else()
+  message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
+endif()
+
 message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
 message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
@@ -91,7 +113,7 @@ endmacro()
 macro(jerry_add_compile_warnings)
   foreach(_warning ${ARGV})
     jerry_add_compile_flags(-W${_warning})
-    if(CMAKE_COMPILER_IS_GNUCC)
+    if(USING_GCC)
       jerry_add_compile_flags(-Werror=${_warning})
     endif()
   endforeach()
@@ -107,20 +129,27 @@ jerry_add_flags(CMAKE_EXE_LINKER_FLAGS ${FLAGS_COMMON_ARCH})
 
 # Enable static build
 if(ENABLE_STATIC_LINK)
-  jerry_add_link_flags("-static")
+  if (USING_GCC OR USING_CLANG)
+    jerry_add_link_flags("-static")
+  endif()
 endif()
 
 # LTO
 if(ENABLE_LTO)
-  jerry_add_compile_flags(-flto)
-  jerry_add_link_flags(-flto)
-  if(CMAKE_COMPILER_IS_GNUCC)
+  if (USING_GCC OR USING_CLANG)
+    jerry_add_compile_flags(-flto)
+    jerry_add_link_flags(-flto)
+  endif()
+  if(USING_GCC)
     if(NOT "${PLATFORM}" STREQUAL "DARWIN")
       jerry_add_compile_flags(-fno-fat-lto-objects)
     endif()
     # Use gcc-ar and gcc-ranlib to support LTO
     set(CMAKE_AR "gcc-ar")
     set(CMAKE_RANLIB "gcc-ranlib")
+  endif()
+  if(USING_TI)
+    jerry_add_link_flags(-lto)
   endif()
 endif()
 
@@ -130,7 +159,9 @@ if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND NOT JERRY_LIBC
 endif()
 
 # Compiler / Linker flags
-jerry_add_compile_flags(-fno-builtin)
+if (USING_GCC OR USING_CLANG)
+  jerry_add_compile_flags(-fno-builtin)
+endif()
 if(("${PLATFORM}" STREQUAL "DARWIN"))
   jerry_add_link_flags(-lSystem)
 else()
@@ -143,17 +174,18 @@ if(JERRY_LIBC)
 endif()
 
 # Turn off stack protector
+if (USING_GCC OR USING_CLANG)
 jerry_add_compile_flags(-fno-stack-protector)
+endif()
 
-# Debug information
-jerry_add_compile_flags(-g)
+if (USING_GCC OR USING_CLANG)
+  jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
+  jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
+endif()
 
-jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
-jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
-
-if(CMAKE_COMPILER_IS_GNUCC)
+if(USING_GCC)
   jerry_add_compile_warnings(logical-op)
-else()
+elseif(USING_CLANG)
   jerry_add_compile_flags(-Wno-nested-anon-types -Wno-static-in-inline)
 endif()
 
@@ -162,11 +194,17 @@ if(JERRY_LIBC)
 endif()
 
 # C
-jerry_add_compile_flags(-std=c99 -pedantic)
+if (USING_GCC OR USING_CLANG)
+  jerry_add_compile_flags(-std=c99 -pedantic)
+elseif(USING_TI)
+  jerry_add_compile_flags(--c99)
+endif()
 
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  jerry_add_link_flags(-s)
+  if (USING_GCC OR USING_CLANG)
+    jerry_add_link_flags(-s)
+  endif()
 endif()
 
 # External compiler & linker flags

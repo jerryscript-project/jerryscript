@@ -292,6 +292,11 @@ typedef enum
 #define ECMA_PROPERTY_TYPE_NOT_FOUND ECMA_PROPERTY_TYPE_DELETED
 
 /**
+ * Type of property not found and no more searching in the proto chain.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP ECMA_PROPERTY_TYPE_HASHMAP
+
+/**
  * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
  * and ECMA_PROPERTY_TYPE_NAMEDACCESSOR).
  */
@@ -320,6 +325,12 @@ typedef enum
  */
 #define ECMA_PROPERTY_CONFIGURABLE_WRITABLE \
   (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
+ * Property flags enumerable, writable.
+ */
+#define ECMA_PROPERTY_ENUMERABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_FLAG_WRITABLE)
 
 /**
  * No attributes can be changed for this property.
@@ -488,7 +499,7 @@ typedef struct
 } ecma_extended_property_ref_t;
 
 /**
- * Option flags for ecma_op_object_get_property
+ * Option flags for ecma_op_object_get_property.
  */
 typedef enum
 {
@@ -498,7 +509,7 @@ typedef enum
 } ecma_property_get_option_bits_t;
 
 /**
- * Internal object types
+ * Internal object types.
  */
 typedef enum
 {
@@ -509,13 +520,25 @@ typedef enum
   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 3, /**< External (host) function object */
   ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_ARGUMENTS = 6, /**< Arguments object (10.6) */
+  ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
 
-  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_ARGUMENTS /**< maximum value */
+  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_PSEUDO_ARRAY /**< maximum value */
 } ecma_object_type_t;
 
 /**
- * Types of lexical environments
+ * Types of objects with class property.
+ */
+typedef enum
+{
+  ECMA_PSEUDO_ARRAY_ARGUMENTS = 0, /**< Arguments object (10.6) */
+  ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
+  ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
+
+  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO /**< maximum value */
+} ecma_pseudo_array_type_t;
+
+/**
+ * Types of lexical environments.
  */
 typedef enum
 {
@@ -629,13 +652,14 @@ typedef struct
     struct
     {
       uint16_t class_id; /**< class id of the object */
+
       /*
        * Description of extra fields. These extra fields depends on the class_id.
        */
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
-        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
+        uint32_t length; /**< length related property  (e.g. length of ArrayBuffer) */
       } u;
     } class_prop;
 
@@ -658,13 +682,24 @@ typedef struct
     } array;
 
     /*
-     * Description of arguments objects.
+     * Description of pseudo array objects.
      */
     struct
     {
-      ecma_value_t lex_env_cp; /**< lexical environment */
-      uint32_t length; /**< length of names */
-    } arguments;
+      uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray*/
+      uint8_t extra_info; /**< extra infomations about the object.
+                            *  e.g. element_width_shift for typed arrays */
+      union
+      {
+        uint16_t length; /**< for arguments: length of names */
+        uint16_t class_id; /**< for typedarray: the specific class name */
+      } u1;
+      union
+      {
+        ecma_value_t lex_env_cp; /**< for arguments: lexical environment */
+        ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
+      } u2;
+    } pseudo_array;
 
     /*
      * Description of bound function object.
@@ -1121,6 +1156,21 @@ typedef struct
 
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+
+/**
+ * Some internal properties of TypedArray object.
+ * It is only used when the offset is not 0, and
+ * the array-length is not buffer-length / element_size.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  ecma_length_t byte_offset; /**< the byteoffset of the above arraybuffer */
+  ecma_length_t array_length; /**< the array length */
+} ecma_extended_typedarray_object_t;
+
+#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
 /**
  * @}
  * @}

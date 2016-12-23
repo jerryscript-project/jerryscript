@@ -155,7 +155,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
   /* 2. */
-  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND)
+  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }
@@ -321,7 +321,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                                   &ext_property_ref.property_ref,
                                                   ECMA_PROPERTY_GET_VALUE | ECMA_PROPERTY_GET_EXT_REFERENCE);
 
-  if (current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND)
+  if (current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND || current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
     /* 3. */
     if (!ecma_get_object_extensible (object_p))

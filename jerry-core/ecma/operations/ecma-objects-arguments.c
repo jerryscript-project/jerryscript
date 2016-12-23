@@ -80,13 +80,15 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
     obj_p = ecma_create_object (prototype_p,
                                 sizeof (ecma_extended_object_t) + formal_params_size,
-                                ECMA_OBJECT_TYPE_ARGUMENTS);
+                                ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
 
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.arguments.lex_env_cp, lex_env_p);
+    ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_ARGUMENTS;
 
-    ext_object_p->u.arguments.length = formal_params_number;
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.pseudo_array.u2.lex_env_cp, lex_env_p);
+
+    ext_object_p->u.pseudo_array.u1.length = (uint16_t) formal_params_number;
 
     jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
 
@@ -263,7 +265,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  if (index >= ext_object_p->u.arguments.length)
+  if (index >= ext_object_p->u.pseudo_array.u1.length)
   {
     return ret_value;
   }
@@ -289,7 +291,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
     {
       /* emulating execution of function described by MakeArgSetter */
       ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                  ext_object_p->u.arguments.lex_env_cp);
+                                                                  ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
       ecma_value_t completion = ecma_op_set_mutable_binding (lex_env_p,
                                                              name_p,
@@ -343,7 +345,7 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      if (index < ext_object_p->u.arguments.length)
+      if (index < ext_object_p->u.pseudo_array.u1.length)
       {
         jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
 

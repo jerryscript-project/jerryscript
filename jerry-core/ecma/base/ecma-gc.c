@@ -31,6 +31,10 @@
 #include "vm-defines.h"
 #include "vm-stack.h"
 
+#ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
+#include "ecma-typedarray-object.h"
+#endif
+
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
 
@@ -259,14 +263,35 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     switch (ecma_get_object_type (object_p))
     {
-      case ECMA_OBJECT_TYPE_ARGUMENTS:
+      case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                    ext_object_p->u.arguments.lex_env_cp);
+        switch (ext_object_p->u.pseudo_array.type)
+        {
+          case ECMA_PSEUDO_ARRAY_ARGUMENTS:
+          {
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-        ecma_gc_set_object_visited (lex_env_p, true);
+            ecma_gc_set_object_visited (lex_env_p, true);
+            break;
+          }
+  #ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+          case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
+          case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
+          {
+            ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p), true);
+            break;
+          }
+  #endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+          default:
+          {
+            JERRY_UNREACHABLE ();
+            break;
+          }
+        }
+
         break;
       }
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
@@ -503,25 +528,52 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
       return;
     }
 
-    if (object_type == ECMA_OBJECT_TYPE_ARGUMENTS)
+    if (object_type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      ecma_length_t formal_params_number = ext_object_p->u.arguments.length;
-      jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
-
-      for (ecma_length_t i = 0; i < formal_params_number; i++)
+      switch (ext_object_p->u.pseudo_array.type)
       {
-        if (arg_Literal_p[i] != JMEM_CP_NULL)
+        case ECMA_PSEUDO_ARRAY_ARGUMENTS:
         {
-          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[i]);
-          ecma_deref_ecma_string (name_p);
+          ecma_length_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
+          jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+
+          for (ecma_length_t i = 0; i < formal_params_number; i++)
+          {
+            if (arg_Literal_p[i] != JMEM_CP_NULL)
+            {
+              ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[i]);
+              ecma_deref_ecma_string (name_p);
+            }
+          }
+
+          size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
+          ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
+          return;
+        }
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
+        {
+          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p,
+                                        sizeof (ecma_extended_object_t));
+          return;
+        }
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
+        {
+          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p,
+                                        sizeof (ecma_extended_typedarray_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+        default:
+        {
+          JERRY_UNREACHABLE ();
+          break;
         }
       }
 
-      size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
-      ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
-      return;
+      JERRY_UNREACHABLE ();
     }
 
     if (object_type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)

@@ -174,6 +174,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_ARRAY_BUFFER_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 #endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
 
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+OBJECT_VALUE (LIT_MAGIC_STRING_INT8_ARRAY_UL,
+              ECMA_BUILTIN_ID_INT8ARRAY,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+#endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

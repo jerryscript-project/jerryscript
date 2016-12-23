@@ -317,6 +317,40 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAYBUFFER,
          arraybuffer)
 #endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
 
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+
+ /* The %TypedArrayPrototype% object (ES2015 24.2.3) */
+BUILTIN (ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         true,
+         typedarray_prototype)
+
+/* The %TypedArray% intrinsic object (ES2015 22.2.1) */
+BUILTIN (ECMA_BUILTIN_ID_TYPEDARRAY,
+         ECMA_OBJECT_TYPE_FUNCTION,
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
+         true,
+         typedarray)
+
+BUILTIN (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
+         true,
+         true,
+         int8array_prototype)
+
+BUILTIN (ECMA_BUILTIN_ID_INT8ARRAY,
+         ECMA_OBJECT_TYPE_FUNCTION,
+         ECMA_BUILTIN_ID_TYPEDARRAY,
+         true,
+         true,
+         int8array)
+
+#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,

@@ -191,7 +191,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
 static ecma_value_t
 ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< built-in wide routine
                                                                         *   identifier */
-                                          ecma_number_t date_num) /* date converted to number */
+                                          ecma_number_t date_num) /**< date converted to number */
 {
   if (ecma_number_is_nan (date_num))
   {
@@ -302,7 +302,7 @@ static ecma_value_t
 ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< built-in wide routine
                                                                         *   identifier */
                                           ecma_extended_object_t *ext_object_p, /**< date extended object */
-                                          ecma_number_t date_num, /* date converted to number */
+                                          ecma_number_t date_num, /**< date converted to number */
                                           const ecma_value_t arguments_list[], /**< list of arguments
                                                                                 *   passed to routine */
                                           ecma_length_t arguments_number) /**< length of arguments' list */
@@ -649,4 +649,3 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
  */
 
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
-

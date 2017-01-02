@@ -21,7 +21,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmaarraybufferobject ECMA Arraybuffer object related routines
+ * \addtogroup ecmaarraybufferobject ECMA ArrayBuffer object related routines
  * @{
  */
 

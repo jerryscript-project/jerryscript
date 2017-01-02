@@ -37,7 +37,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup string ECMA ArrayBuffer object built-in
+ * \addtogroup arraybuffer ECMA ArrayBuffer object built-in
  * @{
  */
 

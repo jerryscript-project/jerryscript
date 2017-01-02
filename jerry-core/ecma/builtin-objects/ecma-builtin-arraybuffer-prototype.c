@@ -39,7 +39,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup arraybuffer prototype ECMA ArrayBuffer.prototype object built-in
+ * \addtogroup arraybufferprototype ECMA ArrayBuffer.prototype object built-in
  * @{
  */
 

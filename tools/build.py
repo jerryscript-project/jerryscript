@@ -25,6 +25,9 @@ from settings import *
 BUILD_DIR = path.join(PROJECT_DIR, 'build')
 DEFAULT_PORT_DIR = path.join(PROJECT_DIR, 'targets/default')
 
+PROFILE_DIR = path.join(PROJECT_DIR, 'jerry-core/profiles')
+DEFAULT_PROFILE = 'es5.1'
+
 def default_toolchain():
     (sysname, _, _, _, machine) = uname()
     toolchain = path.join(PROJECT_DIR, 'cmake', 'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
@@ -61,7 +64,7 @@ def get_arguments():
     parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable link-time optimizations (%(choices)s; default: %(default)s)')
     parser.add_argument('--mem-heap', metavar='SIZE', action='store', type=int, default=512, help='size of memory heap, in kilobytes (default: %(default)s)')
     parser.add_argument('--port-dir', metavar='DIR', action='store', default=DEFAULT_PORT_DIR, help='add port directory (default: %(default)s)')
-    parser.add_argument('--profile', metavar='PROFILE', choices=['es5.1', 'minimal', 'es2015-subset'], default='es5.1', type=str.lower, help='specify the profile (%(choices)s; default: %(default)s)')
+    parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE, help='specify profile file (default: %(default)s)')
     parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable executing snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable saving snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--static-link', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable static linking of binaries (%(choices)s; default: %(default)s)')
@@ -105,7 +108,14 @@ def generate_build_options(arguments):
     build_options.append('-DENABLE_LTO=%s' % arguments.lto)
     build_options.append('-DMEM_HEAP_SIZE_KB=%d' % arguments.mem_heap)
     build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
-    build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
+
+    if path.isabs(arguments.profile):
+        PROFILE = arguments.profile
+    else:
+        PROFILE = path.join(PROFILE_DIR, arguments.profile + '.profile')
+
+    build_options.append('-DFEATURE_PROFILE=%s' % PROFILE)
+
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)
     build_options.append('-DENABLE_STATIC_LINK=%s' % arguments.static_link)

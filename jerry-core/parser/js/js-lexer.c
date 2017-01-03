@@ -1228,7 +1228,6 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
                                 uint8_t literal_type) /**< final literal type */
 {
   uint8_t *destination_start_p;
-  uint8_t *destination_p;
   const uint8_t *source_p;
   uint8_t local_byte_array[LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE];
 
@@ -1241,6 +1240,8 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
   if (literal_p->has_escape)
   {
+    uint8_t *destination_p;
+
     if (literal_p->length > LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE)
     {
       destination_start_p = (uint8_t *) parser_malloc_local (context_p, literal_p->length);

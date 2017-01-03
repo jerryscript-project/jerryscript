@@ -413,7 +413,7 @@ main (void)
   val_t = get_property (global_obj_val, "t");
   TEST_ASSERT (!jerry_value_has_error_flag (val_t));
   TEST_ASSERT (jerry_value_is_number (val_t)
-                && jerry_get_number_value (val_t) == 1.0);
+               && jerry_get_number_value (val_t) == 1.0);
   jerry_release_value (val_t);
 
   /* Get global.foo */
@@ -427,7 +427,7 @@ main (void)
   res = jerry_call_function (val_foo, jerry_create_undefined (), args, 2);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
-                && jerry_get_number_value (res) == 1.0);
+               && jerry_get_number_value (res) == 1.0);
   jerry_release_value (res);
 
   /* Get global.bar */
@@ -439,7 +439,7 @@ main (void)
   res = jerry_call_function (val_bar, jerry_create_undefined (), args, 2);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
-                && jerry_get_number_value (res) == 5.0);
+               && jerry_get_number_value (res) == 5.0);
   jerry_release_value (res);
   jerry_release_value (val_bar);
 
@@ -494,7 +494,7 @@ main (void)
   res = get_property (val_a, "t");
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
-                && jerry_get_number_value (res) == 12.0);
+               && jerry_get_number_value (res) == 12.0);
   jerry_release_value (res);
 
   /* foreach properties */
@@ -524,7 +524,7 @@ main (void)
   res = jerry_call_function (val_a_foo, val_a, NULL, 0);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
-                && jerry_get_number_value (res) == 12.0);
+               && jerry_get_number_value (res) == 12.0);
   jerry_release_value (res);
   jerry_release_value (val_a_foo);
 
@@ -533,7 +533,7 @@ main (void)
   /* Create native handler bound function object and set it to 'external' variable */
   external_func_val = jerry_create_external_function (handler);
   TEST_ASSERT (jerry_value_is_function (external_func_val)
-                && jerry_value_is_constructor (external_func_val));
+               && jerry_value_is_constructor (external_func_val));
 
   res = set_property (global_obj_val, "external", external_func_val);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
@@ -558,7 +558,7 @@ main (void)
   /* Create native handler bound function object and set it to 'external_construct' variable */
   external_construct_val = jerry_create_external_function (handler_construct);
   TEST_ASSERT (jerry_value_is_function (external_construct_val)
-                && jerry_value_is_constructor (external_construct_val));
+               && jerry_value_is_constructor (external_construct_val));
 
   res = set_property (global_obj_val, "external_construct", external_construct_val);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
@@ -575,14 +575,14 @@ main (void)
   /* Get 'value_field' of constructed object */
   TEST_ASSERT (!jerry_value_has_error_flag (val_value_field));
   TEST_ASSERT (jerry_value_is_boolean (val_value_field)
-                && jerry_get_boolean_value (val_value_field));
+               && jerry_get_boolean_value (val_value_field));
   jerry_release_value (val_value_field);
   jerry_release_value (external_construct_val);
 
   uintptr_t ptr = (uintptr_t) NULL;
   is_ok = jerry_get_object_native_handle (res, &ptr);
   TEST_ASSERT (is_ok
-                && ptr == (uintptr_t) 0x0012345678abcdefull);
+               && ptr == (uintptr_t) 0x0012345678abcdefull);
 
   jerry_release_value (res);
 
@@ -664,7 +664,7 @@ main (void)
   jerry_value_t v_out = jerry_get_property_by_index (array_obj_val, 5);
 
   TEST_ASSERT (jerry_value_is_number (v_out)
-                && jerry_get_number_value (v_out) == 10.5);
+               && jerry_get_number_value (v_out) == 10.5);
 
   jerry_release_value (v_in);
   jerry_release_value (v_out);
@@ -761,7 +761,7 @@ main (void)
   res = jerry_call_function (val_t, jerry_create_undefined (), NULL, 0);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res)
-                && jerry_get_number_value (res) == 123.0);
+               && jerry_get_number_value (res) == 123.0);
   jerry_release_value (res);
 
   jerry_release_value (val_t);
@@ -865,7 +865,8 @@ main (void)
   jerry_cleanup ();
 
   /* Dump / execute snapshot */
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
+      && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
     static uint8_t global_mode_snapshot_buffer[1024];
     static uint8_t eval_mode_snapshot_buffer[1024];

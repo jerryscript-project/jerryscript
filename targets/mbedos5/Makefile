@@ -80,6 +80,7 @@ endif
 getlibs: .mbed
 
 .mbed:
+	echo 'ROOT=.' > .mbed
 	mbed config root .
 	mbed toolchain GCC_ARM
 	mbed target $(BOARD)

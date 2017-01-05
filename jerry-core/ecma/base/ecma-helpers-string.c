@@ -858,10 +858,10 @@ ecma_string_get_array_index (const ecma_string_t *str_p) /**< ecma-string */
  * @return number of bytes, actually copied to the buffer.
  */
 lit_utf8_size_t __attr_return_value_should_be_checked___
-ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
-                                 lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
-                                                             * (can be NULL if buffer_size == 0) */
-                                 lit_utf8_size_t buffer_size) /**< size of buffer */
+ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                                  lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                              * (can be NULL if buffer_size == 0) */
+                                  lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   JERRY_ASSERT (string_desc_p != NULL);
   JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
@@ -910,6 +910,73 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-s
 
   JERRY_ASSERT (size <= buffer_size);
   return size;
+} /* ecma_string_copy_to_cesu8_buffer */
+
+/**
+ * Convert ecma-string's contents to an utf-8 string and put it to the buffer.
+ * It is the caller's responsibility to make sure that the string fits in the buffer.
+ *
+ * @return number of bytes, actually copied to the buffer.
+ */
+lit_utf8_size_t __attr_return_value_should_be_checked___
+ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                                 lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                             * (can be NULL if buffer_size == 0) */
+                                 lit_utf8_size_t buffer_size) /**< size of buffer */
+{
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
+  JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
+  JERRY_ASSERT (ecma_string_get_utf8_size (string_desc_p) <= buffer_size);
+
+  lit_utf8_size_t size;
+
+  switch (ECMA_STRING_GET_CONTAINER (string_desc_p))
+  {
+    case ECMA_STRING_CONTAINER_HEAP_UTF8_STRING:
+    {
+      size = lit_convert_cesu8_string_to_utf8_string ((lit_utf8_byte_t *) (string_desc_p + 1),
+                                                      string_desc_p->u.utf8_string.size,
+                                                      buffer_p,
+                                                      buffer_size);
+      break;
+    }
+    case ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING:
+    {
+      size = lit_convert_cesu8_string_to_utf8_string ((lit_utf8_byte_t *) (((ecma_long_string_t *) string_desc_p) + 1),
+                                                      string_desc_p->u.long_utf8_string_size,
+                                                      buffer_p,
+                                                      buffer_size);
+      break;
+    }
+    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
+    {
+      const uint32_t uint32_number = string_desc_p->u.uint32_number;
+      size = ecma_uint32_to_utf8_string (uint32_number, buffer_p, buffer_size);
+      break;
+    }
+    case ECMA_STRING_CONTAINER_MAGIC_STRING:
+    {
+      const lit_magic_string_id_t id = string_desc_p->u.magic_string_id;
+      size = lit_get_magic_string_size (id);
+      memcpy (buffer_p, lit_get_magic_string_utf8 (id), size);
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_desc_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX);
+
+      const lit_magic_string_ex_id_t id = string_desc_p->u.magic_string_ex_id;
+      size = lit_convert_cesu8_string_to_utf8_string (lit_get_magic_string_ex_utf8 (id),
+                                                      lit_get_magic_string_ex_size (id),
+                                                      buffer_p,
+                                                      buffer_size);
+      break;
+    }
+  }
+
+  JERRY_ASSERT (size <= buffer_size);
+  return size;
 } /* ecma_string_copy_to_utf8_buffer */
 
 /**
@@ -923,7 +990,7 @@ ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string 
                                                        * (can be NULL if buffer_size == 0) */
                            lit_utf8_size_t buffer_size) /**< size of buffer */
 {
-  const lit_utf8_size_t size = ecma_string_copy_to_utf8_buffer (string_desc_p, buffer_p, buffer_size);
+  const lit_utf8_size_t size = ecma_string_copy_to_cesu8_buffer (string_desc_p, buffer_p, buffer_size);
   JERRY_ASSERT (size == buffer_size);
 } /* ecma_string_to_utf8_bytes */
 

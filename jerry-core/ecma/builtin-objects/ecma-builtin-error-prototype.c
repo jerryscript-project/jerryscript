@@ -141,7 +141,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
           JMEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
           lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
 
-          lit_utf8_size_t bytes = ecma_string_copy_to_utf8_buffer (name_string_p, ret_str_buffer_p, name_size);
+          lit_utf8_size_t bytes = ecma_string_copy_to_cesu8_buffer (name_string_p, ret_str_buffer_p, name_size);
           JERRY_ASSERT (bytes == name_size);
           ret_str_buffer_p = ret_str_buffer_p + bytes;
           JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
@@ -156,7 +156,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
                                                               space_size);
           JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
 
-          bytes = ecma_string_copy_to_utf8_buffer (msg_string_p, ret_str_buffer_p, msg_size);
+          bytes = ecma_string_copy_to_cesu8_buffer (msg_string_p, ret_str_buffer_p, msg_size);
           JERRY_ASSERT (bytes == msg_size);
           ret_str_buffer_p = ret_str_buffer_p + bytes;
           JERRY_ASSERT (ret_str_buffer_p == ret_str_buffer + size);

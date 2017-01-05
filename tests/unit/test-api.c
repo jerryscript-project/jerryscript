@@ -345,7 +345,7 @@ main (void)
   args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
   args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
 
-  /* these size must be equal */
+  /* These sizes must be equal */
   utf8_sz = jerry_get_string_size (args[0]);
   cesu8_sz = jerry_get_string_size (args[1]);
 
@@ -356,6 +356,26 @@ main (void)
   jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_from_cesu8, cesu8_sz);
 
   TEST_ASSERT (utf8_sz == cesu8_sz);
+  TEST_ASSERT (!strncmp (string_from_utf8, string_from_cesu8, utf8_sz));
+  jerry_release_value (args[0]);
+  jerry_release_value (args[1]);
+
+  /* Test jerry_string_to_utf8_char_buffer, test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
+  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
+  args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+
+  /* These sizes must be equal */
+  utf8_sz = jerry_get_utf8_string_size (args[0]);
+  cesu8_sz = jerry_get_utf8_string_size (args[1]);
+
+  TEST_ASSERT (utf8_sz == cesu8_sz);
+
+  char string_from_utf8_string[utf8_sz];
+  char string_from_cesu8_string[cesu8_sz];
+
+  jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) string_from_utf8_string, utf8_sz);
+  jerry_string_to_utf8_char_buffer (args[1], (jerry_char_t *) string_from_cesu8_string, cesu8_sz);
+
   TEST_ASSERT (!strncmp (string_from_utf8, string_from_cesu8, utf8_sz));
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
@@ -372,6 +392,12 @@ main (void)
   TEST_ASSERT (cesu8_length == 10 && utf8_length == 8);
   TEST_ASSERT (cesu8_sz != utf8_sz);
   TEST_ASSERT (utf8_sz == 14 && cesu8_sz == 18);
+
+  char test_string[utf8_sz];
+
+  TEST_ASSERT (jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) test_string, utf8_sz) == 14);
+  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", utf8_sz));
+
   jerry_release_value (args[0]);
 
   /* Test string: 'str: {DESERET CAPITAL LETTER LONG I}' */

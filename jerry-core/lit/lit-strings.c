@@ -779,6 +779,61 @@ lit_code_point_to_utf8 (lit_code_point_t code_point, /**< code point */
 } /* lit_code_point_to_utf8 */
 
 /**
+ * Convert cesu-8 string to an utf-8 string and put it into the buffer.
+ * It is the caller's responsibility to make sure that the string fits in the buffer.
+ *
+ * @return number of bytes copied to the buffer.
+ */
+lit_utf8_size_t
+lit_convert_cesu8_string_to_utf8_string (const lit_utf8_byte_t *cesu8_string, /**< cesu-8 string */
+                                         lit_utf8_size_t cesu8_size, /**< size of cesu-8 string */
+                                         lit_utf8_byte_t *utf8_string, /**< destination utf-8 buffer pointer
+                                                                        * (can be NULL if buffer_size == 0) */
+                                         lit_utf8_size_t utf8_size) /**< size of utf-8 buffer */
+{
+  const lit_utf8_byte_t *cesu8_pos = cesu8_string;
+  const lit_utf8_byte_t *cesu8_end_pos = cesu8_string + cesu8_size;
+
+  lit_utf8_byte_t *utf8_pos = utf8_string;
+  lit_utf8_byte_t *utf8_end_pos = utf8_string + utf8_size;
+
+  lit_utf8_size_t size = 0;
+
+  ecma_char_t prev_ch = 0;
+  lit_utf8_size_t prev_ch_size = 0;
+
+  while (cesu8_pos < cesu8_end_pos)
+  {
+    ecma_char_t ch;
+    lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_pos, &ch);
+
+    if (lit_is_code_point_utf16_low_surrogate (ch) && lit_is_code_point_utf16_high_surrogate (prev_ch))
+    {
+      JERRY_ASSERT (code_unit_size == prev_ch_size);
+      utf8_pos -= prev_ch_size;
+      lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (prev_ch, ch);
+      lit_code_point_to_utf8 (code_point, utf8_pos);
+      size++;
+    }
+    else
+    {
+      memcpy (utf8_pos, cesu8_pos, code_unit_size);
+      size += code_unit_size;
+    }
+
+    utf8_pos = utf8_string + size;
+    cesu8_pos += code_unit_size;
+    prev_ch = ch;
+    prev_ch_size = code_unit_size;
+  }
+
+  JERRY_ASSERT (cesu8_pos == cesu8_end_pos);
+  JERRY_ASSERT (utf8_pos <= utf8_end_pos);
+
+  return size;
+} /* lit_convert_cesu8_string_to_utf8_string */
+
+/**
  * Convert surrogate pair to code point
  *
  * @return code point

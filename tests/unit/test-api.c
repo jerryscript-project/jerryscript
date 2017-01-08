@@ -376,7 +376,7 @@ main (void)
   jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) string_from_utf8_string, utf8_sz);
   jerry_string_to_utf8_char_buffer (args[1], (jerry_char_t *) string_from_cesu8_string, cesu8_sz);
 
-  TEST_ASSERT (!strncmp (string_from_utf8, string_from_cesu8, utf8_sz));
+  TEST_ASSERT (!strncmp (string_from_utf8_string, string_from_cesu8_string, utf8_sz));
   jerry_release_value (args[0]);
   jerry_release_value (args[1]);
 
@@ -428,6 +428,95 @@ main (void)
   TEST_ASSERT (cesu8_length == 10);
   TEST_ASSERT (cesu8_sz == utf8_sz);
   TEST_ASSERT (utf8_sz == 12);
+  jerry_release_value (args[0]);
+
+  /* Test jerry_substring_to_char_buffer */
+  args[0] = jerry_create_string ((jerry_char_t *) "an ascii string");
+
+  /* Buffer size */
+  cesu8_sz = 5;
+
+  char substring[cesu8_sz];
+  sz = jerry_substring_to_char_buffer (args[0], 3, 8, (jerry_char_t *) substring, cesu8_sz);
+  TEST_ASSERT (sz == 5);
+  TEST_ASSERT (!strncmp (substring, "ascii", sz));
+
+  /* Buffer size is 5, substring length is 11 => copied only the first 5 char */
+  sz = jerry_substring_to_char_buffer (args[0], 0, 11, (jerry_char_t *) substring, cesu8_sz);
+
+  TEST_ASSERT (sz == 5);
+  TEST_ASSERT (!strncmp (substring, "an as", sz));
+
+  /* Position of the first character is greater than the string length */
+  sz = jerry_substring_to_char_buffer (args[0], 16, 21, (jerry_char_t *) substring, cesu8_sz);
+  TEST_ASSERT (sz == 0);
+
+  sz = jerry_substring_to_char_buffer (args[0], 14, 15, (jerry_char_t *) substring, cesu8_sz);
+  TEST_ASSERT (sz == 1);
+  TEST_ASSERT (!strncmp (substring, "g", sz));
+
+  sz = jerry_substring_to_char_buffer (args[0], 0, 1, (jerry_char_t *) substring, cesu8_sz);
+  TEST_ASSERT (sz == 1);
+  TEST_ASSERT (!strncmp (substring, "a", sz));
+
+  cesu8_length = jerry_get_string_length (args[0]);
+  cesu8_sz = jerry_get_string_size (args[0]);
+  TEST_ASSERT (cesu8_length == 15);
+  TEST_ASSERT (cesu8_length == cesu8_sz);
+
+  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) substring, cesu8_sz);
+  TEST_ASSERT (sz = 15);
+  TEST_ASSERT (!strncmp (substring, "an ascii string", sz));
+
+  jerry_release_value (args[0]);
+
+  /* Test jerry_substring_to_char_buffer: '0101' */
+  args[0] = jerry_create_string ((jerry_char_t *) "0101");
+  cesu8_sz = jerry_get_string_size (args[0]);
+
+  char number_substring[cesu8_sz];
+
+  sz = jerry_substring_to_char_buffer (args[0], 1, 3, (jerry_char_t *) number_substring, cesu8_sz);
+  TEST_ASSERT (sz == 2);
+  TEST_ASSERT (!strncmp (number_substring, "10", sz));
+
+  jerry_release_value (args[0]);
+
+  /* Test jerry_substring_to_char_buffer: 'str: {greek zero sign}' */
+  args[0] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x80\xed\xb6\x8a");
+  cesu8_sz = jerry_get_string_size (args[0]);
+  cesu8_length = jerry_get_string_length (args[0]);
+  TEST_ASSERT (cesu8_sz == 11);
+  TEST_ASSERT (cesu8_length = 7);
+
+  char supl_substring[cesu8_sz];
+
+  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) supl_substring, cesu8_sz);
+  TEST_ASSERT (sz == 11);
+  TEST_ASSERT (!strncmp (supl_substring, "\x73\x74\x72\x3a \xed\xa0\x80\xed\xb6\x8a", sz));
+
+  /* Decrease the buffer size => the low surrogate char will not fit into the buffer */
+  cesu8_sz -= 1;
+  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) supl_substring, cesu8_sz);
+  TEST_ASSERT (sz == 8);
+  TEST_ASSERT (!strncmp (supl_substring, "\x73\x74\x72\x3a \xed\xa0\x80", sz));
+
+  sz = jerry_substring_to_char_buffer (args[0],
+                                       cesu8_length - 1,
+                                       cesu8_length,
+                                       (jerry_char_t *) supl_substring,
+                                       cesu8_sz);
+  TEST_ASSERT (sz == 3);
+  TEST_ASSERT (!strncmp (supl_substring, "\xed\xb6\x8a", sz));
+
+  sz = jerry_substring_to_char_buffer (args[0],
+                                       cesu8_length - 2,
+                                       cesu8_length - 1,
+                                       (jerry_char_t *) supl_substring,
+                                       cesu8_sz);
+  TEST_ASSERT (sz == 3);
+  TEST_ASSERT (!strncmp (supl_substring, "\xed\xa0\x80", sz));
+
   jerry_release_value (args[0]);
 
   /* Get global.boo (non-existing field) */

@@ -980,6 +980,86 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-s
 } /* ecma_string_copy_to_utf8_buffer */
 
 /**
+ * Convert ecma-string's contents to a cesu-8 string, extract the parts of the converted string beetween the specified
+ * start position and the end position (or the end of the string, whichever comes first), and copy these characters
+ * into the buffer.
+ *
+ * @return number of bytes, actually copied to the buffer.
+ */
+lit_utf8_size_t
+ecma_substring_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                                     ecma_length_t start_pos, /**< position of the first character */
+                                     ecma_length_t end_pos, /**< position of the last character */
+                                     lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                                 * (can be NULL if buffer_size == 0) */
+                                     lit_utf8_size_t buffer_size) /**< size of buffer */
+{
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
+  JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
+
+  ecma_length_t string_length = ecma_string_get_length (string_desc_p);
+  lit_utf8_size_t size = 0;
+
+  if (start_pos >= string_length || start_pos >= end_pos)
+  {
+    return 0;
+  }
+
+  if (end_pos > string_length)
+  {
+    end_pos = string_length;
+  }
+
+  ECMA_STRING_TO_UTF8_STRING (string_desc_p, utf8_str_p, utf8_str_size);
+
+  const lit_utf8_byte_t *start_p = utf8_str_p;
+
+  if (string_length == utf8_str_size)
+  {
+    start_p += start_pos;
+    size = end_pos - start_pos;
+
+    if (size > buffer_size)
+    {
+      size = buffer_size;
+    }
+
+    memcpy (buffer_p, start_p, size);
+  }
+  else
+  {
+    end_pos -= start_pos;
+    while (start_pos--)
+    {
+      start_p += lit_get_unicode_char_size_by_utf8_first_byte (*start_p);
+    }
+
+    const lit_utf8_byte_t *end_p = start_p;
+
+    while (end_pos--)
+    {
+      lit_utf8_size_t code_unit_size = lit_get_unicode_char_size_by_utf8_first_byte (*end_p);
+
+      if ((size + code_unit_size) > buffer_size)
+      {
+        break;
+      }
+
+      end_p += code_unit_size;
+      size += code_unit_size;
+    }
+
+    memcpy (buffer_p, start_p, size);
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (utf8_str_p, utf8_str_size);
+
+  JERRY_ASSERT (size <= buffer_size);
+  return size;
+} /* ecma_substring_copy_to_cesu8_buffer */
+
+/**
  * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.
  * It is the caller's responsibility to make sure that the string fits in the buffer.
  * Check if the size of the string is equal with the size of the buffer.

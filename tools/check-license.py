@@ -17,6 +17,7 @@
 import os
 import re
 import sys
+from settings import *
 
 
 license = re.compile(
@@ -46,7 +47,8 @@ dirs = [
 ]
 
 exclude_dirs = [
-    'targets/esp8266'
+    'targets/esp8266',
+    os.path.relpath (TEST262_TEST_SUITE_DIR, PROJECT_DIR),
 ]
 
 exts = [

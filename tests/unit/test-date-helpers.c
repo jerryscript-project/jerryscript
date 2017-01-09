@@ -45,27 +45,6 @@ main ()
   TEST_ASSERT (ecma_date_time_within_day (42.51) == 42.51);
   TEST_ASSERT (ecma_date_time_within_day (MS_PER_DAY + 42) == 42);
 
-  /* int ecma_date_days_in_year (year) */
-
-  TEST_ASSERT (ecma_date_days_in_year (0) == 366);
-  TEST_ASSERT (ecma_date_days_in_year (1600) == 366);
-  TEST_ASSERT (ecma_date_days_in_year (1603) == 365);
-  TEST_ASSERT (ecma_date_days_in_year (1900) == 365);
-  TEST_ASSERT (ecma_date_days_in_year (1970) == 365);
-  TEST_ASSERT (ecma_date_days_in_year (2000) == 366);
-  TEST_ASSERT (ecma_date_days_in_year (2000.45) == 366);
-  TEST_ASSERT (ecma_date_days_in_year (2012) == 366);
-  TEST_ASSERT (ecma_date_days_in_year (2015) == 365);
-  TEST_ASSERT (ecma_date_days_in_year (285616 + 1970) == 365);
-  TEST_ASSERT (ecma_date_days_in_year (-1970) == 365);
-
-  /* int ecma_date_day_from_year (year) */
-
-  TEST_ASSERT (ecma_date_day_from_year (1969) == -365);
-  TEST_ASSERT (ecma_date_day_from_year (1970) == 0);
-  TEST_ASSERT (ecma_date_day_from_year (1971) == 365);
-  TEST_ASSERT (ecma_date_day_from_year (2000) == 10957);
-
   /* int ecma_date_year_from_time (time) */
 
   TEST_ASSERT (ecma_date_year_from_time (0) == 1970);
@@ -83,10 +62,6 @@ main ()
   TEST_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR - 1) == -1);
   TEST_ASSERT (ecma_date_year_from_time (START_OF_GREGORIAN_CALENDAR - 3 * MS_PER_YEAR) == -3);
 
-  /* int ecma_date_day_within_year (time) */
-
-  /* FIXME: Implement */
-
   /* int ecma_date_month_from_time  (time) */
 
   TEST_ASSERT (ecma_date_month_from_time (START_OF_GREGORIAN_CALENDAR) == 0);
@@ -102,18 +77,6 @@ main ()
   TEST_ASSERT (ecma_date_date_from_time (31 * MS_PER_DAY) == 1);
 
   /* int ecma_date_week_day (ecma_number_t time) */
-
-  /* FIXME: Implement */
-
-  /* ecma_number_t ecma_date_local_tza () */
-
-  /* FIXME: Implement */
-
-  /* ecma_number_t ecma_date_daylight_saving_ta (time) */
-
-  /* FIXME: Implement */
-
-  /* ecma_number_t ecma_date_local_time (time) */
 
   /* FIXME: Implement */
 

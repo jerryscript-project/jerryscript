@@ -150,8 +150,8 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
  */
 #define JERRY_MAGIC_STRING_ITEMS \
   JERRY_MAGIC_STRING_DEF (GLOBAL, global) \
-  JERRY_MAGIC_STRING_DEF (CONSOLE, console) \
-  JERRY_MAGIC_STRING_DEF (GREEK_ZERO_SIGN, \xed\xa0\x80\xed\xb6\x8a)
+  JERRY_MAGIC_STRING_DEF (GREEK_ZERO_SIGN, \xed\xa0\x80\xed\xb6\x8a) \
+  JERRY_MAGIC_STRING_DEF (CONSOLE, console)
 
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
   static const char jerry_magic_string_ex_ ## NAME[] = # STRING;

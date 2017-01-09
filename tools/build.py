@@ -51,7 +51,7 @@ def get_arguments():
     parser.add_argument('--cmake-param', metavar='OPT', action='append', default=[], help='add custom argument to CMake')
     parser.add_argument('--compile-flag', metavar='OPT', action='append', default=[], help='add custom compile flag')
     parser.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
-    parser.add_argument('--debug', action='store_const', const='Debug', default='Release', dest='build_type', help='debug build')
+    parser.add_argument('--debug', action='store_const', const='Debug', default='MinSizeRel', dest='build_type', help='debug build')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable error messages (%(choices)s; default: %(default)s)')
     parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1, help='Allowed N build jobs at once (default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build jerry command line tool (%(choices)s; default: %(default)s)')

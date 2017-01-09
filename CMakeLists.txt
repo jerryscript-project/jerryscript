@@ -37,7 +37,7 @@ set(ENABLE_STRIP              ON                                    CACHE BOOL  
 set(PORT_DIR                  "${CMAKE_SOURCE_DIR}/targets/default" CACHE STRING "Use default or external port?")
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "MinSizeRel")
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
@@ -100,9 +100,6 @@ endmacro()
 macro(jerry_add_link_flags)
   jerry_add_flags(LINKER_FLAGS_COMMON ${ARGV})
 endmacro()
-
-# build mode specific compile/link flags
-set(CMAKE_C_FLAGS_RELEASE "-Os")
 
 # Architecture-specific compile/link flags
 jerry_add_compile_flags(${FLAGS_COMMON_ARCH})

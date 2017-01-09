@@ -149,7 +149,6 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
  * Extended Magic Strings
  */
 #define JERRY_MAGIC_STRING_ITEMS \
-  JERRY_MAGIC_STRING_DEF (GLOBAL, global) \
   JERRY_MAGIC_STRING_DEF (GREEK_ZERO_SIGN, \xed\xa0\x80\xed\xb6\x8a) \
   JERRY_MAGIC_STRING_DEF (CONSOLE, console)
 

@@ -173,7 +173,11 @@ if __name__ == "__main__":
     # enumerate pins from PinNames.h
     pins = enumerate_pins(pins_file, ['./tools'] + list(includes), defines)
 
-    out_file = '\r\n'.join(['var %s = %s;' % pin for pin in pins.iteritems()])
+    # first sort alphabetically, then by length.
+    pins = [ (x, pins[x]) for x in pins] # turn dict into tuples, which can be sorted
+    pins = sorted(pins, key = lambda x: (len(x[0]), x[0].lower()))
+
+    out_file = '\r\n'.join(['var %s = %s;' % pin for pin in pins])
     args.o.write(out_file)
 
     LICENSE = '''/* Copyright JS Foundation and other contributors, http://js.foundation
@@ -198,21 +202,21 @@ if __name__ == "__main__":
 unsigned int jsmbed_js_magic_string_count = {};
     '''.format(len(pins))
 
-    LENGTHS = ',\n    '.join(str(len(name)) for name in pins.iterkeys())
+    LENGTHS = ',\n    '.join(str(len(pin[0])) for pin in pins)
     LENGTHS_SOURCE = '''
 unsigned int jsmbed_js_magic_string_lengths[] = {
     %s
 };
     ''' % LENGTHS
 
-    MAGIC_VALUES = ',\n    '.join(str(value) for value in pins.itervalues())
+    MAGIC_VALUES = ',\n    '.join(str(pin[1]) for pin in pins)
     MAGIC_SOURCE = '''
 unsigned int jsmbed_js_magic_string_values[] = {
     %s
 };
     ''' % MAGIC_VALUES
 
-    MAGIC_STRINGS = ',\n    '.join('"' + name + '"' for name in pins.iterkeys())
+    MAGIC_STRINGS = ',\n    '.join('"' + pin[0] + '"' for pin in pins)
     MAGIC_STRING_SOURCE = '''
 const char * jsmbed_js_magic_strings[] = {
     %s

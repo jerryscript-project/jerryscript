@@ -126,6 +126,8 @@ print_help (char *name)
                       "  --show-regexp-opcodes\n"
                       "  --save-snapshot-for-global FILE\n"
                       "  --save-snapshot-for-eval FILE\n"
+                      "  --save-literals-list-format FILE\n"
+                      "  --save-literals-c-format FILE\n"
                       "  --exec-snapshot FILE\n"
                       "  --log-level [0-3]\n"
                       "  --abort-on-fail\n"
@@ -354,6 +356,10 @@ main (int argc,
   bool is_save_snapshot_mode_for_global_or_eval = false;
   const char *save_snapshot_file_name_p = NULL;
 
+  bool is_save_literals_mode = false;
+  bool is_save_literals_mode_in_c_format_or_list = false;
+  const char *save_literals_file_name_p = NULL;
+
   bool is_repl_mode = false;
   bool no_prompt = false;
 
@@ -485,6 +491,38 @@ main (int argc,
                         "Ignoring 'exec-snapshot' option because this feature isn't enabled!\n");
       }
     }
+    else if (!strcmp ("--save-literals-list-format", argv[i])
+             || !strcmp ("--save-literals-c-format", argv[i]))
+    {
+      if (++i >= argc)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: no file specified for %s\n", argv[i - 1]);
+        print_usage (argv[0]);
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+
+      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE))
+      {
+        is_save_literals_mode = true;
+        is_save_literals_mode_in_c_format_or_list = !strcmp ("--save-literals-c-format", argv[i - 1]);
+
+        if (save_literals_file_name_p != NULL)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: literal file name already specified\n");
+          print_usage (argv[0]);
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+
+        save_literals_file_name_p = argv[i];
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'save-literals' option because this feature is disabled!\n");
+      }
+    }
     else if (!strcmp ("--log-level", argv[i]))
     {
       if (++i >= argc)
@@ -540,6 +578,16 @@ main (int argc,
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR,
                       "Error: --save-snapshot and --exec-snapshot options can't be passed simultaneously\n");
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+  }
+
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && is_save_literals_mode)
+  {
+    if (files_counter != 1)
+    {
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                      "Error: --save-literals-* options work with exactly one script\n");
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
   }
@@ -610,25 +658,47 @@ main (int argc,
         break;
       }
 
-      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && is_save_snapshot_mode)
+      if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && (is_save_snapshot_mode || is_save_literals_mode))
       {
         static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
 
-        size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_char_t *) source_p,
-                                                              source_size,
-                                                              is_save_snapshot_mode_for_global_or_eval,
-                                                              false,
-                                                              snapshot_save_buffer,
-                                                              JERRY_BUFFER_SIZE);
-        if (snapshot_size == 0)
+        if (is_save_snapshot_mode)
         {
-          ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "");
+          size_t snapshot_size = jerry_parse_and_save_snapshot ((jerry_char_t *) source_p,
+                                                                source_size,
+                                                                is_save_snapshot_mode_for_global_or_eval,
+                                                                false,
+                                                                snapshot_save_buffer,
+                                                                JERRY_BUFFER_SIZE);
+          if (snapshot_size == 0)
+          {
+            ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Snapshot saving failed!");
+          }
+          else
+          {
+            FILE *snapshot_file_p = fopen (save_snapshot_file_name_p, "w");
+            fwrite (snapshot_save_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
+            fclose (snapshot_file_p);
+          }
         }
-        else
+        if (!jerry_value_has_error_flag (ret_value) && is_save_literals_mode)
         {
-          FILE *snapshot_file_p = fopen (save_snapshot_file_name_p, "w");
-          fwrite (snapshot_save_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
-          fclose (snapshot_file_p);
+          const size_t literal_buffer_size = jerry_parse_and_save_literals ((jerry_char_t *) source_p,
+                                                                            source_size,
+                                                                            false,
+                                                                            snapshot_save_buffer,
+                                                                            JERRY_BUFFER_SIZE,
+                                                                            is_save_literals_mode_in_c_format_or_list);
+          if (literal_buffer_size == 0)
+          {
+            ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Literal saving failed!");
+          }
+          else
+          {
+            FILE *literal_file_p = fopen (save_literals_file_name_p, "w");
+            fwrite (snapshot_save_buffer, sizeof (uint8_t), literal_buffer_size, literal_file_p);
+            fclose (literal_file_p);
+          }
         }
       }
       else

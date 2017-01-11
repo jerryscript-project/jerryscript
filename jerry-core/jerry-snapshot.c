@@ -17,9 +17,11 @@
 #include "ecma-function-object.h"
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
+#include "jcontext.h"
 #include "jerry-api.h"
 #include "jerry-snapshot.h"
 #include "js-parser.h"
+#include "lit-char-helpers.h"
 #include "re-compiler.h"
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
@@ -630,3 +632,426 @@ jerry_exec_snapshot (const void *snapshot_p, /**< snapshot */
 /**
  * @}
  */
+
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+
+/**
+ * ====================== Functions for literal saving ==========================
+ */
+
+/**
+ * Compare two ecma_strings by size, then lexicographically.
+ *
+ * @return true - if the first string is less than the second one,
+ *         false - otherwise.
+ */
+static bool
+jerry_save_literals_compare (ecma_string_t *literal1, /**< first literal */
+                             ecma_string_t *literal2) /**< second literal */
+{
+  const lit_utf8_size_t lit1_size = ecma_string_get_size (literal1);
+  const lit_utf8_size_t lit2_size = ecma_string_get_size (literal2);
+
+  if (lit1_size == lit2_size)
+  {
+    return ecma_compare_ecma_strings_relational (literal1, literal2);
+  }
+
+  return (lit1_size < lit2_size);
+} /* jerry_save_literals_compare */
+
+/**
+ * Helper function for the heapsort algorithm.
+ *
+ * @return index of the maximum value
+ */
+static lit_utf8_size_t
+jerry_save_literals_heap_max (ecma_string_t *literals[], /**< array of literals */
+                              lit_utf8_size_t num_of_nodes, /**< number of nodes */
+                              lit_utf8_size_t node_idx, /**< index of parent node */
+                              lit_utf8_size_t child_idx1, /**< index of the first child */
+                              lit_utf8_size_t child_idx2) /**< index of the second child */
+{
+  lit_utf8_size_t max_idx = node_idx;
+
+  if (child_idx1 < num_of_nodes
+      && jerry_save_literals_compare (literals[max_idx], literals[child_idx1]))
+  {
+    max_idx = child_idx1;
+  }
+
+  if (child_idx2 < num_of_nodes
+      && jerry_save_literals_compare (literals[max_idx], literals[child_idx2]))
+  {
+    max_idx = child_idx2;
+  }
+
+  return max_idx;
+} /* jerry_save_literals_heap_max */
+
+/**
+ * Helper function for the heapsort algorithm.
+ */
+static void
+jerry_save_literals_down_heap (ecma_string_t *literals[], /**< array of literals */
+                               lit_utf8_size_t num_of_nodes, /**< number of nodes */
+                               lit_utf8_size_t node_idx) /**< index of parent node */
+{
+  while (true)
+  {
+    lit_utf8_size_t max_idx = jerry_save_literals_heap_max (literals,
+                                                            num_of_nodes,
+                                                            node_idx,
+                                                            2 * node_idx + 1,
+                                                            2 * node_idx + 2);
+    if (max_idx == node_idx)
+    {
+      break;
+    }
+
+    ecma_string_t *tmp_str_p  = literals[node_idx];
+    literals[node_idx] = literals[max_idx];
+    literals[max_idx] = tmp_str_p;
+
+    node_idx = max_idx;
+  }
+} /* jerry_save_literals_down_heap */
+
+/**
+ * Helper function for a heapsort algorithm.
+ */
+static void
+jerry_save_literals_sort (ecma_string_t *literals[], /**< array of literals */
+                          lit_utf8_size_t num_of_literals) /**< number of literals */
+{
+  if (num_of_literals < 2)
+  {
+    return;
+  }
+
+  lit_utf8_size_t lit_idx = (num_of_literals - 2) / 2;
+
+  while (lit_idx <= (num_of_literals - 2) / 2)
+  {
+    jerry_save_literals_down_heap (literals, num_of_literals, lit_idx--);
+  }
+
+  for (lit_idx = 0; lit_idx < num_of_literals; lit_idx++)
+  {
+    const lit_utf8_size_t last_idx = num_of_literals - lit_idx - 1;
+
+    ecma_string_t *tmp_str_p = literals[last_idx];
+    literals[last_idx] = literals[0];
+    literals[0] = tmp_str_p;
+
+    jerry_save_literals_down_heap (literals, last_idx, 0);
+  }
+} /* jerry_save_literals_sort */
+
+/**
+ * Append characters to the specified buffer.
+ *
+ * @return the position of the buffer pointer after copy.
+ */
+static uint8_t *
+jerry_append_chars_to_buffer (uint8_t *buffer_p, /**< buffer */
+                              uint8_t *buffer_end_p, /**< the end of the buffer */
+                              const char *chars, /**< string */
+                              lit_utf8_size_t string_size) /**< string size */
+{
+  if (buffer_p > buffer_end_p)
+  {
+    return buffer_p;
+  }
+
+  if (string_size == 0)
+  {
+    string_size = (lit_utf8_size_t) strlen (chars);
+  }
+
+  if (buffer_p + string_size <= buffer_end_p)
+  {
+    memcpy ((char *) buffer_p, chars, string_size);
+
+    return buffer_p + string_size;
+  }
+
+  /* Move the pointer behind the buffer to prevent further writes. */
+  return buffer_end_p + 1;
+} /* jerry_append_chars_to_buffer */
+
+/**
+ * Append an ecma-string to the specified buffer.
+ *
+ * @return the position of the buffer pointer after copy.
+ */
+static uint8_t *
+jerry_append_ecma_string_to_buffer (uint8_t *buffer_p, /**< buffer */
+                                    uint8_t *buffer_end_p, /**< the end of the buffer */
+                                    ecma_string_t *string_p) /**< ecma-string */
+{
+  uint8_t *new_buffer_p = NULL;
+
+  ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
+
+  /* Append the string to the buffer. */
+  new_buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                               buffer_end_p,
+                                               (const char *) str_buffer_p,
+                                               str_buffer_size);
+
+  ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
+
+  return new_buffer_p;
+} /* jerry_append_ecma_string_to_buffer */
+
+/**
+ * Append an unsigned number to the specified buffer.
+ *
+ * @return the position of the buffer pointer after copy.
+ */
+static uint8_t *
+jerry_append_number_to_buffer (uint8_t *buffer_p, /**< buffer */
+                               uint8_t *buffer_end_p, /**< the end of the buffer */
+                               lit_utf8_size_t number) /**< number */
+{
+  lit_utf8_byte_t uint32_to_str_buffer[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
+  lit_utf8_size_t utf8_str_size = ecma_uint32_to_utf8_string (number,
+                                                              uint32_to_str_buffer,
+                                                              ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+
+  JERRY_ASSERT (utf8_str_size <= ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+
+  return jerry_append_chars_to_buffer (buffer_p,
+                                       buffer_end_p,
+                                       (const char *) uint32_to_str_buffer,
+                                       utf8_str_size);
+} /* jerry_append_number_to_buffer */
+
+/**
+ * Check whether the passed ecma-string is a valid identifier.
+ *
+ * @return true, if the ecma-string is a valid identifier,
+ *         false - otherwise.
+ */
+static bool
+ecma_string_is_valid_identifier (const ecma_string_t *string_p)
+{
+  bool result = false;
+
+  ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
+
+  if (lit_char_is_identifier_start (str_buffer_p))
+  {
+    const uint8_t *str_start_p = str_buffer_p;
+    const uint8_t *str_end_p = str_buffer_p + str_buffer_size;
+
+    result = true;
+
+    while (str_start_p < str_end_p)
+    {
+      if (!lit_char_is_identifier_part (str_start_p))
+      {
+        result = false;
+        break;
+      }
+      lit_utf8_incr (&str_start_p);
+    }
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
+
+  return result;
+} /* ecma_string_is_valid_identifier */
+
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+
+/**
+ * Copy certain string literals into the given buffer in a specified format,
+ * which are valid identifiers and none of them are magic string.
+ *
+ * @return size of the literal-list in bytes, at most equal to the buffer size,
+ *         if the source parsed successfully and the list of the literals isn't empty,
+ *         0 - otherwise.
+ */
+size_t
+jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source */
+                               size_t source_size, /**< script source size */
+                               bool is_strict, /**< strict mode */
+                               uint8_t *buffer_p, /**< [out] buffer to save literals to */
+                               size_t buffer_size, /**< the buffer's size */
+                               bool is_c_format) /**< format-flag */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  ecma_value_t parse_status;
+  ecma_compiled_code_t *bytecode_data_p;
+  parse_status = parser_parse_script (source_p,
+                                      source_size,
+                                      is_strict,
+                                      &bytecode_data_p);
+
+  const bool error = ECMA_IS_VALUE_ERROR (parse_status);
+  ecma_free_value (parse_status);
+
+  if (error)
+  {
+    return 0;
+  }
+
+  ecma_bytecode_deref (bytecode_data_p);
+
+  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
+  lit_utf8_size_t literal_count = 0;
+
+  /* Count the valid and non-magic identifiers in the list. */
+  while (string_list_p != NULL)
+  {
+    for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+    {
+      if (string_list_p->values[i] != JMEM_CP_NULL)
+      {
+        ecma_string_t *literal_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                 string_list_p->values[i]);
+        /* We don't save a literal which isn't a valid identifier
+           or it's a magic string. */
+        if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
+            && ecma_string_is_valid_identifier (literal_p))
+        {
+          literal_count++;
+        }
+      }
+    }
+
+    string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
+  }
+
+  if (literal_count == 0)
+  {
+    return 0;
+  }
+
+  uint8_t * const buffer_start_p = buffer_p;
+  uint8_t * const buffer_end_p = buffer_p + buffer_size;
+
+  JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
+  lit_utf8_size_t literal_idx = 0;
+
+  string_list_p = JERRY_CONTEXT (string_list_first_p);
+
+  while (string_list_p != NULL)
+  {
+    for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+    {
+      if (string_list_p->values[i] != JMEM_CP_NULL)
+      {
+        ecma_string_t *literal_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                 string_list_p->values[i]);
+
+        if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
+            && ecma_string_is_valid_identifier (literal_p))
+        {
+          literal_array[literal_idx++] = literal_p;
+        }
+      }
+    }
+
+    string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
+  }
+
+  /* Sort the strings by size at first, then lexicographically. */
+  jerry_save_literals_sort (literal_array, literal_count);
+
+  if (is_c_format)
+  {
+    /* Save literal count. */
+    buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                             buffer_end_p,
+                                             (const char *) "jerry_length_t literal_count = ",
+                                             0);
+
+    buffer_p = jerry_append_number_to_buffer (buffer_p, buffer_end_p, literal_count);
+
+    /* Save the array of literals. */
+    buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                             buffer_end_p,
+                                             ";\n\njerry_char_ptr_t literals[",
+                                             0);
+
+    buffer_p = jerry_append_number_to_buffer (buffer_p, buffer_end_p, literal_count);
+    buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "] =\n{\n", 0);
+
+    for (lit_utf8_size_t i = 0; i < literal_count; i++)
+    {
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "  \"", 0);
+      buffer_p = jerry_append_ecma_string_to_buffer (buffer_p, buffer_end_p, literal_array[i]);
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "\"", 0);
+
+      if (i < literal_count - 1)
+      {
+        buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, ",", 0);
+      }
+
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "\n", 0);
+    }
+
+    buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                             buffer_end_p,
+                                             (const char *) "};\n\njerry_length_t literal_sizes[",
+                                             0);
+
+    buffer_p = jerry_append_number_to_buffer (buffer_p, buffer_end_p, literal_count);
+    buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "] =\n{\n", 0);
+  }
+
+  /* Save the literal sizes respectively. */
+  for (lit_utf8_size_t i = 0; i < literal_count; i++)
+  {
+    lit_utf8_size_t str_size = ecma_string_get_size (literal_array[i]);
+
+    if (is_c_format)
+    {
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "  ", 0);
+    }
+
+    buffer_p = jerry_append_number_to_buffer (buffer_p, buffer_end_p, str_size);
+    buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, " ", 0);
+
+    if (is_c_format)
+    {
+      /* Show the given string as a comment. */
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "/* ", 0);
+      buffer_p = jerry_append_ecma_string_to_buffer (buffer_p, buffer_end_p, literal_array[i]);
+      buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, " */", 0);
+
+      if (i < literal_count - 1)
+      {
+        buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, ",", 0);
+      }
+    }
+    else
+    {
+      buffer_p = jerry_append_ecma_string_to_buffer (buffer_p, buffer_end_p, literal_array[i]);
+    }
+
+    buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, "\n", 0);
+  }
+
+  if (is_c_format)
+  {
+    buffer_p = jerry_append_chars_to_buffer (buffer_p, buffer_end_p, (const char *) "};\n", 0);
+  }
+
+  JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
+
+  return buffer_p <= buffer_end_p ? (size_t) (buffer_p - buffer_start_p) : 0;
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+  JERRY_UNUSED (is_c_format);
+
+  return 0;
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+} /* jerry_parse_and_save_literals */

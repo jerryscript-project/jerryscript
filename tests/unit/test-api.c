@@ -950,5 +950,61 @@ main (void)
     jerry_cleanup ();
   }
 
+  /* Save literals */
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE))
+  {
+    /* C format generation */
+    jerry_init (JERRY_INIT_EMPTY);
+
+    static jerry_char_t literal_buffer_c[256];
+    static const char *code_for_c_format_p = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
+
+    size_t literal_sizes_c_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_c_format_p,
+                                                                   strlen (code_for_c_format_p),
+                                                                   false,
+                                                                   literal_buffer_c,
+                                                                   sizeof (literal_buffer_c),
+                                                                   true);
+    TEST_ASSERT (literal_sizes_c_format == 203);
+
+    static const char *expected_c_format = (
+                                            "jerry_length_t literal_count = 4;\n\n"
+                                            "jerry_char_ptr_t literals[4] =\n"
+                                            "{\n"
+                                            "  \"Bb\",\n"
+                                            "  \"aa\",\n"
+                                            "  \"aaa\",\n"
+                                            "  \"xzy0\"\n"
+                                            "};\n\n"
+                                            "jerry_length_t literal_sizes[4] =\n"
+                                            "{\n"
+                                            "  2 /* Bb */,\n"
+                                            "  2 /* aa */,\n"
+                                            "  3 /* aaa */,\n"
+                                            "  4 /* xzy0 */\n"
+                                            "};\n"
+                                            );
+
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_c, expected_c_format, literal_sizes_c_format));
+    jerry_cleanup ();
+
+    /* List format generation */
+    jerry_init (JERRY_INIT_EMPTY);
+
+    static jerry_char_t literal_buffer_list[256];
+    static const char *code_for_list_format_p = "var obj = { a:'aa', bb:'Bb' };";
+
+    size_t literal_sizes_list_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_list_format_p,
+                                                                      strlen (code_for_list_format_p),
+                                                                      false,
+                                                                      literal_buffer_list,
+                                                                      sizeof (literal_buffer_list),
+                                                                      false);
+    TEST_ASSERT (literal_sizes_list_format == 25);
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "1 a\n2 Bb\n2 aa\n2 bb\n3 obj\n", literal_sizes_list_format));
+
+    jerry_cleanup ();
+  }
+
   return 0;
 } /* main */

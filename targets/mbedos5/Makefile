@@ -87,4 +87,8 @@ getlibs: .mbed
 	mbed deploy
 
 ../../.mbedignore:
+ifeq ($(OS),Windows_NT)
+	copy template-mbedignore.txt ..\..\.mbedignore
+else
 	cp ./template-mbedignore.txt ../../.mbedignore
+endif

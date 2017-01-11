@@ -374,10 +374,16 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_DATE)
   {
-    if (ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE (builtin_routine_id)
-        && ecma_number_is_nan (date_num))
+    if (ecma_number_is_nan (date_num))
     {
-      date_num = ECMA_NUMBER_ZERO;
+      if (ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE (builtin_routine_id))
+      {
+        date_num = ECMA_NUMBER_ZERO;
+      }
+      else
+      {
+        return ecma_make_number_value (date_num);
+      }
     }
 
     time_part = ecma_date_time_within_day (date_num);
@@ -449,6 +455,11 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
   }
   else
   {
+    if (ecma_number_is_nan (date_num))
+    {
+      return ecma_make_number_value (date_num);
+    }
+
     day_part = ecma_date_day (date_num);
 
     ecma_number_t hour = ecma_date_hour_from_time (date_num);
@@ -589,7 +600,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
     if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
     {
-      this_num = ecma_date_local_time (this_num);
+      this_num += ecma_date_local_time_zone (this_num);
     }
 
     if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)

@@ -96,18 +96,11 @@ typedef enum
 /* ecma-builtin-helpers-date.c */
 ecma_number_t ecma_date_day (ecma_number_t time);
 ecma_number_t ecma_date_time_within_day (ecma_number_t time);
-ecma_number_t ecma_date_days_in_year (ecma_number_t year);
-ecma_number_t ecma_date_day_from_year (ecma_number_t year);
-ecma_number_t ecma_date_time_from_year (ecma_number_t year);
 ecma_number_t ecma_date_year_from_time (ecma_number_t time);
-ecma_number_t ecma_date_in_leap_year (ecma_number_t time);
-ecma_number_t ecma_date_day_within_year (ecma_number_t time);
 ecma_number_t ecma_date_month_from_time (ecma_number_t time);
 ecma_number_t ecma_date_date_from_time (ecma_number_t time);
 ecma_number_t ecma_date_week_day (ecma_number_t time);
-ecma_number_t ecma_date_local_tza ();
-ecma_number_t ecma_date_daylight_saving_ta (ecma_number_t time);
-ecma_number_t ecma_date_local_time (ecma_number_t time);
+ecma_number_t ecma_date_local_time_zone (ecma_number_t time);
 ecma_number_t ecma_date_utc (ecma_number_t time);
 ecma_number_t ecma_date_hour_from_time (ecma_number_t time);
 ecma_number_t ecma_date_min_from_time (ecma_number_t time);

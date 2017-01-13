@@ -980,7 +980,7 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-s
 } /* ecma_string_copy_to_utf8_buffer */
 
 /**
- * Convert ecma-string's contents to a cesu-8 string, extract the parts of the converted string beetween the specified
+ * Convert ecma-string's contents to a cesu-8 string, extract the parts of the converted string between the specified
  * start position and the end position (or the end of the string, whichever comes first), and copy these characters
  * into the buffer.
  *
@@ -1058,6 +1058,137 @@ ecma_substring_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p, /**< ec
   JERRY_ASSERT (size <= buffer_size);
   return size;
 } /* ecma_substring_copy_to_cesu8_buffer */
+
+/**
+ * Convert ecma-string's contents to an utf-8 string, extract the parts of the converted string between the specified
+ * start position and the end position (or the end of the string, whichever comes first), and copy these characters
+ * into the buffer.
+ *
+ * @return number of bytes, actually copied to the buffer.
+ */
+lit_utf8_size_t
+ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
+                                    ecma_length_t start_pos, /**< position of the first character */
+                                    ecma_length_t end_pos, /**< position of the last character */
+                                    lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
+                                                                * (can be NULL if buffer_size == 0) */
+                                    lit_utf8_size_t buffer_size) /**< size of buffer */
+{
+  JERRY_ASSERT (string_desc_p != NULL);
+  JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
+  JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
+
+  lit_utf8_size_t size = 0;
+
+  ecma_length_t utf8_str_length = ecma_string_get_utf8_length (string_desc_p);
+
+  if (start_pos >= utf8_str_length || start_pos >= end_pos)
+  {
+    return 0;
+  }
+
+  if (end_pos > utf8_str_length)
+  {
+    end_pos = utf8_str_length;
+  }
+
+  ECMA_STRING_TO_UTF8_STRING (string_desc_p, cesu8_str_p, cesu8_str_size);
+  ecma_length_t cesu8_str_length = ecma_string_get_length (string_desc_p);
+
+  if (cesu8_str_length == cesu8_str_size)
+  {
+    cesu8_str_p += start_pos;
+    size = end_pos - start_pos;
+
+    if (size > buffer_size)
+    {
+      size = buffer_size;
+    }
+
+    memcpy (buffer_p, cesu8_str_p, size);
+  }
+  else
+  {
+    const lit_utf8_byte_t *cesu8_end_pos = cesu8_str_p + cesu8_str_size;
+    end_pos -= start_pos;
+
+    while (start_pos--)
+    {
+      ecma_char_t ch;
+      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &ch);
+
+      cesu8_str_p += code_unit_size;
+      if ((cesu8_str_p != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
+      {
+        ecma_char_t next_ch;
+        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &next_ch);
+        if (lit_is_code_point_utf16_low_surrogate (next_ch))
+        {
+          JERRY_ASSERT (code_unit_size == next_ch_size);
+          cesu8_str_p += code_unit_size;
+        }
+      }
+    }
+
+    const lit_utf8_byte_t *cesu8_pos = cesu8_str_p;
+
+    lit_utf8_byte_t *utf8_pos = buffer_p;
+    lit_utf8_byte_t *utf8_end_pos = buffer_p + buffer_size;
+
+    while (end_pos--)
+    {
+      ecma_char_t ch;
+      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_pos, &ch);
+
+      if ((size + code_unit_size) > buffer_size)
+      {
+        break;
+      }
+
+      if (((cesu8_pos + code_unit_size) != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
+      {
+        ecma_char_t next_ch;
+        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_pos + code_unit_size, &next_ch);
+
+        if (lit_is_code_point_utf16_low_surrogate (next_ch))
+        {
+          JERRY_ASSERT (code_unit_size == next_ch_size);
+
+          if ((size + code_unit_size + 1) > buffer_size)
+          {
+            break;
+          }
+
+          cesu8_pos += next_ch_size;
+
+          lit_code_point_t code_point = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
+          lit_code_point_to_utf8 (code_point, utf8_pos);
+          size += (code_unit_size + 1);
+        }
+        else
+        {
+          memcpy (utf8_pos, cesu8_pos, code_unit_size);
+          size += code_unit_size;
+        }
+      }
+      else
+      {
+        memcpy (utf8_pos, cesu8_pos, code_unit_size);
+        size += code_unit_size;
+      }
+
+      utf8_pos = buffer_p + size;
+      cesu8_pos += code_unit_size;
+    }
+
+    JERRY_ASSERT (utf8_pos <= utf8_end_pos);
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (cesu8_str_p, cesu8_str_size);
+  JERRY_ASSERT (size <= buffer_size);
+
+  return size;
+} /* ecma_substring_copy_to_utf8_buffer */
 
 /**
  * Convert ecma-string's contents to a cesu-8 string and put it to the buffer.

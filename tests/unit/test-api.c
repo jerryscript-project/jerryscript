@@ -398,6 +398,41 @@ main (void)
   TEST_ASSERT (jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) test_string, utf8_sz) == 14);
   TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", utf8_sz));
 
+  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length, (jerry_char_t *) test_string, utf8_sz);
+  TEST_ASSERT (sz == 14);
+  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", sz));
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length + 1, (jerry_char_t *) test_string, utf8_sz);
+  TEST_ASSERT (sz == 14);
+  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", sz));
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0], utf8_length, 0, (jerry_char_t *) test_string, utf8_sz);
+  TEST_ASSERT (sz == 0);
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length, (jerry_char_t *) test_string, utf8_sz - 1);
+  TEST_ASSERT (sz == 10);
+  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 ", sz));
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length - 1, (jerry_char_t *) test_string, utf8_sz);
+  TEST_ASSERT (sz == 10);
+  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 ", sz));
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0],
+                                            utf8_length - 2,
+                                            utf8_length - 1,
+                                            (jerry_char_t *) test_string,
+                                            utf8_sz);
+  TEST_ASSERT (sz == 1);
+  TEST_ASSERT (!strncmp (test_string, " ", sz));
+
+  sz = jerry_substring_to_utf8_char_buffer (args[0],
+                                            utf8_length - 3,
+                                            utf8_length - 2,
+                                            (jerry_char_t *) test_string,
+                                            utf8_sz);
+  TEST_ASSERT (sz == 4);
+  TEST_ASSERT (!strncmp (test_string, "\xf0\x9d\x94\xa3", sz));
+
   jerry_release_value (args[0]);
 
   /* Test string: 'str: {DESERET CAPITAL LETTER LONG I}' */

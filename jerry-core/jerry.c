@@ -1234,6 +1234,40 @@ jerry_substring_to_char_buffer (const jerry_value_t value, /**< input string val
 } /* jerry_substring_to_char_buffer */
 
 /**
+ * Copy the characters of an utf-8 encoded substring into a specified buffer.
+ *
+ * Note:
+ *      The '\0' character could occur anywhere in the returned string
+ *      Returns 0, if the value parameter is not a string.
+ *      It will extract the substring beetween the specified start position
+ *      and the end position (or the end of the string, whichever comes first).
+ *
+ * @return number of bytes copied to the buffer.
+ */
+jerry_size_t
+jerry_substring_to_utf8_char_buffer (const jerry_value_t value, /**< input string value */
+                                     jerry_length_t start_pos, /**< position of the first character */
+                                     jerry_length_t end_pos, /**< position of the last character */
+                                     jerry_char_t *buffer_p, /**< [out] output characters buffer */
+                                     jerry_size_t buffer_size) /**< size of output buffer */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_string (value) || buffer_p == NULL)
+  {
+    return 0;
+  }
+
+  ecma_string_t *str_p = ecma_get_string_from_value (value);
+
+  return ecma_substring_copy_to_utf8_buffer (str_p,
+                                             start_pos,
+                                             end_pos,
+                                             (lit_utf8_byte_t *) buffer_p,
+                                             buffer_size);
+} /* jerry_substring_to_utf8_char_buffer */
+
+/**
  * Checks whether the object or it's prototype objects have the given property.
  *
  * @return true  - if the property exists

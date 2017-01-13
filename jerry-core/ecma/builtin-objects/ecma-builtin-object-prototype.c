@@ -240,7 +240,7 @@ ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_a
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
   /* 4. */
-  if (property != ECMA_PROPERTY_TYPE_NOT_FOUND)
+  if (property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
     bool is_enumerable = ecma_is_property_enumerable (property);
 

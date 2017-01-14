@@ -19,7 +19,6 @@
 
 #include <zephyr.h>
 #include <misc/printk.h>
-#include <misc/shell.h>
 #include "getline-zephyr.h"
 
 #include "jerry-api.h"

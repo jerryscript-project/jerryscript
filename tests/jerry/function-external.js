@@ -12,28 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var code = 'try\n\
-{\n\
-  print({toStSing:!function() { throw new TypeError("foo"); }}, []);t (false);\n\
-}\n\
-catch (e)\n\
-{\n\
-  assert*(e instanceof\n\
-  assert );\n\
-  asstrt (e.a%e === "foo");\n\
-}';
-
 try {
-  eval(code);
+  ({} instanceof assert);
   assert(false);
 } catch(e) {
   assert(e instanceof TypeError);
 }
 
+assert.prototype = {}
+
 try {
-  eval("var x = {}; x instanceof assert;");
+  assert(!({} instanceof assert));
+} catch(e) {
+  assert(false);
+}
+
+try {
+  ({} instanceof Math.sin);
   assert(false);
 } catch(e) {
   assert(e instanceof TypeError);
 }
 
+Math.sin.prototype = {}
+
+try {
+  assert(!({} instanceof Math.sin));
+} catch(e) {
+  assert(false);
+}

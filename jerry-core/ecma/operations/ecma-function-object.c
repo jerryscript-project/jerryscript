@@ -366,14 +366,9 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+      || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    if (ecma_get_object_is_builtin (func_obj_p)
-        && ecma_builtin_function_is_routine (func_obj_p))
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Function parameter cannot be built-in a function."));
-    }
-
     if (!ecma_is_value_object (value))
     {
       return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
@@ -389,7 +384,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (!ecma_is_value_object (prototype_obj_value))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Object expected."));
     }
     else
     {
@@ -418,10 +413,6 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     ECMA_FINALIZE (prototype_obj_value);
 
     ecma_deref_ecma_string (prototype_magic_string_p);
-  }
-  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
   }
   else
   {

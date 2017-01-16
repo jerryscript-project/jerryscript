@@ -396,7 +396,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   }
 #else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
   JERRY_UNUSED (object_p);
-  JERRY_UNUSED (name_p);
+  JERRY_UNUSED (name_cp);
   JERRY_UNUSED (property_p);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 } /* ecma_property_hashmap_delete */

@@ -16,11 +16,6 @@
 /*
  * Int8Array prototype description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef NUMBER_VALUE
 # define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
@@ -37,9 +32,6 @@
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
 
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE)
-
 /* ES2015 22.2.3.4 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_INT8ARRAY,
@@ -50,7 +42,6 @@ NUMBER_VALUE (LIT_MAGIC_STRING_BYTES_PER_ELEMENT_U,
               1,
               ECMA_PROPERTY_FIXED)
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

@@ -16,11 +16,6 @@
 /*
  * Date.prototype built-in description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef OBJECT_VALUE
 # define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
@@ -28,9 +23,6 @@
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_DATE_PROTOTYPE)
 
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_DATE,
@@ -88,7 +80,6 @@ ROUTINE (LIT_MAGIC_STRING_TO_GMT_STRING_UL, ECMA_DATE_PROTOTYPE_TO_UTC_STRING, 0
 
 #endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

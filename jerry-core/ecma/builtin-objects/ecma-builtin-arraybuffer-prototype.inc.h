@@ -12,11 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef OBJECT_VALUE
 # define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
@@ -37,9 +32,6 @@
 # define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes)
 #endif /* !ACCESSOR_READ_ONLY */
 
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE)
-
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -56,7 +48,6 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_arraybuffer_prototype_object_slice, 2, 2)
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

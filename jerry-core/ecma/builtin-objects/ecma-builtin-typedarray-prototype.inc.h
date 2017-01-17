@@ -16,11 +16,6 @@
 /*
  * %TypedArrayPrototype% description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef NUMBER_VALUE
 # define NUMBER_VALUE(name, number_value, prop_attributes)
 #endif /* !NUMBER_VALUE */
@@ -36,9 +31,6 @@
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE)
 
 /* ES2015 22.2.3.4 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
@@ -63,7 +55,6 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_OFFSET_UL,
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

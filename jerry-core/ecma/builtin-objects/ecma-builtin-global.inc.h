@@ -16,11 +16,6 @@
 /*
  * Global built-in description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef SIMPLE_VALUE
 # define SIMPLE_VALUE(name, simple_value, prop_attributes)
 #endif /* !SIMPLE_VALUE */
@@ -36,9 +31,6 @@
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_GLOBAL)
 
 /* Simple value properties:
  * (property name, simple value, writable, enumerable, configurable) */
@@ -200,7 +192,6 @@ ROUTINE (LIT_MAGIC_STRING_ESCAPE, ecma_builtin_global_object_escape, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UNESCAPE, ecma_builtin_global_object_unescape, 1, 1)
 #endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

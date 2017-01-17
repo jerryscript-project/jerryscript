@@ -16,11 +16,6 @@
 /*
  * Error.prototype built-in description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef STRING_VALUE
 # define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
@@ -32,9 +27,6 @@
 #ifndef ROUTINE
 # define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_ERROR_PROTOTYPE)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -58,7 +50,6 @@ STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_error_prototype_object_to_string, 0, 0)
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

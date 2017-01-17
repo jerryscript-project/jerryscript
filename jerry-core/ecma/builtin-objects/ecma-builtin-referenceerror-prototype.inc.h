@@ -16,11 +16,6 @@
 /*
  * ReferenceError.prototype built-in description
  */
-
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
 #ifndef STRING_VALUE
 # define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
@@ -28,9 +23,6 @@
 #ifndef OBJECT_VALUE
 # define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -50,7 +42,6 @@ STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
               LIT_MAGIC_STRING__EMPTY,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#undef OBJECT_ID
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

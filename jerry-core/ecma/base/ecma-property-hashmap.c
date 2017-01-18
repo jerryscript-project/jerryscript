@@ -300,13 +300,8 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   bits_p += (entry_index >> 3);
   mask = (uint32_t) (1 << (entry_index & 0x7));
 
-  if (!(*bits_p & mask))
-  {
-    /* Deleted entries also has ECMA_NULL_POINTER
-     * value, but they are not NULL values. */
-    hashmap_p->null_count--;
-    JERRY_ASSERT (hashmap_p->null_count > 0);
-  }
+  hashmap_p->null_count--;
+  JERRY_ASSERT (hashmap_p->null_count > 0);
 
   if (property_index == 0)
   {
@@ -337,6 +332,22 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
                                                                   object_p->property_list_or_bound_object_cp);
 
   JERRY_ASSERT (hashmap_p->header.types[0] == ECMA_PROPERTY_TYPE_HASHMAP);
+
+  hashmap_p->null_count++;
+
+  /* The NULLs are above 3/4 of the hashmap. */
+  if (hashmap_p->null_count > ((hashmap_p->max_property_count * 3) >> 2))
+  {
+    uint32_t max_property_count = hashmap_p->max_property_count;
+
+    ecma_property_hashmap_free (object_p);
+
+    if (max_property_count >= ECMA_PROPERTY_HASMAP_MINIMUM_SIZE * 2)
+    {
+      ecma_property_hashmap_create (object_p);
+    }
+    return;
+  }
 
   uint32_t entry_index = ecma_string_get_property_name_hash (*property_p, name_cp);
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];

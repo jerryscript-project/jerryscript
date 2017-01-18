@@ -13,31 +13,9 @@
  * limitations under the License.
  */
 
-#include "ecma-builtins.h"
+var a = new Uint8ClampedArray([1.5, 2.5, -1.5, 10000]);
 
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
-
-#define ECMA_BUILTINS_INTERNAL
-#include "ecma-builtins-internal.h"
-
-#define BUILTIN_INC_HEADER_NAME "ecma-builtin-int8array-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID int8array_prototype
-#include "ecma-builtin-internal-routines-template.inc.h"
-
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmabuiltins
- * @{
- *
- * \addtogroup int8array prototype ECMA Int8Array.prototype object built-in
- * @{
- */
-
-/**
- * @}
- * @}
- * @}
- */
-
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+assert(a[0] === 2);
+assert(a[1] === 2);
+assert(a[2] === 0);
+assert(a[3] === 255);

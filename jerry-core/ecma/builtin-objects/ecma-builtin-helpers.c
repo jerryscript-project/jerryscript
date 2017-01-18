@@ -82,9 +82,9 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
   /* Building string "[object #type#]" where type is 'Undefined',
      'Null' or one of possible object's classes.
-     The string with null character is maximum 19 characters long. */
-  const lit_utf8_size_t buffer_size = 19;
-  JMEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, lit_utf8_byte_t);
+     The string with null character is maximum 27 characters long. */
+  const lit_utf8_size_t buffer_size = 27;
+  lit_utf8_byte_t str_buffer[buffer_size];
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
 
@@ -105,8 +105,6 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   }
 
   ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
-
-  JMEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_helper_object_to_string */

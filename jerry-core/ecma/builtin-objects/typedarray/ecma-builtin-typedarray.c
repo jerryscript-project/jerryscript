@@ -37,7 +37,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup string ECMA %TypedArray% object built-in
+ * \addtogroup typedarray ECMA %TypedArray% object built-in
  * @{
  */
 
@@ -120,5 +120,11 @@ ecma_builtin_typedarray_dispatch_construct (const ecma_value_t *arguments_list_p
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray intrinstic cannot be called by a 'new' expression"));
 } /* ecma_builtin_typedarray_dispatch_construct */
+
+/**
+  * @}
+  * @}
+  * @}
+  */
 
 #endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */

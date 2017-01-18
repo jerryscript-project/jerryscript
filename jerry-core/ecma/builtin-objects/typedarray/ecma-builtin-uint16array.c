@@ -26,8 +26,8 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-#define BUILTIN_INC_HEADER_NAME "ecma-builtin-int8array.inc.h"
-#define BUILTIN_UNDERSCORED_ID int8array
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-uint16array.inc.h"
+#define BUILTIN_UNDERSCORED_ID uint16array
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -36,51 +36,51 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup string ECMA Int8Array object built-in
+ * \addtogroup uint16array ECMA Uint16Array object built-in
  * @{
  */
 
 /**
- * Handle calling [[Call]] of Int8Array
- *
- * ES2015 22.2.4 The TypedArray constructors are not intended
- * to be called as a function and will throw an exception when called in that manner.
+ * Handle calling [[Call]] of Uint16Array
  *
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_int8array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                      ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_builtin_uint16array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                        ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Int8Array cannot be directly called"));
-} /* ecma_builtin_int8array_dispatch_call */
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Uint16Array cannot be directly called"));
+} /* ecma_builtin_uint16array_dispatch_call */
 
 /**
- * Handle calling [[Construct]] of built-in %TypedArray% object
- *
- * ES2015 22.2.1 If %TypedArray% is directly called or
- * called as part of a new expression an exception is thrown
+ * Handle calling [[Construct]] of Uint16Array
  *
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_int8array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                           ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_builtin_uint16array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                             ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE);
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT16ARRAY_PROTOTYPE);
   ecma_value_t val = ecma_op_create_typedarray (arguments_list_p,
                                                 arguments_list_len,
                                                 prototype_obj_p,
-                                                0,
-                                                LIT_MAGIC_STRING_INT8_ARRAY_UL);
+                                                1,
+                                                LIT_MAGIC_STRING_UINT16_ARRAY_UL);
 
   ecma_deref_object (prototype_obj_p);
 
   return val;
-} /* ecma_builtin_int8array_dispatch_construct */
+} /* ecma_builtin_uint16array_dispatch_construct */
+
+/**
+  * @}
+  * @}
+  * @}
+  */
 
 #endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */

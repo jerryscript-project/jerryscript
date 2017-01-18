@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-assert(Int8Array.prototype.BYTES_PER_ELEMENT === 1);
-assert(Uint8Array.prototype.BYTES_PER_ELEMENT === 1);
-assert(Uint8ClampedArray.prototype.BYTES_PER_ELEMENT === 1);
-assert(Int16Array.prototype.BYTES_PER_ELEMENT === 2);
-assert(Uint16Array.prototype.BYTES_PER_ELEMENT === 2);
-assert(Int32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Uint32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Float32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Float64Array.prototype.BYTES_PER_ELEMENT === 8);
+var a = new Float32Array(2);
+
+a[0] = 0.1;
+a[1] = -2.3;
+
+assert(a[0] === 0.10000000149011612);
+assert(a[1] === -2.299999952316284);

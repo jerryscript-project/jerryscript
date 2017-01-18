@@ -51,6 +51,7 @@ set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/base"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
     "${CMAKE_CURRENT_SOURCE_DIR}/jcontext"
     "${CMAKE_CURRENT_SOURCE_DIR}/jmem"
@@ -62,22 +63,24 @@ set(INCLUDE_CORE
 
 # Sources
 # Jerry core
-file(GLOB SOURCE_CORE_API                   *.c)
-file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)
-file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
-file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.c)
-file(GLOB SOURCE_CORE_JCONTEXT              jcontext/*.c)
-file(GLOB SOURCE_CORE_JMEM                  jmem/*.c)
-file(GLOB SOURCE_CORE_JRT                   jrt/*.c)
-file(GLOB SOURCE_CORE_LIT                   lit/*.c)
-file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.c)
-file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.c)
-file(GLOB SOURCE_CORE_VM                    vm/*.c)
+file(GLOB SOURCE_CORE_API                       *.c)
+file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
+file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
+file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
+file(GLOB SOURCE_CORE_ECMA_OPERATIONS           ecma/operations/*.c)
+file(GLOB SOURCE_CORE_JCONTEXT                  jcontext/*.c)
+file(GLOB SOURCE_CORE_JMEM                      jmem/*.c)
+file(GLOB SOURCE_CORE_JRT                       jrt/*.c)
+file(GLOB SOURCE_CORE_LIT                       lit/*.c)
+file(GLOB SOURCE_CORE_PARSER_JS                 parser/js/*.c)
+file(GLOB SOURCE_CORE_PARSER_REGEXP             parser/regexp/*.c)
+file(GLOB SOURCE_CORE_VM                        vm/*.c)
 
 set(SOURCE_CORE_FILES
     ${SOURCE_CORE_API}
     ${SOURCE_CORE_ECMA_BASE}
     ${SOURCE_CORE_ECMA_BUILTINS}
+    ${SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY}
     ${SOURCE_CORE_ECMA_OPERATIONS}
     ${SOURCE_CORE_JCONTEXT}
     ${SOURCE_CORE_JMEM}

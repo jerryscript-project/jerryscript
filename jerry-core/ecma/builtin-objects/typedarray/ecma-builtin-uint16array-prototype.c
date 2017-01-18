@@ -13,12 +13,31 @@
  * limitations under the License.
  */
 
-assert(Int8Array.prototype.BYTES_PER_ELEMENT === 1);
-assert(Uint8Array.prototype.BYTES_PER_ELEMENT === 1);
-assert(Uint8ClampedArray.prototype.BYTES_PER_ELEMENT === 1);
-assert(Int16Array.prototype.BYTES_PER_ELEMENT === 2);
-assert(Uint16Array.prototype.BYTES_PER_ELEMENT === 2);
-assert(Int32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Uint32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Float32Array.prototype.BYTES_PER_ELEMENT === 4);
-assert(Float64Array.prototype.BYTES_PER_ELEMENT === 8);
+#include "ecma-builtins.h"
+
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+
+#define ECMA_BUILTINS_INTERNAL
+#include "ecma-builtins-internal.h"
+
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-uint16array-prototype.inc.h"
+#define BUILTIN_UNDERSCORED_ID uint16array_prototype
+#include "ecma-builtin-internal-routines-template.inc.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmabuiltins
+ * @{
+ *
+ * \addtogroup uint16arrayprototype ECMA Uint16Array.prototype object built-in
+ * @{
+ */
+
+/**
+ * @}
+ * @}
+ * @}
+ */
+
+#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */

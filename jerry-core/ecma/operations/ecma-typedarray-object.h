@@ -22,7 +22,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmatypedarrayobject ECMA typedArray object related routines
+ * \addtogroup ecmatypedarrayobject ECMA TypedArray object related routines
  * @{
  */
 

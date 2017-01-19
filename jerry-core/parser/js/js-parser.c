@@ -2345,13 +2345,6 @@ parser_send_breakpoints (parser_context_t *context_p, /**< context */
 
 #endif /* JERRY_DEBUGGER */
 
-#define PARSE_ERR_POS_START       " [line: "
-#define PARSE_ERR_POS_START_SIZE  ((uint32_t) sizeof (PARSE_ERR_POS_START) - 1)
-#define PARSE_ERR_POS_MIDDLE      ", column: "
-#define PARSE_ERR_POS_MIDDLE_SIZE ((uint32_t) sizeof (PARSE_ERR_POS_MIDDLE) - 1)
-#define PARSE_ERR_POS_END         "]"
-#define PARSE_ERR_POS_END_SIZE    ((uint32_t) sizeof (PARSE_ERR_POS_END))
-
 #endif /* JERRY_JS_PARSER */
 
 /**
@@ -2397,50 +2390,23 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
       return ecma_make_error_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
     }
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
-    const char *err_str_p = parser_error_to_string (parser_error.error);
-    uint32_t err_str_size = lit_zt_utf8_string_size ((const lit_utf8_byte_t *) err_str_p);
+    const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
+    lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
 
-    char line_str_p[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-    uint32_t line_len = ecma_uint32_to_utf8_string (parser_error.line,
-                                                    (lit_utf8_byte_t *) line_str_p,
-                                                    ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+    ecma_string_t *err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+    ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
+    ecma_value_t line_str_val = ecma_make_uint32_value (parser_error.line);
+    ecma_value_t col_str_val = ecma_make_uint32_value (parser_error.column);
 
-    char col_str_p[ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32];
-    uint32_t col_len = ecma_uint32_to_utf8_string (parser_error.column,
-                                                   (lit_utf8_byte_t *) col_str_p,
-                                                   ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
+    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
+                                                                      "% [line: %, column: %]",
+                                                                      err_str_val,
+                                                                      line_str_val,
+                                                                      col_str_val);
 
-    uint32_t msg_size = (err_str_size
-                         + line_len
-                         + col_len
-                         + PARSE_ERR_POS_START_SIZE
-                         + PARSE_ERR_POS_MIDDLE_SIZE
-                         + PARSE_ERR_POS_END_SIZE);
-
-    ecma_value_t error_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-    JMEM_DEFINE_LOCAL_ARRAY (error_msg_p, msg_size, char);
-    char *err_msg_pos_p = error_msg_p;
-
-    strncpy (err_msg_pos_p, err_str_p, err_str_size);
-    err_msg_pos_p += err_str_size;
-
-    strncpy (err_msg_pos_p, PARSE_ERR_POS_START, PARSE_ERR_POS_START_SIZE);
-    err_msg_pos_p += PARSE_ERR_POS_START_SIZE;
-
-    strncpy (err_msg_pos_p, line_str_p, line_len);
-    err_msg_pos_p += line_len;
-
-    strncpy (err_msg_pos_p, PARSE_ERR_POS_MIDDLE, PARSE_ERR_POS_MIDDLE_SIZE);
-    err_msg_pos_p += PARSE_ERR_POS_MIDDLE_SIZE;
-
-    strncpy (err_msg_pos_p, col_str_p, col_len);
-    err_msg_pos_p += col_len;
-
-    strncpy (err_msg_pos_p, PARSE_ERR_POS_END, PARSE_ERR_POS_END_SIZE);
-
-    error_value = ecma_raise_syntax_error (error_msg_p);
-    JMEM_FINALIZE_LOCAL_ARRAY (error_msg_p);
+    ecma_free_value (col_str_val);
+    ecma_free_value (line_str_val);
+    ecma_free_value (err_str_val);
 
     return error_value;
 #else /* !JERRY_ENABLE_ERROR_MESSAGES */

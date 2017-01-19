@@ -96,7 +96,15 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Base object cannot be null or undefined."));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+                                                                      "Cannot read property '%' of %",
+                                                                      property,
+                                                                      object);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+    ecma_value_t error_value = ecma_raise_type_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+    return error_value;
   }
 
   ecma_value_t prop_to_string_result = ecma_op_to_string (property);
@@ -136,8 +144,20 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 
     if (ECMA_IS_VALUE_ERROR (to_object))
     {
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+      ecma_free_value (to_object);
+
+      ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+                                                                        "Cannot set property '%' of %",
+                                                                        property,
+                                                                        object);
+      ecma_free_value (property);
+
+      return error_value;
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
       ecma_free_value (property);
       return to_object;
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
     }
 
     object = to_object;
@@ -1082,16 +1102,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                  name_p);
 
-            if (ref_base_lex_env_p != NULL)
-            {
-              result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                       name_p,
-                                                       is_strict);
-            }
-            else
-            {
-              result = ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
-            }
+            result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
+                                                     name_p,
+                                                     is_strict);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {

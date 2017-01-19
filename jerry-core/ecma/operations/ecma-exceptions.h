@@ -51,6 +51,9 @@ typedef enum
 ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
 ecma_object_t *ecma_new_standard_error_with_message (ecma_standard_error_t error_type, ecma_string_t *message_string_p);
 ecma_value_t ecma_raise_standard_error (ecma_standard_error_t error_type, const lit_utf8_byte_t *msg_p);
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+ecma_value_t ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, const char *msg_p, ...);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 ecma_value_t ecma_raise_common_error (const char *msg_p);
 ecma_value_t ecma_raise_eval_error (const char *msg_p);
 ecma_value_t ecma_raise_range_error (const char *msg_p);

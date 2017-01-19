@@ -123,7 +123,15 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
 
-  return ecma_raise_reference_error (ECMA_ERR_MSG ("Cannot resolve reference."));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+  ecma_value_t name_val = ecma_make_string_value (name_p);
+  ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                                    "% is not defined",
+                                                                    name_val);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+  ecma_value_t error_value = ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+  return error_value;
 } /* ecma_op_resolve_reference_value */
 
 /**

@@ -19,7 +19,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "jrt-libc-includes.h"
-#include "jmem-heap.h"
+#include "jmem.h"
 #include "re-bytecode.h"
 #include "re-compiler.h"
 #include "re-parser.h"

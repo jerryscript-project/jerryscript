@@ -17,7 +17,7 @@
 #define ECMA_HELPERS_H
 
 #include "ecma-globals.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 #include "lit-strings.h"
 
 /** \addtogroup ecma ECMA

@@ -34,7 +34,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
-#include "jmem-heap.h"
+#include "jmem.h"
 
 /* Immediate management. */
 

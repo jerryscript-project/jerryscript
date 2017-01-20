@@ -19,7 +19,7 @@
 #include "config.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -38,7 +38,11 @@
  * The offset is shifted right by JMEM_ALIGNMENT_LOG.
  * Least significant JMEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
  */
-#define ECMA_POINTER_FIELD_WIDTH JMEM_CP_WIDTH
+#ifdef JERRY_CPOINTER_32_BIT
+#define ECMA_POINTER_FIELD_WIDTH 32
+#else /* !JERRY_CPOINTER_32_BIT */
+#define ECMA_POINTER_FIELD_WIDTH 16
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * The NULL value for compressed pointers

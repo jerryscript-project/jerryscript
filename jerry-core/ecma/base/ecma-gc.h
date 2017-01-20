@@ -17,7 +17,7 @@
 #define ECMA_GC_H
 
 #include "ecma-globals.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 
 /** \addtogroup ecma ECMA
  * @{

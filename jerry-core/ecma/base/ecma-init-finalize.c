@@ -20,7 +20,7 @@
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-literal-storage.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA

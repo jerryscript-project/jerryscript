@@ -18,9 +18,7 @@
  */
 
 #include "jcontext.h"
-#include "jmem-allocator.h"
-#include "jmem-heap.h"
-#include "jmem-poolman.h"
+#include "jmem.h"
 #include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL

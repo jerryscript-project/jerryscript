@@ -24,9 +24,33 @@
  * @{
  */
 
+#ifdef JMEM_STATS
+void jmem_heap_get_stats (jmem_heap_stats_t *);
+void jmem_heap_stats_reset_peak (void);
+void jmem_heap_stats_print (void);
+#endif /* JMEM_STATS */
+
+void jmem_heap_init (void);
+void jmem_heap_finalize (void);
+bool jmem_is_heap_pointer (const void *pointer);
+
 void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity);
 
 /**
+ * \addtogroup poolman Memory pool manager
+ * @{
+ */
+#ifdef JMEM_STATS
+void jmem_pools_get_stats (jmem_pools_stats_t *);
+void jmem_pools_stats_reset_peak (void);
+void jmem_pools_stats_print (void);
+#endif /* JMEM_STATS */
+
+void jmem_pools_finalize (void);
+void jmem_pools_collect_empty (void);
+
+/**
+ * @}
  * @}
  */
 

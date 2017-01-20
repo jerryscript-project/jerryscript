@@ -20,8 +20,7 @@
 #define JCONTEXT_H
 
 #include "ecma-builtins.h"
-#include "jmem-allocator.h"
-#include "jmem-config.h"
+#include "jmem.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
 

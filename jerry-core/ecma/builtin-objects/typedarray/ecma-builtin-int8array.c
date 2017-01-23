@@ -78,9 +78,9 @@ ecma_builtin_int8array_dispatch_construct (const ecma_value_t *arguments_list_p,
 } /* ecma_builtin_int8array_dispatch_construct */
 
 /**
-  * @}
-  * @}
-  * @}
-  */
+ * @}
+ * @}
+ * @}
+ */
 
 #endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */

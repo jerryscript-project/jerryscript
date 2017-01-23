@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo apt-get update -q
-sudo apt-get install -q -y \
-    make cmake \
-    gcc gcc-multilib \
-    doxygen \
-    cppcheck vera++ python
+echo -n "Generating documentation with doxygen ..."
+DOXYGEN_WARNINGS=$((doxygen > /dev/null) 2>&1)
+echo " finished"
+
+if [ -n "$DOXYGEN_WARNINGS" ]
+then
+  echo "$DOXYGEN_WARNINGS"
+  exit 1
+fi

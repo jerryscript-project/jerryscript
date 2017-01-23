@@ -343,7 +343,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument 
         while (string_curr_p > start_p)
         {
           ecma_char_t current_char = *(--string_curr_p);
-          ecma_number_t current_number;
+          ecma_number_t current_number = ECMA_NUMBER_MINUS_ONE;
 
           if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
           {

@@ -43,8 +43,13 @@
 /*
  * Conditions' likeliness, unlikeliness.
  */
-#define likely(x) __builtin_expect (!!(x), 1)
-#define unlikely(x) __builtin_expect (!!(x) , 0)
+#ifdef __GNUC__
+#define likely(x)       __builtin_expect(!!(x), 1)
+#define unlikely(x)     __builtin_expect(!!(x), 0)
+#else /* !__GNUC__ */
+#define likely(x)       (x)
+#define unlikely(x)     (x)
+#endif /* __GNUC__ */
 
 /*
  * Normally compilers store const(ant)s in ROM. Thus saving RAM.
@@ -108,7 +113,11 @@ void __noreturn jerry_unreachable (const char *file, const char *function, const
     } \
   } while (0)
 
+#ifdef __GNUC__
 #define JERRY_UNREACHABLE() __builtin_unreachable ()
+#else /* !__GNUC__ */
+#define JERRY_UNREACHABLE()
+#endif /* __GNUC__ */
 #endif /* !JERRY_NDEBUG */
 
 /**

@@ -28,7 +28,7 @@ extern "C"
 #define assert(x) \
   do \
   { \
-    if (__builtin_expect (!(x), 0)) \
+    if (!(x)) \
     { \
       fprintf (stderr, "%s:%d: %s: Assertion `%s' failed.", __FILE__, __LINE__, __func__, #x); \
       abort (); \

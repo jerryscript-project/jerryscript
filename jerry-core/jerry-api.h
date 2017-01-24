@@ -237,6 +237,11 @@ jerry_size_t jerry_substring_to_char_buffer (const jerry_value_t value,
                                              jerry_length_t end_pos,
                                              jerry_char_t *buffer_p,
                                              jerry_size_t buffer_size);
+jerry_size_t jerry_substring_to_utf8_char_buffer (const jerry_value_t value,
+                                                  jerry_length_t start_pos,
+                                                  jerry_length_t end_pos,
+                                                  jerry_char_t *buffer_p,
+                                                  jerry_size_t buffer_size);
 
 /**
  * Functions for array object values

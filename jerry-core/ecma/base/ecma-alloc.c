@@ -18,7 +18,7 @@
 #include "ecma-gc.h"
 #include "ecma-lcache.h"
 #include "jrt.h"
-#include "jmem-poolman.h"
+#include "jmem.h"
 
 JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
                      size_of_ecma_property_value_t_must_be_equal_to_size_of_ecma_value_t);

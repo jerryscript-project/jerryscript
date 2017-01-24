@@ -13,7 +13,14 @@
  * limitations under the License.
  */
 
-#include "jmem-allocator.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#include "jmem.h"
+
+#define JMEM_ALLOCATOR_INTERNAL
+#include "jmem-allocator-internal.h"
 
 #include "test-common.h"
 

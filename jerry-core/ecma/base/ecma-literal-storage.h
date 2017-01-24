@@ -17,7 +17,7 @@
 #define ECMA_LIT_STORAGE_H
 
 #include "ecma-globals.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 #include "lit-globals.h"
 
 /** \addtogroup ecma ECMA

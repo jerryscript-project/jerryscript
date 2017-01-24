@@ -17,10 +17,14 @@
  * Unit test for pool manager.
  */
 
-#define JERRY_MEM_POOL_INTERNAL
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
-#include "jmem-allocator.h"
-#include "jmem-poolman.h"
+#include "jmem.h"
+
+#define JMEM_ALLOCATOR_INTERNAL
+#include "jmem-allocator-internal.h"
 
 #include "test-common.h"
 

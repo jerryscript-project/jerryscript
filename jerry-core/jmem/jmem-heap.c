@@ -18,9 +18,7 @@
  */
 
 #include "jcontext.h"
-#include "jmem-allocator.h"
-#include "jmem-config.h"
-#include "jmem-heap.h"
+#include "jmem.h"
 #include "jrt-bit-fields.h"
 #include "jrt-libc-includes.h"
 
@@ -51,15 +49,12 @@
 #endif /* JERRY_VALGRIND */
 
 #ifdef JERRY_VALGRIND_FREYA
-# include "memcheck.h"
 
-/**
- * Called by pool manager before a heap allocation or free.
- */
-void jmem_heap_valgrind_freya_mempool_request (void)
-{
-  JERRY_CONTEXT (valgrind_freya_mempool_request) = true;
-} /* jmem_heap_valgrind_freya_mempool_request */
+#ifdef JERRY_VALGRIND
+#error Valgrind and valgrind-freya modes are not compatible.
+#endif /* JERRY_VALGRIND */
+
+#include "memcheck.h"
 
 # define VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST \
   bool mempool_request = JERRY_CONTEXT (valgrind_freya_mempool_request); \

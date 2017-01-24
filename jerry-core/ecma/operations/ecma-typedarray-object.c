@@ -30,9 +30,175 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmatypedarrayobject ECMA %TypedArray% object related routines
+ * \addtogroup ecmatypedarrayobject ECMA TypedArray object related routines
  * @{
  */
+
+/**
+ * Convert the value in location,
+ * cast it from type to ecma_number_t
+ * then assign to variale number
+ */
+#define GET_ELEMENT(type, location, number) \
+  type v = *((type *) location); \
+  number = (ecma_number_t) v;
+
+/**
+ * Cast the number from ecma_numbet_t into type,
+ * and store the number in the location
+ */
+#define SET_ELEMENT(type, location, number) \
+  int64_t v = (int64_t) number; \
+  *((type *) location) = (type) v;
+
+/**
+ * set typedarray's element value
+ *
+ * @return ecma_number_t: the value of the element
+ */
+static ecma_number_t
+get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the internal arraybuffer */
+                        lit_magic_string_id_t class_id) /**< class name of the typedarray */
+{
+  ecma_number_t ret_num;
+
+  switch (class_id)
+  {
+    case LIT_MAGIC_STRING_INT8_ARRAY_UL:
+    {
+      GET_ELEMENT (int8_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT8_ARRAY_UL:
+    case LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL:
+    {
+      GET_ELEMENT (uint8_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_INT16_ARRAY_UL:
+    {
+      GET_ELEMENT (int16_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT16_ARRAY_UL:
+    {
+      GET_ELEMENT (uint16_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_INT32_ARRAY_UL:
+    {
+      GET_ELEMENT (int32_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT32_ARRAY_UL:
+    {
+      GET_ELEMENT (uint32_t, src, ret_num);
+      break;
+    }
+    case LIT_MAGIC_STRING_FLOAT32_ARRAY_UL:
+    {
+      GET_ELEMENT (float, src, ret_num);
+      break;
+    }
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
+    {
+      GET_ELEMENT (double, src, ret_num);
+      break;
+    }
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  return ret_num;
+} /* get_typedarray_element */
+
+/**
+ * set typedarray's element value
+ */
+static void
+set_typedarray_element (lit_utf8_byte_t *dst, /**< the location in the internal arraybuffer */
+                        ecma_number_t value, /**< the number value to set */
+                        lit_magic_string_id_t class_id) /**< class name of the typedarray */
+{
+  switch (class_id)
+  {
+    case LIT_MAGIC_STRING_INT8_ARRAY_UL:
+    {
+      SET_ELEMENT (int8_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT8_ARRAY_UL:
+    {
+      SET_ELEMENT (uint8_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL:
+    {
+      uint8_t clamped;
+
+      if (value > 255)
+      {
+        clamped = 255;
+      }
+      else if (value < 0)
+      {
+        clamped = 0;
+      }
+      else
+      {
+        clamped = (uint8_t) value;
+
+        if (clamped + 0.5 < value
+            || (clamped + 0.5 == value && clamped % 2 == 1))
+        {
+          clamped ++;
+        }
+      }
+      *((uint8_t *) dst) = clamped;
+      break;
+    }
+    case LIT_MAGIC_STRING_INT16_ARRAY_UL:
+    {
+      SET_ELEMENT (int16_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT16_ARRAY_UL:
+    {
+      SET_ELEMENT (uint16_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_INT32_ARRAY_UL:
+    {
+      SET_ELEMENT (int32_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT32_ARRAY_UL:
+    {
+      SET_ELEMENT (uint32_t, dst, value);
+      break;
+    }
+    case LIT_MAGIC_STRING_FLOAT32_ARRAY_UL:
+    {
+      *((float *) dst) = (float) value;
+      break;
+    }
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
+    {
+      *((double *) dst) = (double) value;
+      break;
+    }
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* set_typedarray_element */
 
 /**
  * Create a TypedArray object by given array_length
@@ -70,8 +236,8 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
  * @return pointer to the new typedarray object
  */
 static ecma_object_t *
-ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p,
-                                           ecma_length_t byte_offset,
+ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< the arraybuffer inside */
+                                           ecma_length_t byte_offset, /**< the byte offset of the arraybuffer */
                                            ecma_length_t array_length, /**< length of the typedarray */
                                            ecma_object_t *proto_p, /**< prototype object */
                                            uint8_t element_size_shift, /**< the size shift of the element length */
@@ -136,8 +302,22 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   }
   else
   {
-    /** TODO: add other typed */
-    JERRY_UNREACHABLE ();
+    ecma_length_t byte_length = array_length << element_size_shift;
+    arraybuffer_p = ecma_arraybuffer_new_object (byte_length);
+    lit_utf8_byte_t *src_buf = ecma_arraybuffer_get_buffer (src_arraybuffer_p);
+    lit_utf8_byte_t *dst_buf = ecma_arraybuffer_get_buffer (arraybuffer_p);
+    uint8_t src_element_size_shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+
+    for (uint32_t i = 0; i < array_length; i++)
+    {
+      ecma_number_t tmp = get_typedarray_element (src_buf,
+                                                  ecma_object_get_class_name (typedarray_p));
+      /** check dst type and set value to dst typedarray */
+      set_typedarray_element (dst_buf, tmp, class_id);
+
+      src_buf = src_buf + (1 << src_element_size_shift);
+      dst_buf = dst_buf + (1 << element_size_shift);
+    }
   }
 
   ecma_object_t *object_p = ecma_typedarray_create_object_with_buffer (arraybuffer_p,
@@ -163,7 +343,7 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
 ecma_value_t
 ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like object */
                          ecma_value_t map_fn_val, /**< map function */
-                         ecma_value_t this_val, /** this_arg for the above map function */
+                         ecma_value_t this_val, /**< this_arg for the above map function */
                          ecma_object_t *proto_p, /**< prototype object */
                          uint8_t element_size_shift, /**< the size shift of the element length */
                          lit_magic_string_id_t class_id) /**< class name of the typedarray */
@@ -218,7 +398,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
     {
       if (func_object_p != NULL)
       {
-        /* 17.d 17.f*/
+        /* 17.d 17.f */
         current_index = ecma_make_uint32_value (index);
         ecma_value_t call_args[] = { current_value, current_index};
 
@@ -572,24 +752,9 @@ ecma_op_typedarray_get_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
   ecma_length_t byte_pos = (index << shift) + offset;
   lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
   lit_utf8_byte_t *target_p = ecma_arraybuffer_get_buffer (arraybuffer_p) + byte_pos;
-  ecma_value_t value;
+  ecma_number_t value = get_typedarray_element (target_p, class_id);
 
-  switch (class_id)
-  {
-    case LIT_MAGIC_STRING_INT8_ARRAY_UL:
-    {
-      int8_t v = *((int8_t *) target_p);
-      value = ecma_make_number_value ((ecma_number_t) v);
-      break;
-    }
-    default:
-    {
-      /** TODO: implement other types */
-      JERRY_UNREACHABLE ();
-    }
-  }
-
-  return value;
+  return ecma_make_number_value (value);
 } /* ecma_op_typedarray_get_index_prop */
 
 /**
@@ -649,39 +814,24 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p,/**< a TypedArray object
 {
   JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (obj_p)));
 
-  ecma_value_t error_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (value_num, value, error_val);
-
   ecma_length_t array_length = ecma_typedarray_get_length (obj_p);
 
   if (index >= array_length)
   {
-    error_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return false;
   }
-  else
-  {
-    ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
-    ecma_length_t offset = ecma_typedarray_get_offset (obj_p);
-    uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
-    ecma_length_t byte_pos = (index << shift) + offset;
-    lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
-    lit_utf8_byte_t *target_p = ecma_arraybuffer_get_buffer (arraybuffer_p) + byte_pos;
 
-    switch (class_id)
-    {
-      case LIT_MAGIC_STRING_INT8_ARRAY_UL:
-      {
-        *((int8_t *) target_p) = (int8_t) value_num;
-        break;
-      }
-      default:
-      {
-        /** TODO: implement other types */
-        JERRY_UNREACHABLE ();
-      }
-    }
-  }
+  ecma_value_t error_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (value_num, value, error_val);
+
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
+  ecma_length_t offset = ecma_typedarray_get_offset (obj_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
+  ecma_length_t byte_pos = (index << shift) + offset;
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
+  lit_utf8_byte_t *target_p = ecma_arraybuffer_get_buffer (arraybuffer_p) + byte_pos;
+  set_typedarray_element (target_p, value_num, class_id);
 
   ECMA_OP_TO_NUMBER_FINALIZE (value_num);
 

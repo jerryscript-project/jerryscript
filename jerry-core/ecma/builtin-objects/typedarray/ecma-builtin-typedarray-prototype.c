@@ -40,7 +40,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup typedarray prototype ECMA %TypedArray%.prototype object built-in
+ * \addtogroup typedarrayprototype ECMA %TypedArray%.prototype object built-in
  * @{
  */
 

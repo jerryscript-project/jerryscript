@@ -135,10 +135,12 @@ typedef struct
  */
 extern jerry_context_t jerry_global_context;
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Global heap.
  */
 extern jmem_heap_t jerry_global_heap;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 
@@ -154,10 +156,12 @@ extern jerry_hash_table_t jerry_global_hash_table;
  */
 #define JERRY_CONTEXT(field) (jerry_global_context.field)
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Provides a reference to the area field of the heap.
  */
 #define JERRY_HEAP_CONTEXT(field) (jerry_global_heap.field)
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 

@@ -33,10 +33,12 @@ jerry_context_t jerry_global_context;
 #define JERRY_GLOBAL_HEAP_SECTION __attribute__ ((section (JERRY_HEAP_SECTION_ATTR)))
 #endif /* !JERRY_HEAP_SECTION_ATTR */
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Global heap.
  */
 jmem_heap_t jerry_global_heap __attribute__ ((aligned (JMEM_ALIGNMENT))) JERRY_GLOBAL_HEAP_SECTION;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 

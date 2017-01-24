@@ -108,6 +108,12 @@ JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
                      size_of_mem_heap_must_be_less_than_or_equal_to_MEM_HEAP_SIZE);
 
 #ifdef JMEM_STATS
+
+#ifdef JERRY_SYSTEM_ALLOCATOR
+/* TODO: Implement mem-stat support for system allocator */
+#error Memory statistics (JMEM_STATS) are not supported
+#endif
+
 static void jmem_heap_stat_init (void);
 static void jmem_heap_stat_alloc (size_t num);
 static void jmem_heap_stat_free (size_t num);
@@ -144,6 +150,7 @@ jmem_heap_init (void)
                        maximum_heap_size_for_16_bit_compressed_pointers_is_512K);
 #endif /* !JERRY_CPOINTER_32_BIT */
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
   JERRY_CONTEXT (jmem_heap_limit) = CONFIG_MEM_HEAP_DESIRED_LIMIT;
@@ -160,16 +167,20 @@ jmem_heap_init (void)
 
   VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
   JMEM_HEAP_STAT_INIT ();
 } /* jmem_heap_init */
 
 /**
  * Finalize heap
  */
-void jmem_heap_finalize (void)
+void
+jmem_heap_finalize (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) == 0);
+#ifndef JERRY_SYSTEM_ALLOCATOR
   VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_t));
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_finalize */
 
 /**
@@ -181,9 +192,10 @@ void jmem_heap_finalize (void)
  * @return pointer to allocated memory block - if allocation is successful,
  *         NULL - if there is not enough memory.
  */
-static __attr_hot___
-void *jmem_heap_alloc_block_internal (const size_t size)
+static __attr_hot___ void *
+jmem_heap_alloc_block_internal (const size_t size)
 {
+#ifndef JERRY_SYSTEM_ALLOCATOR
   /* Align size. */
   const size_t required_size = ((size + JMEM_ALIGNMENT - 1) / JMEM_ALIGNMENT) * JMEM_ALIGNMENT;
   jmem_heap_free_t *data_space_p = NULL;
@@ -306,7 +318,10 @@ void *jmem_heap_alloc_block_internal (const size_t size)
   JMEM_HEAP_STAT_ALLOC (size);
 
   return (void *) data_space_p;
-} /* jmem_heap_finalize */
+#else /* JERRY_SYSTEM_ALLOCATOR */
+  return malloc (size);
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+} /* jmem_heap_alloc_block_internal */
 
 /**
  * Allocation of memory block, running 'try to give memory back' callbacks, if there is not enough memory.
@@ -412,6 +427,7 @@ void __attr_hot___
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */
                       const size_t size) /**< size of allocated region */
 {
+#ifndef JERRY_SYSTEM_ALLOCATOR
   VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
 
   /* checking that ptr points to the heap */
@@ -515,6 +531,10 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
+#else /* JERRY_SYSTEM_ALLOCATOR */
+  JERRY_UNUSED (size);
+  free (ptr);
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_free_block */
 
 #ifndef JERRY_NDEBUG
@@ -530,8 +550,13 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
 bool
 jmem_is_heap_pointer (const void *pointer) /**< pointer */
 {
+#ifndef JERRY_SYSTEM_ALLOCATOR
   return ((uint8_t *) pointer >= JERRY_HEAP_CONTEXT (area)
           && (uint8_t *) pointer <= (JERRY_HEAP_CONTEXT (area) + JMEM_HEAP_AREA_SIZE));
+#else /* JERRY_SYSTEM_ALLOCATOR */
+  JERRY_UNUSED (pointer);
+  return true;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_is_heap_pointer */
 #endif /* !JERRY_NDEBUG */
 

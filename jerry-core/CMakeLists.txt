@@ -238,7 +238,12 @@ if(JERRY_LIBC)
   target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libc/include")
 endif()
 
-target_link_libraries(${JERRY_CORE_NAME} ${JERRY_LIBS} ${EXTERNAL_LINK_LIBS})
+target_link_libraries(${JERRY_CORE_NAME} ${JERRY_LIBS})
+
+separate_arguments(EXTERNAL_LINK_LIBS)
+foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
+  target_link_libraries(${JERRY_CORE_NAME} ${EXT_LIB})
+endforeach()
 
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
 install(FILES jerry-api.h jerry-port.h DESTINATION include)

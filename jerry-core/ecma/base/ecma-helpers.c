@@ -737,7 +737,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
                                     prop_iter_p->next_property_cp);
   }
 
-  if (steps > (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 4))
+  if (steps >= (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 2))
   {
     ecma_property_hashmap_create (obj_p);
   }
@@ -863,14 +863,14 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 {
   ecma_property_header_t *cur_prop_p = ecma_get_property_list (object_p);
   ecma_property_header_t *prev_prop_p = NULL;
-  bool has_hashmap = false;
+  ecma_property_hashmap_delete_status hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_NO_HASHMAP;
 
   if (cur_prop_p != NULL && cur_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     prev_prop_p = cur_prop_p;
     cur_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
                                    cur_prop_p->next_property_cp);
-    has_hashmap = true;
+    hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
   }
 
   while (true)
@@ -886,11 +886,11 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
       {
         JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (cur_prop_p->types[i]) != ECMA_PROPERTY_TYPE_SPECIAL);
 
-        if (has_hashmap)
+        if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP)
         {
-          ecma_property_hashmap_delete (object_p,
-                                        prop_pair_p->names_cp[i],
-                                        cur_prop_p->types + i);
+          hashmap_status = ecma_property_hashmap_delete (object_p,
+                                                         prop_pair_p->names_cp[i],
+                                                         cur_prop_p->types + i);
         }
 
         ecma_free_property (object_p, prop_pair_p->names_cp[i], cur_prop_p->types + i);
@@ -915,6 +915,12 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
         }
 
         ecma_dealloc_property_pair ((ecma_property_pair_t *) cur_prop_p);
+
+        if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
+        {
+          ecma_property_hashmap_free (object_p);
+          ecma_property_hashmap_create (object_p);
+        }
         return;
       }
     }
@@ -989,14 +995,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
   /* Second all properties between new_length and old_length are deleted. */
   current_prop_p = ecma_get_property_list (object_p);
   ecma_property_header_t *prev_prop_p = NULL;
-  bool has_hashmap = false;
+  ecma_property_hashmap_delete_status hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_NO_HASHMAP;
 
   if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     prev_prop_p = current_prop_p;
     current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
                                        current_prop_p->next_property_cp);
-    has_hashmap = true;
+    hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
   }
 
   while (current_prop_p != NULL)
@@ -1015,9 +1021,11 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
         {
           JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
-          if (has_hashmap)
+          if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP)
           {
-            ecma_property_hashmap_delete (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
+            hashmap_status = ecma_property_hashmap_delete (object_p,
+                                                           prop_pair_p->names_cp[i],
+                                                           current_prop_p->types + i);
           }
 
           ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
@@ -1050,6 +1058,12 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
       current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
                                          current_prop_p->next_property_cp);
     }
+  }
+
+  if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
+  {
+    ecma_property_hashmap_free (object_p);
+    ecma_property_hashmap_create (object_p);
   }
 
   return new_length;

@@ -75,17 +75,21 @@ void
 ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 {
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-  JERRY_ASSERT (ecma_get_property_list (object_p) != NULL);
-  JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (ecma_get_property_list (object_p)));
-
   if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) != ECMA_PROP_HASHMAP_ALLOC_ON)
   {
     return;
   }
 
-  uint32_t named_property_count = 0;
-
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+  if (prop_iter_p == NULL)
+  {
+    return;
+  }
+
+  JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+  uint32_t named_property_count = 0;
 
   while (prop_iter_p != NULL)
   {
@@ -102,6 +106,11 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
     }
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                     prop_iter_p->next_property_cp);
+  }
+
+  if (named_property_count < (ECMA_PROPERTY_HASMAP_MINIMUM_SIZE / 2))
+  {
+    return;
   }
 
   /* The max_property_count must be power of 2. */
@@ -321,8 +330,11 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
 
 /**
  * Delete named property from the hashmap.
+ *
+ * @return ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP if hashmap should be recreated
+ *         ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP otherwise
  */
-void
+ecma_property_hashmap_delete_status
 ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
                               jmem_cpointer_t name_cp, /**< property name */
                               ecma_property_t *property_p) /**< property */
@@ -338,15 +350,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   /* The NULLs are above 3/4 of the hashmap. */
   if (hashmap_p->null_count > ((hashmap_p->max_property_count * 3) >> 2))
   {
-    uint32_t max_property_count = hashmap_p->max_property_count;
-
-    ecma_property_hashmap_free (object_p);
-
-    if (max_property_count >= ECMA_PROPERTY_HASMAP_MINIMUM_SIZE * 2)
-    {
-      ecma_property_hashmap_create (object_p);
-    }
-    return;
+    return ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP;
   }
 
   uint32_t entry_index = ecma_string_get_property_name_hash (*property_p, name_cp);
@@ -390,7 +394,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
 
         pair_list_p[entry_index] = ECMA_NULL_POINTER;
         ECMA_PROPERTY_HASHMAP_SET_BIT (bits_p, entry_index);
-        return;
+        return ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
       }
     }
     else
@@ -410,6 +414,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   JERRY_UNUSED (name_cp);
   JERRY_UNUSED (property_p);
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+  return ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
 } /* ecma_property_hashmap_delete */
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE

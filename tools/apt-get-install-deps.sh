@@ -17,5 +17,5 @@
 sudo apt-get update -q
 sudo apt-get install -q -y \
     make cmake \
-    gcc \
+    gcc gcc-multilib \
     cppcheck vera++ python

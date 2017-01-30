@@ -24,6 +24,7 @@ OUTPUT_DIR = path.join(PROJECT_DIR, 'build', 'tests')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
+parser.add_argument('--buildoptions', action='store', default='', help='Add a comma separated list of extra build options to each test')
 parser.add_argument('--outdir', action='store', default=OUTPUT_DIR, help='Specify output directory (default: %(default)s)')
 parser.add_argument('--check-signed-off', action='store_true', default=False, help='Run signed-off check')
 parser.add_argument('--check-signed-off-tolerant', action='store_true', default=False, help='Run signed-off check in tolerant mode')
@@ -104,6 +105,7 @@ jerry_buildoptions = [
                       Options('buildoption_test-show_opcodes', ['--show-opcodes=on']),
                       Options('buildoption_test-show_regexp_opcodes', ['--show-regexp-opcodes=on']),
                       Options('buildoption_test-compiler_default_libc', ['--jerry-libc=off']),
+                      Options('buildoption_test-cpointer_32bit', ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
                      ]
 
 def get_bin_dir_path(out_dir):
@@ -118,6 +120,9 @@ def create_binary(buildoptions):
 
     if script_args.toolchain:
         build_cmd.append('--toolchain=%s' % script_args.toolchain)
+
+    if script_args.buildoptions:
+        build_cmd.extend(script_args.buildoptions.split(','))
 
     sys.stderr.write('Build command: %s\n' % ' '.join(build_cmd))
 

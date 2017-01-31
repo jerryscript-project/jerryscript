@@ -239,7 +239,7 @@ skip_spaces (parser_context_t *context_p) /**< context */
             && context_p->source_p[2] == 0xbf)
         {
           /* Codepoint \uFEFF */
-          context_p->source_p += 2;
+          context_p->source_p += 3;
           context_p->column++;
           continue;
         }

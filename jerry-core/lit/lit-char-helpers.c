@@ -28,11 +28,10 @@
  */
 static bool
 search_char_in_char_array (ecma_char_t c,               /**< code unit */
-                           const ecma_char_t *array,    /**< array */
-                           int size_of_array)           /**< length of the array */
+                           const ecma_char_t *array)    /**< array */
 {
   int bottom = 0;
-  int top = size_of_array - 1;
+  int top = NUM_OF_ELEMENTS (array) - 1;
 
   while (bottom <= top)
   {
@@ -68,11 +67,10 @@ search_char_in_char_array (ecma_char_t c,               /**< code unit */
 static bool
 search_char_in_interval_array (ecma_char_t c,               /**< code unit */
                                const ecma_char_t *array_sp, /**< array of interval starting points */
-                               const uint8_t *lengths,      /**< array of interval lengths */
-                               int size_of_array)           /**< length of the array */
+                               const uint8_t *lengths)      /**< array of interval lengths */
 {
   int bottom = 0;
-  int top = size_of_array - 1;
+  int top = NUM_OF_ELEMENTS (array_sp) - 1;
 
   while (bottom <= top)
   {
@@ -134,7 +132,7 @@ lit_char_is_white_space (ecma_char_t c) /**< code unit */
             || c == LIT_CHAR_BOM
             || (c >= unicode_separator_char_interv_sps[0]
                 && c <= unicode_separator_char_interv_sps[0] + unicode_separator_char_interv_lens[0])
-            || search_char_in_char_array (c, unicode_separator_chars, NUM_OF_ELEMENTS (unicode_separator_chars)));
+            || search_char_in_char_array (c, unicode_separator_chars));
   }
 } /* lit_char_is_white_space */
 
@@ -174,9 +172,8 @@ lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
 static bool
 lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
 {
-  return (search_char_in_interval_array (c, unicode_letter_interv_sps, unicode_letter_interv_lens,
-                                         NUM_OF_ELEMENTS (unicode_letter_interv_sps))
-          || search_char_in_char_array (c, unicode_letter_chars, NUM_OF_ELEMENTS (unicode_letter_chars)));
+  return (search_char_in_interval_array (c, unicode_letter_interv_sps, unicode_letter_interv_lens)
+          || search_char_in_char_array (c, unicode_letter_chars));
 } /* lit_char_is_unicode_letter */
 
 /**
@@ -197,10 +194,8 @@ static bool
 lit_char_is_unicode_non_letter_ident_part (ecma_char_t c) /**< code unit */
 {
   return (search_char_in_interval_array (c, unicode_non_letter_ident_part_interv_sps,
-                                         unicode_non_letter_ident_part_interv_lens,
-                                         NUM_OF_ELEMENTS (unicode_non_letter_ident_part_interv_sps))
-          || search_char_in_char_array (c, unicode_non_letter_ident_part_chars,
-                                        NUM_OF_ELEMENTS (unicode_non_letter_ident_part_chars)));
+                                         unicode_non_letter_ident_part_interv_lens)
+          || search_char_in_char_array (c, unicode_non_letter_ident_part_chars));
 } /* lit_char_is_unicode_non_letter_ident_part */
 
 /**

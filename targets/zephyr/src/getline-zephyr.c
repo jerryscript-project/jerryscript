@@ -15,19 +15,20 @@
 
 #include <zephyr.h>
 #include <uart.h>
+#include <drivers/console/console.h>
 #include <drivers/console/uart_console.h>
 #include "getline-zephyr.h"
 
 /* While app processes one input line, Zephyr will have another line
    buffer to accumulate more console input. */
-static struct uart_console_input line_bufs[2];
+static struct console_input line_bufs[2];
 
 static struct k_fifo free_queue;
 static struct k_fifo used_queue;
 
 char *zephyr_getline(void)
 {
-  static struct uart_console_input *cmd;
+  static struct console_input *cmd;
 
   /* Recycle cmd buffer returned previous time */
   if (cmd != NULL)

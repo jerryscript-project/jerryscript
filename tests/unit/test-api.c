@@ -922,6 +922,14 @@ main (void)
   /* Test: run gc. */
   jerry_gc ();
 
+  /* Test: spaces */
+  eval_code_src_p = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";
+  val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), true);
+  TEST_ASSERT (!jerry_value_has_error_flag (val_t));
+  TEST_ASSERT (jerry_value_is_number (val_t)
+               && jerry_get_number_value (val_t) == 4321.0);
+  jerry_release_value (val_t);
+
   /* Test: number */
   val_t = jerry_create_number (6.25);
   number_val = jerry_get_number_value (val_t);

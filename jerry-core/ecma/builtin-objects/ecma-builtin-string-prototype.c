@@ -1522,7 +1522,8 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
 
     ret_value = ecma_regexp_exec_helper (regexp_value, ecma_make_string_value (substr_str_p), true);
 
-    if (!ecma_is_value_null (ret_value))
+    if (!ECMA_IS_VALUE_ERROR (ret_value)
+        && !ecma_is_value_null (ret_value))
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (ret_value);
       ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);

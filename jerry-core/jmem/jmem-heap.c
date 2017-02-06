@@ -92,6 +92,7 @@
 #define JMEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((jmem_heap_free_t *) (u))
 #endif /* UINTPTR_MAX > UINT32_MAX */
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Get end of region
  */
@@ -100,6 +101,7 @@ jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 {
   return (jmem_heap_free_t *)((uint8_t *) curr_p + curr_p->size);
 } /* jmem_heap_get_region_end */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 /**
  * Check size of heap is corresponding to configuration

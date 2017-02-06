@@ -808,7 +808,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           default:
           {
-            JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2);
+            JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2
+                          || CBC_BRANCH_OFFSET_LENGTH (opcode) == 3);
 
             branch_offset <<= 8;
             branch_offset |= *(byte_code_p++);

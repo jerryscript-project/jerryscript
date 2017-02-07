@@ -55,6 +55,12 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_OFFSET_UL,
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
+
+ROUTINE (LIT_MAGIC_STRING_EVERY, ecma_builtin_typedarray_prototype_every, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_typedarray_prototype_some, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_typedarray_prototype_for_each, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_MAP, ecma_builtin_typedarray_prototype_map, 2, 1)
+
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

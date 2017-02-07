@@ -808,7 +808,7 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
  * @return boolean, false if failed
  */
 bool
-ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p,/**< a TypedArray object */
+ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, /**< a TypedArray object */
                                    uint32_t index, /**< the index number */
                                    ecma_value_t value) /**< value of the property */
 {
@@ -842,6 +842,98 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p,/**< a TypedArray object
 
   return false;
 } /* ecma_op_typedarray_set_index_prop */
+
+/**
+ * Create a typedarray object based on the "type" and arraylength
+ * The "type" is same with arg1
+ *
+ * @return ecma_value_t
+ */
+ecma_value_t
+ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< TypedArray object
+                                                                        *  indicates the type */
+                                                ecma_length_t array_length) /**< length of the typedarray */
+{
+  JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (obj_p)));
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+  lit_magic_string_id_t class_id = ext_object_p->u.pseudo_array.u1.class_id;
+  ecma_object_t *proto_p;
+  uint8_t element_size_shift = 0;
+
+  switch (class_id)
+  {
+    case LIT_MAGIC_STRING_INT8_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE);
+      element_size_shift = 0;
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT8_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT8ARRAY_PROTOTYPE);
+      element_size_shift = 0;
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY_PROTOTYPE);
+      element_size_shift = 0;
+      break;
+    }
+    case LIT_MAGIC_STRING_INT16_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT16ARRAY_PROTOTYPE);
+      element_size_shift = 1;
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT16_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT16ARRAY_PROTOTYPE);
+      element_size_shift = 1;
+      break;
+    }
+    case LIT_MAGIC_STRING_INT32_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT32ARRAY_PROTOTYPE);
+      element_size_shift = 2;
+      break;
+    }
+    case LIT_MAGIC_STRING_UINT32_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT32ARRAY_PROTOTYPE);
+      element_size_shift = 2;
+      break;
+    }
+    case LIT_MAGIC_STRING_FLOAT32_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT32ARRAY_PROTOTYPE);
+      element_size_shift = 2;
+      break;
+    }
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
+    {
+      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE);
+      element_size_shift = 3;
+      break;
+    }
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  ecma_object_t *new_obj_p = ecma_typedarray_create_object_with_length (array_length,
+                                                                        proto_p,
+                                                                        element_size_shift,
+                                                                        class_id);
+
+  ecma_deref_object (proto_p);
+
+  return ecma_make_object_value (new_obj_p);
+} /* ecma_op_create_typedarray_with_type_and_length */
 
 /**
  * @}

@@ -49,7 +49,8 @@ bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
                                            uint32_t index,
                                            const ecma_property_descriptor_t *property_desc_p);
 bool ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, uint32_t index, ecma_value_t value);
-
+ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p,
+                                                             ecma_length_t array_length);
 
 /**
  * @}

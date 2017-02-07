@@ -75,6 +75,7 @@ jerry_unittests_options = [
 jerry_tests_options = [
                         Options('jerry_tests'),
                         Options('jerry_tests-debug', ['--debug']),
+                        Options('jerry_tests-debug', ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
                         Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                         Options('jerry_tests-debug-snapshot', ['--debug', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                       ]

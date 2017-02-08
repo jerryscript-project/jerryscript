@@ -359,7 +359,9 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                 && !ecma_gc_is_object_visited (object_p)
                 && object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
 
-  if (!ecma_is_lexical_environment (object_p))
+  bool obj_is_not_lex_env = !ecma_is_lexical_environment (object_p);
+
+  if (obj_is_not_lex_env)
   {
     /* if the object provides free callback, invoke it with handle stored in the object */
 
@@ -381,7 +383,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     }
   }
 
-  if (!ecma_is_lexical_environment (object_p)
+  if (obj_is_not_lex_env
       || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
@@ -424,7 +426,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
   JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_number) > 0);
   JERRY_CONTEXT (ecma_gc_objects_number)--;
 
-  if (!ecma_is_lexical_environment (object_p))
+  if (obj_is_not_lex_env)
   {
     ecma_object_type_t object_type = ecma_get_object_type (object_p);
 

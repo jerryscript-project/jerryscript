@@ -16,21 +16,13 @@
 /**
  * Allocator implementation
  */
-
+#include "ecma-globals.h"
 #include "jcontext.h"
 #include "jmem.h"
 #include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
-
-#ifdef JERRY_CPOINTER_32_BIT
-
-/* This check will go away when we will support 64 bit compressed pointers. */
-JERRY_STATIC_ASSERT (sizeof (uintptr_t) <= sizeof (jmem_cpointer_t),
-                     size_of_uintpt_t_must_be_equal_to_jmem_cpointer_t);
-
-#endif
 
 /**
  * Initialize memory allocators.
@@ -74,17 +66,21 @@ jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
 
   JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
 
-#ifdef JERRY_CPOINTER_32_BIT
+#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
   JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
   const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
 
   uint_ptr -= heap_start;
   uint_ptr >>= JMEM_ALIGNMENT_LOG;
 
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (uint_ptr <= UINT32_MAX);
+#else /* !JERRY_CPOINTER_32_BIT */
   JERRY_ASSERT (uint_ptr <= UINT16_MAX);
-  JERRY_ASSERT (uint_ptr != JMEM_CP_NULL);
 #endif /* JERRY_CPOINTER_32_BIT */
+  JERRY_ASSERT (uint_ptr != JMEM_CP_NULL);
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
 
   return (jmem_cpointer_t) uint_ptr;
 } /* jmem_compress_pointer */
@@ -103,16 +99,16 @@ jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompres
 
   JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
 
-#ifdef JERRY_CPOINTER_32_BIT
+#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
   JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
   const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
 
   uint_ptr <<= JMEM_ALIGNMENT_LOG;
   uint_ptr += heap_start;
 
   JERRY_ASSERT (jmem_is_heap_pointer ((void *) uint_ptr));
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
 
   return (void *) uint_ptr;
 } /* jmem_decompress_pointer */

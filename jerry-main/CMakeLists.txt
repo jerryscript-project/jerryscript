@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (${JERRY_NAME} C)
+project (jerry-main C)
 
 # Optional build settings
 set(ENABLE_LINK_MAP OFF CACHE BOOL "Enable generating a link map file?")

@@ -19,6 +19,8 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-conversion.h"
+#include "ecma-function-object.h"
 #include "ecma-typedarray-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
@@ -134,6 +136,223 @@ ecma_builtin_typedarray_prototype_length_getter (ecma_value_t this_arg) /**< thi
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
 } /* ecma_builtin_typedarray_prototype_length_getter */
+
+/**
+ * Type of routine.
+ */
+typedef enum
+{
+  TYPEDARRAY_ROUTINE_EVERY, /**< routine: every ES2015, 22.2.3.7 */
+  TYPEDARRAY_ROUTINE_SOME, /**< routine: some ES2015, 22.2.3.9 */
+  TYPEDARRAY_ROUTINE_FOREACH, /**< routine: forEach ES2015, 15.4.4.18 */
+  TYPEDARRAY_ROUTINE__COUNT /**< count of the modes */
+} typedarray_routine_mode;
+
+/**
+ * The common function for 'every', 'some' and 'forEach'
+ * because they have a similar structure.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this argument */
+                                                ecma_value_t cb_func_val, /**< callback function */
+                                                ecma_value_t cb_this_arg, /**< 'this' of the callback function */
+                                                typedarray_routine_mode mode) /**< mode: which routine */
+{
+  JERRY_ASSERT (mode < TYPEDARRAY_ROUTINE__COUNT);
+
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_op_is_callable (cb_func_val))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  uint32_t len = ecma_typedarray_get_length (obj_p);
+  ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+  for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
+  {
+    ecma_value_t current_index =  ecma_make_uint32_value (index);
+    ecma_value_t get_value = ecma_op_typedarray_get_index_prop (obj_p, index);
+
+    JERRY_ASSERT (ecma_is_value_number (get_value));
+
+    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+
+    ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3), ret_value);
+
+    if (mode == TYPEDARRAY_ROUTINE_EVERY)
+    {
+      if (!ecma_op_to_boolean (call_value))
+      {
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      }
+    }
+    else if (mode == TYPEDARRAY_ROUTINE_SOME)
+    {
+      if (ecma_op_to_boolean (call_value))
+      {
+        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+      }
+    }
+
+    ECMA_FINALIZE (call_value);
+
+    ecma_fast_free_value (current_index);
+    ecma_fast_free_value (get_value);
+  }
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    if (mode == TYPEDARRAY_ROUTINE_EVERY)
+    {
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    }
+    else if (mode == TYPEDARRAY_ROUTINE_SOME)
+    {
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    }
+    else
+    {
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+  }
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_exec_routine */
+
+/**
+ * The %TypedArray%.prototype object's 'every' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.7
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_every (ecma_value_t this_arg, /**< this argument */
+                                         ecma_value_t cb_func_val, /**< callback function */
+                                         ecma_value_t cb_this_arg) /**< this' of the callback function */
+{
+  return ecma_builtin_typedarray_prototype_exec_routine (this_arg,
+                                                         cb_func_val,
+                                                         cb_this_arg,
+                                                         TYPEDARRAY_ROUTINE_EVERY);
+} /* ecma_builtin_typedarray_prototype_every */
+
+/**
+ * The %TypedArray%.prototype object's 'some' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.9
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_some (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t cb_func_val, /**< callback function */
+                                        ecma_value_t cb_this_arg) /**< this' of the callback function */
+{
+  return ecma_builtin_typedarray_prototype_exec_routine (this_arg,
+                                                         cb_func_val,
+                                                         cb_this_arg,
+                                                         TYPEDARRAY_ROUTINE_SOME);
+} /* ecma_builtin_typedarray_prototype_some */
+
+/**
+ * The %TypedArray%.prototype object's 'forEach' routine
+ *
+ * See also:
+ *          ES2015, 15.4.4.18
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_for_each (ecma_value_t this_arg, /**< this argument */
+                                            ecma_value_t cb_func_val, /**< callback function */
+                                            ecma_value_t cb_this_arg) /**< this' of the callback function */
+{
+  return ecma_builtin_typedarray_prototype_exec_routine (this_arg,
+                                                         cb_func_val,
+                                                         cb_this_arg,
+                                                         TYPEDARRAY_ROUTINE_FOREACH);
+} /* ecma_builtin_typedarray_prototype_for_each */
+
+/**
+ * The %TypedArray%.prototype object's 'map' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t cb_func_val, /**< callback function */
+                                       ecma_value_t cb_this_arg) /**< this' of the callback function */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_op_is_callable (cb_func_val))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  uint32_t len = ecma_typedarray_get_length (obj_p);
+  ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, len);
+  ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
+
+  for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
+  {
+    ecma_value_t current_index =  ecma_make_uint32_value (index);
+    ecma_value_t get_value = ecma_op_typedarray_get_index_prop (obj_p, index);
+    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+
+    ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3), ret_value);
+
+    ecma_value_t set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, mapped_value);
+
+    if (!set_status)
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("error in typedarray set"));
+    }
+
+    ECMA_FINALIZE (mapped_value);
+
+    ecma_fast_free_value (current_index);
+    ecma_fast_free_value (get_value);
+  }
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ret_value = new_typedarray;
+  }
+  else
+  {
+    ecma_free_value (new_typedarray);
+  }
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_map */
 
 /**
  * @}

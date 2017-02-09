@@ -355,6 +355,166 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
 } /* ecma_builtin_typedarray_prototype_map */
 
 /**
+ * Reduce and reduceRight routines share a similar structure.
+ * And we use 'is_right' to distinguish between them.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, /**< this argument */
+                                                         ecma_value_t cb_func_val, /**< callback function */
+                                                         ecma_value_t initial_val, /**< initial value */
+                                                         bool is_right) /**< choose order, true is reduceRight */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_op_is_callable (cb_func_val))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  uint32_t len = ecma_typedarray_get_length (obj_p);
+
+  if (len == 0)
+  {
+    if (ecma_is_value_undefined (initial_val))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
+    }
+
+    return ecma_copy_value (initial_val);
+  }
+
+  JERRY_ASSERT (len > 0);
+
+  ecma_value_t accumulator = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  uint32_t index = is_right ? (len - 1) : 0;
+
+  if (ecma_is_value_undefined (initial_val))
+  {
+    accumulator = ecma_op_typedarray_get_index_prop (obj_p, index);
+
+    JERRY_ASSERT (ecma_is_value_number (accumulator));
+
+    if (is_right)
+    {
+      if (index == 0)
+      {
+        return accumulator;
+      }
+
+      index--;
+    }
+    else
+    {
+      index++;
+
+      if (index == len)
+      {
+        return accumulator;
+      }
+    }
+  }
+  else
+  {
+    accumulator = ecma_copy_value (initial_val);
+  }
+
+  ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
+
+  while (true)
+  {
+    ecma_value_t current_index =  ecma_make_uint32_value (index);
+    ecma_value_t get_value = ecma_op_typedarray_get_index_prop (obj_p, index);
+    ecma_value_t call_args[] = { accumulator, get_value, current_index, this_arg };
+
+    JERRY_ASSERT (ecma_is_value_number (get_value));
+
+    ecma_value_t call_value = ecma_op_function_call (func_object_p,
+                                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                     call_args,
+                                                     4);
+
+    ecma_fast_free_value (accumulator);
+    ecma_fast_free_value (get_value);
+    ecma_fast_free_value (current_index);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
+    {
+      return call_value;
+    }
+
+    accumulator = call_value;
+
+    if (is_right)
+    {
+      if (index == 0)
+      {
+        break;
+      }
+
+      index--;
+    }
+    else
+    {
+      index++;
+
+      if (index == len)
+      {
+        break;
+      }
+    }
+  }
+
+  return accumulator;
+} /* ecma_builtin_typedarray_prototype_reduce_with_direction */
+
+/**
+ * The %TypedArray%.prototype object's 'reduce' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.19
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_reduce (ecma_value_t this_arg, /**< this argument */
+                                          ecma_value_t cb_func_val, /**< callback function */
+                                          ecma_value_t initial_val) /**< initial value */
+{
+  return ecma_builtin_typedarray_prototype_reduce_with_direction (this_arg,
+                                                                  cb_func_val,
+                                                                  initial_val,
+                                                                  false);
+} /* ecma_builtin_typedarray_prototype_reduce */
+
+/**
+ * The %TypedArray%.prototype object's 'reduceRight' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.20
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_reduce_right (ecma_value_t this_arg, /**< this argument */
+                                                ecma_value_t cb_func_val, /**< callback function */
+                                                ecma_value_t initial_val) /**< initial value */
+{
+  return ecma_builtin_typedarray_prototype_reduce_with_direction (this_arg,
+                                                                  cb_func_val,
+                                                                  initial_val,
+                                                                  true);
+} /* ecma_builtin_typedarray_prototype_reduce_right */
+
+/**
  * @}
  * @}
  * @}

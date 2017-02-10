@@ -87,7 +87,7 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
 
     lit_utf8_size_t bytes_generated = generate_cesu8_char (char_size, buf_p);
 
-    TEST_ASSERT (lit_is_cesu8_string_valid (buf_p, bytes_generated));
+    TEST_ASSERT (lit_is_valid_cesu8_string (buf_p, bytes_generated));
 
     size += bytes_generated;
     buf_p += bytes_generated;
@@ -183,19 +183,19 @@ main ()
 
   /* Overlong-encoded code point */
   lit_utf8_byte_t invalid_cesu8_string_1[] = {0xC0, 0x82};
-  TEST_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
+  TEST_ASSERT (!lit_is_valid_cesu8_string (invalid_cesu8_string_1, sizeof (invalid_cesu8_string_1)));
 
   /* Overlong-encoded code point */
   lit_utf8_byte_t invalid_cesu8_string_2[] = {0xE0, 0x80, 0x81};
-  TEST_ASSERT (!lit_is_cesu8_string_valid (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
+  TEST_ASSERT (!lit_is_valid_cesu8_string (invalid_cesu8_string_2, sizeof (invalid_cesu8_string_2)));
 
   /* Pair of surrogates: 0xD901 0xDFF0 which encode Unicode character 0x507F0 */
   lit_utf8_byte_t invalid_cesu8_string_3[] = {0xED, 0xA4, 0x81, 0xED, 0xBF, 0xB0};
-  TEST_ASSERT (lit_is_cesu8_string_valid (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
+  TEST_ASSERT (lit_is_valid_cesu8_string (invalid_cesu8_string_3, sizeof (invalid_cesu8_string_3)));
 
   /* Isolated high surrogate 0xD901 */
   lit_utf8_byte_t valid_utf8_string_1[] = {0xED, 0xA4, 0x81};
-  TEST_ASSERT (lit_is_cesu8_string_valid (valid_utf8_string_1, sizeof (valid_utf8_string_1)));
+  TEST_ASSERT (lit_is_valid_cesu8_string (valid_utf8_string_1, sizeof (valid_utf8_string_1)));
 
   lit_utf8_byte_t res_buf[3];
   lit_utf8_size_t res_size;

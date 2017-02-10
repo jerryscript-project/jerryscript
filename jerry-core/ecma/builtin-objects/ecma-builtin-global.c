@@ -899,7 +899,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         }
 
         if (!is_valid
-            || !lit_is_utf8_string_valid (octets, bytes_count))
+            || !lit_is_valid_utf8_string (octets, bytes_count))
         {
           ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string."));
           break;
@@ -923,7 +923,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
     {
       JERRY_ASSERT (output_start_p + output_size == output_char_p);
 
-      if (lit_is_cesu8_string_valid (output_start_p, output_size))
+      if (lit_is_valid_cesu8_string (output_start_p, output_size))
       {
         ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
         ret_value = ecma_make_string_value (output_string_p);

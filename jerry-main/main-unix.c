@@ -663,6 +663,12 @@ main (int argc,
         break;
       }
 
+      if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_size))
+      {
+        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) ("Input must be a valid UTF-8 string."));
+        break;
+      }
+
       if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && (is_save_snapshot_mode || is_save_literals_mode))
       {
         static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
@@ -686,6 +692,7 @@ main (int argc,
             fclose (snapshot_file_p);
           }
         }
+
         if (!jerry_value_has_error_flag (ret_value) && is_save_literals_mode)
         {
           const size_t literal_buffer_size = jerry_parse_and_save_literals ((jerry_char_t *) source_p,

@@ -151,7 +151,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
                                 lit_utf8_size_t string_size) /**< string size */
 {
   JERRY_ASSERT (string_p != NULL || string_size == 0);
-  JERRY_ASSERT (lit_is_cesu8_string_valid (string_p, string_size));
+  JERRY_ASSERT (lit_is_valid_cesu8_string (string_p, string_size));
 
   lit_magic_string_id_t magic_string_id = lit_is_utf8_string_magic (string_p, string_size);
 
@@ -269,7 +269,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
   {
     converted_string_size += string_size;
 
-    JERRY_ASSERT (lit_is_utf8_string_valid (string_p, string_size));
+    JERRY_ASSERT (lit_is_valid_utf8_string (string_p, string_size));
 
     lit_utf8_byte_t *data_p;
 

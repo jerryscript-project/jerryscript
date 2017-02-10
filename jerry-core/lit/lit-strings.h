@@ -85,8 +85,8 @@
 #define LIT_UTF8_FIRST_BYTE_MAX LIT_UTF8_5_BYTE_MARKER
 
 /* validation */
-bool lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
-bool lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
+bool lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
+bool lit_is_valid_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, lit_utf8_size_t buf_size);
 
 /* checks */
 bool lit_is_code_point_utf16_low_surrogate (lit_code_point_t code_point);

@@ -60,6 +60,8 @@ ROUTINE (LIT_MAGIC_STRING_EVERY, ecma_builtin_typedarray_prototype_every, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_typedarray_prototype_some, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_typedarray_prototype_for_each, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_MAP, ecma_builtin_typedarray_prototype_map, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_typedarray_prototype_reduce, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_typedarray_prototype_reduce_right, 2, 1)
 
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE

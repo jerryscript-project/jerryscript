@@ -138,6 +138,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
   hashmap_p->header.next_property_cp = object_p->property_list_or_bound_object_cp;
   hashmap_p->max_property_count = max_property_count;
   hashmap_p->null_count = max_property_count - named_property_count;
+  hashmap_p->unused_count = max_property_count - named_property_count;
 
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + max_property_count);
@@ -312,6 +313,9 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   hashmap_p->null_count--;
   JERRY_ASSERT (hashmap_p->null_count > 0);
 
+  hashmap_p->unused_count--;
+  JERRY_ASSERT (hashmap_p->unused_count > 0);
+
   if (property_index == 0)
   {
     *bits_p = (uint8_t) ((*bits_p) & ~mask);
@@ -345,10 +349,10 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
 
   JERRY_ASSERT (hashmap_p->header.types[0] == ECMA_PROPERTY_TYPE_HASHMAP);
 
-  hashmap_p->null_count++;
+  hashmap_p->unused_count++;
 
   /* The NULLs are above 3/4 of the hashmap. */
-  if (hashmap_p->null_count > ((hashmap_p->max_property_count * 3) >> 2))
+  if (hashmap_p->unused_count > ((hashmap_p->max_property_count * 3) >> 2))
   {
     return ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP;
   }

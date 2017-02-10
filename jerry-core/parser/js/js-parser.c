@@ -323,7 +323,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
     {
       if (!(literal_p->status_flags & LEXER_FLAG_NO_REG_STORE))
       {
-        JERRY_ASSERT (register_count < PARSER_MAXIMUM_NUMBER_OF_REGISTERS);
+        JERRY_ASSERT (register_count <= PARSER_MAXIMUM_NUMBER_OF_REGISTERS);
         /* This var literal can be stored in a register. */
         literal_p->prop.index = register_index;
         register_index++;

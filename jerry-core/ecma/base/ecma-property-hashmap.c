@@ -310,8 +310,13 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   bits_p += (entry_index >> 3);
   mask = (uint32_t) (1 << (entry_index & 0x7));
 
-  hashmap_p->null_count--;
-  JERRY_ASSERT (hashmap_p->null_count > 0);
+  if (!(*bits_p & mask))
+  {
+    /* Deleted entries also has ECMA_NULL_POINTER
+     * value, but they are not NULL values. */
+    hashmap_p->null_count--;
+    JERRY_ASSERT (hashmap_p->null_count > 0);
+  }
 
   hashmap_p->unused_count--;
   JERRY_ASSERT (hashmap_p->unused_count > 0);

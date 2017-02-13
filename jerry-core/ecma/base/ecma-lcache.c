@@ -127,6 +127,8 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   entry_p->prop_p = prop_p;
 
   ecma_set_property_lcached (entry_p->prop_p, true);
+#else  /* CONFIG_ECMA_LCACHE_DISABLE */
+  JERRY_UNUSED (name_cp);
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_insert */
 
@@ -266,6 +268,8 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
 
   /* The property must be present. */
   JERRY_UNREACHABLE ();
+#else  /* CONFIG_ECMA_LCACHE_DISABLE */
+  JERRY_UNUSED (name_cp);
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate */
 

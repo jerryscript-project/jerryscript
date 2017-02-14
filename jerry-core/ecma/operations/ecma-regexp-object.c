@@ -1249,20 +1249,11 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
 
-  re_matcher_ctx_t re_ctx;
-  const lit_utf8_byte_t *input_curr_p = NULL;
-
   ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
   ECMA_STRING_TO_UTF8_STRING (input_string_p, input_buffer_p, input_buffer_size);
 
-  if (input_buffer_size == 0u)
-  {
-    input_curr_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
-  }
-  else
-  {
-    input_curr_p = input_buffer_p;
-  }
+  re_matcher_ctx_t re_ctx;
+  const lit_utf8_byte_t *input_curr_p = input_buffer_p;
 
   re_ctx.input_start_p = input_curr_p;
   const lit_utf8_byte_t *input_end_p = re_ctx.input_start_p + input_buffer_size;

@@ -717,6 +717,9 @@ main (int argc,
       {
         break;
       }
+
+      jerry_release_value (ret_value);
+      ret_value = jerry_create_undefined ();
     }
   }
 

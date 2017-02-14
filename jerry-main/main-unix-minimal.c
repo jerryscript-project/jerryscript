@@ -110,6 +110,9 @@ main (int argc,
     {
       break;
     }
+
+    jerry_release_value (ret_value);
+    ret_value = jerry_create_undefined ();
   }
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;

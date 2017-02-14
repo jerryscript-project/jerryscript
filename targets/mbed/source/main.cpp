@@ -15,7 +15,7 @@
 
 #include "mbed-drivers/mbed.h"
 
-#include "jerry-core/jerry-api.h"
+#include "jerry-core/jerryscript.h"
 #include "jerry_run.h"
 
 #include "jerry-targetjs.h"

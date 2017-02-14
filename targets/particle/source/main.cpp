@@ -14,7 +14,7 @@
  */
 
 #include "application.h"
-#include "jerry-api.h"
+#include "jerryscript.h"
 
 SYSTEM_MODE (MANUAL);
 

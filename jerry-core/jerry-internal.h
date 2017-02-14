@@ -21,7 +21,7 @@
 #define JERRY_INTERNAL_H
 
 #include "ecma-globals.h"
-#include "jerry-api.h"
+#include "jerryscript.h"
 
 ecma_value_t
 jerry_dispatch_external_function (ecma_object_t *function_object_p,

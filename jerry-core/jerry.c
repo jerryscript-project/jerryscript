@@ -30,7 +30,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "jcontext.h"
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "jerry-debugger.h"
 #include "js-parser.h"
 #include "re-compiler.h"

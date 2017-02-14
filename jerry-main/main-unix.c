@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "jerry-port.h"
 #include "jerry-port-default.h"
 

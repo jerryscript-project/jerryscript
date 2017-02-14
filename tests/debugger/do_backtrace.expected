@@ -1,0 +1,9 @@
+Address setup: localhost:5001
+Stopped at tests/debugger/do_backtrace.js:15
+(jerry-debugger) Breakpoint 1 at tests/debugger/do_backtrace.js:32 (in f4)
+(jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_backtrace.js:32 (in f4)
+(jerry-debugger) Frame 0: tests/debugger/do_backtrace.js:32 (in f4)
+Frame 1: tests/debugger/do_backtrace.js:39 (in foo)
+Frame 2: tests/debugger/do_backtrace.js:48 (in test)
+Frame 3: tests/debugger/do_backtrace.js:60
+(jerry-debugger) Connection closed.

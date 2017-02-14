@@ -17,6 +17,10 @@
 
 #ifdef JERRY_JS_PARSER
 
+#ifdef JERRY_DEBUGGER
+#include "jcontext.h"
+#endif /*JERRY_DEBUGGER */
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -310,6 +314,10 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
+#ifdef JERRY_DEBUGGER
+    parser_line_counter_t ident_line_counter = context_p->line;
+#endif /* JERRY_DEBUGGER */
+
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
     parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
@@ -318,6 +326,30 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
     if (context_p->token.type == LEXER_ASSIGN)
     {
+#ifdef JERRY_DEBUGGER
+      if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+      {
+        if (ident_line_counter != context_p->last_breakpoint_line)
+        {
+          JERRY_DEBUG_MSG ("Insert var breakpoint: %d (%d)\n", ident_line_counter, context_p->last_breakpoint_line);
+          JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+
+          cbc_argument_t last_cbc = context_p->last_cbc;
+          context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
+
+          parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
+          parser_flush_cbc (context_p);
+
+          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
+
+          context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+          context_p->last_cbc = last_cbc;
+
+          context_p->last_breakpoint_line = ident_line_counter;
+        }
+      }
+#endif /* JERRY_DEBUGGER */
+
       parser_parse_expression (context_p,
                                PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
     }
@@ -368,6 +400,14 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
                   || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
+
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  {
+    jerry_debugger_send_function_name ((jerry_char_t *) name_p->u.char_p,
+                                       name_p->prop.length);
+  }
+#endif /* JERRY_DEBUGGER */
 
   if (name_p->status_flags & LEXER_FLAG_INITIALIZED)
   {
@@ -1567,6 +1607,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   parser_stack_push_uint8 (context_p, PARSER_STATEMENT_START);
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 
+#ifdef JERRY_DEBUGGER
+  /* Set lexical enviroment for the debugger. */
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  {
+    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+  }
+#endif /* JERRY_DEBUGGER */
+
   while (context_p->token.type == LEXER_LITERAL
          && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
@@ -1653,6 +1701,28 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context_p->stack_depth == context_p->context_stack_depth);
 #endif /* !JERRY_NDEBUG */
+
+#ifdef JERRY_DEBUGGER
+    if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+    {
+      if (context_p->line != context_p->last_breakpoint_line
+          && context_p->token.type != LEXER_SEMICOLON
+          && context_p->token.type != LEXER_LEFT_BRACE
+          && context_p->token.type != LEXER_RIGHT_BRACE
+          && context_p->token.type != LEXER_KEYW_VAR
+          && context_p->token.type != LEXER_KEYW_FUNCTION
+          && context_p->token.type != LEXER_KEYW_CASE
+          && context_p->token.type != LEXER_KEYW_DEFAULT)
+      {
+        parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
+        parser_flush_cbc (context_p);
+
+        parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->line);
+
+        context_p->last_breakpoint_line = context_p->line;
+      }
+    }
+#endif /* JERRY_DEBUGGER */
 
     switch (context_p->token.type)
     {

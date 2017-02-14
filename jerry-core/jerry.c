@@ -31,6 +31,7 @@
 #include "ecma-objects-general.h"
 #include "jcontext.h"
 #include "jerry-api.h"
+#include "jerry-debugger.h"
 #include "js-parser.h"
 #include "re-compiler.h"
 
@@ -154,6 +155,13 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 
   jmem_init ();
   ecma_init ();
+
+#ifdef JERRY_DEBUGGER
+  if (flags & JERRY_INIT_DEBUGGER)
+  {
+    jerry_debugger_accept_connection ();
+  }
+#endif /* JERRY_DEBUGGER */
 } /* jerry_init */
 
 /**
@@ -165,6 +173,14 @@ jerry_cleanup (void)
   jerry_assert_api_available ();
 
   ecma_finalize ();
+
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  {
+    jerry_debugger_close_connection ();
+  }
+#endif /* JERRY_DEBUGGER */
+
   jmem_finalize ();
   jerry_make_api_unavailable ();
 } /* jerry_cleanup */
@@ -295,6 +311,35 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
 #endif /* JERRY_JS_PARSER */
 } /* jerry_parse */
+
+/**
+ * Parse script and construct an ECMAScript function. The lexical
+ * environment is set to the global lexical environment. The name
+ * (usually a file name) is also passed to this function which is
+ * used by the debugger to find the source code.
+ *
+ * @return function object value - if script was parsed successfully,
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_parse_named_resource (const jerry_char_t *name_p, /**< name (usually a file name) */
+                            size_t name_length, /**< length of name */
+                            const jerry_char_t *source_p, /**< script source */
+                            size_t source_size, /**< script source size */
+                            bool is_strict) /**< strict mode */
+{
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_RESOURCE_NAME, name_p, name_length);
+  }
+#else /* JERRY_DEBUGGER */
+  JERRY_UNUSED (name_p);
+  JERRY_UNUSED (name_length);
+#endif /* JERRY_DEBUGGER */
+
+  return jerry_parse (source_p, source_size, is_strict);
+} /* jerry_parse_named_resource */
 
 /**
  * Run an EcmaScript function created by jerry_parse.

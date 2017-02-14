@@ -124,6 +124,7 @@ print_help (char *name)
                       "  --parse-only\n"
                       "  --show-opcodes\n"
                       "  --show-regexp-opcodes\n"
+                      "  --start-debug-server\n"
                       "  --save-snapshot-for-global FILE\n"
                       "  --save-snapshot-for-eval FILE\n"
                       "  --save-literals-list-format FILE\n"
@@ -435,6 +436,10 @@ main (int argc,
                         "Ignoring 'show-regexp-opcodes' option because this feature is disabled!\n");
       }
     }
+    else if (!strcmp ("--start-debug-server", argv[i]))
+    {
+      flags |= JERRY_INIT_DEBUGGER;
+    }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))
     {
@@ -703,7 +708,11 @@ main (int argc,
       }
       else
       {
-        ret_value = jerry_parse (source_p, source_size, false);
+        ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
+                                                strlen (file_names[i]),
+                                                source_p,
+                                                source_size,
+                                                false);
 
         if (!jerry_value_has_error_flag (ret_value) && !is_parse_only)
         {

@@ -18,6 +18,7 @@ from os import path
 
 TOOLS_DIR = path.dirname(path.abspath(__file__))
 PROJECT_DIR = path.normpath(path.join(TOOLS_DIR, '..'))
+DEBUGGER_TESTS_DIR = path.join(PROJECT_DIR, 'tests/debugger')
 JERRY_TESTS_DIR = path.join(PROJECT_DIR, 'tests/jerry')
 JERRY_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/jerry-test-suite')
 JERRY_TEST_SUITE_MINIMAL_LIST = path.join(PROJECT_DIR, 'tests/jerry-test-suite/minimal-profile-list')
@@ -26,6 +27,8 @@ TEST262_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/test262')
 
 BUILD_SCRIPT = path.join(TOOLS_DIR, 'build.py')
 CPPCHECK_SCRIPT = path.join(TOOLS_DIR, 'check-cppcheck.sh')
+DEBUGGER_CLIENT_SCRIPT = path.join(PROJECT_DIR, 'jerry-debugger/jerry-client-ws.py')
+DEBUGGER_TEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-debugger-test.sh')
 DOXYGEN_SCRIPT = path.join(TOOLS_DIR, 'check-doxygen.sh')
 LICENSE_SCRIPT = path.join(TOOLS_DIR, 'check-license.py')
 SIGNED_OFF_SCRIPT = path.join(TOOLS_DIR, 'check-signed-off.sh')

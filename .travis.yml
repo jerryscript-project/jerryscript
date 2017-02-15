@@ -20,6 +20,27 @@ matrix:
       env: OPTS="--jerry-tests --jerry-test-suite"
     - os: osx
       env: OPTS=--unittests
+    - compiler: gcc-5
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gcc-5-multilib
+      env: OPTS="--jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-g,--jerry-libc=off,--static-link=off,--strip=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true TIMEOUT=600
+    - compiler: gcc-5
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gcc-5-multilib
+      env: OPTS="--jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-g,--jerry-libc=off,--static-link=off,--strip=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
+  allow_failures:
+    - compiler: gcc-5
+  fast_finish: true
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tools/apt-get-install-deps.sh; fi

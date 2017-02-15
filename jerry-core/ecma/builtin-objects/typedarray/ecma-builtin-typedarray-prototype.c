@@ -26,6 +26,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "ecma-gc.h"
+#include "jmem.h"
 
 #ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
 
@@ -513,6 +514,99 @@ ecma_builtin_typedarray_prototype_reduce_right (ecma_value_t this_arg, /**< this
                                                                   initial_val,
                                                                   true);
 } /* ecma_builtin_typedarray_prototype_reduce_right */
+
+/**
+ * The %TypedArray%.prototype object's 'filter' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.9
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argument */
+                                          ecma_value_t cb_func_val, /**< callback function */
+                                          ecma_value_t cb_this_arg) /**< 'this' of the callback function */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_op_is_callable (cb_func_val))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  uint32_t len = ecma_typedarray_get_length (obj_p);
+  ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  uint32_t pass_num = 0;
+
+  JMEM_DEFINE_LOCAL_ARRAY (pass_value_list, len, ecma_value_t);
+
+  for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
+  {
+    ecma_value_t current_index =  ecma_make_uint32_value (index);
+    ecma_value_t get_value = ecma_op_typedarray_get_index_prop (obj_p, index);
+
+    JERRY_ASSERT (ecma_is_value_number (get_value));
+
+    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+
+    ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3), ret_value);
+
+    if (ecma_op_to_boolean (call_value))
+    {
+      *(pass_value_list + pass_num) = ecma_fast_copy_value (get_value);
+      pass_num++;
+    }
+
+    ECMA_FINALIZE (call_value);
+
+    ecma_fast_free_value (current_index);
+    ecma_fast_free_value (get_value);
+  }
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
+    ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
+
+    for (uint32_t index = 0; index < pass_num && ecma_is_value_empty (ret_value); index++)
+    {
+      ecma_value_t set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, *(pass_value_list + index));
+
+      if (!set_status)
+      {
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("error in typedarray set"));
+      }
+    }
+
+    if (ecma_is_value_empty (ret_value))
+    {
+      ret_value = new_typedarray;
+    }
+    else
+    {
+      ecma_free_value (new_typedarray);
+    }
+  }
+
+  uint32_t index = 0;
+
+  while (index < pass_num)
+  {
+    ecma_fast_free_value (*(pass_value_list + index));
+    index++;
+  }
+
+  JMEM_FINALIZE_LOCAL_ARRAY (pass_value_list);
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_filter */
 
 /**
  * @}

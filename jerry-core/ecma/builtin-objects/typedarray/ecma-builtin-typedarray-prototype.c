@@ -22,6 +22,7 @@
 #include "ecma-conversion.h"
 #include "ecma-function-object.h"
 #include "ecma-typedarray-object.h"
+#include "ecma-arraybuffer-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
@@ -607,6 +608,48 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_filter */
+
+/**
+ * The %TypedArray%.prototype object's 'reverse' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.21
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argument */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  uint32_t len = ecma_typedarray_get_length (obj_p);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
+  lit_utf8_byte_t *buffer = (ecma_arraybuffer_get_buffer (arraybuffer_p)
+                             + ecma_typedarray_get_offset (obj_p));
+  uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+  uint32_t middle = (len / 2) << shift;
+  uint32_t buffer_last = (len << shift) - element_size;
+
+  for (uint32_t lower = 0; lower < middle; lower += element_size)
+  {
+    uint32_t upper = buffer_last - lower;
+    lit_utf8_byte_t *lower_p = buffer + lower;
+    lit_utf8_byte_t *upper_p = buffer + upper;
+
+    lit_utf8_byte_t tmp[8];
+    memcpy (&tmp[0], lower_p, element_size);
+    memcpy (lower_p, upper_p, element_size);
+    memcpy (upper_p, &tmp[0], element_size);
+  }
+
+  return ecma_copy_value (this_arg);
+} /* ecma_builtin_typedarray_prototype_reverse */
 
 /**
  * @}

@@ -41,10 +41,11 @@ print_help (char *name)
   jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
                       "\n"
                       "Options:\n"
+                      "  --log-level [0-3]\n"
                       "  --mem-stats\n"
                       "  --mem-stats-separate\n"
                       "  --show-opcodes\n"
-                      "  --log-level [0-3]\n"
+                      "  --start-debug-server\n"
                       "\n",
                       name);
 } /* print_help */
@@ -232,6 +233,10 @@ int jerry_main (int argc, char *argv[])
         jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: wrong format or invalid argument\n");
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
+    }
+    else if (!strcmp ("--start-debug-server", argv[i]))
+    {
+      flags |= JERRY_INIT_DEBUGGER;
     }
     else
     {

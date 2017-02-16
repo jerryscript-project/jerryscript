@@ -982,7 +982,7 @@ jerry_create_object (void)
 } /* jerry_create_object */
 
 /**
- * Create string from a valid UTF8 string
+ * Create string from a valid UTF-8 string
  *
  * Note:
  *      returned value must be freed with jerry_release_value when it is no longer needed.
@@ -996,7 +996,7 @@ jerry_create_string_from_utf8 (const jerry_char_t *str_p) /**< pointer to string
 } /* jerry_create_string_from_utf8 */
 
 /**
- * Create string from a valid UTF8 string
+ * Create string from a valid UTF-8 string
  *
  * Note:
  *      returned value must be freed with jerry_release_value when it is no longer needed.
@@ -1016,7 +1016,7 @@ jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, /**< pointer to str
 } /* jerry_create_string_sz_from_utf8 */
 
 /**
- * Create string from a valid CESU8 string
+ * Create string from a valid CESU-8 string
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -1030,7 +1030,7 @@ jerry_create_string (const jerry_char_t *str_p) /**< pointer to string */
 } /* jerry_create_string */
 
 /**
- * Create string from a valid CESU8 string
+ * Create string from a valid CESU-8 string
  *
  * Note:
  *      returned value must be freed with jerry_release_value when it is no longer needed.
@@ -2005,6 +2005,34 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   ecma_free_value (property_value);
   return false;
 } /* jerry_foreach_object_property */
+
+/**
+ * Validate UTF-8 string
+ *
+ * @return true - if UTF-8 string is well-formed
+ *         false - otherwise
+ */
+bool
+jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, /**< UTF-8 string */
+                            jerry_size_t buf_size) /**< string size */
+{
+  return lit_is_valid_utf8_string ((lit_utf8_byte_t *) utf8_buf_p,
+                                   (lit_utf8_size_t) buf_size);
+} /* jerry_is_valid_utf8_string */
+
+/**
+ * Validate CESU-8 string
+ *
+ * @return true - if CESU-8 string is well-formed
+ *         false - otherwise
+ */
+bool
+jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string */
+                             jerry_size_t buf_size) /**< string size */
+{
+  return lit_is_valid_cesu8_string ((lit_utf8_byte_t *) cesu8_buf_p,
+                                    (lit_utf8_size_t) buf_size);
+} /* jerry_is_valid_cesu8_string */
 
 /**
  * @}

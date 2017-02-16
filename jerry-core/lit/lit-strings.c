@@ -28,7 +28,7 @@
  *         false otherwise
  */
 bool
-lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
+lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
                           lit_utf8_size_t buf_size) /**< string size */
 {
   lit_utf8_size_t idx = 0;
@@ -116,7 +116,7 @@ lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
   }
 
   return true;
-} /* lit_is_utf8_string_valid */
+} /* lit_is_valid_utf8_string */
 
 /**
  * Validate cesu-8 string
@@ -125,14 +125,14 @@ lit_is_utf8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
  *         false otherwise
  */
 bool
-lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
+lit_is_valid_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu-8 string */
                            lit_utf8_size_t buf_size) /**< string size */
 {
   lit_utf8_size_t idx = 0;
 
   while (idx < buf_size)
   {
-    lit_utf8_byte_t c = utf8_buf_p[idx++];
+    lit_utf8_byte_t c = cesu8_buf_p[idx++];
     if ((c & LIT_UTF8_1_BYTE_MASK) == LIT_UTF8_1_BYTE_MARKER)
     {
       continue;
@@ -166,7 +166,7 @@ lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string 
 
     for (lit_utf8_size_t offset = 0; offset < extra_bytes_count; ++offset)
     {
-      c = utf8_buf_p[idx + offset];
+      c = cesu8_buf_p[idx + offset];
       if ((c & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
       {
         /* invalid continuation byte */
@@ -186,7 +186,7 @@ lit_is_cesu8_string_valid (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string 
   }
 
   return true;
-} /* lit_is_cesu8_string_valid */
+} /* lit_is_valid_cesu8_string */
 
 /**
  * Check if the code point is UTF-16 low surrogate

@@ -15,7 +15,7 @@
 #include "mbed.h"
 #include "rtos.h"
 
-#include "jerry-core/jerry-api.h"
+#include "jerry-core/jerryscript.h"
 
 #include "jerryscript-mbed-event-loop/EventLoop.h"
 

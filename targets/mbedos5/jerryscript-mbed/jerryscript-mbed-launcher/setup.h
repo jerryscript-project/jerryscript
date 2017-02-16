@@ -15,7 +15,7 @@
 #ifndef _JERRYSCRIPT_MBED_LAUNCHER_SETUP_H
 #define _JERRYSCRIPT_MBED_LAUNCHER_SETUP_H
 
-#include "jerry-core/jerry-api.h"
+#include "jerry-core/jerryscript.h"
 
 void jsmbed_js_load_magic_strings(void);
 

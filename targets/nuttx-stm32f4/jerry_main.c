@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "jerry-port.h"
 
 /**

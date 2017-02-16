@@ -18,7 +18,7 @@
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
 #include "jcontext.h"
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "jerry-snapshot.h"
 #include "js-parser.h"
 #include "lit-char-helpers.h"

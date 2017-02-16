@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "jerry-port.h"
 #include "jrt-types.h"
 

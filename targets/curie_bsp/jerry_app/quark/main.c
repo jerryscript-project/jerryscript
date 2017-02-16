@@ -29,7 +29,7 @@
 /* Watchdog helper */
 #include "infra/wdt_helper.h"
 
-#include "jerry-api.h"
+#include "jerryscript.h"
 #include "string.h"
 #include "jerry-port.h"
 

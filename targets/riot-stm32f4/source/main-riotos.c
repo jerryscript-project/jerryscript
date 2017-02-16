@@ -15,7 +15,7 @@
 
 #include <string.h>
 #include "shell.h"
-#include "jerry-api.h"
+#include "jerryscript.h"
 
 /**
  * Jerryscript simple test

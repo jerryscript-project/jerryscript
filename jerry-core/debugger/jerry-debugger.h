@@ -40,8 +40,8 @@
  * Calculate the maximum number of items for a given type
  * which can be transmitted by one message.
  */
-#define JERRY_DEBUGGER_MAX_SIZE(type) \
- ((JERRY_DEBUGGER_MAX_BUFFER_SIZE - sizeof (jerry_debugger_send_header_t) - 1) / sizeof (type))
+#define JERRY_DEBUGGER_SEND_MAX(type) \
+ ((JERRY_DEBUGGER_MAX_SEND_SIZE - sizeof (jerry_debugger_send_header_t) - 1) / sizeof (type))
 
 /**
  * Types for the package.
@@ -63,6 +63,10 @@ typedef enum
   JERRY_DEBUGGER_BREAKPOINT_HIT = 12, /**< notify breakpoint hit */
   JERRY_DEBUGGER_BACKTRACE = 13, /**< backtrace data */
   JERRY_DEBUGGER_BACKTRACE_END = 14, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 15, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 16, /**< last part of eval result */
+  JERRY_DEBUGGER_EVAL_ERROR = 17, /**< eval result when an error is occured */
+  JERRY_DEBUGGER_EVAL_ERROR_END = 18, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
   JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1, /**< free byte code compressed pointer */
@@ -72,6 +76,8 @@ typedef enum
   JERRY_DEBUGGER_STEP = 5, /**< next breakpoint, step into functions */
   JERRY_DEBUGGER_NEXT = 6, /**< next breakpoint in the same context */
   JERRY_DEBUGGER_GET_BACKTRACE = 7, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 8, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 9, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**
@@ -120,7 +126,7 @@ typedef struct
 {
   jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
-  uint8_t string[JERRY_DEBUGGER_MAX_SIZE (uint8_t)]; /**< string data */
+  uint8_t string[JERRY_DEBUGGER_SEND_MAX (uint8_t)]; /**< string data */
 } jerry_debugger_send_string_t;
 
 /**
@@ -180,7 +186,7 @@ typedef struct
 {
   jerry_debugger_send_header_t header; /**< message header */
   uint8_t type; /**< type of the message */
-  jerry_debugger_frame_t frames[JERRY_DEBUGGER_MAX_SIZE (jerry_debugger_frame_t)]; /**< frames */
+  jerry_debugger_frame_t frames[JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t)]; /**< frames */
 } jerry_debugger_send_backtrace_t;
 
 /**
@@ -192,18 +198,44 @@ typedef struct
   uint8_t max_depth[sizeof (uint32_t)]; /**< maximum depth (0 - unlimited) */
 } jerry_debugger_receive_get_backtrace_t;
 
+/**
+ * Incoming message: first message of evaluating expression.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t eval_size[sizeof (uint32_t)]; /**< total size of the message */
+} jerry_debugger_receive_eval_first_t;
+
+/**
+ * Incoming message: next message of evaluating expression.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+} jerry_debugger_receive_eval_part_t;
+
+/**
+ * Data for evaluating expressions
+ */
+typedef struct
+{
+  uint32_t eval_size; /**< total size of the eval string */
+  uint32_t eval_offset; /**< current offset in the eval string */
+} jerry_debugger_eval_data_t;
+
 void jerry_debugger_free_unreferenced_byte_code (void);
 
-bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size, bool *resume_exec_p);
+bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
+                                     bool *resume_exec_p, uint8_t *expected_message_p, void **message_data_p);
 void jerry_debugger_breakpoint_hit (void);
 
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);
 bool jerry_debugger_send_configuration (uint8_t max_message_size);
 void jerry_debugger_send_data (jerry_debugger_header_type_t type, const void *data, size_t size);
-void jerry_debugger_send_string (uint8_t message_type, const jerry_char_t *string_p, size_t string_length);
-void jerry_debugger_send_function_name (const jerry_char_t *function_name_p, size_t function_name_length);
+bool jerry_debugger_send_string (uint8_t message_type, const uint8_t *string_p, size_t string_length);
+void jerry_debugger_send_function_name (const uint8_t *function_name_p, size_t function_name_length);
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
-void jerry_debugger_send_source_file_name (const jerry_char_t *file_name_p, size_t file_name_length);
 
 #endif /* JERRY_DEBUGGER */
 

@@ -28,6 +28,16 @@
 #define JERRY_DEBUGGER_MAX_BUFFER_SIZE 128
 
 /**
+ * Maximum number of bytes can be received in a single message.
+ */
+#define JERRY_DEBUGGER_MAX_SEND_SIZE (JERRY_DEBUGGER_MAX_BUFFER_SIZE - 1)
+
+/**
+ * Maximum number of bytes can be received in a single message.
+ */
+#define JERRY_DEBUGGER_MAX_RECEIVE_SIZE (JERRY_DEBUGGER_MAX_BUFFER_SIZE - 6)
+
+/**
  * Last fragment of a Websocket package.
  */
 #define JERRY_DEBUGGER_WEBSOCKET_FIN_BIT 0x80

@@ -338,11 +338,13 @@ class JerryDebugger(object):
     def __init__(self, address):
 
         if ":" not in address:
-            print("Wrong address settings: Use the 'IP:PORT' format.")
+            self.host = address
+            self.port = 5001  # use default port
         else:
             self.host, self.port = address.split(":")
             self.port = int(self.port)
-            print("Address setup: %s:%s" % (self.host, self.port))
+
+        print("Connecting to: %s:%s" % (self.host, self.port))
 
         self.message_data = b""
         self.function_list = {}

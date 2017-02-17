@@ -1,4 +1,4 @@
-Address setup: localhost:5001
+Connecting to: localhost:5001
 Stopped at tests/debugger/do_eval.js:15
 (jerry-debugger) undefined
 (jerry-debugger) Stopped at tests/debugger/do_eval.js:23

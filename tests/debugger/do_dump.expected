@@ -1,4 +1,4 @@
-Address setup: localhost:5001
+Connecting to: localhost:5001
 Stopped at tests/debugger/do_dump.js:15
 (jerry-debugger) {68: Function(byte_code_cp:0x44, source:"tests/debugger/do_dump.js", name:"f4", { Breakpoint(line:32, offset:17, active_index:-1),Breakpoint(line:31, offset:16, active_index:-1) }),
  79: Function(byte_code_cp:0x4f, source:"tests/debugger/do_dump.js", name:"f1", { Breakpoint(line:17, offset:21, active_index:-1),Breakpoint(line:27, offset:22, active_index:-1) }),

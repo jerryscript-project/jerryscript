@@ -35,7 +35,7 @@
           <ul class="dropdown-menu">
             {% for p in site.pages %}
               {% if p.title %}
-                {% if p.url == "/debugger/" and p.url == "/internals/" or p.url == "/port-api/" or p.url == "/reference-counting/" %}
+                {% if p.url == "/debugger/" or p.url == "/internals/" or p.url == "/port-api/" or p.url == "/reference-counting/" %}
                   <li><a href="{{ p.url | prepend: site.github.url }}" >{{ p.title }}</a></li>
                 {% endif %}
               {% endif %}

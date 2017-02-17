@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "jerry-api.h"
-
 #ifdef JERRY_DEBUGGER
 
 #include "byte-code.h"
+#include "ecma-conversion.h"
+#include "ecma-eval.h"
+#include "ecma-objects.h"
 #include "jcontext.h"
 #include "jerry-debugger.h"
 #include "jerry-port.h"
@@ -87,7 +88,7 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer the the rece
 
   while (frame_ctx_p != NULL && max_depth > 0)
   {
-    if (current_frame >= JERRY_DEBUGGER_MAX_SIZE (jerry_debugger_frame_t))
+    if (current_frame >= JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t))
     {
       if (!jerry_debugger_send (sizeof (jerry_debugger_send_backtrace_t)))
       {
@@ -119,6 +120,79 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer the the rece
 } /* jerry_debugger_send_backtrace */
 
 /**
+ * Send result of evaluated expression.
+ *
+ * @return true - if no error is occured
+ *         false - otherwise
+ */
+static bool
+jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated string */
+                          size_t eval_string_size) /**< evaluated string size */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+
+  JERRY_CONTEXT (jerry_init_flags) &= (uint32_t) ~JERRY_INIT_DEBUGGER;
+  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p, eval_string_size, true, false);
+  JERRY_CONTEXT (jerry_init_flags) |= (uint32_t) JERRY_INIT_DEBUGGER;
+
+  if (!ECMA_IS_VALUE_ERROR (result))
+  {
+    ecma_value_t to_string_value = ecma_op_to_string (result);
+    ecma_free_value (result);
+    result = to_string_value;
+  }
+
+  ecma_value_t message = result;
+  uint8_t type = JERRY_DEBUGGER_EVAL_RESULT;
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    type = JERRY_DEBUGGER_EVAL_ERROR;
+
+    if (ecma_is_value_object (result))
+    {
+      ecma_string_t *message_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
+
+      message = ecma_op_object_find (ecma_get_object_from_value (result),
+                                     message_string_p);
+
+      ecma_deref_ecma_string (message_string_p);
+
+      if (!ecma_is_value_string (message)
+          || ecma_string_is_empty (ecma_get_string_from_value (message)))
+      {
+        ecma_free_value (message);
+        lit_magic_string_id_t id = ecma_object_get_class_name (ecma_get_object_from_value (result));
+        ecma_free_value (result);
+
+        const lit_utf8_byte_t *string_p = lit_get_magic_string_utf8 (id);
+        return jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_ERROR,
+                                           string_p,
+                                           strlen ((const char *) string_p));
+      }
+    }
+    else
+    {
+      /* Primitve type. */
+      message = ecma_op_to_string (result);
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (message));
+    }
+
+    ecma_free_value (result);
+  }
+
+  ecma_string_t *string_p = ecma_get_string_from_value (message);
+
+  ECMA_STRING_TO_UTF8_STRING (string_p, buffer_p, buffer_size);
+  bool success = jerry_debugger_send_string (type, buffer_p, buffer_size);
+  ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
+
+  ecma_free_value (message);
+
+  return success;
+} /* jerry_debugger_send_eval */
+
+/**
  * Check received packet size.
  */
 #define JERRY_DEBUGGER_CHECK_PACKET_SIZE(type) \
@@ -138,9 +212,65 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer the the rece
 inline bool __attr_always_inline___
 jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the received data */
                                 uint32_t message_size, /**< message size */
-                                bool *resume_exec_p) /**< pointer to the resume exec flag */
+                                bool *resume_exec_p, /**< pointer to the resume exec flag */
+                                uint8_t *expected_message_type_p, /**< expected message type */
+                                void **message_data_p) /**< custom message data */
 {
   /* Process the received message. */
+
+  if (*expected_message_type_p != 0)
+  {
+    JERRY_ASSERT (*expected_message_type_p == JERRY_DEBUGGER_EVAL_PART);
+
+    jerry_debugger_eval_data_t *eval_data_p = (jerry_debugger_eval_data_t *) *message_data_p;
+
+    if (recv_buffer_p[0] != JERRY_DEBUGGER_EVAL_PART)
+    {
+      jmem_heap_free_block (eval_data_p, eval_data_p->eval_size + sizeof (jerry_debugger_eval_data_t));
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unexpected message\n");
+      jerry_debugger_close_connection ();
+      return false;
+    }
+
+    JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_eval_part_t, eval_part_p);
+
+    if (message_size < sizeof (jerry_debugger_receive_eval_part_t) + 1)
+    {
+      jmem_heap_free_block (eval_data_p, eval_data_p->eval_size + sizeof (jerry_debugger_eval_data_t));
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+      jerry_debugger_close_connection ();
+      return false;
+    }
+
+    uint32_t expected_data = eval_data_p->eval_size - eval_data_p->eval_offset;
+
+    message_size -= (uint32_t) sizeof (jerry_debugger_receive_eval_part_t);
+
+    if (message_size > expected_data)
+    {
+      jmem_heap_free_block (eval_data_p, eval_data_p->eval_size + sizeof (jerry_debugger_eval_data_t));
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+      jerry_debugger_close_connection ();
+      return false;
+    }
+
+    lit_utf8_byte_t *eval_string_p = (lit_utf8_byte_t *) (eval_data_p + 1);
+    memcpy (eval_string_p + eval_data_p->eval_offset,
+            (lit_utf8_byte_t *) (eval_part_p + 1),
+            message_size);
+
+    if (message_size < expected_data)
+    {
+      eval_data_p->eval_offset += message_size;
+      return true;
+    }
+
+    bool result = jerry_debugger_send_eval (eval_string_p, eval_data_p->eval_size);
+    jmem_heap_free_block (eval_data_p, eval_data_p->eval_size + sizeof (jerry_debugger_eval_data_t));
+    *expected_message_type_p = 0;
+    return result;
+  }
+
   switch (recv_buffer_p[0])
   {
     case JERRY_DEBUGGER_FREE_BYTE_CODE_CP:
@@ -253,6 +383,50 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       return true;
     }
 
+    case JERRY_DEBUGGER_EVAL:
+    {
+      if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+        jerry_debugger_close_connection ();
+        return false;
+      }
+
+      JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_eval_first_t, eval_first_p);
+
+      uint32_t eval_size;
+      memcpy (&eval_size, eval_first_p->eval_size, sizeof (uint32_t));
+
+      if (eval_size <= JERRY_DEBUGGER_MAX_RECEIVE_SIZE - sizeof (jerry_debugger_receive_eval_first_t))
+      {
+        if (eval_size != message_size - sizeof (jerry_debugger_receive_eval_first_t))
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+          jerry_debugger_close_connection ();
+          return false;
+        }
+
+        return jerry_debugger_send_eval ((lit_utf8_byte_t *) (eval_first_p + 1), eval_size);
+      }
+
+      jerry_debugger_eval_data_t *eval_data_p;
+      size_t eval_data_size = sizeof (jerry_debugger_eval_data_t) + eval_size;
+
+      eval_data_p = (jerry_debugger_eval_data_t *) jmem_heap_alloc_block (eval_data_size);
+
+      eval_data_p->eval_size = eval_size;
+      eval_data_p->eval_offset = (uint32_t) (message_size - sizeof (jerry_debugger_receive_eval_first_t));
+
+      lit_utf8_byte_t *eval_string_p = (lit_utf8_byte_t *) (eval_data_p + 1);
+      memcpy (eval_string_p,
+              (lit_utf8_byte_t *) (eval_first_p + 1),
+              message_size - sizeof (jerry_debugger_receive_eval_first_t));
+
+      *message_data_p = eval_data_p;
+      *expected_message_type_p = JERRY_DEBUGGER_EVAL_PART;
+      return true;
+    }
+
     default:
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unexpected message.");
@@ -355,7 +529,7 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
                           const void *data, /**< raw data */
                           size_t size) /**< size of data */
 {
-  JERRY_ASSERT (size < JERRY_DEBUGGER_MAX_SIZE (uint8_t));
+  JERRY_ASSERT (size <= JERRY_DEBUGGER_SEND_MAX (uint8_t));
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
 
@@ -369,15 +543,18 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
 
 /**
  * Send string to the debugger client.
+ *
+ * @return true - if the data sent successfully to the debugger client,
+ *         false - otherwise
  */
-void
+bool
 jerry_debugger_send_string (uint8_t message_type, /**< message type */
-                            const jerry_char_t *string_p, /**< string data */
+                            const uint8_t *string_p, /**< string data */
                             size_t string_length) /**< length of string */
 {
   JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
 
-  const size_t max_fragment_len = JERRY_DEBUGGER_MAX_SIZE (char);
+  const size_t max_fragment_len = JERRY_DEBUGGER_SEND_MAX (uint8_t);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_string_p);
 
@@ -391,7 +568,7 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
 
     if (!jerry_debugger_send (sizeof (jerry_debugger_send_string_t)))
     {
-      return;
+      return false;
     }
 
     string_length -= max_fragment_len;
@@ -403,14 +580,14 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
 
   memcpy (message_string_p->string, string_p, string_length);
 
-  jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + string_length);
+  return jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + string_length);
 } /* jerry_debugger_send_string */
 
 /**
  * Send the function name to the debugger client.
  */
 void
-jerry_debugger_send_function_name (const jerry_char_t *function_name_p, /**< function name */
+jerry_debugger_send_function_name (const uint8_t *function_name_p, /**< function name */
                                    size_t function_name_length) /**< length of function name */
 {
   JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);

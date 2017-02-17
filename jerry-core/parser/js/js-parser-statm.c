@@ -404,7 +404,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
   {
-    jerry_debugger_send_function_name ((jerry_char_t *) name_p->u.char_p,
+    jerry_debugger_send_function_name (name_p->u.char_p,
                                        name_p->prop.length);
   }
 #endif /* JERRY_DEBUGGER */

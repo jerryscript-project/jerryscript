@@ -1,0 +1,14 @@
+Address setup: localhost:5001
+Stopped at tests/debugger/do_eval.js:15
+(jerry-debugger) undefined
+(jerry-debugger) Stopped at tests/debugger/do_eval.js:23
+(jerry-debugger) 5
+(jerry-debugger) Breakpoint 1 at tests/debugger/do_eval.js:17 (in f)
+(jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_eval.js:17 (in f)
+(jerry-debugger) 3.3
+(jerry-debugger) Stopped at tests/debugger/do_eval.js:19 (in f)
+(jerry-debugger) undefined
+(jerry-debugger) Stopped at tests/debugger/do_eval.js:20 (in f)
+(jerry-debugger) 6
+(jerry-debugger) 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 XXX 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 YYY 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 ZZZ 123
+(jerry-debugger) Connection closed.

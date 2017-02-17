@@ -39,6 +39,10 @@ JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 11
 JERRY_DEBUGGER_BREAKPOINT_HIT = 12
 JERRY_DEBUGGER_BACKTRACE = 13
 JERRY_DEBUGGER_BACKTRACE_END = 14
+JERRY_DEBUGGER_EVAL_RESULT = 15
+JERRY_DEBUGGER_EVAL_RESULT_END = 16
+JERRY_DEBUGGER_EVAL_ERROR = 17
+JERRY_DEBUGGER_EVAL_ERROR_END = 18
 
 # Messages sent by the client to server.
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
@@ -48,6 +52,8 @@ JERRY_DEBUGGER_CONTINUE = 4
 JERRY_DEBUGGER_STEP = 5
 JERRY_DEBUGGER_NEXT = 6
 JERRY_DEBUGGER_GET_BACKTRACE = 7
+JERRY_DEBUGGER_EVAL = 8
+JERRY_DEBUGGER_EVAL_PART = 9
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -246,6 +252,58 @@ class DebuggerPrompt(Cmd):
         """ Dump all of the debugger data """
         pprint(self.debugger.function_list)
 
+    def eval_string(self, args):
+        size = len(args)
+        if size == 0:
+            return
+
+        # 1: length of type byte
+        # 4: length of an uint32 value
+        message_header = 1 + 4
+        max_fragment = min(self.debugger.max_message_size - message_header, size)
+
+        message = pack(self.debugger.byte_order + "BBIBI",
+                       WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                       WEBSOCKET_FIN_BIT + max_fragment + message_header,
+                       0,
+                       JERRY_DEBUGGER_EVAL,
+                       size)
+
+        if size == max_fragment:
+            self.debugger.send_message(message + args)
+            self.stop = True
+            return
+
+        self.debugger.send_message(message + args[0:max_fragment])
+        offset = max_fragment
+
+        # 1: length of type byte
+        message_header = 1
+
+        max_fragment = self.debugger.max_message_size - message_header
+        while offset < size:
+            next_fragment = min(max_fragment, size - offset)
+
+            message = pack(self.debugger.byte_order + "BBIB",
+                           WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                           WEBSOCKET_FIN_BIT + next_fragment + message_header,
+                           0,
+                           JERRY_DEBUGGER_EVAL_PART)
+
+            prev_offset = offset
+            offset += next_fragment
+            self.debugger.send_message(message + args[prev_offset:offset])
+
+        self.stop = True
+
+    def do_eval(self, args):
+        """ Evaluate JavaScript source code """
+        self.eval_string(args)
+
+    def do_e(self, args):
+        """ Evaluate JavaScript source code """
+        self.eval_string(args)
+
 
 class Multimap(object):
 
@@ -316,6 +374,8 @@ class JerryDebugger(object):
 
         if len_result > len_expected:
             result = result[len_expected:]
+        else:
+            result = b""
 
         len_expected = 6
         # Network configurations, which has the following struct:
@@ -330,10 +390,13 @@ class JerryDebugger(object):
 
         len_result = len(result)
 
-        if (ord(result[0]) != WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT or
-                ord(result[1]) != 4 or
-                ord(result[2]) != JERRY_DEBUGGER_CONFIGURATION):
-                    raise Exception("Unexpected configuration")
+        expected = pack("BBB",
+                        WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                        4,
+                        JERRY_DEBUGGER_CONFIGURATION)
+
+        if result[0:3] != expected:
+            raise Exception("Unexpected configuration")
 
         self.max_message_size = ord(result[3])
         self.cp_size = ord(result[4])
@@ -434,10 +497,10 @@ def parse_source(debugger, data):
             return
 
         if buffer_type in [JERRY_DEBUGGER_RESOURCE_NAME, JERRY_DEBUGGER_RESOURCE_NAME_END]:
-            source_name += unpack("%ds" % (buffer_size), data[3:buffer_size+3])[0]
+            source_name += data[3:]
 
         elif buffer_type in [JERRY_DEBUGGER_FUNCTION_NAME, JERRY_DEBUGGER_FUNCTION_NAME_END]:
-            function_name += unpack("%ds" % (buffer_size), data[3:buffer_size+3])[0]
+            function_name += data[3:]
 
         elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
             logging.debug("Source name: %s, function name: %s" % (source_name, function_name))
@@ -653,6 +716,35 @@ def main():
                 if buffer_type not in [JERRY_DEBUGGER_BACKTRACE,
                                        JERRY_DEBUGGER_BACKTRACE_END]:
                     raise Exception("Backtrace data expected")
+
+            prompt.cmdloop()
+
+        elif buffer_type in [JERRY_DEBUGGER_EVAL_RESULT,
+                             JERRY_DEBUGGER_EVAL_RESULT_END,
+                             JERRY_DEBUGGER_EVAL_ERROR,
+                             JERRY_DEBUGGER_EVAL_ERROR_END]:
+
+            message = b""
+            eval_type = buffer_type
+            while True:
+                message += data[3:]
+
+                if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
+                                   JERRY_DEBUGGER_EVAL_ERROR_END]:
+                    break
+
+                data = debugger.get_message()
+                buffer_type = ord(data[2])
+                buffer_size = ord(data[1]) - 1
+
+                if buffer_type not in [eval_type,
+                                       eval_type + 1]:
+                    raise Exception("Eval result expected")
+
+            if buffer_type == JERRY_DEBUGGER_EVAL_ERROR_END:
+                print("Uncaught exception: %s" % (message))
+            else:
+                print(message)
 
             prompt.cmdloop()
 

@@ -42,6 +42,10 @@ var JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 11;
 var JERRY_DEBUGGER_BREAKPOINT_HIT = 12;
 var JERRY_DEBUGGER_BACKTRACE = 13;
 var JERRY_DEBUGGER_BACKTRACE_END = 14;
+var JERRY_DEBUGGER_EVAL_RESULT = 15;
+var JERRY_DEBUGGER_EVAL_RESULT_END = 16;
+var JERRY_DEBUGGER_EVAL_ERROR = 17;
+var JERRY_DEBUGGER_EVAL_ERROR_END = 18;
 
 var JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1;
 var JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2;
@@ -50,6 +54,8 @@ var JERRY_DEBUGGER_CONTINUE = 4;
 var JERRY_DEBUGGER_STEP = 5;
 var JERRY_DEBUGGER_NEXT = 6;
 var JERRY_DEBUGGER_GET_BACKTRACE = 7;
+var JERRY_DEBUGGER_EVAL = 8;
+var JERRY_DEBUGGER_EVAL_PART = 9;
 
 var textBox = document.getElementById("log");
 var commandBox = document.getElementById("command");
@@ -78,12 +84,31 @@ function DebuggerClient(ipAddr)
   var activeBreakpoints = { };
   var nextBreakpointIndex = 1;
   var backtraceFrame = 0;
+  var evalResult = null;
 
   function assert(expr)
   {
     if (!expr)
     {
       throw new Error("Assertion failed.");
+    }
+  }
+
+  function setUint32(array, offset, value)
+  {
+    if (littleEndian)
+    {
+      array[offset] = value & 0xff;
+      array[offset + 1] = (value >> 8) & 0xff;
+      array[offset + 2] = (value >> 16) & 0xff;
+      array[offset + 3] = (value >> 24) & 0xff;
+    }
+    else
+    {
+      array[offset] = (value >> 24) & 0xff;
+      array[offset + 1] = (value >> 16) & 0xff;
+      array[offset + 2] = (value >> 8) & 0xff;
+      array[offset + 3] = value & 0xff;
     }
   }
 
@@ -105,10 +130,10 @@ function DebuggerClient(ipAddr)
     var baseLength = baseArray.byteLength;
     var nextLength = nextArray.byteLength - 1;
 
-    var result = new Uint8Array(baseArray.byteLength + nextArray.byteLength);
-    result.set(nextArray, baseArray.byteLength - 1);
+    var result = new Uint8Array(baseLength + nextLength);
+    result.set(nextArray, baseLength - 1);
 
-    /* This set overwrites the opcode. */
+    /* This set operation overwrites the opcode. */
     result.set(baseArray);
 
     return result;
@@ -149,6 +174,62 @@ function DebuggerClient(ipAddr)
       }
 
       result += String.fromCharCode(chr);
+    }
+
+    return result;
+  }
+
+  function stringToCesu8(string)
+  {
+    assert(string != "");
+
+    var length = string.length;
+    var byteLength = length;
+
+    for (var i = 0; i < length; i++)
+    {
+      var chr = string.charCodeAt(i);
+
+      if (chr >= 0x7ff)
+      {
+        byteLength ++;
+      }
+
+      if (chr >= 0x7f)
+      {
+        byteLength++;
+      }
+    }
+
+    var result = new Uint8Array(byteLength + 1 + 4);
+
+    result[0] = JERRY_DEBUGGER_EVAL;
+
+    setUint32(result, 1, byteLength);
+
+    var offset = 5;
+
+    for (var i = 0; i < length; i++)
+    {
+      var chr = string.charCodeAt(i);
+
+      if (chr >= 0x7ff)
+      {
+        result[offset] = 0xe0 | (chr >> 12);
+        result[offset + 1] = 0x80 | ((chr >> 6) & 0x3f);
+        result[offset + 2] = 0x80 | (chr & 0x3f);
+        offset += 3;
+      }
+      else if (chr >= 0x7f)
+      {
+        result[offset] = 0xc0 | (chr >> 6);
+        result[offset + 1] = 0x80 | (chr & 0x3f);
+      }
+      else
+      {
+        result[offset] = chr;
+        offset++;
+      }
     }
 
     return result;
@@ -373,21 +454,7 @@ function DebuggerClient(ipAddr)
         continue;
       }
 
-      if (littleEndian)
-      {
-        message[offset] = value & 0xff;
-        message[offset + 1] = (value >> 8) & 0xff;
-        message[offset + 2] = (value >> 16) & 0xff;
-        message[offset + 3] = (value >> 24) & 0xff;
-      }
-      else
-      {
-        message[offset] = (value >> 24) & 0xff;
-        message[offset + 1] = (value >> 16) & 0xff;
-        message[offset + 2] = (value >> 8) & 0xff;
-        message[offset + 3] = value & 0xff;
-      }
-
+      setUint32(message, offset, value);
       offset += 4;
     }
 
@@ -671,6 +738,30 @@ function DebuggerClient(ipAddr)
         return;
       }
 
+      case JERRY_DEBUGGER_EVAL_RESULT:
+      case JERRY_DEBUGGER_EVAL_RESULT_END:
+      case JERRY_DEBUGGER_EVAL_ERROR:
+      case JERRY_DEBUGGER_EVAL_ERROR_END:
+      {
+        evalResult = concatUint8Arrays(evalResult, message);
+
+        if (message[0] == JERRY_DEBUGGER_EVAL_RESULT_END)
+        {
+          appendLog(cesu8ToString(evalResult));
+          evalResult = null;
+          return;
+        }
+
+        if (message[0] == JERRY_DEBUGGER_EVAL_ERROR_END)
+        {
+          appendLog("Uncaught exception: " + cesu8ToString(evalResult));
+          evalResult = null;
+          return;
+        }
+
+        return;
+      }
+
       default:
       {
         abortConnection("unexpected message.");
@@ -775,6 +866,34 @@ function DebuggerClient(ipAddr)
     }
   }
 
+  this.sendEval = function(str)
+  {
+    if (str == "")
+    {
+      return;
+    }
+
+    var array = stringToCesu8(str);
+    var byteLength = array.byteLength;
+
+    if (byteLength <= maxMessageSize)
+    {
+      socket.send(array);
+      return;
+    }
+
+    socket.send(array.slice(0, maxMessageSize));
+
+    var offset = maxMessageSize - 1;
+
+    while (offset < byteLength)
+    {
+      array[offset] = JERRY_DEBUGGER_EVAL_PART;
+      socket.send(array.slice(offset, offset + maxMessageSize));
+      offset += maxMessageSize - 1;
+    }
+  }
+
   this.dump = function()
   {
     for (var i in functions)
@@ -837,6 +956,7 @@ function debuggerCommand(event)
               "  continue|c - continue execution\n" +
               "  step|s - step-in execution\n" +
               "  next|n - connect to server\n" +
+              "  eval|e - evaluate expression\n" +
               "  backtrace|bt <max-depth> - get backtrace\n" +
               "  dump - dump all breakpoint data");
 
@@ -905,6 +1025,11 @@ function debuggerCommand(event)
       debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_NEXT ]);
       break;
 
+    case "e":
+    case "eval":
+      debuggerObj.sendEval(args[2]);
+      break;
+
     case "bt":
     case "backtrace":
       max_depth = 0;
@@ -937,6 +1062,7 @@ function debuggerCommand(event)
 
     default:
       appendLog("Unknown command: " + args[1]);
+      break;
   }
 
   commandBox.value = "";

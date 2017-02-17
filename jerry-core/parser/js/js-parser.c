@@ -2049,6 +2049,10 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
   {
+    /* This option has a high memory and performance costs,
+     * but it is necessary for executing eval operations by the debugger. */
+    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
+
     if (context_p->line != context_p->last_breakpoint_line)
     {
       parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
@@ -2074,7 +2078,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #ifdef JERRY_DEBUGGER
     if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
     {
-      jerry_debugger_send_function_name ((jerry_char_t *) context_p->lit_object.literal_p->u.char_p,
+      jerry_debugger_send_function_name (context_p->lit_object.literal_p->u.char_p,
                                          context_p->lit_object.literal_p->prop.length);
     }
 #endif /* JERRY_DEBUGGER */
@@ -2313,7 +2317,7 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
 
-  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_MAX_SIZE (parser_list_t))
+  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_list_t))
   {
     parser_send_breakpoints (context_p, type);
   }

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include "jerry-api.h"
-
 #ifdef JERRY_DEBUGGER
 
 #include <arpa/inet.h>
@@ -383,7 +381,7 @@ jerry_debugger_accept_connection ()
     return false;
   }
 
-  if (!jerry_debugger_send_configuration (JERRY_DEBUGGER_MAX_BUFFER_SIZE - sizeof (jerry_debugger_receive_header_t)))
+  if (!jerry_debugger_send_configuration (JERRY_DEBUGGER_MAX_RECEIVE_SIZE))
   {
     return false;
   }
@@ -432,6 +430,9 @@ jerry_debugger_send (size_t data_size) /**< data size */
   return jerry_debugger_send_tcp (JERRY_CONTEXT (debugger_send_buffer), data_size);
 } /* jerry_debugger_send */
 
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MAX_RECEIVE_SIZE < 126,
+                     maximum_debug_message_receive_size_must_be_smaller_than_126);
+
 /**
  * Receive message from the client.
  *
@@ -451,6 +452,8 @@ jerry_debugger_receive (void)
 
   uint8_t *recv_buffer_p = JERRY_CONTEXT (debugger_receive_buffer);
   bool resume_exec = false;
+  uint8_t expected_message_type = 0;
+  void *message_data = NULL;
 
   while (true)
   {
@@ -468,6 +471,11 @@ jerry_debugger_receive (void)
         return true;
       }
 
+      if (expected_message_type != 0)
+      {
+        continue;
+      }
+
       return resume_exec;
     }
 
@@ -475,15 +483,16 @@ jerry_debugger_receive (void)
 
     if (JERRY_CONTEXT (debugger_receive_buffer_offset) < sizeof (jerry_debugger_receive_header_t))
     {
+      if (expected_message_type != 0)
+      {
+        continue;
+      }
+
       return resume_exec;
     }
 
-    const size_t max_packet_size = JERRY_DEBUGGER_MAX_BUFFER_SIZE - sizeof (jerry_debugger_receive_header_t);
-
-    JERRY_ASSERT (max_packet_size < 126);
-
     if ((recv_buffer_p[0] & ~JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_FIN_BIT
-        || (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) >= max_packet_size
+        || (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) > JERRY_DEBUGGER_MAX_RECEIVE_SIZE
         || !(recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_MASK_BIT))
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unsupported Websocket message.\n");
@@ -503,6 +512,11 @@ jerry_debugger_receive (void)
 
     if (JERRY_CONTEXT (debugger_receive_buffer_offset) < message_total_size)
     {
+      if (expected_message_type != 0)
+      {
+        continue;
+      }
+
       return resume_exec;
     }
 
@@ -526,9 +540,13 @@ jerry_debugger_receive (void)
       }
     }
 
+    /* The jerry_debugger_process_message function is inlined
+     * so passing these arguments is essentially free. */
     if (!jerry_debugger_process_message (recv_buffer_p + sizeof (jerry_debugger_receive_header_t),
                                          message_size,
-                                         &resume_exec))
+                                         &resume_exec,
+                                         &expected_message_type,
+                                         &message_data))
     {
       return true;
     }

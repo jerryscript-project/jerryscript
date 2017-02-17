@@ -238,7 +238,7 @@ ecma_number_get_sign_field (ecma_number_t num) /**< ecma-number */
                   fraction is filled with anything but not all zero bits,
  *         false - otherwise
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 {
   bool is_nan = (num != num);
@@ -291,7 +291,7 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
  * @return true - if sign bit of ecma-number is set
  *         false - otherwise
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));

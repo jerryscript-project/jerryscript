@@ -400,7 +400,7 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
  * @return NULL, if the required memory is 0
  *         pointer to allocated memory block, otherwise
  */
-void * __attr_hot___ __attr_always_inline___
+inline void * __attr_hot___ __attr_always_inline___
 jmem_heap_alloc_block (const size_t size)  /**< required memory size */
 {
   return jmem_heap_gc_and_alloc_block (size, false);
@@ -416,7 +416,7 @@ jmem_heap_alloc_block (const size_t size)  /**< required memory size */
  *         also NULL, if the allocation has failed
  *         pointer to the allocated memory block, otherwise
  */
-void * __attr_hot___ __attr_always_inline___
+inline void * __attr_hot___ __attr_always_inline___
 jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory size */
 {
   return jmem_heap_gc_and_alloc_block (size, true);

@@ -1195,7 +1195,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
  * It is the caller's responsibility to make sure that the string fits in the buffer.
  * Check if the size of the string is equal with the size of the buffer.
  */
-void __attr_always_inline___
+inline void __attr_always_inline___
 ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                            lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                        * (can be NULL if buffer_size == 0) */
@@ -1575,7 +1575,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
  * @return true - if strings are equal;
  *         false - otherwise.
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
                            const ecma_string_t *string2_p) /* ecma-string */
 {

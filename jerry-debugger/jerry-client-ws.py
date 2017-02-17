@@ -316,6 +316,8 @@ class JerryDebugger(object):
 
         if len_result > len_expected:
             result = result[len_expected:]
+        else:
+            result = b""
 
         len_expected = 6
         # Network configurations, which has the following struct:

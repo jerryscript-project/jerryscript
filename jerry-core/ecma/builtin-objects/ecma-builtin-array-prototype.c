@@ -783,10 +783,10 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
     if (ecma_is_value_empty (ret_value))
     {
       len--;
-      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (len);
+      ecma_string_t *len_str_p = ecma_new_ecma_string_from_uint32 (len);
 
       /* 8. */
-      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, index_str_p, true), ret_value);
+      ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, len_str_p, true), ret_value);
 
       /* 9. */
       ECMA_TRY_CATCH (set_length_value,
@@ -797,7 +797,7 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
 
       ECMA_FINALIZE (set_length_value);
       ECMA_FINALIZE (del_value);
-      ecma_deref_ecma_string (index_str_p);
+      ecma_deref_ecma_string (len_str_p);
     }
 
     ECMA_FINALIZE (first_value);
@@ -1426,11 +1426,9 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
   }
 
   /* 8-9. */
-  uint32_t k;
+  uint32_t k = 0;
 
-  for (uint32_t del_item_idx, k = 0;
-       k < delete_count && ecma_is_value_empty (ret_value);
-       k++)
+  for (uint32_t del_item_idx; k < delete_count && ecma_is_value_empty (ret_value); k++)
   {
     /* 9.a */
     del_item_idx = k + start;

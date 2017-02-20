@@ -998,7 +998,6 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
           }
 
           ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-          ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
 
           ECMA_TRY_CATCH (submatch_value,
                           ecma_op_object_get (match_object_p, index_string_p),
@@ -1863,18 +1862,18 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
                 ecma_string_t *idx_str_p = ecma_new_ecma_string_from_uint32 (i);
                 ecma_string_t *new_array_idx_str_p = ecma_new_ecma_string_from_uint32 (new_array_length);
 
-                ecma_value_t match_comp_value = ecma_op_object_get (match_array_obj_p, idx_str_p);
+                match_comp_value = ecma_op_object_get (match_array_obj_p, idx_str_p);
 
                 JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (match_comp_value));
 
                 /* 13.c.iii.7.b */
-                ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
-                                                                      new_array_idx_str_p,
-                                                                      match_comp_value,
-                                                                      true,
-                                                                      true,
-                                                                      true,
-                                                                      false);
+                put_comp = ecma_builtin_helper_def_prop (new_array_p,
+                                                         new_array_idx_str_p,
+                                                         match_comp_value,
+                                                         true,
+                                                         true,
+                                                         true,
+                                                         false);
 
                 JERRY_ASSERT (ecma_is_value_true (put_comp));
 

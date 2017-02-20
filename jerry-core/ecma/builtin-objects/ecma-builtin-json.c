@@ -934,11 +934,10 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
                                    array_length,
                                    ret_value);
 
-      uint32_t array_length = ecma_number_to_uint32 (array_length_num);
       uint32_t index = 0;
 
       /* 4.b.ii */
-      while ((index < array_length) && ecma_is_value_empty (ret_value))
+      while ((index < ecma_number_to_uint32 (array_length_num)) && ecma_is_value_empty (ret_value))
       {
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
 
@@ -1060,23 +1059,24 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
 
         /* 6.a */
         int32_t num_of_spaces = ecma_number_to_int32 (array_length_num);
-        int32_t space = (num_of_spaces > 10) ? 10 : num_of_spaces;
+        num_of_spaces = (num_of_spaces > 10) ? 10 : num_of_spaces;
 
         /* 6.b */
-        if (space < 1)
+        if (num_of_spaces < 1)
         {
           context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
         }
         else
         {
-          JMEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
+          JMEM_DEFINE_LOCAL_ARRAY (space_buff, num_of_spaces, char);
 
-          for (int32_t i = 0; i < space; i++)
+          for (int32_t i = 0; i < num_of_spaces; i++)
           {
             space_buff[i] = LIT_CHAR_SP;
           }
 
-          context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
+          context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff,
+                                                              (lit_utf8_size_t) num_of_spaces);
 
           JMEM_FINALIZE_LOCAL_ARRAY (space_buff);
         }
@@ -1738,11 +1738,9 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
                                array_length,
                                ret_value);
 
-  uint32_t array_length = ecma_number_to_uint32 (array_length_num);
-
   /* 7. - 8. */
   for (uint32_t index = 0;
-       index < array_length && ecma_is_value_empty (ret_value);
+       index < ecma_number_to_uint32 (array_length_num) && ecma_is_value_empty (ret_value);
        index++)
   {
 

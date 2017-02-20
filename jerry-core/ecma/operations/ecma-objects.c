@@ -864,9 +864,9 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
     if (create_new_property
         && ecma_get_object_extensible (object_p))
     {
-      const ecma_object_type_t type = ecma_get_object_type (object_p);
+      const ecma_object_type_t obj_type = ecma_get_object_type (object_p);
 
-      if (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
+      if (obj_type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -884,7 +884,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
       uint32_t index = ecma_string_get_array_index (property_name_p);
 
-      if (type == ECMA_OBJECT_TYPE_ARRAY
+      if (obj_type == ECMA_OBJECT_TYPE_ARRAY
           && index != ECMA_STRING_NOT_ARRAY_INDEX)
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1614,7 +1614,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         /* name with same hash already occured */
         bool is_equal_found = false;
 
-        ecma_collection_iterator_t iter;
         ecma_collection_iterator_init (&iter, ret_p);
 
         while (ecma_collection_iterator_next (&iter))

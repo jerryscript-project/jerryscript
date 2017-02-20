@@ -75,7 +75,7 @@ test_heap_give_some_memory_back (jmem_free_unused_memory_severity_t severity)
 } /* test_heap_give_some_memory_back */
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

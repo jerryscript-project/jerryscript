@@ -68,7 +68,7 @@ test_setjmp_longjmp (volatile int depth)
 } /* test_setjmp_longjmp */
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

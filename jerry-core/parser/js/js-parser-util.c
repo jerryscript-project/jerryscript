@@ -192,7 +192,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
       {
         literal_index = context_p->last_cbc.third_literal_index;
 
-        lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
+        literal_p = PARSER_GET_LITERAL (literal_index);
         JERRY_DEBUG_MSG (" idx:%d->", literal_index);
         util_print_literal (literal_p);
       }
@@ -640,7 +640,7 @@ parser_set_continues_to_current_position (parser_context_t *context_p, /**< cont
   }
 } /* parser_set_continues_to_current_position */
 
-#if JERRY_ENABLE_ERROR_MESSAGES
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
 /**
  * Returns with the string representation of the error
  */

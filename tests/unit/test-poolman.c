@@ -39,7 +39,7 @@ uint8_t *ptrs[TEST_MAX_SUB_ITERS];
 uint8_t data[TEST_MAX_SUB_ITERS][TEST_CHUNK_SIZE];
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

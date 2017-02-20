@@ -119,10 +119,10 @@ JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
 static void jmem_heap_stat_init (void);
 static void jmem_heap_stat_alloc (size_t num);
 static void jmem_heap_stat_free (size_t num);
-static void jmem_heap_stat_skip ();
-static void jmem_heap_stat_nonskip ();
-static void jmem_heap_stat_alloc_iter ();
-static void jmem_heap_stat_free_iter ();
+static void jmem_heap_stat_skip (void);
+static void jmem_heap_stat_nonskip (void);
+static void jmem_heap_stat_alloc_iter (void);
+static void jmem_heap_stat_free_iter (void);
 
 #  define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
 #  define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
@@ -465,7 +465,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   /* Find position of region in the list. */
   while (prev_p->next_offset < block_offset)
   {
-    jmem_heap_free_t *const next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
+    next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
     JERRY_ASSERT (jmem_is_heap_pointer (next_p));
 
     VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
@@ -619,7 +619,7 @@ jmem_heap_stats_print (void)
  * Initalize heap memory usage statistics account structure
  */
 static void
-jmem_heap_stat_init ()
+jmem_heap_stat_init (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).size = JMEM_HEAP_AREA_SIZE;
 } /* jmem_heap_stat_init */
@@ -678,7 +678,7 @@ jmem_heap_stat_free (size_t size) /**< Size of freed block */
  * Counts number of skip-aheads during insertion of free block
  */
 static void
-jmem_heap_stat_skip ()
+jmem_heap_stat_skip (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).skip_count++;
 } /* jmem_heap_stat_skip  */
@@ -687,7 +687,7 @@ jmem_heap_stat_skip ()
  * Counts number of times we could not skip ahead during free block insertion
  */
 static void
-jmem_heap_stat_nonskip ()
+jmem_heap_stat_nonskip (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).nonskip_count++;
 } /* jmem_heap_stat_nonskip */
@@ -696,7 +696,7 @@ jmem_heap_stat_nonskip ()
  * Count number of iterations required for allocations
  */
 static void
-jmem_heap_stat_alloc_iter ()
+jmem_heap_stat_alloc_iter (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).alloc_iter_count++;
 } /* jmem_heap_stat_alloc_iter */
@@ -705,7 +705,7 @@ jmem_heap_stat_alloc_iter ()
  * Counts number of iterations required for inserting free blocks
  */
 static void
-jmem_heap_stat_free_iter ()
+jmem_heap_stat_free_iter (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).free_iter_count++;
 } /* jmem_heap_stat_free_iter */

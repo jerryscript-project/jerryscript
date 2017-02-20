@@ -387,7 +387,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
                                                        : RE_OP_CHAR_CLASS);
         uint32_t offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 
-        ECMA_TRY_CATCH (empty,
+        ECMA_TRY_CATCH (empty_value,
                         re_parse_char_class (re_ctx_p->parser_ctx_p,
                                              re_append_char_class,
                                              re_ctx_p,
@@ -400,7 +400,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
           re_insert_simple_iterator (re_ctx_p, new_atom_start_offset);
         }
 
-        ECMA_FINALIZE (empty);
+        ECMA_FINALIZE (empty_value);
 
         break;
       }

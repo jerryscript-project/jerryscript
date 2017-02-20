@@ -319,11 +319,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
       else if (date_str_curr_p < date_str_end_p
                && (*date_str_curr_p == '+' || *date_str_curr_p == '-'))
       {
-        ecma_length_t remaining_length;
-        remaining_length = lit_utf8_string_length (date_str_curr_p,
-                                                   (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) - 1;
+        ecma_length_t remaining_date_length;
+        remaining_date_length = lit_utf8_string_length (date_str_curr_p,
+                                                        (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) - 1;
 
-        if (remaining_length == 5)
+        if (remaining_date_length == 5)
         {
           bool is_negative = false;
 

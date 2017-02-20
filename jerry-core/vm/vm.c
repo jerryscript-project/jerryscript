@@ -753,9 +753,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             case VM_OC_GET_LITERAL_LITERAL:
             {
-              uint16_t literal_index;
-              READ_LITERAL_INDEX (literal_index);
-              READ_LITERAL (literal_index, right_value);
+              uint16_t second_literal_index;
+              READ_LITERAL_INDEX (second_literal_index);
+              READ_LITERAL (second_literal_index, right_value);
               break;
             }
             case VM_OC_GET_STACK_LITERAL:

@@ -65,9 +65,12 @@ typedef struct
 static void
 jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-  JERRY_CONTEXT (jerry_init_flags) &= (uint32_t) ~JERRY_INIT_DEBUGGER;
+  uint8_t debugger_flags = JERRY_CONTEXT (debugger_flags);
+  debugger_flags = (uint8_t) (debugger_flags & ~(JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_VM_STOP));
+  debugger_flags = (uint8_t) (debugger_flags | JERRY_DEBUGGER_VM_IGNORE);
+  JERRY_CONTEXT (debugger_flags) = debugger_flags;
 
   if (log_error)
   {
@@ -92,7 +95,7 @@ static bool
 jerry_debugger_send_tcp (const uint8_t *data_p, /**< data pointer */
                          size_t data_size) /**< data size */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   do
   {
@@ -314,9 +317,6 @@ jerry_debugger_accept_connection ()
 
   JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
 
-  /* Disable debugger flag temporarily. */
-  JERRY_CONTEXT (jerry_init_flags) &= (uint32_t) ~JERRY_INIT_DEBUGGER;
-
   addr.sin_family = AF_INET;
   addr.sin_port = htons (JERRY_DEBUGGER_PORT);
   addr.sin_addr.s_addr = INADDR_ANY;
@@ -363,8 +363,7 @@ jerry_debugger_accept_connection ()
 
   close (server_socket);
 
-  /* Enable debugger flag again. */
-  JERRY_CONTEXT (jerry_init_flags) |= JERRY_INIT_DEBUGGER;
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CONNECTED);
 
   bool is_handshake_ok = false;
 
@@ -403,7 +402,7 @@ jerry_debugger_accept_connection ()
 
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
-  JERRY_CONTEXT (debugger_stop_exec) = true;
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
   JERRY_CONTEXT (debugger_stop_context) = NULL;
 
   return true;
@@ -438,7 +437,7 @@ JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MAX_RECEIVE_SIZE < 126,
  *
  * Note:
  *   If the function returns with true, the value of
- *   JERRY_CONTEXT (debugger_stop_exec) should be ignored.
+ *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
  *
  * @return true - if execution should be resumed,
  *         false - otherwise
@@ -446,7 +445,7 @@ JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MAX_RECEIVE_SIZE < 126,
 bool
 jerry_debugger_receive (void)
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
 
@@ -458,30 +457,27 @@ jerry_debugger_receive (void)
   while (true)
   {
     uint32_t offset = JERRY_CONTEXT (debugger_receive_buffer_offset);
+
     ssize_t byte_recv = recv (JERRY_CONTEXT (debugger_connection),
                               recv_buffer_p + offset,
                               JERRY_DEBUGGER_MAX_BUFFER_SIZE - offset,
                               0);
 
-    if (byte_recv <= 0)
+    if (byte_recv < 0)
     {
-      if (byte_recv < 0 && errno != EWOULDBLOCK)
+      if (errno != EWOULDBLOCK)
       {
         jerry_debugger_close_connection_tcp (true);
         return true;
       }
 
-      if (expected_message_type != 0)
-      {
-        continue;
-      }
-
-      return resume_exec;
+      byte_recv = 0;
     }
 
-    JERRY_CONTEXT (debugger_receive_buffer_offset) += (uint32_t) byte_recv;
+    offset += (uint32_t) byte_recv;
+    JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) offset;
 
-    if (JERRY_CONTEXT (debugger_receive_buffer_offset) < sizeof (jerry_debugger_receive_header_t))
+    if (offset < sizeof (jerry_debugger_receive_header_t))
     {
       if (expected_message_type != 0)
       {
@@ -510,7 +506,7 @@ jerry_debugger_receive (void)
     uint32_t message_size = (uint32_t) (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK);
     uint32_t message_total_size = (uint32_t) (message_size + sizeof (jerry_debugger_receive_header_t));
 
-    if (JERRY_CONTEXT (debugger_receive_buffer_offset) < message_total_size)
+    if (offset < message_total_size)
     {
       if (expected_message_type != 0)
       {
@@ -551,14 +547,14 @@ jerry_debugger_receive (void)
       return true;
     }
 
-    if (message_total_size < JERRY_CONTEXT (debugger_receive_buffer_offset))
+    if (message_total_size < offset)
     {
       memcpy (recv_buffer_p,
               recv_buffer_p + message_total_size,
-              JERRY_CONTEXT (debugger_receive_buffer_offset) - message_total_size);
+              offset - message_total_size);
     }
 
-    JERRY_CONTEXT (debugger_receive_buffer_offset) -= message_total_size;
+    JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) (offset - message_total_size);
   }
 } /* jerry_debugger_receive */
 

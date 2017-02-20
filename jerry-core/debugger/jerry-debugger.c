@@ -129,11 +129,12 @@ static bool
 jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated string */
                           size_t eval_string_size) /**< evaluated string size */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
 
-  JERRY_CONTEXT (jerry_init_flags) &= (uint32_t) ~JERRY_INIT_DEBUGGER;
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_IGNORE);
   ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p, eval_string_size, true, false);
-  JERRY_CONTEXT (jerry_init_flags) |= (uint32_t) JERRY_INIT_DEBUGGER;
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_VM_IGNORE);
 
   if (!ECMA_IS_VALUE_ERROR (result))
   {
@@ -338,7 +339,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
 
-      JERRY_CONTEXT (debugger_stop_exec) = true;
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
       *resume_exec_p = false;
       return true;
@@ -348,9 +349,8 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
 
-      JERRY_CONTEXT (debugger_stop_exec) = false;
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
-
       *resume_exec_p = true;
       return true;
     }
@@ -359,7 +359,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
 
-      JERRY_CONTEXT (debugger_stop_exec) = true;
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
       *resume_exec_p = true;
       return true;
@@ -369,7 +369,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
 
-      JERRY_CONTEXT (debugger_stop_exec) = true;
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = JERRY_CONTEXT (vm_top_context_p);
       *resume_exec_p = true;
       return true;
@@ -444,7 +444,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
 void
 jerry_debugger_breakpoint_hit (void)
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_breakpoint_hit_t, breakpoint_hit_p);
 
@@ -479,7 +479,7 @@ jerry_debugger_breakpoint_hit (void)
 void
 jerry_debugger_send_type (jerry_debugger_header_type_t type) /**< message type */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
 
@@ -552,7 +552,7 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
                             const uint8_t *string_p, /**< string data */
                             size_t string_length) /**< length of string */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   const size_t max_fragment_len = JERRY_DEBUGGER_SEND_MAX (uint8_t);
 
@@ -590,7 +590,7 @@ void
 jerry_debugger_send_function_name (const uint8_t *function_name_p, /**< function name */
                                    size_t function_name_length) /**< length of function name */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME, function_name_p, function_name_length);
 } /* jerry_debugger_send_function_name */
@@ -605,7 +605,7 @@ bool
 jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, /**< message type */
                                  ecma_compiled_code_t *compiled_code_p) /**< byte code pointer */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_byte_code_cp_t, byte_code_cp_p);
 

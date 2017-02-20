@@ -175,7 +175,7 @@ jerry_cleanup (void)
   ecma_finalize ();
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_close_connection ();
   }
@@ -329,7 +329,7 @@ jerry_parse_named_resource (const jerry_char_t *name_p, /**< name (usually a fil
                             bool is_strict) /**< strict mode */
 {
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_RESOURCE_NAME, name_p, name_length);
   }

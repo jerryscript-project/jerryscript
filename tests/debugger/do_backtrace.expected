@@ -1,4 +1,4 @@
-Address setup: localhost:5001
+Connecting to: localhost:5001
 Stopped at tests/debugger/do_backtrace.js:15
 (jerry-debugger) Breakpoint 1 at tests/debugger/do_backtrace.js:32 (in f4)
 (jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_backtrace.js:32 (in f4)

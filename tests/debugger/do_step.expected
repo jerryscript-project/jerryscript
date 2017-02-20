@@ -1,4 +1,4 @@
-Address setup: localhost:5001
+Connecting to: localhost:5001
 Stopped at tests/debugger/do_step.js:25
 (jerry-debugger) Breakpoint 1 at tests/debugger/do_step.js:25
 (jerry-debugger) Stopped at tests/debugger/do_step.js:15 (in f1)

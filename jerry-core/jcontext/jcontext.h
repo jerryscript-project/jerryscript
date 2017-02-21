@@ -83,13 +83,13 @@ typedef struct
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
 #ifdef JERRY_DEBUGGER
-  uint32_t debugger_message_delay; /**< call receive message when reaches zero */
+  uint16_t debugger_message_delay; /**< call receive message when reaches zero */
+  uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */
   jmem_cpointer_t debugger_byte_code_free_head; /**< head of byte code free linked list */
-  uint32_t debugger_receive_buffer_offset; /**< receive buffer offset */
   int debugger_connection; /**< hold the file descriptor for socket communication */
-  bool debugger_stop_exec; /**< stop at the next breakpoint regardless it is enabled */
+  uint8_t debugger_flags; /**< debugger flags */
   vm_frame_ctx_t *debugger_stop_context; /**< stop only if the current context is equal to this context */
 #endif /* JERRY_DEBUGGER */
 

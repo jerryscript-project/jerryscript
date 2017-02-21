@@ -2308,10 +2308,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_BREAKPOINT_ENABLED:
         {
 #ifdef JERRY_DEBUGGER
-          if (!(JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER))
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
           {
             continue;
           }
+
+          JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
           frame_ctx_p->byte_code_p = byte_code_start_p;
 
@@ -2322,14 +2324,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_BREAKPOINT_DISABLED:
         {
 #ifdef JERRY_DEBUGGER
-          if (!(JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER))
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
           {
             continue;
           }
 
+          JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
           frame_ctx_p->byte_code_p = byte_code_start_p;
 
-          if (JERRY_CONTEXT (debugger_stop_exec)
+          if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
               && (JERRY_CONTEXT (debugger_stop_context) == NULL
                   || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
           {
@@ -2350,7 +2354,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             continue;
           }
 
-          if (JERRY_CONTEXT (debugger_stop_exec))
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
           {
             JERRY_ASSERT (JERRY_CONTEXT (debugger_stop_context) == NULL);
             jerry_debugger_breakpoint_hit ();
@@ -2663,7 +2667,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   if (JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p))
   {
     /* The engine will stop when the next breakpoint is reached. */
-    JERRY_ASSERT (JERRY_CONTEXT (debugger_stop_exec));
+    JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
 #endif /* JERRY_DEBUGGER */

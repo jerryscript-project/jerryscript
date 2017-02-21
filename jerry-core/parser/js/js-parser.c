@@ -1273,7 +1273,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->literal_count <= PARSER_MAXIMUM_NUMBER_OF_LITERALS);
 
 #ifdef JERRY_DEBUGGER
-  if ((JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
@@ -1687,7 +1687,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #ifdef JERRY_DEBUGGER
-  if ((JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST);
@@ -1798,7 +1798,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_function_cp (JERRY_DEBUGGER_BYTE_CODE_CP, compiled_code_p);
   }
@@ -1988,7 +1988,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
 
 #ifdef JERRY_DEBUGGER
-  if ((JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
@@ -2047,7 +2047,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     /* This option has a high memory and performance costs,
      * but it is necessary for executing eval operations by the debugger. */
@@ -2076,7 +2076,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
                                     LEXER_IDENT_LITERAL);
 
 #ifdef JERRY_DEBUGGER
-    if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+    if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
       jerry_debugger_send_function_name (context_p->lit_object.literal_p->u.char_p,
                                          context_p->lit_object.literal_p->prop.length);
@@ -2101,7 +2101,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   }
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_type (JERRY_DEBUGGER_PARSE_FUNCTION);
   }
@@ -2315,7 +2315,7 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
                                jerry_debugger_header_type_t type, /**< message type */
                                uint32_t value) /**< line or offset of the breakpoint */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_list_t))
   {
@@ -2333,7 +2333,7 @@ void
 parser_send_breakpoints (parser_context_t *context_p, /**< context */
                          jerry_debugger_header_type_t type) /**< message type */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
   JERRY_ASSERT (context_p->breakpoint_info_count > 0);
 
   jerry_debugger_send_data (type,
@@ -2376,7 +2376,7 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
   if (!*bytecode_data_p)
   {
 #ifdef JERRY_DEBUGGER
-    if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER)
+    if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
       jerry_debugger_send_type (JERRY_DEBUGGER_PARSE_ERROR);
     }

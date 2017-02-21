@@ -44,6 +44,17 @@
  ((JERRY_DEBUGGER_MAX_SEND_SIZE - sizeof (jerry_debugger_send_header_t) - 1) / sizeof (type))
 
 /**
+ * Debugger option flags.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_CONNECTED = 1u << 0, /**< debugger is connected */
+  JERRY_DEBUGGER_VM_STOP = 1u << 1, /**< stop at the next breakpoint
+                                     *   regardless it is enabled */
+  JERRY_DEBUGGER_VM_IGNORE = 1u << 2, /**< ignore all breakpoints */
+} jerry_debugger_flags_t;
+
+/**
  * Types for the package.
  */
 typedef enum

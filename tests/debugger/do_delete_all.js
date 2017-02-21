@@ -12,22 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-print("break test");
+var str = "Delete all breakpoints";
+var patt = new RegExp("e");
+var res = patt.test(str);
+var pi = Math.PI;
 
-print ("var cat");
-var cat = 'cat';
-
-function test()
-{
-	print("function test");
-	foo();
-	var a = 3;
-	var b = 5;
-	var c = a + b;
-	global_var = c;
-	return c;
+function delete_test(x,y) {
+	var sum = x + y;
 }
-
-var
-	x =
-	  1;

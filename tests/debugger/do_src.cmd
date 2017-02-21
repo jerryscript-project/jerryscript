@@ -1,13 +1,10 @@
 b f
 n
-n
+next
 n
 s
 src
 n
-b f
-c
-src
-c
+step
 src
 c

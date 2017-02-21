@@ -1,0 +1,11 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_delete_all.js:15
+(jerry-debugger) Breakpoint 1 at tests/debugger/do_delete_all.js:17
+(jerry-debugger) Breakpoint 2 at tests/debugger/do_delete_all.js:18
+(jerry-debugger) Breakpoint 3 at tests/debugger/do_delete_all.js:21 (in delete_test)
+(jerry-debugger) 1: tests/debugger/do_delete_all.js:17
+2: tests/debugger/do_delete_all.js:18
+3: tests/debugger/do_delete_all.js:21 (in delete_test)
+(jerry-debugger) (jerry-debugger) Stopped at tests/debugger/do_delete_all.js:16
+(jerry-debugger) Press enter to stop JavaScript execution.
+Connection closed.

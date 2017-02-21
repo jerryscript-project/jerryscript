@@ -47,7 +47,7 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
   };
 
-  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+  JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
 
   return lit_magic_strings[id];
 } /* lit_get_magic_string_utf8 */
@@ -70,7 +70,7 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
   };
 
-  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+  JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
 
   return lit_magic_string_sizes[id];
 } /* lit_get_magic_string_size */
@@ -90,7 +90,7 @@ lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string s
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id) \
     id,
 #include "lit-magic-strings.inc.h"
-    LIT_MAGIC_STRING__COUNT
+    LIT_NON_INTERNAL_MAGIC_STRING__COUNT
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
   };
@@ -189,7 +189,7 @@ lit_magic_string_id_t
 lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
                           lit_utf8_size_t string_size) /**< string size in bytes */
 {
-  if (string_size > lit_get_magic_string_size (LIT_MAGIC_STRING__COUNT - 1))
+  if (string_size > lit_get_magic_string_size (LIT_NON_INTERNAL_MAGIC_STRING__COUNT - 1))
   {
     return LIT_MAGIC_STRING__COUNT;
   }
@@ -234,7 +234,7 @@ lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first utf-
 {
   lit_utf8_size_t total_string_size = string1_size + string2_size;
 
-  if (total_string_size > lit_get_magic_string_size (LIT_MAGIC_STRING__COUNT - 1))
+  if (total_string_size > lit_get_magic_string_size (LIT_NON_INTERNAL_MAGIC_STRING__COUNT - 1))
   {
     return LIT_MAGIC_STRING__COUNT;
   }

@@ -34,6 +34,12 @@ typedef enum
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+  LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**< number of non-internal magic strings */
+
+  LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE = LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**< native handle associated
+                                                                                   *   with an object */
+  LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK, /**< object's native free callback */
+
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;
 

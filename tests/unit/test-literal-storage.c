@@ -85,7 +85,7 @@ main ()
       }
       else if (type == 1)
       {
-        lit_magic_string_id_t msi = (lit_magic_string_id_t) (rand () % LIT_MAGIC_STRING__COUNT);
+        lit_magic_string_id_t msi = (lit_magic_string_id_t) (rand () % LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
         ptrs[j] = lit_get_magic_string_utf8 (msi);
         TEST_ASSERT (ptrs[j]);
         lengths[j] = (lit_utf8_size_t) lit_zt_utf8_string_size (ptrs[j]);

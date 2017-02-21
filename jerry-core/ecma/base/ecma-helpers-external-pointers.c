@@ -29,35 +29,45 @@
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
- *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
+ *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+ *        - LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK
  *
  * @return true - if property was just created with specified value,
  *         false - otherwise, if property existed before the call, it's value was updated.
  */
 bool
 ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to create property in */
-                                       ecma_internal_property_id_t id, /**< identifier of internal
-                                                                        *   property to create */
+                                       lit_magic_string_id_t id, /**< identifier of internal
+                                                                  *   property to create */
                                        ecma_external_pointer_t ptr_value) /**< value to store in the property */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
-                || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
+  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+                || id == LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK);
 
-  ecma_value_t *prop_p = ecma_find_internal_property (obj_p, id);
-  bool is_new = (prop_p == NULL);
+  ecma_string_t name;
+  ecma_init_ecma_magic_string (&name, id);
+
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, &name);
+  bool is_new = (property_p == NULL);
+  ecma_property_value_t *value_p;
 
   if (is_new)
   {
-    prop_p = ecma_create_internal_property (obj_p, id);
+    value_p = ecma_create_named_data_property (obj_p, &name, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+  }
+  else
+  {
+    value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
   }
 
-  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (ECMA_PROPERTY_VALUE_PTR (prop_p)->value),
+  JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
+
+  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (value_p->value),
                        size_of_internal_property_value_must_be_greater_than_or_equal_to_4_bytes);
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-  *prop_p = (ecma_value_t) ptr_value;
+  value_p->value = (ecma_value_t) ptr_value;
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
@@ -67,11 +77,11 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
   {
     handler_p = ecma_alloc_external_pointer ();
 
-    ECMA_SET_NON_NULL_POINTER (*prop_p, handler_p);
+    ECMA_SET_NON_NULL_POINTER (value_p->value, handler_p);
   }
   else
   {
-    handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, *prop_p);
+    handler_p = ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, value_p->value);
   }
 
   *handler_p = ptr_value;
@@ -86,37 +96,44 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
- *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
+ *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+ *        - LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK
  *
  * @return true - if property exists and it's value is returned through out_pointer_p,
  *         false - otherwise (value returned through out_pointer_p is NULL).
  */
 bool
 ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
-                                 ecma_internal_property_id_t id, /**< identifier of internal property
-                                                                  *   to get value from */
+                                 lit_magic_string_id_t id, /**< identifier of internal property
+                                                            *   to get value from */
                                  ecma_external_pointer_t *out_pointer_p) /**< [out] value of the external pointer */
 {
-  JERRY_ASSERT (id == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
-                || id == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
+  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+                || id == LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK);
 
-  ecma_value_t *prop_p = ecma_find_internal_property (obj_p, id);
+  ecma_string_t name;
+  ecma_init_ecma_magic_string (&name, id);
 
-  if (prop_p == NULL)
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, &name);
+
+  JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
+
+  if (property_p == NULL)
   {
     *out_pointer_p = (ecma_external_pointer_t) NULL;
 
     return false;
   }
 
+  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-  *out_pointer_p = *prop_p;
+  *out_pointer_p = value_p->value;
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
-  *out_pointer_p = *ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, *prop_p);
+  *out_pointer_p = *ECMA_GET_NON_NULL_POINTER (ecma_external_pointer_t, value_p->value);
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
@@ -128,18 +145,16 @@ ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get proper
  *
  * Note:
  *      property identifier should be one of the following:
- *        - ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE;
- *        - ECMA_INTERNAL_PROPERTY_FREE_CALLBACK.
+ *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+ *        - LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK
  */
 void
 ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal property */
 {
-  JERRY_ASSERT (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE
-                || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (prop_p) == ECMA_INTERNAL_PROPERTY_FREE_CALLBACK);
-
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
   /* no additional memory was allocated for the pointer storage */
+  JERRY_UNUSED (prop_p);
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
@@ -149,7 +164,6 @@ ecma_free_external_pointer_in_property (ecma_property_t *prop_p) /**< internal p
   ecma_dealloc_external_pointer (handler_p);
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-
 } /* ecma_free_external_pointer_in_property */
 
 /**

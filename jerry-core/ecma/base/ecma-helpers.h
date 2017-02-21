@@ -202,6 +202,7 @@ void ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byt
 const lit_utf8_byte_t *ecma_string_raw_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, bool *is_ascii_p);
 void ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, uint32_t uint32_number);
 void ecma_init_ecma_length_string (ecma_string_t *string_desc_p);
+void ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, lit_magic_string_id_t id);
 bool ecma_string_is_empty (const ecma_string_t *str_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);
 
@@ -298,10 +299,6 @@ ecma_property_header_t *ecma_get_property_list (const ecma_object_t *object_p) _
 ecma_object_t *ecma_get_lex_env_binding_object (const ecma_object_t *object_p) __attr_pure___;
 bool ecma_get_lex_env_provide_this (const ecma_object_t *object_p) __attr_pure___;
 
-ecma_value_t *ecma_create_internal_property (ecma_object_t *object_p, ecma_internal_property_id_t property_id);
-ecma_value_t *ecma_find_internal_property (ecma_object_t *object_p, ecma_internal_property_id_t property_id);
-ecma_value_t *ecma_get_internal_property (ecma_object_t *object_p, ecma_internal_property_id_t property_id);
-
 ecma_property_value_t *
 ecma_create_named_data_property (ecma_object_t *object_p, ecma_string_t *name_p, uint8_t prop_attributes,
                                  ecma_property_t **out_prop_p);
@@ -346,14 +343,11 @@ void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
 
 /* ecma-helpers-external-pointers.c */
-bool
-ecma_create_external_pointer_property (ecma_object_t *obj_p, ecma_internal_property_id_t id,
-                                       ecma_external_pointer_t ptr_value);
-bool
-ecma_get_external_pointer_value (ecma_object_t *obj_p, ecma_internal_property_id_t id,
-                                 ecma_external_pointer_t *out_pointer_p);
-void
-ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
+bool ecma_create_external_pointer_property (ecma_object_t *obj_p, lit_magic_string_id_t id,
+                                            ecma_external_pointer_t ptr_value);
+bool ecma_get_external_pointer_value (ecma_object_t *obj_p, lit_magic_string_id_t id,
+                                      ecma_external_pointer_t *out_pointer_p);
+void ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
 
 /* ecma-helpers-conversion.c */
 ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size);

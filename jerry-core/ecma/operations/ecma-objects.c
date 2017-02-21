@@ -1433,6 +1433,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
         {
           ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+          if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
+              && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+          {
+            /* Internal properties are never enumerated. */
+            continue;
+          }
+
           ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
                                                                   prop_pair_p->names_cp[i]);
 

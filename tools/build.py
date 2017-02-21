@@ -57,6 +57,7 @@ def get_arguments():
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build jerry command line tool (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-cmdline-minimal', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='build minimal version of the jerry command line tool (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable the jerry debugger (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-debugger-port', metavar='N', action='store', type=int, default=5001, help='add custom port number (default: %(default)s)')
     parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build and use jerry-libc (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build and use jerry-libm (%(choices)s; default: %(default)s)')
     parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable js-parser (%(choices)s; default: %(default)s)')
@@ -119,6 +120,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_PROFILE=%s' % PROFILE)
 
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
+    build_options.append('-DFEATURE_DEBUGGER_PORT=%d' % arguments.jerry_debugger_port)
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)
     build_options.append('-DFEATURE_SYSTEM_ALLOCATOR=%s' % arguments.system_allocator)

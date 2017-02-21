@@ -13,6 +13,7 @@ env:
   - OPTS="--jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
   - OPTS="--unittests"
   - OPTS="--test262"
+  - OPTS="--check-pylint"
 
 matrix:
   include:
@@ -40,6 +41,7 @@ matrix:
       env: OPTS="--jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-g,--jerry-libc=off,--static-link=off,--strip=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
   allow_failures:
     - compiler: gcc-5
+    - env: OPTS="--check-pylint"
   fast_finish: true
 
 before_install:

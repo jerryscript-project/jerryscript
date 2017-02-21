@@ -31,6 +31,7 @@ DEBUGGER_CLIENT_SCRIPT = path.join(PROJECT_DIR, 'jerry-debugger/jerry-client-ws.
 DEBUGGER_TEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-debugger-test.sh')
 DOXYGEN_SCRIPT = path.join(TOOLS_DIR, 'check-doxygen.sh')
 LICENSE_SCRIPT = path.join(TOOLS_DIR, 'check-license.py')
+PYLINT_SCRIPT = path.join(TOOLS_DIR, 'check-pylint.sh')
 SIGNED_OFF_SCRIPT = path.join(TOOLS_DIR, 'check-signed-off.sh')
 TEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-test-suite.sh')
 TEST262_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-test-suite-test262.sh')

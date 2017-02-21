@@ -31,6 +31,7 @@ parser.add_argument('--check-signed-off-tolerant', action='store_true', default=
 parser.add_argument('--check-signed-off-travis', action='store_true', default=False, help='Run signed-off check in tolerant mode if on Travis CI and not checking a pull request')
 parser.add_argument('--check-cppcheck', action='store_true', default=False, help='Run cppcheck')
 parser.add_argument('--check-doxygen', action='store_true', default=False, help='Run doxygen')
+parser.add_argument('--check-pylint', action='store_true', default=False, help='Run pylint')
 parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
 parser.add_argument('--check-license', action='store_true', default=False, help='Run license check')
 parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
@@ -265,6 +266,9 @@ def main():
 
     if not ret and (script_args.all or script_args.check_doxygen):
         ret = run_check([DOXYGEN_SCRIPT])
+
+    if not ret and (script_args.all or script_args.check_pylint):
+        ret = run_check([PYLINT_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_vera):
         ret = run_check([VERA_SCRIPT])

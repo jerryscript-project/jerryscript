@@ -31,4 +31,22 @@ config JERRYSCRIPT_HEAPSIZE
 	int "Jerryscript heap size"
 	default 107520
 
+config JERRYSCRIPT_MEM_STATS
+	bool "Enable memory statistics"
+	default n
+
+config JERRYSCRIPT_SHOW_OPCODES
+	bool "Enable parser byte-code dumps"
+	default n
+
+config JERRYSCRIPT_DEBUGGER
+	bool "Jerryscript debugger"
+	default n
+
+if JERRYSCRIPT_DEBUGGER
+config JERRYSCRIPT_DEBUGGER_PORT
+	int "Jerryscript debugger port"
+	default 5001
+endif
+
 endif

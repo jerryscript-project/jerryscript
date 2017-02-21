@@ -20,6 +20,7 @@
 
 #include "jerryscript.h"
 #include "jerry-port.h"
+#include "jmem.h"
 
 /**
  * Maximum command line arguments number.
@@ -51,126 +52,66 @@ print_help (char *name)
 } /* print_help */
 
 /**
- * Read source files.
+ * Read source code into buffer.
  *
- * @return concatenated source files
+ * Returned value must be freed with jmem_heap_free_block if it's not NULL.
+ * @return NULL, if read or allocation has failed
+ *         pointer to the allocated memory block, otherwise
  */
-static char*
-read_sources (const char *script_file_names[],
-              int files_count,
-              size_t *out_source_size_p)
+static const uint8_t *
+read_file (const char *file_name, /**< source code */
+           size_t *out_size_p) /**< [out] number of bytes successfully read from source */
 {
-  int i;
-  char* source_buffer = NULL;
-  char *source_buffer_tail = NULL;
-  size_t total_length = 0;
-  FILE *file = NULL;
-
-  for (i = 0; i < files_count; i++)
+  FILE *file = fopen (file_name, "r");
+  if (file == NULL)
   {
-    const char *script_file_name = script_file_names[i];
-
-    file = fopen (script_file_name, "r");
-    if (file == NULL)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fopen [%s]\n", script_file_name);
-      return NULL;
-    }
-
-    int fseek_status = fseek (file, 0, SEEK_END);
-    if (fseek_status != 0)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fseek fseek_status(%d)\n", fseek_status);
-      fclose (file);
-      return NULL;
-    }
-
-    long script_len = ftell (file);
-    if (script_len < 0)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to ftell script_len(%ld)\n", script_len);
-      fclose (file);
-      break;
-    }
-
-    total_length += (size_t) script_len;
-
-    fclose (file);
-    file = NULL;
-  }
-
-  if (total_length <= 0)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "There's nothing to read\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: cannot open file: %s\n", file_name);
     return NULL;
   }
 
-  source_buffer = (char*) malloc (total_length);
-  if (source_buffer == NULL)
+  int fseek_status = fseek (file, 0, SEEK_END);
+  if (fseek_status != 0)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to seek (error: %d)\n", fseek_status);
+    fclose (file);
+    return NULL;
+  }
+
+  long script_len = ftell (file);
+  if (script_len < 0)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to get the file size(error %ld)\n", script_len);
+    fclose (file);
+    return NULL;
+  }
+
+  rewind (file);
+
+  uint8_t *buffer = jmem_heap_alloc_block_null_on_error (script_len);
+
+  if (buffer == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Out of memory error\n");
-    return NULL;
-  }
-  memset (source_buffer, 0, sizeof (char) * total_length);
-  source_buffer_tail = source_buffer;
-
-  for (i = 0; i < files_count; i++)
-  {
-    const char *script_file_name = script_file_names[i];
-    file = fopen (script_file_name, "r");
-
-    if (file == NULL)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fopen [%s]\n", script_file_name);
-      break;
-    }
-
-    int fseek_status = fseek (file, 0, SEEK_END);
-    if (fseek_status != 0)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fseek fseek_status(%d)\n", fseek_status);
-      break;
-    }
-
-    long script_len = ftell (file);
-    if (script_len < 0)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to ftell script_len(%ld)\n", script_len);
-      break;
-    }
-
-    rewind (file);
-
-    const size_t current_source_size = (size_t) script_len;
-    size_t bytes_read = fread (source_buffer_tail, 1, current_source_size, file);
-    if (bytes_read < current_source_size)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to fread bytes_read(%d)\n", bytes_read);
-      break;
-    }
-
     fclose (file);
-    file = NULL;
-
-    source_buffer_tail += current_source_size;
-  }
-
-  if (file != NULL)
-  {
-    fclose (file);
-  }
-
-  if (i < files_count)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Failed to read script N%d\n", i + 1);
-    free (source_buffer);
     return NULL;
   }
 
-  *out_source_size_p = (size_t) total_length;
+  size_t bytes_read = fread (buffer, 1u, script_len, file);
 
-  return source_buffer;
-} /* read_sources */
+  if (!bytes_read || bytes_read != script_len)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name);
+    jmem_heap_free_block ((void*) buffer, script_len);
+
+    fclose (file);
+    return NULL;
+  }
+
+  fclose (file);
+
+  *out_size_p = bytes_read;
+  return (const uint8_t *) buffer;
+} /* read_file */
 
 /**
  * JerryScript log level
@@ -250,27 +191,59 @@ int jerry_main (int argc, char *argv[])
     char *source_p = "var a = 3.5; print('Hello world ' + (a + 1.5) + ' times from JerryScript')";
 
     jerry_run_simple ((jerry_char_t *) source_p, strlen (source_p), flags);
-    return 0;
+    return JERRY_STANDALONE_EXIT_CODE_OK;
   }
 
-  size_t source_size;
-  char *source_p = read_sources (file_names, files_counter, &source_size);
+  jerry_init (flags);
+  jerry_value_t ret_value = jerry_create_undefined ();
 
-  if (source_p == NULL)
+  for (i = 0; i < files_counter; i++)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "JERRY_STANDALONE_EXIT_CODE_FAIL\n");
-    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    size_t source_size;
+    const jerry_char_t *source_p = read_file (file_names[i], &source_size);
+
+    if (source_p == NULL)
+    {
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Source file load error\n");
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+
+    ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
+                                            strlen (file_names[i]),
+                                            source_p,
+                                            source_size,
+                                            false);
+
+    jmem_heap_free_block ((void*) source_p, source_size);
+
+    if (!jerry_value_has_error_flag (ret_value))
+    {
+      jerry_value_t func_val = ret_value;
+      ret_value = jerry_run (func_val);
+      jerry_release_value (func_val);
+    }
+
+    if (jerry_value_has_error_flag (ret_value))
+    {
+      break;
+    }
+
+    jerry_release_value (ret_value);
+    ret_value = jerry_create_undefined ();
   }
 
-  bool success = jerry_run_simple ((jerry_char_t *) source_p, source_size, flags);
+  int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  free (source_p);
-
-  if (!success)
+  if (jerry_value_has_error_flag (ret_value))
   {
-    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unhandled exception: Script Error!\n");
+    ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
-  return JERRY_STANDALONE_EXIT_CODE_OK;
+
+  jerry_release_value (ret_value);
+  jerry_cleanup ();
+
+  return ret_code;
 } /* main */
 
 /**

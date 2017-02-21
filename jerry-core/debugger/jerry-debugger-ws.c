@@ -27,7 +27,9 @@
 /**
  * Debugger socket communication port.
  */
+#ifndef JERRY_DEBUGGER_PORT
 #define JERRY_DEBUGGER_PORT 5001
+#endif
 
 /**
  * Masking-key is available.

@@ -145,31 +145,27 @@ def generate_build_options(arguments):
     return build_options
 
 def configure_output_dir(arguments):
-    global BUILD_DIR
+    if not path.isabs(arguments.builddir):
+        arguments.builddir = path.join(PROJECT_DIR, arguments.builddir)
 
-    if path.isabs(arguments.builddir):
-        BUILD_DIR = arguments.builddir
-    else:
-        BUILD_DIR = path.join(PROJECT_DIR, arguments.builddir)
+    if arguments.clean and path.exists(arguments.builddir):
+        shutil.rmtree(arguments.builddir)
 
-    if arguments.clean and path.exists(BUILD_DIR):
-        shutil.rmtree(BUILD_DIR)
-
-    if not path.exists(BUILD_DIR):
-        makedirs(BUILD_DIR)
+    if not path.exists(arguments.builddir):
+        makedirs(arguments.builddir)
 
 def configure_build(arguments):
     configure_output_dir(arguments)
 
     build_options = generate_build_options(arguments)
 
-    cmake_cmd = ['cmake', '-B' + BUILD_DIR, '-H' + PROJECT_DIR]
+    cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + PROJECT_DIR]
     cmake_cmd.extend(build_options)
 
     return subprocess.call(cmake_cmd)
 
 def build_jerry(arguments):
-    return subprocess.call(['make', '--no-print-directory','-j', str(arguments.jobs), '-C', BUILD_DIR])
+    return subprocess.call(['make', '--no-print-directory','-j', str(arguments.jobs), '-C', arguments.builddir])
 
 def print_result(ret):
     print('=' * 30)

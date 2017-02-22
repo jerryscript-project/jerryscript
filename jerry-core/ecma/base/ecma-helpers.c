@@ -519,86 +519,6 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
 } /* ecma_create_property */
 
 /**
- * Create internal property in an object and link it into
- * the object's properties' linked-list (at start of the list).
- *
- * @return pointer to the newly created property value
- */
-ecma_value_t *
-ecma_create_internal_property (ecma_object_t *object_p, /**< the object */
-                               ecma_internal_property_id_t property_id) /**< internal property identifier */
-{
-  JERRY_ASSERT (ecma_find_internal_property (object_p, property_id) == NULL);
-
-  uint8_t type_and_flags = ECMA_SPECIAL_PROPERTY_VALUE (property_id);
-
-  ecma_property_value_t value;
-  value.value = ECMA_NULL_POINTER;
-
-  ecma_property_value_t *prop_value_p = ecma_create_property (object_p, NULL, type_and_flags, value, NULL);
-  return &prop_value_p->value;
-} /* ecma_create_internal_property */
-
-/**
- * Find internal property in the object's property set.
- *
- * @return pointer to the property, if it is found,
- *         NULL - otherwise.
- */
-ecma_value_t *
-ecma_find_internal_property (ecma_object_t *object_p, /**< object descriptor */
-                             ecma_internal_property_id_t property_id) /**< internal property identifier */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
-
-  uint8_t value = ECMA_SPECIAL_PROPERTY_VALUE (property_id);
-
-  while (prop_iter_p != NULL)
-  {
-    JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP
-                  || ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
-
-    if (prop_iter_p->types[0] == value)
-    {
-      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
-      return &prop_pair_p->values[0].value;
-    }
-
-    if (prop_iter_p->types[1] == value)
-    {
-      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
-      return &prop_pair_p->values[1].value;
-    }
-
-    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                    prop_iter_p->next_property_cp);
-  }
-
-  return NULL;
-} /* ecma_find_internal_property */
-
-/**
- * Get an internal property.
- *
- * Warning:
- *         the property must exist
- *
- * @return pointer to the property
- */
-inline ecma_value_t * __attr_always_inline___
-ecma_get_internal_property (ecma_object_t *object_p, /**< object descriptor */
-                            ecma_internal_property_id_t property_id) /**< internal property identifier */
-{
-  ecma_value_t *property_p = ecma_find_internal_property (object_p, property_id);
-
-  JERRY_ASSERT (property_p != NULL);
-
-  return property_p;
-} /* ecma_get_internal_property */
-
-/**
  * Create named data property with given name, attributes and undefined value
  * in the specified object.
  *
@@ -780,31 +700,6 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 } /* ecma_get_named_data_property */
 
 /**
- * Free the internal property and values it references.
- */
-static void
-ecma_free_internal_property (ecma_property_t *property_p) /**< the property */
-{
-  JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_SPECIAL);
-
-  switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
-  {
-    case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
-    case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an external pointer */
-    {
-      ecma_free_external_pointer_in_property (property_p);
-
-      break;
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
-      break;
-    }
-  }
-} /* ecma_free_internal_property */
-
-/**
  * Free property values and change their type to deleted.
  */
 void
@@ -818,6 +713,16 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
+      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING)
+      {
+        if (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+            || name_cp == LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK)
+        {
+          ecma_free_external_pointer_in_property (property_p);
+          break;
+        }
+      }
+
       ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       break;
     }
@@ -833,11 +738,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     }
     default:
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_SPECIAL);
-      JERRY_ASSERT (name_cp == ECMA_NULL_POINTER);
-
-      ecma_free_internal_property (property_p);
-      *property_p = ECMA_PROPERTY_TYPE_DELETED;
+      JERRY_UNREACHABLE ();
       return;
     }
   }

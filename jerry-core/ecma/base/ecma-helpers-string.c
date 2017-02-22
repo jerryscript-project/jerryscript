@@ -358,15 +358,25 @@ ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, /**< ecma-strin
 } /* ecma_init_ecma_string_from_uint32 */
 
 /**
+ * Initialize a magic ecma-string
+ */
+void
+ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, /**< ecma-string */
+                             lit_magic_string_id_t id) /**< literal id */
+{
+  string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_MAGIC_STRING | ECMA_STRING_REF_ONE;
+  string_desc_p->hash = (lit_string_hash_t) id;
+
+  string_desc_p->u.magic_string_id = (uint32_t) id;
+} /* ecma_init_ecma_magic_string */
+
+/**
  * Initialize a length ecma-string
  */
 inline void __attr_always_inline___
 ecma_init_ecma_length_string (ecma_string_t *string_desc_p) /**< ecma-string */
 {
-  string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_MAGIC_STRING | ECMA_STRING_REF_ONE;
-  string_desc_p->hash = LIT_MAGIC_STRING_LENGTH;
-
-  string_desc_p->u.magic_string_id = LIT_MAGIC_STRING_LENGTH;
+  ecma_init_ecma_magic_string (string_desc_p, LIT_MAGIC_STRING_LENGTH);
 } /* ecma_init_ecma_length_string */
 
 /**

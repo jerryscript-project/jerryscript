@@ -202,20 +202,8 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
     }
     case ECMA_PROPERTY_TYPE_SPECIAL:
     {
-      switch (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p))
-      {
-        case ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE: /* an external pointer */
-        case ECMA_INTERNAL_PROPERTY_FREE_CALLBACK: /* an object's native free callback */
-        {
-          break;
-        }
-        default:
-        {
-          JERRY_ASSERT (ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_DELETED
-                        || ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_HASHMAP);
-          break;
-        }
-      }
+      JERRY_ASSERT (ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_DELETED
+                    || ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_HASHMAP);
       break;
     }
     default:
@@ -369,13 +357,13 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     ecma_external_pointer_t native_p;
 
     bool is_retrieved = ecma_get_external_pointer_value (object_p,
-                                                         ECMA_INTERNAL_PROPERTY_FREE_CALLBACK,
+                                                         LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK,
                                                          &freecb_p);
 
     if (is_retrieved && ((jerry_object_free_callback_t) freecb_p) != NULL)
     {
       is_retrieved = ecma_get_external_pointer_value (object_p,
-                                                      ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE,
+                                                      LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
                                                       &native_p);
       JERRY_ASSERT (is_retrieved);
 

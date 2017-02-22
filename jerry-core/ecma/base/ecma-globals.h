@@ -206,9 +206,6 @@ typedef enum
    * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
   ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
 
-  ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
-  ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-
   ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
 } ecma_internal_property_id_t;
 
@@ -455,7 +452,7 @@ typedef struct
 /**
  * Returns the internal property type
  */
-#define ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE(property_p) \
+#define ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE(property_p) \
   ((ecma_internal_property_id_t) (*(property_p) >> ECMA_PROPERTY_FLAG_SHIFT))
 
 /**

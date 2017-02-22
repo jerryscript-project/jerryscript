@@ -297,7 +297,7 @@ function DebuggerClient(ipAddr)
     }
   }
 
-  var socket = new WebSocket("ws://localhost:5001/jerry-debugger");
+  var socket = new WebSocket("ws://" + ipAddr + ":5001/jerry-debugger");
   socket.binaryType = 'arraybuffer';
 
   function abortConnection(message)

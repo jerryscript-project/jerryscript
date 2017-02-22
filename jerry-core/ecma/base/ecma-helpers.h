@@ -170,7 +170,7 @@ ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id);
 ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id);
-ecma_string_t *ecma_new_ecma_length_string ();
+ecma_string_t *ecma_new_ecma_length_string (void);
 ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 void ecma_ref_ecma_string (ecma_string_t *string_p);
 void ecma_deref_ecma_string (ecma_string_t *string_p);

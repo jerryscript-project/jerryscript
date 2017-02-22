@@ -179,7 +179,7 @@ jerry_add_compile_flags(-fno-stack-protector)
 endif()
 
 if (USING_GCC OR USING_CLANG)
-  jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations)
+  jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations shadow strict-prototypes undef)
   jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
 endif()
 

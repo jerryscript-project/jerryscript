@@ -100,7 +100,7 @@ generate_cesu8_string (lit_utf8_byte_t *buf_p,
 } /* generate_cesu8_string */
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

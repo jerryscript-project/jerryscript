@@ -38,7 +38,7 @@ generate_string (lit_utf8_byte_t *str, lit_utf8_size_t len)
 } /* generate_string */
 
 static ecma_number_t
-generate_number ()
+generate_number (void)
 {
   ecma_number_t num = ((ecma_number_t) rand () / 32767.0);
   if (rand () % 2)
@@ -54,7 +54,7 @@ generate_number ()
 } /* generate_number */
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

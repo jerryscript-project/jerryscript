@@ -84,7 +84,7 @@ check_double (const char *expr, double computed, double expected)
 } /* check_double */
 
 int
-main ()
+main (void)
 {
 #define INF INFINITY
 #include "test-libm.inc.h"

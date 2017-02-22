@@ -23,7 +23,7 @@
  * Unit test's main function.
  */
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

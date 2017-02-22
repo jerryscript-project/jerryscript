@@ -344,7 +344,6 @@ main (int argc,
   }
 
   const char *file_names[JERRY_MAX_COMMAND_LINE_ARGS];
-  int i;
   int files_counter = 0;
 
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
@@ -364,7 +363,7 @@ main (int argc,
   bool is_repl_mode = false;
   bool no_prompt = false;
 
-  for (i = 1; i < argc; i++)
+  for (int i = 1; i < argc; i++)
   {
     if (!strcmp ("-h", argv[i]) || !strcmp ("--help", argv[i]))
     {
@@ -744,9 +743,9 @@ main (int argc,
     const char *prompt = !no_prompt ? "jerry> " : "";
     bool is_done = false;
 
-    jerry_value_t global_obj_val = jerry_get_global_object ();
+    jerry_value_t global_object_val = jerry_get_global_object ();
     jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");
-    jerry_value_t print_function = jerry_get_property (global_obj_val, print_func_name_val);
+    jerry_value_t print_function = jerry_get_property (global_object_val, print_func_name_val);
 
     jerry_release_value (print_func_name_val);
 
@@ -808,7 +807,7 @@ main (int argc,
       }
     }
 
-    jerry_release_value (global_obj_val);
+    jerry_release_value (global_object_val);
     jerry_release_value (print_function);
   }
 

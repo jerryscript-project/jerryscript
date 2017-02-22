@@ -1008,7 +1008,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
             old_start_p = re_ctx_p->saved_p[start_idx];
             re_ctx_p->saved_p[start_idx] = str_curr_p;
 
-            ecma_value_t match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
+            match_value = re_match_regexp (re_ctx_p, bc_p, str_curr_p, &sub_str_p);
 
             if (ecma_is_value_true (match_value))
             {

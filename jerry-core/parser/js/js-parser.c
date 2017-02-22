@@ -1563,16 +1563,16 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     {
       /* These opcodes are deleted from the stream. */
 #if PARSER_MAXIMUM_CODE_SIZE <= 65535
-      size_t length = 3;
+      size_t counter = 3;
 #else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
-      size_t length = 4;
+      size_t counter = 4;
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
       do
       {
         PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
       }
-      while (--length > 0);
+      while (--counter > 0);
 
       continue;
     }
@@ -1586,8 +1586,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #ifdef JERRY_DEBUGGER
     if (opcode == CBC_BREAKPOINT_DISABLED)
     {
-      uint32_t offset = (uint32_t) (((uint8_t *) dst_p) - ((uint8_t *) compiled_code_p) - 1);
-      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST, offset);
+      uint32_t bp_offset = (uint32_t) (((uint8_t *) dst_p) - ((uint8_t *) compiled_code_p) - 1);
+      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST, bp_offset);
     }
 #endif /* JERRY_DEBUGGER */
 
@@ -2087,8 +2087,8 @@ parser_parse_function (parser_context_t *context_p, /**< context */
      * function expression name, so there is no need to assign special flags. */
     if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ARGUMENTS)
     {
-      uint8_t status_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_NAME;
-      context_p->lit_object.literal_p->status_flags |= status_flags;
+      uint8_t lexer_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_NAME;
+      context_p->lit_object.literal_p->status_flags |= lexer_flags;
     }
 
     if (context_p->token.literal_is_reserved
@@ -2177,8 +2177,8 @@ parser_parse_function (parser_context_t *context_p, /**< context */
       }
       else
       {
-        uint8_t status_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_ARGUMENT;
-        context_p->lit_object.literal_p->status_flags |= status_flags;
+        uint8_t lexer_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_ARGUMENT;
+        context_p->lit_object.literal_p->status_flags |= lexer_flags;
       }
 
       context_p->argument_count++;
@@ -2388,7 +2388,7 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
        * situation. However, a simple value can still be thrown. */
       return ecma_make_error_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
     }
-#if JERRY_ENABLE_ERROR_MESSAGES
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
     const char *err_str_p = parser_error_to_string (parser_error.error);
     uint32_t err_str_size = lit_zt_utf8_string_size ((const lit_utf8_byte_t *) err_str_p);
 

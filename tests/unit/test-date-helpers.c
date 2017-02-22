@@ -31,7 +31,7 @@
  * Unit test's main function.
  */
 int
-main ()
+main (void)
 {
   /* int ecma_date_day (time)*/
 

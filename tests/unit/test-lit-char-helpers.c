@@ -22,7 +22,7 @@
 #include "test-common.h"
 
 int
-main ()
+main (void)
 {
   TEST_INIT ();
 

@@ -644,7 +644,7 @@ parser_parse_do_while_statement_end (parser_context_t *context_p) /**< context *
     context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
   }
 
-  parser_stack_pop (context_p, NULL, sizeof (parser_do_while_statement_t) + sizeof (parser_loop_statement_t) + 1);
+  parser_stack_pop (context_p, NULL, 1 + sizeof (parser_loop_statement_t) + sizeof (parser_do_while_statement_t));
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
@@ -938,10 +938,13 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (context_p->stack_top_uint8 == PARSER_STATEMENT_FOR);
 
-  parser_stack_pop_uint8 (context_p);
-  parser_stack_pop (context_p, &loop, sizeof (parser_loop_statement_t));
-  parser_stack_pop (context_p, &for_statement, sizeof (parser_for_statement_t));
-  parser_stack_iterator_init (context_p, &context_p->last_statement);
+  parser_stack_iterator_t iterator;
+  parser_stack_iterator_init (context_p, &iterator);
+
+  parser_stack_iterator_skip (&iterator, 1);
+  parser_stack_iterator_read (&iterator, &loop, sizeof (parser_loop_statement_t));
+  parser_stack_iterator_skip (&iterator, sizeof (parser_loop_statement_t));
+  parser_stack_iterator_read (&iterator, &for_statement, sizeof (parser_for_statement_t));
 
   parser_save_range (context_p, &range, context_p->source_end_p);
   current_token = context_p->token;
@@ -991,6 +994,9 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   {
     opcode = CBC_JUMP_BACKWARD;
   }
+
+  parser_stack_pop (context_p, NULL, 1 + sizeof (parser_loop_statement_t) + sizeof (parser_for_statement_t));
+  parser_stack_iterator_init (context_p, &context_p->last_statement);
 
   parser_emit_cbc_backward_branch (context_p, opcode, for_statement.start_offset);
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);

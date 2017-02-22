@@ -115,13 +115,13 @@ vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte cod
     case 3:
     {
       branch_offset <<= 8;
-      branch_offset |= *(branch_offset_p++);
+      branch_offset |= *(++branch_offset_p);
       /* FALLTHRU */
     }
     case 2:
     {
       branch_offset <<= 8;
-      branch_offset |= *(branch_offset_p++);
+      branch_offset |= *(++branch_offset_p);
       break;
     }
   }
@@ -174,7 +174,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         return false;
       }
 
-      byte_code_p = frame_ctx_p->byte_code_start_p + VM_GET_CONTEXT_END (vm_stack_top_p[-1]);
+      byte_code_p = frame_ctx_p->byte_code_start_p + context_end;
 
       if (context_type == VM_CONTEXT_TRY)
       {

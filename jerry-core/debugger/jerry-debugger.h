@@ -66,18 +66,20 @@ typedef enum
   JERRY_DEBUGGER_PARSE_FUNCTION = 4, /**< parsing a new function */
   JERRY_DEBUGGER_BREAKPOINT_LIST = 5, /**< list of line offsets */
   JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST = 6, /**< list of byte code offsets */
-  JERRY_DEBUGGER_RESOURCE_NAME = 7, /**< resource name fragment */
-  JERRY_DEBUGGER_RESOURCE_NAME_END = 8, /**< resource name fragment */
-  JERRY_DEBUGGER_FUNCTION_NAME = 9, /**< function name fragment */
-  JERRY_DEBUGGER_FUNCTION_NAME_END = 10, /**< function name fragment */
-  JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 11, /**< invalidate byte code compressed pointer */
-  JERRY_DEBUGGER_BREAKPOINT_HIT = 12, /**< notify breakpoint hit */
-  JERRY_DEBUGGER_BACKTRACE = 13, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 14, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 15, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 16, /**< last part of eval result */
-  JERRY_DEBUGGER_EVAL_ERROR = 17, /**< eval result when an error is occured */
-  JERRY_DEBUGGER_EVAL_ERROR_END = 18, /**< last part of eval result when an error is occured */
+  JERRY_DEBUGGER_SOURCE_CODE = 7, /**< source code fragment */
+  JERRY_DEBUGGER_SOURCE_CODE_END = 8, /**< source code last fragment */
+  JERRY_DEBUGGER_SOURCE_CODE_NAME = 9, /**< source code name fragment */
+  JERRY_DEBUGGER_SOURCE_CODE_NAME_END = 10, /**< source code name last fragment */
+  JERRY_DEBUGGER_FUNCTION_NAME = 11, /**< function name fragment */
+  JERRY_DEBUGGER_FUNCTION_NAME_END = 12, /**< function name last fragment */
+  JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13, /**< invalidate byte code compressed pointer */
+  JERRY_DEBUGGER_BREAKPOINT_HIT = 14, /**< notify breakpoint hit */
+  JERRY_DEBUGGER_BACKTRACE = 15, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 16, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 17, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 18, /**< last part of eval result */
+  JERRY_DEBUGGER_EVAL_ERROR = 19, /**< eval result when an error is occured */
+  JERRY_DEBUGGER_EVAL_ERROR_END = 20, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
   JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1, /**< free byte code compressed pointer */

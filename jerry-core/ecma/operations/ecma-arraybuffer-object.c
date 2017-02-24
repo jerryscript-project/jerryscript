@@ -21,6 +21,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "jmem.h"
 
 #ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
 
@@ -66,6 +67,11 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
     {
       return ret;
     }
+  }
+
+  if (length > UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
   }
 
   ecma_object_t *object_p = ecma_arraybuffer_new_object (length);

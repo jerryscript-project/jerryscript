@@ -321,6 +321,12 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
   ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, len);
+
+  if (ECMA_IS_VALUE_ERROR (new_typedarray))
+  {
+    return new_typedarray;
+  }
+
   ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
 
   for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
@@ -331,7 +337,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
 
     ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3), ret_value);
 
-    ecma_value_t set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, mapped_value);
+    bool set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, mapped_value);
 
     if (!set_status)
     {
@@ -574,25 +580,33 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   if (ecma_is_value_empty (ret_value))
   {
     ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
-    ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
 
-    for (uint32_t index = 0; index < pass_num && ecma_is_value_empty (ret_value); index++)
-    {
-      ecma_value_t set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, *(pass_value_list + index));
-
-      if (!set_status)
-      {
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("error in typedarray set"));
-      }
-    }
-
-    if (ecma_is_value_empty (ret_value))
+    if (ECMA_IS_VALUE_ERROR (new_typedarray))
     {
       ret_value = new_typedarray;
     }
     else
     {
-      ecma_free_value (new_typedarray);
+      ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
+
+      for (uint32_t index = 0; index < pass_num && ecma_is_value_empty (ret_value); index++)
+      {
+        bool set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, *(pass_value_list + index));
+
+        if (!set_status)
+        {
+          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("error in typedarray set"));
+        }
+      }
+
+      if (ecma_is_value_empty (ret_value))
+      {
+        ret_value = new_typedarray;
+      }
+      else
+      {
+        ecma_free_value (new_typedarray);
+      }
     }
   }
 

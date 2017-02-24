@@ -214,6 +214,9 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
                                            lit_magic_string_id_t class_id) /**< class name of the typedarray */
 {
   ecma_length_t byte_length = array_length << element_size_shift;
+
+  ecma_value_t new_arraybuffer_p = ecma_make_object_value (ecma_arraybuffer_new_object (byte_length));
+
   ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
@@ -222,8 +225,9 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
   ext_object_p->u.pseudo_array.u1.class_id = class_id;
   ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY;
   ext_object_p->u.pseudo_array.extra_info = element_size_shift;
-  ext_object_p->u.pseudo_array.u2.arraybuffer = ecma_make_object_value (ecma_arraybuffer_new_object (byte_length));
-  ecma_free_value (ext_object_p->u.pseudo_array.u2.arraybuffer);
+  ext_object_p->u.pseudo_array.u2.arraybuffer = new_arraybuffer_p;
+
+  ecma_free_value (new_arraybuffer_p);
 
   return object_p;
 } /* !ecma_typedarray_create_object_with_length */

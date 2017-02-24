@@ -1667,6 +1667,38 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 } /* ecma_op_object_get_property_names */
 
 /**
+ * The function is used in the assert of ecma_object_get_class_name
+ */
+inline static bool
+ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
+{
+#ifndef JERRY_NDEBUG
+  return (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL)
+#ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE)
+#endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
+#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_UINT8ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_INT16ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_UINT16ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_INT32ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_UINT32ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT32ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY_PROTOTYPE)
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
+#else /* JERRY_NDEBUG */
+  JERRY_UNUSED (obj_p);
+  return true;
+#endif /* !JERRY_NDEBUG */
+} /* ecma_object_check_class_name_is_object */
+
+/**
  * Get [[Class]] string of specified object
  *
  * @return class name magic string
@@ -1729,10 +1761,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 
         switch (ext_obj_p->u.built_in.id)
         {
-          case ECMA_BUILTIN_ID_OBJECT_PROTOTYPE:
-          {
-            return LIT_MAGIC_STRING_OBJECT_UL;
-          }
 #ifndef CONFIG_DISABLE_MATH_BUILTIN
           case ECMA_BUILTIN_ID_MATH:
           {
@@ -1759,7 +1787,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           }
           default:
           {
-            JERRY_ASSERT (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL));
+            JERRY_ASSERT (ecma_object_check_class_name_is_object (obj_p));
 
             return LIT_MAGIC_STRING_OBJECT_UL;
           }

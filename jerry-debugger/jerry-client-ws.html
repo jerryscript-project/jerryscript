@@ -71,9 +71,9 @@ function appendLog(str)
 
 var debuggerObj = null;
 
-function DebuggerClient(ipAddr)
+function DebuggerClient(address)
 {
-  appendLog("ws://" + ipAddr + ":5001/jerry-debugger");
+  appendLog("ws://" + address + "/jerry-debugger");
 
   var parseObj = null;
   var maxMessageSize = 0;
@@ -297,7 +297,7 @@ function DebuggerClient(ipAddr)
     }
   }
 
-  var socket = new WebSocket("ws://" + ipAddr + ":5001/jerry-debugger");
+  var socket = new WebSocket("ws://" + address + "/jerry-debugger");
   socket.binaryType = 'arraybuffer';
 
   function abortConnection(message)
@@ -949,7 +949,7 @@ function debuggerCommand(event)
   if (args[1] == "help")
   {
     appendLog("Debugger commands:\n" +
-              "  connect <IP address> - connect to server\n" +
+              "  connect <IP address:PORT> - connect to server (default is localhost:5001)\n" +
               "  break|b <file_name:line>|<function_name> - set breakpoint\n" +
               "  delete|d <id> - delete breakpoint\n" +
               "  list - list breakpoints\n" +
@@ -972,15 +972,26 @@ function debuggerCommand(event)
       return true;
     }
 
-    if (args[2] == "")
+    var ipAddr = args[2];
+    var PORT = "5001";
+
+    if (ipAddr == "")
     {
-      appendLog("IP address expected");
-      return true;
+      ipAddr = "localhost";
     }
 
-    appendLog("Connect to: " + args[2]);
+    if (ipAddr.match(/.*:\d/))
+    {
+      var fields = ipAddr.split(":");
+      ipAddr = fields[0];
+      PORT = fields[1];
+    }
 
-    debuggerObj = new DebuggerClient(args[2]);
+    var address = ipAddr + ":" + PORT;
+
+    appendLog("Connect to: " + address);
+
+    debuggerObj = new DebuggerClient(address);
 
     commandBox.value = "";
     return true;

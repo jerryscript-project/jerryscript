@@ -511,7 +511,8 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
    * To find this time it starts from the beginning of the year (ym)
    * then find the first day of the month.
    */
-  if (ecma_date_year_from_time (time) == ym)
+  if (!ecma_number_is_nan (time)
+      && ecma_date_year_from_time (time) == ym)
   {
     /* Get the month */
     time += 31 * mn * ECMA_DATE_MS_PER_DAY;
@@ -519,7 +520,9 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
     /* Get the month's first day */
     time += ((ecma_number_t) 1.0 - ecma_date_date_from_time (time)) * ECMA_DATE_MS_PER_DAY;
 
-    if (ecma_date_month_from_time (time) == mn && ecma_date_date_from_time (time) == 1)
+    if (!ecma_number_is_nan (time)
+        && ecma_date_month_from_time (time) == mn
+        && ecma_date_date_from_time (time) == 1)
     {
       /* 8. */
       return ecma_date_day (time) + dt - ((ecma_number_t) 1.0);

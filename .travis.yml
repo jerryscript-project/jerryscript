@@ -18,9 +18,7 @@ env:
 matrix:
   include:
     - os: osx
-      env: OPTS="--jerry-tests --jerry-test-suite"
-    - os: osx
-      env: OPTS=--unittests
+      env: OPTS="--jerry-tests --jerry-test-suite --unittests"
     - compiler: gcc-5
       addons:
         apt:

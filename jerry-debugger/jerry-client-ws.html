@@ -840,7 +840,23 @@ function DebuggerClient(address)
   {
     breakpoint = activeBreakpoints[index];
 
-    if (!breakpoint)
+    if (index == "all")
+    {
+      var found = false;
+
+      for (var i in activeBreakpoints)
+      {
+        delete activeBreakpoints[i];
+        found = true;
+      }
+
+      if (!found)
+      {
+        appendLog("No active breakpoints.")
+      }
+    }
+
+    else if (!breakpoint)
     {
       appendLog("No breakpoint found with index " + index);
       return;

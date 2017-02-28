@@ -2371,6 +2371,14 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
 {
 #ifdef JERRY_JS_PARSER
   parser_error_location_t parser_error;
+
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE, source_p, size);
+  }
+#endif /* JERRY_DEBUGGER */
+
   *bytecode_data_p = parser_parse_source (source_p, size, is_strict, &parser_error);
 
   if (!*bytecode_data_p)

@@ -331,7 +331,7 @@ jerry_parse_named_resource (const jerry_char_t *name_p, /**< name (usually a fil
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    jerry_debugger_send_string (JERRY_DEBUGGER_RESOURCE_NAME, name_p, name_length);
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME, name_p, name_length);
   }
 #else /* JERRY_DEBUGGER */
   JERRY_UNUSED (name_p);

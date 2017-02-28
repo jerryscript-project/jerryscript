@@ -31,18 +31,20 @@ JERRY_DEBUGGER_BYTE_CODE_CP = 3
 JERRY_DEBUGGER_PARSE_FUNCTION = 4
 JERRY_DEBUGGER_BREAKPOINT_LIST = 5
 JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST = 6
-JERRY_DEBUGGER_RESOURCE_NAME = 7
-JERRY_DEBUGGER_RESOURCE_NAME_END = 8
-JERRY_DEBUGGER_FUNCTION_NAME = 9
-JERRY_DEBUGGER_FUNCTION_NAME_END = 10
-JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 11
-JERRY_DEBUGGER_BREAKPOINT_HIT = 12
-JERRY_DEBUGGER_BACKTRACE = 13
-JERRY_DEBUGGER_BACKTRACE_END = 14
-JERRY_DEBUGGER_EVAL_RESULT = 15
-JERRY_DEBUGGER_EVAL_RESULT_END = 16
-JERRY_DEBUGGER_EVAL_ERROR = 17
-JERRY_DEBUGGER_EVAL_ERROR_END = 18
+JERRY_DEBUGGER_SOURCE_CODE = 7
+JERRY_DEBUGGER_SOURCE_CODE_END = 8
+JERRY_DEBUGGER_SOURCE_CODE_NAME = 9
+JERRY_DEBUGGER_SOURCE_CODE_NAME_END = 10
+JERRY_DEBUGGER_FUNCTION_NAME = 11
+JERRY_DEBUGGER_FUNCTION_NAME_END = 12
+JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13
+JERRY_DEBUGGER_BREAKPOINT_HIT = 14
+JERRY_DEBUGGER_BACKTRACE = 15
+JERRY_DEBUGGER_BACKTRACE_END = 16
+JERRY_DEBUGGER_EVAL_RESULT = 17
+JERRY_DEBUGGER_EVAL_RESULT_END = 18
+JERRY_DEBUGGER_EVAL_ERROR = 19
+JERRY_DEBUGGER_EVAL_ERROR_END = 20
 
 # Messages sent by the client to server.
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
@@ -84,7 +86,7 @@ class JerryBreakpoint(object):
         self.active_index = -1
 
     def to_string(self):
-        result = self.function.source
+        result = self.function.source_name
 
         if result == "":
             result = "<unknown>"
@@ -102,15 +104,16 @@ class JerryBreakpoint(object):
 
 class JerryFunction(object):
 
-    def __init__(self, byte_code_cp, source, name, lines, offsets):
+    def __init__(self, byte_code_cp, source, source_name, name, lines, offsets):
         self.byte_code_cp = byte_code_cp
         self.source = source
+        self.source_name = source_name
         self.name = name
         self.lines = {}
         self.offsets = {}
         self.first_line = -1
 
-        if len > 0:
+        if lines:
             self.first_line = lines[0]
 
         for i in range(len(lines)):
@@ -121,8 +124,8 @@ class JerryFunction(object):
             self.offsets[offset] = breakpoint
 
     def __repr__(self):
-        result = ("Function(byte_code_cp:0x%x, source:\"%s\", name:\"%s\", { "
-                  % (self.byte_code_cp, self.source, self.name))
+        result = ("Function(byte_code_cp:0x%x, source_name:\"%s\", name:\"%s\", { "
+                  % (self.byte_code_cp, self.source_name, self.name))
 
         result += ','.join([str(breakpoint) for breakpoint in self.lines.values()])
 
@@ -248,6 +251,11 @@ class DebuggerPrompt(Cmd):
         """ Get backtrace data from debugger """
         self.exec_backtrace(args)
 
+    def do_src(self, args):
+        """ Get current source code """
+        if self.debugger.last_breakpoint_hit:
+            print(self.debugger.last_breakpoint_hit.function.source)
+
     def do_dump(self, args):
         """ Dump all of the debugger data """
         pprint(self.debugger.function_list)
@@ -348,6 +356,7 @@ class JerryDebugger(object):
 
         self.message_data = b""
         self.function_list = {}
+        self.last_breakpoint_hit = None
         self.next_breakpoint_index = 0
         self.active_breakpoint_list = {}
         self.line_list = Multimap()
@@ -480,7 +489,8 @@ class JerryDebugger(object):
 
 
 def parse_source(debugger, data):
-    source_name = ""
+    source_code = ""
+    source_code_name = ""
     function_name = ""
     stack = [{"lines": [], "offsets": [], "name": ""}]
     new_function_list = {}
@@ -498,15 +508,22 @@ def parse_source(debugger, data):
             logging.error("Parser error!")
             return
 
-        if buffer_type in [JERRY_DEBUGGER_RESOURCE_NAME, JERRY_DEBUGGER_RESOURCE_NAME_END]:
-            source_name += data[3:]
+        elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE, JERRY_DEBUGGER_SOURCE_CODE_END]:
+            source_code += data[3:]
+
+        elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE_NAME, JERRY_DEBUGGER_SOURCE_CODE_NAME_END]:
+            source_code_name += data[3:]
 
         elif buffer_type in [JERRY_DEBUGGER_FUNCTION_NAME, JERRY_DEBUGGER_FUNCTION_NAME_END]:
             function_name += data[3:]
 
         elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
-            logging.debug("Source name: %s, function name: %s" % (source_name, function_name))
-            stack.append({"name": function_name, "source": source_name, "lines": [], "offsets": []})
+            logging.debug("Source name: %s, function name: %s" % (source_code_name, function_name))
+            stack.append({ "source": source_code,
+                           "source_name": source_code_name,
+                           "name": function_name,
+                           "lines": [],
+                           "offsets": []})
             function_name = ""
 
         elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_LIST, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST]:
@@ -534,10 +551,12 @@ def parse_source(debugger, data):
 
             # We know the last item in the list is the general byte code.
             if len(stack) == 0:
-                func_desc["source"] = source_name
+                func_desc["source"] = source_code
+                func_desc["source_name"] = source_code_name
 
             function = JerryFunction(byte_code_cp,
                                      func_desc["source"],
+                                     func_desc["source_name"],
                                      func_desc["name"],
                                      func_desc["lines"],
                                      func_desc["offsets"])
@@ -604,14 +623,14 @@ def set_breakpoint(debugger, string):
     found = False
 
     if line:
-        source = line.group(1)
+        source_name = line.group(1)
         line = int(line.group(2))
 
         for breakpoint in debugger.line_list.get(line):
-            func_source = breakpoint.function.source
-            if (source == func_source or
-                    func_source.endswith("/" + source) or
-                    func_source.endswith("\\" + source)):
+            func_source = breakpoint.function.source_name
+            if (source_name == func_source or
+                    func_source.endswith("/" + source_name) or
+                    func_source.endswith("\\" + source_name)):
 
                 enable_breakpoint(debugger, breakpoint)
                 found = True
@@ -656,8 +675,10 @@ def main():
                            JERRY_DEBUGGER_BYTE_CODE_CP,
                            JERRY_DEBUGGER_PARSE_FUNCTION,
                            JERRY_DEBUGGER_BREAKPOINT_LIST,
-                           JERRY_DEBUGGER_RESOURCE_NAME,
-                           JERRY_DEBUGGER_RESOURCE_NAME_END,
+                           JERRY_DEBUGGER_SOURCE_CODE,
+                           JERRY_DEBUGGER_SOURCE_CODE_END,
+                           JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                           JERRY_DEBUGGER_SOURCE_CODE_NAME_END,
                            JERRY_DEBUGGER_FUNCTION_NAME,
                            JERRY_DEBUGGER_FUNCTION_NAME_END]:
             parse_source(debugger, data)
@@ -670,6 +691,8 @@ def main():
 
             function = debugger.function_list[breakpoint_data[0]]
             breakpoint = function.offsets[breakpoint_data[1]]
+
+            debugger.last_breakpoint_hit = breakpoint
 
             breakpoint_index = ""
             if breakpoint.active_index >= 0:

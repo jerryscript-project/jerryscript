@@ -151,9 +151,17 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
         if (ECMA_STRING_GET_CONTAINER (property_name_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
         {
           ecma_value_t value = ecma_op_typedarray_get_index_prop (object_p, property_name_p->u.uint32_number);
+
           if (!ecma_is_value_undefined (value))
           {
-            property_ref_p->virtual_value = value;
+            if (options & ECMA_PROPERTY_GET_VALUE)
+            {
+              property_ref_p->virtual_value = value;
+            }
+            else
+            {
+              ecma_fast_free_value (value);
+            }
 
             return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
           }

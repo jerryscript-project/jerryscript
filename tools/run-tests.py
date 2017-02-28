@@ -81,6 +81,7 @@ jerry_tests_options = [
                         Options('jerry_tests-debug', ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
                         Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
                         Options('jerry_tests-debug-snapshot', ['--debug', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
+                        Options('jerry_tests-es2015-subset-debug', ['--debug', '--profile=es2015-subset'])
                       ]
 
 # Test options for jerry-test-suite
@@ -91,7 +92,6 @@ jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug', ['--de
 jerry_test_suite_options.append(Options('jerry_test_suite-minimal-debug-snapshot', ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
 jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset', ['--profile=es2015-subset']))
 jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset-snapshot', ['--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
-jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset-debug', ['--debug', '--profile=es2015-subset']))
 jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset-debug-snapshot', ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
 
 # Test options for test262
@@ -185,8 +185,16 @@ def run_jerry_tests():
             break
 
         test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir), JERRY_TESTS_DIR]
+        skip_list = []
+
+        if '--profile=es2015-subset' not in job.build_args:
+            skip_list.append("es2015\/")
+
         if script_args.skip_list:
-            test_cmd.append("--skip-list=" + script_args.skip_list)
+            skip_list.append(script_args.skip_list)
+
+        if skip_list:
+            test_cmd.append("--skip-list=" + ",".join(skip_list))
 
         if job.test_args:
             test_cmd.extend(job.test_args)

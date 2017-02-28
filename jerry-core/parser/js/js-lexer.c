@@ -1578,6 +1578,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;
+      context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
       return false;
     }
 

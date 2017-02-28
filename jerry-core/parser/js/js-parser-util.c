@@ -731,11 +731,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_NUMBER_TOO_LONG:
     {
-      return "Number too long.";
+      return "Number is too long.";
     }
     case PARSER_ERR_REGEXP_TOO_LONG:
     {
-      return "Regexp too long.";
+      return "Regexp is too long.";
     }
     case PARSER_ERR_UNTERMINATED_MULTILINE_COMMENT:
     {
@@ -767,11 +767,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_EVAL_NOT_ALLOWED:
     {
-      return "Eval is not allowed to use here in strict mode.";
+      return "Eval is not allowed to be used here in strict mode.";
     }
     case PARSER_ERR_ARGUMENTS_NOT_ALLOWED:
     {
-      return "Arguments is not allowed to use here in strict mode.";
+      return "Arguments is not allowed to be used here in strict mode.";
     }
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
@@ -779,11 +779,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_EVAL_CANNOT_ASSIGNED:
     {
-      return "Eval cannot assigned in strict mode.";
+      return "Eval cannot be assigned to in strict mode.";
     }
     case PARSER_ERR_ARGUMENTS_CANNOT_ASSIGNED:
     {
-      return "Arguments cannot assigned in strict mode.";
+      return "Arguments cannot be assigned to in strict mode.";
     }
     case PARSER_ERR_WITH_NOT_ALLOWED:
     {
@@ -791,7 +791,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_MULTIPLE_DEFAULTS_NOT_ALLOWED:
     {
-      return "Multiple default cases not allowed.";
+      return "Multiple default cases are not allowed.";
     }
     case PARSER_ERR_DEFAULT_NOT_IN_SWITCH:
     {
@@ -895,7 +895,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_INVALID_BREAK_LABEL:
     {
-      return "Labelled statement targeted by a break not found.";
+      return "Labeled statement targeted by a break not found.";
     }
     case PARSER_ERR_INVALID_CONTINUE:
     {
@@ -903,7 +903,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_INVALID_CONTINUE_LABEL:
     {
-      return "Labelled statement targeted by a continue noty found.";
+      return "Labeled statement targeted by a continue not found.";
     }
     case PARSER_ERR_INVALID_RETURN:
     {
@@ -923,7 +923,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_NON_STRICT_ARG_DEFINITION:
     {
-      return "Non strict argument definition.";
+      return "Non-strict argument definition.";
     }
     default:
     {

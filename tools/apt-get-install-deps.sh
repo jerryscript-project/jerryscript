@@ -19,4 +19,4 @@ sudo apt-get install -q -y \
     make cmake \
     gcc gcc-multilib \
     doxygen \
-    cppcheck vera++ python pylint
+    cppcheck vera++ python

@@ -155,7 +155,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
   /* 2. */
-  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
+  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
     return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
   }

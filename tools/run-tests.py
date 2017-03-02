@@ -25,6 +25,7 @@ OUTPUT_DIR = path.join(PROJECT_DIR, 'build', 'tests')
 parser = argparse.ArgumentParser()
 parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
 parser.add_argument('--buildoptions', action='store', default='', help='Add a comma separated list of extra build options to each test')
+parser.add_argument('--skip-list', action='store', default='', help='Add a comma separated list of patterns of the excluded JS-tests')
 parser.add_argument('--outdir', action='store', default=OUTPUT_DIR, help='Specify output directory (default: %(default)s)')
 parser.add_argument('--check-signed-off', action='store_true', default=False, help='Run signed-off check')
 parser.add_argument('--check-signed-off-tolerant', action='store_true', default=False, help='Run signed-off check in tolerant mode')
@@ -184,6 +185,9 @@ def run_jerry_tests():
             break
 
         test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir), JERRY_TESTS_DIR]
+        if script_args.skip_list:
+            test_cmd.append("--skip-list=" + script_args.skip_list)
+
         if job.test_args:
             test_cmd.extend(job.test_args)
 
@@ -206,6 +210,9 @@ def run_jerry_test_suite():
             test_cmd.append(JERRY_TEST_SUITE_DIR)
         else:
             test_cmd.append(JERRY_TEST_SUITE_ES51_LIST)
+
+        if script_args.skip_list:
+            test_cmd.append("--skip-list=" + script_args.skip_list)
 
         if job.test_args:
             test_cmd.extend(job.test_args)

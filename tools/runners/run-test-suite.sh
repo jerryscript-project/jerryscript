@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Usage:
-#       ./tools/runners/run-test-suite.sh ENGINE TESTS [--snapshot] ENGINE_ARGS....
+#       ./tools/runners/run-test-suite.sh ENGINE TESTS [--skip-list=item1,item2] [--snapshot] ENGINE_ARGS....
 
 TIMEOUT=${TIMEOUT:=5}
 
@@ -31,6 +31,13 @@ TESTS_BASENAME=`basename $TESTS`
 TEST_FILES=$OUTPUT_DIR/$TESTS_BASENAME.files
 TEST_FAILED=$OUTPUT_DIR/$TESTS_BASENAME.failed
 TEST_PASSED=$OUTPUT_DIR/$TESTS_BASENAME.passed
+
+if [[ "$1" =~ ^--skip-list=.* ]]
+then
+    SKIP_LIST=${1#--skip-list=}
+    SKIP_LIST=(${SKIP_LIST//,/ })
+    shift
+fi
 
 if [ "$1" == "--snapshot" ]
 then
@@ -64,8 +71,14 @@ else
     exit 1
 fi
 
-total=$(cat $TEST_FILES | wc -l)
-if [ "$total" -eq 0 ]
+# Remove the skipped tests from list
+for TEST in "${SKIP_LIST[@]}"
+do
+    ( sed -i "/$TEST/d" $TEST_FILES )
+done
+
+TOTAL=$(cat $TEST_FILES | wc -l)
+if [ "$TOTAL" -eq 0 ]
 then
     echo "$0: $TESTS: no test in test suite"
     exit 1
@@ -122,7 +135,7 @@ do
 
         if [ $status_code -eq 0 ]
         then
-            echo "[$tested/$total] $cmd_line: PASS"
+            echo "[$tested/$TOTAL] $cmd_line: PASS"
 
             cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP"
             ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP )
@@ -138,7 +151,7 @@ do
 
     if [ $status_code -ne $error_code ]
     then
-        echo "[$tested/$total] $cmd_line: FAIL ($status_code)"
+        echo "[$tested/$TOTAL] $cmd_line: FAIL ($status_code)"
         cat $ENGINE_TEMP
 
         echo "$status_code: $test" >> $TEST_FAILED
@@ -150,7 +163,7 @@ do
 
         failed=$((failed+1))
     else
-        echo "[$tested/$total] $cmd_line: $PASS"
+        echo "[$tested/$TOTAL] $cmd_line: $PASS"
 
         echo "$test" >> $TEST_PASSED
 
@@ -162,14 +175,14 @@ done
 
 rm -f $ENGINE_TEMP
 
-ratio=$(echo $passed*100/$total | bc)
+ratio=$(echo $passed*100/$TOTAL | bc)
 
 if [ "$IS_SNAPSHOT" == true ]
 then
     ENGINE_ARGS="--snapshot $ENGINE_ARGS"
 fi
 
-echo "[summary] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${TESTS#$ROOT_DIR}: $passed PASS, $failed FAIL, $total total, $ratio% success"
+echo "[summary] ${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${TESTS#$ROOT_DIR}: $passed PASS, $failed FAIL, $TOTAL total, $ratio% success"
 
 if [ $failed -ne 0 ]
 then

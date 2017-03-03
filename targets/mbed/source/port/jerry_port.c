@@ -76,10 +76,12 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< timezone pointer */
 /**
  * Implementation of jerry_port_get_current_time.
  *
- * @return current timer's counter value in microseconds 
+ * @return current timer's counter value in milliseconds
  */
 double
 jerry_port_get_current_time ()
 {
-  return (double) us_ticker_read ();
+  /* Note: if the target has its own RTC, this value should be extended by the
+   * RTC's one. */
+  return (double) us_ticker_read () / 1000;
 } /* jerry_port_get_current_time */

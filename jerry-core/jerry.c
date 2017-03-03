@@ -50,9 +50,11 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
                      ecma_standard_error_t_must_be_equal_to_jerry_error_t);
 
-#if !defined (JERRY_JS_PARSER) && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
-#error JERRY_JS_PARSER or JERRY_ENABLE_SNAPSHOT_EXEC must be defined!
-#endif /* !JERRY_JS_PARSER && !JERRY_ENABLE_SNAPSHOT_EXEC */
+#ifndef JERRY_JS_PARSER
+#error JERRY_JS_PARSER must be defined with 0 (disabled) or 1 (enabled)
+#elif (JERRY_JS_PARSER == 0) && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
+#error JERRY_JS_PARSER or JERRY_ENABLE_SNAPSHOT_EXEC must be enabled!
+#endif /* JERRY_JS_PARSER */
 
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
 

@@ -364,7 +364,13 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   {
     this_value = stack_top_p[-3];
 
-    if (vm_get_implicit_this_value (&this_value))
+    if (this_value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_REGISTER_REF))
+    {
+      /* Lexical environment cannot be 'this' value. */
+      stack_top_p[-2] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      this_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else if (vm_get_implicit_this_value (&this_value))
     {
       ecma_free_value (stack_top_p[-3]);
       stack_top_p[-3] = this_value;

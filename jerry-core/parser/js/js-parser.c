@@ -20,7 +20,7 @@
 #include "jerry-debugger.h"
 #include "js-parser-internal.h"
 
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -2369,7 +2369,7 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
                      bool is_strict, /**< strict mode */
                      ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
 {
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
   parser_error_location_t parser_error;
 
 #ifdef JERRY_DEBUGGER

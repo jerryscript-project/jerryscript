@@ -167,9 +167,7 @@ class DebuggerPrompt(Cmd):
         """ Insert breakpoints on the given lines """
         self.insert_breakpoint(args)
 
-    def do_b(self, args):
-        """ Insert breakpoints on the given lines """
-        self.insert_breakpoint(args)
+    do_b = do_break
 
     def exec_command(self, args, command_id):
         self.stop = True
@@ -185,28 +183,19 @@ class DebuggerPrompt(Cmd):
         self.cont = True
         print("Press enter to stop JavaScript execution.")
 
-    def do_c(self, args):
-        """ Continue execution """
-        self.exec_command(args, JERRY_DEBUGGER_CONTINUE)
-        self.stop = True
-        self.cont = True
-        print("Press enter to stop JavaScript execution.")
+    do_c = do_continue
 
     def do_step(self, args):
         """ Next breakpoint, step into functions """
         self.exec_command(args, JERRY_DEBUGGER_STEP)
 
-    def do_s(self, args):
-        """ Next breakpoint, step into functions """
-        self.exec_command(args, JERRY_DEBUGGER_STEP)
+    do_s = do_step
 
     def do_next(self, args):
         """ Next breakpoint in the same context """
         self.exec_command(args, JERRY_DEBUGGER_NEXT)
 
-    def do_n(self, args):
-        """ Next breakpoint in the same context """
-        self.exec_command(args, JERRY_DEBUGGER_NEXT)
+    do_n = do_next
 
     def do_list(self, args):
         """ Lists the available breakpoints """
@@ -270,9 +259,7 @@ class DebuggerPrompt(Cmd):
         """ Get backtrace data from debugger """
         self.exec_backtrace(args)
 
-    def do_bt(self, args):
-        """ Get backtrace data from debugger """
-        self.exec_backtrace(args)
+    do_bt = do_backtrace
 
     def do_src(self, args):
         """ Get current source code """
@@ -331,9 +318,7 @@ class DebuggerPrompt(Cmd):
         """ Evaluate JavaScript source code """
         self.eval_string(args)
 
-    def do_e(self, args):
-        """ Evaluate JavaScript source code """
-        self.eval_string(args)
+    do_e = do_eval
 
 
 class Multimap(object):

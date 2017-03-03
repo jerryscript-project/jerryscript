@@ -650,14 +650,19 @@ typedef struct
   uint16_t literal_end;             /**< end position of the literal group */
 } cbc_uint16_arguments_t;
 
-/* When CBC_CODE_FLAGS_FULL_LITERAL_ENCODING
- * is not set the small encoding is used. */
-#define CBC_CODE_FLAGS_FUNCTION 0x01
-#define CBC_CODE_FLAGS_FULL_LITERAL_ENCODING 0x02
-#define CBC_CODE_FLAGS_UINT16_ARGUMENTS 0x04
-#define CBC_CODE_FLAGS_STRICT_MODE 0x08
-#define CBC_CODE_FLAGS_ARGUMENTS_NEEDED 0x10
-#define CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED 0x20
+/**
+ * Compact byte code status flags.
+ */
+typedef enum
+{
+  CBC_CODE_FLAGS_FUNCTION = (1u << 0), /**< compiled code is JavaScript function */
+  CBC_CODE_FLAGS_FULL_LITERAL_ENCODING = (1u << 1), /**< full literal encoding mode is enabled */
+  CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 2), /**< compiled code data is cbc_uint16_arguments_t */
+  CBC_CODE_FLAGS_STRICT_MODE = (1u << 3), /**< strict mode is enabled */
+  CBC_CODE_FLAGS_ARGUMENTS_NEEDED = (1u << 4), /**< arguments object must be constructed */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
+} cbc_code_flags;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

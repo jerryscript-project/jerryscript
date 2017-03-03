@@ -98,9 +98,8 @@ typedef enum
  */
 typedef struct
 {
-  uint16_t size;
-  jmem_cpointer_t prev_cp;
-  jmem_cpointer_t next_cp;
+  uint16_t size; /**< size of the byte code header divided by JMEM_ALIGNMENT */
+  jmem_cpointer_t prev_cp; /**< previous byte code data to be freed */
 } jerry_debugger_byte_code_free_t;
 
 /**

@@ -395,6 +395,10 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
 
   JERRY_ASSERT (bytecode_p->refs == 1);
 
+#ifdef JERRY_DEBUGGER
+  bytecode_p->status_flags = (uint16_t) (bytecode_p->status_flags | CBC_CODE_FLAGS_DEBUGGER_IGNORE);
+#endif /* JERRY_DEBUGGER */
+
   jmem_cpointer_t *literal_start_p = (jmem_cpointer_t *) (((uint8_t *) bytecode_p) + header_size);
 
   for (uint32_t i = 0; i < const_literal_end; i++)

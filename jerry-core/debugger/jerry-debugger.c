@@ -45,18 +45,18 @@ jerry_debugger_free_unreferenced_byte_code (void)
   jerry_debugger_byte_code_free_t *byte_code_free_p;
 
   byte_code_free_p = JMEM_CP_GET_POINTER (jerry_debugger_byte_code_free_t,
-                                          JERRY_CONTEXT (debugger_byte_code_free_head));
+                                          JERRY_CONTEXT (debugger_byte_code_free_tail));
 
   while (byte_code_free_p != NULL)
   {
-    jerry_debugger_byte_code_free_t *next_byte_code_free_p;
-    next_byte_code_free_p = JMEM_CP_GET_POINTER (jerry_debugger_byte_code_free_t,
-                                                 byte_code_free_p->next_cp);
+    jerry_debugger_byte_code_free_t *prev_byte_code_free_p;
+    prev_byte_code_free_p = JMEM_CP_GET_POINTER (jerry_debugger_byte_code_free_t,
+                                                 byte_code_free_p->prev_cp);
 
     jmem_heap_free_block (byte_code_free_p,
                           ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
 
-    byte_code_free_p = next_byte_code_free_p;
+    byte_code_free_p = prev_byte_code_free_p;
   }
 } /* jerry_debugger_free_unreferenced_byte_code */
 
@@ -88,6 +88,12 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer the the rece
 
   while (frame_ctx_p != NULL && max_depth > 0)
   {
+    if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+    {
+      frame_ctx_p = frame_ctx_p->prev_context_p;
+      continue;
+    }
+
     if (current_frame >= JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t))
     {
       if (!jerry_debugger_send (sizeof (jerry_debugger_send_backtrace_t)))
@@ -283,31 +289,25 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       jmem_cpointer_t byte_code_free_cp;
       memcpy (&byte_code_free_cp, byte_code_p->byte_code_cp, sizeof (jmem_cpointer_t));
 
+      if (byte_code_free_cp != JERRY_CONTEXT (debugger_byte_code_free_tail))
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid byte code free order\n");
+        jerry_debugger_close_connection ();
+        return false;
+      }
+
       jerry_debugger_byte_code_free_t *byte_code_free_p;
       byte_code_free_p = JMEM_CP_GET_NON_NULL_POINTER (jerry_debugger_byte_code_free_t,
                                                        byte_code_free_cp);
 
-      if (JERRY_CONTEXT (debugger_byte_code_free_head) == byte_code_free_cp)
-      {
-        JERRY_CONTEXT (debugger_byte_code_free_head) = byte_code_free_p->next_cp;
-      }
-
       if (byte_code_free_p->prev_cp != ECMA_NULL_POINTER)
       {
-        jerry_debugger_byte_code_free_t *prev_byte_code_free_p;
-        prev_byte_code_free_p = JMEM_CP_GET_NON_NULL_POINTER (jerry_debugger_byte_code_free_t,
-                                                              byte_code_free_p->prev_cp);
-
-        prev_byte_code_free_p->next_cp = byte_code_free_p->next_cp;
+        JERRY_CONTEXT (debugger_byte_code_free_tail) = byte_code_free_p->prev_cp;
       }
-
-      if (byte_code_free_p->next_cp != ECMA_NULL_POINTER)
+      else
       {
-        jerry_debugger_byte_code_free_t *next_byte_code_free_p;
-        next_byte_code_free_p = JMEM_CP_GET_NON_NULL_POINTER (jerry_debugger_byte_code_free_t,
-                                                              byte_code_free_p->next_cp);
-
-        next_byte_code_free_p->prev_cp = byte_code_free_p->prev_cp;
+        JERRY_CONTEXT (debugger_byte_code_free_head) = ECMA_NULL_POINTER;
+        JERRY_CONTEXT (debugger_byte_code_free_tail) = ECMA_NULL_POINTER;
       }
 
       jmem_heap_free_block (byte_code_free_p,

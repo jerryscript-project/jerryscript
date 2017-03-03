@@ -88,6 +88,7 @@ typedef struct
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */
   jmem_cpointer_t debugger_byte_code_free_head; /**< head of byte code free linked list */
+  jmem_cpointer_t debugger_byte_code_free_tail; /**< tail of byte code free linked list */
   int debugger_connection; /**< hold the file descriptor for socket communication */
   uint8_t debugger_flags; /**< debugger flags */
   vm_frame_ctx_t *debugger_stop_context; /**< stop only if the current context is equal to this context */

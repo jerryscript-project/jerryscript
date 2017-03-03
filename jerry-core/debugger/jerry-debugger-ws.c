@@ -551,9 +551,9 @@ jerry_debugger_receive (void)
 
     if (message_total_size < offset)
     {
-      memcpy (recv_buffer_p,
-              recv_buffer_p + message_total_size,
-              offset - message_total_size);
+      memmove (recv_buffer_p,
+               recv_buffer_p + message_total_size,
+               offset - message_total_size);
     }
 
     JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) (offset - message_total_size);

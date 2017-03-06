@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
 
 #ifdef JERRY_DEBUGGER
 #include "jcontext.h"

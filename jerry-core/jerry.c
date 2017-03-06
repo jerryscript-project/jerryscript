@@ -50,9 +50,11 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
                      ecma_standard_error_t_must_be_equal_to_jerry_error_t);
 
-#if !defined (JERRY_JS_PARSER) && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
+#ifndef JERRY_JS_PARSER
+#error JERRY_JS_PARSER must be defined with 0 (disabled) or 1 (enabled)
+#elif !JERRY_JS_PARSER && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
 #error JERRY_JS_PARSER or JERRY_ENABLE_SNAPSHOT_EXEC must be defined!
-#endif /* !JERRY_JS_PARSER && !JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* !JERRY_JS_PARSER */
 
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
 
@@ -269,7 +271,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
              bool is_strict) /**< strict mode */
 {
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
   jerry_assert_api_available ();
 
   ecma_compiled_code_t *bytecode_data_p;
@@ -566,7 +568,7 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
           || feature == JERRY_FEATURE_ERROR_MESSAGES
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
           || feature == JERRY_FEATURE_JS_PARSER
 #endif /* JERRY_JS_PARSER */
 #ifdef JMEM_STATS

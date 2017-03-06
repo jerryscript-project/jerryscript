@@ -20,7 +20,7 @@
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
 
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{

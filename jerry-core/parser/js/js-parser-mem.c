@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
 
 /** \addtogroup mem Memory allocation
  * @{

@@ -81,7 +81,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
                            bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
                            bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
 {
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
   JERRY_ASSERT (code_p != NULL);
 
   ecma_compiled_code_t *bytecode_data_p;

@@ -16,7 +16,7 @@
 #include "common.h"
 #include "ecma-helpers.h"
 
-#ifdef JERRY_JS_PARSER
+#if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{

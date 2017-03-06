@@ -74,7 +74,7 @@ fi
 # Remove the skipped tests from list
 for TEST in "${SKIP_LIST[@]}"
 do
-    ( sed -i "/$TEST/d" $TEST_FILES )
+    ( sed -i -r "/$TEST/d" $TEST_FILES )
 done
 
 TOTAL=$(cat $TEST_FILES | wc -l)

@@ -1,9 +1,14 @@
 Connecting to: localhost:5001
 Stopped at tests/debugger/do_backtrace.js:15
-(jerry-debugger) Breakpoint 1 at tests/debugger/do_backtrace.js:32 (in f4)
-(jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_backtrace.js:32 (in f4)
-(jerry-debugger) Frame 0: tests/debugger/do_backtrace.js:32 (in f4)
-Frame 1: tests/debugger/do_backtrace.js:39 (in foo)
-Frame 2: tests/debugger/do_backtrace.js:48 (in test)
-Frame 3: tests/debugger/do_backtrace.js:60
-(jerry-debugger) Connection closed.
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:28
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:37
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:40
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:30 (in test)
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:32 (in test)
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:33 (in test)
+(jerry-debugger) Stopped at tests/debugger/do_backtrace.js:21 (in foo)
+(jerry-debugger) Frame 0: tests/debugger/do_backtrace.js:21 (in foo)
+Frame 1: tests/debugger/do_backtrace.js:33 (in test)
+Frame 2: tests/debugger/do_backtrace.js:40
+(jerry-debugger) Press enter to stop JavaScript execution.
+Connection closed.

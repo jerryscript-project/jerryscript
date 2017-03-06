@@ -12,21 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-print("first line of code");
-
-function f1()
-{
-	function f2()
-	{
-		return function f3() {
-			a = 4;
-			print("funciton f3");
-		};
-	}
-
-	x =
-	  6;
-}
+print("backtrace-test");
 
 function f4() {
 	print("function f4");
@@ -39,18 +25,12 @@ function foo()
   f4();
 }
 
-print ("var cat");
 var cat = 'cat';
 
 function test()
 {
 	print("function test");
 	foo();
-	var a = 3;
-	var b = 5;
-	var c = a + b;
-	global_var = c;
-	return c;
 }
 
 var

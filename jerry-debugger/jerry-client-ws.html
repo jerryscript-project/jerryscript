@@ -894,10 +894,43 @@ function DebuggerClient(address)
     }
   }
 
+  this.sendResumeExec = function(command)
+  {
+    if (!lastBreakpointHit)
+    {
+      appendLog("This command is allowed only if JavaScript execution is stopped at a breakpoint.");
+      return;
+    }
+
+    encodeMessage("B", [ command ]);
+
+    lastBreakpointHit = null;
+  }
+
+  this.sendGetBacktrace = function(depth)
+  {
+    if (!lastBreakpointHit)
+    {
+      appendLog("This command is allowed only if JavaScript execution is stopped at a breakpoint.");
+      return;
+    }
+
+    encodeMessage("BI", [ JERRY_DEBUGGER_GET_BACKTRACE, max_depth ]);
+
+    appendLog("Backtrace:");
+  }
+
   this.sendEval = function(str)
   {
+    if (!lastBreakpointHit)
+    {
+      appendLog("This command is allowed only if JavaScript execution is stopped at a breakpoint.");
+      return;
+    }
+
     if (str == "")
     {
+      appendLog("Argument required");
       return;
     }
 
@@ -1054,23 +1087,24 @@ function debuggerCommand(event)
       debuggerObj.deleteBreakpoint(args[2]);
       break;
 
+    case "st":
     case "stop":
       debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_STOP ]);
       break;
 
     case "c":
     case "continue":
-      debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_CONTINUE ]);
+      debuggerObj.sendResumeExec(JERRY_DEBUGGER_CONTINUE);
       break;
 
     case "s":
     case "step":
-      debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_STEP ]);
+      debuggerObj.sendResumeExec(JERRY_DEBUGGER_STEP);
       break;
 
     case "n":
     case "next":
-      debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_NEXT ]);
+      debuggerObj.sendResumeExec(JERRY_DEBUGGER_NEXT);
       break;
 
     case "e":
@@ -1095,9 +1129,7 @@ function debuggerCommand(event)
         }
       }
 
-      appendLog("Backtrace:");
-
-      debuggerObj.encodeMessage("BI", [ JERRY_DEBUGGER_GET_BACKTRACE, max_depth ]);
+      debuggerObj.sendGetBacktrace(max_depth);
       break;
 
     case "src":

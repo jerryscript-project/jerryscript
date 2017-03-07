@@ -225,6 +225,14 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
 {
   /* Process the received message. */
 
+  if (recv_buffer_p[0] >= JERRY_DEBUGGER_CONTINUE
+      && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Message requires breakpoint mode\n");
+    jerry_debugger_close_connection ();
+    return false;
+  }
+
   if (*expected_message_type_p != 0)
   {
     JERRY_ASSERT (*expected_message_type_p == JERRY_DEBUGGER_EVAL_PART);
@@ -466,9 +474,13 @@ jerry_debugger_breakpoint_hit (void)
     return;
   }
 
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_BREAKPOINT_MODE);
+
   while (!jerry_debugger_receive ())
   {
   }
+
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_BREAKPOINT_MODE);
 
   JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
 } /* jerry_debugger_breakpoint_hit */

@@ -167,13 +167,22 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
  * Mark referenced object from property
  */
 static void
-ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
+ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair */
+                       uint32_t index) /**< property index */
 {
-  switch (ECMA_PROPERTY_GET_TYPE (*property_p))
+  uint8_t property = property_pair_p->header.types[index];
+
+  switch (ECMA_PROPERTY_GET_TYPE (property))
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      ecma_value_t value = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
+      if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_STRING_CONTAINER_MAGIC_STRING
+          && property_pair_p->names_cp[index] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+      {
+        break;
+      }
+
+      ecma_value_t value = property_pair_p->values[index].value;
 
       if (ecma_is_value_object (value))
       {
@@ -185,9 +194,9 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
     }
     case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
     {
-      ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-      ecma_object_t *getter_obj_p = ecma_get_named_accessor_property_getter (prop_value_p);
-      ecma_object_t *setter_obj_p = ecma_get_named_accessor_property_setter (prop_value_p);
+      ecma_property_value_t *accessor_objs_p = property_pair_p->values + index;
+      ecma_object_t *getter_obj_p = ecma_get_named_accessor_property_getter (accessor_objs_p);
+      ecma_object_t *setter_obj_p = ecma_get_named_accessor_property_setter (accessor_objs_p);
 
       if (getter_obj_p != NULL)
       {
@@ -202,8 +211,8 @@ ecma_gc_mark_property (ecma_property_t *property_p) /**< property */
     }
     case ECMA_PROPERTY_TYPE_SPECIAL:
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_DELETED
-                    || ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (property_p) == ECMA_SPECIAL_PROPERTY_HASHMAP);
+      JERRY_ASSERT (ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (&property) == ECMA_SPECIAL_PROPERTY_DELETED
+                    || ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (&property) == ECMA_SPECIAL_PROPERTY_HASHMAP);
       break;
     }
     default:
@@ -328,8 +337,8 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP
                     || ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
-      ecma_gc_mark_property (prop_iter_p->types + 0);
-      ecma_gc_mark_property (prop_iter_p->types + 1);
+      ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 0);
+      ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 1);
 
       prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                       prop_iter_p->next_property_cp);

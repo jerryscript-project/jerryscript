@@ -68,6 +68,7 @@ def arguments_parse():
 
     parser.add_argument("address", action="store", nargs="?", default="localhost:5001", help="specify a unique network address for connection (default: %(default)s)")
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="increase verbosity (default: %(default)s)")
+    parser.add_argument("--non-interactive", action="store_true", default=False, help="disable stop when newline is pressed (default: %(default)s)")
 
     args = parser.parse_args()
 
@@ -140,7 +141,7 @@ class DebuggerPrompt(Cmd):
         self.debugger = debugger
         self.stop = False
         self.quit = False
-        self.cont = False
+        self.cont = True
 
     def precmd(self, line):
         self.stop = False
@@ -188,12 +189,14 @@ class DebuggerPrompt(Cmd):
     def do_step(self, args):
         """ Next breakpoint, step into functions """
         self.exec_command(args, JERRY_DEBUGGER_STEP)
+        self.cont = True
 
     do_s = do_step
 
     def do_next(self, args):
         """ Next breakpoint in the same context """
         self.exec_command(args, JERRY_DEBUGGER_NEXT)
+        self.cont = True
 
     do_n = do_next
 
@@ -669,13 +672,15 @@ def main():
 
     debugger = JerryDebugger(args.address)
 
+    non_interactive = args.non_interactive
+
     logging.debug("Connected to JerryScript on %d port" % (debugger.port))
 
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "
 
     while True:
-        if prompt.cont:
+        if not non_interactive and prompt.cont:
             if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                 sys.stdin.readline()
                 prompt.cont = False

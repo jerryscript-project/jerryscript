@@ -44,14 +44,39 @@
  ((JERRY_DEBUGGER_MAX_SEND_SIZE - sizeof (jerry_debugger_send_header_t) - 1) / sizeof (type))
 
 /**
+ * Debugger operation modes:
+ *
+ * The debugger has two operation modes: run mode and breakpoint mode.
+ *
+ * In run mode the debugger server accepts only a limited number of message
+ * types from the debugger client (e.g. stop execution, set breakpoint).
+ *
+ * In breakpoint mode the JavaScript execution is stopped at a breakpoint and
+ * more message types are accepted (e.g. get backtrace, evaluate expression).
+ *
+ * Switching between modes:
+ *
+ * When the JavaScript execution stops at a breakpoint the server sends a
+ * JERRY_DEBUGGER_BREAKPOINT_HIT message to the client. The client can only
+ * issue breakpoint mode commands after this message is received.
+ *
+ * Certain breakpoint mode commands (e.g. continue) resumes the JavaScript
+ * execution and the client must not send any breakpoint mode messages
+ * until the JERRY_DEBUGGER_BREAKPOINT_HIT is received again.
+ *
+ * The debugger server starts in run mode but stops at the first available
+ * breakpoint.
+ */
+
+/**
  * Debugger option flags.
  */
 typedef enum
 {
   JERRY_DEBUGGER_CONNECTED = 1u << 0, /**< debugger is connected */
-  JERRY_DEBUGGER_VM_STOP = 1u << 1, /**< stop at the next breakpoint
-                                     *   regardless it is enabled */
-  JERRY_DEBUGGER_VM_IGNORE = 1u << 2, /**< ignore all breakpoints */
+  JERRY_DEBUGGER_BREAKPOINT_MODE = 1u << 1, /**< debugger waiting at a breakpoint */
+  JERRY_DEBUGGER_VM_STOP = 1u << 2, /**< stop at the next breakpoint regardless it is enabled */
+  JERRY_DEBUGGER_VM_IGNORE = 1u << 3, /**< ignore all breakpoints */
 } jerry_debugger_flags_t;
 
 /**
@@ -82,12 +107,18 @@ typedef enum
   JERRY_DEBUGGER_EVAL_ERROR_END = 20, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
+
+  /* The following messages are accepted in both run and breakpoint modes. */
   JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1, /**< free byte code compressed pointer */
   JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2, /**< update breakpoint status */
   JERRY_DEBUGGER_STOP = 3, /**< stop execution */
+  /* The following messages are only available in breakpoint
+   * mode and they switch the engine to run mode. */
   JERRY_DEBUGGER_CONTINUE = 4, /**< continue execution */
   JERRY_DEBUGGER_STEP = 5, /**< next breakpoint, step into functions */
   JERRY_DEBUGGER_NEXT = 6, /**< next breakpoint in the same context */
+  /* The following messages are only available in breakpoint
+   * mode and this mode is kept after the message is processed. */
   JERRY_DEBUGGER_GET_BACKTRACE = 7, /**< get backtrace */
   JERRY_DEBUGGER_EVAL = 8, /**< first message of evaluating a string */
   JERRY_DEBUGGER_EVAL_PART = 9, /**< next message of evaluating a string */

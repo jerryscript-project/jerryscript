@@ -24,7 +24,7 @@ echo "$START_DEBUG_SERVER"
 eval "$START_DEBUG_SERVER"
 sleep 1s
 
-RESULT=$((cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT}) 2>&1)
+RESULT=$((cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive) 2>&1)
 DIFF=$(diff -u0 ${TEST_CASE}.expected <(echo "$RESULT"))
 
 if [ -n "$DIFF" ]

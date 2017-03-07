@@ -2321,19 +2321,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-          if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
-          {
-            /* Messages are still processed regardless of ignore. */
-            if (JERRY_CONTEXT (debugger_message_delay) > 0)
-            {
-              JERRY_CONTEXT (debugger_message_delay)--;
-              continue;
-            }
-
-            JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
-            jerry_debugger_receive ();
-            continue;
-          }
+          JERRY_ASSERT (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE));
 
           frame_ctx_p->byte_code_p = byte_code_start_p;
 
@@ -2351,19 +2339,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-          if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
-          {
-            /* Messages are still processed regardless of ignore. */
-            if (JERRY_CONTEXT (debugger_message_delay) > 0)
-            {
-              JERRY_CONTEXT (debugger_message_delay)--;
-              continue;
-            }
-
-            JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
-            jerry_debugger_receive ();
-            continue;
-          }
+          JERRY_ASSERT (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE));
 
           frame_ctx_p->byte_code_p = byte_code_start_p;
 

@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
+#include <stdarg.h>
 #include "ecma-builtins.h"
+#include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
@@ -155,6 +157,95 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
 
   return ecma_make_error_obj_value (error_obj_p);
 } /* ecma_raise_standard_error */
+
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+
+/**
+ * Raise a standard ecma-error with the given format string and arguments.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< error type */
+                                       const char *format, /**< format string */
+                                       ...) /**< ecma-values */
+{
+  JERRY_ASSERT (format != NULL);
+
+  ecma_string_t *error_msg_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  ecma_string_t *string1_p;
+  ecma_string_t *string2_p;
+
+  const char *start_p = format;
+  const char *end_p = format;
+
+  va_list args;
+
+  va_start (args, format);
+
+  while (*end_p)
+  {
+    if (*end_p == '%')
+    {
+      /* Concat template string. */
+      if (end_p > start_p)
+      {
+        string1_p = error_msg_p;
+        string2_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) start_p,
+                                                    (lit_utf8_size_t) (end_p - start_p));
+        error_msg_p = ecma_concat_ecma_strings (string1_p, string2_p);
+        ecma_deref_ecma_string (string1_p);
+        ecma_deref_ecma_string (string2_p);
+      }
+
+      /* Convert an argument to string without side effects. */
+      ecma_string_t *arg_string_p;
+      const ecma_value_t arg_val = va_arg (args, ecma_value_t);
+      if (unlikely (ecma_is_value_object (arg_val)))
+      {
+        ecma_object_t *arg_object_p = ecma_get_object_from_value (arg_val);
+        lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);
+        arg_string_p = ecma_get_magic_string (class_name);
+      }
+      else
+      {
+        jerry_value_t str_val = ecma_op_to_string (arg_val);
+        arg_string_p = ecma_get_string_from_value (str_val);
+      }
+
+      /* Concat argument. */
+      string1_p = error_msg_p;
+      string2_p = arg_string_p;
+      error_msg_p = ecma_concat_ecma_strings (string1_p, string2_p);
+      ecma_deref_ecma_string (string1_p);
+      ecma_deref_ecma_string (string2_p);
+
+      start_p = end_p + 1;
+    }
+
+    end_p++;
+  }
+
+  va_end (args);
+
+  /* Concat reset of template string. */
+  if (start_p < end_p)
+  {
+    string1_p = error_msg_p;
+    string2_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) start_p,
+                                                (lit_utf8_size_t) (end_p - start_p));
+    error_msg_p = ecma_concat_ecma_strings (string1_p, string2_p);
+    ecma_deref_ecma_string (string1_p);
+    ecma_deref_ecma_string (string2_p);
+  }
+
+  ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
+  ecma_deref_ecma_string (error_msg_p);
+  return ecma_make_error_obj_value (error_obj_p);
+} /* ecma_raise_standard_error_with_format */
+
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
 /**
  * Raise a common error with the given message.

@@ -448,24 +448,17 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   /* Checking if significant part of parse string is equal to "Infinity" */
   const lit_utf8_byte_t *infinity_zt_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
 
-  for (const lit_utf8_byte_t *iter_p = begin_p, *iter_infinity_p = infinity_zt_str_p;
-       ;
-       iter_infinity_p++, iter_p++)
-  {
-    if (*iter_p != *iter_infinity_p)
-    {
-      break;
-    }
+  JERRY_ASSERT (strlen ((const char *) infinity_zt_str_p) == 8);
 
-    if (iter_p == end_p)
-    {
-      return ecma_number_make_infinity (sign);
-    }
+  if ((end_p - begin_p) == (8 - 1) && memcmp (infinity_zt_str_p, begin_p, 8) == 0)
+  {
+    return ecma_number_make_infinity (sign);
   }
 
   uint64_t fraction_uint64 = 0;
   uint32_t digits = 0;
   int32_t e = 0;
+  bool digit_seen = false;
 
   /* Parsing digits before dot (or before end of digits part if there is no dot in number) */
   while (begin_p <= end_p)
@@ -475,6 +468,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     if (*begin_p >= LIT_CHAR_0
         && *begin_p <= LIT_CHAR_9)
     {
+      digit_seen = true;
       digit_value = (*begin_p - LIT_CHAR_0);
     }
     else
@@ -489,9 +483,8 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
         fraction_uint64 = fraction_uint64 * 10 + (uint32_t) digit_value;
         digits++;
       }
-      else if (e <= 100000) /* Some limit to not overflow exponent value
-                               (so big exponent anyway will make number
-                               rounded to infinity) */
+      else if (e <= 100000) /* Limit the exponent, since large
+                             * exponent is rounded to infinity anyway. */
       {
         e++;
       }
@@ -505,6 +498,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   {
     begin_p++;
 
+    if (!digit_seen && begin_p > end_p)
+    {
+      return ecma_number_make_nan ();
+    }
+
     /* Parsing number's part that is placed after dot */
     while (begin_p <= end_p)
     {
@@ -513,6 +511,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       if (*begin_p >= LIT_CHAR_0
           && *begin_p <= LIT_CHAR_9)
       {
+        digit_seen = true;
         digit_value = (*begin_p - LIT_CHAR_0);
       }
       else
@@ -544,6 +543,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
           || *begin_p == LIT_CHAR_UPPERCASE_E))
   {
     begin_p++;
+
+    if (!digit_seen || begin_p > end_p)
+    {
+      return ecma_number_make_nan ();
+    }
 
     if (*begin_p == LIT_CHAR_PLUS)
     {

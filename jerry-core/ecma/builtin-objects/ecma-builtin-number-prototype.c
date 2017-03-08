@@ -253,10 +253,15 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
         scale = -scale;
       }
 
-      int buff_size;
+      int buff_size = 1;
       if (is_scale_negative)
       {
-        buff_size = (int) floor (log (this_arg_number) / log (radix)) + 1;
+        double counter = this_arg_number;
+        while (counter > radix)
+        {
+          counter /= radix;
+          buff_size++;
+        }
       }
       else
       {

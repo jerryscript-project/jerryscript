@@ -488,7 +488,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
  * Run gerbage collection in RegExp cache
  */
 void
-re_cache_gc_run ()
+re_cache_gc_run (void)
 {
   for (uint32_t i = 0u; i < RE_CACHE_SIZE; i++)
   {

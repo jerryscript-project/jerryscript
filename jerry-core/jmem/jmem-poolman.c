@@ -191,7 +191,7 @@ jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
  *  Collect empty pool chunks
  */
 void
-jmem_pools_collect_empty ()
+jmem_pools_collect_empty (void)
 {
   jmem_pools_chunk_t *chunk_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
   JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = NULL;

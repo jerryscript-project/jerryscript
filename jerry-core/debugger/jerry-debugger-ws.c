@@ -311,7 +311,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
  *         false - otherwise
  */
 bool
-jerry_debugger_accept_connection ()
+jerry_debugger_accept_connection (void)
 {
   int server_socket;
   struct sockaddr_in addr;

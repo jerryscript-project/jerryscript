@@ -36,7 +36,7 @@ void jerry_port_default_set_abort_on_fail (bool flag) /**< new value of 'abort o
  * @return true - if 'abort on fail' flag is set,
  *         false - otherwise.
  */
-bool jerry_port_default_is_abort_on_fail ()
+bool jerry_port_default_is_abort_on_fail (void)
 {
   return abort_on_fail;
 } /* jerry_port_default_is_abort_on_fail */

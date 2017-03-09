@@ -37,7 +37,7 @@ jmem_init (void)
  * Finalize memory allocators.
  */
 void
-jmem_finalize ()
+jmem_finalize (void)
 {
   jmem_pools_finalize ();
 

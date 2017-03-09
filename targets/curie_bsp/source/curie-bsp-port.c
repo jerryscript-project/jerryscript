@@ -84,7 +84,7 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 /**
  * Curie BSP implementation of jerry_port_get_current_time.
  */
-double jerry_port_get_current_time ()
+double jerry_port_get_current_time (void)
 {
   uint32_t uptime_ms = get_uptime_ms ();
   uint32_t epoch_time = uptime_to_epoch (uptime_ms);

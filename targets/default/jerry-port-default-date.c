@@ -50,7 +50,7 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 /**
  * Default implementation of jerry_port_get_current_time.
  */
-double jerry_port_get_current_time ()
+double jerry_port_get_current_time (void)
 {
 #ifdef __GNUC__
   struct timeval tv;

@@ -65,7 +65,7 @@ void jerry_port_fatal (jerry_fatal_code_t code)
  * @return current timer's counter value in milliseconds
  */
 double
-jerry_port_get_current_time ()
+jerry_port_get_current_time (void)
 {
   int64_t ms = k_uptime_get();
   return (double) ms;

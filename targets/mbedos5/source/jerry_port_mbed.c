@@ -93,7 +93,7 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< timezone pointer */
  * @return current timer's counter value in microseconds
  */
 double
-jerry_port_get_current_time ()
+jerry_port_get_current_time (void)
 {
   return (double) us_ticker_read ();
 } /* jerry_port_get_current_time */

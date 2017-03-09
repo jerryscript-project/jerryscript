@@ -304,7 +304,7 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
  * @return 0
  */
 double
-jerry_port_get_current_time ()
+jerry_port_get_current_time (void)
 {
   return 0;
 } /* jerry_port_get_current_time */

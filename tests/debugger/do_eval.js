@@ -20,4 +20,5 @@ function f(a)
   return a + b;
 }
 
-f(3.3)
+a = f(3.3);
+null;

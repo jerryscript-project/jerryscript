@@ -1,14 +1,13 @@
 Connecting to: localhost:5001
 Stopped at tests/debugger/do_src.js:19
-(jerry-debugger) Breakpoint 1 at tests/debugger/do_src.js:15 (in f)
-(jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_src.js:15 (in f)
-(jerry-debugger) Stopped at tests/debugger/do_src.js:16 (in f)
+(jerry-debugger) Breakpoint 1 at tests/debugger/do_src.js:16 (in f() at line:15, col:1)
+(jerry-debugger) Stopped at breakpoint:1 tests/debugger/do_src.js:16 (in f() at line:15, col:1)
 (jerry-debugger) Stopped at tests/debugger/do_src.js:20
 (jerry-debugger) Stopped at <unknown>:1
 (jerry-debugger) f = function f() {
 print('F2') }
 (jerry-debugger) Stopped at tests/debugger/do_src.js:21
-(jerry-debugger) Stopped at <unknown>:2 (in f)
+(jerry-debugger) Stopped at <unknown>:2 (in f() at line:1, col:5)
 (jerry-debugger) f = function f() {
 print('F2') }
 (jerry-debugger) Press enter to stop JavaScript execution.

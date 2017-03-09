@@ -1,7 +1,6 @@
 b f
 n
 next
-n
 s
 src
 n

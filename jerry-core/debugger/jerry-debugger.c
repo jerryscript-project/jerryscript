@@ -496,7 +496,7 @@ jerry_debugger_send_type (jerry_debugger_header_type_t type) /**< message type *
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
 
   JERRY_DEBUGGER_INIT_SEND_MESSAGE (message_type_p);
-  JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE (message_type_p, jerry_debugger_send_type_t)
+  JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE (message_type_p, jerry_debugger_send_type_t);
   message_type_p->type = (uint8_t) type;
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t));
@@ -596,18 +596,6 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
 } /* jerry_debugger_send_string */
 
 /**
- * Send the function name to the debugger client.
- */
-void
-jerry_debugger_send_function_name (const uint8_t *function_name_p, /**< function name */
-                                   size_t function_name_length) /**< length of function name */
-{
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-
-  jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME, function_name_p, function_name_length);
-} /* jerry_debugger_send_function_name */
-
-/**
  * Send the function compressed pointer to the debugger client.
  *
  * @return true - if the data was sent successfully to the debugger client,
@@ -631,5 +619,28 @@ jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, /**< message
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_byte_code_cp_t));
 } /* jerry_debugger_send_function_cp */
+
+/**
+ * Send function data to the debugger client.
+ *
+ * @return true - if the data sent successfully to the debugger client,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_send_parse_function (uint32_t line, /**< line */
+                                    uint32_t column) /**< column */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_parse_function_t, message_parse_function_p);
+
+  JERRY_DEBUGGER_INIT_SEND_MESSAGE (message_parse_function_p);
+  JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE (message_parse_function_p, jerry_debugger_send_parse_function_t);
+  message_parse_function_p->type = JERRY_DEBUGGER_PARSE_FUNCTION;
+  memcpy (message_parse_function_p->line, &line, sizeof (uint32_t));
+  memcpy (message_parse_function_p->column, &column, sizeof (uint32_t));
+
+  return jerry_debugger_send (sizeof (jerry_debugger_send_parse_function_t));
+} /* jerry_debugger_send_parse_function */
 
 #endif /* JERRY_DEBUGGER */

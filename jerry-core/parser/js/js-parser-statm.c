@@ -315,7 +315,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
 #ifdef JERRY_DEBUGGER
-    parser_line_counter_t ident_line_counter = context_p->line;
+    parser_line_counter_t ident_line_counter = context_p->token.line;
 #endif /* JERRY_DEBUGGER */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
@@ -327,26 +327,23 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     if (context_p->token.type == LEXER_ASSIGN)
     {
 #ifdef JERRY_DEBUGGER
-      if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+          && ident_line_counter != context_p->last_breakpoint_line)
       {
-        if (ident_line_counter != context_p->last_breakpoint_line)
-        {
-          JERRY_DEBUG_MSG ("Insert var breakpoint: %d (%d)\n", ident_line_counter, context_p->last_breakpoint_line);
-          JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
 
-          cbc_argument_t last_cbc = context_p->last_cbc;
-          context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
+        cbc_argument_t last_cbc = context_p->last_cbc;
+        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
 
-          parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-          parser_flush_cbc (context_p);
+        parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
+        parser_flush_cbc (context_p);
 
-          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
+        parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
 
-          context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
-          context_p->last_cbc = last_cbc;
+        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+        context_p->last_cbc = last_cbc;
 
-          context_p->last_breakpoint_line = ident_line_counter;
-        }
+        context_p->last_breakpoint_line = ident_line_counter;
       }
 #endif /* JERRY_DEBUGGER */
 
@@ -381,6 +378,11 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
 
+#ifdef JERRY_DEBUGGER
+  parser_line_counter_t debugger_line = context_p->token.line;
+  parser_line_counter_t debugger_column = context_p->token.column;
+#endif /* JERRY_DEBUGGER */
+
   lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                 && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
@@ -404,8 +406,13 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    jerry_debugger_send_function_name (name_p->u.char_p,
-                                       name_p->prop.length);
+    jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
+                                name_p->u.char_p,
+                                name_p->prop.length);
+
+    /* Reset token position for the function. */
+    context_p->token.line = debugger_line;
+    context_p->token.column = debugger_column;
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -1618,6 +1625,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+    context_p->last_breakpoint_line = 0;
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -1656,21 +1664,22 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           || context_p->token.type == LEXER_LEFT_SQUARE
           || context_p->token.type == LEXER_DOT)
       {
+        /* The string is part of an expression statement. */
+        context_p->status_flags = status_flags;
+
 #ifdef JERRY_DEBUGGER
-        if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
-            && context_p->line != context_p->last_breakpoint_line)
+        if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
         {
+          JERRY_ASSERT (context_p->last_breakpoint_line == 0);
+
           parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
           parser_flush_cbc (context_p);
 
-          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->line);
+          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
 
-          context_p->last_breakpoint_line = context_p->line;
+          context_p->last_breakpoint_line = context_p->token.line;
         }
 #endif /* JERRY_DEBUGGER */
-
-        /* The string is part of an expression statement. */
-        context_p->status_flags = status_flags;
 
         lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
         parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
@@ -1723,7 +1732,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #ifdef JERRY_DEBUGGER
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
-        && context_p->line != context_p->last_breakpoint_line
+        && context_p->token.line != context_p->last_breakpoint_line
         && context_p->token.type != LEXER_SEMICOLON
         && context_p->token.type != LEXER_LEFT_BRACE
         && context_p->token.type != LEXER_RIGHT_BRACE
@@ -1735,9 +1744,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
       parser_flush_cbc (context_p);
 
-      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->line);
+      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
 
-      context_p->last_breakpoint_line = context_p->line;
+      context_p->last_breakpoint_line = context_p->token.line;
     }
 #endif /* JERRY_DEBUGGER */
 

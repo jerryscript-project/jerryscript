@@ -1,8 +1,10 @@
-break do_step.js:25
+step
 step
 backtrace
-b do_step.js:26
 next
+bt
 next
+s
+n
 bt
 c

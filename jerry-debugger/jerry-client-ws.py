@@ -95,8 +95,13 @@ class JerryBreakpoint(object):
 
         result += ":%d" % (self.line)
 
-        if self.function.name:
-            result += " (in %s)" % (self.function.name)
+        if self.function.is_func:
+            result += " (in "
+            if self.function.name:
+                result += self.function.name
+            else:
+                result += "function"
+            result += "() at line:%d, col:%d)" % (self.function.line, self.function.column)
         return result
 
     def __repr__(self):
@@ -106,17 +111,17 @@ class JerryBreakpoint(object):
 
 class JerryFunction(object):
 
-    def __init__(self, byte_code_cp, source, source_name, name, lines, offsets):
+    def __init__(self, is_func, byte_code_cp, source, source_name, line, column, name, lines, offsets):
+        self.is_func = is_func
         self.byte_code_cp = byte_code_cp
         self.source = source
         self.source_name = source_name
         self.name = name
         self.lines = {}
         self.offsets = {}
-        self.first_line = -1
-
-        if lines:
-            self.first_line = lines[0]
+        self.line = line
+        self.column = column
+        self.first_breakpoint_line = lines[0]
 
         for i in range(len(lines)):
             line = lines[i]
@@ -126,8 +131,8 @@ class JerryFunction(object):
             self.offsets[offset] = breakpoint
 
     def __repr__(self):
-        result = ("Function(byte_code_cp:0x%x, source_name:\"%s\", name:\"%s\", { "
-                  % (self.byte_code_cp, self.source_name, self.name))
+        result = ("Function(byte_code_cp:0x%x, source_name:\"%s\", name:\"%s\", line:%d, column: %d { "
+                  % (self.byte_code_cp, self.source_name, self.name, self.line, self.column))
 
         result += ','.join([str(breakpoint) for breakpoint in self.lines.values()])
 
@@ -465,6 +470,15 @@ class JerryDebugger(object):
                               breakpoint.offset)
         self.send_message(message)
 
+    def send_bytecode_cp(self, byte_code_cp):
+       message = struct.pack(self.byte_order + "BBIB" + self.cp_format,
+                             WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                             WEBSOCKET_FIN_BIT + 1 + self.cp_size,
+                             0,
+                             JERRY_DEBUGGER_FREE_BYTE_CODE_CP,
+                             byte_code_cp)
+       self.send_message(message)
+
     def send_command(self, command):
         message = struct.pack(self.byte_order + "BBIB",
                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
@@ -510,7 +524,11 @@ def parse_source(debugger, data):
     source_code = ""
     source_code_name = ""
     function_name = ""
-    stack = [{"lines": [], "offsets": [], "name": ""}]
+    stack = [{"line": 1,
+              "column": 1,
+              "name": "",
+              "lines": [],
+              "offsets": []}]
     new_function_list = {}
 
     while True:
@@ -537,8 +555,14 @@ def parse_source(debugger, data):
 
         elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
             logging.debug("Source name: %s, function name: %s" % (source_code_name, function_name))
+
+            position = struct.unpack(debugger.byte_order + debugger.idx_format + debugger.idx_format,
+                                     data[3: 3 + 4 + 4])
+
             stack.append({"source": source_code,
                           "source_name": source_code_name,
+                          "line": position[0],
+                          "column": position[1],
                           "name": function_name,
                           "lines": [],
                           "offsets": []})
@@ -572,9 +596,12 @@ def parse_source(debugger, data):
                 func_desc["source"] = source_code
                 func_desc["source_name"] = source_code_name
 
-            function = JerryFunction(byte_code_cp,
+            function = JerryFunction(len(stack) != 0,
+                                     byte_code_cp,
                                      func_desc["source"],
                                      func_desc["source_name"],
+                                     func_desc["line"],
+                                     func_desc["column"],
                                      func_desc["name"],
                                      func_desc["lines"],
                                      func_desc["offsets"])
@@ -584,6 +611,17 @@ def parse_source(debugger, data):
             if len(stack) == 0:
                 logging.debug("Parse completed.")
                 break
+
+        elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
+            # Redefined functions are dropped during parsing.
+            byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
+                                         data[3: 3 + debugger.cp_size])[0]
+
+            if byte_code_cp in new_function_list:
+                del new_function_list[byte_code_cp]
+                debugger.send_bytecode_cp(byte_code_cp)
+            else:
+                release_function(debugger, data)
 
         else:
             logging.error("Parser error!")
@@ -612,14 +650,7 @@ def release_function(debugger, data):
 
     del debugger.function_list[byte_code_cp]
 
-    message = struct.pack(debugger.byte_order + "BBIB" + debugger.cp_format,
-                          WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                          WEBSOCKET_FIN_BIT + 1 + debugger.cp_size,
-                          0,
-                          JERRY_DEBUGGER_FREE_BYTE_CODE_CP,
-                          byte_code_cp)
-
-    debugger.send_message(message)
+    debugger.send_bytecode_cp(byte_code_cp)
 
     logging.debug("Function {0x%x} byte-code released" % byte_code_cp)
 
@@ -656,10 +687,7 @@ def set_breakpoint(debugger, string):
     else:
         for function in debugger.function_list.values():
             if function.name == string:
-                if function.first_line >= 0:
-                    enable_breakpoint(debugger, function.lines[function.first_line])
-                else:
-                    print("Function %s has no breakpoints." % (string))
+                enable_breakpoint(debugger, function.lines[function.first_breakpoint_line])
                 found = True
 
     if not found:

@@ -251,9 +251,15 @@ function DebuggerClient(address)
 
     result += ":" + breakpoint.line;
 
-    if (breakpoint.func.name)
+    if (breakpoint.func.is_func)
     {
-      result += " (in " + breakpoint.func.name + ")";
+      result += " (in "
+                + (breakpoint.func.name ? breakpoint.func.name : "function")
+                + "() at line:"
+                + breakpoint.func.line
+                + ", col:"
+                + breakpoint.func.column
+                + ")";
     }
 
     return result;
@@ -464,6 +470,31 @@ function DebuggerClient(address)
     socket.send(message);
   }
 
+  function releaseFunction(message)
+  {
+    var byte_code_cp = decodeMessage("C", message, 1)[0];
+    var func = functions[byte_code_cp];
+
+    for (var i in func.lines)
+    {
+      lineList.delete(i, func);
+
+      var breakpoint = func.lines[i];
+
+      assert(i == breakpoint.line);
+
+      if (breakpoint.activeIndex >= 0)
+      {
+        delete activeBreakpoints[breakpoint.activeIndex];
+      }
+    }
+
+    delete functions[byte_code_cp];
+
+    message[0] = JERRY_DEBUGGER_FREE_BYTE_CODE_CP;
+    socket.send(message);
+  }
+
   this.encodeMessage = encodeMessage;
 
   function ParseSource()
@@ -473,8 +504,14 @@ function DebuggerClient(address)
     var sourceName = "";
     var sourceNameData = null;
     var functionName = null;
-    var stack = [ { name: "", source: "", lines: [], offsets: [] } ];
-    var newFunctions = [ ];
+    var stack = [{ is_func: false,
+                   line: 1,
+                   column: 1,
+                   name: "",
+                   source: "",
+                   lines: [],
+                   offsets: [] }];
+    var newFunctions = { };
 
     this.receive = function(message)
     {
@@ -520,7 +557,12 @@ function DebuggerClient(address)
 
         case JERRY_DEBUGGER_PARSE_FUNCTION:
         {
-          stack.push({ name: cesu8ToString(functionName),
+          position = decodeMessage("II", message, 1);
+
+          stack.push({ is_func: true,
+                       line: position[0],
+                       column: position[1],
+                       name: cesu8ToString(functionName),
                        source: source,
                        sourceName: sourceName,
                        lines: [],
@@ -563,7 +605,7 @@ function DebuggerClient(address)
           lines = {}
           offsets = {}
 
-          func.firstLine = (func.lines.length > 0) ? func.lines[0] : -1;
+          func.firstBreakpointLine = func.lines[0];
 
           for (var i = 0; i < func.lines.length; i++)
           {
@@ -576,7 +618,7 @@ function DebuggerClient(address)
           func.lines = lines;
           func.offsets = offsets;
 
-          newFunctions.push(func);
+          newFunctions[func.byte_code_cp] = func;
 
           if (stack.length > 0)
           {
@@ -588,6 +630,21 @@ function DebuggerClient(address)
           break;
         }
 
+        case JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
+        {
+          var byte_code_cp = decodeMessage("C", message, 1)[0];
+
+          if (byte_code_cp in newFunctions)
+          {
+            delete newFunctions[byte_code_cp];
+          }
+          else
+          {
+            releaseFunction(message);
+          }
+          return;
+        }
+
         default:
         {
           abortConnection("unexpected message.");
@@ -595,11 +652,11 @@ function DebuggerClient(address)
         }
       }
 
-      for (var i = 0; i < newFunctions.length; i++)
+      for (var i in newFunctions)
       {
         var func = newFunctions[i];
 
-        functions[func.byte_code_cp] = func
+        functions[i] = func;
 
         for (var j in func.lines)
         {
@@ -667,27 +724,7 @@ function DebuggerClient(address)
 
       case JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
       {
-        var byte_code_cp = decodeMessage("C", message, 1)[0];
-        var func = functions[byte_code_cp];
-
-        for (var i in func.lines)
-        {
-          lineList.delete(i, func);
-
-          var breakpoint = func.lines[i];
-
-          assert(i == breakpoint.line);
-
-          if (breakpoint.activeIndex >= 0)
-          {
-            delete activeBreakpoints[breakpoint.activeIndex];
-          }
-        }
-
-        delete functions[byte_code_cp];
-
-        message[0] = JERRY_DEBUGGER_FREE_BYTE_CODE_CP;
-        socket.send(message);
+        releaseFunction(message);
         return;
       }
 
@@ -828,9 +865,9 @@ function DebuggerClient(address)
       {
         var func = functions[i];
 
-        if (func.name == str && func.firstLine >= 0)
+        if (func.name == str)
         {
-          insertBreakpoint(func.lines[func.firstLine]);
+          insertBreakpoint(func.lines[func.firstBreakpointLine]);
         }
       }
     }
@@ -975,7 +1012,16 @@ function DebuggerClient(address)
         sourceName = "<unknown>";
       }
 
-      appendLog("Function 0x" + Number(i).toString(16) + " '" + func.name + "' at " + sourceName + ":" + func.firstLine);
+      appendLog("Function 0x"
+                + Number(i).toString(16)
+                + " '"
+                + func.name
+                + "' at "
+                + sourceName
+                + ":"
+                + func.line
+                + ","
+                + func.column);
 
       for (var j in func.lines)
       {
@@ -986,7 +1032,7 @@ function DebuggerClient(address)
           active = " (active: " + func.lines[j].active + ")";
         }
 
-        appendLog("  Breatpoint line: " + j + " at memory offset: " + func.lines[j].offset + active);
+        appendLog("  Breakpoint line: " + j + " at memory offset: " + func.lines[j].offset + active);
       }
     }
   }

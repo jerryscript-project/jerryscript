@@ -3,7 +3,10 @@ n
 next
 step
 next
-n
 s
 bt
+n
+n
+s
+backtrace
 c

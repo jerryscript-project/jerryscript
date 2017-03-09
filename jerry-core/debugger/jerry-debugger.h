@@ -173,6 +173,17 @@ typedef struct
 } jerry_debugger_send_string_t;
 
 /**
+ * Outgoing message: uint32 value.
+ */
+typedef struct
+{
+  jerry_debugger_send_header_t header; /**< message header */
+  uint8_t type; /**< type of the message */
+  uint8_t line[sizeof (uint32_t)]; /**< value data */
+  uint8_t column[sizeof (uint32_t)]; /**< value data */
+} jerry_debugger_send_parse_function_t;
+
+/**
  * Outgoing message: byte code compressed pointer.
  */
 typedef struct
@@ -277,8 +288,8 @@ void jerry_debugger_send_type (jerry_debugger_header_type_t type);
 bool jerry_debugger_send_configuration (uint8_t max_message_size);
 void jerry_debugger_send_data (jerry_debugger_header_type_t type, const void *data, size_t size);
 bool jerry_debugger_send_string (uint8_t message_type, const uint8_t *string_p, size_t string_length);
-void jerry_debugger_send_function_name (const uint8_t *function_name_p, size_t function_name_length);
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
+bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 
 #endif /* JERRY_DEBUGGER */
 

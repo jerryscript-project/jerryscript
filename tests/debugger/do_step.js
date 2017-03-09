@@ -14,12 +14,19 @@
 
 function f1()
 {
-  var i = 1;
+  function g()
+  {
+    return 6;
+  }
+
+  var i = g();
+  g();
 }
 
 function f2()
 {
-  var y = 2;
+  f1();
+  return 7;
 }
 
 f1();

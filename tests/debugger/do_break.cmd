@@ -1,7 +1,10 @@
-break do_break.js:24
-b do_break.js:27
-b do_break.js:17
+break do_break.js:51
+b do_break.js:36
+break f
 list
-delete 2
-next
+c
+delete 1
+list
+c
+continue
 c

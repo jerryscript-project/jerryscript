@@ -77,6 +77,7 @@ typedef enum
   JERRY_DEBUGGER_BREAKPOINT_MODE = 1u << 1, /**< debugger waiting at a breakpoint */
   JERRY_DEBUGGER_VM_STOP = 1u << 2, /**< stop at the next breakpoint regardless it is enabled */
   JERRY_DEBUGGER_VM_IGNORE = 1u << 3, /**< ignore all breakpoints */
+  JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger stop at an exception */
 } jerry_debugger_flags_t;
 
 /**
@@ -99,29 +100,31 @@ typedef enum
   JERRY_DEBUGGER_FUNCTION_NAME_END = 12, /**< function name last fragment */
   JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13, /**< invalidate byte code compressed pointer */
   JERRY_DEBUGGER_BREAKPOINT_HIT = 14, /**< notify breakpoint hit */
-  JERRY_DEBUGGER_BACKTRACE = 15, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 16, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 17, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 18, /**< last part of eval result */
-  JERRY_DEBUGGER_EVAL_ERROR = 19, /**< eval result when an error is occured */
-  JERRY_DEBUGGER_EVAL_ERROR_END = 20, /**< last part of eval result when an error is occured */
+  JERRY_DEBUGGER_EXCEPTION_HIT = 15, /**< notify exception hit */
+  JERRY_DEBUGGER_BACKTRACE = 16, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 17, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 18, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 19, /**< last part of eval result */
+  JERRY_DEBUGGER_EVAL_ERROR = 20, /**< eval result when an error is occured */
+  JERRY_DEBUGGER_EVAL_ERROR_END = 21, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
 
   /* The following messages are accepted in both run and breakpoint modes. */
   JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1, /**< free byte code compressed pointer */
   JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2, /**< update breakpoint status */
-  JERRY_DEBUGGER_STOP = 3, /**< stop execution */
+  JERRY_DEBUGGER_EXCEPTION_CONFIG = 3, /**< exception handler config */
+  JERRY_DEBUGGER_STOP = 4, /**< stop execution */
   /* The following messages are only available in breakpoint
    * mode and they switch the engine to run mode. */
-  JERRY_DEBUGGER_CONTINUE = 4, /**< continue execution */
-  JERRY_DEBUGGER_STEP = 5, /**< next breakpoint, step into functions */
-  JERRY_DEBUGGER_NEXT = 6, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_CONTINUE = 5, /**< continue execution */
+  JERRY_DEBUGGER_STEP = 6, /**< next breakpoint, step into functions */
+  JERRY_DEBUGGER_NEXT = 7, /**< next breakpoint in the same context */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 7, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 8, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 9, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 8, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 9, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 10, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**
@@ -243,6 +246,12 @@ typedef struct
   jerry_debugger_frame_t frames[JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t)]; /**< frames */
 } jerry_debugger_send_backtrace_t;
 
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t enable; /**< non-zero: enable stop at exception */
+} jerry_debugger_receive_exception_config_t;
+
 /**
  * Incoming message: get backtrace.
  */
@@ -282,7 +291,7 @@ void jerry_debugger_free_unreferenced_byte_code (void);
 
 bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
                                      bool *resume_exec_p, uint8_t *expected_message_p, void **message_data_p);
-void jerry_debugger_breakpoint_hit (void);
+void jerry_debugger_breakpoint_hit (uint8_t message_type);
 
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);
 bool jerry_debugger_send_configuration (uint8_t max_message_size);

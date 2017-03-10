@@ -1774,7 +1774,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
                                                                          separator);
 
             /* 13.b */
-            if (ecma_is_value_null (match_result))
+            if (ecma_is_value_null (match_result)
+                || ECMA_IS_VALUE_ERROR (match_result))
             {
               curr_pos++;
             }

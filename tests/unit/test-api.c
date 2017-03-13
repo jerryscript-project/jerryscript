@@ -18,6 +18,11 @@
 
 #include "test-common.h"
 
+/**
+ * Maximum size of snapshots buffer
+ */
+#define SNAPSHOT_BUFFER_SIZE (256)
+
 const char *test_source = (
                            "function assert (arg) { "
                            "  if (!arg) { "
@@ -1026,8 +1031,8 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    static uint8_t global_mode_snapshot_buffer[1024];
-    static uint8_t eval_mode_snapshot_buffer[1024];
+    static uint32_t global_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+    static uint32_t eval_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
     const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
 
@@ -1037,7 +1042,7 @@ main (void)
                                                                       true,
                                                                       false,
                                                                       global_mode_snapshot_buffer,
-                                                                      sizeof (global_mode_snapshot_buffer));
+                                                                      SNAPSHOT_BUFFER_SIZE);
     TEST_ASSERT (global_mode_snapshot_size != 0);
     jerry_cleanup ();
 
@@ -1047,7 +1052,7 @@ main (void)
                                                                     false,
                                                                     false,
                                                                     eval_mode_snapshot_buffer,
-                                                                    sizeof (eval_mode_snapshot_buffer));
+                                                                    SNAPSHOT_BUFFER_SIZE);
     TEST_ASSERT (eval_mode_snapshot_size != 0);
     jerry_cleanup ();
 
@@ -1088,14 +1093,14 @@ main (void)
     /* C format generation */
     jerry_init (JERRY_INIT_EMPTY);
 
-    static jerry_char_t literal_buffer_c[256];
+    static uint32_t literal_buffer_c[SNAPSHOT_BUFFER_SIZE];
     static const char *code_for_c_format_p = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
 
     size_t literal_sizes_c_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_c_format_p,
                                                                    strlen (code_for_c_format_p),
                                                                    false,
                                                                    literal_buffer_c,
-                                                                   sizeof (literal_buffer_c),
+                                                                   SNAPSHOT_BUFFER_SIZE,
                                                                    true);
     TEST_ASSERT (literal_sizes_c_format == 203);
 
@@ -1123,15 +1128,16 @@ main (void)
     /* List format generation */
     jerry_init (JERRY_INIT_EMPTY);
 
-    static jerry_char_t literal_buffer_list[256];
+    static uint32_t literal_buffer_list[SNAPSHOT_BUFFER_SIZE];
     static const char *code_for_list_format_p = "var obj = { a:'aa', bb:'Bb' };";
 
     size_t literal_sizes_list_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_list_format_p,
                                                                       strlen (code_for_list_format_p),
                                                                       false,
                                                                       literal_buffer_list,
-                                                                      sizeof (literal_buffer_list),
+                                                                      SNAPSHOT_BUFFER_SIZE,
                                                                       false);
+
     TEST_ASSERT (literal_sizes_list_format == 25);
     TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "1 a\n2 Bb\n2 aa\n2 bb\n3 obj\n", literal_sizes_list_format));
 

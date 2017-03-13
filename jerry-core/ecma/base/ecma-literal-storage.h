@@ -43,13 +43,13 @@ jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t number_arg);
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 bool
-ecma_save_literals_for_snapshot (uint8_t *, size_t, size_t *,
+ecma_save_literals_for_snapshot (uint32_t *, size_t, size_t *,
                                  lit_mem_to_snapshot_id_map_entry_t **, uint32_t *, uint32_t *);
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
 bool
-ecma_load_literals_from_snapshot (const uint8_t *, uint32_t,
+ecma_load_literals_from_snapshot (const uint32_t *, uint32_t,
                                   lit_mem_to_snapshot_id_map_entry_t **, uint32_t *);
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 

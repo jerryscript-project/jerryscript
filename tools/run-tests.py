@@ -18,9 +18,9 @@ import argparse
 import os
 import subprocess
 import sys
-from settings import *
+import settings
 
-OUTPUT_DIR = path.join(PROJECT_DIR, 'build', 'tests')
+OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
@@ -49,20 +49,20 @@ if len(sys.argv) == 1:
 
 script_args = parser.parse_args()
 
-if path.isabs(script_args.outdir):
+if os.path.isabs(script_args.outdir):
     OUTPUT_DIR = script_args.outdir
 else:
-    OUTPUT_DIR = path.join(PROJECT_DIR, script_args.outdir)
+    OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, script_args.outdir)
 
 class Options:
-    def __init__(self, name = '', build_args = None, test_args = None):
+    def __init__(self, name='', build_args=None, test_args=None):
         if build_args is None:
             build_args = []
 
         if test_args is None:
             test_args = []
 
-        self.out_dir = path.join(OUTPUT_DIR, name)
+        self.out_dir = os.path.join(OUTPUT_DIR, name)
         self.build_args = build_args
         self.build_args.append('--builddir=%s' % self.out_dir)
         self.test_args = test_args
@@ -70,19 +70,19 @@ class Options:
 
 # Test options for unittests
 jerry_unittests_options = [
-                            Options('unittests', ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
-                            Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
-                          ]
+    Options('unittests', ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+    Options('unittests-debug', ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+]
 
 # Test options for jerry-tests
 jerry_tests_options = [
-                        Options('jerry_tests'),
-                        Options('jerry_tests-debug', ['--debug']),
-                        Options('jerry_tests-debug', ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
-                        Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
-                        Options('jerry_tests-debug-snapshot', ['--debug', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
-                        Options('jerry_tests-es2015-subset-debug', ['--debug', '--profile=es2015-subset'])
-                      ]
+    Options('jerry_tests'),
+    Options('jerry_tests-debug', ['--debug']),
+    Options('jerry_tests-debug', ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
+    Options('jerry_tests-snapshot', ['--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
+    Options('jerry_tests-debug-snapshot', ['--debug', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']),
+    Options('jerry_tests-es2015-subset-debug', ['--debug', '--profile=es2015-subset'])
+]
 
 # Test options for jerry-test-suite
 jerry_test_suite_options = jerry_tests_options[:]
@@ -95,37 +95,35 @@ jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset-snapshot
 jerry_test_suite_options.append(Options('jerry_test_suite-es2015-subset-debug-snapshot', ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on'], ['--snapshot']))
 
 # Test options for test262
-test262_test_suite_options = [
-                               Options('test262_tests'),
-                             ]
+test262_test_suite_options = [Options('test262_tests')]
 
 # Test options for jerry-debugger
 debugger_test_options = [
-                          Options('jerry_debugger_tests', ['--debug', '--jerry-debugger=on', '--jerry-libc=off']),
-                        ]
+    Options('jerry_debugger_tests', ['--debug', '--jerry-debugger=on', '--jerry-libc=off'])
+]
 
 # Test options for buildoption-test
 jerry_buildoptions = [
-                      Options('buildoption_test-lto', ['--lto=on']),
-                      Options('buildoption_test-error_messages', ['--error-messages=on']),
-                      Options('buildoption_test-all_in_one', ['--all-in-one=on']),
-                      Options('buildoption_test-valgrind', ['--valgrind=on']),
-                      Options('buildoption_test-valgrind_freya', ['--valgrind-freya=on']),
-                      Options('buildoption_test-mem_stats', ['--mem-stats=on']),
-                      Options('buildoption_test-show_opcodes', ['--show-opcodes=on']),
-                      Options('buildoption_test-show_regexp_opcodes', ['--show-regexp-opcodes=on']),
-                      Options('buildoption_test-compiler_default_libc', ['--jerry-libc=off']),
-                      Options('buildoption_test-cpointer_32bit', ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
-                     ]
+    Options('buildoption_test-lto', ['--lto=on']),
+    Options('buildoption_test-error_messages', ['--error-messages=on']),
+    Options('buildoption_test-all_in_one', ['--all-in-one=on']),
+    Options('buildoption_test-valgrind', ['--valgrind=on']),
+    Options('buildoption_test-valgrind_freya', ['--valgrind-freya=on']),
+    Options('buildoption_test-mem_stats', ['--mem-stats=on']),
+    Options('buildoption_test-show_opcodes', ['--show-opcodes=on']),
+    Options('buildoption_test-show_regexp_opcodes', ['--show-regexp-opcodes=on']),
+    Options('buildoption_test-compiler_default_libc', ['--jerry-libc=off']),
+    Options('buildoption_test-cpointer_32bit', ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
+]
 
 def get_bin_dir_path(out_dir):
-    return path.join(out_dir, 'bin')
+    return os.path.join(out_dir, 'bin')
 
 def get_binary_path(out_dir):
-    return path.join(get_bin_dir_path(out_dir), 'jerry')
+    return os.path.join(get_bin_dir_path(out_dir), 'jerry')
 
 def create_binary(buildoptions):
-    build_cmd = [BUILD_SCRIPT]
+    build_cmd = [settings.BUILD_SCRIPT]
     build_cmd.extend(buildoptions)
 
     if script_args.toolchain:
@@ -160,16 +158,17 @@ def run_jerry_debugger_tests():
         if ret_build:
             break
 
-        for file in os.listdir(DEBUGGER_TESTS_DIR):
+        for file in os.listdir(settings.DEBUGGER_TESTS_DIR):
             if file.endswith(".js"):
                 test_case, _ = os.path.splitext(file)
-                test_case_path = os.path.join (DEBUGGER_TESTS_DIR, test_case)
+                test_case_path = os.path.join(settings.DEBUGGER_TESTS_DIR, test_case)
                 test_cmd = [
-                              DEBUGGER_TEST_RUNNER_SCRIPT,
-                              get_binary_path(job.out_dir),
-                              DEBUGGER_CLIENT_SCRIPT,
-                              os.path.relpath (test_case_path, PROJECT_DIR),
-                            ]
+                    settings.DEBUGGER_TEST_RUNNER_SCRIPT,
+                    get_binary_path(job.out_dir),
+                    settings.DEBUGGER_CLIENT_SCRIPT,
+                    os.path.relpath(test_case_path, settings.PROJECT_DIR),
+                ]
+
                 if job.test_args:
                     test_cmd.extend(job.test_args)
 
@@ -184,7 +183,11 @@ def run_jerry_tests():
         if ret_build:
             break
 
-        test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir), JERRY_TESTS_DIR]
+        test_cmd = [
+            settings.TEST_RUNNER_SCRIPT,
+            get_binary_path(job.out_dir),
+            settings.JERRY_TESTS_DIR
+        ]
         skip_list = []
 
         if '--profile=es2015-subset' not in job.build_args:
@@ -210,14 +213,14 @@ def run_jerry_test_suite():
         if ret_build:
             break
 
-        test_cmd = [TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir)]
+        test_cmd = [settings.TEST_RUNNER_SCRIPT, get_binary_path(job.out_dir)]
 
         if '--profile=minimal' in job.build_args:
-            test_cmd.append(JERRY_TEST_SUITE_MINIMAL_LIST)
+            test_cmd.append(settings.JERRY_TEST_SUITE_MINIMAL_LIST)
         elif '--profile=es2015-subset' in job.build_args:
-            test_cmd.append(JERRY_TEST_SUITE_DIR)
+            test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
         else:
-            test_cmd.append(JERRY_TEST_SUITE_ES51_LIST)
+            test_cmd.append(settings.JERRY_TEST_SUITE_ES51_LIST)
 
         if script_args.skip_list:
             test_cmd.append("--skip-list=" + script_args.skip_list)
@@ -236,7 +239,11 @@ def run_test262_test_suite():
         if ret_build:
             break
 
-        test_cmd = [TEST262_RUNNER_SCRIPT, get_binary_path(job.out_dir), TEST262_TEST_SUITE_DIR]
+        test_cmd = [
+            settings.TEST262_RUNNER_SCRIPT,
+            get_binary_path(job.out_dir),
+            settings.TEST262_TEST_SUITE_DIR
+        ]
 
         if job.test_args:
             test_cmd.extend(job.test_args)
@@ -252,7 +259,10 @@ def run_unittests():
         if ret_build:
             break
 
-        ret_test |= run_check([UNITTEST_RUNNER_SCRIPT, get_bin_dir_path(job.out_dir)])
+        ret_test |= run_check([
+            settings.UNITTEST_RUNNER_SCRIPT,
+            get_bin_dir_path(job.out_dir)
+        ])
 
     return ret_build | ret_test
 
@@ -268,28 +278,28 @@ def main():
     ret = 0
 
     if script_args.check_signed_off_tolerant:
-        ret = run_check([SIGNED_OFF_SCRIPT, '--tolerant'])
+        ret = run_check([settings.SIGNED_OFF_SCRIPT, '--tolerant'])
 
     if not ret and script_args.check_signed_off_travis:
-        ret = run_check([SIGNED_OFF_SCRIPT, '--travis'])
+        ret = run_check([settings.SIGNED_OFF_SCRIPT, '--travis'])
 
     if not ret and (script_args.all or script_args.check_signed_off):
-        ret = run_check([SIGNED_OFF_SCRIPT])
+        ret = run_check([settings.SIGNED_OFF_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_cppcheck):
-        ret = run_check([CPPCHECK_SCRIPT])
+        ret = run_check([settings.CPPCHECK_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_doxygen):
-        ret = run_check([DOXYGEN_SCRIPT])
+        ret = run_check([settings.DOXYGEN_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_pylint):
-        ret = run_check([PYLINT_SCRIPT])
+        ret = run_check([settings.PYLINT_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_vera):
-        ret = run_check([VERA_SCRIPT])
+        ret = run_check([settings.VERA_SCRIPT])
 
     if not ret and (script_args.all or script_args.check_license):
-        ret = run_check([LICENSE_SCRIPT])
+        ret = run_check([settings.LICENSE_SCRIPT])
 
     if not ret and (script_args.all or script_args.jerry_debugger):
         ret = run_jerry_debugger_tests()

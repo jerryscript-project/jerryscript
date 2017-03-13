@@ -16,22 +16,22 @@
 
 import argparse
 import multiprocessing
+import os
 import shutil
 import subprocess
 import sys
-from os import makedirs, uname
-from settings import *
+import settings
 
-BUILD_DIR = path.join(PROJECT_DIR, 'build')
-DEFAULT_PORT_DIR = path.join(PROJECT_DIR, 'targets/default')
+BUILD_DIR = os.path.join(settings.PROJECT_DIR, 'build')
+DEFAULT_PORT_DIR = os.path.join(settings.PROJECT_DIR, 'targets/default')
 
-PROFILE_DIR = path.join(PROJECT_DIR, 'jerry-core/profiles')
+PROFILE_DIR = os.path.join(settings.PROJECT_DIR, 'jerry-core/profiles')
 DEFAULT_PROFILE = 'es5.1'
 
 def default_toolchain():
-    (sysname, _, _, _, machine) = uname()
-    toolchain = path.join(PROJECT_DIR, 'cmake', 'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
-    return toolchain if path.isfile(toolchain) else None
+    (sysname, _, _, _, machine) = os.uname()
+    toolchain = os.path.join(settings.PROJECT_DIR, 'cmake', 'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
+    return toolchain if os.path.isfile(toolchain) else None
 
 def get_arguments():
     devhelp_preparser = argparse.ArgumentParser(add_help=False)
@@ -112,10 +112,10 @@ def generate_build_options(arguments):
     build_options.append('-DMEM_HEAP_SIZE_KB=%d' % arguments.mem_heap)
     build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
 
-    if path.isabs(arguments.profile):
+    if os.path.isabs(arguments.profile):
         PROFILE = arguments.profile
     else:
-        PROFILE = path.join(PROFILE_DIR, arguments.profile + '.profile')
+        PROFILE = os.path.join(PROFILE_DIR, arguments.profile + '.profile')
 
     build_options.append('-DFEATURE_PROFILE=%s' % PROFILE)
 
@@ -128,7 +128,7 @@ def generate_build_options(arguments):
     build_options.append('-DENABLE_STRIP=%s' % arguments.strip)
 
     if arguments.toolchain:
-      build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)
+        build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)
 
     build_options.append('-DUNITTESTS=%s' % arguments.unittests)
     build_options.append('-DCMAKE_VERBOSE_MAKEFILE=%s' % arguments.verbose)
@@ -145,27 +145,27 @@ def generate_build_options(arguments):
     return build_options
 
 def configure_output_dir(arguments):
-    if not path.isabs(arguments.builddir):
-        arguments.builddir = path.join(PROJECT_DIR, arguments.builddir)
+    if not os.path.isabs(arguments.builddir):
+        arguments.builddir = os.path.join(settings.PROJECT_DIR, arguments.builddir)
 
-    if arguments.clean and path.exists(arguments.builddir):
+    if arguments.clean and os.path.exists(arguments.builddir):
         shutil.rmtree(arguments.builddir)
 
-    if not path.exists(arguments.builddir):
-        makedirs(arguments.builddir)
+    if not os.path.exists(arguments.builddir):
+        os.makedirs(arguments.builddir)
 
 def configure_build(arguments):
     configure_output_dir(arguments)
 
     build_options = generate_build_options(arguments)
 
-    cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + PROJECT_DIR]
+    cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + settings.PROJECT_DIR]
     cmake_cmd.extend(build_options)
 
     return subprocess.call(cmake_cmd)
 
 def build_jerry(arguments):
-    return subprocess.call(['make', '--no-print-directory','-j', str(arguments.jobs), '-C', arguments.builddir])
+    return subprocess.call(['make', '--no-print-directory', '-j', str(arguments.jobs), '-C', arguments.builddir])
 
 def print_result(ret):
     print('=' * 30)

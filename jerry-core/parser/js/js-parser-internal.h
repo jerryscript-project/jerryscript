@@ -52,6 +52,7 @@
 #define PARSER_ARGUMENTS_NOT_NEEDED           0x04000u
 #define PARSER_LEXICAL_ENV_NEEDED             0x08000u
 #define PARSER_HAS_LATE_LIT_INIT              0x10000u
+#define PARSER_DEBUGGER_BREAKPOINT_APPENDED   0x20000u
 
 /* Expression parsing flags. */
 #define PARSE_EXPR                            0x00

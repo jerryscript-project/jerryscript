@@ -1,3 +1,2 @@
-step
 dump
 c

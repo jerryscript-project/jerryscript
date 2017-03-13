@@ -67,19 +67,19 @@ typedef struct
  * Initialize the header of an outgoing message.
  */
 #define JERRY_DEBUGGER_INIT_SEND_MESSAGE(message_p) \
-  (message_p)->header.ws_opcode = JERRY_DEBUGGER_WEBSOCKET_FIN_BIT | JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME;
+  (message_p)->header.ws_opcode = JERRY_DEBUGGER_WEBSOCKET_FIN_BIT | JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME
 
 /**
  * Set the size of an outgoing message from type.
  */
 #define JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE(message_p, type) \
-  (message_p)->header.size = (uint8_t) (sizeof (type) - sizeof (jerry_debugger_send_header_t));
+  (message_p)->header.size = (uint8_t) (sizeof (type) - sizeof (jerry_debugger_send_header_t))
 
 /**
  * Set the size of an outgoing message.
  */
 #define JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE(message_p, byte_size) \
-  (message_p)->header.size = (uint8_t) (byte_size);
+  (message_p)->header.size = (uint8_t) (byte_size)
 
 bool jerry_debugger_accept_connection (void);
 void jerry_debugger_close_connection (void);

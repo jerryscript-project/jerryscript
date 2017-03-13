@@ -19,4 +19,3 @@ function f() {
 f();
 eval("f = function f() {\nprint('F2') }");
 f();
-f();

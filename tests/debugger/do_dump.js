@@ -16,45 +16,43 @@ print("first line of code");
 
 function f1()
 {
-	function f2()
-	{
-		return function f3() {
-			a = 4;
-			print("funciton f3");
-		};
-	}
+  function f2()
+  {
+    function g1() {
+      a = 4;
+      return print("funciton f3");
+    }
 
-	x =
-	  6;
+    function g2() { }
+  }
+
+  var
+    x =
+       6;
 }
 
-function f4() {
-	print("function f4");
+function func() {
+  'use strict';
+  'use stri' + 'ct';
 }
 
-function foo()
 {
-  print("function foo");
-  var tmp = 4;
-  f4();
+  {
+    print("Y");
+  }
 }
 
-print ("var cat");
-var cat = 'cat';
-
-function test()
-{
-	print("function test");
-	foo();
-	var a = 3;
-	var b = 5;
-	var c = a + b;
-	global_var = c;
-	return c;
-}
+;
+;
 
 var
-	x =
-	  1;
+  x =
+    1,
+  y =
+    2
 
-test();
+test = function
+(
+)
+{
+}

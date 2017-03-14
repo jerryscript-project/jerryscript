@@ -119,6 +119,11 @@ ecma_date_year_from_time (ecma_number_t time) /**< time value */
   ecma_number_t year = (ecma_number_t) (1970 + 285616);
   ecma_number_t lower_year_boundary = (ecma_number_t) (1970 - 285616);
 
+  if (ecma_date_time_from_year (year) < time || ecma_date_time_from_year (lower_year_boundary) > time)
+  {
+    return ecma_number_make_nan ();
+  }
+
   while (ecma_date_time_from_year (year) > time)
   {
     ecma_number_t year_boundary = (ecma_number_t) floor (lower_year_boundary + (year - lower_year_boundary) / 2);
@@ -193,6 +198,12 @@ ecma_date_month_from_time (ecma_number_t time) /**< time value */
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
   ecma_number_t year = ecma_date_year_from_time (time);
+
+  if (ecma_number_is_nan (year))
+  {
+    return ecma_number_make_nan ();
+  }
+
   int day_within_year = (int) (ecma_date_day (time) - ecma_date_day_from_year (year));
 
   JERRY_ASSERT (day_within_year >= 0);
@@ -231,6 +242,12 @@ ecma_date_date_from_time (ecma_number_t time) /**< time value */
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
   ecma_number_t year = ecma_date_year_from_time (time);
+
+  if (ecma_number_is_nan (year))
+  {
+    return ecma_number_make_nan ();
+  }
+
   int day_within_year = (int) (ecma_date_day (time) - ecma_date_day_from_year (year));
 
   JERRY_ASSERT (day_within_year >= 0);

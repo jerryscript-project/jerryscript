@@ -18,6 +18,11 @@
 #       ./tools/runners/run-test-suite.sh ENGINE TESTS [--skip-list=item1,item2] [--snapshot] ENGINE_ARGS....
 
 TIMEOUT=${TIMEOUT:=5}
+TIMEOUT_CMD=`which timeout`
+if [ $? -ne 0 ]
+then
+    TIMEOUT_CMD=`which gtimeout`
+fi
 
 ENGINE="$1"
 shift
@@ -130,7 +135,7 @@ do
         SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).snapshot.XXXXXXXXXX`
 
         cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
-        ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP )
+        $TIMEOUT_CMD $TIMEOUT $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP
         status_code=$?
 
         if [ $status_code -eq 0 ]
@@ -138,14 +143,14 @@ do
             echo "[$tested/$TOTAL] $cmd_line: PASS"
 
             cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP"
-            ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP )
+            $TIMEOUT_CMD $TIMEOUT $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP
             status_code=$?
         fi
 
         rm -f $SNAPSHOT_TEMP
     else
         cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS ${full_test#$ROOT_DIR}"
-        ( ulimit -t $TIMEOUT; $ENGINE $ENGINE_ARGS $full_test &> $ENGINE_TEMP )
+        $TIMEOUT_CMD $TIMEOUT $ENGINE $ENGINE_ARGS $full_test &> $ENGINE_TEMP
         status_code=$?
     fi
 

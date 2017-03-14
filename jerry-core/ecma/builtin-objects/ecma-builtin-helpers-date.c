@@ -312,6 +312,10 @@ ecma_date_daylight_saving_ta (jerry_time_zone_t *tz, /**< time zone information 
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
+  /*
+   * TODO: Fix daylight saving calculation.
+   *       https://github.com/jerryscript-project/jerryscript/issues/1661
+   */
   return tz->daylight_saving_time * ECMA_DATE_MS_PER_HOUR;
 } /* ecma_date_daylight_saving_ta */
 

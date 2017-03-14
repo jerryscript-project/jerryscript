@@ -14,28 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import os
 import re
 import sys
 import settings
 
+LICENSE = re.compile(
+    r'((#|//|\*) Copyright .*\n'
+    r')+\s?\2\n'
+    r'\s?\2 Licensed under the Apache License, Version 2.0 \(the "License"\);\n'
+    r'\s?\2 you may not use this file except in compliance with the License.\n'
+    r'\s?\2 You may obtain a copy of the License at\n'
+    r'\s?\2\n'
+    r'\s?\2     http://www.apache.org/licenses/LICENSE-2.0\n'
+    r'\s?\2\n'
+    r'\s?\2 Unless required by applicable law or agreed to in writing, software\n'
+    r'\s?\2 distributed under the License is distributed on an "AS IS" BASIS\n'
+    r'\s?\2 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n'
+    r'\s?\2 See the License for the specific language governing permissions and\n'
+    r'\s?\2 limitations under the License.\n'
+)
 
-license = re.compile(
-u"""((#|//|\*) Copyright .*
-)+\s?\\2
-\s?\\2 Licensed under the Apache License, Version 2.0 \(the "License"\);
-\s?\\2 you may not use this file except in compliance with the License.
-\s?\\2 You may obtain a copy of the License at
-\s?\\2
-\s?\\2     http://www.apache.org/licenses/LICENSE-2.0
-\s?\\2
-\s?\\2 Unless required by applicable law or agreed to in writing, software
-\s?\\2 distributed under the License is distributed on an "AS IS" BASIS
-\s?\\2 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-\s?\\2 See the License for the specific language governing permissions and
-\s?\\2 limitations under the License.""")
-
-dirs = [
+INCLUDE_DIRS = [
     'cmake',
     'jerry-core',
     'jerry-libc',
@@ -46,12 +48,12 @@ dirs = [
     'tools',
 ]
 
-exclude_dirs = [
+EXCLUDE_DIRS = [
     'targets/esp8266',
-    os.path.relpath (settings.TEST262_TEST_SUITE_DIR, settings.PROJECT_DIR),
+    os.path.relpath(settings.TEST262_TEST_SUITE_DIR, settings.PROJECT_DIR),
 ]
 
-exts = [
+EXTENSIONS = [
     '.c',
     '.cpp',
     '.h',
@@ -67,15 +69,15 @@ exts = [
 def main():
     is_ok = True
 
-    for dname in dirs:
+    for dname in INCLUDE_DIRS:
         for root, _, files in os.walk(dname):
-            if any(root.startswith(exclude) for exclude in exclude_dirs):
+            if any(root.startswith(exclude) for exclude in EXCLUDE_DIRS):
                 continue
             for fname in files:
-                if any(fname.endswith(ext) for ext in exts):
+                if any(fname.endswith(ext) for ext in EXTENSIONS):
                     fpath = os.path.join(root, fname)
-                    with open(fpath) as f:
-                        if not license.search(f.read()):
+                    with open(fpath) as curr_file:
+                        if not LICENSE.search(curr_file.read()):
                             print('%s: incorrect license' % fpath)
                             is_ok = False
 

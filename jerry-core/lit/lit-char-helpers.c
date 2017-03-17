@@ -105,7 +105,7 @@ search_char_in_interval_array (ecma_char_t c,               /**< code unit */
  * Check if specified character is one of the Format-Control characters
  *
  * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 1,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 lit_char_is_format_control (ecma_char_t c) /**< code unit */
@@ -120,7 +120,7 @@ lit_char_is_format_control (ecma_char_t c) /**< code unit */
  * that fall into "Space, Separator" ("Zs") Unicode character category.
  *
  * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 2,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 lit_char_is_white_space (ecma_char_t c) /**< code unit */
@@ -148,7 +148,7 @@ lit_char_is_white_space (ecma_char_t c) /**< code unit */
  * Check if specified character is one of LineTerminator characters
  *
  * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 3,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
@@ -175,7 +175,7 @@ lit_char_is_line_terminator (ecma_char_t c) /**< code unit */
  *          ECMA-262 v5, 7.6
  *
  * @return true - if specified character falls into one of the listed categories,
- *         false - otherwise.
+ *         false - otherwise
  */
 static bool
 lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
@@ -199,7 +199,7 @@ lit_char_is_unicode_letter (ecma_char_t c) /**< code unit */
  *          ECMA-262 v5, 7.6
  *
  * @return true - if specified character falls into one of the listed categories,
- *         false - otherwise.
+ *         false - otherwise
  */
 static bool
 lit_char_is_unicode_non_letter_ident_part (ecma_char_t c) /**< code unit */
@@ -457,7 +457,7 @@ lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with char
  * See also: ECMA-262 v5, 15.10.2.6 (IsWordChar)
  *
  * @return true - if the character is a word character
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 lit_char_is_word_char (ecma_char_t c) /**< code unit */

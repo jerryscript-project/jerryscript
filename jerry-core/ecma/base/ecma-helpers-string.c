@@ -1543,7 +1543,7 @@ ecma_string_compare_to_property_name (ecma_property_t property, /**< property na
  *          ecma_compare_ecma_strings
  *
  * @return true - if strings are equal;
- *         false - otherwise.
+ *         false - otherwise
  */
 static bool __attr_noinline___
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
@@ -1583,7 +1583,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
  * Compare ecma-string to ecma-string
  *
  * @return true - if strings are equal;
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
@@ -1625,7 +1625,7 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
  *  - first string is prefix of second or is lexicographically less than second.
  *
  * @return true - if first string is less than second string,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-string */

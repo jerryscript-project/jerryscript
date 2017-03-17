@@ -1117,7 +1117,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
  * Get property's 'Writable' attribute value
  *
  * @return true - property is writable,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_is_property_writable (ecma_property_t property) /**< property */
@@ -1151,7 +1151,7 @@ ecma_set_property_writable_attr (ecma_property_t *property_p, /**< [in,out] prop
  * Get property's 'Enumerable' attribute value
  *
  * @return true - property is enumerable,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_is_property_enumerable (ecma_property_t property) /**< property */
@@ -1187,7 +1187,7 @@ ecma_set_property_enumerable_attr (ecma_property_t *property_p, /**< [in,out] pr
  * Get property's 'Configurable' attribute value
  *
  * @return true - property is configurable,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_is_property_configurable (ecma_property_t property) /**< property */

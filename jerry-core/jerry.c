@@ -428,7 +428,7 @@ jerry_get_global_object (void)
  * Check if the specified value is an array object value.
  *
  * @return true  - if the specified value is an array object,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_array (const jerry_value_t value) /**< jerry api value */
@@ -443,7 +443,7 @@ jerry_value_is_array (const jerry_value_t value) /**< jerry api value */
  * Check if the specified value is boolean.
  *
  * @return true  - if the specified value is boolean,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_boolean (const jerry_value_t value) /**< api value */
@@ -457,7 +457,7 @@ jerry_value_is_boolean (const jerry_value_t value) /**< api value */
  * Check if the specified value is a constructor function object value.
  *
  * @return true - if the specified value is a function value that implements [[Construct]],
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_constructor (const jerry_value_t value) /**< jerry api value */
@@ -471,7 +471,7 @@ jerry_value_is_constructor (const jerry_value_t value) /**< jerry api value */
  * Check if the specified value is a function object value.
  *
  * @return true - if the specified value is callable,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_function (const jerry_value_t value) /**< api value */
@@ -485,7 +485,7 @@ jerry_value_is_function (const jerry_value_t value) /**< api value */
  * Check if the specified value is number.
  *
  * @return true  - if the specified value is number,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_number (const jerry_value_t value) /**< api value */
@@ -499,7 +499,7 @@ jerry_value_is_number (const jerry_value_t value) /**< api value */
  * Check if the specified value is null.
  *
  * @return true  - if the specified value is null,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_null (const jerry_value_t value) /**< api value */
@@ -513,7 +513,7 @@ jerry_value_is_null (const jerry_value_t value) /**< api value */
  * Check if the specified value is object.
  *
  * @return true  - if the specified value is object,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_object (const jerry_value_t value) /**< api value */
@@ -527,7 +527,7 @@ jerry_value_is_object (const jerry_value_t value) /**< api value */
  * Check if the specified value is string.
  *
  * @return true  - if the specified value is string,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_string (const jerry_value_t value) /**< api value */
@@ -541,7 +541,7 @@ jerry_value_is_string (const jerry_value_t value) /**< api value */
  * Check if the specified value is undefined.
  *
  * @return true  - if the specified value is undefined,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_is_undefined (const jerry_value_t value) /**< api value */
@@ -555,7 +555,7 @@ jerry_value_is_undefined (const jerry_value_t value) /**< api value */
  * Check if the specified feature is enabled.
  *
  * @return true  - if the specified feature is enabled,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool jerry_is_feature_enabled (const jerry_feature_t feature)
 {
@@ -593,7 +593,7 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
  * Check if the specified value is an error value.
  *
  * @return true  - if the error flag of the specified value is true,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_value_has_error_flag (const jerry_value_t value) /**< api value */
@@ -1905,7 +1905,7 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
  * Get native handle, associated with specified object
  *
  * @return true - if there is an associated handle (handle is returned through out_handle_p),
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get handle from */
@@ -1960,7 +1960,7 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 /**
  * Applies the given function to the every property in the object.
  *
- * @return true, if object fields traversal was performed successfully, i.e.:
+ * @return true - if object fields traversal was performed successfully, i.e.:
  *                - no unhandled exceptions were thrown in object fields traversal;
  *                - object fields traversal was stopped on callback that returned false;
  *         false - otherwise,

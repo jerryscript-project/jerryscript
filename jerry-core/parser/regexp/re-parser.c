@@ -36,8 +36,8 @@
 /**
  * Lookup a character in the input string.
  *
- * @return true, if lookup number of characters ahead are hex digits
- *         false, otherwise
+ * @return true - if lookup number of characters ahead are hex digits
+ *         false - otherwise
  */
 static bool
 re_hex_lookup (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
@@ -64,8 +64,8 @@ re_hex_lookup (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
 /**
  * Consume non greedy (question mark) character if present.
  *
- * @return true, if non-greedy character found
- *         false, otherwise
+ * @return true - if non-greedy character found
+ *         false - otherwise
  */
 static inline bool __attr_always_inline___
 re_parse_non_greedy_char (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */

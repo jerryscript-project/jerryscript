@@ -42,8 +42,8 @@
  *
  * See also: ECMA-262 v5, 9.11
  *
- * @return true, if value is callable object;
- *         false - otherwise.
+ * @return true - if value is callable object;
+ *         false - otherwise
  */
 bool
 ecma_op_is_callable (ecma_value_t value) /**< ecma value */
@@ -66,8 +66,8 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
 /**
  * Check whether the value is Object that implements [[Construct]].
  *
- * @return true, if value is constructor object;
- *         false - otherwise.
+ * @return true - if value is constructor object;
+ *         false - otherwise
  */
 bool
 ecma_is_constructor (ecma_value_t value) /**< ecma value */

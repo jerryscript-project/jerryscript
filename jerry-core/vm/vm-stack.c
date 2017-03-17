@@ -132,8 +132,8 @@ vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte cod
 /**
  * Find a finally up to the end position.
  *
- * @return true if 'finally' found,
- *         false otherwise
+ * @return true - if 'finally' found,
+ *         false - otherwise
  */
 bool
 vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */

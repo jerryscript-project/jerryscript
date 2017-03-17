@@ -45,8 +45,8 @@ typedef struct
  * Note:
  *      Offset is in-out and is incremented if the write operation completes successfully.
  *
- * @return true, if write was successful, i.e. offset + data_size doesn't exceed buffer size,
- *         false - otherwise.
+ * @return true - if write was successful, i.e. offset + data_size doesn't exceed buffer size,
+ *         false - otherwise
  */
 static inline bool __attr_always_inline___
 snapshot_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
@@ -650,7 +650,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
  * Compare two ecma_strings by size, then lexicographically.
  *
  * @return true - if the first string is less than the second one,
- *         false - otherwise.
+ *         false - otherwise
  */
 static bool
 jerry_save_literals_compare (ecma_string_t *literal1, /**< first literal */
@@ -838,8 +838,8 @@ jerry_append_number_to_buffer (uint8_t *buffer_p, /**< buffer */
 /**
  * Check whether the passed ecma-string is a valid identifier.
  *
- * @return true, if the ecma-string is a valid identifier,
- *         false - otherwise.
+ * @return true - if the ecma-string is a valid identifier,
+ *         false - otherwise
  */
 static bool
 ecma_string_is_valid_identifier (const ecma_string_t *string_p)

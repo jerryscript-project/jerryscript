@@ -147,10 +147,13 @@ class DebuggerPrompt(Cmd):
         self.stop = False
         self.quit = False
         self.cont = True
+        self.non_interactive = False
 
     def precmd(self, line):
         self.stop = False
         self.cont = False
+        if self.non_interactive:
+            print("%s" % line)
         return line
 
     def postcmd(self, stop, line):
@@ -187,7 +190,8 @@ class DebuggerPrompt(Cmd):
         self.exec_command(args, JERRY_DEBUGGER_CONTINUE)
         self.stop = True
         self.cont = True
-        print("Press enter to stop JavaScript execution.")
+        if not self.non_interactive:
+            print("Press enter to stop JavaScript execution.")
 
     do_c = do_continue
 
@@ -706,6 +710,7 @@ def main():
 
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "
+    prompt.non_interactive = non_interactive
 
     while True:
         if not non_interactive and prompt.cont:

@@ -1,11 +1,12 @@
 Connecting to: localhost:5001
 Stopped at tests/debugger/do_dump.js:15
-(jerry-debugger) {60: Function(byte_code_cp:0x3c, source_name:"tests/debugger/do_dump.js", name:"", line:54, column: 8 { Breakpoint(line:58, offset:12, active_index:-1) }),
+(jerry-debugger) dump
+{60: Function(byte_code_cp:0x3c, source_name:"tests/debugger/do_dump.js", name:"", line:54, column: 8 { Breakpoint(line:58, offset:12, active_index:-1) }),
  64: Function(byte_code_cp:0x40, source_name:"tests/debugger/do_dump.js", name:"func", line:34, column: 1 { Breakpoint(line:36, offset:16, active_index:-1) }),
  79: Function(byte_code_cp:0x4f, source_name:"tests/debugger/do_dump.js", name:"f1", line:17, column: 1 { Breakpoint(line:30, offset:23, active_index:-1) }),
  100: Function(byte_code_cp:0x64, source_name:"tests/debugger/do_dump.js", name:"g2", line:26, column: 5 { Breakpoint(line:26, offset:12, active_index:-1) }),
  102: Function(byte_code_cp:0x66, source_name:"tests/debugger/do_dump.js", name:"f2", line:19, column: 3 { Breakpoint(line:27, offset:26, active_index:-1) }),
  109: Function(byte_code_cp:0x6d, source_name:"tests/debugger/do_dump.js", name:"g1", line:21, column: 5 { Breakpoint(line:22, offset:18, active_index:-1),Breakpoint(line:23, offset:23, active_index:-1) }),
  128: Function(byte_code_cp:0x80, source_name:"tests/debugger/do_dump.js", name:"", line:1, column: 1 { Breakpoint(line:41, offset:47, active_index:-1),Breakpoint(line:51, offset:57, active_index:-1),Breakpoint(line:49, offset:52, active_index:-1),Breakpoint(line:54, offset:62, active_index:-1),Breakpoint(line:15, offset:42, active_index:-1) })}
-(jerry-debugger) Press enter to stop JavaScript execution.
+(jerry-debugger) c
 Connection closed.

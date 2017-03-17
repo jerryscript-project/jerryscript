@@ -339,10 +339,10 @@ bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t 
  * Snapshot functions
  */
 size_t jerry_parse_and_save_snapshot (const jerry_char_t *source_p, size_t source_size, bool is_for_global,
-                                      bool is_strict, uint8_t *buffer_p, size_t buffer_size);
-jerry_value_t jerry_exec_snapshot (const void *snapshot_p, size_t snapshot_size, bool copy_bytecode);
+                                      bool is_strict, uint32_t *buffer_p, size_t buffer_size);
+jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode);
 size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
-                                      uint8_t *buffer_p, size_t buffer_size, bool is_c_format);
+                                      uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
 
 /**
  * @}

@@ -28,9 +28,14 @@
 #define JERRY_MAX_COMMAND_LINE_ARGS (64)
 
 /**
- * Maximum size of source code / snapshots buffer
+ * Maximum size of source code
  */
 #define JERRY_BUFFER_SIZE (1048576)
+
+/**
+ * Maximum size of snapshots buffer
+ */
+#define JERRY_SNAPSHOT_BUFFER_SIZE (JERRY_BUFFER_SIZE / sizeof (uint32_t))
 
 /**
  * Standalone Jerry exit codes
@@ -45,7 +50,7 @@
 
 static uint8_t buffer[ JERRY_BUFFER_SIZE ];
 
-static const uint8_t *
+static const uint32_t *
 read_file (const char *file_name,
            size_t *out_size_p)
 {
@@ -75,7 +80,7 @@ read_file (const char *file_name,
   fclose (file);
 
   *out_size_p = bytes_read;
-  return (const uint8_t *) buffer;
+  return (const uint32_t *) buffer;
 } /* read_file */
 
 /**
@@ -629,7 +634,7 @@ main (int argc,
     for (int i = 0; i < exec_snapshots_count; i++)
     {
       size_t snapshot_size;
-      const uint8_t *snapshot_p = read_file (exec_snapshot_file_names[i], &snapshot_size);
+      const uint32_t *snapshot_p = read_file (exec_snapshot_file_names[i], &snapshot_size);
 
       if (snapshot_p == NULL)
       {
@@ -637,7 +642,7 @@ main (int argc,
       }
       else
       {
-        ret_value = jerry_exec_snapshot ((void *) snapshot_p,
+        ret_value = jerry_exec_snapshot (snapshot_p,
                                          snapshot_size,
                                          true);
       }
@@ -654,7 +659,7 @@ main (int argc,
     for (int i = 0; i < files_counter; i++)
     {
       size_t source_size;
-      const jerry_char_t *source_p = read_file (file_names[i], &source_size);
+      const jerry_char_t *source_p = (jerry_char_t *) read_file (file_names[i], &source_size);
 
       if (source_p == NULL)
       {
@@ -670,7 +675,7 @@ main (int argc,
 
       if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE) && (is_save_snapshot_mode || is_save_literals_mode))
       {
-        static uint8_t snapshot_save_buffer[ JERRY_BUFFER_SIZE ];
+        static uint32_t snapshot_save_buffer[ JERRY_SNAPSHOT_BUFFER_SIZE ];
 
         if (is_save_snapshot_mode)
         {
@@ -679,7 +684,7 @@ main (int argc,
                                                                 is_save_snapshot_mode_for_global_or_eval,
                                                                 false,
                                                                 snapshot_save_buffer,
-                                                                JERRY_BUFFER_SIZE);
+                                                                JERRY_SNAPSHOT_BUFFER_SIZE);
           if (snapshot_size == 0)
           {
             ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Snapshot saving failed!");
@@ -698,7 +703,7 @@ main (int argc,
                                                                             source_size,
                                                                             false,
                                                                             snapshot_save_buffer,
-                                                                            JERRY_BUFFER_SIZE,
+                                                                            JERRY_SNAPSHOT_BUFFER_SIZE,
                                                                             is_save_literals_mode_in_c_format_or_list);
           if (literal_buffer_size == 0)
           {

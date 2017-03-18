@@ -135,6 +135,127 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
   return ret_value;
 } /* ecma_builtin_object_object_get_prototype_of */
 
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+/**
+ * [[SetPrototypeOf]]
+ *
+ * See also:
+ *          ES2015 9.1.2
+ */
+static bool
+ecma_set_prototype_of (ecma_value_t o_value, /**< O */
+                       ecma_value_t v_value) /**< V */
+{
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (o_value));
+  JERRY_ASSERT (ecma_is_value_object (v_value) || ecma_is_value_null (v_value));
+
+  ecma_object_t *o_p = ecma_get_object_from_value (o_value);
+  ecma_object_t *v_p = ecma_is_value_null (v_value) ? NULL : ecma_get_object_from_value (v_value);
+
+  /* 3., 4. */
+  if (v_p == ecma_get_object_prototype (o_p))
+  {
+    return true;
+  }
+
+  /* 2., 5. */
+  if (!ecma_get_object_extensible (o_p))
+  {
+    return false;
+  }
+
+  /* 6., 7., 8. */
+  ecma_object_t *p_p = v_p;
+  while (true)
+  {
+    /* a. */
+    if (p_p == NULL)
+    {
+      break;
+    }
+
+    /* b. */
+    if (p_p == o_p)
+    {
+      return false;
+    }
+
+    /* c.i. TODO: es2015-subset profile does not support having a different
+     * [[GetPrototypeOf]] internal method */
+
+    /* c.ii. */
+    p_p = ecma_get_object_prototype (p_p);
+  }
+
+  /* 9. */
+  ECMA_SET_POINTER (o_p->prototype_or_outer_reference_cp, v_p);
+
+  /* 10. */
+  return true;
+} /* ecma_set_prototype_of */
+
+/**
+ * The Object object's 'setPrototypeOf' routine
+ *
+ * See also:
+ *          ES2015 19.1.2.18
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_set_prototype_of (ecma_value_t this_arg, /**< 'this' argument */
+                                             ecma_value_t arg1, /**< routine's first argument */
+                                             ecma_value_t arg2) /**< routine's second argument */
+{
+  JERRY_UNUSED (this_arg);
+  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+
+  /* 1., 2. */
+  ECMA_TRY_CATCH (unused_value,
+                  ecma_op_check_object_coercible (arg1),
+                  ret_value);
+
+  /* 3. */
+  if (!ecma_is_value_object (arg2) && !ecma_is_value_null (arg2))
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("proto is neither Object nor Null."));
+  }
+  else
+  {
+    /* 4. */
+    if (!ecma_is_value_object (arg1))
+    {
+      ret_value = ecma_copy_value (arg1);
+    }
+    else
+    {
+      /* 5. */
+      bool status = ecma_set_prototype_of (arg1, arg2);
+
+      /* 6. TODO: es2015-subset profile does not support having a different
+       * [[SetPrototypeOf]] internal method */
+
+      /* 7. */
+      if (!status)
+      {
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("cannot set prototype."));
+      }
+      else
+      {
+        /* 8. */
+        ret_value = ecma_copy_value (arg1);
+      }
+    }
+  }
+
+  ECMA_FINALIZE (unused_value);
+
+  return ret_value;
+} /* ecma_builtin_object_object_set_prototype_of */
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
 /**
  * The Object object's 'getOwnPropertyNames' routine
  *

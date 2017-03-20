@@ -1,0 +1,22 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_delete.js:15
+(jerry-debugger) next
+Stopped at tests/debugger/do_delete.js:17
+(jerry-debugger) b do_delete.js:17
+Breakpoint 1 at tests/debugger/do_delete.js:17
+(jerry-debugger) b do_delete.js:21
+Breakpoint not found
+(jerry-debugger) b do_delete.js:19
+Breakpoint 2 at tests/debugger/do_delete.js:19
+(jerry-debugger) b do_delete.js:18
+Breakpoint 3 at tests/debugger/do_delete.js:18
+(jerry-debugger) list
+1: tests/debugger/do_delete.js:17
+2: tests/debugger/do_delete.js:19
+3: tests/debugger/do_delete.js:18
+(jerry-debugger) delete 2
+(jerry-debugger) delete 3
+(jerry-debugger) list
+1: tests/debugger/do_delete.js:17
+(jerry-debugger) c
+Connection closed.

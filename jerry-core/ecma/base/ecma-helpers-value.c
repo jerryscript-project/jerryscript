@@ -115,7 +115,7 @@ ecma_get_pointer_from_ecma_value (ecma_value_t value) /**< value */
  * Check if the value is direct ecma-value.
  *
  * @return true - if the value is a direct value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_direct (ecma_value_t value) /**< ecma value */
@@ -127,7 +127,7 @@ ecma_is_value_direct (ecma_value_t value) /**< ecma value */
  * Check if the value is simple ecma-value.
  *
  * @return true - if the value is a simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_simple (ecma_value_t value) /**< ecma value */
@@ -139,7 +139,7 @@ ecma_is_value_simple (ecma_value_t value) /**< ecma value */
  * Check whether the value is a given simple value.
  *
  * @return true - if the value is equal to the given simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 static inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_equal_to_simple_value (ecma_value_t value, /**< ecma value */
@@ -152,7 +152,7 @@ ecma_is_value_equal_to_simple_value (ecma_value_t value, /**< ecma value */
  * Check if the value is empty.
  *
  * @return true - if the value contains implementation-defined empty simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_empty (ecma_value_t value) /**< ecma value */
@@ -164,7 +164,7 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma value */
  * Check if the value is undefined.
  *
  * @return true - if the value contains ecma-undefined simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
@@ -176,7 +176,7 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
  * Check if the value is null.
  *
  * @return true - if the value contains ecma-null simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_null (ecma_value_t value) /**< ecma value */
@@ -188,7 +188,7 @@ ecma_is_value_null (ecma_value_t value) /**< ecma value */
  * Check if the value is boolean.
  *
  * @return true - if the value contains ecma-true or ecma-false simple values,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
@@ -200,7 +200,7 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
  * Check if the value is true.
  *
  * @return true - if the value contains ecma-true simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_true (ecma_value_t value) /**< ecma value */
@@ -212,7 +212,7 @@ ecma_is_value_true (ecma_value_t value) /**< ecma value */
  * Check if the value is false.
  *
  * @return true - if the value contains ecma-false simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_false (ecma_value_t value) /**< ecma value */
@@ -224,7 +224,7 @@ ecma_is_value_false (ecma_value_t value) /**< ecma value */
  * Check if the value is not found.
  *
  * @return true - if the value contains ecma-not-found simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_found (ecma_value_t value) /**< ecma value */
@@ -236,7 +236,7 @@ ecma_is_value_found (ecma_value_t value) /**< ecma value */
  * Check if the value is array hole.
  *
  * @return true - if the value contains ecma-array-hole simple value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
@@ -248,7 +248,7 @@ ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
  * Check if the value is integer ecma-number.
  *
  * @return true - if the value contains an integer ecma-number value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_integer_number (ecma_value_t value) /**< ecma value */
@@ -260,7 +260,7 @@ ecma_is_value_integer_number (ecma_value_t value) /**< ecma value */
  * Check if both values are integer ecma-numbers.
  *
  * @return true - if both values contain integer ecma-number values,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_are_values_integer_numbers (ecma_value_t first_value, /**< first ecma value */
@@ -276,7 +276,7 @@ ecma_are_values_integer_numbers (ecma_value_t first_value, /**< first ecma value
  * Check if the value is floating-point ecma-number.
  *
  * @return true - if the value contains a floating-point ecma-number value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_float_number (ecma_value_t value) /**< ecma value */
@@ -288,7 +288,7 @@ ecma_is_value_float_number (ecma_value_t value) /**< ecma value */
  * Check if the value is ecma-number.
  *
  * @return true - if the value contains ecma-number value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_number (ecma_value_t value) /**< ecma value */
@@ -301,7 +301,7 @@ ecma_is_value_number (ecma_value_t value) /**< ecma value */
  * Check if the value is ecma-string.
  *
  * @return true - if the value contains ecma-string value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_string (ecma_value_t value) /**< ecma value */
@@ -313,7 +313,7 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
  * Check if the value is object.
  *
  * @return true - if the value contains object value,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_pure___ __attr_always_inline___
 ecma_is_value_object (ecma_value_t value) /**< ecma value */

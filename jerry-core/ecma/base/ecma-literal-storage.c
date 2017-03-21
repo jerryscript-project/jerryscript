@@ -222,8 +222,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 /**
  * Save literals to specified snapshot buffer.
  *
- * @return true, if save was performed successfully (i.e. buffer size is sufficient),
- *         false - otherwise.
+ * @return true - if save was performed successfully (i.e. buffer size is sufficient),
+ *         false - otherwise
  */
 bool
 ecma_save_literals_for_snapshot (uint32_t *buffer_p, /**< [out] output snapshot buffer */
@@ -389,8 +389,8 @@ ecma_save_literals_for_snapshot (uint32_t *buffer_p, /**< [out] output snapshot 
  *
  * Note: always inline because it is used only once.
  *
- * @return true, if load was performed successfully
- *         false - otherwise (i.e. buffer length is incorrect).
+ * @return true - if load was performed successfully
+ *         false - otherwise (i.e. buffer length is incorrect)
  */
 static inline bool __attr_always_inline___
 ecma_load_literals_from_buffer (const uint16_t *buffer_p, /**< buffer with literal table in snapshot */
@@ -465,8 +465,8 @@ ecma_load_literals_from_buffer (const uint16_t *buffer_p, /**< buffer with liter
 /**
  * Load literals from snapshot.
  *
- * @return true, if load was performed successfully (i.e. literals saved in the snapshot are consistent),
- *         false - otherwise (i.e. snapshot is incorrect).
+ * @return true - if load was performed successfully (i.e. literals saved in the snapshot are consistent),
+ *         false - otherwise (i.e. snapshot is incorrect)
  */
 bool
 ecma_load_literals_from_snapshot (const uint32_t *buffer_p, /**< buffer with literal table in snapshot */

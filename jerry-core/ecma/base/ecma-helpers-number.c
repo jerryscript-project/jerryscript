@@ -329,7 +329,7 @@ ecma_number_is_zero (ecma_number_t num) /**< ecma-number */
  *
  * @return true - if biased exponent is filled with 1 bits and
  *                fraction is filled with zero bits,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */

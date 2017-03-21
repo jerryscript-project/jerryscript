@@ -863,7 +863,7 @@ lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surrogate, /**< high 
  *  - first string is prefix of second or is lexicographically less than second.
  *
  * @return true - if first string is less than second string,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, /**< utf-8 string */
                                           lit_utf8_size_t string1_size, /**< string size */

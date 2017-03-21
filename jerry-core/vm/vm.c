@@ -332,8 +332,8 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 /**
  * Get implicit this value
  *
- * @return true, if the implicit 'this' value is updated,
- *         false - otherwise.
+ * @return true - if the implicit 'this' value is updated,
+ *         false - otherwise
  */
 static inline bool __attr_always_inline___
 vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value */
@@ -2757,7 +2757,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
  * Check whether currently executed code is strict mode code
  *
  * @return true - current code is executed in strict mode,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 vm_is_strict_mode (void)
@@ -2777,7 +2777,7 @@ vm_is_strict_mode (void)
  *
  * @return true - currently performed call is performed through 'eval' identifier,
  *                without 'this' argument,
- *         false - otherwise.
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 vm_is_direct_eval_form_call (void)

@@ -32,7 +32,7 @@
  * See also: ECMA-262 v5, 11.9.3
  *
  * @return true - if values are equal,
- *         false - otherwise.
+ *         false - otherwise
  */
 ecma_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
@@ -187,7 +187,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
  * See also: ECMA-262 v5, 11.9.6
  *
  * @return true - if values are strict equal,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */

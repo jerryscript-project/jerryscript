@@ -33,7 +33,7 @@
  *        - LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK
  *
  * @return true - if property was just created with specified value,
- *         false - otherwise, if property existed before the call, it's value was updated.
+ *         false - otherwise, if property existed before the call, it's value was updated
  */
 bool
 ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to create property in */
@@ -100,7 +100,7 @@ ecma_create_external_pointer_property (ecma_object_t *obj_p, /**< object to crea
  *        - LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK
  *
  * @return true - if property exists and it's value is returned through out_pointer_p,
- *         false - otherwise (value returned through out_pointer_p is NULL).
+ *         false - otherwise (value returned through out_pointer_p is NULL)
  */
 bool
 ecma_get_external_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */

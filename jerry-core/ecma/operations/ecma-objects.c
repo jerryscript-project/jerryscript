@@ -335,8 +335,8 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
 /**
  * Checks whether an object (excluding prototypes) has a named property
  *
- * @return true if property is found
- *         false otherwise
+ * @return true - if property is found
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
@@ -353,8 +353,8 @@ ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
 /**
  * Checks whether an object (including prototypes) has a named property
  *
- * @return true if property is found
- *         false otherwise
+ * @return true - if property is found
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
@@ -949,8 +949,8 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
  * Note:
  *      returned value must be freed with ecma_free_value
  *
- * @return true, if deleted successfully
- *         false or type error otherwise (based in 'is_throw')
+ * @return true - if deleted successfully
+ *         false - or type error otherwise (based in 'is_throw')
  */
 ecma_value_t
 ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
@@ -1157,8 +1157,8 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  *                                      [Enumerable], [Configurable]
  *                                    }.
  *
- * @return true if property found
- *         false otherwise
+ * @return true - if property found
+ *         false - otherwise
  */
 bool
 ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the object */
@@ -1270,8 +1270,8 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 15.2.4.6; 3
  *
- * @return true if the target object is prototype of the base object
- *         false if the target object is not prototype of the base object
+ * @return true - if the target object is prototype of the base object
+ *         false - if the target object is not prototype of the base object
  */
 bool
 ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */

@@ -145,7 +145,7 @@ print_help (char *name)
 /**
  * Check whether an error is a SyntaxError or not
  *
- * @return true  - if param is SyntaxError
+ * @return true - if param is SyntaxError
  *         false - otherwise
  */
 static bool

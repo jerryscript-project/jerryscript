@@ -34,7 +34,7 @@ void jerry_port_default_set_abort_on_fail (bool flag) /**< new value of 'abort o
  * non-zero exit code in the default implementation of jerry_port_fatal.
  *
  * @return true - if 'abort on fail' flag is set,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool jerry_port_default_is_abort_on_fail (void)
 {

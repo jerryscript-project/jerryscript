@@ -71,7 +71,7 @@ ecma_op_check_object_coercible (ecma_value_t value) /**< ecma value */
  *          ECMA-262 v5, 9.12
  *
  * @return true - if the value are same according to ECMA-defined SameValue algorithm,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 ecma_op_same_value (ecma_value_t x, /**< ecma value */
@@ -188,8 +188,8 @@ ecma_op_to_primitive (ecma_value_t value, /**< ecma value */
  * See also:
  *          ECMA-262 v5, 9.2
  *
- * @return true if the logical value is true
- *         false otherwise
+ * @return true - if the logical value is true
+ *         false - otherwise
  */
 bool
 ecma_op_to_boolean (ecma_value_t value) /**< ecma value */

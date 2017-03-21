@@ -938,6 +938,9 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
   }
 
+  uint32_t property_pair_count = 0;
+  uint32_t deleted_property_count = 0;
+
   while (current_prop_p != NULL)
   {
     ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) current_prop_p;
@@ -987,6 +990,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     }
     else
     {
+      property_pair_count++;
+
+      if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_DELETED
+          || current_prop_p->types[1] == ECMA_PROPERTY_TYPE_DELETED)
+      {
+        deleted_property_count++;
+      }
+
       prev_prop_p = current_prop_p;
       current_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
                                          current_prop_p->next_property_cp);
@@ -996,11 +1007,155 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
   if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
   {
     ecma_property_hashmap_free (object_p);
+  }
+
+  if (deleted_property_count >= 4 && (deleted_property_count > property_pair_count / 8))
+  {
+    ecma_compact_properties (object_p);
+  }
+
+  if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
+  {
     ecma_property_hashmap_create (object_p);
   }
 
   return new_length;
 } /* ecma_delete_array_properties */
+
+/**
+ * Remove deleted entries from the property pair list
+ */
+void
+ecma_compact_properties (ecma_object_t *object_p) /**< object */
+{
+  ecma_property_header_t *src_prop_iter_p = ecma_get_property_list (object_p);
+  jmem_cpointer_t prev_property_cp = ECMA_NULL_POINTER;
+  jmem_cpointer_t curr_property_cp = object_p->property_list_or_bound_object_cp;
+
+  JERRY_ASSERT (src_prop_iter_p != NULL);
+
+  /* First reverse the property pair chain. */
+  while (src_prop_iter_p->next_property_cp != ECMA_NULL_POINTER)
+  {
+    jmem_cpointer_t next_property_cp = src_prop_iter_p->next_property_cp;
+
+    ecma_property_header_t *next_prop_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                     next_property_cp);
+
+    src_prop_iter_p->next_property_cp = prev_property_cp;
+
+    src_prop_iter_p = next_prop_p;
+    prev_property_cp = curr_property_cp;
+    curr_property_cp = next_property_cp;
+  }
+
+  src_prop_iter_p->next_property_cp = prev_property_cp;
+
+  /* Move all properties to the end of the reversed chain
+   * and reverse it back to the original chain. */
+  ecma_property_header_t *dst_prop_iter_p = src_prop_iter_p;
+  int src_index = 1;
+  int dst_index = 1;
+
+  prev_property_cp = ECMA_NULL_POINTER;
+
+  while (src_prop_iter_p != NULL && src_prop_iter_p->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    if (src_prop_iter_p->types[src_index] != ECMA_PROPERTY_TYPE_DELETED)
+    {
+      /* Copy living properties. */
+      if (src_prop_iter_p != dst_prop_iter_p || src_index != dst_index)
+      {
+        ecma_property_pair_t *src_prop_pair_p = (ecma_property_pair_t *) src_prop_iter_p;
+        ecma_property_pair_t *dst_prop_pair_p = (ecma_property_pair_t *) dst_prop_iter_p;
+
+        dst_prop_pair_p->header.types[dst_index] = src_prop_pair_p->header.types[src_index];
+        dst_prop_pair_p->values[dst_index] = src_prop_pair_p->values[src_index];
+        dst_prop_pair_p->names_cp[dst_index] = src_prop_pair_p->names_cp[src_index];
+
+        if (ecma_is_property_lcached (src_prop_pair_p->header.types + src_index))
+        {
+          ecma_lcache_update (object_p,
+                              dst_prop_pair_p->names_cp[dst_index],
+                              src_prop_pair_p->header.types + src_index,
+                              dst_prop_pair_p->header.types + dst_index);
+        }
+      }
+
+      if (dst_index == 1)
+      {
+        dst_index = 0;
+      }
+      else
+      {
+        jmem_cpointer_t next_property_cp = dst_prop_iter_p->next_property_cp;
+
+        ecma_property_header_t *next_prop_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                         next_property_cp);
+
+        dst_prop_iter_p->next_property_cp = prev_property_cp;
+
+        dst_prop_iter_p = next_prop_p;
+        prev_property_cp = curr_property_cp;
+        curr_property_cp = next_property_cp;
+
+        dst_index = 1;
+      }
+    }
+
+    if (src_index == 1)
+    {
+      src_index = 0;
+    }
+    else
+    {
+      src_prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                          src_prop_iter_p->next_property_cp);
+      src_index = 1;
+    }
+  }
+
+  if (dst_index == 1)
+  {
+    curr_property_cp = prev_property_cp;
+  }
+  else
+  {
+    /* This deleted property will be reused by the create property. */
+    jmem_cpointer_t next_property_cp = dst_prop_iter_p->next_property_cp;
+
+    dst_prop_iter_p->next_property_cp = prev_property_cp;
+    dst_prop_iter_p->types[0] = ECMA_PROPERTY_TYPE_DELETED;
+
+    dst_prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                        next_property_cp);
+  }
+
+  src_prop_iter_p = dst_prop_iter_p;
+
+  /* Delete all property pairs until we reach the end or the hashmap. */
+  while (src_prop_iter_p != NULL && src_prop_iter_p->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    ecma_property_header_t *next_prop_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                                            src_prop_iter_p->next_property_cp);
+    ecma_dealloc_property_pair ((ecma_property_pair_t *) src_prop_iter_p);
+    src_prop_iter_p = next_prop_p;
+  }
+
+  if (src_prop_iter_p != NULL)
+  {
+    src_prop_iter_p->next_property_cp = curr_property_cp;
+
+    /* TODO: Reset hashmap instead of deleting it.
+     *       Recreating is not an option since memory
+     *       should not be allocated during GC. */
+    ecma_property_hashmap_free (object_p);
+  }
+  else
+  {
+    object_p->property_list_or_bound_object_cp = curr_property_cp;
+  }
+} /* ecma_compact_properties */
 
 /**
  * Check whether the object contains a property

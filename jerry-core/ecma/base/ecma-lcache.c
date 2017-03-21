@@ -234,7 +234,7 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
 } /* ecma_lcache_lookup */
 
 /**
- * Invalidate LCache entries associated with given object and property name / property
+ * Invalidate LCache entry associated with given object and property name / property
  */
 void
 ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
@@ -272,6 +272,48 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   JERRY_UNUSED (name_cp);
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate */
+
+/**
+ * Update LCache entry associated with given object and property name / property
+ */
+void
+ecma_lcache_update (ecma_object_t *object_p, /**< object */
+                    jmem_cpointer_t name_cp, /**< property name */
+                    ecma_property_t *old_prop_p, /**< old property pointer */
+                    ecma_property_t *new_prop_p) /**< new property pointer */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (new_prop_p != NULL && ecma_is_property_lcached (new_prop_p));
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*new_prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+                || ECMA_PROPERTY_GET_TYPE (*new_prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  jmem_cpointer_t object_cp;
+  ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
+
+  lit_string_hash_t name_hash = ecma_string_get_property_name_hash (*new_prop_p, name_cp);
+  size_t row_index = ecma_lcache_row_index (object_cp, name_hash);
+  ecma_lcache_hash_entry_t *entry_p = JERRY_HASH_TABLE_CONTEXT (table) [row_index];
+
+  for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
+  {
+    if (entry_p->object_cp != ECMA_NULL_POINTER && entry_p->prop_p == old_prop_p)
+    {
+      JERRY_ASSERT (entry_p->object_cp == object_cp);
+
+      entry_p->prop_p = new_prop_p;
+      return;
+    }
+    entry_p++;
+  }
+
+  /* The property must be present. */
+  JERRY_UNREACHABLE ();
+#else  /* CONFIG_ECMA_LCACHE_DISABLE */
+  JERRY_UNUSED (name_cp);
+  JERRY_UNUSED (old_prop_p);
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+} /* ecma_lcache_update */
 
 /**
  * @}

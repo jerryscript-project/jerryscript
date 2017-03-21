@@ -58,9 +58,6 @@
  *          true  |             true  |     false
  */
 
-static void ecma_gc_mark (ecma_object_t *object_p);
-static void ecma_gc_sweep (ecma_object_t *object_p);
-
 /**
  * Get next object in list of objects with same generation.
  */
@@ -226,7 +223,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
 /**
  * Mark objects as visited starting from specified object as root
  */
-void
+static void
 ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -337,6 +334,9 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP
                     || ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
+      JERRY_ASSERT (prop_iter_p->types[0] != ECMA_PROPERTY_TYPE_DELETED
+                    || prop_iter_p->types[1] != ECMA_PROPERTY_TYPE_DELETED);
+
       ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 0);
       ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 1);
 
@@ -349,7 +349,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 /**
  * Free specified object
  */
-void
+static void
 ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 {
   JERRY_ASSERT (object_p != NULL

@@ -107,6 +107,21 @@ assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< f
   }
 } /* assert_handler */
 
+/**
+ * Provide the '__gc' implementation for the engine.
+ *
+ * @return undefined.
+ */
+static jerry_value_t
+gc_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+            const jerry_value_t this_p __attribute__((unused)), /**< this arg */
+            const jerry_value_t args_p[] __attribute__((unused)), /**< function arguments */
+            const jerry_length_t args_cnt __attribute__((unused))) /**< number of function arguments */
+{
+  jerry_gc ();
+  return jerry_create_undefined ();
+} /* gc_handler */
+
 static void
 print_usage (char *name)
 {
@@ -610,14 +625,12 @@ main (int argc,
   jerry_init (flags);
 
   jerry_value_t global_obj_val = jerry_get_global_object ();
-  jerry_value_t assert_value = jerry_create_external_function (assert_handler);
 
+  jerry_value_t assert_value = jerry_create_external_function (assert_handler);
   jerry_value_t assert_func_name_val = jerry_create_string ((jerry_char_t *) "assert");
   jerry_value_t ret_value = jerry_set_property (global_obj_val, assert_func_name_val, assert_value);
-
   jerry_release_value (assert_func_name_val);
   jerry_release_value (assert_value);
-  jerry_release_value (global_obj_val);
 
   if (jerry_value_has_error_flag (ret_value))
   {
@@ -626,6 +639,21 @@ main (int argc,
   }
 
   jerry_release_value (ret_value);
+
+  jerry_value_t gc_value = jerry_create_external_function (gc_handler);
+  jerry_value_t gc_func_name_val = jerry_create_string ((jerry_char_t *) "__gc");
+  ret_value = jerry_set_property (global_obj_val, gc_func_name_val, gc_value);
+  jerry_release_value (gc_func_name_val);
+  jerry_release_value (gc_value);
+
+  if (jerry_value_has_error_flag (ret_value))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '__gc' method.");
+    print_unhandled_exception (ret_value);
+  }
+
+  jerry_release_value (ret_value);
+  jerry_release_value (global_obj_val);
 
   ret_value = jerry_create_undefined ();
 

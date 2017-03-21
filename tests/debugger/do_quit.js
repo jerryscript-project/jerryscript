@@ -12,24 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-print("first line of code");
-
-function f1()
-{
-  function f2()
-  {
-    function g1() {
-      a = 4;
-      return print("funciton f3");
-    }
-
-    function g2() { }
-  }
-
-  var
-    x =
-       6;
-}
+print("quit test");
 
 function func() {
   'use strict';
@@ -38,7 +21,7 @@ function func() {
 
 {
   {
-    print("Y");
+    print("quit");
   }
 }
 

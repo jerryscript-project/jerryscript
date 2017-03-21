@@ -60,6 +60,10 @@ ROUTINE (LIT_MAGIC_STRING_CREATE, ecma_builtin_object_object_create, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTIES_UL, ecma_builtin_object_object_define_properties, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_property, 3, 3)
 
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL, ecma_builtin_object_object_set_prototype_of, 2, 2)
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
 #undef SIMPLE_VALUE
 #undef NUMBER_VALUE
 #undef STRING_VALUE

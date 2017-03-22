@@ -13,20 +13,10 @@
  * limitations under the License.
  */
 
-/*
- * RegExp built-in description
- */
-
-#include "ecma-builtin-helpers-macro-defines.inc.h"
-
-/* ECMA-262 v5, 15.10.5 */
-NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              2,
-              ECMA_PROPERTY_FIXED)
-
-/* ECMA-262 v5, 15.10.5.1 */
-OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
-              ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
-              ECMA_PROPERTY_FIXED)
-
-#include "ecma-builtin-helpers-macro-undefs.inc.h"
+#undef SIMPLE_VALUE
+#undef NUMBER_VALUE
+#undef STRING_VALUE
+#undef OBJECT_VALUE
+#undef ROUTINE
+#undef ACCESSOR_READ_WRITE
+#undef ACCESSOR_READ_ONLY

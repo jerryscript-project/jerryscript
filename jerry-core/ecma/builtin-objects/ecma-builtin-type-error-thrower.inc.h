@@ -18,9 +18,8 @@
  *
  * See also: ECMA-262 v5, 13.2.3
  */
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
+
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -29,10 +28,4 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_FIXED)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

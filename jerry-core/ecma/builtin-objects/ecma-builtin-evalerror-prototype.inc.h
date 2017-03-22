@@ -16,13 +16,8 @@
 /*
  * EvalError.prototype built-in description
  */
-#ifndef STRING_VALUE
-# define STRING_VALUE(name, magic_string_id, prop_attributes)
-#endif /* !STRING_VALUE */
 
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -42,10 +37,4 @@ STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
               LIT_MAGIC_STRING__EMPTY,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

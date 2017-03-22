@@ -16,25 +16,8 @@
 /*
  * RegExp.prototype built-in description
  */
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
 
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
-
-#ifndef SIMPLE_VALUE
-# define SIMPLE_VALUE(name, simple_value, prop_attributes)
-#endif /* !SIMPLE_VALUE */
-
-#ifndef STRING_VALUE
-# define STRING_VALUE(name, magic_string_id, prop_attributes)
-#endif /* !STRING_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* ECMA-262 v5, 15.10.6.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
@@ -73,10 +56,4 @@ ROUTINE (LIT_MAGIC_STRING_EXEC, ecma_builtin_regexp_prototype_exec, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TEST, ecma_builtin_regexp_prototype_test, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_regexp_prototype_to_string, 0, 0)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

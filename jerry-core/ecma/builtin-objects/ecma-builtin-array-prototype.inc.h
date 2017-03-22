@@ -16,17 +16,8 @@
 /*
  * Array.prototype built-in description
  */
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
 
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -68,10 +59,4 @@ ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2,
 ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, NON_FIXED, 1)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -177,10 +177,10 @@ endif()
 # Enable debugger
 if(FEATURE_DEBUGGER)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
-endif()
 
-# Debugger port
-set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER_PORT=${FEATURE_DEBUGGER_PORT})
+  # Debugger port
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER_PORT=${FEATURE_DEBUGGER_PORT})
+endif()
 
 # Memory management stress-test mode
 if(FEATURE_MEM_STRESS_TEST)

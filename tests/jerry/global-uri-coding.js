@@ -14,6 +14,8 @@
 
 // URI encoding
 
+// This test will not pass on FLOAT32 due to precision issues
+
 function checkEncodeURIParseError (str)
 {
   try {

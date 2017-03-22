@@ -86,6 +86,10 @@
            && CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT64 */
 #endif /* !CONFIG_ECMA_NUMBER_TYPE */
 
+#if (!defined (CONFIG_DISABLE_DATE_BUILTIN) && (CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32))
+#  error "Date does not support float32"
+#endif
+
 /**
  * Representation for ecma-characters
  */

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This test will not pass on FLOAT32 due to precision issues
+
 var func = function(a, b) {
   return a + b;
 }

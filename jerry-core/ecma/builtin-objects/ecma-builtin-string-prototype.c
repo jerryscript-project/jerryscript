@@ -817,7 +817,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
     if (ecma_is_value_empty (ret_value))
     {
-      arguments_list[match_length] = ecma_make_number_value (context_p->match_start);
+      arguments_list[match_length] = ecma_make_uint32_value (context_p->match_start);
       arguments_list[match_length + 1] = ecma_copy_value (context_p->input_string);
 
       ECMA_TRY_CATCH (result_value,
@@ -1117,7 +1117,7 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
           ECMA_TRY_CATCH (put_value,
                           ecma_op_object_put (regexp_obj_p,
                                               last_index_string_p,
-                                              ecma_make_number_value (context_p->match_end + 1),
+                                              ecma_make_uint32_value (context_p->match_end + 1),
                                               true),
                           ret_value);
 
@@ -1529,7 +1529,7 @@ ecma_builtin_helper_split_match (ecma_value_t input_string, /**< first argument 
       ecma_property_value_t *index_prop_value_p = ecma_get_named_data_property (obj_p, magic_index_str_p);
 
       ecma_number_t index_num = ecma_get_number_from_value (index_prop_value_p->value);
-      ecma_value_assign_number (&index_prop_value_p->value, index_num + start_idx);
+      ecma_value_assign_number (&index_prop_value_p->value, index_num + (ecma_number_t) start_idx);
 
       ecma_deref_ecma_string (magic_index_str_p);
     }

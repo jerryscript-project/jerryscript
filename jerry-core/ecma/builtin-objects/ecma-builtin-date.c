@@ -525,7 +525,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     ECMA_FINALIZE (prim_comp_value);
   }
-  else if (arguments_list_len >= 2)
+  else
   {
     ECMA_TRY_CATCH (time_value,
                     ecma_date_construct_helper (arguments_list_p, arguments_list_len),
@@ -535,10 +535,6 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     prim_value_num = ecma_date_time_clip (ecma_date_utc (time));
 
     ECMA_FINALIZE (time_value);
-  }
-  else
-  {
-    prim_value_num = ecma_number_make_nan ();
   }
 
   if (ecma_is_value_empty (ret_value))

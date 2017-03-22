@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import argparse
 import multiprocessing
 import os
@@ -30,60 +32,101 @@ DEFAULT_PROFILE = 'es5.1'
 
 def default_toolchain():
     (sysname, _, _, _, machine) = os.uname()
-    toolchain = os.path.join(settings.PROJECT_DIR, 'cmake', 'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
+    toolchain = os.path.join(settings.PROJECT_DIR,
+                             'cmake',
+                             'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
     return toolchain if os.path.isfile(toolchain) else None
 
 def get_arguments():
     devhelp_preparser = argparse.ArgumentParser(add_help=False)
-    devhelp_preparser.add_argument('--devhelp', action='store_true', default=False, help='show help with all options (including those, which are useful for developers only)')
+    devhelp_preparser.add_argument('--devhelp', action='store_true', default=False,
+                                   help='show help with all options '
+                                   '(including those, which are useful for developers only)')
 
     devhelp_arguments, args = devhelp_preparser.parse_known_args()
     if devhelp_arguments.devhelp:
         args.append('--devhelp')
 
-    def devhelp(help):
-        return help if devhelp_arguments.devhelp else argparse.SUPPRESS
+    def devhelp(helpstring):
+        return helpstring if devhelp_arguments.devhelp else argparse.SUPPRESS
 
     parser = argparse.ArgumentParser(parents=[devhelp_preparser])
-    parser.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='all-in-one build (%(choices)s; default: %(default)s)')
-    parser.add_argument('--builddir', metavar='DIR', action='store', default=BUILD_DIR, help='specify output directory (default: %(default)s)')
+    parser.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='all-in-one build (%(choices)s; default: %(default)s)')
+    parser.add_argument('--builddir', metavar='DIR', action='store', default=BUILD_DIR,
+                        help='specify output directory (default: %(default)s)')
     parser.add_argument('--clean', action='store_true', default=False, help='clean build')
-    parser.add_argument('--cmake-param', metavar='OPT', action='append', default=[], help='add custom argument to CMake')
-    parser.add_argument('--compile-flag', metavar='OPT', action='append', default=[], help='add custom compile flag')
-    parser.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
-    parser.add_argument('--debug', action='store_const', const='Debug', default='MinSizeRel', dest='build_type', help='debug build')
-    parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable error messages (%(choices)s; default: %(default)s)')
-    parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1, help='Allowed N build jobs at once (default: %(default)s)')
-    parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-cmdline-minimal', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='build minimal version of the jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable the jerry debugger (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-debugger-port', metavar='N', action='store', type=int, default=5001, help='add custom port number (default: %(default)s)')
-    parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build and use jerry-libc (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='build and use jerry-libm (%(choices)s; default: %(default)s)')
-    parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable js-parser (%(choices)s; default: %(default)s)')
-    parser.add_argument('--link-lib', metavar='OPT', action='append', default=[], help='add custom library to be linked')
-    parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[], help='add custom linker flag')
-    parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable link-time optimizations (%(choices)s; default: %(default)s)')
-    parser.add_argument('--mem-heap', metavar='SIZE', action='store', type=int, default=512, help='size of memory heap, in kilobytes (default: %(default)s)')
-    parser.add_argument('--port-dir', metavar='DIR', action='store', default=DEFAULT_PORT_DIR, help='add port directory (default: %(default)s)')
-    parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE, help='specify profile file (default: %(default)s)')
-    parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable executing snapshot files (%(choices)s; default: %(default)s)')
-    parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable saving snapshot files (%(choices)s; default: %(default)s)')
-    parser.add_argument('--system-allocator', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help='enable system allocator (%(choices)s; default: %(default)s)')
-    parser.add_argument('--static-link', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='enable static linking of binaries (%(choices)s; default: %(default)s)')
-    parser.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper, help='strip release binaries (%(choices)s; default: %(default)s)')
-    parser.add_argument('--toolchain', metavar='FILE', action='store', default=default_toolchain(), help='add toolchain file (default: %(default)s)')
-    parser.add_argument('--unittests', action='store_const', const='ON', default='OFF', help='build unittests')
-    parser.add_argument('-v', '--verbose', action='store_const', const='ON', default='OFF', help='increase verbosity')
+    parser.add_argument('--cmake-param', metavar='OPT', action='append', default=[],
+                        help='add custom argument to CMake')
+    parser.add_argument('--compile-flag', metavar='OPT', action='append', default=[],
+                        help='add custom compile flag')
+    parser.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
+    parser.add_argument('--debug', action='store_const', const='Debug', default='MinSizeRel', dest='build_type',
+                        help='debug build')
+    parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable error messages (%(choices)s; default: %(default)s)')
+    parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1,
+                        help='Allowed N build jobs at once (default: %(default)s)')
+    parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='build jerry command line tool (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-cmdline-minimal', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='build minimal version of the jerry command line tool (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable the jerry debugger (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-debugger-port', metavar='N', action='store', type=int, default=5001,
+                        help='add custom port number (default: %(default)s)')
+    parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='build and use jerry-libc (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='build and use jerry-libm (%(choices)s; default: %(default)s)')
+    parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='enable js-parser (%(choices)s; default: %(default)s)')
+    parser.add_argument('--link-lib', metavar='OPT', action='append', default=[],
+                        help='add custom library to be linked')
+    parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[],
+                        help='add custom linker flag')
+    parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='enable link-time optimizations (%(choices)s; default: %(default)s)')
+    parser.add_argument('--mem-heap', metavar='SIZE', action='store', type=int, default=512,
+                        help='size of memory heap, in kilobytes (default: %(default)s)')
+    parser.add_argument('--port-dir', metavar='DIR', action='store', default=DEFAULT_PORT_DIR,
+                        help='add port directory (default: %(default)s)')
+    parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE,
+                        help='specify profile file (default: %(default)s)')
+    parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable executing snapshot files (%(choices)s; default: %(default)s)')
+    parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable saving snapshot files (%(choices)s; default: %(default)s)')
+    parser.add_argument('--system-allocator', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable system allocator (%(choices)s; default: %(default)s)')
+    parser.add_argument('--static-link', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='enable static linking of binaries (%(choices)s; default: %(default)s)')
+    parser.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='strip release binaries (%(choices)s; default: %(default)s)')
+    parser.add_argument('--toolchain', metavar='FILE', action='store', default=default_toolchain(),
+                        help='add toolchain file (default: %(default)s)')
+    parser.add_argument('--unittests', action='store_const', const='ON', default='OFF',
+                        help='build unittests')
+    parser.add_argument('-v', '--verbose', action='store_const', const='ON', default='OFF',
+                        help='increase verbosity')
 
     devgroup = parser.add_argument_group('developer options')
-    devgroup.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable the generation of a link map file for jerry command line tool (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable memory statistics (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable mem-stress test (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable parser byte-code dumps (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable regexp byte-code dumps (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--valgrind', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable Valgrind support (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--valgrind-freya', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper, help=devhelp('enable Valgrind-Freya support (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable the generation of a link map file for jerry command line tool '
+                                       '(%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable memory statistics (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable mem-stress test (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable parser byte-code dumps (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable regexp byte-code dumps (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--valgrind', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable Valgrind support (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--valgrind-freya', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable Valgrind-Freya support (%(choices)s; default: %(default)s)'))
 
     arguments = parser.parse_args(args)
     if arguments.devhelp:
@@ -113,11 +156,11 @@ def generate_build_options(arguments):
     build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
 
     if os.path.isabs(arguments.profile):
-        PROFILE = arguments.profile
+        profile = arguments.profile
     else:
-        PROFILE = os.path.join(PROFILE_DIR, arguments.profile + '.profile')
+        profile = os.path.join(PROFILE_DIR, arguments.profile + '.profile')
 
-    build_options.append('-DFEATURE_PROFILE=%s' % PROFILE)
+    build_options.append('-DFEATURE_PROFILE=%s' % profile)
 
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
     build_options.append('-DFEATURE_DEBUGGER_PORT=%d' % arguments.jerry_debugger_port)

@@ -1375,8 +1375,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     if (sub_str_p != NULL
         && input_buffer_p != NULL)
     {
-      lastindex_num = lit_utf8_string_length (input_buffer_p,
-                                              (lit_utf8_size_t) (sub_str_p - input_buffer_p));
+      lastindex_num = (ecma_number_t) lit_utf8_string_length (input_buffer_p,
+                                                              (lit_utf8_size_t) (sub_str_p - input_buffer_p));
     }
     else
     {

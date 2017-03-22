@@ -544,10 +544,10 @@ typedef enum
 typedef enum
 {
   /* ECMA_OBJECT_TYPE_GENERAL (0) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_FUNCTION (1) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (2) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_ARRAY (3) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_STRING (4) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_CLASS (1) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_FUNCTION (2) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (3) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_ARRAY (4) with built-in flag. */
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 5, /**< declarative lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 6, /**< object-bound lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 7, /**< object-bound lexical environment

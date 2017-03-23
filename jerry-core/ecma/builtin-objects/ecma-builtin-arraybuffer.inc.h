@@ -16,17 +16,8 @@
 /*
  * ArrayBuffer built-in description
  */
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
 
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -48,10 +39,4 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 /* ES2015 24.1.3.1 */
 ROUTINE (LIT_MAGIC_STRING_IS_VIEW_UL, ecma_builtin_arraybuffer_object_is_view, 1, 1)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

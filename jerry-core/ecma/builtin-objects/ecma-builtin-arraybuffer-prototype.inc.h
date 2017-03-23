@@ -12,25 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
 
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
+/*
+ * ArrayBuffer.prototype built-in description
+ */
 
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
-
-#ifndef ACCESSOR_READ_WRITE
-# define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes)
-#endif /* !ROUTINE */
-
-#ifndef ACCESSOR_READ_ONLY
-# define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes)
-#endif /* !ACCESSOR_READ_ONLY */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -48,10 +35,4 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_arraybuffer_prototype_object_slice, 2, 2)
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

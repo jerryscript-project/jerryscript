@@ -215,13 +215,13 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
           if (qmax != RE_ITERATOR_INFINITE)
           {
             re_token_p->qmin = qmax;
-            re_token_p->qmax = qmin;
           }
           else
           {
             re_token_p->qmin = qmin;
-            re_token_p->qmax = qmin;
           }
+
+          re_token_p->qmax = qmin;
 
           break;
         }

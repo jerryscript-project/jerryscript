@@ -29,7 +29,7 @@
 #include "ecma-gc.h"
 #include "jmem.h"
 
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -671,4 +671,4 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */

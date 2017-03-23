@@ -15,7 +15,7 @@
 
 #ifndef ECMA_TYPEDARRAY_OBJECT_H
 #define ECMA_TYPEDARRAY_OBJECT_H
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
 #include "ecma-globals.h"
 
@@ -57,5 +57,5 @@ ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 #endif /* !ECMA_TYPEDARRAY_OBJECT_H */

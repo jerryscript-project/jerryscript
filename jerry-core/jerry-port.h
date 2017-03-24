@@ -142,6 +142,8 @@ double jerry_port_get_current_time (void);
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 
+#define JERRY_PORT_ENABLE_JOBQUEUE
+
 typedef uint32_t (*jerry_job_handler_t) (void *);
 
 void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, void *job_p);

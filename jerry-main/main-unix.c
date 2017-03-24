@@ -648,6 +648,9 @@ main (int argc,
     is_repl_mode = true;
   }
 
+#ifdef JERRY_PORT_ENABLE_JOBQUEUE
+  jerry_port_jobqueue_init ();
+#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
   jerry_init (flags);
 
   register_js_function ("assert", assert_handler);
@@ -828,6 +831,15 @@ main (int argc,
                                                              args,
                                                              1);
           jerry_release_value (ret_val_print);
+#ifdef JERRY_PORT_ENABLE_JOBQUEUE
+          jerry_release_value (ret_val_eval);
+          ret_val_eval = jerry_port_jobqueue_run ();
+
+          if (jerry_value_has_error_flag (ret_value))
+          {
+            print_unhandled_exception (ret_value);
+          }
+#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
         }
         else
         {
@@ -850,7 +862,19 @@ main (int argc,
 
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
+#ifdef JERRY_PORT_ENABLE_JOBQUEUE
+  else
+  {
+    jerry_release_value (ret_value);
+    ret_value = jerry_port_jobqueue_run ();
 
+    if (jerry_value_has_error_flag (ret_value))
+    {
+      print_unhandled_exception (ret_value);
+      ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+  }
+#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
   jerry_release_value (ret_value);
   jerry_cleanup ();
 

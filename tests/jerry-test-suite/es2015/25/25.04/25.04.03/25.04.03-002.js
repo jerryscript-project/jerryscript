@@ -13,24 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_JOB_QUEUE_H
-#define ECMA_JOB_QUEUE_H
+var name1 = "";
+var name2 = "";
+var name3 = "";
+function foo() {};
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+try
+{
+  new Promise();
+}
+catch (e)
+{
+  name1 = e.name;
+}
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmajobqueue ECMA Job Queue related routines
- * @{
- */
+try
+{
+  Promise(foo);
+}
+catch (e)
+{
+  name2 = e.name;
+}
 
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
-void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
+try
+{
+  new Promise("string");
+}
+catch (e)
+{
+  name3 = e.name;
+}
 
-/**
- * @}
- * @}
- */
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-#endif /* !ECMA_JOB_QUEUE_H */
+assert (name1 === "TypeError");
+assert (name2 === "TypeError");
+assert (name3 === "TypeError");

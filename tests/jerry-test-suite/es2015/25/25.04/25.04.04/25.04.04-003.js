@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_JOB_QUEUE_H
-#define ECMA_JOB_QUEUE_H
+var a = new Promise(function(f, r){
+  r(0);
+});
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmajobqueue ECMA Job Queue related routines
- * @{
- */
-
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
-void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
-
-/**
- * @}
- * @}
- */
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-#endif /* !ECMA_JOB_QUEUE_H */
+a
+.then(function f1(x) {
+  return x + 1; // unreachable
+}, function r1(x){
+  return x + 10;
+})
+.then(function f2(x) {
+  throw x + 100
+})
+.then(function f3(x) {
+  return x + 1000 //unreachable
+}, function r3(x) {
+  return x + 10000
+})
+.then(function(x) {
+  assert (x === 10110);
+})

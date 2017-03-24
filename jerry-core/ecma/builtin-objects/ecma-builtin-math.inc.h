@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_MATH_BUILTIN
+
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -82,5 +84,7 @@ ROUTINE (LIT_MAGIC_STRING_ROUND, ECMA_MATH_OBJECT_ROUND, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_SIN, ECMA_MATH_OBJECT_SIN, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_SQRT, ECMA_MATH_OBJECT_SQRT, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TAN, ECMA_MATH_OBJECT_TAN, 1, 1)
+
+#endif /* !CONFIG_DISABLE_MATH_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

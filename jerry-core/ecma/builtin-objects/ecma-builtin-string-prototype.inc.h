@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_STRING_BUILTIN
+
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -64,5 +66,7 @@ ROUTINE (LIT_MAGIC_STRING_TRIM, ecma_builtin_string_prototype_object_trim, 0, 0)
 #ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_SUBSTR, ecma_builtin_string_prototype_object_substr, 2, 2)
 #endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+
+#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

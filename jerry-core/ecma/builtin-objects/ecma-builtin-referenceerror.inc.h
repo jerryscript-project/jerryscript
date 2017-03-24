@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -34,5 +36,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
+
+#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

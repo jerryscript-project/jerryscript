@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -38,5 +40,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 
 /* ES2015 24.1.3.1 */
 ROUTINE (LIT_MAGIC_STRING_IS_VIEW_UL, ecma_builtin_arraybuffer_object_is_view, 1, 1)
+
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

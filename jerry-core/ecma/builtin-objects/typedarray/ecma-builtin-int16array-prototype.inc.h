@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+
 /* ES2015 22.2.3.4 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_INT16ARRAY,
@@ -28,5 +30,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 NUMBER_VALUE (LIT_MAGIC_STRING_BYTES_PER_ELEMENT_U,
               2,
               ECMA_PROPERTY_FIXED)
+
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

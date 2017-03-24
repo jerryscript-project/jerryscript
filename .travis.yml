@@ -6,7 +6,7 @@ sudo: required
 
 env:
   matrix:
-    - OPTS="--check-signed-off-travis --check-cppcheck --check-doxygen --check-vera --check-license"
+    - OPTS="--check-signed-off-travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings"
     - OPTS="--jerry-debugger"
     - OPTS="--jerry-tests --jerry-test-suite"
     - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300 INSTALL_QEMU_ARM=yes

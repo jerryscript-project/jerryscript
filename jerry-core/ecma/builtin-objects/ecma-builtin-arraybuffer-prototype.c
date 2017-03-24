@@ -24,7 +24,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -138,4 +138,4 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN */

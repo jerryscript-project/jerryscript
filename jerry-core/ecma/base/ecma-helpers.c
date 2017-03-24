@@ -26,6 +26,7 @@
 #include "jrt-bit-fields.h"
 #include "byte-code.h"
 #include "re-compiler.h"
+#include "ecma-builtins.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -300,6 +301,33 @@ ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
 
   object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV);
 } /* ecma_set_object_is_builtin */
+
+/**
+ * Get the builtin id of the object.
+ * If the object is not builtin, return ECMA_BUILTIN_ID__COUNT
+ */
+inline uint8_t
+ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
+{
+  if (!ecma_get_object_is_builtin (object_p))
+  {
+    return ECMA_BUILTIN_ID__COUNT;
+  }
+
+  ecma_built_in_props_t *built_in_props_p;
+  ecma_object_type_t object_type = ecma_get_object_type (object_p);
+
+  if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
+  {
+    built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
+  }
+  else
+  {
+    built_in_props_p = &((ecma_extended_object_t *) object_p)->u.built_in;
+  }
+
+  return built_in_props_p->id;
+} /* ecma_get_object_builtin_id */
 
 /**
  * Get type of lexical environment.

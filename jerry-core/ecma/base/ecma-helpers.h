@@ -293,6 +293,7 @@ void ecma_set_object_type (ecma_object_t *object_p, ecma_object_type_t type);
 ecma_object_t *ecma_get_object_prototype (const ecma_object_t *object_p) __attr_pure___;
 bool ecma_get_object_is_builtin (const ecma_object_t *object_p) __attr_pure___;
 void ecma_set_object_is_builtin (ecma_object_t *object_p);
+uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
 ecma_lexical_environment_type_t ecma_get_lex_env_type (const ecma_object_t *object_p) __attr_pure___;
 ecma_object_t *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) __attr_pure___;
 ecma_property_header_t *ecma_get_property_list (const ecma_object_t *object_p) __attr_pure___;

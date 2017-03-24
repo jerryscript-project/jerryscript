@@ -16,7 +16,7 @@
 #ifndef ECMA_ARRAYBUFFER_OBJECT_H
 #define ECMA_ARRAYBUFFER_OBJECT_H
 
-#ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ECMA
@@ -48,5 +48,5 @@ ecma_is_arraybuffer (ecma_value_t val);
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN */
 #endif /* !ECMA_ARRAYBUFFER_OBJECT_H */

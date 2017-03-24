@@ -27,9 +27,9 @@
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 #include "ecma-typedarray-object.h"
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -142,7 +142,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       }
       break;
     }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
       /* ES2015 9.4.5.1 */
@@ -184,7 +184,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
       break;
     }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
     default:
     {
       break;
@@ -463,7 +463,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           }
         }
       }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
       /* ES2015 9.4.5.4 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
@@ -484,7 +484,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
         ecma_deref_ecma_string (num_to_str);
       }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 
       break;
     }
@@ -742,7 +742,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           }
         }
       }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
       /* ES2015 9.4.5.5 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
@@ -770,7 +770,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
         ecma_deref_ecma_string (num_to_str);
       }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
       break;
     }
     default:
@@ -1097,7 +1097,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                              property_desc_p,
                                                              is_throw);
       }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
       /* ES2015 9.4.5.3 */
       if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
       {
@@ -1133,7 +1133,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                          property_desc_p,
                                                          is_throw);
 
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
       break;
     }
     default:
@@ -1356,12 +1356,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         }
         case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
         {
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
           {
             ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
           }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           break;
         }
         case ECMA_OBJECT_TYPE_FUNCTION:
@@ -1685,7 +1685,7 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #ifndef CONFIG_DISABLE_ARRAYBUFFER_BUILTIN
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE)
 #endif /* !CONFIG_DISABLE_ARRAYBUFFER_BUILTIN */
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_UINT8ARRAY_PROTOTYPE)
@@ -1698,7 +1698,7 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 #else /* JERRY_NDEBUG */
   JERRY_UNUSED (obj_p);
@@ -1737,13 +1737,13 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         {
           return LIT_MAGIC_STRING_ARGUMENTS_UL;
         }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
         {
           return ext_obj_p->u.pseudo_array.u1.class_id;
         }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:
         {
           JERRY_UNREACHABLE ();

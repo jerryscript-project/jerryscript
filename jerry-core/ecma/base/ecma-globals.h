@@ -1157,7 +1157,7 @@ typedef struct
 
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
 /**
  * Some internal properties of TypedArray object.
@@ -1171,7 +1171,7 @@ typedef struct
   ecma_length_t array_length; /**< the array length */
 } ecma_extended_typedarray_object_t;
 
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 /**
  * @}
  * @}

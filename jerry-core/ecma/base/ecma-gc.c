@@ -274,14 +274,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             ecma_gc_set_object_visited (lex_env_p, true);
             break;
           }
-  #ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+  #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
           {
             ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p), true);
             break;
           }
-  #endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+  #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           default:
           {
             JERRY_UNREACHABLE ();
@@ -551,7 +551,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
           ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
           return;
         }
-#ifndef CONFIG_DISABLE_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         {
           ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p,
@@ -564,7 +564,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                                         sizeof (ecma_extended_typedarray_object_t));
           return;
         }
-#endif /* !CONFIG_DISABLE_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:
         {
           JERRY_UNREACHABLE ();

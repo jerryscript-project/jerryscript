@@ -93,6 +93,8 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
   if (PARSER_IS_BASIC_OPCODE (context_p->last_cbc_opcode))
   {
     cbc_opcode_t opcode = (cbc_opcode_t) context_p->last_cbc_opcode;
+
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
 
     PARSER_APPEND_TO_BYTE_CODE (context_p, opcode);
@@ -102,6 +104,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
   {
     cbc_ext_opcode_t opcode = (cbc_ext_opcode_t) PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     parser_emit_two_bytes (context_p, CBC_EXT_OPCODE, opcode);
     context_p->byte_code_size += 2;
@@ -369,6 +372,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 
   if (PARSER_IS_BASIC_OPCODE (opcode))
   {
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
     extra_byte_code_increase = 0;
   }
@@ -377,6 +381,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
     PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_EXT_OPCODE);
     opcode = (uint16_t) PARSER_GET_EXT_OPCODE (opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     extra_byte_code_increase = 1;
   }
@@ -478,6 +483,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 
   if (PARSER_IS_BASIC_OPCODE (opcode))
   {
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
 
 #ifdef PARSER_DUMP_BYTE_CODE
@@ -489,6 +495,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
     PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_EXT_OPCODE);
     opcode = (uint16_t) PARSER_GET_EXT_OPCODE (opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     context_p->byte_code_size++;
 

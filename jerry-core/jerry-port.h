@@ -17,6 +17,7 @@
 #define JERRY_PORT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -138,6 +139,14 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
  * @return milliseconds since Unix epoch
  */
 double jerry_port_get_current_time (void);
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+typedef uint32_t (*jerry_job_handler_t) (void *);
+
+void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, void *job_p);
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 /**
  * @}

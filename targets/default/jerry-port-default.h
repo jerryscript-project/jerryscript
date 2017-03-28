@@ -16,6 +16,7 @@
 #ifndef JERRY_PORT_DEFAULT_H
 #define JERRY_PORT_DEFAULT_H
 
+#include "jerryscript.h"
 #include "jerry-port.h"
 
 #include <stdbool.h>
@@ -35,6 +36,11 @@ bool jerry_port_default_is_abort_on_fail (void);
 
 jerry_log_level_t jerry_port_default_get_log_level (void);
 void jerry_port_default_set_log_level (jerry_log_level_t level);
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+void jerry_port_jobqueue_init (void);
+jerry_value_t jerry_port_jobqueue_run (void);
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 /**
  * @}

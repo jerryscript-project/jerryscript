@@ -40,23 +40,26 @@ JERRY_DEBUGGER_FUNCTION_NAME = 11
 JERRY_DEBUGGER_FUNCTION_NAME_END = 12
 JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13
 JERRY_DEBUGGER_BREAKPOINT_HIT = 14
-JERRY_DEBUGGER_BACKTRACE = 15
-JERRY_DEBUGGER_BACKTRACE_END = 16
-JERRY_DEBUGGER_EVAL_RESULT = 17
-JERRY_DEBUGGER_EVAL_RESULT_END = 18
-JERRY_DEBUGGER_EVAL_ERROR = 19
-JERRY_DEBUGGER_EVAL_ERROR_END = 20
+JERRY_DEBUGGER_EXCEPTION_HIT = 15
+JERRY_DEBUGGER_BACKTRACE = 16
+JERRY_DEBUGGER_BACKTRACE_END = 17
+JERRY_DEBUGGER_EVAL_RESULT = 18
+JERRY_DEBUGGER_EVAL_RESULT_END = 19
+JERRY_DEBUGGER_EVAL_ERROR = 20
+JERRY_DEBUGGER_EVAL_ERROR_END = 21
+
 
 # Messages sent by the client to server.
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
 JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2
-JERRY_DEBUGGER_STOP = 3
-JERRY_DEBUGGER_CONTINUE = 4
-JERRY_DEBUGGER_STEP = 5
-JERRY_DEBUGGER_NEXT = 6
-JERRY_DEBUGGER_GET_BACKTRACE = 7
-JERRY_DEBUGGER_EVAL = 8
-JERRY_DEBUGGER_EVAL_PART = 9
+JERRY_DEBUGGER_EXCEPTION_CONFIG = 3
+JERRY_DEBUGGER_STOP = 4
+JERRY_DEBUGGER_CONTINUE = 5
+JERRY_DEBUGGER_STEP = 6
+JERRY_DEBUGGER_NEXT = 7
+JERRY_DEBUGGER_GET_BACKTRACE = 8
+JERRY_DEBUGGER_EVAL = 9
+JERRY_DEBUGGER_EVAL_PART = 10
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -122,6 +125,7 @@ class JerryFunction(object):
         self.line = line
         self.column = column
         self.first_breakpoint_line = lines[0]
+        self.first_breakpoint_offset = offsets[0]
 
         for i in range(len(lines)):
             line = lines[i]
@@ -332,6 +336,24 @@ class DebuggerPrompt(Cmd):
 
     do_e = do_eval
 
+    def do_exception(self, args):
+        """ Config the exception handler module """
+        if not args:
+            print("Error: Status expected!")
+            return
+
+        enable = int(args)
+
+        if enable == 1:
+            logging.debug("Stop at exception enabled")
+        elif enable == 0:
+            logging.debug("Stop at exception disabled")
+        else:
+            print("Error: Invalid input! Usage 1: [Enable] or 0: [Disable].")
+            return
+
+        self.debugger.send_exception_config(enable)
+
 
 class Multimap(object):
 
@@ -475,13 +497,13 @@ class JerryDebugger(object):
         self.send_message(message)
 
     def send_bytecode_cp(self, byte_code_cp):
-       message = struct.pack(self.byte_order + "BBIB" + self.cp_format,
-                             WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                             WEBSOCKET_FIN_BIT + 1 + self.cp_size,
-                             0,
-                             JERRY_DEBUGGER_FREE_BYTE_CODE_CP,
-                             byte_code_cp)
-       self.send_message(message)
+        message = struct.pack(self.byte_order + "BBIB" + self.cp_format,
+                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                              WEBSOCKET_FIN_BIT + 1 + self.cp_size,
+                              0,
+                              JERRY_DEBUGGER_FREE_BYTE_CODE_CP,
+                              byte_code_cp)
+        self.send_message(message)
 
     def send_command(self, command):
         message = struct.pack(self.byte_order + "BBIB",
@@ -489,6 +511,15 @@ class JerryDebugger(object):
                               WEBSOCKET_FIN_BIT + 1,
                               0,
                               command)
+        self.send_message(message)
+
+    def send_exception_config(self, enable):
+        message = struct.pack(self.byte_order + "BBIBB",
+                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                              WEBSOCKET_FIN_BIT + 1 + 1,
+                              0,
+                              JERRY_DEBUGGER_EXCEPTION_CONFIG,
+                              enable)
         self.send_message(message)
 
     def get_message(self, blocking):
@@ -698,6 +729,23 @@ def set_breakpoint(debugger, string):
         print("Breakpoint not found")
         return
 
+def get_breakpoint(debugger, breakpoint_data):
+    function = debugger.function_list[breakpoint_data[0]]
+    offset = breakpoint_data[1]
+
+    if offset in function.offsets:
+        return (function.offsets[offset], True)
+
+    if offset < function.first_breakpoint_offset:
+        return (function.offsets[function.first_breakpoint_offset], False)
+
+    nearest_offset = -1
+
+    for current_offset in function.offsets:
+        if current_offset <= offset and current_offset > nearest_offset:
+            nearest_offset = current_offset
+
+    return (function.offsets[nearest_offset], False)
 
 def main():
     args = arguments_parse()
@@ -747,19 +795,24 @@ def main():
         elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
             release_function(debugger, data)
 
-        elif buffer_type == JERRY_DEBUGGER_BREAKPOINT_HIT:
+        elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_HIT, JERRY_DEBUGGER_EXCEPTION_HIT]:
             breakpoint_data = struct.unpack(debugger.byte_order + debugger.cp_format + debugger.idx_format, data[3:])
 
-            function = debugger.function_list[breakpoint_data[0]]
-            breakpoint = function.offsets[breakpoint_data[1]]
+            breakpoint = get_breakpoint(debugger, breakpoint_data)
+            debugger.last_breakpoint_hit = breakpoint[0]
 
-            debugger.last_breakpoint_hit = breakpoint
+            if buffer_type == JERRY_DEBUGGER_EXCEPTION_HIT:
+                print("Exception throw detected (to disable automatic stop type exception 0)")
 
-            breakpoint_index = ""
-            if breakpoint.active_index >= 0:
-                breakpoint_index = " breakpoint:%d" % (breakpoint.active_index)
+            if breakpoint[1]:
+                breakpoint_info = "at"
+            else:
+                breakpoint_info = "around"
 
-            print("Stopped at%s %s" % (breakpoint_index, breakpoint.to_string()))
+            if breakpoint[0].active_index >= 0:
+                breakpoint_info += " breakpoint:%d" % (breakpoint[0].active_index)
+
+            print("Stopped %s %s" % (breakpoint_info, breakpoint[0].to_string()))
 
             prompt.cmdloop()
             if prompt.quit:
@@ -775,20 +828,9 @@ def main():
                     breakpoint_data = struct.unpack(debugger.byte_order + debugger.cp_format + debugger.idx_format,
                                                     data[buffer_pos: buffer_pos + debugger.cp_size + 4])
 
-                    function = debugger.function_list[breakpoint_data[0]]
-                    best_offset = -1
+                    breakpoint = get_breakpoint(debugger, breakpoint_data)
 
-                    for offset in function.offsets:
-                        if offset <= breakpoint_data[1] and offset > best_offset:
-                            best_offset = offset
-
-                    if best_offset >= 0:
-                        breakpoint = function.offsets[best_offset]
-                        print("Frame %d: %s" % (frame_index, breakpoint.to_string()))
-                    elif function.name:
-                        print("Frame %d: %s()" % (frame_index, function.name))
-                    else:
-                        print("Frame %d: <unknown>()" % (frame_index))
+                    print("Frame %d: %s" % (frame_index, breakpoint[0].to_string()))
 
                     frame_index += 1
                     buffer_pos += 6

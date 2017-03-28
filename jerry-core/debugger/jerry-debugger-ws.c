@@ -69,10 +69,7 @@ jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-  uint8_t debugger_flags = JERRY_CONTEXT (debugger_flags);
-  debugger_flags = (uint8_t) (debugger_flags & ~(JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_VM_STOP));
-  debugger_flags = (uint8_t) (debugger_flags | JERRY_DEBUGGER_VM_IGNORE);
-  JERRY_CONTEXT (debugger_flags) = debugger_flags;
+  JERRY_CONTEXT (debugger_flags) = (uint8_t) JERRY_DEBUGGER_VM_IGNORE;
 
   if (log_error)
   {

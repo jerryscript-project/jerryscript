@@ -42,22 +42,24 @@ var JERRY_DEBUGGER_FUNCTION_NAME = 11;
 var JERRY_DEBUGGER_FUNCTION_NAME_END = 12;
 var JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13;
 var JERRY_DEBUGGER_BREAKPOINT_HIT = 14;
-var JERRY_DEBUGGER_BACKTRACE = 15;
-var JERRY_DEBUGGER_BACKTRACE_END = 16;
-var JERRY_DEBUGGER_EVAL_RESULT = 17;
-var JERRY_DEBUGGER_EVAL_RESULT_END = 18;
-var JERRY_DEBUGGER_EVAL_ERROR = 19;
-var JERRY_DEBUGGER_EVAL_ERROR_END = 20;
+var JERRY_DEBUGGER_EXCEPTION_HIT = 15;
+var JERRY_DEBUGGER_BACKTRACE = 16;
+var JERRY_DEBUGGER_BACKTRACE_END = 17;
+var JERRY_DEBUGGER_EVAL_RESULT = 18;
+var JERRY_DEBUGGER_EVAL_RESULT_END = 19;
+var JERRY_DEBUGGER_EVAL_ERROR = 20;
+var JERRY_DEBUGGER_EVAL_ERROR_END = 21;
 
 var JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1;
 var JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2;
-var JERRY_DEBUGGER_STOP = 3;
-var JERRY_DEBUGGER_CONTINUE = 4;
-var JERRY_DEBUGGER_STEP = 5;
-var JERRY_DEBUGGER_NEXT = 6;
-var JERRY_DEBUGGER_GET_BACKTRACE = 7;
-var JERRY_DEBUGGER_EVAL = 8;
-var JERRY_DEBUGGER_EVAL_PART = 9;
+var JERRY_DEBUGGER_EXCEPTION_CONFIG = 3;
+var JERRY_DEBUGGER_STOP = 4;
+var JERRY_DEBUGGER_CONTINUE = 5;
+var JERRY_DEBUGGER_STEP = 6;
+var JERRY_DEBUGGER_NEXT = 7;
+var JERRY_DEBUGGER_GET_BACKTRACE = 8;
+var JERRY_DEBUGGER_EVAL = 9;
+var JERRY_DEBUGGER_EVAL_PART = 10;
 
 var textBox = document.getElementById("log");
 var commandBox = document.getElementById("command");
@@ -495,6 +497,41 @@ function DebuggerClient(address)
     socket.send(message);
   }
 
+  function getBreakpoint(breakpointData)
+  {
+      var returnValue = {};
+      var func = functions[breakpointData[0]];
+      var offset = breakpointData[1];
+
+      if (offset in functions)
+      {
+        returnValue.breakpoint = func.offsets[offset];
+        returnValue.at = true;
+        return returnValue;
+      }
+
+      if (offset < functions.firstBreakpointOffset)
+      {
+        returnValue.breakpoint = func.offsets[firstBreakpointOffset];
+        returnValue.at = true;
+        return returnValue;
+      }
+
+      nearest_offset = -1;
+
+      for (var current_offset in func.offsets)
+      {
+        if ((current_offset <= offset) && (current_offset > nearest_offset))
+        {
+          nearest_offset = current_offset;
+        }
+      }
+
+      returnValue.breakpoint = func.offsets[nearest_offset];
+      returnValue.at = false;
+      return returnValue;
+  }
+
   this.encodeMessage = encodeMessage;
 
   function ParseSource()
@@ -606,6 +643,7 @@ function DebuggerClient(address)
           offsets = {}
 
           func.firstBreakpointLine = func.lines[0];
+          func.firstBreakpointOffset = func.offsets[0];
 
           for (var i = 0; i < func.lines.length; i++)
           {
@@ -729,20 +767,29 @@ function DebuggerClient(address)
       }
 
       case JERRY_DEBUGGER_BREAKPOINT_HIT:
+      case JERRY_DEBUGGER_EXCEPTION_HIT:
       {
-        var breakpoint = decodeMessage("CI", message, 1);
+        var breakpointData = decodeMessage("CI", message, 1);
+        var breakpointRef = getBreakpoint(breakpointData);
+        var breakpoint = breakpointRef.breakpoint;
 
-        breakpoint = functions[breakpoint[0]].offsets[breakpoint[1]];
+        if (message[0] == JERRY_DEBUGGER_EXCEPTION_HIT)
+        {
+          appendLog("Exception throw detected (to disable automatic stop type exception 0)");
+        }
 
         lastBreakpointHit = breakpoint;
 
-        breakpointIndex = "";
-        if (breakpoint.activeIndex >= 0)
+        var breakpointInfo = "";
+        if (breakpoint.offset.activeIndex >= 0)
         {
-          breakpointIndex = "breakpoint:" + breakpoint.activeIndex + " ";
+          breakpointInfo = " breakpoint:" + breakpoint.offset.activeIndex + " ";
         }
 
-        appendLog("Stopped at " + breakpointIndex + breakpointToString(breakpoint));
+        appendLog("Stopped "
+                  + (breakpoint.at ? "at " : "around ")
+                  + breakpointInfo
+                  + breakpointToString(breakpoint));
         return;
       }
 
@@ -751,31 +798,14 @@ function DebuggerClient(address)
       {
         for (var i = 1; i < message.byteLength; i += cpointerSize + 4)
         {
-          var breakpoint = decodeMessage("CI", message, i);
-          var func = functions[breakpoint[0]];
-          var best_offset = -1;
+          var breakpointData = decodeMessage("CI", message, i);
 
-          for (var offset in func.offsets)
-          {
-            if (offset <= breakpoint[1] && offset > best_offset)
-            {
-              best_offset = offset;
-            }
-          }
+          breakpoint = getBreakpoint(breakpointData).breakpoint;
 
-          if (best_offset >= 0)
-          {
-            breakpoint = func.offsets[best_offset];
-            appendLog("  frame " + backtraceFrame + ": " + breakpointToString(breakpoint));
-          }
-          else if (func.name)
-          {
-            appendLog("  frame " + backtraceFrame + ": " + func.name + "()");
-          }
-          else
-          {
-            appendLog("  frame " + backtraceFrame + ": <unknown>()");
-          }
+          appendLog("  frame "
+                    + backtraceFrame
+                    + ": "
+                    + breakpointToString(breakpoint));
 
           ++backtraceFrame;
         }
@@ -871,6 +901,31 @@ function DebuggerClient(address)
         }
       }
     }
+  }
+
+  this.sendExceptionConfig = function(enable)
+  {
+    if (enable == "")
+    {
+      appendLog("Argument required");
+      return;
+    }
+
+    if (enable == 1)
+    {
+      appendLog("Stop at exception enabled");
+    }
+    else if (enable == 0)
+    {
+      appendLog("Stop at exception disabled");
+    }
+    else
+    {
+      appendLog("Invalid input. Usage 1: [Enable] or 0: [Disable].");
+      return;
+    }
+
+    encodeMessage("BB", [ JERRY_DEBUGGER_EXCEPTION_CONFIG, enable ]);
   }
 
   this.deleteBreakpoint = function(index)
@@ -1176,6 +1231,10 @@ function debuggerCommand(event)
       }
 
       debuggerObj.sendGetBacktrace(max_depth);
+      break;
+
+    case "exception":
+      debuggerObj.sendExceptionConfig(args[2]);
       break;
 
     case "src":

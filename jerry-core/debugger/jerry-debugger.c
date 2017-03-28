@@ -391,6 +391,28 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       return true;
     }
 
+    case JERRY_DEBUGGER_EXCEPTION_CONFIG:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_exception_config_t);
+      JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_exception_config_t, exception_config_p);
+
+      uint8_t debugger_flags = JERRY_CONTEXT (debugger_flags);
+
+      if (exception_config_p->enable == 0)
+      {
+        debugger_flags = (uint8_t) (debugger_flags | JERRY_DEBUGGER_VM_IGNORE_EXCEPTION);
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Stop at exception disabled\n");
+      }
+      else
+      {
+        debugger_flags = (uint8_t) (debugger_flags & ~JERRY_DEBUGGER_VM_IGNORE_EXCEPTION);
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Stop at exception enabled\n");
+      }
+
+      JERRY_CONTEXT (debugger_flags)  = debugger_flags;
+      return true;
+    }
+
     case JERRY_DEBUGGER_EVAL:
     {
       if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
@@ -450,7 +472,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
  * Tell the client that a breakpoint has been hit and wait for further debugger commands.
  */
 void
-jerry_debugger_breakpoint_hit (void)
+jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
@@ -458,7 +480,7 @@ jerry_debugger_breakpoint_hit (void)
 
   JERRY_DEBUGGER_INIT_SEND_MESSAGE (breakpoint_hit_p);
   JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE (breakpoint_hit_p, jerry_debugger_send_breakpoint_hit_t);
-  breakpoint_hit_p->type = (uint8_t) JERRY_DEBUGGER_BREAKPOINT_HIT;
+  breakpoint_hit_p->type = message_type;
 
   vm_frame_ctx_t *frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
 

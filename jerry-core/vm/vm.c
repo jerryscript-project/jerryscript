@@ -2338,7 +2338,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           frame_ctx_p->byte_code_p = byte_code_start_p;
 
-          jerry_debugger_breakpoint_hit ();
+          jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
 #endif /* JERRY_DEBUGGER */
           continue;
         }
@@ -2360,7 +2360,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               && (JERRY_CONTEXT (debugger_stop_context) == NULL
                   || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
           {
-            jerry_debugger_breakpoint_hit ();
+            jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
             continue;
           }
 
@@ -2380,7 +2380,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
           {
             JERRY_ASSERT (JERRY_CONTEXT (debugger_stop_context) == NULL);
-            jerry_debugger_breakpoint_hit ();
+            jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
           }
 #endif /* JERRY_DEBUGGER */
           continue;
@@ -2515,6 +2515,15 @@ error:
       }
 
       stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
+#ifdef JERRY_DEBUGGER
+      JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+      if (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+          && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE_EXCEPTION))
+      {
+        jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+      }
+#endif /* JERRY_DEBUGGER */
     }
 
     JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);

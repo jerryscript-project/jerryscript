@@ -31,7 +31,7 @@
 #include "vm-defines.h"
 #include "vm-stack.h"
 
-#ifndef CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 #include "ecma-typedarray-object.h"
 #endif
 
@@ -487,7 +487,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
           }
           break;
         }
-#ifndef CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
         case LIT_MAGIC_STRING_ARRAY_BUFFER_UL:
         {
           ecma_length_t arraybuffer_length = ext_object_p->u.class_prop.u.length;
@@ -495,7 +495,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
           ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, size);
           return;
         }
-#endif /* !CONFIG_DISABLE_ES2015_ARRAYBUFFER_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:
         {
           JERRY_UNREACHABLE ();

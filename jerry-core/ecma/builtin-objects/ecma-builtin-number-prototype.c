@@ -398,7 +398,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       /* Place radix point to the required position. */
       if (point < buff_index)
       {
-        memmove (buff + point + 1, buff + point,  (size_t) buff_index);
+        memmove (buff + point + 1, buff + point, (size_t) (buff_index - point));
         buff[point] = '.';
         buff_index++;
       }

@@ -548,15 +548,19 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   uint32_t len = ecma_typedarray_get_length (obj_p);
+  lit_utf8_byte_t *buffer_p = ecma_typedarray_get_buffer (obj_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  uint32_t pass_num = 0;
 
-  JMEM_DEFINE_LOCAL_ARRAY (pass_value_list, len, ecma_value_t);
+  JMEM_DEFINE_LOCAL_ARRAY (pass_value_list_p, len * element_size, lit_utf8_byte_t);
+
+  lit_utf8_byte_t *pass_value_p = pass_value_list_p;
 
   for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
   {
-    ecma_value_t current_index =  ecma_make_uint32_value (index);
+    ecma_value_t current_index = ecma_make_uint32_value (index);
     ecma_value_t get_value = ecma_op_typedarray_get_index_prop (obj_p, index);
 
     JERRY_ASSERT (ecma_is_value_number (get_value));
@@ -567,9 +571,11 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
     if (ecma_op_to_boolean (call_value))
     {
-      *(pass_value_list + pass_num) = ecma_fast_copy_value (get_value);
-      pass_num++;
+      memcpy (pass_value_p, buffer_p, element_size);
+      pass_value_p += element_size;
     }
+
+    buffer_p += element_size;
 
     ECMA_FINALIZE (call_value);
 
@@ -579,46 +585,24 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
+    uint32_t pass_num = (uint32_t) ((pass_value_p - pass_value_list_p) >> shift);
 
-    if (ECMA_IS_VALUE_ERROR (new_typedarray))
+    ret_value = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
+
+
+    if (!ECMA_IS_VALUE_ERROR (ret_value))
     {
-      ret_value = new_typedarray;
-    }
-    else
-    {
-      ecma_object_t *new_obj_p = ecma_get_object_from_value (new_typedarray);
+      obj_p = ecma_get_object_from_value (ret_value);
 
-      for (uint32_t index = 0; index < pass_num && ecma_is_value_empty (ret_value); index++)
-      {
-        bool set_status = ecma_op_typedarray_set_index_prop (new_obj_p, index, *(pass_value_list + index));
+      JERRY_ASSERT (ecma_typedarray_get_offset (obj_p) == 0);
 
-        if (!set_status)
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("error in typedarray set"));
-        }
-      }
-
-      if (ecma_is_value_empty (ret_value))
-      {
-        ret_value = new_typedarray;
-      }
-      else
-      {
-        ecma_free_value (new_typedarray);
-      }
+      memcpy (ecma_typedarray_get_buffer (obj_p),
+              pass_value_list_p,
+              (size_t) (pass_value_p - pass_value_list_p));
     }
   }
 
-  uint32_t index = 0;
-
-  while (index < pass_num)
-  {
-    ecma_fast_free_value (*(pass_value_list + index));
-    index++;
-  }
-
-  JMEM_FINALIZE_LOCAL_ARRAY (pass_value_list);
+  JMEM_FINALIZE_LOCAL_ARRAY (pass_value_list_p);
 
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_filter */
@@ -642,9 +626,7 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   uint32_t len = ecma_typedarray_get_length (obj_p);
-  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
-  lit_utf8_byte_t *buffer = (ecma_arraybuffer_get_buffer (arraybuffer_p)
-                             + ecma_typedarray_get_offset (obj_p));
+  lit_utf8_byte_t *buffer_p = ecma_typedarray_get_buffer (obj_p);
   uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
   uint8_t element_size = (uint8_t) (1 << shift);
   uint32_t middle = (len / 2) << shift;
@@ -653,8 +635,8 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
   for (uint32_t lower = 0; lower < middle; lower += element_size)
   {
     uint32_t upper = buffer_last - lower;
-    lit_utf8_byte_t *lower_p = buffer + lower;
-    lit_utf8_byte_t *upper_p = buffer + upper;
+    lit_utf8_byte_t *lower_p = buffer_p + lower;
+    lit_utf8_byte_t *upper_p = buffer_p + upper;
 
     lit_utf8_byte_t tmp[8];
     memcpy (&tmp[0], lower_p, element_size);

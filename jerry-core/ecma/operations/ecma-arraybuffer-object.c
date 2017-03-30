@@ -112,24 +112,23 @@ ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffe
  *
  * See also: ES2015 24.1.1.4
  *
- * @return ecma_object_t *
+ * @return cloned array buffer
  */
 ecma_object_t *
-ecma_arraybuffer_new_object_by_clone_arraybuffer (ecma_object_t *src_p, /**< the src arraybuffer  */
-                                                  ecma_length_t offset) /**< the offset */
+ecma_arraybuffer_clone_arraybuffer (ecma_object_t *array_buf_p, /**< the cloned array buffer  */
+                                    ecma_length_t offset) /**< start offset */
 {
-  ecma_length_t length = ecma_arraybuffer_get_length (src_p);
 
-  JERRY_ASSERT (offset <= length);
+  JERRY_ASSERT (offset <= ecma_arraybuffer_get_length (array_buf_p));
 
-  ecma_length_t clone_length = length - offset;
-  ecma_object_t *dst_p = ecma_arraybuffer_new_object (clone_length);
-  lit_utf8_byte_t *src_buf = ecma_arraybuffer_get_buffer (src_p);
-  lit_utf8_byte_t *dst_buf = ecma_arraybuffer_get_buffer (dst_p);
-  memcpy (dst_buf, src_buf + offset, clone_length);
+  ecma_length_t length = ecma_arraybuffer_get_length (array_buf_p) - offset;
+  ecma_object_t *new_array_buf_p = ecma_arraybuffer_new_object (length);
+  lit_utf8_byte_t *src_buf_p = ecma_arraybuffer_get_buffer (array_buf_p);
+  lit_utf8_byte_t *dst_buf_p = ecma_arraybuffer_get_buffer (new_array_buf_p);
+  memcpy (dst_buf_p, src_buf_p + offset, length);
 
-  return dst_p;
-} /* ecma_arraybuffer_new_object_by_clone_arraybuffer */
+  return new_array_buf_p;
+} /* ecma_arraybuffer_clone_arraybuffer */
 
 /**
  * Helper function: check if the target is ArrayBuffer
@@ -137,8 +136,8 @@ ecma_arraybuffer_new_object_by_clone_arraybuffer (ecma_object_t *src_p, /**< the
  *
  * See also: ES2015 24.1.1.4
  *
- * @return bool True if it is ArrayBuffer
- *              Flase if it is not Object or it is not ArrayBuffer
+ * @return true - if value is an ArrayBuffer object
+ *         false - otherwise
  */
 bool
 ecma_is_arraybuffer (ecma_value_t target) /**< the target value */
@@ -173,7 +172,7 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
  *
  * @return pointer to the data buffer
  */
-lit_utf8_byte_t * __attr_pure___
+inline lit_utf8_byte_t * __attr_pure___ __attr_always_inline___
 ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));

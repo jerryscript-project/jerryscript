@@ -314,8 +314,8 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
 
   if (src_class_id == class_id)
   {
-    arraybuffer_p = ecma_arraybuffer_new_object_by_clone_arraybuffer (src_arraybuffer_p,
-                                                                      byte_offset);
+    arraybuffer_p = ecma_arraybuffer_clone_arraybuffer (src_arraybuffer_p,
+                                                        byte_offset);
   }
   else
   {
@@ -487,7 +487,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
  *
  * @return the pointer to the internal arraybuffer
  */
-ecma_object_t *
+inline ecma_object_t * __attr_always_inline___
 ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p) /**< the pointer to the typedarray object */
 {
   JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (typedarray_p)));
@@ -561,6 +561,18 @@ ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the
   return info_p->byte_offset;
 } /* ecma_typedarray_get_offset */
 
+/**
+ * Utility function: return the pointer of the data buffer referenced by the typed array
+ *
+ * @return pointer to the data buffer
+ */
+lit_utf8_byte_t *
+ecma_typedarray_get_buffer (ecma_object_t *typedarray_p) /**< the pointer to the typed array object */
+{
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+
+  return ecma_arraybuffer_get_buffer (arraybuffer_p) + ecma_typedarray_get_offset (typedarray_p);
+} /* ecma_typedarray_get_buffer */
 
 /**
  * Create a new typedarray object.
@@ -718,18 +730,18 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 /**
  * Check if the value is typedarray
  *
- * @return True: it is a typedarray object
- *         False: it is not object or it is not a typedarray
+ * @return true - if value is a TypedArray object
+ *         false - otherwise
  */
 bool
-ecma_is_typedarray (ecma_value_t target) /**< the target need to be checked */
+ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
 {
-  if (!ecma_is_value_object (target))
+  if (!ecma_is_value_object (value))
   {
     return false;
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (target);
+  ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
   if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
   {
@@ -772,7 +784,7 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
  * See also: ES2015 9.4.5.8
  *
  * @return ecma value
- *         if failed, return undefined value
+ *         returns undefined if index is greater or equal than length
  */
 ecma_value_t
 ecma_op_typedarray_get_index_prop (ecma_object_t *obj_p, /**< a TypedArray object */

@@ -69,9 +69,12 @@ WEBSOCKET_FIN_BIT = 0x80
 def arguments_parse():
     parser = argparse.ArgumentParser(description="JerryScript debugger client")
 
-    parser.add_argument("address", action="store", nargs="?", default="localhost:5001", help="specify a unique network address for connection (default: %(default)s)")
-    parser.add_argument("-v", "--verbose", action="store_true", default=False, help="increase verbosity (default: %(default)s)")
-    parser.add_argument("--non-interactive", action="store_true", default=False, help="disable stop when newline is pressed (default: %(default)s)")
+    parser.add_argument("address", action="store", nargs="?", default="localhost:5001",
+                        help="specify a unique network address for connection (default: %(default)s)")
+    parser.add_argument("-v", "--verbose", action="store_true", default=False,
+                        help="increase verbosity (default: %(default)s)")
+    parser.add_argument("--non-interactive", action="store_true", default=False,
+                        help="disable stop when newline is pressed (default: %(default)s)")
 
     args = parser.parse_args()
 
@@ -169,6 +172,12 @@ class DebuggerPrompt(Cmd):
         else:
             set_breakpoint(self.debugger, args)
 
+    def disable_args(self, args):
+        if args:
+            print("Error: No argument expected")
+            return True
+        return False
+
     def do_quit(self, args):
         """ Exit JerryScript debugger """
         self.do_delete("all")
@@ -215,12 +224,10 @@ class DebuggerPrompt(Cmd):
 
     def do_list(self, args):
         """ Lists the available breakpoints """
-        if args != "":
-            print("Error: No argument expected")
+        if self.disable_args(args):
             return
 
         for breakpoint in self.debugger.active_breakpoint_list.values():
-            source = breakpoint.function.source
             print("%d: %s" % (breakpoint.active_index, breakpoint.to_string()))
 
     def do_delete(self, args):
@@ -237,8 +244,8 @@ class DebuggerPrompt(Cmd):
         else:
             try:
                 breakpoint_index = int(args)
-            except:
-                print("Error: Integer number expected")
+            except ValueError as val_errno:
+                print("Error: Integer number expected, %s" % (val_errno))
                 return
 
             if breakpoint_index in self.debugger.active_breakpoint_list:
@@ -258,8 +265,8 @@ class DebuggerPrompt(Cmd):
                 if max_depth <= 0:
                     print("Error: Positive integer number expected")
                     return
-            except:
-                print("Error: Positive integer number expected")
+            except ValueError as val_errno:
+                print("Error: Positive integer number expected, %s" % (val_errno))
                 return
 
         message = struct.pack(self.debugger.byte_order + "BBIB" + self.debugger.idx_format,
@@ -279,11 +286,17 @@ class DebuggerPrompt(Cmd):
 
     def do_src(self, args):
         """ Get current source code """
+        if self.disable_args(args):
+            return
+
         if self.debugger.last_breakpoint_hit:
             print(self.debugger.last_breakpoint_hit.function.source)
 
     def do_dump(self, args):
         """ Dump all of the debugger data """
+        if self.disable_args(args):
+            return
+
         pprint(self.debugger.function_list)
 
     def eval_string(self, args):
@@ -469,7 +482,7 @@ class JerryDebugger(object):
 
         self.idx_format = "I"
 
-        logging.debug("Compressed pointer size: %d" % (self.cp_size))
+        logging.debug("Compressed pointer size: %d", self.cp_size)
 
         if len_result > len_expected:
             self.message_data = result[len_expected:]
@@ -573,7 +586,7 @@ def parse_source(debugger, data):
         buffer_type = ord(data[2])
         buffer_size = ord(data[1]) - 1
 
-        logging.debug("Parser buffer type: %d, message size: %d" % (buffer_type, buffer_size))
+        logging.debug("Parser buffer type: %d, message size: %d", buffer_type, buffer_size)
 
         if buffer_type == JERRY_DEBUGGER_PARSE_ERROR:
             logging.error("Parser error!")
@@ -589,7 +602,7 @@ def parse_source(debugger, data):
             function_name += data[3:]
 
         elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
-            logging.debug("Source name: %s, function name: %s" % (source_code_name, function_name))
+            logging.debug("Source name: %s, function name: %s", source_code_name, function_name)
 
             position = struct.unpack(debugger.byte_order + debugger.idx_format + debugger.idx_format,
                                      data[3: 3 + 4 + 4])
@@ -608,7 +621,7 @@ def parse_source(debugger, data):
             if buffer_type == JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST:
                 name = "offsets"
 
-            logging.debug("Breakpoint %s received" % (name))
+            logging.debug("Breakpoint %s received", name)
 
             buffer_pos = 3
             while buffer_size > 0:
@@ -622,7 +635,7 @@ def parse_source(debugger, data):
             byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
                                          data[3: 3 + debugger.cp_size])[0]
 
-            logging.debug("Byte code cptr received: {0x%x}" % (byte_code_cp))
+            logging.debug("Byte code cptr received: {0x%x}", byte_code_cp)
 
             func_desc = stack.pop()
 
@@ -687,7 +700,7 @@ def release_function(debugger, data):
 
     debugger.send_bytecode_cp(byte_code_cp)
 
-    logging.debug("Function {0x%x} byte-code released" % byte_code_cp)
+    logging.debug("Function {0x%x} byte-code released", byte_code_cp)
 
 
 def enable_breakpoint(debugger, breakpoint):
@@ -729,6 +742,7 @@ def set_breakpoint(debugger, string):
         print("Breakpoint not found")
         return
 
+
 def get_breakpoint(debugger, breakpoint_data):
     function = debugger.function_list[breakpoint_data[0]]
     offset = breakpoint_data[1]
@@ -747,6 +761,7 @@ def get_breakpoint(debugger, breakpoint_data):
 
     return (function.offsets[nearest_offset], False)
 
+
 def main():
     args = arguments_parse()
 
@@ -754,7 +769,7 @@ def main():
 
     non_interactive = args.non_interactive
 
-    logging.debug("Connected to JerryScript on %d port" % (debugger.port))
+    logging.debug("Connected to JerryScript on %d port", debugger.port)
 
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "
@@ -778,7 +793,7 @@ def main():
         buffer_type = ord(data[2])
         buffer_size = ord(data[1]) - 1
 
-        logging.debug("Main buffer type: %d, message size: %d" % (buffer_type, buffer_size))
+        logging.debug("Main buffer type: %d, message size: %d", buffer_type, buffer_size)
 
         if buffer_type in [JERRY_DEBUGGER_PARSE_ERROR,
                            JERRY_DEBUGGER_BYTE_CODE_CP,

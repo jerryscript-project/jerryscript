@@ -34,6 +34,7 @@ ecma_value_t ecma_op_typedarray_from (ecma_value_t items_val,
                                       lit_magic_string_id_t class_id);
 ecma_length_t ecma_typedarray_get_length (ecma_object_t *typedarray_p);
 ecma_length_t ecma_typedarray_get_offset (ecma_object_t *typedarray_p);
+lit_utf8_byte_t *ecma_typedarray_get_buffer (ecma_object_t *typedarray_p);
 uint8_t ecma_typedarray_get_element_size_shift (ecma_object_t *typedarray_p);
 ecma_object_t *ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p);
 ecma_value_t ecma_op_create_typedarray (const ecma_value_t *arguments_list_p,

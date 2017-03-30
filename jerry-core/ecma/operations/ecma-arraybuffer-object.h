@@ -35,7 +35,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *, ecma_length_t);
 ecma_object_t *
 ecma_arraybuffer_new_object (ecma_length_t lengh);
 ecma_object_t *
-ecma_arraybuffer_new_object_by_clone_arraybuffer (ecma_object_t *src_p, ecma_length_t offset);
+ecma_arraybuffer_clone_arraybuffer (ecma_object_t *src_p, ecma_length_t offset);
 lit_utf8_byte_t *
 ecma_arraybuffer_get_buffer (ecma_object_t *obj_p) __attr_pure___;
 ecma_length_t

@@ -344,11 +344,17 @@ void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
 
 /* ecma-helpers-external-pointers.c */
-bool ecma_create_external_pointer_property (ecma_object_t *obj_p, lit_magic_string_id_t id,
-                                            ecma_external_pointer_t ptr_value);
-bool ecma_get_external_pointer_value (ecma_object_t *obj_p, lit_magic_string_id_t id,
-                                      ecma_external_pointer_t *out_pointer_p);
-void ecma_free_external_pointer_in_property (ecma_property_t *prop_p);
+bool ecma_create_native_handle_property (ecma_object_t *obj_p,
+                                         ecma_external_pointer_t handle_p,
+                                         ecma_external_pointer_t free_cb);
+bool ecma_create_native_pointer_property (ecma_object_t *obj_p,
+                                          ecma_external_pointer_t native_p,
+                                          ecma_external_pointer_t info_p);
+bool ecma_get_native_package_value (ecma_object_t *obj_p,
+                                    lit_magic_string_id_t id,
+                                    void **out_pointer_p);
+void ecma_free_native_package_property (ecma_property_t *prop_p,
+                                        lit_magic_string_id_t id);
 
 /* ecma-helpers-conversion.c */
 ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size);

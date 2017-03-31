@@ -25,6 +25,12 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+#ifdef __GNUC__
+#define JERRY_DEPRECATED_API __attribute__((deprecated))
+#else /* !__GNUC__ */
+/* TODO: for other compilers */
+#define JERRY_DEPRECATED_API
+#endif /* __GNUC__ */
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
@@ -156,9 +162,14 @@ typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_
                                                    const jerry_length_t args_count);
 
 /**
- * Native free callback of an object
+ * Native free callback of an object (deprecated)
  */
 typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
+
+/**
+ * Native free callback of an object
+ */
+typedef void (*jerry_object_native_free_callback_t) (void *native_p);
 
 /**
  * Function type applied for each data property of an object
@@ -166,6 +177,13 @@ typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
+/**
+ * Type information of a native pointer.
+ */
+typedef struct
+{
+  jerry_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
+} jerry_object_native_info_t;
 
 /**
  * General engine functions
@@ -322,9 +340,19 @@ jerry_value_t jerry_get_object_keys (const jerry_value_t obj_val);
 jerry_value_t jerry_get_prototype (const jerry_value_t obj_val);
 jerry_value_t jerry_set_prototype (const jerry_value_t obj_val, const jerry_value_t proto_obj_val);
 
+JERRY_DEPRECATED_API
 bool jerry_get_object_native_handle (const jerry_value_t obj_val, uintptr_t *out_handle_p);
+JERRY_DEPRECATED_API
 void jerry_set_object_native_handle (const jerry_value_t obj_val, uintptr_t handle_p,
                                      jerry_object_free_callback_t freecb_p);
+
+bool jerry_get_object_native_pointer (const jerry_value_t obj_val,
+                                      void **out_native_p,
+                                      const jerry_object_native_info_t **out_info_p);
+void jerry_set_object_native_pointer (const jerry_value_t obj_val,
+                                      void *native_p,
+                                      const jerry_object_native_info_t *info_p);
+
 bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_property_foreach_t foreach_p,
                                     void *user_data_p);
 

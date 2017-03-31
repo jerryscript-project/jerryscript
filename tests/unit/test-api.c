@@ -107,13 +107,31 @@ handler_throw_test (const jerry_value_t func_obj_val, /**< function object */
 } /* handler_throw_test */
 
 static void
-handler_construct_freecb (uintptr_t native_p)
+handler_construct_freecb (void *native_p)
 {
-  TEST_ASSERT (native_p == (uintptr_t) 0x0012345678abcdefull);
+  TEST_ASSERT ((uintptr_t) native_p == (uintptr_t) 0x0012345678abcdefull);
   printf ("ok object free callback\n");
 
   test_api_is_free_callback_was_called = true;
 } /* handler_construct_freecb */
+
+
+/**
+ * The name of the jerry_object_native_info_t struct.
+ */
+#define JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE(c_type) _jerry_object_native_info_##c_type
+
+/**
+ * Define a native pointer's type based on the C type and free callback.
+ */
+#define JERRY_DEFINE_NATIVE_HANDLE_INFO(c_type, native_free_cb) \
+  static const jerry_object_native_info_t JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (c_type) = \
+  { \
+    .free_cb = (jerry_object_native_free_callback_t) native_free_cb \
+  }
+
+JERRY_DEFINE_NATIVE_HANDLE_INFO (bind1, handler_construct_freecb);
+JERRY_DEFINE_NATIVE_HANDLE_INFO (bind2, handler_construct_freecb);
 
 static jerry_value_t
 handler_construct (const jerry_value_t func_obj_val, /**< function object */
@@ -134,18 +152,20 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
   jerry_set_property (this_val, field_name, args_p[0]);
   jerry_release_value (field_name);
 
-  jerry_set_object_native_handle (this_val,
-                                  (uintptr_t) 0x0000000000000000ull,
-                                  handler_construct_freecb);
+  jerry_set_object_native_pointer (this_val,
+                                   (void *) 0x0000000000000000ull,
+                                   &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind1));
 
-  uintptr_t ptr = (uintptr_t) NULL;
-  bool is_ok = jerry_get_object_native_handle (this_val, &ptr);
-  TEST_ASSERT (is_ok && ptr == (uintptr_t) 0x0000000000000000ull);
-
+  void *ptr = NULL;
+  const jerry_object_native_info_t *out_info_p;
+  bool is_ok = jerry_get_object_native_pointer (this_val, &ptr, &out_info_p);
+  TEST_ASSERT (is_ok
+               && (uintptr_t) ptr == (uintptr_t) 0x0000000000000000ull
+               && out_info_p == &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind1));
   /* check if setting handle for second time is handled correctly */
-  jerry_set_object_native_handle (this_val,
-                                  (uintptr_t) 0x0012345678abcdefull,
-                                  handler_construct_freecb);
+  jerry_set_object_native_pointer (this_val,
+                                   (void *) 0x0012345678abcdefull,
+                                   &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind2));
 
   return jerry_create_boolean (true);
 } /* handler_construct */
@@ -734,10 +754,12 @@ main (void)
   jerry_release_value (val_value_field);
   jerry_release_value (external_construct_val);
 
-  uintptr_t ptr = (uintptr_t) NULL;
-  is_ok = jerry_get_object_native_handle (res, &ptr);
+  void *ptr = NULL;
+  const jerry_object_native_info_t *out_info_p;
+  is_ok = jerry_get_object_native_pointer (res, &ptr, &out_info_p);
   TEST_ASSERT (is_ok
-               && ptr == (uintptr_t) 0x0012345678abcdefull);
+               && (uintptr_t) ptr == (uintptr_t) 0x0012345678abcdefull
+               && out_info_p == &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind2));
 
   jerry_release_value (res);
 

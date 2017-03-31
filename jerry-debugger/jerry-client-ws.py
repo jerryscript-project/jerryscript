@@ -172,6 +172,7 @@ class DebuggerPrompt(Cmd):
     def do_quit(self, args):
         """ Exit JerryScript debugger """
         self.do_delete("all")
+        self.do_exception("0")  # disable the exception handler
         self.exec_command(args, JERRY_DEBUGGER_CONTINUE)
         self.stop = True
         self.quit = True

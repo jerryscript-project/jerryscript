@@ -7,26 +7,33 @@ JerryScript HTML (WebSocket) Debugger Client
 </title>
 <style>
 body {
+  background-color: #feffd6;
   text-align: center;
 }
-textarea {
-  margin-bottom: 30px;
-}
+
 input {
   margin-top: 10px;
-  width: 657px;
+  width: 650px;
+}
+
+textarea {
+  width: 750px;
+  margin-top: 30px;
+  resize: none;
 }
 </style>
 </head>
 <body>
-
 <h2>JerryScript HTML (WebSocket) Debugger Client</h2>
-
-<textarea id="log" rows="20" cols="80"></textarea><br>
-
-Getting help: type 'help' in the command line below.<br>
-
-<input id="command" type="text" onkeypress="debuggerCommand(event); return true;">
+<div class="container">
+  <div>
+    <textarea readonly rows="16" id="log"></textarea>
+  </div>
+  <p role="alert">Getting help: type <b>help</b> in the command line below.</p>
+  <div>
+    <input id="command" rows="1" type="text" onkeypress="debuggerCommand(event); return true;">
+  <div>
+</div>
 <script>
 var JERRY_DEBUGGER_CONFIGURATION = 1;
 var JERRY_DEBUGGER_PARSE_ERROR = 2;
@@ -71,6 +78,7 @@ commandBox.value = "connect localhost"
 function appendLog(str)
 {
   textBox.value += str + "\n";
+  textBox.scrollTop = textBox.scrollHeight;
 }
 
 var debuggerObj = null;

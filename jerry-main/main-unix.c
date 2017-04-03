@@ -107,6 +107,21 @@ assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< f
   }
 } /* assert_handler */
 
+/**
+ * Provide the 'gc' implementation for the engine.
+ *
+ * @return undefined.
+ */
+static jerry_value_t
+gc_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+            const jerry_value_t this_p __attribute__((unused)), /**< this arg */
+            const jerry_value_t args_p[] __attribute__((unused)), /**< function arguments */
+            const jerry_length_t args_cnt __attribute__((unused))) /**< number of function arguments */
+{
+  jerry_gc ();
+  return jerry_create_undefined ();
+} /* gc_handler */
+
 static void
 print_usage (char *name)
 {
@@ -333,6 +348,32 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
   jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
   jerry_release_value (err_str_val);
 } /* print_unhandled_exception */
+
+/**
+ * Register a JavaScript function in the global object.
+ */
+static void
+register_js_function (const char *name_p, /**< name of the function */
+                      jerry_external_handler_t handler_p) /**< function callback */
+{
+  jerry_value_t global_obj_val = jerry_get_global_object ();
+
+  jerry_value_t function_val = jerry_create_external_function (handler_p);
+  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
+  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
+
+  jerry_release_value (function_name_val);
+  jerry_release_value (function_val);
+  jerry_release_value (global_obj_val);
+
+  if (jerry_value_has_error_flag (result_val))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
+    print_unhandled_exception (result_val);
+  }
+
+  jerry_release_value (result_val);
+} /* register_js_function */
 
 int
 main (int argc,
@@ -609,25 +650,10 @@ main (int argc,
 
   jerry_init (flags);
 
-  jerry_value_t global_obj_val = jerry_get_global_object ();
-  jerry_value_t assert_value = jerry_create_external_function (assert_handler);
+  register_js_function ("assert", assert_handler);
+  register_js_function ("gc", gc_handler);
 
-  jerry_value_t assert_func_name_val = jerry_create_string ((jerry_char_t *) "assert");
-  jerry_value_t ret_value = jerry_set_property (global_obj_val, assert_func_name_val, assert_value);
-
-  jerry_release_value (assert_func_name_val);
-  jerry_release_value (assert_value);
-  jerry_release_value (global_obj_val);
-
-  if (jerry_value_has_error_flag (ret_value))
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register 'assert' method.");
-    print_unhandled_exception (ret_value);
-  }
-
-  jerry_release_value (ret_value);
-
-  ret_value = jerry_create_undefined ();
+  jerry_value_t ret_value = jerry_create_undefined ();
 
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {

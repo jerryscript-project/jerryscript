@@ -153,8 +153,8 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
 
     int i = 1;
 
-    /* Handle curry number. */
-    for (; i < (int) num_digits; i++)
+    /* Handle carry number. */
+    for (; i <= round_num; i++)
     {
       if (++digits_p[round_num - i] <= '9')
       {
@@ -164,7 +164,7 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
     }
 
     /* Prepend highest digit */
-    if (i >= (int) num_digits)
+    if (i > round_num)
     {
       memmove (digits_p + 1, digits_p, num_digits);
       digits_p[0] = '1';

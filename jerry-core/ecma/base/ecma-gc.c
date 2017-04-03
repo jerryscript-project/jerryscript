@@ -294,6 +294,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {
         ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+
+        ecma_object_t *target_func_obj_p;
+        target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                             ext_function_p->u.bound_function.target_function);
+
+        ecma_gc_set_object_visited (target_func_obj_p, true);
+
         ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
         ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 

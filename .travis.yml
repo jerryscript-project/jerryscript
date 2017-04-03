@@ -5,20 +5,38 @@ dist: trusty
 sudo: required
 
 env:
-  - OPTS="--check-signed-off-travis --check-cppcheck --check-doxygen --check-vera --check-license"
-  - OPTS="--jerry-debugger"
-  - OPTS="--jerry-tests --jerry-test-suite"
-  - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300 INSTALL_QEMU_ARM=yes
-  - OPTS="--buildoption-test"
-  - OPTS="--jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
-  - OPTS="--unittests"
-  - OPTS="--test262"
-  - OPTS="--check-pylint"
+  matrix:
+    - OPTS="--check-signed-off-travis --check-cppcheck --check-doxygen --check-vera --check-license"
+    - OPTS="--jerry-debugger"
+    - OPTS="--jerry-tests --jerry-test-suite"
+    - OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300 INSTALL_QEMU_ARM=yes
+    - OPTS="--buildoption-test"
+    - OPTS="--jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
+    - OPTS="--unittests"
+    - OPTS="--test262"
+    - OPTS="--check-pylint"
+  global:
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "V7BdXv3FCVkFGEfKfWto6I+Sytou1zTCGyn49xurkBfKNsG/3vbkXfsbK1m6lCZxmY7W/1odpfjixpAPZgy2L4FgPZK6/UyVvC8pIFjDOubcEniN48haleSvm/ZFPLDifxDL2+VVFtK1oRYPtDBzzSoUCcfwovgk+Wy+tSBnhnyRLqO/WaI6PqFof7ECYMTRlJVjioZARVP4YmkBruIPmGDdR/3EvwowlxfuiFoPheix61ug4x3tpTBW2qWgvFjDyCZXFz4pJrBQPTAIbyKMxHcBykJjl9eR+dWAOsvE1Uw48tFOJxjKDfUttVQUPsyKFllmcCVS0fDYB5pzZOmRUPxJmox1jt8J1FY85Ri1PGY0THBPM2H7to4Yf2418Y3539epbN8p+79dwaM7e2OiJ2owukbWI7PoNqIz5DV5zxpIKsOQfeWuNLJOgsBePEIU7lz133Si/2d5W/7If46B1d+hZRBJfSYksgDqDU6G/voZkPf0K5bKe2O2BxiIW1DYk4yQ1ecZAkqGjZ8jG3zYGMG3mSF4VyuU4UGFG1Pg8fw7Ap5zuHxSVY1H9dtu4T6JQG3aj/x1omlzfw48DjgkwxVhf7Xvl3yfR7pzydYheLX3MZYtcVo7rWnglZFZoUjWDK1StbmzsvPftvwWtoDTWlzo4xeSXhahSJvJyc4U8Wc="
 
 matrix:
   include:
     - os: osx
       env: OPTS="--jerry-tests --jerry-test-suite --unittests"
+    - os: linux
+      before_install:
+        - tools/apt-get-install-deps.sh
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+      addons:
+        coverity_scan:
+          project:
+            name: "jerryscript-project/jerryscript"
+            description: "Ultra-lightweight JavaScript engine for the Internet of Things."
+          notification_email: rsipka.uszeged@partner.samsung.com
+          build_command: "tools/build.py --clean"
+          branch_pattern: master
+      env: OPTS=""
     - compiler: gcc-5
       addons:
         apt:
@@ -50,7 +68,7 @@ before_install:
 
 install:
 
-script: "python tools/run-tests.py $OPTS"
+script: if [[ -n "$OPTS" ]]; then tools/run-tests.py $OPTS; fi
 
 # The channel name "chat.freenode.net#jerryscript"
 # is encrypted against Samsung/jerryscript

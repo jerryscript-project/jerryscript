@@ -2515,9 +2515,8 @@ error:
 
       stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
 #ifdef JERRY_DEBUGGER
-      JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-
-      if (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+      if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+          && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
           && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE_EXCEPTION))
       {
         jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);

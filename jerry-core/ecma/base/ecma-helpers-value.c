@@ -563,25 +563,6 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
 } /* ecma_get_number_from_value */
 
 /**
- * Get uint32 value from an ecma value
- *
- * @return floating point value
- */
-uint32_t __attr_pure___
-ecma_get_uint32_from_value (ecma_value_t value) /**< ecma value */
-{
-  if (ecma_is_value_integer_number (value))
-  {
-    /* Works with negative numbers as well. */
-    return (uint32_t) (((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT);
-  }
-
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
-
-  return ecma_number_to_uint32 (*(ecma_number_t *) ecma_get_pointer_from_ecma_value (value));
-} /* ecma_get_uint32_from_value */
-
-/**
  * Get pointer to ecma-string from ecma value
  *
  * @return the pointer
@@ -825,31 +806,6 @@ ecma_value_assign_number (ecma_value_t *value_p, /**< [in, out] ecma value */
 
   ecma_value_assign_float_number (value_p, ecma_number);
 } /* ecma_value_assign_number */
-
-/**
- * Assign an uint32 value to an ecma-value
- *
- * Note:
- *      value previously stored in the property is freed
- */
-void
-ecma_value_assign_uint32 (ecma_value_t *value_p, /**< [in, out] ecma value */
-                          uint32_t uint32_number) /**< number to assign */
-{
-  if (uint32_number <= ECMA_INTEGER_NUMBER_MAX)
-  {
-    if (ecma_get_value_type_field (*value_p) != ECMA_TYPE_DIRECT
-        && ecma_get_value_type_field (*value_p) != ECMA_TYPE_OBJECT)
-    {
-      ecma_free_value (*value_p);
-    }
-
-    *value_p = ecma_make_integer_value ((ecma_integer_value_t) uint32_number);
-    return;
-  }
-
-  ecma_value_assign_float_number (value_p, (ecma_number_t) uint32_number);
-} /* ecma_value_assign_uint32 */
 
 /**
  * Free the ecma value

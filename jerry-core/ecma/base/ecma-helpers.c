@@ -250,19 +250,6 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 } /* ecma_get_object_type */
 
 /**
- * Set object's internal implementation-defined type.
- */
-inline void
-ecma_set_object_type (ecma_object_t *object_p, /**< object */
-                      ecma_object_type_t type) /**< type */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (!(object_p->type_flags_refs & ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV));
-
-  object_p->type_flags_refs = (uint16_t) ((object_p->type_flags_refs & ~ECMA_OBJECT_TYPE_MASK) | type);
-} /* ecma_set_object_type */
-
-/**
  * Get object's prototype.
  */
 inline ecma_object_t *__attr_pure___

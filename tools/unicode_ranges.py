@@ -15,7 +15,7 @@
 # limitations under the License.
 
 #
-# http://www.unicode.org/Public/3.0-Update/UnicodeData-3.0.0.txt
+# http://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
 #
 
 # unicode categories:      Lu Ll Lt Mn Mc Me Nd Nl No Zs Zl Zp Cc Cf Cs Co Lm Lo Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So
@@ -204,14 +204,17 @@ def read_categories(unicode_data_file):
     if non_breaking_space in separators:
         separators.remove(int(non_breaking_space))
 
-    # These separator chars are not in UnicodeData-3.0.0.txt or not in Zs category
+    # These separator chars are not in the unicode data file or not in Zs category
     mongolian_vowel_separator = 0x180E
     medium_mathematical_space = 0x205F
+    zero_width_space = 0x200B
 
     if mongolian_vowel_separator not in separators:
         bisect.insort(separators, int(mongolian_vowel_separator))
     if medium_mathematical_space not in separators:
         bisect.insort(separators, int(medium_mathematical_space))
+    if zero_width_space not in separators:
+        bisect.insort(separators, int(zero_width_space))
 
     return letters, non_letters, separators
 

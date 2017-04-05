@@ -13,12 +13,22 @@
  * limitations under the License.
  */
 
-var a = new Int32Array(3);
+var a = new Int32Array(8);
 
 a[0] = 0xffffffff;
 a[1] = 0xff00000001;
-a[2] = -2.3;
+a[2] = 0xff80000001;
+a[3] = -2.3;
+a[4] = Number.NEGATIVE_INFINITY;
+a[5] = NaN;
+a[6] = 10e17;
+a[7] = -10e17;
 
 assert(a[0] === -1);
 assert(a[1] === 1);
-assert(a[2] === -2);
+assert(a[2] === -2147483647);
+assert(a[3] === -2);
+assert(a[4] === 0);
+assert(a[5] === 0);
+assert(a[6] === -1486618624);
+assert(a[7] === 1486618624);

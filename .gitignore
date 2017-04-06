@@ -4,8 +4,8 @@ build/*
 
 # IDE related files
 nbproject
-**.sublime-project
-**.sublime-workspace
+*.sublime-project
+*.sublime-workspace
 .idea
 
 # Random Trash
@@ -14,9 +14,9 @@ nbproject
 *~
 core
 vgcore.*
-**.orig
-**.directory
-**.patch
+*.orig
+*.directory
+*.patch
 .tags*
 cscope.*
 __pycache__

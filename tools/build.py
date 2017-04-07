@@ -27,7 +27,6 @@ import settings
 BUILD_DIR = os.path.join(settings.PROJECT_DIR, 'build')
 DEFAULT_PORT_DIR = os.path.join(settings.PROJECT_DIR, 'targets/default')
 
-PROFILE_DIR = os.path.join(settings.PROJECT_DIR, 'jerry-core/profiles')
 DEFAULT_PROFILE = 'es5.1'
 
 def default_toolchain():
@@ -155,13 +154,7 @@ def generate_build_options(arguments):
     build_options.append('-DMEM_HEAP_SIZE_KB=%d' % arguments.mem_heap)
     build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
 
-    if os.path.isabs(arguments.profile):
-        profile = arguments.profile
-    else:
-        profile = os.path.join(PROFILE_DIR, arguments.profile + '.profile')
-
-    build_options.append('-DFEATURE_PROFILE=%s' % profile)
-
+    build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
     build_options.append('-DFEATURE_DEBUGGER_PORT=%d' % arguments.jerry_debugger_port)
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)

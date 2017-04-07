@@ -3,7 +3,7 @@
 
 Specify compile definitions in profile files to use when compiling the `jerry-core` target.
 
-The default profile is ``es5.1`` which disables the ArrayBuffer built-in.
+The default profile is ``es5.1`` which disables the ES2015 features.
 
 ### Using profiles with the build system
 
@@ -30,7 +30,7 @@ or
 ./tools/build.py --profile=minimal
 ```
 
-This command selects the profile/minimal.profile file.
+This command selects the profiles/minimal.profile file.
 
 #### 2. Using only CMake build system
 

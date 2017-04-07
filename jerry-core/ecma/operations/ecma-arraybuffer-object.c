@@ -33,53 +33,6 @@
  */
 
 /**
- * ArrayBuffer object creation operation.
- *
- * See also: ES2015 24.1.1.1
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                          *   are passed to String constructor */
-                                   ecma_length_t arguments_list_len) /**< length of the arguments' list */
-{
-  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
-
-  uint32_t length = 0;
-
-  if (arguments_list_len > 0)
-  {
-    ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num, arguments_list_p[0], ret);
-    length = ecma_number_to_uint32 (num);
-
-    if (num != ((ecma_number_t) length))
-    {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
-    }
-
-    ECMA_OP_TO_NUMBER_FINALIZE (num);
-
-    if (!ecma_is_value_empty (ret))
-    {
-      return ret;
-    }
-  }
-
-  if (length > UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1)
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
-  }
-
-  ecma_object_t *object_p = ecma_arraybuffer_new_object (length);
-
-  return ecma_make_object_value (object_p);
-} /* ecma_op_create_arraybuffer_object */
-
-/**
  * Helper function: create arraybuffer object based on the array length
  *
  * The struct of arraybuffer object:
@@ -108,27 +61,55 @@ ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffe
 } /* ecma_arraybuffer_new_object */
 
 /**
- * Helper function: create arraybuffer object by cloning another arraybuffer
+ * ArrayBuffer object creation operation.
  *
- * See also: ES2015 24.1.1.4
+ * See also: ES2015 24.1.1.1
  *
- * @return cloned array buffer
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-ecma_object_t *
-ecma_arraybuffer_clone_arraybuffer (ecma_object_t *array_buf_p, /**< the cloned array buffer  */
-                                    ecma_length_t offset) /**< start offset */
+ecma_value_t
+ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
+                                                                          *   are passed to String constructor */
+                                   ecma_length_t arguments_list_len) /**< length of the arguments' list */
 {
+  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  JERRY_ASSERT (offset <= ecma_arraybuffer_get_length (array_buf_p));
+  uint32_t length = 0;
 
-  ecma_length_t length = ecma_arraybuffer_get_length (array_buf_p) - offset;
-  ecma_object_t *new_array_buf_p = ecma_arraybuffer_new_object (length);
-  lit_utf8_byte_t *src_buf_p = ecma_arraybuffer_get_buffer (array_buf_p);
-  lit_utf8_byte_t *dst_buf_p = ecma_arraybuffer_get_buffer (new_array_buf_p);
-  memcpy (dst_buf_p, src_buf_p + offset, length);
+  if (arguments_list_len > 0)
+  {
+    ecma_number_t num;
 
-  return new_array_buf_p;
-} /* ecma_arraybuffer_clone_arraybuffer */
+    if (ecma_is_value_number (arguments_list_p[0]))
+    {
+      num = ecma_get_number_from_value (arguments_list_p[0]);
+    }
+    else
+    {
+      ecma_value_t to_number_value = ecma_op_to_number (arguments_list_p[0]);
+
+      if (ECMA_IS_VALUE_ERROR (to_number_value))
+      {
+        return to_number_value;
+      }
+
+      num = ecma_get_number_from_value (to_number_value);
+
+      ecma_free_value (to_number_value);
+    }
+
+    length = ecma_number_to_uint32 (num);
+
+    if (num != ((ecma_number_t) length)
+        || length > (UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1))
+    {
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
+    }
+  }
+
+  return ecma_make_object_value (ecma_arraybuffer_new_object (length));
+} /* ecma_op_create_arraybuffer_object */
 
 /**
  * Helper function: check if the target is ArrayBuffer
@@ -142,15 +123,9 @@ ecma_arraybuffer_clone_arraybuffer (ecma_object_t *array_buf_p, /**< the cloned 
 bool
 ecma_is_arraybuffer (ecma_value_t target) /**< the target value */
 {
-  if (!ecma_is_value_object (target))
-  {
-    return false;
-  }
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (target);
-  lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
-
-  return class_id == LIT_MAGIC_STRING_ARRAY_BUFFER_UL;
+  return (ecma_is_value_object (target)
+          && ecma_object_class_is (ecma_get_object_from_value (target),
+                                   LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
 } /* ecma_is_arraybuffer */
 
 /**

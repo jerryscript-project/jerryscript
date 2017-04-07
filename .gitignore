@@ -38,3 +38,6 @@ targets/esp8266/libs
 
 # Generated documentation
 docs/doxygen
+
+# Tests
+tests/test262/

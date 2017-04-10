@@ -13,24 +13,13 @@
  * limitations under the License.
  */
 
-var obj = {name:""};
+var a = new Promise(function(f)
+{
+  var o = {name: "abc"};
+  f(o);
+})
 
-var a = new Promise(function(f, r){
-  obj.name = obj.name + "a";
-  f(obj);
+Promise.resolve(a).then(function(x)
+{
+  assert (x.name === "abc");
 });
-
-a.then(function(x) {
-  x.name = x.name + "b";
-  return x;
-}).then(null, function(x) {
-  x.name = x.name + "c"; // unreachable
-  return x;
-}).then(function(x) {
-  x.name = x.name + "d";
-  assert (obj.name === "aebd");
-});
-
-obj.name = obj.name + "e";
-
-assert (obj.name === "ae")

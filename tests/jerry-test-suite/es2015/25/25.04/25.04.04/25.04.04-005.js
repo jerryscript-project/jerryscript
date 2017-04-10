@@ -14,33 +14,36 @@
  */
 
 var a = Promise.resolve('a');
-var b = Promise.reject('b');
+var b = Promise.resolve('b');
+var c = Promise.reject('c');
 
-Promise.race([a, b]).then(function(x)
+Promise.all([a, b, 1]).then(function(x)
 {
-  assert (x === 'a');
+  assert (x[0] === 'a');
+  assert (x[1] === 'b');
+  assert (x[2] === 1);
 }, function(x)
 {
   assert (false); // should not run here.
 });
 
-Promise.race([b, a]).then(function(x)
+Promise.all([a, b, c, 1]).then(function(x)
 {
   assert (false); // should not run here.
 }, function(x)
 {
-  assert (x === 'b');
+  assert (x === 'c');
 });
 
-Promise.race([ ,b, a]).then(function(x)
+Promise.all([]).then(function(x)
 {
-  assert (x === undefined);
+  assert (x.length === 0);
 }, function(x)
 {
   assert (false); // should not run here.
 });
 
-Promise.race(a).then(function(x)
+Promise.all(a).then(function(x)
 {
   assert (false); // should not run here.
 }, function(x)

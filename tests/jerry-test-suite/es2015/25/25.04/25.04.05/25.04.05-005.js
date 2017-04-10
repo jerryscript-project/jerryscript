@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
-Promise.resolve("abc").then(function(x)
+Promise.reject("abc").catch(function(x)
 {
   assert (x === "abc");
+  return "def";
+}).then(function(x) {
+  assert (x === "def");
 });

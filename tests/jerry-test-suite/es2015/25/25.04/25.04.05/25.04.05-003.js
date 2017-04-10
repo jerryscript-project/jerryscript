@@ -13,7 +13,24 @@
  * limitations under the License.
  */
 
-Promise.resolve("abc").then(function(x)
-{
-  assert (x === "abc");
+var a = new Promise(function(f, r){
+  r(0);
 });
+
+a
+.then(function f1(x) {
+  return x + 1; // unreachable
+}, function r1(x){
+  return x + 10;
+})
+.then(function f2(x) {
+  throw x + 100
+})
+.then(function f3(x) {
+  return x + 1000 //unreachable
+}, function r3(x) {
+  return x + 10000
+})
+.then(function(x) {
+  assert (x === 10110);
+})

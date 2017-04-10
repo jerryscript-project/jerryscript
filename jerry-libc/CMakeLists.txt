@@ -16,6 +16,18 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_LIBC_NAME jerry-libc)
 project (${JERRY_LIBC_NAME} C ASM)
 
+# Optional features
+set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+
+# Status messages
+message(STATUS "FEATURE_INIT_FINI         " ${FEATURE_INIT_FINI})
+
+# Checks the optional features
+# Enable init/fini arrays
+if(FEATURE_INIT_FINI)
+  set(DEFINES_LIBC ${DEFINES_LIBC} ENABLE_INIT_FINI)
+endif()
+
 # Architecture-specific configuration
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
   set(DEFINES_LIBC ${DEFINES_LIBC} __TARGET_HOST_x64)

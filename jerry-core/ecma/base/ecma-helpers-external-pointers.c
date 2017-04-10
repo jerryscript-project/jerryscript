@@ -39,7 +39,8 @@ static bool
 ecma_create_native_property (ecma_object_t *obj_p, /**< object to create property in */
                              lit_magic_string_id_t id, /**< identifier of internal
                                                         *   property to create */
-                             void *package_p) /**< value to store in the property */
+                             void *data_p, /**< native pointer data */
+                             void *info_p) /**< native pointer's info */
 {
   JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
@@ -49,24 +50,29 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
 
   ecma_property_t *property_p = ecma_find_named_property (obj_p, &name);
   bool is_new = (property_p == NULL);
-  ecma_property_value_t *value_p;
+
+  ecma_native_pointer_t *native_pointer_p;
 
   if (is_new)
   {
+    ecma_property_value_t *value_p;
     value_p = ecma_create_named_data_property (obj_p, &name, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+
+    native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+
+    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
   }
   else
   {
-    value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-    ecma_free_native_package_property (property_p, id);
+    ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+    native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
   }
 
   JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
 
-  JERRY_STATIC_ASSERT (sizeof (uint32_t) <= sizeof (value_p->value),
-                       size_of_internal_property_value_must_be_greater_than_or_equal_to_4_bytes);
-
-  ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, package_p);
+  native_pointer_p->data_p = data_p;
+  native_pointer_p->info_p = info_p;
 
   return is_new;
 } /* ecma_create_native_property */
@@ -79,17 +85,13 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
  */
 bool
 ecma_create_native_handle_property (ecma_object_t *obj_p, /**< object to create property in */
-                                    ecma_external_pointer_t handle_p, /**< native handle */
-                                    ecma_external_pointer_t free_cb) /**< native handle's free callback*/
+                                    void *handle_p, /**< native handle */
+                                    void *free_cb) /**< native handle's free callback*/
 {
-  ecma_native_handle_package_t *package_p;
-  package_p = jmem_heap_alloc_block (sizeof (ecma_native_handle_package_t));
-  package_p->handle_p = handle_p;
-  package_p->free_cb = free_cb;
-
   return ecma_create_native_property (obj_p,
                                       LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
-                                      package_p);
+                                      handle_p,
+                                      free_cb);
 } /* ecma_create_native_handle_property */
 
 /**
@@ -100,17 +102,13 @@ ecma_create_native_handle_property (ecma_object_t *obj_p, /**< object to create 
  */
 bool
 ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create property in */
-                                     ecma_external_pointer_t native_p, /**< native pointer */
-                                     ecma_external_pointer_t info_p) /**< native pointer's type info */
+                                     void *native_p, /**< native pointer */
+                                     void *info_p) /**< native pointer's type info */
 {
-  ecma_native_pointer_package_t *package_p;
-  package_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_package_t));
-  package_p->native_p = native_p;
-  package_p->info_p = info_p;
-
   return ecma_create_native_property (obj_p,
                                       LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER,
-                                      package_p);
+                                      native_p,
+                                      info_p);
 } /* ecma_create_native_pointer_property */
 
 /**
@@ -121,14 +119,13 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
  *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
  *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER
  *
- * @return true - if property exists and it's value is returned through out_pointer_p,
- *         false - otherwise (value returned through out_pointer_p is NULL)
+ * @return native pointer data if property exists
+ *         NULL otherwise
  */
-bool
-ecma_get_native_package_value (ecma_object_t *obj_p, /**< object to get property value from */
-                               lit_magic_string_id_t id, /**< identifier of internal property
+ecma_native_pointer_t *
+ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
+                               lit_magic_string_id_t id) /**< identifier of internal property
                                                           *   to get value from */
-                               void **out_pointer_p) /**< [out] value of the native package */
 {
   JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
@@ -142,46 +139,27 @@ ecma_get_native_package_value (ecma_object_t *obj_p, /**< object to get property
 
   if (property_p == NULL)
   {
-    *out_pointer_p = NULL;
-
-    return false;
+    return NULL;
   }
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-  *out_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (void, value_p->value);
-
-  return true;
-} /* ecma_get_native_package_value */
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
+} /* ecma_get_native_pointer_value */
 
 /**
  * Free the allocated native package struct.
- *
- * Note:
- *      property identifier should be one of the following:
- *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
- *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER
  */
 void
-ecma_free_native_package_property (ecma_property_t *prop_p, /**< native property */
-                                          lit_magic_string_id_t id) /**< identifier of internal */
+ecma_free_native_pointer (ecma_property_t *prop_p) /**< native property */
 {
-  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-              || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
-
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
-  void *package_p;
 
-  package_p = ECMA_GET_INTERNAL_VALUE_POINTER (void, value_p->value);
+  ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
+                                                                             value_p->value);
 
-  if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
-  {
-    jmem_heap_free_block (package_p, sizeof (ecma_native_handle_package_t));
-    return;
-  }
-
-  jmem_heap_free_block (package_p, sizeof (ecma_native_pointer_package_t));
-} /* ecma_free_native_package_property */
+  jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+} /* ecma_free_native_pointer */
 
 /**
  * @}

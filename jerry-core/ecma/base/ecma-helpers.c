@@ -733,7 +733,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
         if (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
             || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER)
         {
-          ecma_free_native_package_property (property_p, (lit_magic_string_id_t) name_cp);
+          ecma_free_native_pointer (property_p);
           break;
         }
       }

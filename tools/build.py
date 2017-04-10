@@ -126,6 +126,8 @@ def get_arguments():
                           help=devhelp('enable Valgrind support (%(choices)s; default: %(default)s)'))
     devgroup.add_argument('--valgrind-freya', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                           help=devhelp('enable Valgrind-Freya support (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--module-registration', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable module registration support (%(choices)s; default: %(default)s)'))
 
     arguments = parser.parse_args(args)
     if arguments.devhelp:
@@ -177,6 +179,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_REGEXP_DUMP=%s' % arguments.show_regexp_opcodes)
     build_options.append('-DFEATURE_VALGRIND=%s' % arguments.valgrind)
     build_options.append('-DFEATURE_VALGRIND_FREYA=%s' % arguments.valgrind_freya)
+    build_options.append('-DFEATURE_MODULE_REGISTER=%s' % arguments.module_registration)
 
     return build_options
 

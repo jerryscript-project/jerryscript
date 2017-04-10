@@ -32,6 +32,7 @@ set(FEATURE_SNAPSHOT_SAVE    OFF     CACHE BOOL   "Enable saving snapshot files?
 set(FEATURE_SYSTEM_ALLOCATOR OFF     CACHE BOOL   "Enable system allocator?")
 set(FEATURE_VALGRIND         OFF     CACHE BOOL   "Enable Valgrind support?")
 set(FEATURE_VALGRIND_FREYA   OFF     CACHE BOOL   "Enable Valgrind-Freya support?")
+set(FEATURE_MODULE_REGISTER  OFF     CACHE BOOL   "Enable module registration support?")
 set(MEM_HEAP_SIZE_KB         "512"   CACHE STRING "Size of memory heap, in kilobytes")
 
 if(FEATURE_SYSTEM_ALLOCATOR)
@@ -54,6 +55,7 @@ message(STATUS "FEATURE_SNAPSHOT_SAVE     " ${FEATURE_SNAPSHOT_SAVE})
 message(STATUS "FEATURE_SYSTEM_ALLOCATOR  " ${FEATURE_SYSTEM_ALLOCATOR})
 message(STATUS "FEATURE_VALGRIND          " ${FEATURE_VALGRIND})
 message(STATUS "FEATURE_VALGRIND_FREYA    " ${FEATURE_VALGRIND_FREYA})
+message(STATUS "FEATURE_MODULE_REGISTER   " ${FEATURE_MODULE_REGISTER})
 message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
 
 # Include directories
@@ -239,6 +241,11 @@ endif()
 if(FEATURE_VALGRIND_FREYA)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND_FREYA)
   set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+endif()
+
+# Module registration
+if(FEATURE_MODULE_REGISTER)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_MODULE_REGISTER)
 endif()
 
 # Size of heap

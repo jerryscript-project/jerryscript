@@ -34,6 +34,16 @@
  */
 #define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
 
+#ifndef JERRY_CONTEXT_MODULE_COUNT
+#define JERRY_CONTEXT_MODULE_COUNT 8
+#endif /* ndef JERRY_CONTEXT_MODULE_COUNT */
+
+typedef struct
+{
+  void (*deleter)(void *);
+  void *data;
+} jerry_module_data_t;
+
 /**
  * JerryScript context
  *
@@ -103,6 +113,9 @@ typedef struct
   uint8_t valgrind_freya_mempool_request; /**< Tells whether a pool manager
                                            *   allocator request is in progress */
 #endif /* JERRY_VALGRIND_FREYA */
+#ifdef JERRY_MODULE_REGISTER
+  jerry_module_data_t module_data[JERRY_CONTEXT_MODULE_COUNT];
+#endif /* JERRY_MODULE_REGISTER */
 } jerry_context_t;
 
 /**

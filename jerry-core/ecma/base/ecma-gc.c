@@ -354,6 +354,47 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 } /* ecma_gc_mark */
 
 /**
+ * Free the native handle/pointer by calling its free callback
+ */
+static void
+ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
+                             lit_magic_string_id_t id) /**< identifier of internal property */
+{
+  JERRY_ASSERT (property_p != NULL);
+
+  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+                || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+
+  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  ecma_external_pointer_t native_p;
+  ecma_external_pointer_t free_cb;
+  void *package_p;
+
+  package_p = ECMA_GET_INTERNAL_VALUE_POINTER (void, value_p->value);
+
+  if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
+  {
+    native_p = ((ecma_native_handle_package_t *) package_p)->handle_p;
+    free_cb = ((ecma_native_handle_package_t *) package_p)->free_cb;
+
+    if ((jerry_object_free_callback_t) free_cb != NULL)
+    {
+      ((jerry_object_free_callback_t) free_cb) ((uintptr_t) native_p);
+    }
+  }
+  else
+  {
+    native_p = ((ecma_native_pointer_package_t *) package_p)->native_p;
+    free_cb = *(ecma_external_pointer_t *) (((ecma_native_pointer_package_t *) package_p)->info_p);
+
+    if ((jerry_object_native_free_callback_t) free_cb != NULL)
+    {
+      ((jerry_object_native_free_callback_t) free_cb) ((void *) native_p);
+    }
+  }
+} /* ecma_gc_free_native_pointer */
+
+/**
  * Free specified object
  */
 void
@@ -364,28 +405,6 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
                 && object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
 
   bool obj_is_not_lex_env = !ecma_is_lexical_environment (object_p);
-
-  if (obj_is_not_lex_env)
-  {
-    /* if the object provides free callback, invoke it with handle stored in the object */
-
-    ecma_external_pointer_t freecb_p;
-    ecma_external_pointer_t native_p;
-
-    bool is_retrieved = ecma_get_external_pointer_value (object_p,
-                                                         LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK,
-                                                         &freecb_p);
-
-    if (is_retrieved && ((jerry_object_free_callback_t) freecb_p) != NULL)
-    {
-      is_retrieved = ecma_get_external_pointer_value (object_p,
-                                                      LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
-                                                      &native_p);
-      JERRY_ASSERT (is_retrieved);
-
-      jerry_dispatch_object_free_callback (freecb_p, native_p);
-    }
-  }
 
   if (obj_is_not_lex_env
       || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
@@ -410,9 +429,20 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
 
       for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
       {
+        ecma_property_t *property_p = (ecma_property_t *) (prop_iter_p->types + i);
+        jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
+
+        /* Call the native's free callback. */
+        if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
+            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
+                || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
+        {
+          ecma_gc_free_native_pointer (property_p, (lit_magic_string_id_t) name_cp);
+        }
+
         if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
         {
-          ecma_free_property (object_p, prop_pair_p->names_cp[i], prop_iter_p->types + i);
+          ecma_free_property (object_p, name_cp, property_p);
         }
       }
 

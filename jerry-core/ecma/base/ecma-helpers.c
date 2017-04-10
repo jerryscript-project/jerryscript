@@ -731,9 +731,9 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING)
       {
         if (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-            || name_cp == LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK)
+            || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER)
         {
-          ecma_free_external_pointer_in_property (property_p);
+          ecma_free_native_package_property (property_p, (lit_magic_string_id_t) name_cp);
           break;
         }
       }

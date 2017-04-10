@@ -196,6 +196,28 @@ typedef int32_t ecma_integer_value_t;
 typedef uintptr_t ecma_external_pointer_t;
 
 /**
+ * Representation for native handle package.
+ *
+ * Note: It is for the deprecated api:
+ *       jerry_get_object_native_handle and jerry_set_object_native_handle
+ */
+
+typedef struct
+{
+  ecma_external_pointer_t handle_p; /**< points to the external native object */
+  ecma_external_pointer_t free_cb; /**< free callback of the native handle */
+} ecma_native_handle_package_t;
+
+/**
+ * Representation of the native pointer package.
+ */
+typedef struct
+{
+  ecma_external_pointer_t native_p; /**< points to the external native object */
+  ecma_external_pointer_t info_p; /**< type info of the native pointer */
+} ecma_native_pointer_package_t;
+
+/**
  * Special property identifiers.
  */
 typedef enum

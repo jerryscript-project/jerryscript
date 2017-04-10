@@ -1902,7 +1902,9 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
 } /* jerry_set_prototype */
 
 /**
- * Get native handle, associated with specified object
+ * Get native handle, associated with specified object.
+ *
+ * Note: This API is deprecated, please use jerry_get_object_native_pointer instaed.
  *
  * @return true - if there is an associated handle (handle is returned through out_handle_p),
  *         false - otherwise
@@ -1913,22 +1915,53 @@ jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get 
 {
   jerry_assert_api_available ();
 
-  uintptr_t handle_value;
+  ecma_native_handle_package_t *package_p;
 
-  bool does_exist = ecma_get_external_pointer_value (ecma_get_object_from_value (obj_val),
-                                                     LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
-                                                     &handle_value);
+  bool does_exist = ecma_get_native_package_value (ecma_get_object_from_value (obj_val),
+                                                   LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
+                                                   (void **) &package_p);
 
   if (does_exist)
   {
-    *out_handle_p = handle_value;
+    *out_handle_p = package_p->handle_p;
   }
 
   return does_exist;
 } /* jerry_get_object_native_handle */
 
 /**
- * Set native handle and an optional free callback for the specified object
+ * Get native pointer and its type information, associated with specified object.
+ *
+ * @return true - if there is an associated pointer (pointer is returned through out_handle_p),
+ *         false - otherwise
+ */
+bool
+jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get native pointer from */
+                                 void **out_native_p, /**< [out] native pointer */
+                                 const jerry_object_native_info_t **out_info_p) /**< [out] the type info
+                                                                                     *  of the native pointer */
+{
+  jerry_assert_api_available ();
+
+  ecma_native_pointer_package_t *package_p;
+
+  bool does_exist = ecma_get_native_package_value (ecma_get_object_from_value (obj_val),
+                                                   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER,
+                                                   (void **) &package_p);
+
+  if (does_exist)
+  {
+    *out_native_p = (void *) package_p->native_p;
+    *out_info_p = (const jerry_object_native_info_t *) package_p->info_p;
+  }
+
+  return does_exist;
+} /* jerry_get_object_native_pointer */
+
+/**
+ * Set native handle and an optional free callback for the specified object.
+ *
+ * Note: This API is deprecated, please use jerry_set_object_native_pointer instaed.
  *
  * Note:
  *      If native handle was already set for the object, its value is updated.
@@ -1948,14 +1981,39 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
 
-  ecma_create_external_pointer_property (object_p,
-                                         LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE,
-                                         handle_p);
-
-  ecma_create_external_pointer_property (object_p,
-                                         LIT_INTERNAL_MAGIC_STRING_FREE_CALLBACK,
-                                         (uintptr_t) freecb_p);
+  ecma_create_native_handle_property (object_p,
+                                      handle_p,
+                                      (ecma_external_pointer_t) freecb_p);
 } /* jerry_set_object_native_handle */
+
+/**
+ * Set native pointer and an optional type info for the specified object.
+ *
+ *
+ * Note:
+ *      If native pointer was already set for the object, its value is updated.
+ *
+ * Note:
+ *      If a non-NULL free callback is specified in the native type info,
+ *      it will be called by the garbage collector when the object is freed.
+ *      The type info is always overwrites the previous value, so passing
+ *      a NULL value deletes the current type info.
+ */
+void
+jerry_set_object_native_pointer (const jerry_value_t obj_val, /**< object to set native pointer in */
+                                 void *native_p, /**< native pointer */
+                                 const jerry_object_native_info_t *info_p) /**< object's native type info */
+{
+  jerry_assert_api_available ();
+
+  ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
+
+  ecma_create_native_pointer_property (object_p,
+                                       (ecma_external_pointer_t) native_p,
+                                       (ecma_external_pointer_t) info_p);
+} /* jerry_set_object_native_pointer */
+
+
 
 /**
  * Applies the given function to the every property in the object.

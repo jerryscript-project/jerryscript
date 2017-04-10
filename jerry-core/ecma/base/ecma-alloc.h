@@ -97,18 +97,6 @@ ecma_getter_setter_pointers_t *ecma_alloc_getter_setter_pointers (void);
  */
 void ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_setter_pointers_p);
 
-/**
-* Allocate memory for external pointer
-*
-* @return pointer to allocated memory
-*/
-ecma_external_pointer_t *ecma_alloc_external_pointer (void);
-
-/**
-* Dealloc memory from external pointer
-*/
-void ecma_dealloc_external_pointer (ecma_external_pointer_t *external_pointer_p);
-
 /*
  * Allocate memory for extended object
  *

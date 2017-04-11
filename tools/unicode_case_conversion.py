@@ -15,8 +15,6 @@
 # limitations under the License.
 
 from __future__ import print_function
-from settings import PROJECT_DIR
-from unicode_c_source import Source
 
 import argparse
 import csv
@@ -24,6 +22,9 @@ import itertools
 import os
 import sys
 import warnings
+
+from settings import PROJECT_DIR
+from c_source_helper import UniCodeSource
 
 CONVERSIONS_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-conversions.inc.h')
 
@@ -69,7 +70,7 @@ def main():
     lower_case_conversions = conv_tables.get_lower_case_conversions()
     upper_case_conversions = conv_tables.get_upper_case_conversions()
 
-    c_source = Source(script_args.c_source)
+    c_source = UniCodeSource(script_args.c_source)
 
     unicode_file = os.path.basename(script_args.unicode_data)
     spec_casing_file = os.path.basename(script_args.special_casing)
@@ -395,8 +396,7 @@ def extract_character_pair_ranges(letter_case, reverse_letter_case):
             in_range = False
 
     # Remove all founded case mapping from the conversion tables after the scanning method
-    for idx in range(len(start_points)):
-        letter_id = start_points[idx]
+    for idx, letter_id in enumerate(start_points):
         conv_length = lengths[idx]
 
         for incr in range(0, conv_length, 2):

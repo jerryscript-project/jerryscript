@@ -66,7 +66,7 @@ clean:
 	rm -rf .build/$(BOARD)
 
 js2c: js/main.js js/flash_leds.js
-	python ../tools/js2c.py --ignore pins.js
+	python ../../tools/js2c.py --ignore pins.js
 
 source/pins.cpp:
 	python tools/generate_pins.py ${BOARD}

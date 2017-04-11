@@ -92,7 +92,7 @@ jerry:
 
 
 js2c:
-	cd targets/esp8266; ../tools/js2c.py
+	cd targets/esp8266; ../../tools/js2c.py
 
 
 mkbin:

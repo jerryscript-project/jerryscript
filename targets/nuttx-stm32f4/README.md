@@ -85,12 +85,12 @@ make
 
 Connect Mini-USB for power supply and connect Micro-USB for `NSH` console.
 
-To configure `stlink` utility for flashing, follow the instructions [here](https://github.com/texane/stlink#build-from-sources).
+To configure `stlink` utility for flashing, follow the instructions in the official [Stlink repository](https://github.com/texane/stlink).
 
 To flash,
 ```
 # assuming you are in nuttx folder
-sudo ../stlink/build/st-flash write nuttx.bin 0x8000000
+sudo ../stlink/build/Release/st-flash write nuttx.bin 0x8000000
 ```
 
 ### Running JerryScript

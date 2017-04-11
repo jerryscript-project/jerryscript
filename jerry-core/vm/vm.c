@@ -64,7 +64,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 #ifdef JERRY_CPOINTER_32_BIT
       bool limit_check = (int_value >= 0);
 #else /* !JERRY_CPOINTER_32_BIT */
-      bool limit_check = (int_value >= 0 && int_value < (UINT16_MAX + 1));
+      bool limit_check = (int_value >= 0 && int_value < (ecma_integer_value_t) (UINT16_MAX + 1));
 #endif
 
       if (limit_check)

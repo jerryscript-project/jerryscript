@@ -167,6 +167,22 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 } /* jerry_init */
 
 /**
+ * Initialize Jerry engine with custom user context.
+ */
+void
+jerry_init_with_user_context (jerry_init_flag_t flags,  /**< combination of Jerry flags */
+                              jerry_user_context_init_cb init_cb, /**< callback to call to create the user context or
+                                                                    *  NULL, in which case no user context will be
+                                                                    *  created */
+                              jerry_user_context_deinit_cb deinit_cb) /**< callback to call to free the user context or
+                                                                        *  NULL if it does not need to be freed */
+{
+  jerry_init (flags);
+  JERRY_CONTEXT (user_context_p) = (init_cb ? init_cb () : NULL);
+  JERRY_CONTEXT (user_context_deinit_cb) = deinit_cb;
+} /* jerry_init_with_user_context */
+
+/**
  * Terminate Jerry engine
  */
 void
@@ -185,7 +201,23 @@ jerry_cleanup (void)
 
   jmem_finalize ();
   jerry_make_api_unavailable ();
+
+  if (JERRY_CONTEXT (user_context_deinit_cb))
+  {
+    JERRY_CONTEXT (user_context_deinit_cb) (JERRY_CONTEXT (user_context_p));
+  }
 } /* jerry_cleanup */
+
+/**
+ * Retrieve user context.
+ *
+ * @return the user-provided context-specific pointer
+ */
+void *
+jerry_get_user_context (void)
+{
+  return JERRY_CONTEXT (user_context_p);
+} /* jerry_get_user_context */
 
 /**
  * Register external magic string array

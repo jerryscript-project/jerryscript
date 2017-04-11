@@ -61,6 +61,8 @@ typedef struct
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
+  void *user_context_p; /**< user-provided context-specific pointer */
+  jerry_user_context_deinit_cb user_context_deinit_cb; /**< user-provided deleter for context-specific pointer */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */

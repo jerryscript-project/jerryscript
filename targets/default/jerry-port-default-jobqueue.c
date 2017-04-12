@@ -19,7 +19,7 @@
 #include "jmem.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+#ifdef JERRY_PORT_ENABLE_JOBQUEUE
 
 typedef struct jerry_port_queueitem_t jerry_port_queueitem_t;
 
@@ -34,7 +34,7 @@ struct jerry_port_queueitem_t
 };
 
 /**
- * Description of a job queue (FIFO)
+ * Description of a job queue (FIFO).
  */
 typedef struct
 {
@@ -45,7 +45,7 @@ typedef struct
 static jerry_port_jobqueue_t queue;
 
 /**
- * Initialize the job queue
+ * Initialize the job queue.
  */
 void jerry_port_jobqueue_init (void)
 {
@@ -54,7 +54,7 @@ void jerry_port_jobqueue_init (void)
 } /* jerry_port_jobqueue_init */
 
 /**
- * Enqueue a job
+ * Enqueue a job.
  */
 void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, /**< the handler for the job */
                                   void *job_p) /**< the job */
@@ -62,19 +62,15 @@ void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, /**< the handler 
   jerry_port_queueitem_t *item_p = jmem_heap_alloc_block (sizeof (jerry_port_queueitem_t));
   item_p->job_p = job_p;
   item_p->handler = handler;
+  item_p->next_p = NULL;
 
   if (queue.head_p == NULL)
   {
-    JERRY_ASSERT (queue.tail_p == NULL);
-
     queue.head_p = item_p;
-    item_p->next_p = NULL;
     queue.tail_p = item_p;
 
     return;
   }
-
-  JERRY_ASSERT (queue.tail_p != NULL);
 
   queue.tail_p->next_p = item_p;
   queue.tail_p = item_p;
@@ -82,20 +78,17 @@ void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, /**< the handler 
 
 /**
  * Dequeue and get the job.
- * @return pointer to jerry_port_queueitem_t
- *         It should be freed with jmem_heap_free_block
+ *
+ * @return pointer to jerry_port_queueitem_t.
+ *         It should be freed with jmem_heap_free_block.
  */
 static jerry_port_queueitem_t *
 jerry_port_jobqueue_dequeue (void)
 {
   if (queue.head_p == NULL)
   {
-    JERRY_ASSERT (queue.tail_p == NULL);
-
     return NULL;
   }
-
-  JERRY_ASSERT (queue.tail_p != NULL);
 
   jerry_port_queueitem_t *item_p = queue.head_p;
   queue.head_p = queue.head_p->next_p;
@@ -105,10 +98,11 @@ jerry_port_jobqueue_dequeue (void)
 
 /**
  * Start the jobqueue.
- * @return jerry value
+ *
+ * @return jerry value.
  *         If exception happens in the handler, stop the queue
  *         and return the exception.
- *         Otherwise, return undefined
+ *         Otherwise, return undefined.
  */
 jerry_value_t
 jerry_port_jobqueue_run (void)
@@ -138,4 +132,4 @@ jerry_port_jobqueue_run (void)
   }
 } /* jerry_port_jobqueue_run */
 
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#endif /* JERRY_PORT_ENABLE_JOBQUEUE */

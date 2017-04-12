@@ -37,10 +37,10 @@ bool jerry_port_default_is_abort_on_fail (void);
 jerry_log_level_t jerry_port_default_get_log_level (void);
 void jerry_port_default_set_log_level (jerry_log_level_t level);
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+#ifdef JERRY_PORT_ENABLE_JOBQUEUE
 void jerry_port_jobqueue_init (void);
 jerry_value_t jerry_port_jobqueue_run (void);
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
 
 /**
  * @}

@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_JOB_QUEUE_H
-#define ECMA_JOB_QUEUE_H
+var obj = {name:""};
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+var a = new Promise(function(f, r){
+  obj.name = obj.name + "a";
+  f(obj);
+});
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmajobqueue ECMA Job Queue related routines
- * @{
- */
+a.then(function(x) {
+  x.name = x.name + "b";
+  return x;
+}).then(null, function(x) {
+  x.name = x.name + "c"; // unreachable
+  return x;
+}).then(function(x) {
+  x.name = x.name + "d";
+  assert (obj.name === "aebd");
+});
 
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
-void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
+obj.name = obj.name + "e";
 
-/**
- * @}
- * @}
- */
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-#endif /* !ECMA_JOB_QUEUE_H */
+assert (obj.name === "ae")

@@ -34,6 +34,9 @@
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 #include "ecma-typedarray-object.h"
 #endif
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+#include "ecma-promise-object.h"
+#endif
 
 #define JERRY_INTERNAL
 #include "jerry-internal.h"
@@ -177,7 +180,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
       if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_STRING_CONTAINER_MAGIC_STRING
-          && property_pair_p->names_cp[index] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+          && property_pair_p->names_cp[index] >= LIT_NEED_MARK_MAGIC_STRING__COUNT)
       {
         break;
       }
@@ -260,6 +263,41 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     switch (ecma_get_object_type (object_p))
     {
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+      case ECMA_OBJECT_TYPE_CLASS:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+        if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_PROMISE_UL)
+        {
+          /* Mark promise result. */
+          ecma_value_t result = ext_object_p->u.class_prop.u.value;
+
+          if (ecma_is_value_object (result))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (result), true);
+          }
+
+          /* Mark all reactions. */
+          ecma_collection_iterator_t iter;
+          ecma_collection_iterator_init (&iter, ((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
+
+          while (ecma_collection_iterator_next (&iter))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p), true);
+          }
+
+          ecma_collection_iterator_init (&iter, ((ecma_promise_object_t *) ext_object_p)->reject_reactions);
+
+          while (ecma_collection_iterator_next (&iter))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p), true);
+          }
+        }
+
+        break;
+      }
+#endif /*! CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
       case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -274,14 +312,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             ecma_gc_set_object_visited (lex_env_p, true);
             break;
           }
-  #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
           {
             ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p), true);
             break;
           }
-  #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           default:
           {
             JERRY_UNREACHABLE ();
@@ -528,7 +566,18 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
           ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, size);
           return;
         }
+
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+        case LIT_MAGIC_STRING_PROMISE_UL:
+        {
+          ecma_free_value_if_not_object (ext_object_p->u.class_prop.u.value);
+          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->fulfill_reactions, false);
+          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->reject_reactions, false);
+          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, sizeof (ecma_promise_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
         default:
         {
           JERRY_UNREACHABLE ();

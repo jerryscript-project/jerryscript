@@ -13,24 +13,4 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_JOB_QUEUE_H
-#define ECMA_JOB_QUEUE_H
-
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmajobqueue ECMA Job Queue related routines
- * @{
- */
-
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
-void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
-
-/**
- * @}
- * @}
- */
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-#endif /* !ECMA_JOB_QUEUE_H */
+assert (Promise.prototype.length === 1);

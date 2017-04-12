@@ -13,24 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_JOB_QUEUE_H
-#define ECMA_JOB_QUEUE_H
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+/* Object properties:
+ *  (property name, object pointer getter) */
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmajobqueue ECMA Job Queue related routines
- * @{
- */
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
+              ECMA_BUILTIN_ID_PROMISE,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
-void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
+              1,
+              ECMA_PROPERTY_FLAG_WRITABLE)
 
-/**
- * @}
- * @}
- */
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-#endif /* !ECMA_JOB_QUEUE_H */
+ROUTINE (LIT_MAGIC_STRING_THEN, ecma_builtin_promise_prototype_then, 2, 2)
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

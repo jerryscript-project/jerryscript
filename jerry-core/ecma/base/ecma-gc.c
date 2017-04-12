@@ -354,7 +354,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 } /* ecma_gc_mark */
 
 /**
- * Free the native handle/pointer by calling its free callback
+ * Free the native handle/pointer by calling its free callback.
  */
 static void
 ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
@@ -366,36 +366,32 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-  ecma_external_pointer_t native_p;
-  ecma_external_pointer_t free_cb;
-  void *package_p;
+  ecma_native_pointer_t *native_pointer_p;
 
-  package_p = ECMA_GET_INTERNAL_VALUE_POINTER (void, value_p->value);
+  native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
+                                                      value_p->value);
 
   if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
   {
-    native_p = ((ecma_native_handle_package_t *) package_p)->handle_p;
-    free_cb = ((ecma_native_handle_package_t *) package_p)->free_cb;
-
-    if ((jerry_object_free_callback_t) free_cb != NULL)
+    if (native_pointer_p->info_p != NULL)
     {
-      ((jerry_object_free_callback_t) free_cb) ((uintptr_t) native_p);
+      ecma_external_pointer_t freecb_p = (ecma_external_pointer_t) native_pointer_p->info_p;
+      ((jerry_object_free_callback_t) freecb_p) ((uintptr_t) native_pointer_p->data_p);
     }
   }
   else
   {
-    native_p = ((ecma_native_pointer_package_t *) package_p)->native_p;
-    free_cb = *(ecma_external_pointer_t *) (((ecma_native_pointer_package_t *) package_p)->info_p);
-
-    if ((jerry_object_native_free_callback_t) free_cb != NULL)
+    if (native_pointer_p->info_p != NULL)
     {
-      ((jerry_object_native_free_callback_t) free_cb) ((void *) native_p);
+      const jerry_object_native_info_t *native_info_p = (const jerry_object_native_info_t *) native_pointer_p->info_p;
+
+      native_info_p->free_cb (native_pointer_p->data_p);
     }
   }
 } /* ecma_gc_free_native_pointer */
 
 /**
- * Free specified object
+ * Free specified object.
  */
 void
 ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */

@@ -370,7 +370,7 @@ ecma_make_integer_value (ecma_integer_value_t integer_value) /**< integer number
 {
   JERRY_ASSERT (ECMA_IS_INTEGER_NUMBER (integer_value));
 
-  return ((ecma_value_t) (integer_value << ECMA_DIRECT_SHIFT)) | ECMA_DIRECT_TYPE_INTEGER_VALUE;
+  return (((ecma_value_t) integer_value) << ECMA_DIRECT_SHIFT) | ECMA_DIRECT_TYPE_INTEGER_VALUE;
 } /* ecma_make_integer_value */
 
 /**

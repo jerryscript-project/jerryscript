@@ -51,6 +51,10 @@ long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int 
 void __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
+#ifdef ENABLE_INIT_FINI
+  libc_fini_array ();
+#endif /* ENABLE_INIT_FINI */
+
   syscall_1 (SYSCALL_NO (close), (long int) stdin);
   syscall_1 (SYSCALL_NO (close), (long int) stdout);
   syscall_1 (SYSCALL_NO (close), (long int) stderr);

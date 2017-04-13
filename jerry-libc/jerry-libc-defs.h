@@ -27,5 +27,11 @@
 #define __attr_used___     __attribute__((used))
 #define __attr_noreturn___ __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
+#define __attr_weak___     __attribute__((weak))
+
+#ifdef ENABLE_INIT_FINI
+void libc_init_array (void);
+void libc_fini_array (void);
+#endif /* ENABLE_INIT_FINI */
 
 #endif /* !DEFS_H */

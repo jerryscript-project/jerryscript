@@ -92,7 +92,19 @@
   pop %edi;               \
   ret;
 
+#ifdef ENABLE_INIT_FINI
 /*
+ * call libc_init_array
+ */
+#define _INIT             \
+  call libc_init_array;
+#else /* !ENABLE_INIT_FINI */
+#define _INIT
+#endif /* ENABLE_INIT_FINI */
+
+/*
+ * call libc_init_array
+ *
  * push argv (%esp + 4)
  * push argc ([%esp + 0x4])
  *
@@ -103,20 +115,22 @@
  *
  * infinite loop
  */
-#define _START             \
-   mov %esp, %eax;         \
-   add $4, %eax;           \
-   push %eax;              \
-   mov 0x4 (%esp), %eax;   \
-   push %eax;              \
-                           \
-   call main;              \
-                           \
-   push %eax;              \
-   call exit;              \
-                           \
-   1:                      \
-   jmp 1b
+#define _START            \
+  _INIT;                  \
+                          \
+  mov %esp, %eax;         \
+  add $4, %eax;           \
+  push %eax;              \
+  mov 0x4 (%esp), %eax;   \
+  push %eax;              \
+                          \
+  call main;              \
+                          \
+  push %eax;              \
+  call exit;              \
+                          \
+  1:                      \
+  jmp 1b;
 
 /*
  * setjmp

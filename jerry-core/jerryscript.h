@@ -180,6 +180,16 @@ typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_na
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
 /**
+ * Function type for user context allocation
+ */
+typedef void *(*jerry_user_context_init_cb) (void);
+
+/**
+ * Function type for user context deallocation
+ */
+typedef void (*jerry_user_context_deinit_cb) (void *user_context_p);
+
+/**
  * Type information of a native pointer.
  */
 typedef struct
@@ -191,11 +201,15 @@ typedef struct
  * General engine functions.
  */
 void jerry_init (jerry_init_flag_t flags);
+void jerry_init_with_user_context (jerry_init_flag_t flags,
+                                   jerry_user_context_init_cb init_cb,
+                                   jerry_user_context_deinit_cb deinit_cb);
 void jerry_cleanup (void);
 void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
                                    const jerry_length_t *str_lengths_p);
 void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 void jerry_gc (void);
+void *jerry_get_user_context (void);
 
 /**
  * Parser and executor functions.

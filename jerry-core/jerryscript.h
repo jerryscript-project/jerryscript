@@ -85,6 +85,7 @@ typedef enum
   JERRY_FEATURE_REGEXP_DUMP, /**< regexp byte-code dumps */
   JERRY_FEATURE_SNAPSHOT_SAVE, /**< saving snapshot files */
   JERRY_FEATURE_SNAPSHOT_EXEC, /**< executing snapshot files */
+  JERRY_FEATURE_DEBUGGER, /**< debugging */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 

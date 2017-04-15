@@ -483,7 +483,16 @@ main (int argc,
     }
     else if (!strcmp ("--start-debug-server", argv[i]))
     {
-      flags |= JERRY_INIT_DEBUGGER;
+      if (jerry_is_feature_enabled (JERRY_FEATURE_DEBUGGER))
+      {
+        flags |= JERRY_INIT_DEBUGGER;
+      }
+      else
+      {
+        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_WARNING);
+        jerry_port_log (JERRY_LOG_LEVEL_WARNING,
+                        "Ignoring 'start-debug-server' option because this feature is disabled!\n");
+      }
     }
     else if (!strcmp ("--save-snapshot-for-global", argv[i])
              || !strcmp ("--save-snapshot-for-eval", argv[i]))

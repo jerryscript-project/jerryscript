@@ -74,6 +74,8 @@ def get_arguments():
                         help='enable the jerry debugger (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-debugger-port', metavar='N', action='store', type=int, default=5001,
                         help='add custom port number (default: %(default)s)')
+    parser.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='build jerry-ext (default: %(default)s)')
     parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='build and use jerry-libc (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
@@ -145,6 +147,7 @@ def generate_build_options(arguments):
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
     build_options.append('-DJERRY_CMDLINE_MINIMAL=%s' % arguments.jerry_cmdline_minimal)
     build_options.append('-DJERRY_PORT_DEFAULT=%s' % arguments.jerry_port_default)
+    build_options.append('-DJERRY_EXT=%s' % arguments.jerry_ext)
     build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc)
     build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm)
     build_options.append('-DFEATURE_JS_PARSER=%s' % arguments.js_parser)

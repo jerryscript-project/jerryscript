@@ -40,6 +40,7 @@ LICENSE = re.compile(
 INCLUDE_DIRS = [
     'cmake',
     'jerry-core',
+    'jerry-ext',
     'jerry-libc',
     'jerry-libm',
     'jerry-main',

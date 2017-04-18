@@ -17,7 +17,7 @@ Key characteristics of JerryScript:
 Additional information can be found on our [project page](http://jerryscript.net) and [Wiki](https://github.com/jerryscript-project/jerryscript/wiki).
 
 IRC channel: #jerryscript on [freenode](https://freenode.net)  
-Mailing list: jerryscript-dev@gna.org, you can subscribe [here](https://mail.gna.org/listinfo/jerryscript-dev) and access the mailing list archive [here](https://mail.gna.org/public/jerryscript-dev).
+Mailing list: jerryscript-dev@groups.io, you can subscribe [here](https://groups.io/g/jerryscript-dev) and access the mailing list archive [here](https://groups.io/g/jerryscript-dev/topics).
 
 ## Quick Start
 ### Getting the sources

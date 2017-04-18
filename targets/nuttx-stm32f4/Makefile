@@ -48,7 +48,7 @@ jerry_core_allin.c:
 	echo '#include "jerryscript/jerry-libm/nextafter.c"' > jerry_core_allin.c
 	find $(ROOT_DIR)/jerryscript/jerry-core -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' >> jerry_core_allin.c
 
-ASRCS =
+ASRCS = setjmp.S
 CSRCS = jerry_core_allin.c
 MAINSRC = jerry_main.c
 

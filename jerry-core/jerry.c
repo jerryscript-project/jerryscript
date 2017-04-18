@@ -618,6 +618,9 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
           || feature == JERRY_FEATURE_SNAPSHOT_EXEC
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#ifdef JERRY_DEBUGGER
+          || feature == JERRY_FEATURE_DEBUGGER
+#endif /* JERRY_DEBUGGER */
           );
 } /* jerry_is_feature_enabled */
 

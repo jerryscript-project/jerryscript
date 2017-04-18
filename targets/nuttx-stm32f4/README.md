@@ -56,7 +56,6 @@ We must set the following options:
 
 * Change `Build Setup -> Build Host Platform` from _Windows_ to _Linux_
 * Enable `System Type -> FPU support`
-* Enable `Library Routines -> Standard Math library`
 * Enable `Application Configuration -> Interpreters -> JerryScript`
 
 If you get `kconfig-mconf: not found` error when you run `make menuconfig` you may have to install kconfig-frontends:

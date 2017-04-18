@@ -111,23 +111,23 @@
   }
 
 /* ecma-helpers-value.c */
-bool ecma_is_value_direct (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_simple (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_empty (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_undefined (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_null (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_boolean (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_true (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_false (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_found (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_array_hole (ecma_value_t value) __attr_pure___;
+bool ecma_is_value_direct (ecma_value_t value) __attr_const___;
+bool ecma_is_value_simple (ecma_value_t value) __attr_const___;
+bool ecma_is_value_empty (ecma_value_t value) __attr_const___;
+bool ecma_is_value_undefined (ecma_value_t value) __attr_const___;
+bool ecma_is_value_null (ecma_value_t value) __attr_const___;
+bool ecma_is_value_boolean (ecma_value_t value) __attr_const___;
+bool ecma_is_value_true (ecma_value_t value) __attr_const___;
+bool ecma_is_value_false (ecma_value_t value) __attr_const___;
+bool ecma_is_value_found (ecma_value_t value) __attr_const___;
+bool ecma_is_value_array_hole (ecma_value_t value) __attr_const___;
 
-bool ecma_is_value_integer_number (ecma_value_t value) __attr_pure___;
-bool ecma_are_values_integer_numbers (ecma_value_t first_value, ecma_value_t second_value) __attr_pure___;
-bool ecma_is_value_float_number (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_number (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_string (ecma_value_t value) __attr_pure___;
-bool ecma_is_value_object (ecma_value_t value) __attr_pure___;
+bool ecma_is_value_integer_number (ecma_value_t value) __attr_const___;
+bool ecma_are_values_integer_numbers (ecma_value_t first_value, ecma_value_t second_value) __attr_const___;
+bool ecma_is_value_float_number (ecma_value_t value) __attr_const___;
+bool ecma_is_value_number (ecma_value_t value) __attr_const___;
+bool ecma_is_value_string (ecma_value_t value) __attr_const___;
+bool ecma_is_value_object (ecma_value_t value) __attr_const___;
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
@@ -138,17 +138,17 @@ ecma_value_t ecma_make_nan_value (void);
 ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
-ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p);
-ecma_value_t ecma_make_object_value (const ecma_object_t *object_p);
-ecma_value_t ecma_make_error_value (ecma_value_t value);
-ecma_value_t ecma_make_error_obj_value (const ecma_object_t *object_p);
-ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t value) __attr_pure___;
+ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p) __attr_pure___;
+ecma_value_t ecma_make_object_value (const ecma_object_t *object_p) __attr_pure___;
+ecma_value_t ecma_make_error_value (ecma_value_t value) __attr_const___;
+ecma_value_t ecma_make_error_obj_value (const ecma_object_t *object_p) __attr_pure___;
+ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t value) __attr_const___;
 ecma_number_t ecma_get_float_from_value (ecma_value_t value) __attr_pure___;
 ecma_number_t ecma_get_number_from_value (ecma_value_t value) __attr_pure___;
 ecma_string_t *ecma_get_string_from_value (ecma_value_t value) __attr_pure___;
 ecma_object_t *ecma_get_object_from_value (ecma_value_t value) __attr_pure___;
-ecma_value_t ecma_get_value_from_error_value (ecma_value_t value) __attr_pure___;
-ecma_value_t ecma_invert_boolean_value (ecma_value_t value) __attr_pure___;
+ecma_value_t ecma_get_value_from_error_value (ecma_value_t value) __attr_const___;
+ecma_value_t ecma_invert_boolean_value (ecma_value_t value) __attr_const___;
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
 ecma_value_t ecma_copy_value_if_not_object (ecma_value_t value);

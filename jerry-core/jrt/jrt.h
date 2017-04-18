@@ -31,13 +31,13 @@
 #define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
 #define __attr_hot___ __attribute__((hot))
 #ifndef __attr_always_inline___
-# define __attr_always_inline___ __attribute__((always_inline))
+#define __attr_always_inline___ __attribute__((always_inline))
 #endif /* !__attr_always_inline___ */
 #ifndef __attr_const___
-# define __attr_const___ __attribute__((const))
+#define __attr_const___ __attribute__((const))
 #endif /* !__attr_const___ */
 #ifndef __attr_pure___
-# define __attr_pure___ __attribute__((pure))
+#define __attr_pure___ __attribute__((pure))
 #endif /* !__attr_pure___ */
 
 /*

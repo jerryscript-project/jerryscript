@@ -16,6 +16,8 @@
 #ifndef JMEM_H
 #define JMEM_H
 
+#include "jrt.h"
+
 /** \addtogroup mem Memory allocation
  * @{
  *
@@ -143,8 +145,8 @@ void jmem_stats_reset_peak (void);
 void jmem_stats_print (void);
 #endif /* JMEM_STATS */
 
-jmem_cpointer_t jmem_compress_pointer (const void *pointer_p);
-void *jmem_decompress_pointer (uintptr_t compressed_pointer);
+jmem_cpointer_t jmem_compress_pointer (const void *pointer_p) __attr_pure___;
+void *jmem_decompress_pointer (uintptr_t compressed_pointer) __attr_pure___;
 
 /**
  * A free memory callback routine type.

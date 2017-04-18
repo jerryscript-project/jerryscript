@@ -56,7 +56,7 @@ jmem_finalize (void)
  *
  * @return packed pointer
  */
-inline jmem_cpointer_t __attr_always_inline___
+inline jmem_cpointer_t __attr_pure___ __attr_always_inline___
 jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
 {
   JERRY_ASSERT (pointer_p != NULL);
@@ -90,7 +90,7 @@ jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
  *
  * @return unpacked pointer
  */
-inline void * __attr_always_inline___
+inline void * __attr_pure___ __attr_always_inline___
 jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
 {
   JERRY_ASSERT (compressed_pointer != JMEM_CP_NULL);

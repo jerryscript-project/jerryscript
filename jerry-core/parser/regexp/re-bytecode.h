@@ -103,7 +103,7 @@ typedef struct
 re_opcode_t re_get_opcode (uint8_t **bc_p);
 ecma_char_t re_get_char (uint8_t **bc_p);
 uint32_t re_get_value (uint8_t **bc_p);
-uint32_t re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p);
+uint32_t re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p) __attr_pure___;
 
 void re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, re_opcode_t opcode);
 void re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, uint32_t value);

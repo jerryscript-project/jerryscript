@@ -36,6 +36,6 @@ typedef struct
 /**
  * Jerry snapshot format version
  */
-#define JERRY_SNAPSHOT_VERSION (6u)
+#define JERRY_SNAPSHOT_VERSION (7u)
 
 #endif /* !JERRY_SNAPSHOT_H */

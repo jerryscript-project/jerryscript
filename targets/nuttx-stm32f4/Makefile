@@ -30,6 +30,11 @@ CFLAGS += -std=c99 -DJERRY_NDEBUG -DJERRY_JS_PARSER '-DCONFIG_MEM_HEAP_AREA_SIZE
 CFLAGS += -I$(ROOT_DIR)/ $(shell find $(ROOT_DIR)/jerryscript/jerry-core -type d | sed -r -e 's/^/-I/g')
 CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-libm/include
 
+# Fill error messages for builtin error objects
+ifeq ($(CONFIG_JERRYSCRIPT_ERROR_MESSAGES),y)
+	CFLAGS += -DJERRY_ENABLE_ERROR_MESSAGES
+endif
+
 ifeq ($(CONFIG_JERRYSCRIPT_MEM_STATS),y)
 	CFLAGS += -DJMEM_STATS
 endif

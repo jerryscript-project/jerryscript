@@ -34,6 +34,11 @@
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
 /**
+ * Context size of the SYNTAX_ERROR
+ */
+#define SYNTAX_ERROR_CONTEXT_SIZE 2
+
+/**
  * Print usage and available options
  */
 static void
@@ -112,6 +117,199 @@ read_file (const char *file_name, /**< source code */
   *out_size_p = bytes_read;
   return (const uint8_t *) buffer;
 } /* read_file */
+
+/**
+ * Check whether an error is a SyntaxError or not
+ *
+ * @return true - if param is SyntaxError
+ *         false - otherwise
+ */
+static bool
+jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
+{
+  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
+
+  if (!jerry_value_is_object (error_value))
+  {
+    return false;
+  }
+
+  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *)"name");
+  jerry_value_t error_name = jerry_get_property (error_value, prop_name);
+  jerry_release_value (prop_name);
+
+  if (jerry_value_has_error_flag (error_name)
+      || !jerry_value_is_string (error_name))
+  {
+    return false;
+  }
+
+  jerry_size_t err_str_size = jerry_get_string_size (error_name);
+  jerry_char_t err_str_buf[err_str_size];
+
+  jerry_size_t sz = jerry_string_to_char_buffer (error_name, err_str_buf, err_str_size);
+  jerry_release_value (error_name);
+
+  if (sz == 0)
+  {
+    return false;
+  }
+
+  if (!strcmp ((char *) err_str_buf, "SyntaxError"))
+  {
+    return true;
+  }
+
+  return false;
+} /* jerry_value_is_syntax_error */
+
+/**
+ * Convert string into unsigned integer
+ *
+ * @return converted number
+ */
+static uint32_t
+str_to_uint (const char *num_str_p) /**< string to convert */
+{
+  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
+
+  uint32_t result = 0;
+
+  while (*num_str_p != '\0')
+  {
+    assert (*num_str_p >= '0' && *num_str_p <= '9');
+
+    result *= 10;
+    result += (uint32_t) (*num_str_p - '0');
+    num_str_p++;
+  }
+
+  return result;
+} /* str_to_uint */
+
+/**
+ * Print error value
+ */
+static void
+print_unhandled_exception (jerry_value_t error_value, /**< error value */
+                           const jerry_char_t *source_p) /**< source_p */
+{
+  assert (jerry_value_has_error_flag (error_value));
+
+  jerry_value_clear_error_flag (&error_value);
+  jerry_value_t err_str_val = jerry_value_to_string (error_value);
+  jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+  jerry_char_t err_str_buf[256];
+
+  if (err_str_size >= 256)
+  {
+    const char msg[] = "[Error message too long]";
+    err_str_size = sizeof (msg) / sizeof (char) - 1;
+    memcpy (err_str_buf, msg, err_str_size);
+  }
+  else
+  {
+    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    assert (sz == err_str_size);
+    err_str_buf[err_str_size] = 0;
+
+    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES) && jerry_value_is_syntax_error (error_value))
+    {
+      uint32_t err_line = 0;
+      uint32_t err_col = 0;
+
+      /* 1. parse column and line information */
+      for (uint32_t i = 0; i < sz; i++)
+      {
+        if (!strncmp ((char *) (err_str_buf + i), "[line: ", 7))
+        {
+          i += 7;
+
+          char num_str[8];
+          uint32_t j = 0;
+
+          while (i < sz && err_str_buf[i] != ',')
+          {
+            num_str[j] = (char) err_str_buf[i];
+            j++;
+            i++;
+          }
+          num_str[j] = '\0';
+
+          err_line = str_to_uint (num_str);
+
+          if (strncmp ((char *) (err_str_buf + i), ", column: ", 10))
+          {
+            break; /* wrong position info format */
+          }
+
+          i += 10;
+          j = 0;
+
+          while (i < sz && err_str_buf[i] != ']')
+          {
+            num_str[j] = (char) err_str_buf[i];
+            j++;
+            i++;
+          }
+          num_str[j] = '\0';
+
+          err_col = str_to_uint (num_str);
+          break;
+        }
+      } /* for */
+
+      if (err_line != 0 && err_col != 0)
+      {
+        uint32_t curr_line = 1;
+
+        bool is_printing_context = false;
+        uint32_t pos = 0;
+
+        /* 2. seek and print */
+        while (source_p[pos] != '\0')
+        {
+          if (source_p[pos] == '\n')
+          {
+            curr_line++;
+          }
+
+          if (err_line < SYNTAX_ERROR_CONTEXT_SIZE
+              || (err_line >= curr_line
+                  && (err_line - curr_line) <= SYNTAX_ERROR_CONTEXT_SIZE))
+          {
+            /* context must be printed */
+            is_printing_context = true;
+          }
+
+          if (curr_line > err_line)
+          {
+            break;
+          }
+
+          if (is_printing_context)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
+          }
+
+          pos++;
+        }
+
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+
+        while (--err_col)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
+        }
+
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n");
+      }
+    }
+  }
+
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: %s\n", err_str_buf);
+  jerry_release_value (err_str_val);
+} /* print_unhandled_exception */
 
 /**
  * Provide the 'assert' implementation for the engine.
@@ -282,8 +480,6 @@ int jerry_main (int argc, char *argv[])
                                             source_size,
                                             false);
 
-    jmem_heap_free_block ((void*) source_p, source_size);
-
     if (!jerry_value_has_error_flag (ret_value))
     {
       jerry_value_t func_val = ret_value;
@@ -293,8 +489,13 @@ int jerry_main (int argc, char *argv[])
 
     if (jerry_value_has_error_flag (ret_value))
     {
+      print_unhandled_exception (ret_value, source_p);
+      jmem_heap_free_block ((void*) source_p, source_size);
+
       break;
     }
+
+    jmem_heap_free_block ((void*) source_p, source_size);
 
     jerry_release_value (ret_value);
     ret_value = jerry_create_undefined ();
@@ -304,7 +505,6 @@ int jerry_main (int argc, char *argv[])
 
   if (jerry_value_has_error_flag (ret_value))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unhandled exception: Script Error!\n");
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 

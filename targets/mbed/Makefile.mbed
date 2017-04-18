@@ -71,7 +71,7 @@ jerry:
 	cp $(BUILD_DIR)/lib/libjerry-libm.a $(COPYTARGET)/libjerrylibm.a
 
 js2c:
-	cd targets/mbed; ../tools/js2c.py;
+	cd targets/mbed; ../../tools/js2c.py;
 
 yotta:
 	cd targets/mbed; \

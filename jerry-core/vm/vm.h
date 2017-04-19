@@ -223,16 +223,6 @@ typedef enum
 #define VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG 0x4
 
 /**
- * Jump to target offset if input value is logical false.
- */
-#define VM_OC_BRANCH_IF_FALSE_FLAG 0x1
-
-/**
- * Branch optimized for logical and/or opcodes.
- */
-#define VM_OC_LOGICAL_BRANCH_FLAG 0x2
-
-/**
  * Position of "put result" opcode.
  */
 #define VM_OC_PUT_RESULT_SHIFT 10

@@ -1499,31 +1499,78 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
         case VM_OC_BRANCH_IF_TRUE:
-        case VM_OC_BRANCH_IF_FALSE:
-        case VM_OC_BRANCH_IF_LOGICAL_TRUE:
-        case VM_OC_BRANCH_IF_LOGICAL_FALSE:
         {
-          uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
           ecma_value_t value = *(--stack_top_p);
 
-          bool boolean_value = ecma_op_to_boolean (value);
-
-          if (opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG)
-          {
-            boolean_value = !boolean_value;
-          }
-
-          if (boolean_value)
+          if (value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE))
           {
             byte_code_p = byte_code_start_p + branch_offset;
-            if (opcode_flags & VM_OC_LOGICAL_BRANCH_FLAG)
-            {
-              /* "Push" the value back to the stack. */
-              ++stack_top_p;
-              continue;
-            }
+            continue;
           }
 
+          if (value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE))
+          {
+            continue;
+          }
+
+          if (ecma_op_to_boolean (value))
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+          }
+
+          ecma_fast_free_value (value);
+          continue;
+        }
+        case VM_OC_BRANCH_IF_FALSE:
+        {
+          ecma_value_t value = *(--stack_top_p);
+
+          if (value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE))
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+
+          if (value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE))
+          {
+            continue;
+          }
+
+          if (!ecma_op_to_boolean (value))
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+          }
+
+          ecma_fast_free_value (value);
+          continue;
+        }
+        case VM_OC_BRANCH_IF_LOGICAL_TRUE:
+        {
+          ecma_value_t value = stack_top_p[-1];
+
+          if (ecma_op_to_boolean (value))
+          {
+            /* Keep the value on the stack. */
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+
+          stack_top_p--;
+          ecma_fast_free_value (value);
+          continue;
+        }
+        case VM_OC_BRANCH_IF_LOGICAL_FALSE:
+        {
+          ecma_value_t value = stack_top_p[-1];
+
+          if (!ecma_op_to_boolean (value))
+          {
+            /* Keep the value on the stack. */
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+
+          stack_top_p--;
           ecma_fast_free_value (value);
           continue;
         }

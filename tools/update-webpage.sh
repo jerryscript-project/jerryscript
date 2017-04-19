@@ -72,9 +72,6 @@ for docfile in $docs_dir/*.md; do
     link = substr(line_remain, 1, link_end_pos-1);
     line_end = substr(line_remain, link_end_pos)
 
-    # delete underscores form the link
-    gsub(/_/, "", link);
-
     printf "%s%s%s\n", line_beg, link, line_end
   }
   ' $docfile                                             >> $gh_pages_dir/$docfile_base

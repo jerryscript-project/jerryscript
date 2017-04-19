@@ -21,19 +21,6 @@
 int ets_putc (int);
 
 /**
- * Provide console message implementation for the engine.
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  va_list args;
-  va_start (args, format);
-  ets_vprintf (ets_putc, format, args);
-  va_end (args);
-} /* jerry_port_console */
-
-/**
  * Provide log message implementation for the engine.
  */
 void

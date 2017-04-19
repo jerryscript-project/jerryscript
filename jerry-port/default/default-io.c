@@ -60,19 +60,6 @@ jerry_port_default_set_log_level (jerry_log_level_t level) /**< log level */
 #endif /* !DISABLE_EXTRA_API */
 
 /**
- * Provide console message implementation for the engine.
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  va_list args;
-  va_start (args, format);
-  vfprintf (stdout, format, args);
-  va_end (args);
-} /* jerry_port_console */
-
-/**
  * Default implementation of jerry_port_log. Prints log message to standard
  * error with 'vfprintf' if message level is less than or equal to the set log
  * level.

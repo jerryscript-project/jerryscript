@@ -22,26 +22,6 @@
 
 #include "us_ticker_api.h"
 
-#ifndef JSMBED_OVERRIDE_JERRY_PORT_CONSOLE
-/**
- * Provide console message implementation for the engine.
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  va_list args;
-  va_start (args, format);
-  vfprintf (stdout, format, args);
-  va_end (args);
-
-  if (strlen (format) == 1 && format[0] == 0x0a) /* line feed (\n) */
-  {
-    printf ("\r"); /* add CR for proper display in serial monitors */
-  }
-} /* jerry_port_console */
-#endif /* JSMBED_OVERRIDE_JERRY_PORT_CONSOLE */
-
 #ifndef JSMBED_OVERRIDE_JERRY_PORT_LOG
 /**
  * Provide log message implementation for the engine.

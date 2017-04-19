@@ -200,9 +200,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROMISE_UL,
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 
-/* Implementation-defined 'print' routine */
-ROUTINE (LIT_MAGIC_STRING_PRINT, ecma_builtin_global_object_print, NON_FIXED, 1)
-
 ROUTINE (LIT_MAGIC_STRING_EVAL, ecma_builtin_global_object_eval, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_PARSE_FLOAT, ecma_builtin_global_object_parse_float, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_IS_NAN, ecma_builtin_global_object_is_nan, 1, 1)

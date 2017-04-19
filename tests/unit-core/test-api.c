@@ -356,9 +356,6 @@ main (void)
   double number_val;
   char buffer[32];
 
-  is_ok = test_run_simple ("print ('Hello, World!');");
-  TEST_ASSERT (is_ok);
-
   is_ok = test_run_simple ("throw 'Hello World';");
   TEST_ASSERT (!is_ok);
 

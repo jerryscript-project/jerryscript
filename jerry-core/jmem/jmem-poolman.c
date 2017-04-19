@@ -253,16 +253,16 @@ jmem_pools_stats_print (void)
 {
   jmem_pools_stats_t *pools_stats = &JERRY_CONTEXT (jmem_pools_stats);
 
-  JERRY_DEBUG_MSG ("Pools stats:\n"
-                   "  Pool chunks: %zu\n"
-                   "  Peak pool chunks: %zu\n"
-                   "  Free chunks: %zu\n"
-                   "  Pool reuse ratio: %zu.%04zu\n",
-                   pools_stats->pools_count,
-                   pools_stats->peak_pools_count,
-                   pools_stats->free_chunks,
-                   pools_stats->reused_count / pools_stats->new_alloc_count,
-                   pools_stats->reused_count % pools_stats->new_alloc_count * 10000 / pools_stats->new_alloc_count);
+  jerry_port_console ("Pools stats:\n"
+                      "  Pool chunks: %zu\n"
+                      "  Peak pool chunks: %zu\n"
+                      "  Free chunks: %zu\n"
+                      "  Pool reuse ratio: %zu.%04zu\n",
+                      pools_stats->pools_count,
+                      pools_stats->peak_pools_count,
+                      pools_stats->free_chunks,
+                      pools_stats->reused_count / pools_stats->new_alloc_count,
+                      pools_stats->reused_count % pools_stats->new_alloc_count * 10000 / pools_stats->new_alloc_count);
 } /* jmem_pools_stats_print */
 
 /**

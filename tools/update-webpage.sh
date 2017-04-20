@@ -29,16 +29,18 @@ INTERNALS_MD="04.INTERNALS.md"
 PORT_API_MD="05.PORT-API.md"
 REFERENCE_COUNTING_MD="06.REFERENCE-COUNTING.md"
 DEBUGGER_MD="07.DEBUGGER.md"
+CODING_STANDARDS_MD="08.CODING-STANDARDS.md"
 
 declare -A titles
 
 titles[$GETTING_STARTED_MD]="Getting Started"
 titles[$API_REFERENCE_MD]="API Reference"
 titles[$API_EXAMPLES_MD]="API Examples"
-titles[$DEBUGGER_MD]="Debugger"
 titles[$INTERNALS_MD]="Internals"
 titles[$PORT_API_MD]="Port API"
-titles[$REFERENCE_COUNTING_MD]="Reference counting"
+titles[$REFERENCE_COUNTING_MD]="Reference Counting"
+titles[$DEBUGGER_MD]="Debugger"
+titles[$CODING_STANDARDS_MD]="Coding Standards"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`

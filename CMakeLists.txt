@@ -250,3 +250,5 @@ if(UNITTESTS)
     add_subdirectory(tests/unit-libm)
   endif()
 endif()
+
+add_subdirectory(jerry-ext)

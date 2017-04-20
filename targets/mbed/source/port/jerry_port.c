@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "jerry-core/jerry-port.h"
+#include "jerry-core/jerryscript-port.h"
 
 #include "mbed-hal/us_ticker_api.h"
 

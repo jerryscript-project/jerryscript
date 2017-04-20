@@ -15,8 +15,8 @@
 
 #include <stdlib.h>
 
-#include "jerry-port.h"
-#include "jerry-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
 
 static bool abort_on_fail = false;
 

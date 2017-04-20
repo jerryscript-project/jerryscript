@@ -15,8 +15,8 @@
 
 #include <stdarg.h>
 
-#include "jerry-port.h"
-#include "jerry-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
 
 /**
  * Actual log level

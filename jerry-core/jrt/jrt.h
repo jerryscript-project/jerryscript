@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "jerryscript.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 #include "jrt-types.h"
 
 /*

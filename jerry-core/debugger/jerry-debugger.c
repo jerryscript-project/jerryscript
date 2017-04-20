@@ -21,7 +21,7 @@
 #include "ecma-objects.h"
 #include "jcontext.h"
 #include "jerry-debugger.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 /**
  * Type cast the debugger send buffer into a specific type.

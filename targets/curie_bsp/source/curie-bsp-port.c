@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 /**
  * Provide console message implementation for the engine.

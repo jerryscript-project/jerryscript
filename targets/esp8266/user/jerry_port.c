@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "jerry-core/jerry-port.h"
+#include "jerry-core/jerryscript-port.h"
 int ets_putc (int);
 
 /**

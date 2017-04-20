@@ -22,7 +22,7 @@
 
 #include "jcontext.h"
 #include "jerry-debugger.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 /**
  * Debugger socket communication port.

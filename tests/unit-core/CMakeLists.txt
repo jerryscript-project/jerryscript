@@ -14,6 +14,7 @@
 
 cmake_minimum_required (VERSION 2.8.12)
 project (unit-core C)
+set(INCLUDE_UNITTESTS ${CMAKE_CURRENT_LIST_DIR})
 
 if (NOT IS_ABSOLUTE ${FEATURE_PROFILE})
   set(FEATURE_PROFILE "${CMAKE_SOURCE_DIR}/jerry-core/profiles/${FEATURE_PROFILE}.profile")
@@ -43,3 +44,5 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
 
   add_dependencies(unittests-core ${TARGET_NAME})
 endforeach()
+
+add_subdirectory(jerry-ext)

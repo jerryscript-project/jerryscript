@@ -239,5 +239,8 @@ endif()
 
 # Unittests
 if(UNITTESTS)
-  add_subdirectory(tests/unit)
+  add_subdirectory(tests/unit-core)
+  if(JERRY_LIBM)
+    add_subdirectory(tests/unit-libm)
+  endif()
 endif()

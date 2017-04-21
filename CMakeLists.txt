@@ -47,6 +47,13 @@ if("${PLATFORM}" STREQUAL "DARWIN")
   set(ENABLE_LTO         "OFF")
   set(ENABLE_STATIC_LINK "OFF")
   set(ENABLE_STRIP       "OFF")
+
+  set(JERRY_LIBC_MESSAGE         " (FORCED BY PLATFORM)")
+  set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
+  set(ENABLE_ALL_IN_ONE_MESSAGE  " (FORCED BY PLATFORM)")
+  set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
+  set(ENABLE_STATIC_LINK_MESSAGE " (FORCED BY PLATFORM)")
+  set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
 
 
@@ -62,27 +69,24 @@ if(CMAKE_C_COMPILER_ID MATCHES "TI")
   set(USING_TI 1)
 endif()
 
+if(USING_TI)
+  set(ENABLE_STATIC_LINK "ON")
+
+  set(ENABLE_STATIC_LINK_MESSAGE " (FORCED BY COMPILER)")
+endif()
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
 message(STATUS "CMAKE_SYSTEM_NAME         " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR    " ${CMAKE_SYSTEM_PROCESSOR})
-message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE})
-message(STATUS "ENABLE_LTO                " ${ENABLE_LTO})
-
-if(USING_TI)
-# If using a compiler that _only_ does static linking, inform the user
-# of the discrepancy in settings.
-  set(ENABLE_STATIC_LINK "ON")
-  message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} " (ONLY OPTION FOR THIS COMPILER)")
-else()
-  message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK})
-endif()
-
-message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP})
+message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN_ONE_MESSAGE})
+message(STATUS "ENABLE_LTO                " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
+message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} ${ENABLE_STATIC_LINK_MESSAGE})
+message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
 message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
-message(STATUS "JERRY_LIBC                " ${JERRY_LIBC})
-message(STATUS "JERRY_LIBM                " ${JERRY_LIBM})
+message(STATUS "JERRY_LIBC                " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
+message(STATUS "JERRY_LIBM                " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
 message(STATUS "PORT_DIR                  " ${PORT_DIR})
 message(STATUS "UNITTESTS                 " ${UNITTESTS})
 

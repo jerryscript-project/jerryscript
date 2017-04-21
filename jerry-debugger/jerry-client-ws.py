@@ -93,20 +93,13 @@ class JerryBreakpoint(object):
         self.function = function
         self.active_index = -1
 
-    def to_string(self):
-        result = self.function.source_name
-
-        if result == "":
-            result = "<unknown>"
-
+    def __str__(self):
+        result = self.function.source_name or "<unknown>"
         result += ":%d" % (self.line)
 
         if self.function.is_func:
             result += " (in "
-            if self.function.name:
-                result += self.function.name
-            else:
-                result += "function"
+            result += self.function.name or "function"
             result += "() at line:%d, col:%d)" % (self.function.line, self.function.column)
         return result
 
@@ -138,7 +131,7 @@ class JerryFunction(object):
             self.offsets[offset] = breakpoint
 
     def __repr__(self):
-        result = ("Function(byte_code_cp:0x%x, source_name:\"%s\", name:\"%s\", line:%d, column: %d { "
+        result = ("Function(byte_code_cp:0x%x, source_name:%r, name:%r, line:%d, column:%d { "
                   % (self.byte_code_cp, self.source_name, self.name, self.line, self.column))
 
         result += ','.join([str(breakpoint) for breakpoint in self.lines.values()])
@@ -229,7 +222,7 @@ class DebuggerPrompt(Cmd):
             return
 
         for breakpoint in self.debugger.active_breakpoint_list.values():
-            print("%d: %s" % (breakpoint.active_index, breakpoint.to_string()))
+            print("%d: %s" % (breakpoint.active_index, breakpoint))
 
     def do_delete(self, args):
         """ Delete the given breakpoint, use 'delete all' to clear the breakpoints in the whole program"""
@@ -394,7 +387,7 @@ class Multimap(object):
             del items[items.index(value)]
 
     def __repr__(self):
-        return "Multimap(%s)" % (self.map)
+        return "Multimap(%r)" % (self.map)
 
 
 class JerryDebugger(object):
@@ -712,8 +705,7 @@ def enable_breakpoint(debugger, breakpoint):
         breakpoint.active_index = debugger.next_breakpoint_index
         debugger.send_breakpoint(breakpoint)
 
-    print ("Breakpoint %d at %s"
-           % (breakpoint.active_index, breakpoint.to_string()))
+    print ("Breakpoint %d at %s" % (breakpoint.active_index, breakpoint))
 
 
 def set_breakpoint(debugger, string):
@@ -828,7 +820,7 @@ def main():
             if breakpoint[0].active_index >= 0:
                 breakpoint_info += " breakpoint:%d" % (breakpoint[0].active_index)
 
-            print("Stopped %s %s" % (breakpoint_info, breakpoint[0].to_string()))
+            print("Stopped %s %s" % (breakpoint_info, breakpoint[0]))
 
             prompt.cmdloop()
             if prompt.quit:
@@ -846,7 +838,7 @@ def main():
 
                     breakpoint = get_breakpoint(debugger, breakpoint_data)
 
-                    print("Frame %d: %s" % (frame_index, breakpoint[0].to_string()))
+                    print("Frame %d: %s" % (frame_index, breakpoint[0]))
 
                     frame_index += 1
                     buffer_pos += 6

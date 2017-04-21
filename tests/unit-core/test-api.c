@@ -761,6 +761,11 @@ main (void)
                && (uintptr_t) ptr == (uintptr_t) 0x0012345678abcdefull
                && out_info_p == &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind2));
 
+  /* Passing NULL for out_info_p is allowed. */
+  is_ok = jerry_get_object_native_pointer (res, &ptr, NULL);
+  TEST_ASSERT (is_ok
+               && (uintptr_t) ptr == (uintptr_t) 0x0012345678abcdefull);
+
   jerry_release_value (res);
 
   /* Test: Throwing exception from native handler. */

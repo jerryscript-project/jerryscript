@@ -187,6 +187,11 @@ jerry_cleanup (void)
 {
   jerry_assert_api_available ();
 
+  if (JERRY_CONTEXT (user_context_deinit_cb))
+  {
+    JERRY_CONTEXT (user_context_deinit_cb) (JERRY_CONTEXT (user_context_p));
+  }
+
   ecma_finalize ();
 
 #ifdef JERRY_DEBUGGER
@@ -198,11 +203,6 @@ jerry_cleanup (void)
 
   jmem_finalize ();
   jerry_make_api_unavailable ();
-
-  if (JERRY_CONTEXT (user_context_deinit_cb))
-  {
-    JERRY_CONTEXT (user_context_deinit_cb) (JERRY_CONTEXT (user_context_p));
-  }
 } /* jerry_cleanup */
 
 /**

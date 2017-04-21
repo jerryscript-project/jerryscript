@@ -31,6 +31,10 @@ config JERRYSCRIPT_HEAPSIZE
 	int "Jerryscript heap size"
 	default 107520
 
+config JERRYSCRIPT_ERROR_MESSAGES
+	bool "Enable error messages for builtin error objects"
+	default n
+
 config JERRYSCRIPT_MEM_STATS
 	bool "Enable memory statistics"
 	default n

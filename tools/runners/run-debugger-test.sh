@@ -24,15 +24,19 @@ echo "$START_DEBUG_SERVER"
 eval "$START_DEBUG_SERVER"
 sleep 1s
 
-RESULT=$((cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive) 2>&1)
-DIFF=$(diff -u0 ${TEST_CASE}.expected <(echo "$RESULT"))
+RESULT_TEMP=`mktemp ${TEST_CASE}.out.XXXXXXXXXX`
 
-if [ -n "$DIFF" ]
+(cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive) &> ${RESULT_TEMP}
+diff -U0 ${TEST_CASE}.expected ${RESULT_TEMP}
+STATUS_CODE=$?
+
+rm -f ${RESULT_TEMP}
+
+if [ ${STATUS_CODE} -ne 0 ]
 then
-	echo "$DIFF"
-	echo "${TEST_CASE} failed"
-	exit 1
+  echo "${TEST_CASE} failed"
+else
+  echo "${TEST_CASE} passed"
 fi
 
-echo "${TEST_CASE} passed"
-exit 0
+exit ${STATUS_CODE}

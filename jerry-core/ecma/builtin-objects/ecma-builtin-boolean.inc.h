@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
+
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -34,5 +36,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FIXED)
+
+#endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

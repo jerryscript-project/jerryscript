@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
+
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -59,5 +61,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_NEGATIVE_INFINITY_U,
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
+
+#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -15,6 +15,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -27,5 +29,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               ECMA_PROPERTY_FLAG_WRITABLE)
 
 ROUTINE (LIT_MAGIC_STRING_THEN, ecma_builtin_promise_prototype_then, 2, 2)
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

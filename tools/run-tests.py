@@ -142,6 +142,8 @@ def get_arguments():
     parser.add_argument('--check-pylint', action='store_true', default=False, help='Run pylint')
     parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
     parser.add_argument('--check-license', action='store_true', default=False, help='Run license check')
+    parser.add_argument('--check-magic-strings', action='store_true', default=False,
+                        help='Run "magic string source code generator should be executed" check')
     parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
     parser.add_argument('--jerry-debugger', action='store_true', default=False, help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true', default=False, help='Run jerry-tests')
@@ -349,6 +351,9 @@ def main(options):
 
     if not ret and (options.all or options.check_license):
         ret = run_check([settings.LICENSE_SCRIPT])
+
+    if not ret and (options.all or options.check_magic_strings):
+        ret = run_check([settings.MAGIC_STRINGS_SCRIPT])
 
     if not ret and (options.all or options.jerry_debugger):
         ret = run_jerry_debugger_tests(options)

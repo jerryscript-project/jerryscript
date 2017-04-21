@@ -19,9 +19,13 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_PARSE, ecma_builtin_json_parse, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_STRINGIFY, ecma_builtin_json_stringify, 3, 3)
+
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

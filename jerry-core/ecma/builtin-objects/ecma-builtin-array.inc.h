@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
+
 /* Object properties:
  *  (property name, object pointer getter) */
 
@@ -38,5 +40,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ecma_builtin_array_object_is_array, 1, 1)
+
+#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

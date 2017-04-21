@@ -555,15 +555,16 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 /**
  * Dummy function to get the time zone.
  *
- * @return false
+ * @return true
  */
 bool
 jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 {
+  /* We live in UTC. */
   tz_p->offset = 0;
   tz_p->daylight_saving_time = 0;
 
-  return false;
+  return true;
 } /* jerry_port_get_time_zone */
 
 /**

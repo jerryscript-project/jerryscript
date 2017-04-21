@@ -637,6 +637,9 @@ typedef struct
   uint16_t ident_end;               /**< end position of the identifier group */
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
+#ifdef JERRY_CPOINTER_32_BIT
+  uint16_t padding;                 /**< an unused value */
+#endif
 } cbc_uint16_arguments_t;
 
 /**

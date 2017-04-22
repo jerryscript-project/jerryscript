@@ -1682,6 +1682,9 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 {
 #ifndef JERRY_NDEBUG
   return (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL)
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_PROMISE_PROTOTYPE)
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE)

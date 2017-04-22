@@ -72,8 +72,20 @@ var textBox = document.getElementById("log");
 var commandBox = document.getElementById("command");
 var socket = null;
 
+var address = "localhost";
+var params = window.location.search.slice(1).split("&");
+for (var i = 0; i < params.length; i++)
+{
+  var nv = params[i].split("=");
+  var name = nv[0], value = nv[1];
+  if (name == "address")
+  {
+    address = value;
+  }
+}
+
 textBox.value = ""
-commandBox.value = "connect localhost"
+commandBox.value = "connect " + address
 
 function appendLog(str)
 {

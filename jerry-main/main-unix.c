@@ -19,8 +19,8 @@
 #include <string.h>
 
 #include "jerryscript.h"
-#include "jerry-port.h"
-#include "jerry-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
 
 /**
  * Maximum command line arguments number

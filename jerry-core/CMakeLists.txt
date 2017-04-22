@@ -270,4 +270,4 @@ foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
 endforeach()
 
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
-install(FILES jerry-api.h jerryscript.h jerry-port.h DESTINATION include)
+install(FILES jerryscript.h jerryscript-port.h jerry-api.h jerry-port.h DESTINATION include)

@@ -16,7 +16,7 @@
 #include <string.h>
 
 #include "jerryscript.h"
-#include "jerry-port-default.h"
+#include "jerryscript-port.h"
 
 /**
  * Maximum size of source code / snapshots buffer

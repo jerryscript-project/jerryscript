@@ -17,8 +17,8 @@
 #include <sys/time.h>
 #endif
 
-#include "jerry-port.h"
-#include "jerry-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
 
 /**
  * Default implementation of jerry_port_get_time_zone.

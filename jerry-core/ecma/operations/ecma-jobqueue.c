@@ -19,7 +19,7 @@
 #include "ecma-jobqueue.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 

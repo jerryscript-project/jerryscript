@@ -19,7 +19,7 @@
 #include <setjmp.h>
 
 #include "jerryscript.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 #include "jmem.h"
 
 /**

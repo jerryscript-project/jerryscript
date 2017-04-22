@@ -30,8 +30,8 @@
 #include "infra/wdt_helper.h"
 
 #include "jerryscript.h"
+#include "jerryscript-port.h"
 #include "string.h"
-#include "jerry-port.h"
 
 #include "zephyr.h"
 #include "microkernel/task.h"

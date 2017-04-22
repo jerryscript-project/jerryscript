@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_PORT_DEFAULT_H
-#define JERRY_PORT_DEFAULT_H
+#ifndef JERRYSCRIPT_PORT_DEFAULT_H
+#define JERRYSCRIPT_PORT_DEFAULT_H
 
 #include "jerryscript.h"
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 #include <stdbool.h>
 
@@ -49,4 +49,4 @@ jerry_value_t jerry_port_jobqueue_run (void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* !JERRY_PORT_DEFAULT_H */
+#endif /* !JERRYSCRIPT_PORT_DEFAULT_H */

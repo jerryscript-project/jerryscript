@@ -17,7 +17,7 @@
 
 #include <zephyr.h>
 
-#include "jerry-port.h"
+#include "jerryscript-port.h"
 
 /**
  * Provide console message implementation for the engine.

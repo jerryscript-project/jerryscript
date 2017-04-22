@@ -17,7 +17,10 @@
  * Unit test for jerry-libm
  */
 
-#include "test-common.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 static bool passed = true;
 

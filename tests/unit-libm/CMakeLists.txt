@@ -13,21 +13,13 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (Unittest C)
-
-if (NOT IS_ABSOLUTE ${FEATURE_PROFILE})
-  set(FEATURE_PROFILE "${CMAKE_SOURCE_DIR}/jerry-core/profiles/${FEATURE_PROFILE}.profile")
-endif()
-
-if(NOT ${FEATURE_PROFILE} STREQUAL "${CMAKE_SOURCE_DIR}/jerry-core/profiles/es5.1.profile")
-  message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' isn't supported with UNITTESTS=ON")
-endif()
+project (unit-libm C)
 
 # Unit tests main modules
 file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES *.c)
 
 # Unit tests declaration
-add_custom_target(unittests)
+add_custom_target(unittests-libm)
 
 foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
   get_filename_component(TARGET_NAME ${SOURCE_UNIT_TEST_MAIN} NAME_WE)
@@ -39,7 +31,11 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
 
   link_directories(${CMAKE_BINARY_DIR})
 
-  target_link_libraries(${TARGET_NAME} jerry-core)
+  set(TARGET_LIBS jerry-libm)
+  if(JERRY_LIBC)
+    set(TARGET_LIBS ${TARGET_LIBS} jerry-libc)
+  endif()
+  target_link_libraries(${TARGET_NAME} ${TARGET_LIBS})
 
-  add_dependencies(unittests ${TARGET_NAME})
+  add_dependencies(unittests-libm ${TARGET_NAME})
 endforeach()

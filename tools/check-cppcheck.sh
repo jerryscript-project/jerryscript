@@ -41,4 +41,4 @@ cppcheck -j$CPPCHECK_JOBS --force \
  --exitcode-suppressions=tools/cppcheck/suppressions-list \
  --suppressions-list=tools/cppcheck/suppressions-list \
  "${INCLUDE_DIRS[@]}" \
- jerry-core targets/default jerry-libc jerry-libm *.c *h tests/unit
+ jerry-core targets/default jerry-libc jerry-libm jerry-main tests/unit-*

@@ -25,7 +25,6 @@ import sys
 import settings
 
 BUILD_DIR = os.path.join(settings.PROJECT_DIR, 'build')
-DEFAULT_PORT_DIR = os.path.join(settings.PROJECT_DIR, 'targets/default')
 
 DEFAULT_PROFILE = 'es5.1'
 
@@ -79,6 +78,8 @@ def get_arguments():
                         help='build and use jerry-libc (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='build and use jerry-libm (%(choices)s; default: %(default)s)')
+    parser.add_argument('--jerry-port-default', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
+                        help='build default jerry port implementation (%(choices)s; default: %(default)s)')
     parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='enable js-parser (%(choices)s; default: %(default)s)')
     parser.add_argument('--link-lib', metavar='OPT', action='append', default=[],
@@ -89,8 +90,6 @@ def get_arguments():
                         help='enable link-time optimizations (%(choices)s; default: %(default)s)')
     parser.add_argument('--mem-heap', metavar='SIZE', action='store', type=int, default=512,
                         help='size of memory heap, in kilobytes (default: %(default)s)')
-    parser.add_argument('--port-dir', metavar='DIR', action='store', default=DEFAULT_PORT_DIR,
-                        help='add port directory (default: %(default)s)')
     parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE,
                         help='specify profile file (default: %(default)s)')
     parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -145,6 +144,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
     build_options.append('-DJERRY_CMDLINE_MINIMAL=%s' % arguments.jerry_cmdline_minimal)
+    build_options.append('-DJERRY_PORT_DEFAULT=%s' % arguments.jerry_port_default)
     build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc)
     build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm)
     build_options.append('-DFEATURE_JS_PARSER=%s' % arguments.js_parser)
@@ -152,7 +152,6 @@ def generate_build_options(arguments):
     build_options.append('-DEXTERNAL_LINKER_FLAGS=' + ' '.join(arguments.linker_flag))
     build_options.append('-DENABLE_LTO=%s' % arguments.lto)
     build_options.append('-DMEM_HEAP_SIZE_KB=%d' % arguments.mem_heap)
-    build_options.append('-DPORT_DIR=%s' % arguments.port_dir)
 
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)

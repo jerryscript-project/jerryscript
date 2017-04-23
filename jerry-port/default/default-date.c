@@ -21,9 +21,13 @@
 #include "jerryscript-port-default.h"
 
 /**
- * Default implementation of jerry_port_get_time_zone.
+ * Default implementation of jerry_port_get_time_zone. Uses 'gettimeofday' if
+ * available on the system, does nothing otherwise.
+ *
+ * @return true - if 'gettimeofday' is available and executed successfully,
+ *         false - otherwise.
  */
-bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< [out] time zone structure to fill */
 {
 #ifdef __GNUC__
   struct timeval tv;
@@ -48,7 +52,12 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 } /* jerry_port_get_time_zone */
 
 /**
- * Default implementation of jerry_port_get_current_time.
+ * Default implementation of jerry_port_get_current_time. Uses 'gettimeofday' if
+ * available on the system, does nothing otherwise.
+ *
+ * @return milliseconds since Unix epoch - if 'gettimeofday' is available and
+ *                                         executed successfully,
+ *         0 - otherwise.
  */
 double jerry_port_get_current_time (void)
 {

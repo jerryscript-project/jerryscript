@@ -19,8 +19,6 @@
 #include "jmem.h"
 #include "jrt.h"
 
-#ifdef JERRY_PORT_ENABLE_JOBQUEUE
-
 typedef struct jerry_port_queueitem_t jerry_port_queueitem_t;
 
 /**
@@ -47,11 +45,11 @@ static jerry_port_jobqueue_t queue;
 /**
  * Initialize the job queue.
  */
-void jerry_port_jobqueue_init (void)
+void jerry_port_default_jobqueue_init (void)
 {
   queue.head_p = NULL;
   queue.tail_p = NULL;
-} /* jerry_port_jobqueue_init */
+} /* jerry_port_default_jobqueue_init */
 
 /**
  * Enqueue a job.
@@ -83,7 +81,7 @@ void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, /**< the handler 
  *         It should be freed with jmem_heap_free_block.
  */
 static jerry_port_queueitem_t *
-jerry_port_jobqueue_dequeue (void)
+jerry_port_default_jobqueue_dequeue (void)
 {
   if (queue.head_p == NULL)
   {
@@ -94,7 +92,7 @@ jerry_port_jobqueue_dequeue (void)
   queue.head_p = queue.head_p->next_p;
 
   return item_p;
-} /* jerry_port_jobqueue_dequeue */
+} /* jerry_port_default_jobqueue_dequeue */
 
 /**
  * Start the jobqueue.
@@ -105,13 +103,13 @@ jerry_port_jobqueue_dequeue (void)
  *         Otherwise, return undefined.
  */
 jerry_value_t
-jerry_port_jobqueue_run (void)
+jerry_port_default_jobqueue_run (void)
 {
   jerry_value_t ret;
 
   while (true)
   {
-    jerry_port_queueitem_t *item_p = jerry_port_jobqueue_dequeue ();
+    jerry_port_queueitem_t *item_p = jerry_port_default_jobqueue_dequeue ();
 
     if (item_p == NULL)
     {
@@ -130,6 +128,4 @@ jerry_port_jobqueue_run (void)
 
     jerry_release_value (ret);
   }
-} /* jerry_port_jobqueue_run */
-
-#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
+} /* jerry_port_default_jobqueue_run */

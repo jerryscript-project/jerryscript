@@ -25,19 +25,25 @@ set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 # Components
 set(JERRY_CMDLINE         ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_MINIMAL OFF CACHE BOOL "Build jerry minimal command line tool?")
+set(JERRY_PORT_DEFAULT    ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_LIBC            ON  CACHE BOOL "Build and use jerry-libc?")
 set(JERRY_LIBM            ON  CACHE BOOL "Build and use jerry-libm?")
 set(UNITTESTS             OFF CACHE BOOL "Build unit tests?")
 
 # Optional build settings
-set(ENABLE_ALL_IN_ONE         OFF                                   CACHE BOOL   "Enable all-in-one build?")
-set(ENABLE_LTO                ON                                    CACHE BOOL   "Enable LTO build?")
-set(ENABLE_STATIC_LINK        ON                                    CACHE BOOL   "Enable static linking?")
-set(ENABLE_STRIP              ON                                    CACHE BOOL   "Enable stripping all symbols from release binary?")
-set(PORT_DIR                  "${CMAKE_SOURCE_DIR}/targets/default" CACHE STRING "Use default or external port?")
+set(ENABLE_ALL_IN_ONE  OFF CACHE BOOL "Enable all-in-one build?")
+set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
+set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
+set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "MinSizeRel")
+endif()
+
+if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
+  set(JERRY_PORT_DEFAULT "ON")
+
+  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE)")
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
@@ -85,9 +91,9 @@ message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} ${ENABLE_STATI
 message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
 message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
+message(STATUS "JERRY_PORT_DEFAULT        " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
-message(STATUS "PORT_DIR                  " ${PORT_DIR})
 message(STATUS "UNITTESTS                 " ${UNITTESTS})
 
 # Setup directories
@@ -154,11 +160,6 @@ if(ENABLE_LTO)
   if(USING_TI)
     jerry_add_link_flags(-lto)
   endif()
-endif()
-
-# Define _BSD_SOURCE and _DEFAULT_SOURCE if we use default port and compiler default libc
-if(${PORT_DIR} STREQUAL "${CMAKE_SOURCE_DIR}/targets/default" AND NOT JERRY_LIBC)
-  set(DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE _DEFAULT_SOURCE)
 endif()
 
 # Compiler / Linker flags
@@ -231,6 +232,11 @@ endif()
 
 # Jerry's core
 add_subdirectory(jerry-core)
+
+# Jerry's default port implementation
+if(JERRY_PORT_DEFAULT)
+  add_subdirectory(jerry-port/default)
+endif()
 
 # Jerry command line tool
 if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)

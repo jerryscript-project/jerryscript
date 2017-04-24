@@ -13,14 +13,21 @@
 # limitations under the License.
 
 set(JERRYX_CONTEXT OFF CACHE BOOL "Build context support?")
+set(JERRYX_MODULE  OFF CACHE BOOL "Build module support?")
 
 if("${PLATFORM}" STREQUAL "DARWIN")
   set(JERRYX_CONTEXT "OFF")
+  set(JERRYX_MODULE "OFF")
 endif()
 
 # Status messages
 message(STATUS "JERRYX_CONTEXT            " ${JERRYX_CONTEXT})
+message(STATUS "JERRYX_MODULE             " ${JERRYX_MODULE})
 
 if(JERRYX_CONTEXT)
   add_subdirectory(context)
+endif()
+
+if(JERRYX_MODULE)
+  add_subdirectory(module)
 endif()

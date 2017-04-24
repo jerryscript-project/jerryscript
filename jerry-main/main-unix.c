@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "jerryscript.h"
+#include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
@@ -77,117 +78,6 @@ read_file (const char *file_name,
   *out_size_p = bytes_read;
   return (const uint32_t *) buffer;
 } /* read_file */
-
-/**
- * Provide the 'assert' implementation for the engine.
- *
- * @return true - if only one argument was passed and the argument is a boolean true.
- */
-static jerry_value_t
-assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
-                const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-                const jerry_value_t args_p[], /**< function arguments */
-                const jerry_length_t args_cnt) /**< number of function arguments */
-{
-  if (args_cnt == 1
-      && jerry_value_is_boolean (args_p[0])
-      && jerry_get_boolean_value (args_p[0]))
-  {
-    return jerry_create_boolean (true);
-  }
-  else
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: assertion failed\n");
-    exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
-  }
-} /* assert_handler */
-
-/**
- * Provide the 'gc' implementation for the engine.
- *
- * @return undefined.
- */
-static jerry_value_t
-gc_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
-            const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-            const jerry_value_t args_p[] __attribute__((unused)), /**< function arguments */
-            const jerry_length_t args_cnt __attribute__((unused))) /**< number of function arguments */
-{
-  jerry_gc ();
-  return jerry_create_undefined ();
-} /* gc_handler */
-
-/**
- * Provide the 'print' implementation for the engine.
- *
- * The routine converts all of its arguments to strings and outputs them using
- * 'printf'.
- *
- * The NUL character is output as "\u0000", other code points are output using
- * "%c" format argument.
- *
- * @return undefined - if all arguments could be converted to strings,
- *         error - otherwise.
- */
-static jerry_value_t
-print_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
-               const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-               const jerry_value_t args_p[], /**< function arguments */
-               const jerry_length_t args_cnt) /**< number of function arguments */
-{
-  jerry_value_t ret_val = jerry_create_undefined ();
-
-  for (jerry_length_t arg_index = 0;
-       jerry_value_is_undefined (ret_val) && arg_index < args_cnt;
-       arg_index++)
-  {
-    jerry_value_t str_val = jerry_value_to_string (args_p[arg_index]);
-
-    if (!jerry_value_has_error_flag (str_val))
-    {
-      if (arg_index != 0)
-      {
-        printf (" ");
-      }
-
-      jerry_size_t substr_size;
-      jerry_length_t substr_pos = 0;
-      jerry_char_t substr_buf[256];
-
-      while ((substr_size = jerry_substring_to_char_buffer (str_val,
-                                                            substr_pos,
-                                                            substr_pos + 256,
-                                                            substr_buf,
-                                                            256)) != 0)
-      {
-        for (jerry_size_t chr_index = 0; chr_index < substr_size; chr_index++)
-        {
-          char chr = (char) substr_buf[chr_index];
-          if (chr == '\0')
-          {
-            printf ("\\u0000");
-          }
-          else
-          {
-            printf ("%c", chr);
-          }
-        }
-
-        substr_pos += substr_size;
-      }
-
-      jerry_release_value (str_val);
-    }
-    else
-    {
-      ret_val = str_val;
-    }
-  }
-
-  printf ("\n");
-
-  return ret_val;
-} /* print_handler */
 
 static void
 print_usage (const char *name)
@@ -423,15 +313,7 @@ static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
-
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
-  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
-
-  jerry_release_value (function_name_val);
-  jerry_release_value (function_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
 
   if (jerry_value_has_error_flag (result_val))
   {
@@ -654,9 +536,9 @@ main (int argc,
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
   jerry_init (flags);
 
-  register_js_function ("assert", assert_handler);
-  register_js_function ("gc", gc_handler);
-  register_js_function ("print", print_handler);
+  register_js_function ("assert", jerryx_handler_assert);
+  register_js_function ("gc", jerryx_handler_gc);
+  register_js_function ("print", jerryx_handler_print);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
@@ -812,10 +694,10 @@ main (int argc,
         {
           /* Print return value */
           const jerry_value_t args[] = { ret_val_eval };
-          jerry_value_t ret_val_print = print_handler (jerry_create_undefined (),
-                                                       jerry_create_undefined (),
-                                                       args,
-                                                       1);
+          jerry_value_t ret_val_print = jerryx_handler_print (jerry_create_undefined (),
+                                                              jerry_create_undefined (),
+                                                              args,
+                                                              1);
           jerry_release_value (ret_val_print);
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
           jerry_release_value (ret_val_eval);

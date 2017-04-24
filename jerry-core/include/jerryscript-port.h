@@ -62,7 +62,7 @@ typedef enum
  *
  * Example: a libc-based port may implement this with exit() or abort(), or both.
  */
-void jerry_port_fatal (jerry_fatal_code_t code);
+void jerry_port_fatal (jerry_fatal_code_t code) __attribute__((noreturn));
 
 /*
  *  I/O Port API

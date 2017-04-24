@@ -390,6 +390,20 @@ check_usage (bool condition, /**< the condition that must hold */
   }
 } /* check_usage */
 
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+
+/**
+ * The alloc function passed to jerry_create_instance
+ */
+static void *
+instance_alloc (size_t size,
+                void *cb_data_p __attribute__((unused)))
+{
+  return malloc (size);
+} /* instance_alloc */
+
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+
 int
 main (int argc,
       char **argv)
@@ -559,6 +573,13 @@ main (int argc,
   {
     is_repl_mode = true;
   }
+
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+
+  jerry_instance_t *instance_p = jerry_create_instance (512*1024, instance_alloc, NULL);
+  jerry_port_default_set_instance (instance_p);
+
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
   jerry_init (flags);
 
@@ -764,6 +785,8 @@ main (int argc,
   }
   jerry_release_value (ret_value);
   jerry_cleanup ();
-
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+  free (instance_p);
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
   return ret_code;
 } /* main */

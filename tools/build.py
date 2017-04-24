@@ -64,6 +64,8 @@ def get_arguments():
                         help='debug build')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable error messages (%(choices)s; default: %(default)s)')
+    parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable external context (%(choices)s; default: %(default)s)')
     parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1,
                         help='Allowed N build jobs at once (default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
@@ -161,6 +163,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
     build_options.append('-DFEATURE_DEBUGGER_PORT=%d' % arguments.jerry_debugger_port)
+    build_options.append('-DFEATURE_EXTERNAL_CONTEXT=%s' % arguments.external_context)
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)
     build_options.append('-DFEATURE_SYSTEM_ALLOCATOR=%s' % arguments.system_allocator)

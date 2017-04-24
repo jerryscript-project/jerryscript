@@ -206,12 +206,22 @@ typedef void *(*jerry_user_context_init_t) (void);
 typedef void (*jerry_user_context_deinit_t) (void *user_context_p);
 
 /**
+ * Function type for allocating buffer for JerryScript instance.
+ */
+typedef void *(*jerry_instance_alloc_t) (size_t size, void *cb_data_p);
+
+/**
  * Type information of a native pointer.
  */
 typedef struct
 {
   jerry_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
 } jerry_object_native_info_t;
+
+/**
+ * A forward declaration of the JerryScript instance structure.
+ */
+typedef struct jerry_instance_t jerry_instance_t;
 
 /**
  * General engine functions.
@@ -402,6 +412,11 @@ jerry_value_t jerry_resolve_or_reject_promise (jerry_value_t promise, jerry_valu
  */
 bool jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, jerry_size_t buf_size);
 bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t buf_size);
+
+/*
+ * External context functions.
+ */
+jerry_instance_t *jerry_create_instance (uint32_t heap_size, jerry_instance_alloc_t alloc, void *cb_data_p);
 
 /**
  * Miscellaneous functions.

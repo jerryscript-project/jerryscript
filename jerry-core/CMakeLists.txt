@@ -21,6 +21,7 @@ set(FEATURE_CPOINTER_32_BIT  OFF     CACHE BOOL   "Enable 32 bit compressed poin
 set(FEATURE_DEBUGGER         OFF     CACHE BOOL   "Enable JerryScript debugger?")
 set(FEATURE_DEBUGGER_PORT    "5001"  CACHE STRING "Set debugger port number (default: 5001)")
 set(FEATURE_ERROR_MESSAGES   OFF     CACHE BOOL   "Enable error messages?")
+set(FEATURE_EXTERNAL_CONTEXT OFF     CACHE BOOL   "Enable external context?")
 set(FEATURE_JS_PARSER        ON      CACHE BOOL   "Enable js-parser?")
 set(FEATURE_MEM_STATS        OFF     CACHE BOOL   "Enable memory statistics?")
 set(FEATURE_MEM_STRESS_TEST  OFF     CACHE BOOL   "Enable mem-stress test?")
@@ -44,6 +45,7 @@ message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT})
 message(STATUS "FEATURE_DEBUGGER          " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_DEBUGGER_PORT     " ${FEATURE_DEBUGGER_PORT})
 message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
+message(STATUS "FEATURE_EXTERNAL_CONTEXT  " ${FEATURE_EXTERNAL_CONTEXT})
 message(STATUS "FEATURE_JS_PARSER         " ${FEATURE_JS_PARSER})
 message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
 message(STATUS "FEATURE_MEM_STRESS_TEST   " ${FEATURE_MEM_STRESS_TEST})
@@ -154,6 +156,11 @@ if(FEATURE_ERROR_MESSAGES)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_ERROR_MESSAGES)
 endif()
 
+# Use external context instead of static one
+if(FEATURE_EXTERNAL_CONTEXT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_EXTERNAL_CONTEXT)
+endif()
+
 # JS-Parser
 if(FEATURE_JS_PARSER)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_JS_PARSER=1)
@@ -208,6 +215,10 @@ endif()
 
 if(JERRY_LIBC AND FEATURE_DEBUGGER)
   MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
+endif()
+
+if(JERRY_LIBC AND FEATURE_SYSTEM_ALLOCATOR)
+  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the system allocator.")
 endif()
 
 # RegExp byte-code dumps

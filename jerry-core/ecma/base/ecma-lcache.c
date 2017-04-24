@@ -98,7 +98,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   size_t row_index = ecma_lcache_row_index (object_cp, name_hash);
   ecma_lcache_hash_entry_t *entries_p = JERRY_HASH_TABLE_CONTEXT (table)[row_index];
 
-  int32_t entry_index;
+  uint32_t entry_index;
   for (entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
   {
     if (entries_p[entry_index].object_cp == ECMA_NULL_POINTER)

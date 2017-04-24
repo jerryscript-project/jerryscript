@@ -16,6 +16,8 @@ env:
     - OPTS="--test262"
     - OPTS="--check-pylint"
     - OPTS="--unittests --buildoptions=--cmake-param=-DJERRYX_CONTEXT=ON,--cmake-param=-DJERRYX_CONTEXT_SLOTS=2"
+    - OPTS="--unittests --buildoptions=--cmake-param=-DJERRYX_MODULE=ON,--cmake-param=-DFEATURE_INIT_FINI=ON,--cmake-param=-DJERRYX_CONTEXT=ON,--cmake-param=-DJERRYX_CONTEXT_SLOTS=2"
+    - OPTS="--unittests --buildoptions=--cmake-param=-DJERRYX_MODULE=ON,--cmake-param=-DFEATURE_INIT_FINI=ON"
   global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     #   via the "travis encrypt" command using the project repo's public key

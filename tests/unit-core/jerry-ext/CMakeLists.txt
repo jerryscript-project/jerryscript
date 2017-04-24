@@ -15,3 +15,7 @@
 if(JERRYX_CONTEXT)
   add_subdirectory(jerry-context)
 endif()
+
+if(JERRYX_MODULE)
+  add_subdirectory(jerry-module)
+endif()

@@ -848,7 +848,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
     if (proto_p != NULL)
     {
-      ecma_property_ref_t property_ref;
+      ecma_property_ref_t property_ref = { NULL };
 
       ecma_property_t inherited_property = ecma_op_object_get_property (proto_p,
                                                                         property_name_p,

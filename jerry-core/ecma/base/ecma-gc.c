@@ -38,9 +38,6 @@
 #include "ecma-promise-object.h"
 #endif
 
-#define JERRY_INTERNAL
-#include "jerry-internal.h"
-
 /* TODO: Extract GC to a separate component */
 
 /** \addtogroup ecma ECMA

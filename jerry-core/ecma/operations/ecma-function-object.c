@@ -27,9 +27,6 @@
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 
-#define JERRY_INTERNAL
-#include "jerry-internal.h"
-
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -539,12 +536,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
     ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+    jerry_external_handler_t handler_p = (jerry_external_handler_t) ext_func_obj_p->u.external_function;
 
-    ret_value = jerry_dispatch_external_function (func_obj_p,
-                                                  ext_func_obj_p->u.external_function,
-                                                  this_arg_value,
-                                                  arguments_list_p,
-                                                  arguments_list_len);
+    ret_value = handler_p (ecma_make_object_value (func_obj_p),
+                           this_arg_value,
+                           arguments_list_p,
+                           arguments_list_len);
   }
   else
   {

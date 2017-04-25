@@ -20,9 +20,6 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#define JERRY_INTERNAL
-#include "jerry-internal.h"
-
 /*
  * Exit with specified status code.
  *

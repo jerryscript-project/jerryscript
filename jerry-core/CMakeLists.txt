@@ -106,9 +106,6 @@ if(FEATURE_DEBUGGER)
   set(SOURCE_CORE_FILES ${SOURCE_CORE_FILES} ${SOURCE_CORE_DEBUGGER})
 endif()
 
-# Jerry port
-file(GLOB SOURCE_PORT_FILES "${PORT_DIR}/*.c")
-
 # All-in-one build
 if(ENABLE_ALL_IN_ONE)
   set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.c")

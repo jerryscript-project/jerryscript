@@ -48,7 +48,6 @@ macro(jerry_create_executable JERRY_NAME SOURCE_JERRY_STANDALONE_MAIN)
   set_property(TARGET ${JERRY_NAME}
                PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   target_compile_definitions(${JERRY_NAME} PRIVATE ${DEFINES_JERRY})
-  target_include_directories(${JERRY_NAME} PRIVATE ${PORT_DIR})
   link_directories(${CMAKE_BINARY_DIR})
 
   target_link_libraries(${JERRY_NAME} jerry-core)
@@ -59,8 +58,10 @@ endmacro()
 # Jerry standalones
 if(JERRY_CMDLINE)
   jerry_create_executable("jerry" "main-unix.c")
+  target_link_libraries("jerry" jerry-port-default)
 endif()
 
 if(JERRY_CMDLINE_MINIMAL)
   jerry_create_executable("jerry-minimal" "main-unix-minimal.c")
+  target_link_libraries("jerry-minimal" jerry-port-default-minimal)
 endif()

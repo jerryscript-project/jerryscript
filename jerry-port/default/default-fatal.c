@@ -18,11 +18,17 @@
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
+#ifndef DISABLE_EXTRA_API
+
 static bool abort_on_fail = false;
 
 /**
  * Sets whether 'abort' should be called instead of 'exit' upon exiting with
  * non-zero exit code in the default implementation of jerry_port_fatal.
+ *
+ * Note:
+ *      This function is only available if the port implementation library is
+ *      compiled without the DISABLE_EXTRA_API macro.
  */
 void jerry_port_default_set_abort_on_fail (bool flag) /**< new value of 'abort on fail' flag */
 {
@@ -35,17 +41,29 @@ void jerry_port_default_set_abort_on_fail (bool flag) /**< new value of 'abort o
  *
  * @return true - if 'abort on fail' flag is set,
  *         false - otherwise
+ *
+ * Note:
+ *      This function is only available if the port implementation library is
+ *      compiled without the DISABLE_EXTRA_API macro.
  */
 bool jerry_port_default_is_abort_on_fail (void)
 {
   return abort_on_fail;
 } /* jerry_port_default_is_abort_on_fail */
 
+#endif /* !DISABLE_EXTRA_API */
+
 /**
- * Default implementation of jerry_port_fatal.
+ * Default implementation of jerry_port_fatal. Calls 'abort' if exit code is
+ * non-zero and "abort-on-fail" behaviour is enabled, 'exit' otherwise.
+ *
+ * Note:
+ *      The "abort-on-fail" behaviour is only available if the port
+ *      implementation library is compiled without the DISABLE_EXTRA_API macro.
  */
 void jerry_port_fatal (jerry_fatal_code_t code)
 {
+#ifndef DISABLE_EXTRA_API
   if (code != 0
       && code != ERR_OUT_OF_MEMORY
       && jerry_port_default_is_abort_on_fail ())
@@ -54,6 +72,9 @@ void jerry_port_fatal (jerry_fatal_code_t code)
   }
   else
   {
+#endif /* !DISABLE_EXTRA_API */
     exit (code);
+#ifndef DISABLE_EXTRA_API
   }
+#endif /* !DISABLE_EXTRA_API */
 } /* jerry_port_fatal */

@@ -37,10 +37,8 @@ bool jerry_port_default_is_abort_on_fail (void);
 jerry_log_level_t jerry_port_default_get_log_level (void);
 void jerry_port_default_set_log_level (jerry_log_level_t level);
 
-#ifdef JERRY_PORT_ENABLE_JOBQUEUE
-void jerry_port_jobqueue_init (void);
-jerry_value_t jerry_port_jobqueue_run (void);
-#endif /* JERRY_PORT_ENABLE_JOBQUEUE */
+void jerry_port_default_jobqueue_init (void);
+jerry_value_t jerry_port_default_jobqueue_run (void);
 
 /**
  * @}

@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/badge/licence-Apache%202.0-brightgreen.svg?style=flat)](LICENSE)
 [![Build Status](https://travis-ci.org/jerryscript-project/jerryscript.svg?branch=master)](https://travis-ci.org/jerryscript-project/jerryscript)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/12127/badge.svg)](https://scan.coverity.com/projects/jerryscript-project)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript?ref=badge_shield)
 
 JerryScript is a lightweight JavaScript engine for resource-constrained devices such as microcontrollers. It can run on devices with less than 64 KB of RAM and less than 200 KB of flash memory.
 
@@ -44,6 +45,8 @@ The project can only accept contributions which are licensed under the [Apache L
 
 ## License
 JerryScript is open source software under the [Apache License 2.0](LICENSE). Complete license and copyright information can be found in the source code.
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript?ref=badge_large)
 
 > Copyright JS Foundation and other contributors, http://js.foundation
 

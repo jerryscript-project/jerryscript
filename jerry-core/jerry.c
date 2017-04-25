@@ -35,9 +35,6 @@
 #include "js-parser.h"
 #include "re-compiler.h"
 
-#define JERRY_INTERNAL
-#include "jerry-internal.h"
-
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
@@ -2151,51 +2148,3 @@ jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string
 /**
  * @}
  */
-
-/**
- * ====================== Internal functions ==========================
- */
-
-/**
- * Dispatch call to specified external function using the native handler
- *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return returned ecma value of the invoked native function - if success
- *         thrown error - otherwise
- */
-ecma_value_t
-jerry_dispatch_external_function (ecma_object_t *function_object_p, /**< external function object */
-                                  ecma_external_pointer_t handler_p, /**< pointer to the function's native handler */
-                                  ecma_value_t this_arg_value, /**< 'this' argument */
-                                  const ecma_value_t *arguments_list_p, /**< arguments list */
-                                  ecma_length_t arguments_list_len) /**< arguments list length */
-{
-  jerry_assert_api_available ();
-
-  ecma_value_t ret_value = ((jerry_external_handler_t) handler_p) (ecma_make_object_value (function_object_p),
-                                                                   this_arg_value,
-                                                                   arguments_list_p,
-                                                                   arguments_list_len);
-  return ret_value;
-} /* jerry_dispatch_external_function */
-
-/**
- * Dispatch call to object's native free callback function
- *
- * Note:
- *       the callback is called during critical GC phase,
- *       so should not perform any requests to engine.
- */
-void
-jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< pointer to free callback handler */
-                                     ecma_external_pointer_t native_p) /**< native handle, associated
-                                                                        *   with freed object */
-{
-  jerry_make_api_unavailable ();
-
-  ((jerry_object_free_callback_t) freecb_p) ((uintptr_t) native_p);
-
-  jerry_make_api_available ();
-} /* jerry_dispatch_object_free_callback */

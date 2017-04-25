@@ -2199,3 +2199,55 @@ jerry_dispatch_object_free_callback (ecma_external_pointer_t freecb_p, /**< poin
 
   jerry_make_api_available ();
 } /* jerry_dispatch_object_free_callback */
+
+#ifdef JERRY_MODULE_REGISTER
+/**
+ * Reserve a slot in the context for a module
+ *
+ * Returns: 0 or positive on success, -1 on failure.
+ */
+
+/* This value is context-independent */
+static int module_index = -1;
+int
+jerry_register_module (void)
+{
+  if (module_index == JERRY_CONTEXT_MODULE_COUNT - 1)
+  {
+    return -1;
+  }
+  return (++module_index);
+} /* jerry_register_module */
+
+/**
+ * Retrieve the module's data from the context
+ *
+ * Returns: The module's data on success, NULL of failure.
+ */
+void *
+jerry_get_module_data (int index)
+{
+  void *return_value = NULL;
+
+  if (index >= 0 && index < JERRY_CONTEXT_MODULE_COUNT)
+  {
+    return_value = (JERRY_CONTEXT (module_data)[index]).data;
+  }
+
+  return return_value;
+} /* jerry_get_module_data */
+
+/**
+ * Set the module's data for the context
+ */
+void
+jerry_set_module_data (int index, void *data, void (*deleter)(void *))
+{
+  if (index >= 0 && index < JERRY_CONTEXT_MODULE_COUNT)
+  {
+    (JERRY_CONTEXT (module_data)[index]).data = data;
+    (JERRY_CONTEXT (module_data)[index]).deleter = deleter;
+  }
+} /* jerry_set_module_data */
+
+#endif /* JERRY_MODULE_REGISTER */

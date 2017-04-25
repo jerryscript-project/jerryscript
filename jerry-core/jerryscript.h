@@ -389,6 +389,13 @@ size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t sourc
                                       uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
 
 /**
+ * Module management
+ */
+int jerry_register_module (void);
+void *jerry_get_module_data (int index);
+void jerry_set_module_data (int index, void *data, void (*deleter)(void *));
+
+/**
  * @}
  */
 

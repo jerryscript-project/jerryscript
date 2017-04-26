@@ -13,7 +13,4 @@
  * limitations under the License.
  */
 
-Promise.resolve("abc").then(function(x)
-{
-  assert (x === "abc");
-});
+assert (Promise.prototype.length === 1);

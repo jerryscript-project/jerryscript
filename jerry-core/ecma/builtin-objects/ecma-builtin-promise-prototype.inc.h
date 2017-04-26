@@ -29,6 +29,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               ECMA_PROPERTY_FLAG_WRITABLE)
 
 ROUTINE (LIT_MAGIC_STRING_THEN, ecma_builtin_promise_prototype_then, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_CATCH, ecma_builtin_promise_prototype_catch, 1, 1)
 
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 

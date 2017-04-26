@@ -19,6 +19,8 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
@@ -35,5 +37,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
+ROUTINE (LIT_MAGIC_STRING_REJECT, ecma_builtin_promise_reject, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_RESOLVE, ecma_builtin_promise_resolve, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_RACE, ecma_builtin_promise_race, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_ALL, ecma_builtin_promise_all, 1, 1)
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

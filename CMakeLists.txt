@@ -77,8 +77,10 @@ endif()
 
 if(USING_TI)
   set(ENABLE_STATIC_LINK "ON")
+  set(ENABLE_STRIP       "OFF")
 
   set(ENABLE_STATIC_LINK_MESSAGE " (FORCED BY COMPILER)")
+  set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
 # Status messages
@@ -206,9 +208,7 @@ endif()
 
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (USING_GCC OR USING_CLANG)
-    jerry_add_link_flags(-s)
-  endif()
+  jerry_add_link_flags(-s)
 endif()
 
 # External compiler & linker flags

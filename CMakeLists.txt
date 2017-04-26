@@ -250,3 +250,8 @@ if(UNITTESTS)
     add_subdirectory(tests/unit-libm)
   endif()
 endif()
+
+# External target build
+if(EXTERNAL_BUILD)
+  add_subdirectory(${EXTERNAL_BUILD})
+endif()

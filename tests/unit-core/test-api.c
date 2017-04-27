@@ -132,6 +132,7 @@ handler_construct_freecb (void *native_p)
 
 JERRY_DEFINE_NATIVE_HANDLE_INFO (bind1, handler_construct_freecb);
 JERRY_DEFINE_NATIVE_HANDLE_INFO (bind2, handler_construct_freecb);
+JERRY_DEFINE_NATIVE_HANDLE_INFO (bind3, NULL);
 
 static jerry_value_t
 handler_construct (const jerry_value_t func_obj_val, /**< function object */
@@ -767,6 +768,14 @@ main (void)
                && (uintptr_t) ptr == (uintptr_t) 0x0012345678abcdefull);
 
   jerry_release_value (res);
+
+  /* Test: It is ok to set native pointer's free callback as NULL. */
+  jerry_value_t obj_freecb = jerry_create_object ();
+  jerry_set_object_native_pointer (obj_freecb,
+                                   (void *) 0x1234,
+                                   &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind3));
+
+  jerry_release_value (obj_freecb);
 
   /* Test: Throwing exception from native handler. */
   throw_test_handler_val = jerry_create_external_function (handler_throw_test);

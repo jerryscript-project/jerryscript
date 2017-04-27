@@ -418,9 +418,13 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
   {
     if (native_pointer_p->info_p != NULL)
     {
-      const jerry_object_native_info_t *native_info_p = (const jerry_object_native_info_t *) native_pointer_p->info_p;
+      jerry_object_free_callback_t free_cb;
+      free_cb = (jerry_object_free_callback_t) ((const jerry_object_native_info_t *) native_pointer_p->info_p)->free_cb;
 
-      native_info_p->free_cb (native_pointer_p->data_p);
+      if (free_cb != NULL)
+      {
+        free_cb ((uintptr_t) native_pointer_p->data_p);
+      }
     }
   }
 } /* ecma_gc_free_native_pointer */

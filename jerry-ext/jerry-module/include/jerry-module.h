@@ -11,7 +11,7 @@
 #define EXTERN_C_END
 #endif
 
-#define JERRYX_C_CTOR(fn)                           \
+#define JERRYX_C_CTOR(fn)                          \
 static void fn(void) __attribute__((constructor)); \
 static void fn(void)
 
@@ -21,21 +21,21 @@ typedef struct jerryx_module_link
 {
   jerry_char_t *name;
   struct jerryx_module_link *next;
-} jerryx_module_link_t;
+} jerryx_module_header_t;
 
 #define JERRYX_MODULE_LINK_STATIC_INIT(name) \
   {name, NULL}
 
 #define JERRYX_MODULE_LINK_FLOAT(link) \
-  ((jerryx_module_link_t *) link)->next = NULL
+  ((jerryx_module_header_t *) link)->next = NULL
 
 #define JERRYX_MODULE_LINK_RUNTIME_INIT(link, module_name) \
-  ((jerryx_module_link_t *) link)->name = (module_name);   \
+  ((jerryx_module_header_t *) link)->name = (module_name); \
   JERRYX_MODULE_LINK_FLOAT((link))
 
 typedef struct
 {
-  jerryx_module_link_t link;
+  jerryx_module_header_t link;
   int version;
   jerry_value_t (*init)(void);
 } jerryx_module_t;

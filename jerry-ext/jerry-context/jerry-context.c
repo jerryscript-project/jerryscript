@@ -23,14 +23,14 @@ typedef struct
 {
   jerry_user_context_init_cb init_cb;
   jerry_user_context_deinit_cb deinit_cb;
-} jerryx_context_slot_info;
+} jerryx_context_slot_info_t;
 
 /* Context-free data */
 
 /* We do not allocate slots after a context has already been created. */
 bool before_first_context = true;
 static int next_index = -1;
-static jerryx_context_slot_info slot_info[JERRYX_CONTEXT_SLOTS] =
+static jerryx_context_slot_info_t slot_info[JERRYX_CONTEXT_SLOTS] =
 {
   {
     NULL, NULL
@@ -46,25 +46,26 @@ void *
 jerryx_context_init (void)
 {
   size_t index = 0;
-  void **return_value = NULL;
+  void **ret = NULL;
 
   before_first_context = false;
 
-  return_value = (void **) jmem_heap_alloc_block_null_on_error (HEAP_BLOCK_SIZE);
+  ret = (void **) jmem_heap_alloc_block_null_on_error (HEAP_BLOCK_SIZE);
 
-  if (return_value)
+  if (ret)
   {
-    memset (return_value, 0, HEAP_BLOCK_SIZE);
+    memset (ret, 0, HEAP_BLOCK_SIZE);
+
     for (index = 0; index < JERRYX_CONTEXT_SLOTS; index++)
     {
       if (slot_info[index].init_cb)
       {
-        return_value[index] = slot_info[index].init_cb ();
+        ret[index] = slot_info[index].init_cb ();
       }
     }
   }
 
-  return ((void *) return_value);
+  return ((void *) ret);
 } /* jerryx_context_init */
 
 /**
@@ -100,23 +101,23 @@ int
 jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback for creating a new context */
                              jerry_user_context_deinit_cb deinit_cb) /**< callback for freeing context */
 {
-  int return_value = -1;
+  int slot_index = -1;
 
   if (before_first_context)
   {
-    return_value = (++next_index);
-    if (return_value >= JERRYX_CONTEXT_SLOTS)
+    slot_index = (++next_index);
+    if (slot_index >= JERRYX_CONTEXT_SLOTS)
     {
-      return_value = -1;
+      slot_index = -1;
     }
     else
     {
-      slot_info[return_value].init_cb = init_cb;
-      slot_info[return_value].deinit_cb = deinit_cb;
+      slot_info[slot_index].init_cb = init_cb;
+      slot_info[slot_index].deinit_cb = deinit_cb;
     }
   }
 
-  return return_value;
+  return slot_index;
 } /* jerryx_context_request_slot */
 
 /**

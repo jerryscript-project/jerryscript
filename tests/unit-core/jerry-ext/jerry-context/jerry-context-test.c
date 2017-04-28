@@ -20,6 +20,8 @@
 static char *static_slot1 = "static slot 1";
 static char *static_slot2 = "static slot 2";
 
+static int deinit_called_count = 0;
+
 static void *
 init_slot1 (void)
 {
@@ -30,6 +32,7 @@ static void
 deinit_slot1 (void *slot)
 {
   TEST_ASSERT (slot == static_slot1);
+  deinit_called_count++;
 } /* deinit_slot1 */
 
 static void *
@@ -42,6 +45,7 @@ static void
 deinit_slot2 (void *slot)
 {
   TEST_ASSERT (slot == static_slot2);
+  deinit_called_count++;
 } /* deinit_slot2 */
 
 int
@@ -65,4 +69,6 @@ main (int argc, char **argv)
   TEST_ASSERT (jerryx_context_get_slot (slot2) == static_slot2);
 
   jerry_cleanup ();
+
+  TEST_ASSERT (deinit_called_count == 2);
 } /* main */

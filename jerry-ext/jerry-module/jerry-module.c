@@ -61,7 +61,7 @@ jerryx_module_link_remove (const jerry_char_t *name,
     {
       (*root) = return_value->next;
     }
-    JERRYX_MODULE_LINK_FLOAT (return_value);
+    JERRYX_MODULE_HEADER_UNLINK (return_value);
   }
 
   return return_value;
@@ -182,7 +182,7 @@ jerryx_module_load (const jerry_char_t *name)
       instance_p = (jerryx_instance_t *) jmem_heap_alloc_block_null_on_error (sizeof (jerryx_instance_t));
       if (instance_p)
       {
-        JERRYX_MODULE_LINK_RUNTIME_INIT (instance_p, module->link.name);
+        JERRYX_MODULE_HEADER_RUNTIME_INIT (instance_p, module->link.name);
         instance_p->result = jerry_acquire_value (return_value);
         jerryx_module_link_insert ((jerryx_module_header_t *) instance_p, (jerryx_module_header_t **) instances_pp);
       }

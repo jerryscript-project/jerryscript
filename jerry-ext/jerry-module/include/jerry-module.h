@@ -38,18 +38,18 @@ typedef struct jerryx_module_link
   struct jerryx_module_link *next;
 } jerryx_module_header_t;
 
-#define JERRYX_MODULE_LINK_STATIC_INIT(module_name) \
+#define JERRYX_MODULE_HEADER_STATIC_INIT(module_name) \
   {                                                 \
     .name = (module_name),                          \
     .next = NULL                                    \
   }
 
-#define JERRYX_MODULE_LINK_FLOAT(link) \
+#define JERRYX_MODULE_HEADER_UNLINK(link) \
   ((jerryx_module_header_t *) link)->next = NULL
 
-#define JERRYX_MODULE_LINK_RUNTIME_INIT(link, module_name) \
+#define JERRYX_MODULE_HEADER_RUNTIME_INIT(link, module_name) \
   ((jerryx_module_header_t *) link)->name = (module_name); \
-  JERRYX_MODULE_LINK_FLOAT((link))
+  JERRYX_MODULE_HEADER_UNLINK((link))
 
 typedef struct
 {
@@ -83,18 +83,18 @@ void jerryx_module_unregister (jerryx_module_t *module);
  */
 jerry_value_t jerryx_module_load (const jerry_char_t *name);
 
-#define JERRYX_MODULE(name, init_cb)                               \
-EXTERN_C_START                                                     \
-static jerryx_module_t _module =                                   \
-{                                                                  \
-  .link = JERRYX_MODULE_LINK_STATIC_INIT ((jerry_char_t *) #name), \
-  .version = JERRYX_MODULE_VERSION,                                \
-  .init = (init_cb)                                                \
-};                                                                 \
-JERRYX_C_CTOR(_register_ ## name)                                  \
-{                                                                  \
-  jerryx_module_register(&_module);                                \
-}                                                                  \
+#define JERRYX_MODULE(name, init_cb)                                 \
+EXTERN_C_START                                                       \
+static jerryx_module_t _module =                                     \
+{                                                                    \
+  .link = JERRYX_MODULE_HEADER_STATIC_INIT ((jerry_char_t *) #name), \
+  .version = JERRYX_MODULE_VERSION,                                  \
+  .init = (init_cb)                                                  \
+};                                                                   \
+JERRYX_C_CTOR(_register_ ## name)                                    \
+{                                                                    \
+  jerryx_module_register(&_module);                                  \
+}                                                                    \
 EXTERN_C_END
 
 #endif /* !JERRYX_MODULE_H */

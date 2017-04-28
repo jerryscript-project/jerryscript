@@ -171,6 +171,21 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
   return jerry_create_boolean (true);
 } /* handler_construct */
 
+static jerry_value_t
+vm_exec_stop_callback (void *user_p)
+{
+  int *int_p = (int *) user_p;
+
+  if (*int_p > 0)
+  {
+    (*int_p)--;
+
+    return jerry_create_undefined ();
+  }
+
+  return jerry_create_string ((const jerry_char_t *) "Abort script");
+} /* vm_exec_stop_callback */
+
 /**
  * Extended Magic Strings
  */
@@ -1012,6 +1027,50 @@ main (void)
     jerry_release_value (parsed_code_val);
     TEST_ASSERT (!strcmp ((char *) err_str_buf,
                           "SyntaxError: Primary expression expected. [line: 2, column: 10]"));
+
+    jerry_cleanup ();
+  }
+
+  /* Test stopping an infinite loop. */
+  if (jerry_is_feature_enabled (JERRY_FEATURE_VM_EXEC_STOP))
+  {
+    jerry_init (JERRY_INIT_EMPTY);
+
+    int countdown = 6;
+    jerry_set_vm_exec_stop_callback (vm_exec_stop_callback, &countdown, 16);
+
+    const char *inf_loop_code_src_p = "while(true) {}";
+    parsed_code_val = jerry_parse ((jerry_char_t *) inf_loop_code_src_p, strlen (inf_loop_code_src_p), false);
+    TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+    res = jerry_run (parsed_code_val);
+    TEST_ASSERT (countdown == 0);
+
+    TEST_ASSERT (jerry_value_has_error_flag (res));
+
+    jerry_release_value (res);
+    jerry_release_value (parsed_code_val);
+
+    /* A more complex example. Although the callback error is captured
+     * by the catch block, it is automatically thrown again. */
+
+    /* We keep the callback function, only the countdown is reset. */
+    countdown = 6;
+
+    inf_loop_code_src_p = ("function f() { while (true) ; }\n"
+                           "try { f(); } catch(e) {}");
+
+    parsed_code_val = jerry_parse ((jerry_char_t *) inf_loop_code_src_p, strlen (inf_loop_code_src_p), false);
+
+    TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+    res = jerry_run (parsed_code_val);
+    TEST_ASSERT (countdown == 0);
+
+    /* The result must have an error flag which proves that
+     * the error is thrown again inside the catch block. */
+    TEST_ASSERT (jerry_value_has_error_flag (res));
+
+    jerry_release_value (res);
+    jerry_release_value (parsed_code_val);
 
     jerry_cleanup ();
   }

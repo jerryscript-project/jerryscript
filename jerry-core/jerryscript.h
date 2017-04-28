@@ -86,6 +86,7 @@ typedef enum
   JERRY_FEATURE_SNAPSHOT_SAVE, /**< saving snapshot files */
   JERRY_FEATURE_SNAPSHOT_EXEC, /**< executing snapshot files */
   JERRY_FEATURE_DEBUGGER, /**< debugging */
+  JERRY_FEATURE_VM_EXEC_STOP, /**< stopping ECMAScript execution */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -173,6 +174,19 @@ typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
  * Native free callback of an object.
  */
 typedef void (*jerry_object_native_free_callback_t) (void *native_p);
+
+/**
+ * Callback which tells whether the ECMAScript execution should be stopped.
+ *
+ * As long as the function returns with undefined the execution continues.
+ * When a non-undefined value is returned the execution stops and the value
+ * is thrown by the engine (if the error flag is not set for the returned
+ * value the engine automatically sets it).
+ *
+ * Note: if the function returns with a non-undefined value it
+ *       must return with the same value for future calls.
+ */
+typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 
 /**
  * Function type applied for each data property of an object.
@@ -387,6 +401,11 @@ size_t jerry_parse_and_save_snapshot (const jerry_char_t *source_p, size_t sourc
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode);
 size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
                                       uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
+
+/**
+ * Miscellaneous functions.
+ */
+void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
 
 /**
  * @}

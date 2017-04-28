@@ -42,9 +42,9 @@ def get_binary_path(bin_dir_path):
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
     Options('unittests',
-            ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on']),
+            ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']),
     Options('unittests-debug',
-            ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on'])
+            ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on'])
 ]
 
 # Test options for jerry-tests

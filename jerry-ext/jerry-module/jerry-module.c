@@ -18,19 +18,19 @@
 #include "jerry-module.h"
 
 static void
-jerryx_module_link_insert (jerryx_module_header_t *link,
-                           jerryx_module_header_t **root)
+jerryx_module_header_insert (jerryx_module_header_t *link,
+                            jerryx_module_header_t **root)
 {
   if (*root)
   {
     link->next = (*root);
   }
   (*root) = link;
-} /* jerryx_module_link_insert */
+} /* jerryx_module_header_insert */
 
 static jerryx_module_header_t *
-jerryx_module_link_find (jerryx_module_header_t *root,
-                         const jerry_char_t *name,
+jerryx_module_header_find (jerryx_module_header_t *root,
+                           const jerry_char_t *name,
                          jerryx_module_header_t **previous)
 {
   for (;root && strcmp ((char *) name, ((char *) root->name)); root = root->next)
@@ -42,14 +42,14 @@ jerryx_module_link_find (jerryx_module_header_t *root,
   }
 
   return root;
-} /* jerryx_module_link_find */
+} /* jerryx_module_header_find */
 
 static jerryx_module_header_t *
-jerryx_module_link_remove (const jerry_char_t *name,
-                           jerryx_module_header_t **root)
+jerryx_module_header_remove (const jerry_char_t *name,
+                             jerryx_module_header_t **root)
 {
   jerryx_module_header_t *previous = NULL;
-  jerryx_module_header_t *return_value = jerryx_module_link_find ((*root), name, &previous);
+  jerryx_module_header_t *return_value = jerryx_module_header_find ((*root), name, &previous);
 
   if (return_value)
   {
@@ -65,11 +65,11 @@ jerryx_module_link_remove (const jerry_char_t *name,
   }
 
   return return_value;
-} /* jerryx_module_link_remove */
+} /* jerryx_module_header_remove */
 
 static void
-jerryx_module_link_free (jerryx_module_header_t *root,
-                         void (*free_link) (jerryx_module_header_t *link))
+jerryx_module_header_free (jerryx_module_header_t *root,
+                           void (*free_link) (jerryx_module_header_t *link))
 {
   jerryx_module_header_t *next;
   while (root)
@@ -78,19 +78,19 @@ jerryx_module_link_free (jerryx_module_header_t *root,
     free_link (root);
     root = next;
   }
-} /* jerryx_module_link_free */
+} /* jerryx_module_header_free */
 
 typedef struct
 {
   jerryx_module_header_t link;
-  jerry_value_t result;
+  jerry_value_t export;
 } jerryx_module_instance_t;
 
 static void
 jerryx_module_free_instance (jerryx_module_header_t *link)
 {
   jerryx_module_instance_t *instance = (jerryx_module_instance_t *) link;
-  jerry_release_value (instance->result);
+  jerry_release_value (instance->export);
   jmem_heap_free_block (instance, sizeof (jerryx_module_instance_t));
 } /* jerryx_module_free_instance */
 
@@ -107,7 +107,7 @@ jerryx_module_context_deinit (void *context_p)
 {
   if (context_p)
   {
-    jerryx_module_link_free (*((jerryx_module_header_t **) (context_p)), jerryx_module_free_instance);
+    jerryx_module_header_free (*((jerryx_module_header_t **) (context_p)), jerryx_module_free_instance);
     jmem_heap_free_block (context_p, sizeof (jerryx_module_header_t *));
   }
 } /* jerryx_module_context_deinit */
@@ -135,20 +135,14 @@ static jerryx_module_t *modules = NULL;
 void
 jerryx_module_register (jerryx_module_t *module_p)
 {
-  jerryx_module_link_insert ((jerryx_module_header_t *) module_p, ((jerryx_module_header_t **) (&modules)));
+  jerryx_module_header_insert ((jerryx_module_header_t *) module_p, ((jerryx_module_header_t **) (&modules)));
 } /* jerryx_module_register */
 
 void
 jerryx_module_unregister (jerryx_module_t *module_p)
 {
-  jerryx_module_link_remove (module_p->link.name, ((jerryx_module_header_t **) (&modules)));
+  jerryx_module_header_remove (module_p->link.name, ((jerryx_module_header_t **) (&modules)));
 } /* jerryx_module_unregister */
-
-typedef struct
-{
-  jerryx_module_header_t link;
-  jerry_value_t result;
-} jerryx_instance_t;
 
 static const char not_found_prologue[] = "Module '";
 static const char not_found_epilogue[] = "' not found";
@@ -161,32 +155,32 @@ jerryx_module_load (const jerry_char_t *name)
   char *error_message = NULL;
   jerryx_module_t *module = NULL;
   jerryx_module_instance_t **instances_pp = JERRYX_MODULE_CONTEXT;
-  jerryx_instance_t *instance_p = NULL;
+  jerryx_module_instance_t *instance_p = NULL;
 
   if (instances_pp)
   {
     instance_p =
-    (jerryx_instance_t *) jerryx_module_link_find (*((jerryx_module_header_t **) instances_pp), name, NULL);
+    (jerryx_module_instance_t *) jerryx_module_header_find (*((jerryx_module_header_t **) instances_pp), name, NULL);
   }
 
   if (instance_p)
   {
-    return instance_p->result;
+    return instance_p->export;
   }
 
-  module = (jerryx_module_t *) jerryx_module_link_find ((jerryx_module_header_t *) modules, name, NULL);
+  module = (jerryx_module_t *) jerryx_module_header_find ((jerryx_module_header_t *) modules, name, NULL);
 
   if (module)
   {
     return_value = module->init ();
     if (instances_pp)
     {
-      instance_p = (jerryx_instance_t *) jmem_heap_alloc_block_null_on_error (sizeof (jerryx_instance_t));
+      instance_p = (jerryx_module_instance_t *) jmem_heap_alloc_block_null_on_error (sizeof (jerryx_module_instance_t));
       if (instance_p)
       {
         JERRYX_MODULE_HEADER_RUNTIME_INIT (instance_p, module->link.name);
-        instance_p->result = jerry_acquire_value (return_value);
-        jerryx_module_link_insert ((jerryx_module_header_t *) instance_p, (jerryx_module_header_t **) instances_pp);
+        instance_p->export = jerry_acquire_value (return_value);
+        jerryx_module_header_insert ((jerryx_module_header_t *) instance_p, (jerryx_module_header_t **) instances_pp);
       }
     }
     return return_value;

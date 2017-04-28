@@ -127,7 +127,9 @@ JERRYX_C_CTOR (_register_module_handler_)
   (jerry_get_user_context ())
 #endif /* JERRYX_MODULE_HAVE_CONTEXT */
 
-/* Context-free list of modules */
+/* This list of module definitions is constructed by calls to jerry_module_register (). jerry_module_register () does
+ * not require a user context. The list is simply a collection of global static structures defined in each module,
+ * arranged into a linked list. */
 static jerryx_module_t *modules = NULL;
 
 void

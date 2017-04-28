@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRYSCRIPT_H
-#define JERRYSCRIPT_H
+#ifndef JERRYSCRIPT_CORE_H
+#define JERRYSCRIPT_CORE_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -31,6 +31,7 @@ extern "C"
 /* TODO: for other compilers */
 #define JERRY_DEPRECATED_API
 #endif /* __GNUC__ */
+
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
@@ -401,15 +402,6 @@ bool jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, jerry_size_t bu
 bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t buf_size);
 
 /**
- * Snapshot functions.
- */
-size_t jerry_parse_and_save_snapshot (const jerry_char_t *source_p, size_t source_size, bool is_for_global,
-                                      bool is_strict, uint32_t *buffer_p, size_t buffer_size);
-jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode);
-size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
-                                      uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
-
-/**
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
@@ -421,4 +413,4 @@ void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, voi
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* !JERRYSCRIPT_H */
+#endif /* !JERRYSCRIPT_CORE_H */

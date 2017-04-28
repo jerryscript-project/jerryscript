@@ -37,7 +37,7 @@ CFLAGS += -DDEVELHELP
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
-INCLUDES += -I$(JERRYDIR)/jerry-core/
+INCLUDES += -I$(JERRYDIR)/jerry-core/include
 
 # Add the shell and some shell commands
 USEMODULE += shell

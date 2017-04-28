@@ -15,7 +15,7 @@
 
 #include "mbed-drivers/mbed.h"
 
-#include "jerry-core/jerryscript.h"
+#include "jerry-core/include/jerryscript.h"
 #include "jerry_run.h"
 
 #include "jerry-targetjs.h"
@@ -64,7 +64,7 @@ void app_start (int, char**)
 
   printf ("\r\nJerryScript in mbed\r\n");
   printf ("Version: \t%d.%d\n\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
-  
+
   if (jerry_task_init () == 0)
   {
     minar::Scheduler::postCallback(jerry_loop).period(minar::milliseconds(100));

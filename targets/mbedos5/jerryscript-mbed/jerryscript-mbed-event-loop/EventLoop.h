@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "jerry-core/jerryscript.h"
+#include "jerry-core/include/jerryscript.h"
 
 #include "Callback.h"
 #include "mbed_assert.h"

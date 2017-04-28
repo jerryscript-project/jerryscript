@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "jerry-core/jerryscript.h"
+#include "jerry-core/include/jerryscript.h"
 #include "jerry_extapi.h"
 #include "jerry_run.h"
 
@@ -80,7 +80,7 @@ int js_loop (uint32_t ticknow)
   jerry_value_t global_obj = jerry_get_global_object ();
   jerry_value_t sys_name = jerry_create_string ((const jerry_char_t *) fn_sys_loop_name);
   jerry_value_t sysloop_func = jerry_get_property (global_obj, sys_name);
-  
+
   jerry_release_value (sys_name);
 
   if (jerry_value_has_error_flag (sysloop_func))

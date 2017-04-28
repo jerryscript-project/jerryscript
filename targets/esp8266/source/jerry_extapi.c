@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "jerry-core/jerryscript.h"
+#include "jerry-core/include/jerryscript.h"
 #include "jerry_extapi.h"
 
 #include "native_esp8266.h"

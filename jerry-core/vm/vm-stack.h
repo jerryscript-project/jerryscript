@@ -16,7 +16,6 @@
 #ifndef VM_STACK_H
 #define VM_STACK_H
 
-#include "config.h"
 #include "ecma-globals.h"
 
 /** \addtogroup vm Virtual machine

@@ -38,7 +38,6 @@
 
 #include <math.h>
 
-#include "config.h"
 #include "ecma-helpers.h"
 
 /** \addtogroup ecma ECMA

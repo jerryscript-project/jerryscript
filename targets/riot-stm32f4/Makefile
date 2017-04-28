@@ -43,7 +43,8 @@ INCLUDES += -I$(JERRYDIR)/jerry-core/
 USEMODULE += shell
 USEMODULE += shell_commands
 
-# Add the jerry lib
-USEMODULE += libjerrycore
+# Add the jerry libs
+USEMODULE += libjerrycore libjerryport-minimal
+
 
 include $(RIOTBASE)/Makefile.include

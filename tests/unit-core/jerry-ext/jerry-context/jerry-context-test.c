@@ -65,8 +65,8 @@ main (int argc, char **argv)
 
   jerry_init_with_user_context (JERRY_INIT_EMPTY, jerryx_context_init, jerryx_context_deinit);
 
-  TEST_ASSERT (jerryx_context_get_slot (slot1) == static_slot1);
-  TEST_ASSERT (jerryx_context_get_slot (slot2) == static_slot2);
+  TEST_ASSERT (jerryx_context_get (slot1) == static_slot1);
+  TEST_ASSERT (jerryx_context_get (slot2) == static_slot2);
 
   jerry_cleanup ();
 

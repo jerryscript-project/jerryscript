@@ -39,5 +39,5 @@ int jerryx_context_request_slot (jerry_user_context_init_cb init_cb,
                                  jerry_user_context_deinit_cb deinit_cb);
 
 
-void *jerryx_context_get_slot (int slot);
+void *jerryx_context_get (int slot);
 #endif /* !JERRYX_CONTEXT_H */

@@ -95,7 +95,7 @@ jerryx_context_deinit (void *user_context_p) /**< user context to deinit */
  * Request an index for per-context data.
  *
  * @return the slot in which the user data will be stored, or -1 on failure. The value can later be passed to
- * jerryx_context_get_slot () to retrieve the per-context user data.
+ * jerryx_context_get () to retrieve the per-context user data.
  */
 int
 jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback for creating a new context */
@@ -126,7 +126,7 @@ jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback f
  * @return the user data that was created in the given slot when the context was initialized.
  */
 void *
-jerryx_context_get_slot (int slot) /**< the slot from which to retrieve the data */
+jerryx_context_get (int slot) /**< the slot from which to retrieve the data */
 {
   void *return_value = NULL;
   void **slots = (void **) jerry_get_user_context ();
@@ -137,4 +137,4 @@ jerryx_context_get_slot (int slot) /**< the slot from which to retrieve the data
   }
 
   return return_value;
-} /* jerryx_context_get_slot */
+} /* jerryx_context_get */

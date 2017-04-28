@@ -106,7 +106,7 @@ JERRYX_C_CTOR (_register_module_handler_)
                                                                  jerryx_module_context_deinit);
 } /* JERRYX_C_CTOR */
 #define JERRYX_MODULE_CONTEXT \
-  (jerryx_context_get_slot (jerryx_module_user_context_slot))
+  (jerryx_context_get (jerryx_module_user_context_slot))
 #else /* !JERRYX_MODULE_HAVE_CONTEXT */
 #define JERRYX_MODULE_CONTEXT \
   (jerry_get_user_context ())
@@ -175,7 +175,7 @@ jerryx_module_load (const jerry_char_t *name)
     return return_value;
   }
 
-  error_message_size = 1 + name_length + sizeof (not_found_prologue) - 1 + sizeof (not_found_epilogue) - 1;
+  error_message_size = name_length + sizeof (not_found_prologue) + sizeof (not_found_epilogue) - 1;
   error_message = jmem_heap_alloc_block_null_on_error (error_message_size);
   if (error_message)
   {

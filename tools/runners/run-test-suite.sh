@@ -118,13 +118,13 @@ ENGINE_TEMP=`mktemp engine-out.XXXXXXXXXX`
 
 for test in `cat $TEST_FILES`
 do
-    error_code=`echo $test | grep -e "^.\/fail\/[0-9]*\/" -o | cut -d / -f 3`
-    if [ "$error_code" = "" ]
+    if [[ $test =~ ^\.\/fail\/ ]]
     then
-        PASS="PASS"
-        error_code=0
-    else
+        error_code=1
         PASS="PASS (XFAIL)"
+    else
+        error_code=0
+        PASS="PASS"
     fi
 
     full_test=$TESTS_DIR/${test#./}

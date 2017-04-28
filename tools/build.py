@@ -108,6 +108,8 @@ def get_arguments():
                         help='build unittests')
     parser.add_argument('-v', '--verbose', action='store_const', const='ON', default='OFF',
                         help='increase verbosity')
+    parser.add_argument('--vm-exec-stop', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable VM execution stopping (%(choices)s; default: %(default)s)')
 
     devgroup = parser.add_argument_group('developer options')
     devgroup.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -161,6 +163,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_SYSTEM_ALLOCATOR=%s' % arguments.system_allocator)
     build_options.append('-DENABLE_STATIC_LINK=%s' % arguments.static_link)
     build_options.append('-DENABLE_STRIP=%s' % arguments.strip)
+    build_options.append('-DFEATURE_VM_EXEC_STOP=%s' % arguments.vm_exec_stop)
 
     if arguments.toolchain:
         build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)

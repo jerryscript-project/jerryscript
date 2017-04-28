@@ -847,6 +847,29 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         if (opcode_data & VM_OC_BACKWARD_BRANCH)
         {
+#ifdef JERRY_VM_EXEC_STOP
+          if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL
+              && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
+          {
+            result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
+
+            if (ecma_is_value_undefined (result))
+            {
+              JERRY_CONTEXT (vm_exec_stop_counter) = JERRY_CONTEXT (vm_exec_stop_frequency);
+            }
+            else
+            {
+              JERRY_CONTEXT (vm_exec_stop_counter) = 1;
+
+              if (!ECMA_IS_VALUE_ERROR (result))
+              {
+                result = ecma_make_error_value (result);
+              }
+              goto error;
+            }
+          }
+#endif /* JERRY_VM_EXEC_STOP */
+
           branch_offset = -branch_offset;
         }
       }
@@ -2595,6 +2618,33 @@ error:
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW);
           stack_top_p[-2] = result;
         }
+
+#ifdef JERRY_VM_EXEC_STOP
+        if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL
+            && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
+        {
+          result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
+
+          if (ecma_is_value_undefined (result))
+          {
+            JERRY_CONTEXT (vm_exec_stop_counter) = JERRY_CONTEXT (vm_exec_stop_frequency);
+          }
+          else
+          {
+            JERRY_CONTEXT (vm_exec_stop_counter) = 1;
+
+            left_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+            right_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+            if (!ECMA_IS_VALUE_ERROR (result))
+            {
+              result = ecma_make_error_value (result);
+            }
+            goto error;
+          }
+        }
+#endif /* JERRY_VM_EXEC_STOP */
+
         continue;
       }
     }

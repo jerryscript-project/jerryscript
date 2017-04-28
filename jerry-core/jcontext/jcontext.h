@@ -84,6 +84,14 @@ typedef struct
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
+#ifdef JERRY_VM_EXEC_STOP
+  uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
+  uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */
+  void *vm_exec_stop_user_p; /**< user pointer for vm_exec_stop_cb */
+  jerry_vm_exec_stop_callback_t vm_exec_stop_cb; /**< user function which returns whether the
+                                                  *   ECMAScript execution should be stopped */
+#endif /* JERRY_VM_EXEC_STOP */
+
 #ifdef JERRY_DEBUGGER
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */

@@ -159,12 +159,6 @@ class DebuggerPrompt(Cmd):
     def postcmd(self, stop, line):
         return self.stop
 
-    def insert_breakpoint(self, args):
-        if args == "":
-            print("Error: Breakpoint index expected")
-        else:
-            set_breakpoint(self.debugger, args)
-
     def disable_args(self, args):
         if args:
             print("Error: No argument expected")
@@ -180,10 +174,20 @@ class DebuggerPrompt(Cmd):
         self.quit = True
 
     def do_break(self, args):
-        """ Insert breakpoints on the given lines """
-        self.insert_breakpoint(args)
+        """ Insert breakpoints on the given lines or functions """
+        if args == "":
+            print("Error: Breakpoint index expected")
+        else:
+            set_breakpoint(self.debugger, False, args)
 
     do_b = do_break
+
+    def do_fbreak(self, args):
+        """ Insert breakpoints on the given lines or functions, if not found add the pending list """
+        if args == "":
+            print("Error: Breakpoint index expected")
+        else:
+            set_breakpoint(self.debugger, True, args)
 
     def exec_command(self, args, command_id):
         self.stop = True
@@ -217,8 +221,10 @@ class DebuggerPrompt(Cmd):
     do_n = do_next
 
     def do_list(self, args):
-        """ Lists the available breakpoints """
-        if self.disable_args(args):
+        """ Lists the available breakpoints, use 'pending' to list all the available pending breakpoints """
+        if args == "pending":
+            for index, breakpoint in enumerate(self.debugger.pending_breakpoint_list):
+                print("%d: %s" % (index, breakpoint))
             return
 
         for breakpoint in self.debugger.active_breakpoint_list.values():
@@ -249,6 +255,28 @@ class DebuggerPrompt(Cmd):
                 self.debugger.send_breakpoint(breakpoint)
             else:
                 print("Error: Breakpoint %d not found" % (breakpoint_index))
+
+    def do_pendingdel(self, args):
+        """ Delete the given pending breakpoints from the list """
+        if not args:
+            print("Error: Pending breakpoint index expected")
+            return
+
+        else:
+            try:
+                breakpoint_index = int(args)
+            except ValueError as val_errno:
+                print("Error: Integer number expectes, %s" % (val_errno))
+                return
+
+            if breakpoint_index <= len(self.debugger.pending_breakpoint_list):
+                try:
+                    del self.debugger.pending_breakpoint_list[breakpoint_index]
+                except IndexError as index_errno:
+                    print("Error: Index not found, %s" % (index_errno))
+                    return
+            else:
+                print("Error: Pending breakpoint %d not found" % (breakpoint_index))
 
     def exec_backtrace(self, args):
         max_depth = 0
@@ -408,6 +436,7 @@ class JerryDebugger(object):
         self.last_breakpoint_hit = None
         self.next_breakpoint_index = 0
         self.active_breakpoint_list = {}
+        self.pending_breakpoint_list = []
         self.line_list = Multimap()
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
@@ -678,6 +707,17 @@ def parse_source(debugger, data):
         for line, breakpoint in function.lines.items():
             debugger.line_list.insert(line, breakpoint)
 
+    # Try to set the pending breakpoints
+    if len(debugger.pending_breakpoint_list) != 0:
+        logging.debug("Pending breakpoints list: %s", debugger.pending_breakpoint_list)
+
+        for breakpoint in debugger.pending_breakpoint_list:
+            if isinstance(breakpoint, int):
+                breakpoint = source_code_name + ":" + str(breakpoint)
+            set_breakpoint(debugger, False, breakpoint)
+    else:
+        logging.debug("No pending breakpoints")
+
 
 def release_function(debugger, data):
     byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
@@ -708,7 +748,7 @@ def enable_breakpoint(debugger, breakpoint):
     print ("Breakpoint %d at %s" % (breakpoint.active_index, breakpoint))
 
 
-def set_breakpoint(debugger, string):
+def set_breakpoint(debugger, pending, string):
     line = re.match("(.*):(\\d+)$", string)
     found = False
 
@@ -733,7 +773,13 @@ def set_breakpoint(debugger, string):
 
     if not found:
         print("Breakpoint not found")
-        return
+        if pending:
+            if line:
+                debugger.pending_breakpoint_list.append(line)
+            else:
+                debugger.pending_breakpoint_list.append(string)
+            print ("Pending breakpoint added")
+    return
 
 
 def get_breakpoint(debugger, breakpoint_data):

@@ -71,12 +71,12 @@ void jerryx_module_context_deinit (void *context_p);
 /**
  * Function to register a module
  */
-void jerryx_module_register (jerryx_module_t *module);
+void jerryx_module_register (jerryx_module_t *module_p);
 
 /**
  * Function to unregister a module
  */
-void jerryx_module_unregister (jerryx_module_t *module);
+void jerryx_module_unregister (jerryx_module_t *module_p);
 
 /**
  * Function to load a copy of a module into the current context

@@ -148,7 +148,7 @@ static const char not_found_prologue[] = "Module '";
 static const char not_found_epilogue[] = "' not found";
 
 jerry_value_t
-jerryx_module_load (const jerry_char_t *name)
+jerryx_module_resolve (const jerry_char_t *name)
 {
   jerry_value_t return_value = 0;
   size_t error_message_size = 0, name_length = strlen ((char *) name);
@@ -191,4 +191,4 @@ jerryx_module_load (const jerry_char_t *name)
   }
 
   return return_value;
-} /* jerryx_module_load */
+} /* jerryx_module_resolve */

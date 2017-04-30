@@ -41,7 +41,7 @@ handle_require (const jerry_value_t js_function,
   if (bytes_copied < 256)
   {
     module_name[bytes_copied] = 0;
-    return_value = jerryx_module_load (module_name);
+    return_value = jerryx_module_resolve (module_name);
   }
 
   return return_value;

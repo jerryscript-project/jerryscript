@@ -81,7 +81,7 @@ void jerryx_module_unregister (jerryx_module_t *module);
 /**
  * Function to load a copy of a module into the current context
  */
-jerry_value_t jerryx_module_load (const jerry_char_t *name);
+jerry_value_t jerryx_module_resolve (const jerry_char_t *name);
 
 #define JERRYX_MODULE(name, init_cb)                                 \
 EXTERN_C_START                                                       \

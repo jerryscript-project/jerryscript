@@ -97,7 +97,7 @@ jerryx_module_free_instance (jerryx_module_header_t *link)
 void *
 jerryx_module_context_init (void)
 {
-  void *return_value = jmem_heap_alloc_block_null_on_error (sizeof (jerryx_module_instance_t *));
+  void *return_value = jmem_heap_alloc_block (sizeof (jerryx_module_instance_t *));
   memset (return_value, 0, sizeof (jerryx_module_instance_t *));
   return return_value;
 } /* jerryx_module_context_init */
@@ -157,11 +157,8 @@ jerryx_module_load (const jerry_char_t *name)
   jerryx_module_instance_t **instances_pp = JERRYX_MODULE_CONTEXT;
   jerryx_module_instance_t *instance_p = NULL;
 
-  if (instances_pp)
-  {
-    instance_p =
-    (jerryx_module_instance_t *) jerryx_module_header_find (*((jerryx_module_header_t **) instances_pp), name, NULL);
-  }
+  instance_p =
+  (jerryx_module_instance_t *) jerryx_module_header_find (*((jerryx_module_header_t **) instances_pp), name, NULL);
 
   if (instance_p)
   {
@@ -173,16 +170,10 @@ jerryx_module_load (const jerry_char_t *name)
   if (module)
   {
     return_value = module->init ();
-    if (instances_pp)
-    {
-      instance_p = (jerryx_module_instance_t *) jmem_heap_alloc_block_null_on_error (sizeof (jerryx_module_instance_t));
-      if (instance_p)
-      {
-        JERRYX_MODULE_HEADER_RUNTIME_INIT (instance_p, module->link.name);
-        instance_p->export = jerry_acquire_value (return_value);
-        jerryx_module_header_insert ((jerryx_module_header_t *) instance_p, (jerryx_module_header_t **) instances_pp);
-      }
-    }
+    instance_p = (jerryx_module_instance_t *) jmem_heap_alloc_block (sizeof (jerryx_module_instance_t));
+    JERRYX_MODULE_HEADER_RUNTIME_INIT (instance_p, module->link.name);
+    instance_p->export = jerry_acquire_value (return_value);
+    jerryx_module_header_insert ((jerryx_module_header_t *) instance_p, (jerryx_module_header_t **) instances_pp);
     return return_value;
   }
 

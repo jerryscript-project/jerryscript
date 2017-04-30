@@ -50,18 +50,15 @@ jerryx_context_init (void)
 
   before_first_context = false;
 
-  ret = (void **) jmem_heap_alloc_block_null_on_error (HEAP_BLOCK_SIZE);
+  ret = (void **) jmem_heap_alloc_block (HEAP_BLOCK_SIZE);
 
-  if (ret)
+  memset (ret, 0, HEAP_BLOCK_SIZE);
+
+  for (index = 0; index < JERRYX_CONTEXT_SLOTS; index++)
   {
-    memset (ret, 0, HEAP_BLOCK_SIZE);
-
-    for (index = 0; index < JERRYX_CONTEXT_SLOTS; index++)
+    if (slot_info[index].init_cb)
     {
-      if (slot_info[index].init_cb)
-      {
-        ret[index] = slot_info[index].init_cb ();
-      }
+      ret[index] = slot_info[index].init_cb ();
     }
   }
 
@@ -128,13 +125,12 @@ jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback f
 void *
 jerryx_context_get (int slot) /**< the slot from which to retrieve the data */
 {
-  void *return_value = NULL;
   void **slots = (void **) jerry_get_user_context ();
 
-  if (slots && slot >= 0 && slot < JERRYX_CONTEXT_SLOTS)
+  if (!(slots && slot >= 0 && slot < JERRYX_CONTEXT_SLOTS))
   {
-    return_value = slots[slot];
+    jerry_port_fatal(ERR_FAILED_INTERNAL_ASSERTION);
   }
 
-  return return_value;
+  return slots[slot];
 } /* jerryx_context_get */

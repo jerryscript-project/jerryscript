@@ -55,7 +55,7 @@ typedef struct
 {
   jerryx_module_header_t link;
   int version;
-  jerry_value_t (*init)(void);
+  jerry_value_t (*onresolve)(void);
 } jerryx_module_t;
 
 /**
@@ -89,7 +89,7 @@ static jerryx_module_t _module =                                     \
 {                                                                    \
   .link = JERRYX_MODULE_HEADER_STATIC_INIT ((jerry_char_t *) #name), \
   .version = JERRYX_MODULE_VERSION,                                  \
-  .init = (init_cb)                                                  \
+  .onresolve = (init_cb)                                             \
 };                                                                   \
 JERRYX_C_CTOR(_register_ ## name)                                    \
 {                                                                    \

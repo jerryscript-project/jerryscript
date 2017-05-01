@@ -169,7 +169,7 @@ jerryx_module_resolve (const jerry_char_t *name)
 
   if (module)
   {
-    return_value = module->init ();
+    return_value = module->onresolve ();
     instance_p = (jerryx_module_instance_t *) jmem_heap_alloc_block (sizeof (jerryx_module_instance_t));
     JERRYX_MODULE_HEADER_RUNTIME_INIT (instance_p, module->link.name);
     instance_p->export = jerry_acquire_value (return_value);

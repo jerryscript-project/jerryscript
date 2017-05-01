@@ -129,7 +129,7 @@ jerryx_context_get (int slot) /**< the slot from which to retrieve the data */
 
   if (!(slots && slot >= 0 && slot < JERRYX_CONTEXT_SLOTS))
   {
-    jerry_port_fatal(ERR_FAILED_INTERNAL_ASSERTION);
+    jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION);
   }
 
   return slots[slot];

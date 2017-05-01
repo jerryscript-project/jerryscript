@@ -32,10 +32,10 @@ static void fn(void)
 
 #define JERRYX_MODULE_VERSION 1
 
-typedef struct jerryx_module_link
+typedef struct jerryx_module_header
 {
   jerry_char_t *name;
-  struct jerryx_module_link *next;
+  struct jerryx_module_header *next;
 } jerryx_module_header_t;
 
 #define JERRYX_MODULE_HEADER_STATIC_INIT(module_name) \

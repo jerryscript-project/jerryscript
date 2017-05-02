@@ -19,8 +19,8 @@ if (NOT IS_ABSOLUTE ${FEATURE_PROFILE})
   set(FEATURE_PROFILE "${CMAKE_SOURCE_DIR}/jerry-core/profiles/${FEATURE_PROFILE}.profile")
 endif()
 
-if(NOT ${FEATURE_PROFILE} STREQUAL "${CMAKE_SOURCE_DIR}/jerry-core/profiles/es5.1.profile")
-  message(FATAL_ERROR "FEATURE_PROFILE='${FEATURE_PROFILE}' isn't supported with UNITTESTS=ON")
+if(${FEATURE_PROFILE} STREQUAL "${CMAKE_SOURCE_DIR}/jerry-core/profiles/minimal.profile")
+  message(FATAL_ERROR "minimal profile isn't supported in unit-core")
 endif()
 
 # Unit tests main modules

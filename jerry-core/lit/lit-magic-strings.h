@@ -38,6 +38,8 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_PROMISE = LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**<  [[Promise]] of promise
                                                                              *    reject or resolve functions */
   LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED, /**< [[AlreadyResolved]] of promise reject or resolve functions */
+  LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION, /**< the resolve funtion of the promise object */
+  LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION, /**< the reject function of the promise object */
   LIT_NEED_MARK_MAGIC_STRING__COUNT,  /**< number of internal magic strings which will be used as properties' names,
                                        *   and the properties need to be marked during gc. */
   LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE = LIT_NEED_MARK_MAGIC_STRING__COUNT, /**< native handle package

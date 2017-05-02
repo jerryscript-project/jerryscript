@@ -404,7 +404,7 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
  *
  * @return pointer to the resolving functions
  */
-ecma_promise_resolving_functions_t *
+static ecma_promise_resolving_functions_t *
 ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promise object */
 {
   /* 1. */
@@ -455,7 +455,7 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
 /**
  * Free the heap and the member of the resolving functions.
  */
-void
+static void
 ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs) /**< points to the functions */
 {
   ecma_free_value (funcs->resolve);
@@ -473,7 +473,7 @@ ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs
  */
 ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function or object */
-                               bool is_func) /**< indicates whether executor is a function */
+                               ecma_promise_executor_type_t type) /**< indicates the type of executor */
 {
   /* 3. */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE_PROTOTYPE);
@@ -496,10 +496,22 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   /* 8. */
   ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (object_p);
 
-  /* 9. */
-  ecma_value_t completion;
+  ecma_string_t str_resolve, str_reject;
+  ecma_init_ecma_magic_string (&str_resolve, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
+  ecma_init_ecma_magic_string (&str_reject, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  ecma_op_object_put (object_p,
+                      &str_resolve,
+                      funcs->resolve,
+                      false);
+  ecma_op_object_put (object_p,
+                      &str_reject,
+                      funcs->reject,
+                      false);
 
-  if (is_func)
+  /* 9. */
+  ecma_value_t completion = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  if (type == ECMA_PROMISE_EXECUTOR_FUNCTION)
   {
     JERRY_ASSERT (ecma_op_is_callable (executor));
 
@@ -509,13 +521,18 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
                                         argv,
                                         2);
   }
-  else
+  else if (type == ECMA_PROMISE_EXECUTOR_OBJECT)
   {
     JERRY_ASSERT (ecma_is_value_object (executor));
 
     completion = ecma_call_builtin_executor (ecma_get_object_from_value (executor),
                                              funcs->resolve,
                                              funcs->reject);
+  }
+  else
+  {
+    JERRY_ASSERT (type == ECMA_PROMISE_EXECUTOR_EMPTY);
+    JERRY_UNUSED (executor);
   }
 
   ecma_value_t status = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -572,7 +589,7 @@ ecma_promise_new_capability (void)
                       false);
 
   /* 6. */
-  ecma_value_t promise = ecma_op_create_promise_object (executor, false);
+  ecma_value_t promise = ecma_op_create_promise_object (executor, ECMA_PROMISE_EXECUTOR_OBJECT);
 
   /* 10. */
   ecma_op_object_put (capability_p,

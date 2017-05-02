@@ -27,13 +27,6 @@
 #define CONFIG_MEM_STACK_LIMIT (4096)
 
 /**
- * Size of pool chunk
- *
- * Should not be less than size of any of ECMA Object Model's data types.
- */
-#define CONFIG_MEM_POOL_CHUNK_SIZE (8)
-
-/**
  * Size of heap
  */
 #ifndef CONFIG_MEM_HEAP_AREA_SIZE
@@ -49,26 +42,6 @@
  * Desired limit of heap usage
  */
 #define CONFIG_MEM_HEAP_DESIRED_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_AREA_SIZE / 32, CONFIG_MEM_HEAP_MAX_LIMIT))
-
-/**
- * Number of lower bits in key of literal hash table.
- */
-#define CONFIG_LITERAL_HASH_TABLE_KEY_BITS (7)
-
-/**
- * Width of fields used for holding counter of references to ecma-strings and ecma-objects
- *
- * The option affects maximum number of simultaneously existing:
- *  - references to one string;
- *  - stack references to one object
- * The number is ((2 ^ CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1).
- *
- * Also the option affects size of ECMA Object Model's data types.
- * In any case size of any of the types should not exceed CONFIG_MEM_POOL_CHUNK_SIZE.
- */
-#define CONFIG_ECMA_REFERENCE_COUNTER_WIDTH (12)
-
-#define CONFIG_ECMA_REFERENCE_COUNTER_LIMIT ((1u << CONFIG_ECMA_REFERENCE_COUNTER_WIDTH) - 1u)
 
 /**
  * Use 32-bit/64-bit float for ecma-numbers
@@ -89,22 +62,6 @@
 #if (!defined (CONFIG_DISABLE_DATE_BUILTIN) && (CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32))
 #  error "Date does not support float32"
 #endif
-
-/**
- * Representation for ecma-characters
- */
-#define CONFIG_ECMA_CHAR_ASCII (1) /* ASCII */
-#define CONFIG_ECMA_CHAR_UTF16 (2) /* UTF-16 */
-
-#ifndef CONFIG_ECMA_CHAR_ENCODING
-# define CONFIG_ECMA_CHAR_ENCODING CONFIG_ECMA_CHAR_ASCII
-#else /* CONFIG_ECMA_CHAR_ENCODING */
-# if (CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII \
-      && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16)
-#  error "ECMA-char encoding is configured incorrectly"
-# endif /* CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_ASCII
-           && CONFIG_ECMA_CHAR_ENCODING != CONFIG_ECMA_CHAR_UTF16 */
-#endif /* !CONFIG_ECMA_CHAR_ENCODING */
 
 /**
  * Disable ECMA lookup cache
@@ -135,15 +92,5 @@
  * Number of ecma values inlined into VM stack frame
  */
 #define CONFIG_VM_STACK_FRAME_INLINED_VALUES_NUMBER (16)
-
-/**
- * Run GC after execution of each byte-code instruction
- */
-// #define CONFIG_VM_RUN_GC_AFTER_EACH_OPCODE
-
-/**
- * Flag, indicating whether to enable parser-time byte-code optimizations
- */
-#define CONFIG_PARSER_ENABLE_PARSE_TIME_BYTE_CODE_OPTIMIZER
 
 #endif /* !CONFIG_H */

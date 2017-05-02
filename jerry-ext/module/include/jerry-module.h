@@ -83,13 +83,13 @@ void jerryx_module_unregister (jerryx_module_t *module_p);
  */
 jerry_value_t jerryx_module_resolve (const jerry_char_t *name);
 
-#define JERRYX_MODULE(name, init_cb)                                 \
+#define JERRYX_MODULE(name, onresolve_cb)                            \
 EXTERN_C_START                                                       \
 static jerryx_module_t _module =                                     \
 {                                                                    \
   .link = JERRYX_MODULE_HEADER_STATIC_INIT ((jerry_char_t *) #name), \
   .version = JERRYX_MODULE_VERSION,                                  \
-  .onresolve = (init_cb)                                             \
+  .onresolve = (onresolve_cb)                                        \
 };                                                                   \
 JERRYX_C_CTOR(_register_ ## name)                                    \
 {                                                                    \

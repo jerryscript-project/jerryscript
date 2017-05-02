@@ -25,9 +25,9 @@ message(STATUS "JERRYX_CONTEXT            " ${JERRYX_CONTEXT})
 message(STATUS "JERRYX_MODULE             " ${JERRYX_MODULE})
 
 if(JERRYX_MODULE)
-  add_subdirectory(jerry-module)
+  add_subdirectory(module)
 endif()
 
 if(JERRYX_CONTEXT)
-  add_subdirectory(jerry-context)
+  add_subdirectory(context)
 endif()

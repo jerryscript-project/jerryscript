@@ -21,6 +21,6 @@ file(GLOB JERRYX_CONTEXT_UNIT_TEST_SOURCES *.c)
 
 add_executable(${JERRYX_CONTEXT_UNITTEST_NAME} ${JERRYX_CONTEXT_UNIT_TEST_SOURCES})
 set_property(TARGET ${JERRYX_CONTEXT_UNITTEST_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
-target_link_libraries(${JERRYX_CONTEXT_UNITTEST_NAME} jerry-context jerry-core jerry-port-default-minimal)
+target_link_libraries(${JERRYX_CONTEXT_UNITTEST_NAME} jerryx-context jerry-core jerry-port-default-minimal)
 target_include_directories(${JERRYX_CONTEXT_UNITTEST_NAME} PRIVATE ${INCLUDE_UNITTESTS})
-target_include_directories(${JERRYX_CONTEXT_UNITTEST_NAME} PRIVATE ${INCLUDE_CONTEXT})
+target_include_directories(${JERRYX_CONTEXT_UNITTEST_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/jerry-ext/context/include")

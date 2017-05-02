@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-set(JERRYX_MODULE_NAME jerry-module)
+set(JERRYX_MODULE_NAME jerryx-module)
 project (${JERRYX_MODULE_NAME} C)
 
 # Include directories
@@ -28,7 +28,7 @@ file(GLOB SOURCE_MODULE *.c)
 
 add_library(${JERRYX_MODULE_NAME} STATIC ${SOURCE_MODULE})
 if(JERRYX_CONTEXT)
-  target_include_directories(${JERRYX_MODULE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/jerry-ext/jerry-context/include")
+  target_include_directories(${JERRYX_MODULE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/jerry-ext/context/include")
 endif()
 target_include_directories(${JERRYX_MODULE_NAME} PRIVATE ${INCLUDE_MODULE})
 target_include_directories(${JERRYX_MODULE_NAME} INTERFACE ${INCLUDE_MODULE})
@@ -40,4 +40,4 @@ if(NOT "${DEFINES_MODULE}" STREQUAL "")
 endif()
 
 install(TARGETS ${JERRYX_MODULE_NAME} DESTINATION lib)
-install(DIRECTORY ${INCLUDE_MODULE}/ DESTINATION include/jerry-module)
+install(DIRECTORY ${INCLUDE_MODULE}/ DESTINATION include/jerry-ext)

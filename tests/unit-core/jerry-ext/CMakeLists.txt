@@ -13,9 +13,9 @@
 # limitations under the License.
 
 if(JERRYX_CONTEXT)
-  add_subdirectory(jerry-context)
+  add_subdirectory(context)
 endif()
 
 if(JERRYX_MODULE)
-  add_subdirectory(jerry-module)
+  add_subdirectory(module)
 endif()

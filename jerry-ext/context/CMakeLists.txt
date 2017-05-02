@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-set(JERRYX_CONTEXT_NAME jerry-context)
+set(JERRYX_CONTEXT_NAME jerryx-context)
 project (${JERRYX_CONTEXT_NAME} C)
 
 set(JERRYX_CONTEXT_SLOTS "1" CACHE STRING "Number of context slots")
@@ -43,4 +43,4 @@ target_include_directories(${JERRYX_CONTEXT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/j
 target_include_directories(${JERRYX_CONTEXT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/jerry-core/jrt")
 
 install(TARGETS ${JERRYX_CONTEXT_NAME} DESTINATION lib)
-install(DIRECTORY ${INCLUDE_CONTEXT}/ DESTINATION include/jerry-context)
+install(DIRECTORY ${INCLUDE_CONTEXT}/ DESTINATION include/jerry-ext)

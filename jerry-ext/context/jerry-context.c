@@ -28,8 +28,8 @@ typedef struct
 /* Context-free data */
 
 /* We do not allocate slots after a context has already been created. */
-bool before_first_context = true;
-static int next_index = -1;
+static bool allow_slot_request = true;
+static int available_index = -1;
 static jerryx_context_slot_info_t slot_info[JERRYX_CONTEXT_SLOTS] =
 {
   {
@@ -46,23 +46,22 @@ void *
 jerryx_context_init (void)
 {
   size_t index = 0;
-  void **ret = NULL;
+  void **ret_pp = NULL;
 
-  before_first_context = false;
+  allow_slot_request = false;
 
-  ret = (void **) jmem_heap_alloc_block (HEAP_BLOCK_SIZE);
-
-  memset (ret, 0, HEAP_BLOCK_SIZE);
+  ret_pp = (void **) jmem_heap_alloc_block (HEAP_BLOCK_SIZE);
+  memset (ret_pp, 0, HEAP_BLOCK_SIZE);
 
   for (index = 0; index < JERRYX_CONTEXT_SLOTS; index++)
   {
     if (slot_info[index].init_cb)
     {
-      ret[index] = slot_info[index].init_cb ();
+      ret_pp[index] = slot_info[index].init_cb ();
     }
   }
 
-  return ((void *) ret);
+  return ((void *) ret_pp);
 } /* jerryx_context_init */
 
 /**
@@ -72,19 +71,19 @@ void
 jerryx_context_deinit (void *user_context_p) /**< user context to deinit */
 {
   size_t index;
-  void **slots = NULL;
+  void **slots_p = NULL;
 
   if (user_context_p)
   {
-    slots = (void **) user_context_p;
+    slots_p = (void **) user_context_p;
     for (index = 0; index < JERRYX_CONTEXT_SLOTS; index++)
     {
       if (slot_info[index].deinit_cb)
       {
-        slot_info[index].deinit_cb (slots[index]);
+        slot_info[index].deinit_cb (slots_p[index]);
       }
     }
-    jmem_heap_free_block (slots, HEAP_BLOCK_SIZE);
+    jmem_heap_free_block (slots_p, HEAP_BLOCK_SIZE);
   }
 } /* jerryx_context_deinit */
 
@@ -100,9 +99,9 @@ jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback f
 {
   int slot_index = -1;
 
-  if (before_first_context)
+  if (allow_slot_request)
   {
-    slot_index = (++next_index);
+    slot_index = (++available_index);
     if (slot_index >= JERRYX_CONTEXT_SLOTS)
     {
       slot_index = -1;
@@ -125,12 +124,12 @@ jerryx_context_request_slot (jerry_user_context_init_cb init_cb, /**< callback f
 void *
 jerryx_context_get (int slot) /**< the slot from which to retrieve the data */
 {
-  void **slots = (void **) jerry_get_user_context ();
+  void **slots_p = (void **) jerry_get_user_context ();
 
-  if (!(slots && slot >= 0 && slot < JERRYX_CONTEXT_SLOTS))
+  if (!(slots_p && slot >= 0 && slot < JERRYX_CONTEXT_SLOTS))
   {
     jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION);
   }
 
-  return slots[slot];
+  return slots_p[slot];
 } /* jerryx_context_get */

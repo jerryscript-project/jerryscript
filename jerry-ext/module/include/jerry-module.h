@@ -35,27 +35,27 @@ static void fn(void)
 typedef struct jerryx_module_header
 {
   jerry_char_t *name;
-  struct jerryx_module_header *next;
+  struct jerryx_module_header *next_p;
 } jerryx_module_header_t;
 
 #define JERRYX_MODULE_HEADER_STATIC_INIT(module_name) \
   {                                                 \
     .name = (module_name),                          \
-    .next = NULL                                    \
+    .next_p = NULL                                  \
   }
 
-#define JERRYX_MODULE_HEADER_UNLINK(link) \
-  ((jerryx_module_header_t *) link)->next = NULL
+#define JERRYX_MODULE_HEADER_UNLINK(header) \
+  ((jerryx_module_header_t *) (header))->next_p = NULL
 
-#define JERRYX_MODULE_HEADER_RUNTIME_INIT(link, module_name) \
-  ((jerryx_module_header_t *) link)->name = (module_name); \
-  JERRYX_MODULE_HEADER_UNLINK((link))
+#define JERRYX_MODULE_HEADER_RUNTIME_INIT(header, module_name) \
+  ((jerryx_module_header_t *) (header))->name = (module_name); \
+  JERRYX_MODULE_HEADER_UNLINK((header))
 
 typedef struct
 {
-  jerryx_module_header_t link;
+  jerryx_module_header_t header;
   int version;
-  jerry_value_t (*onresolve)(void);
+  jerry_value_t (*on_resolve)(void);
 } jerryx_module_t;
 
 /**
@@ -83,35 +83,24 @@ void jerryx_module_unregister (jerryx_module_t *module_p);
  */
 jerry_value_t jerryx_module_resolve (const jerry_char_t *name);
 
-#define JERRYX_MODULE(name, onresolve_cb)                            \
-EXTERN_C_START                                                       \
-static jerryx_module_t _module =                                     \
-{                                                                    \
-  .link = JERRYX_MODULE_HEADER_STATIC_INIT ((jerry_char_t *) #name), \
-  .version = JERRYX_MODULE_VERSION,                                  \
-  .onresolve = (onresolve_cb)                                        \
-};                                                                   \
-JERRYX_C_CTOR(_register_ ## name)                                    \
-{                                                                    \
-  jerryx_module_register(&_module);                                  \
-}                                                                    \
+#define JERRYX_MODULE(name, on_resolve_cb)                             \
+EXTERN_C_START                                                         \
+static jerryx_module_t _module =                                       \
+{                                                                      \
+  .header = JERRYX_MODULE_HEADER_STATIC_INIT ((jerry_char_t *) #name), \
+  .version = JERRYX_MODULE_VERSION,                                    \
+  .on_resolve = (on_resolve_cb)                                        \
+};                                                                     \
+JERRYX_C_CTOR(_register_ ## name)                                      \
+{                                                                      \
+  jerryx_module_register(&_module);                                    \
+}                                                                      \
 EXTERN_C_END
 
-/**
- * A structure is needed to hold the function pointer because the compiler doesn't like to perform pointer arithmetic on
- * function pointers.
- */
-typedef struct
-{
-  jerry_value_t (*resolver) (const jerry_char_t *name);
-} jerryx_module_resolver_t;
-
-#define JERRYX_MODULE_RESOLVER(cb_name)                                        \
-static jerry_value_t cb_name (const jerry_char_t *name) __attribute__((used)); \
-static jerryx_module_resolver_t __static_global_ ## cb_name                    \
-__attribute__((used)) __attribute__((section("jerryx_module_resolvers"))) = {  \
-  .resolver = cb_name                                                          \
-};                                                                             \
+#define JERRYX_MODULE_RESOLVER(cb_name)                                              \
+static jerry_value_t cb_name (const jerry_char_t *name);                             \
+static jerry_value_t (*__static_global_ ## cb_name) (const jerry_char_t *)           \
+__attribute__((used)) __attribute__((section("jerryx_module_resolvers"))) = cb_name; \
 static jerry_value_t cb_name (const jerry_char_t *name)
 
 #endif /* !JERRYX_MODULE_H */

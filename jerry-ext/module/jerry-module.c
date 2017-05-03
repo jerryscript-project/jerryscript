@@ -95,30 +95,30 @@ jerryx_module_free_instance (jerryx_module_header_t *header_p)
 } /* jerryx_module_free_instance */
 
 void *
-jerryx_module_context_init (void)
+jerryx_module_manager_init (void)
 {
   void *ret = jmem_heap_alloc_block (sizeof (jerryx_module_instance_t *));
   memset (ret, 0, sizeof (jerryx_module_instance_t *));
   return ret;
-} /* jerryx_module_context_init */
+} /* jerryx_module_manager_init */
 
 void
-jerryx_module_context_deinit (void *context_p)
+jerryx_module_manager_deinit (void *context_p)
 {
   if (context_p)
   {
     jerryx_module_header_free (*((jerryx_module_header_t **) (context_p)), jerryx_module_free_instance);
     jmem_heap_free_block (context_p, sizeof (jerryx_module_header_t *));
   }
-} /* jerryx_module_context_deinit */
+} /* jerryx_module_manager_deinit */
 
 #ifdef JERRYX_MODULE_HAVE_CONTEXT
 #include "jerry-context.h"
 static int jerryx_module_user_context_slot = -1;
 JERRYX_C_CTOR (_register_module_handler_)
 {
-  jerryx_module_user_context_slot = jerryx_context_request_slot (jerryx_module_context_init,
-                                                                 jerryx_module_context_deinit);
+  jerryx_module_user_context_slot = jerryx_context_request_slot (jerryx_module_manager_init,
+                                                                 jerryx_module_manager_deinit);
 } /* JERRYX_C_CTOR */
 #define JERRYX_MODULE_CONTEXT \
   (jerryx_context_get (jerryx_module_user_context_slot))

@@ -59,7 +59,7 @@ main (int argc, char **argv)
 #ifdef JERRYX_MODULE_HAVE_CONTEXT
   jerry_init_with_user_context (JERRY_INIT_EMPTY, jerryx_context_init, jerryx_context_deinit);
 #else /* !JERRYX_MODULE_HAVE_CONTEXT */
-  jerry_init_with_user_context (JERRY_INIT_EMPTY, jerryx_module_context_init, jerryx_module_context_deinit);
+  jerry_init_with_user_context (JERRY_INIT_EMPTY, jerryx_module_manager_init, jerryx_module_manager_deinit);
 #endif /* JERRYX_MODULE_HAVE_CONTEXT */
 
   js_global = jerry_get_global_object ();

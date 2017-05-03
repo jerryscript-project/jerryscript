@@ -61,12 +61,12 @@ typedef struct
 /**
  * Function to create a module manager context
  */
-void *jerryx_module_context_init (void);
+void *jerryx_module_manager_init (void);
 
 /**
  * Function to clean up a given module manager context
  */
-void jerryx_module_context_deinit (void *context_p);
+void jerryx_module_manager_deinit (void *context_p);
 
 /**
  * Function to register a module

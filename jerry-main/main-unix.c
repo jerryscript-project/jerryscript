@@ -122,39 +122,111 @@ gc_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< funct
   return jerry_create_undefined ();
 } /* gc_handler */
 
+/**
+ * Provide the 'print' implementation for the engine.
+ *
+ * The routine converts all of its arguments to strings and outputs them using
+ * 'printf'.
+ *
+ * The NUL character is output as "\u0000", other code points are output using
+ * "%c" format argument.
+ *
+ * @return undefined - if all arguments could be converted to strings,
+ *         error - otherwise.
+ */
+static jerry_value_t
+print_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+               const jerry_value_t this_p __attribute__((unused)), /**< this arg */
+               const jerry_value_t args_p[], /**< function arguments */
+               const jerry_length_t args_cnt) /**< number of function arguments */
+{
+  jerry_value_t ret_val = jerry_create_undefined ();
+
+  for (jerry_length_t arg_index = 0;
+       jerry_value_is_undefined (ret_val) && arg_index < args_cnt;
+       arg_index++)
+  {
+    jerry_value_t str_val = jerry_value_to_string (args_p[arg_index]);
+
+    if (!jerry_value_has_error_flag (str_val))
+    {
+      if (arg_index != 0)
+      {
+        printf (" ");
+      }
+
+      jerry_size_t substr_size;
+      jerry_length_t substr_pos = 0;
+      jerry_char_t substr_buf[256];
+
+      while ((substr_size = jerry_substring_to_char_buffer (str_val,
+                                                            substr_pos,
+                                                            substr_pos + 256,
+                                                            substr_buf,
+                                                            256)) != 0)
+      {
+        for (jerry_size_t chr_index = 0; chr_index < substr_size; chr_index++)
+        {
+          char chr = (char) substr_buf[chr_index];
+          if (chr == '\0')
+          {
+            printf ("\\u0000");
+          }
+          else
+          {
+            printf ("%c", chr);
+          }
+        }
+
+        substr_pos += substr_size;
+      }
+
+      jerry_release_value (str_val);
+    }
+    else
+    {
+      ret_val = str_val;
+    }
+  }
+
+  printf ("\n");
+
+  return ret_val;
+} /* print_handler */
+
 static void
 print_usage (const char *name)
 {
-  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
-                      "Try '%s --help' for more information.\n",
-                      name,
-                      name);
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "Try '%s --help' for more information.\n",
+          name,
+          name);
 } /* print_usage */
 
 static void
 print_help (const char *name)
 {
-  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
-                      "\n"
-                      "Options:\n"
-                      "  -h, --help\n"
-                      "  -v, --version\n"
-                      "  --mem-stats\n"
-                      "  --mem-stats-separate\n"
-                      "  --parse-only\n"
-                      "  --show-opcodes\n"
-                      "  --show-regexp-opcodes\n"
-                      "  --start-debug-server\n"
-                      "  --save-snapshot-for-global FILE\n"
-                      "  --save-snapshot-for-eval FILE\n"
-                      "  --save-literals-list-format FILE\n"
-                      "  --save-literals-c-format FILE\n"
-                      "  --exec-snapshot FILE\n"
-                      "  --log-level [0-3]\n"
-                      "  --abort-on-fail\n"
-                      "  --no-prompt\n"
-                      "\n",
-                      name);
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "\n"
+          "Options:\n"
+          "  -h, --help\n"
+          "  -v, --version\n"
+          "  --mem-stats\n"
+          "  --mem-stats-separate\n"
+          "  --parse-only\n"
+          "  --show-opcodes\n"
+          "  --show-regexp-opcodes\n"
+          "  --start-debug-server\n"
+          "  --save-snapshot-for-global FILE\n"
+          "  --save-snapshot-for-eval FILE\n"
+          "  --save-literals-list-format FILE\n"
+          "  --save-literals-c-format FILE\n"
+          "  --exec-snapshot FILE\n"
+          "  --log-level [0-3]\n"
+          "  --abort-on-fail\n"
+          "  --no-prompt\n"
+          "\n",
+          name);
 } /* print_help */
 
 /**
@@ -461,7 +533,7 @@ main (int argc,
     }
     else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
     {
-      jerry_port_console ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
+      printf ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
       return JERRY_STANDALONE_EXIT_CODE_OK;
     }
     else if (!strcmp ("--mem-stats", argv[i]))
@@ -600,6 +672,7 @@ main (int argc,
 
   register_js_function ("assert", assert_handler);
   register_js_function ("gc", gc_handler);
+  register_js_function ("print", print_handler);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
@@ -722,28 +795,12 @@ main (int argc,
     const char *prompt = !no_prompt ? "jerry> " : "";
     bool is_done = false;
 
-    jerry_value_t global_object_val = jerry_get_global_object ();
-    jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");
-    jerry_value_t print_function = jerry_get_property (global_object_val, print_func_name_val);
-
-    jerry_release_value (print_func_name_val);
-
-    if (jerry_value_has_error_flag (print_function))
-    {
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
-
-    if (!jerry_value_is_function (print_function))
-    {
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
-
     while (!is_done)
     {
       uint8_t *source_buffer_tail = buffer;
       size_t len = 0;
 
-      jerry_port_console ("%s", prompt);
+      printf ("%s", prompt);
 
       /* Read a line */
       while (true)
@@ -771,10 +828,10 @@ main (int argc,
         {
           /* Print return value */
           const jerry_value_t args[] = { ret_val_eval };
-          jerry_value_t ret_val_print = jerry_call_function (print_function,
-                                                             jerry_create_undefined (),
-                                                             args,
-                                                             1);
+          jerry_value_t ret_val_print = print_handler (jerry_create_undefined (),
+                                                       jerry_create_undefined (),
+                                                       args,
+                                                       1);
           jerry_release_value (ret_val_print);
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
           jerry_release_value (ret_val_eval);
@@ -794,9 +851,6 @@ main (int argc,
         jerry_release_value (ret_val_eval);
       }
     }
-
-    jerry_release_value (global_object_val);
-    jerry_release_value (print_function);
   }
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;

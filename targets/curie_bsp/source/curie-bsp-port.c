@@ -21,24 +21,6 @@
 #include "jerryscript-port.h"
 
 /**
- * Provide console message implementation for the engine.
- * Curie BSP implementation
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  char buf[256];
-  int length = 0;
-  va_list args;
-  va_start (args, format);
-  length = vsnprintf (buf, 256, format, args);
-  buf[length] = '\0';
-  printk ("%s", buf);
-  va_end (args);
-} /* jerry_port_console */
-
-/**
  * Provide log message implementation for the engine.
  * Curie BSP implementation
  */

@@ -30,19 +30,6 @@ void jerry_port_fatal (jerry_fatal_code_t code)
 } /* jerry_port_fatal */
 
 /**
- * Provide console message implementation for the engine.
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  va_list args;
-  va_start (args, format);
-  vprintf (format, args);
-  va_end (args);
-} /* jerry_port_console */
-
-/**
  * Provide log message implementation for the engine.
  */
 void
@@ -110,4 +97,3 @@ longjmp (jmp_buf buf, int value)
   (void)(value); // suppress unused param warning
   __builtin_longjmp (buf, 1);
 } /* longjmp */
-

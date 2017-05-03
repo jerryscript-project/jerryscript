@@ -44,16 +44,16 @@
 static void
 print_help (char *name)
 {
-  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
-                      "\n"
-                      "Options:\n"
-                      "  --log-level [0-3]\n"
-                      "  --mem-stats\n"
-                      "  --mem-stats-separate\n"
-                      "  --show-opcodes\n"
-                      "  --start-debug-server\n"
-                      "\n",
-                      name);
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "\n"
+          "Options:\n"
+          "  --log-level [0-3]\n"
+          "  --mem-stats\n"
+          "  --mem-stats-separate\n"
+          "  --show-opcodes\n"
+          "  --start-debug-server\n"
+          "\n",
+          name);
 } /* print_help */
 
 /**
@@ -449,7 +449,7 @@ int jerry_main (int argc, char *argv[])
 
   if (files_counter == 0)
   {
-    jerry_port_console ("No input files, running a hello world demo:\n");
+    printf ("No input files, running a hello world demo:\n");
     char *source_p = "var a = 3.5; print('Hello world ' + (a + 1.5) + ' times from JerryScript')";
 
     jerry_run_simple ((jerry_char_t *) source_p, strlen (source_p), flags);
@@ -521,19 +521,6 @@ void jerry_port_fatal (jerry_fatal_code_t code)
 {
   exit (1);
 } /* jerry_port_fatal */
-
-/**
- * Provide console message implementation for the engine.
- */
-void
-jerry_port_console (const char *format, /**< format string */
-                    ...) /**< parameters */
-{
-  va_list args;
-  va_start (args, format);
-  vfprintf (stdout, format, args);
-  va_end (args);
-} /* jerry_port_console */
 
 /**
  * Provide log message implementation for the engine.

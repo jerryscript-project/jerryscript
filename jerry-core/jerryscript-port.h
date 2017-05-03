@@ -69,20 +69,6 @@ void jerry_port_fatal (jerry_fatal_code_t code);
  */
 
 /**
- * Print a string to the console. The function should implement a printf-like
- * interface, where the first argument specifies a format string on how to
- * stringify the rest of the parameter list.
- *
- * This function is only called with strings coming from the executed ECMAScript
- * wanting to print something as the result of its normal operation.
- *
- * It should be the port that decides what a "console" is.
- *
- * Example: a libc-based port may implement this with vprintf().
- */
-void jerry_port_console (const char *format, ...) __attribute__ ((format (printf, 1, 2)));
-
-/**
  * Jerry log levels. The levels are in severity order
  * where the most serious levels come first.
  */

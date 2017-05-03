@@ -59,12 +59,12 @@ read_file (const char *file_name,
 static void
 print_help (char *name)
 {
-  jerry_port_console ("Usage: %s [OPTION]... [FILE]...\n"
-                      "\n"
-                      "Options:\n"
-                      "  -h, --help\n"
-                      "\n",
-                      name);
+  printf ("Usage: %s [OPTION]... [FILE]...\n"
+          "\n"
+          "Options:\n"
+          "  -h, --help\n"
+          "\n",
+          name);
 } /* print_help */
 
 int

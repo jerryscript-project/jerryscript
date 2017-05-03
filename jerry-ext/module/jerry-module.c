@@ -147,12 +147,9 @@ jerryx_module_unregister (jerryx_module_t *module_p)
 static const char not_found_prologue[] = "Module '";
 static const char not_found_epilogue[] = "' not found";
 
-jerry_value_t
-jerryx_module_resolve (const jerry_char_t *name)
+JERRYX_MODULE_RESOLVER(native_resolver)
 {
   jerry_value_t return_value = 0;
-  size_t error_message_size = 0, name_length = strlen ((char *) name);
-  char *error_message = NULL;
   jerryx_module_t *module = NULL;
   jerryx_module_instance_t **instances_pp = JERRYX_MODULE_CONTEXT;
   jerryx_module_instance_t *instance_p = NULL;
@@ -177,6 +174,29 @@ jerryx_module_resolve (const jerry_char_t *name)
     return return_value;
   }
 
+  return 0;
+}
+
+extern jerryx_module_resolver_t __start_jerryx_module_resolvers;
+extern jerryx_module_resolver_t __stop_jerryx_module_resolvers;
+
+jerry_value_t
+jerryx_module_resolve (const jerry_char_t *name)
+{
+  jerry_value_t ret;
+  jerryx_module_resolver_t *resolver = NULL;
+  char *error_message = NULL;
+  size_t error_message_size = 0, name_length = strlen ((char *) name);
+
+  for (resolver = &__start_jerryx_module_resolvers; resolver < &__stop_jerryx_module_resolvers; resolver++)
+  {
+    ret = resolver->resolver(name);
+	if (ret)
+	{
+	  return ret;
+	}
+  }
+
   error_message_size = name_length + sizeof (not_found_prologue) + sizeof (not_found_epilogue) - 1;
   error_message = jmem_heap_alloc_block_null_on_error (error_message_size);
   if (error_message)
@@ -186,9 +206,9 @@ jerryx_module_resolve (const jerry_char_t *name)
     memcpy (&error_message[sizeof (not_found_prologue) - 1 + name_length], not_found_epilogue,
             sizeof (not_found_epilogue) - 1);
     error_message[error_message_size - 1] = 0;
-    return_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) error_message);
+    ret = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) error_message);
     jmem_heap_free_block (error_message, error_message_size);
   }
 
-  return return_value;
+  return ret;
 } /* jerryx_module_resolve */

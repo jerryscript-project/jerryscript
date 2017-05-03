@@ -97,4 +97,21 @@ JERRYX_C_CTOR(_register_ ## name)                                    \
 }                                                                    \
 EXTERN_C_END
 
+/**
+ * A structure is needed to hold the function pointer because the compiler doesn't like to perform pointer arithmetic on
+ * function pointers.
+ */
+typedef struct
+{
+  jerry_value_t (*resolver) (const jerry_char_t *name);
+} jerryx_module_resolver_t;
+
+#define JERRYX_MODULE_RESOLVER(cb_name)                                        \
+static jerry_value_t cb_name (const jerry_char_t *name) __attribute__((used)); \
+static jerryx_module_resolver_t __static_global_ ## cb_name                    \
+__attribute__((used)) __attribute__((section("jerryx_module_resolvers"))) = {  \
+  .resolver = cb_name                                                          \
+};                                                                             \
+static jerry_value_t cb_name (const jerry_char_t *name)
+
 #endif /* !JERRYX_MODULE_H */

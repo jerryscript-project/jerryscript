@@ -251,6 +251,7 @@ bool jerry_value_is_function (const jerry_value_t value);
 bool jerry_value_is_number (const jerry_value_t value);
 bool jerry_value_is_null (const jerry_value_t value);
 bool jerry_value_is_object (const jerry_value_t value);
+bool jerry_value_is_promise (const jerry_value_t value);
 bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
 
@@ -332,6 +333,7 @@ jerry_value_t jerry_create_number_infinity (bool sign);
 jerry_value_t jerry_create_number_nan (void);
 jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
+jerry_value_t jerry_create_promise (void);
 jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);
@@ -386,6 +388,11 @@ void jerry_set_object_native_pointer (const jerry_value_t obj_val,
 
 bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_property_foreach_t foreach_p,
                                     void *user_data_p);
+
+/**
+ * Promise resolve/reject functions.
+ */
+jerry_value_t jerry_resolve_or_reject_promise (jerry_value_t promise, jerry_value_t argument, bool is_resolve);
 
 /**
  * Input validator functions.

@@ -29,6 +29,7 @@
 #include "ecma-literal-storage.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-promise-object.h"
 #include "jcontext.h"
 #include "jerryscript.h"
 #include "jerry-debugger.h"
@@ -552,6 +553,25 @@ jerry_value_is_object (const jerry_value_t value) /**< api value */
   return ecma_is_value_object (value);
 } /* jerry_value_is_object */
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+/**
+ * Check if the specified value is promise.
+ *
+ * @return true  - if the specified value is promise,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_promise (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  return (ecma_is_value_object (value)
+          && ecma_is_promise (ecma_get_object_from_value (value)));
+} /* jerry_value_is_promise */
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+
 /**
  * Check if the specified value is string.
  *
@@ -1017,6 +1037,27 @@ jerry_create_object (void)
 
   return ecma_make_object_value (ecma_op_create_object_object_noarg ());
 } /* jerry_create_object */
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+/**
+ * Create an empty Promise object which can be resolve/reject later
+ * by calling jerry_resolve_or_reject_promise.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the created object
+ */
+jerry_value_t
+jerry_create_promise (void)
+{
+  jerry_assert_api_available ();
+
+  return ecma_op_create_promise_object (ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY), ECMA_PROMISE_EXECUTOR_EMPTY);
+} /* jerry_create_promise */
+
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 /**
  * Create string from a valid UTF-8 string
@@ -2119,6 +2160,51 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   ecma_free_value (property_value);
   return false;
 } /* jerry_foreach_object_property */
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+/**
+ * Resolve or reject the promise with an argument.
+ *
+ * @return undefined value - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value */
+                                 jerry_value_t argument, /**< the argument */
+                                 bool is_resolve) /**< whether the promise should be resolved or rejected */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (promise) || !ecma_is_promise (ecma_get_object_from_value (promise)))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+  }
+
+  ecma_string_t str;
+
+  if (is_resolve)
+  {
+    ecma_init_ecma_magic_string (&str, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
+  }
+  else
+  {
+    ecma_init_ecma_magic_string (&str, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  }
+
+  ecma_value_t function = ecma_op_object_get (ecma_get_object_from_value (promise), &str);
+
+  ecma_value_t ret = ecma_op_function_call (ecma_get_object_from_value (function),
+                                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                            &argument,
+                                            1);
+
+  ecma_free_value (function);
+
+  return ret;
+} /* jerry_resolve_or_reject_promise */
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 
 /**
  * Validate UTF-8 string

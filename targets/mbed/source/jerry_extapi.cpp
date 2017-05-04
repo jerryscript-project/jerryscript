@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "jerry-core/jerryscript.h"
+#include "jerry-core/include/jerryscript.h"
 #include "jerry_extapi.h"
 
 #include "native_mbed.h"
@@ -99,7 +99,7 @@ register_native_function (const char* name,
   jerry_value_t global_object_val = jerry_get_global_object ();
   jerry_value_t reg_function = jerry_create_external_function (handler);
 
-  bool is_ok = true; 
+  bool is_ok = true;
 
   if (!(jerry_value_is_function (reg_function)
         && jerry_value_is_constructor (reg_function)))

@@ -61,11 +61,13 @@ message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
 # Include directories
 set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/api"
     "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/base"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/jcontext"
     "${CMAKE_CURRENT_SOURCE_DIR}/jmem"
     "${CMAKE_CURRENT_SOURCE_DIR}/jrt"
@@ -76,7 +78,7 @@ set(INCLUDE_CORE
 
 # Sources
 # Jerry core
-file(GLOB SOURCE_CORE_API                       *.c)
+file(GLOB SOURCE_CORE_API                       api/*.c)
 file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
 file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
 file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
@@ -274,4 +276,4 @@ foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
 endforeach()
 
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
-install(FILES jerryscript.h jerryscript-port.h jerry-api.h jerry-port.h DESTINATION include)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)

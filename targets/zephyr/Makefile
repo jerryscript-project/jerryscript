@@ -34,7 +34,7 @@ ZEPHYRLIB   = $(ZEPHYR_BASE)/lib
 TARGET_ZEPHYR ?= ./targets/zephyr
 SOURCE_DIR = $(TARGET_ZEPHYR)/src
 
-export JERRY_INCLUDE = $(CURDIR)/jerry-core/
+export JERRY_INCLUDE = $(CURDIR)/jerry-core/include
 
 MDEF_FILE = $(realpath $(SOURCE_DIR)/../prj.mdef)
 CONF_FILE = $(realpath $(SOURCE_DIR)/../prj.conf)
@@ -57,7 +57,6 @@ export ALL_LIBS
 LDFLAGS_zephyr += $(USER_LIB_INCLUDE_DIR)
 export LDFLAGS_zephyr
 
-include ${ZEPHYR_BASE}/Makefile.inc 
+include ${ZEPHYR_BASE}/Makefile.inc
 
 .PHONY = showconfig
-

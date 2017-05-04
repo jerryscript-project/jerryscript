@@ -12,11 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _JERRYSCRIPT_MBED_LAUNCHER_SETUP_H
-#define _JERRYSCRIPT_MBED_LAUNCHER_SETUP_H
 
-#include "jerry-core/include/jerryscript.h"
+#ifndef JERRYSCRIPT_DEBUGGER_H
+#define JERRYSCRIPT_DEBUGGER_H
 
-void jsmbed_js_load_magic_strings(void);
+#include <stdbool.h>
 
-#endif  // _JERRYSCRIPT_MBED_LAUNCHER_SETUP_H
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
+/** \addtogroup jerry-debugger Jerry engine interface - Debugger feature
+ * @{
+ */
+
+/**
+ * Engine debugger functions.
+ */
+bool jerry_debugger_is_connected (void);
+void jerry_debugger_stop (void);
+void jerry_debugger_continue (void);
+void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
+
+/**
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* !JERRYSCRIPT_DEBUGGER_H */

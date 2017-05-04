@@ -14,7 +14,7 @@
  */
 
 #include "jcontext.h"
-#include "jerryscript-debugger.h"
+#include "jerryscript.h"
 #include "jerry-debugger.h"
 
 /**

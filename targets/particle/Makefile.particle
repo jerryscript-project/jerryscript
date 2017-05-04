@@ -25,7 +25,7 @@ EXT_CFLAGS += -Wno-error=format=
 .PHONY: jerrycore jerry-main flash clean
 
 PARTICLE_BUILD_CONFIG = \
-	 INCLUDE_DIRS=$(JERRYDIR)/jerry-core \
+	 INCLUDE_DIRS=$(JERRYDIR)/jerry-core/include \
 	 LIBS=jerry-core \
 	 PLATFORM=photon \
 	 LIB_DIRS=$(BUILD_DIR)/lib \

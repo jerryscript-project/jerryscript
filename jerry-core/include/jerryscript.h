@@ -13,32 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef JERRYSCRIPT_DEBUGGER_H
-#define JERRYSCRIPT_DEBUGGER_H
+#ifndef JERRYSCRIPT_H
+#define JERRYSCRIPT_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "jerryscript-core.h"
+#include "jerryscript-debugger.h"
+#include "jerryscript-snapshot.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
-
-/** \addtogroup jerry Jerry engine debugger interface
- * @{
- */
-
-bool jerry_debugger_is_connected (void);
-void jerry_debugger_stop (void);
-void jerry_debugger_continue (void);
-void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
-
-/**
- * @}
- */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 #endif /* !JERRYSCRIPT_H */

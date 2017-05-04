@@ -20,6 +20,7 @@ JERRY_LIBC_FILES=`find ./jerry-libc -name "*.c" -or -name "*.h"`
 JERRY_LIBM_FILES=`find ./jerry-libm -name "*.c" -or -name "*.h"`
 JERRY_MAIN_FILES=`find ./jerry-main -name "*.c" -or -name "*.h"`
 UNIT_TEST_FILES=`find ./tests/unit-* -name "*.c" -or -name "*.h"`
+JERRY_EXT_FILES=`find ./jerry-ext -name "*.c" -or -name "*.h"`
 
 if [ -n "$1" ]
 then
@@ -28,4 +29,4 @@ fi
 
 vera++ -r tools/vera++ -p jerry \
  -e --no-duplicate \
- $MANUAL_CHECK_FILES $JERRY_CORE_FILES $JERRY_PORT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES
+ $MANUAL_CHECK_FILES $JERRY_CORE_FILES $JERRY_PORT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $JERRY_EXT_FILES $UNIT_TEST_FILES

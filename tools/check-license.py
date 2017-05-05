@@ -44,6 +44,7 @@ INCLUDE_DIRS = [
     'jerry-libm',
     'jerry-main',
     'jerry-port',
+    'jerry-ext',
     'targets',
     'tests',
     'tools',

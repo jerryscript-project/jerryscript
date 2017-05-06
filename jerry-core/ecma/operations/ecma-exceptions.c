@@ -210,7 +210,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
       }
       else
       {
-        jerry_value_t str_val = ecma_op_to_string (arg_val);
+        ecma_value_t str_val = ecma_op_to_string (arg_val);
         arg_string_p = ecma_get_string_from_value (str_val);
       }
 

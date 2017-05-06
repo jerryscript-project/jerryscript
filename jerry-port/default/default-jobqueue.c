@@ -13,119 +13,12 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
-#include "jmem.h"
-#include "jrt.h"
-
-typedef struct jerry_port_queueitem_t jerry_port_queueitem_t;
 
 /**
- * Description of the queue item.
+ * Default implementation of jerry_port_job_enqueued, does nothing.
  */
-struct jerry_port_queueitem_t
+void jerry_port_job_enqueued (void)
 {
-  jerry_port_queueitem_t *next_p; /**< points to next item */
-  jerry_job_handler_t handler; /**< the handler for the job*/
-  void *job_p; /**< points to the job */
-};
-
-/**
- * Description of a job queue (FIFO).
- */
-typedef struct
-{
-  jerry_port_queueitem_t *head_p; /**< points to the head item of the queue */
-  jerry_port_queueitem_t *tail_p; /**< points to the tail item of the queue*/
-} jerry_port_jobqueue_t;
-
-static jerry_port_jobqueue_t queue;
-
-/**
- * Initialize the job queue.
- */
-void jerry_port_default_jobqueue_init (void)
-{
-  queue.head_p = NULL;
-  queue.tail_p = NULL;
-} /* jerry_port_default_jobqueue_init */
-
-/**
- * Enqueue a job.
- */
-void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, /**< the handler for the job */
-                                  void *job_p) /**< the job */
-{
-  jerry_port_queueitem_t *item_p = jmem_heap_alloc_block (sizeof (jerry_port_queueitem_t));
-  item_p->job_p = job_p;
-  item_p->handler = handler;
-  item_p->next_p = NULL;
-
-  if (queue.head_p == NULL)
-  {
-    queue.head_p = item_p;
-    queue.tail_p = item_p;
-
-    return;
-  }
-
-  queue.tail_p->next_p = item_p;
-  queue.tail_p = item_p;
-} /* jerry_port_jobqueue_enqueue */
-
-/**
- * Dequeue and get the job.
- *
- * @return pointer to jerry_port_queueitem_t.
- *         It should be freed with jmem_heap_free_block.
- */
-static jerry_port_queueitem_t *
-jerry_port_default_jobqueue_dequeue (void)
-{
-  if (queue.head_p == NULL)
-  {
-    return NULL;
-  }
-
-  jerry_port_queueitem_t *item_p = queue.head_p;
-  queue.head_p = queue.head_p->next_p;
-
-  return item_p;
-} /* jerry_port_default_jobqueue_dequeue */
-
-/**
- * Start the jobqueue.
- *
- * @return jerry value.
- *         If exception happens in the handler, stop the queue
- *         and return the exception.
- *         Otherwise, return undefined.
- */
-jerry_value_t
-jerry_port_default_jobqueue_run (void)
-{
-  jerry_value_t ret;
-
-  while (true)
-  {
-    jerry_port_queueitem_t *item_p = jerry_port_default_jobqueue_dequeue ();
-
-    if (item_p == NULL)
-    {
-      return jerry_create_undefined ();
-    }
-
-    void *job_p = item_p->job_p;
-    jerry_job_handler_t handler = item_p->handler;
-    jmem_heap_free_block (item_p, sizeof (jerry_port_queueitem_t));
-    ret = handler (job_p);
-
-    if (jerry_value_has_error_flag (ret))
-    {
-      return ret;
-    }
-
-    jerry_release_value (ret);
-  }
-} /* jerry_port_default_jobqueue_run */
+} /* jerry_port_job_enqueued */

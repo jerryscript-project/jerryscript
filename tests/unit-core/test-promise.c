@@ -117,7 +117,6 @@ register_js_function (const char *name_p, /**< name of the function */
 int
 main (void)
 {
-  jerry_port_default_jobqueue_init ();
   jerry_init (JERRY_INIT_EMPTY);
 
   register_js_function ("create_promise1", create_promise1_handler);
@@ -151,7 +150,7 @@ main (void)
   jerry_resolve_or_reject_promise (my_promise1, str_reject, false);
 
   /* Run the jobqueue. */
-  res = jerry_port_default_jobqueue_run ();
+  res = jerry_run_all_enqueued_jobs ();
 
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (count_in_assert == 2);

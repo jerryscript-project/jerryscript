@@ -19,6 +19,7 @@
 #include "ecma-jobqueue.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
+#include "jcontext.h"
 #include "jerryscript-port.h"
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
@@ -48,6 +49,15 @@ typedef struct
   ecma_value_t thenable; /**< thenbale object */
   ecma_value_t then; /** 'then' function */
 } ecma_job_promise_resolve_thenable_t;
+
+/**
+ * Initialize the jobqueue.
+ */
+void ecma_job_queue_init (void)
+{
+  JERRY_CONTEXT (job_queue_head_p) = NULL;
+  JERRY_CONTEXT (job_queue_tail_p) = NULL;
+} /* ecma_job_queue_init */
 
 /**
  * Create a PromiseReactionJob.
@@ -257,18 +267,44 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
 } /* ecma_process_promise_resolve_thenable_job */
 
 /**
- * Enqueue a PromiseReactionJob into a jobqueue.
+ * Enqueue a Promise job into the jobqueue.
+ */
+static void
+ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
+                  void *job_p) /**< the job */
+{
+  ecma_job_queueitem_t *item_p = jmem_heap_alloc_block (sizeof (ecma_job_queueitem_t));
+  item_p->job_p = job_p;
+  item_p->handler = handler;
+  item_p->next_p = NULL;
+
+  if (JERRY_CONTEXT (job_queue_head_p) == NULL)
+  {
+    JERRY_CONTEXT (job_queue_head_p) = item_p;
+    JERRY_CONTEXT (job_queue_tail_p) = item_p;
+  }
+  else
+  {
+    JERRY_CONTEXT (job_queue_tail_p)->next_p = item_p;
+    JERRY_CONTEXT (job_queue_tail_p) = item_p;
+  }
+
+  jerry_port_job_enqueued ();
+} /* ecma_enqueue_job */
+
+/**
+ * Enqueue a PromiseReactionJob into the jobqueue.
  */
 void
 ecma_enqueue_promise_reaction_job (ecma_value_t reaction, /**< PromiseReaction */
                                    ecma_value_t argument) /**< argument for the reaction */
 {
   ecma_job_promise_reaction_t *job_p = ecma_create_promise_reaction_job (reaction, argument);
-  jerry_port_jobqueue_enqueue (ecma_process_promise_reaction_job, job_p);
+  ecma_enqueue_job (ecma_process_promise_reaction_job, job_p);
 } /* ecma_enqueue_promise_reaction_job */
 
 /**
- * Enqueue a PromiseResolveThenableJob into a jobqueue.
+ * Enqueue a PromiseResolveThenableJob into the jobqueue.
  */
 void
 ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to be resolved */
@@ -278,8 +314,52 @@ ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to
   ecma_job_promise_resolve_thenable_t *job_p = ecma_create_promise_resolve_thenable_job (promise,
                                                                                          thenable,
                                                                                          then);
-  jerry_port_jobqueue_enqueue (ecma_process_promise_resolve_thenable_job, job_p);
+  ecma_enqueue_job (ecma_process_promise_resolve_thenable_job, job_p);
 } /* ecma_enqueue_promise_resolve_thenable_job */
+
+/**
+ * Process an enqueued Promise job if the jobqueue is not empty.
+ *
+ * @return result of the processed job - if the jobqueue was non-empty,
+ *         undefined - otherwise.
+ */
+ecma_value_t
+ecma_process_enqueued_job (void)
+{
+  if (JERRY_CONTEXT (job_queue_head_p) == NULL)
+  {
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+
+  ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
+  JERRY_CONTEXT (job_queue_head_p) = JERRY_CONTEXT (job_queue_head_p)->next_p;
+
+  void *job_p = item_p->job_p;
+  ecma_job_handler_t handler = item_p->handler;
+  jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+  return handler (job_p);
+} /* ecma_process_enqueued_job */
+
+/**
+ * Process enqueued Promise jobs until the first thrown error or until the
+ * jobqueue becomes empty.
+ *
+ * @return result of the last processed job - if the jobqueue was non-empty,
+ *         undefined - otherwise.
+ */
+ecma_value_t
+ecma_process_all_enqueued_jobs (void)
+{
+  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
+  {
+    ecma_free_value (ret);
+    ret = ecma_process_enqueued_job ();
+  }
+
+  return ret;
+} /* ecma_process_all_enqueued_jobs */
 
 /**
  * @}

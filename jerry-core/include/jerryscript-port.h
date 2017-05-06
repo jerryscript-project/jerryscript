@@ -127,29 +127,26 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
 double jerry_port_get_current_time (void);
 
 /*
- * JobQueue Port API
+ * Promise Job Port API
  */
 
 /**
- * Jerry job handler function type
- */
-typedef uint32_t (*jerry_job_handler_t) (void *);
-
-/**
- * Enqueue a job described by a pair of function and data pointers. The port is
- * expected to call the handler function with the given data at some (later)
- * point of time.
- *
- * @param handler the pointer of the handler function associated with the job.
- * @param job_p the data pointer to be passed to handler when called.
+ * Signal the port that a Promise job has been enqueued. The user of the engine
+ * must ensure that enqueued jobs are executed.
  *
  * Note:
  *      This port function is only called by the implementation of the Promise
  *      builtin (mandated by the ES2015 standard). If the engine is built with
  *      Promise disabled (e.g., with ES5.1 profile), then the port does not have
  *      to implement this function.
+ *
+ * Example: a port for a simple REPL use case may implement this as a
+ * no-operation and execute all enqueued jobs in one batch with
+ * jerry_run_all_enqueued_jobs, while a more complex port for a use case with an
+ * event loop may implement this by emitting an event that triggers the call of
+ * jerry_run_enqueued_job.
  */
-void jerry_port_jobqueue_enqueue (jerry_job_handler_t handler, void *job_p);
+void jerry_port_job_enqueued (void);
 
 /**
  * @}

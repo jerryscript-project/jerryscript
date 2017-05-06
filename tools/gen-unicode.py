@@ -46,7 +46,7 @@ class UniCodeSource(object):
 
     def add_table(self, table, table_name, table_type, table_descr):
         self.__data.append(table_descr)
-        self.__data.append("static const %s jerry_%s[] JERRY_CONST_DATA =" % (table_type, table_name))
+        self.__data.append("static const %s lit_%s[] JERRY_CONST_DATA =" % (table_type, table_name))
         self.__data.append("{")
         self.__data.append(format_code(table, 1))
         self.__data.append("};")
@@ -198,7 +198,7 @@ def generate_ranges(script_args):
                        "uint16_t",
                        ("/**\n"
                         " * Those unicode letter characters that are not inside any of\n"
-                        " * the intervals specified in jerry_unicode_letter_interval_sps array.\n"
+                        " * the intervals specified in lit_unicode_letter_interval_sps array.\n"
                         " *\n"
                         " * The characters are from the following Unicode categories:\n"
                         " * Lu, Ll, Lt, Lm, Lo, Nl\n"
@@ -232,7 +232,7 @@ def generate_ranges(script_args):
                        ("/**\n"
                         " * Those non-letter characters that can be used as a non-first\n"
                         " * character of an identifier and not included in any of the intervals\n"
-                        " * specified in jerry_unicode_non_letter_ident_part_interval_sps array.\n"
+                        " * specified in lit_unicode_non_letter_ident_part_interval_sps array.\n"
                         " *\n"
                         " * The characters are from the following Unicode categories:\n"
                         " * Nd, Mn, Mc, Pc\n"
@@ -257,7 +257,7 @@ def generate_ranges(script_args):
                        "uint16_t",
                        ("/**\n"
                         " * Unicode separator characters that are not in the\n"
-                        " * jerry_unicode_separator_char_intervals array.\n"
+                        " * lit_unicode_separator_char_intervals array.\n"
                         " *\n"
                         " * Unicode category: Zs\n"
                         " */"))

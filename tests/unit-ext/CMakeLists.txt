@@ -15,6 +15,8 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (unit-ext C)
 
+set(INCLUDE_UNIT_EXT ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Unit tests main modules
 file(GLOB SOURCE_UNIT_TEST_EXT_MODULES *.c)
 
@@ -32,4 +34,11 @@ foreach(SOURCE_UNIT_TEST_EXT ${SOURCE_UNIT_TEST_EXT_MODULES})
   target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default-minimal)
 
   add_dependencies(unittests-ext ${TARGET_NAME})
+endforeach()
+
+file(GLOB CONTENTS_UNIT_TEST_EXT *)
+foreach(CONTENT_UNIT_TEST_EXT ${CONTENTS_UNIT_TEST_EXT})
+  if(IS_DIRECTORY ${CONTENT_UNIT_TEST_EXT})
+    add_subdirectory(${CONTENT_UNIT_TEST_EXT})
+  endif()
 endforeach()

@@ -837,9 +837,9 @@ main (int argc,
           jerry_release_value (ret_val_eval);
           ret_val_eval = jerry_port_default_jobqueue_run ();
 
-          if (jerry_value_has_error_flag (ret_value))
+          if (jerry_value_has_error_flag (ret_val_eval))
           {
-            print_unhandled_exception (ret_value);
+            print_unhandled_exception (ret_val_eval);
           }
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
         }

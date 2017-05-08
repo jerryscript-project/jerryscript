@@ -13,27 +13,12 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-set(JERRY_EXT_NAME jerry-ext)
-project (${JERRY_EXT_NAME} C)
+set(JERRYX_MODULE_UNITTEST_NAME unit-test-jerry-module)
+project (${JERRYX_MODULE_UNITTEST_NAME} C)
 
-# Include directories
-set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include")
+file(GLOB JERRYX_MODULE_UNIT_TEST_SOURCES *.c)
 
-# Source directories
-file(GLOB SOURCE_EXT_ARG      arg/*.c)
-file(GLOB SOURCE_EXT_MODULE   module/*.c)
-file(GLOB SOURCE_EXT_HANDLER  handler/*.c)
-
-set(SOURCE_EXT
-    ${SOURCE_EXT_ARG}
-    ${SOURCE_EXT_MODULE}
-    ${SOURCE_EXT_HANDLER})
-
-add_library(${JERRY_EXT_NAME} STATIC ${SOURCE_EXT})
-
-target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT})
-
-target_link_libraries(${JERRY_EXT_NAME} jerry-core)
-
-install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
-install(DIRECTORY ${INCLUDE_EXT}/ DESTINATION include)
+add_executable(${JERRYX_MODULE_UNITTEST_NAME} ${JERRYX_MODULE_UNIT_TEST_SOURCES})
+set_property(TARGET ${JERRYX_MODULE_UNITTEST_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
+target_link_libraries(${JERRYX_MODULE_UNITTEST_NAME} jerry-ext jerry-core jerry-port-default-minimal)
+target_include_directories(${JERRYX_MODULE_UNITTEST_NAME} PRIVATE ${INCLUDE_UNIT_EXT})

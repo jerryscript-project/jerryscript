@@ -20,7 +20,12 @@ project (${JERRY_EXT_NAME} C)
 set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Source directories
-file(GLOB SOURCE_EXT arg/*.c)
+file(GLOB SOURCE_EXT_ARG      arg/*.c)
+file(GLOB SOURCE_EXT_HANDLER  handler/*.c)
+
+set(SOURCE_EXT
+    ${SOURCE_EXT_ARG}
+    ${SOURCE_EXT_HANDLER})
 
 add_library(${JERRY_EXT_NAME} STATIC ${SOURCE_EXT})
 

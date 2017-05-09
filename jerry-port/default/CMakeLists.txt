@@ -32,8 +32,10 @@ set(DEFINES_PORT_DEFAULT _BSD_SOURCE _DEFAULT_SOURCE)
 foreach(JERRY_PORT_LIBRARY_NAME ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal)
   add_library(${JERRY_PORT_LIBRARY_NAME} STATIC ${SOURCE_PORT_DEFAULT})
   target_include_directories(${JERRY_PORT_LIBRARY_NAME} PUBLIC ${INCLUDE_PORT_DEFAULT})
+  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/jerry-core/include)
+  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/jerry-ext/include)
   target_compile_definitions(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${DEFINES_PORT_DEFAULT})
-  target_link_libraries(${JERRY_PORT_LIBRARY_NAME} jerry-core)
+  target_link_libraries(${JERRY_PORT_LIBRARY_NAME} jerry-core) # FIXME: remove this dependency as soon as possible
 endforeach()
 
 target_compile_definitions(${JERRY_PORT_DEFAULT_NAME}-minimal PRIVATE DISABLE_EXTRA_API)

@@ -23,11 +23,6 @@
 #include "jerryscript-port-default.h"
 
 /**
- * Maximum command line arguments number
- */
-#define JERRY_MAX_COMMAND_LINE_ARGS (64)
-
-/**
  * Maximum size of source code
  */
 #define JERRY_BUFFER_SIZE (1048576)
@@ -494,22 +489,12 @@ int
 main (int argc,
       char **argv)
 {
-  if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR,
-                    "Error: too many command line arguments: %d (JERRY_MAX_COMMAND_LINE_ARGS=%d)\n",
-                    argc,
-                    JERRY_MAX_COMMAND_LINE_ARGS);
-
-    return JERRY_STANDALONE_EXIT_CODE_FAIL;
-  }
-
-  const char *file_names[JERRY_MAX_COMMAND_LINE_ARGS];
+  const char *file_names[argc];
   int files_counter = 0;
 
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
-  const char *exec_snapshot_file_names[JERRY_MAX_COMMAND_LINE_ARGS];
+  const char *exec_snapshot_file_names[argc];
   int exec_snapshots_count = 0;
 
   bool is_parse_only = false;
@@ -598,7 +583,6 @@ main (int argc,
 
       if (check_feature (JERRY_FEATURE_SNAPSHOT_EXEC, argv[i++]))
       {
-        assert (exec_snapshots_count < JERRY_MAX_COMMAND_LINE_ARGS);
         exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
       }
     }

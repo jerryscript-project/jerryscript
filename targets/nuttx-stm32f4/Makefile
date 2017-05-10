@@ -29,6 +29,7 @@ STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)
 CFLAGS += -std=c99 -DJERRY_NDEBUG -DJERRY_JS_PARSER '-DCONFIG_MEM_HEAP_AREA_SIZE=$(CONFIG_JERRYSCRIPT_HEAPSIZE)' -DCONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 CFLAGS += -I$(ROOT_DIR)/ $(shell find $(ROOT_DIR)/jerryscript/jerry-core -type d | sed -r -e 's/^/-I/g')
 CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-libm/include
+CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-ext/include
 
 # Fill error messages for builtin error objects
 ifeq ($(CONFIG_JERRYSCRIPT_ERROR_MESSAGES),y)
@@ -57,8 +58,12 @@ jerry_core_allin.c:
 jerry_libm_allin.c:
 	find $(ROOT_DIR)/jerryscript/jerry-libm -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_libm_allin.c
 
+.PHONY: jerry_ext_allin.c
+jerry_ext_allin.c:
+	find $(ROOT_DIR)/jerryscript/jerry-ext -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_ext_allin.c
+
 ASRCS = setjmp.S
-CSRCS = jerry_core_allin.c jerry_libm_allin.c
+CSRCS = jerry_core_allin.c jerry_libm_allin.c jerry_ext_allin.c
 MAINSRC = jerry_main.c
 
 CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)

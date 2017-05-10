@@ -16,11 +16,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <setjmp.h>
 
 #include "jerryscript.h"
+#include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
 #include "jmem.h"
+#include "setjmp.h"
 
 /**
  * Maximum command line arguments number.
@@ -312,60 +313,13 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
 } /* print_unhandled_exception */
 
 /**
- * Provide the 'assert' implementation for the engine.
- *
- * @return true - if only one argument was passed and the argument is a boolean true.
- */
-static jerry_value_t
-assert_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
-                const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-                const jerry_value_t args_p[], /**< function arguments */
-                const jerry_length_t args_cnt) /**< number of function arguments */
-{
-  if (args_cnt == 1
-      && jerry_value_is_boolean (args_p[0])
-      && jerry_get_boolean_value (args_p[0]))
-  {
-    return jerry_create_boolean (true);
-  }
-  else
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Script Error: assertion failed\n");
-    exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
-  }
-} /* assert_handler */
-
-/**
- * Provide the 'gc' implementation for the engine.
- *
- * @return undefined.
- */
-static jerry_value_t
-gc_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
-            const jerry_value_t this_p __attribute__((unused)), /**< this arg */
-            const jerry_value_t args_p[] __attribute__((unused)), /**< function arguments */
-            const jerry_length_t args_cnt __attribute__((unused))) /**< number of function arguments */
-{
-  jerry_gc ();
-  return jerry_create_undefined ();
-} /* gc_handler */
-
-/**
  * Register a JavaScript function in the global object.
  */
 static void
 register_js_function (const char *name_p, /**< name of the function */
                       jerry_external_handler_t handler_p) /**< function callback */
 {
-  jerry_value_t global_obj_val = jerry_get_global_object ();
-
-  jerry_value_t function_val = jerry_create_external_function (handler_p);
-  jerry_value_t function_name_val = jerry_create_string ((const jerry_char_t *) name_p);
-  jerry_value_t result_val = jerry_set_property (global_obj_val, function_name_val, function_val);
-
-  jerry_release_value (function_name_val);
-  jerry_release_value (function_val);
-  jerry_release_value (global_obj_val);
+  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
 
   if (jerry_value_has_error_flag (result_val))
   {
@@ -447,58 +401,66 @@ int jerry_main (int argc, char *argv[])
     }
   }
 
-  if (files_counter == 0)
-  {
-    printf ("No input files, running a hello world demo:\n");
-    char *source_p = "var a = 3.5; print('Hello world ' + (a + 1.5) + ' times from JerryScript')";
-
-    jerry_run_simple ((jerry_char_t *) source_p, strlen (source_p), flags);
-    return JERRY_STANDALONE_EXIT_CODE_OK;
-  }
-
   jerry_init (flags);
 
-  register_js_function ("assert", assert_handler);
-  register_js_function ("gc", gc_handler);
+  register_js_function ("assert", jerryx_handler_assert);
+  register_js_function ("gc", jerryx_handler_gc);
+  register_js_function ("print", jerryx_handler_print);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
-  for (i = 0; i < files_counter; i++)
+  if (files_counter == 0)
   {
-    size_t source_size;
-    const jerry_char_t *source_p = read_file (file_names[i], &source_size);
+    printf ("No input files, running a hello world demo:\n");
+    const jerry_char_t script[] = "var str = 'Hello World'; print(str + ' from JerryScript')";
+    size_t script_size = strlen ((const char *) script);
 
-    if (source_p == NULL)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Source file load error\n");
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
-
-    ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
-                                            strlen (file_names[i]),
-                                            source_p,
-                                            source_size,
-                                            false);
+    ret_value = jerry_parse (script, script_size, false);
 
     if (!jerry_value_has_error_flag (ret_value))
     {
-      jerry_value_t func_val = ret_value;
-      ret_value = jerry_run (func_val);
-      jerry_release_value (func_val);
+      ret_value = jerry_run (ret_value);
     }
-
-    if (jerry_value_has_error_flag (ret_value))
+  }
+  else
+  {
+    for (i = 0; i < files_counter; i++)
     {
-      print_unhandled_exception (ret_value, source_p);
+      size_t source_size;
+      const jerry_char_t *source_p = read_file (file_names[i], &source_size);
+
+      if (source_p == NULL)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Source file load error\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
+
+      ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
+                                              strlen (file_names[i]),
+                                              source_p,
+                                              source_size,
+                                              false);
+
+      if (!jerry_value_has_error_flag (ret_value))
+      {
+        jerry_value_t func_val = ret_value;
+        ret_value = jerry_run (func_val);
+        jerry_release_value (func_val);
+      }
+
+      if (jerry_value_has_error_flag (ret_value))
+      {
+        print_unhandled_exception (ret_value, source_p);
+        jmem_heap_free_block ((void*) source_p, source_size);
+
+        break;
+      }
+
       jmem_heap_free_block ((void*) source_p, source_size);
 
-      break;
+      jerry_release_value (ret_value);
+      ret_value = jerry_create_undefined ();
     }
-
-    jmem_heap_free_block ((void*) source_p, source_size);
-
-    jerry_release_value (ret_value);
-    ret_value = jerry_create_undefined ();
   }
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
@@ -564,3 +526,13 @@ jerry_port_get_current_time (void)
 {
   return 0;
 } /* jerry_port_get_current_time */
+
+/**
+ * Provide the implementation of jerryx_port_handler_print_char.
+ * Uses 'printf' to print a single character to standard output.
+ */
+void
+jerryx_port_handler_print_char (char c) /**< the character to print */
+{
+  printf ("%c", c);
+} /* jerryx_port_handler_print_char */

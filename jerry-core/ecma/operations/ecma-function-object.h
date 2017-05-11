@@ -42,7 +42,7 @@ ecma_property_t *
 ecma_op_function_try_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 
 ecma_object_t *
-ecma_op_create_external_function_object (ecma_external_pointer_t code_p);
+ecma_op_create_external_function_object (ecma_external_handler_t handler_cb);
 
 ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,

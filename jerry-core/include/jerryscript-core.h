@@ -195,15 +195,16 @@ typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
-/**
- * Function type for user context allocation
- */
-typedef void *(*jerry_user_context_init_t) (void);
 
 /**
- * Function type for user context deallocation
+ * User context item manager
  */
-typedef void (*jerry_user_context_deinit_t) (void *user_context_p);
+typedef struct
+{
+  void (*init_cb) (void *); /**< callback responsible for initializing a context item, or NULL to zero out the memory */
+  void (*deinit_cb) (void *); /**< callback responsible for deinitializing a context item */
+  size_t bytes_needed; /**< number of bytes to allocate for this manager */
+} jerry_context_data_manager_t;
 
 /**
  * Function type for allocating buffer for JerryScript instance.
@@ -227,15 +228,12 @@ typedef struct jerry_instance_t jerry_instance_t;
  * General engine functions.
  */
 void jerry_init (jerry_init_flag_t flags);
-void jerry_init_with_user_context (jerry_init_flag_t flags,
-                                   jerry_user_context_init_t init_cb,
-                                   jerry_user_context_deinit_t deinit_cb);
 void jerry_cleanup (void);
 void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
                                    const jerry_length_t *str_lengths_p);
 void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 void jerry_gc (void);
-void *jerry_get_user_context (void);
+void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
 
 /**
  * Parser and executor functions.

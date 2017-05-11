@@ -26,6 +26,7 @@
 #include "jmem.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
+#include "jerryscript.h"
 
 /** \addtogroup context Context
  * @{
@@ -35,6 +36,18 @@
  * First member of the jerry context
  */
 #define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
+
+/**
+ * User context item
+ */
+typedef struct jerry_context_data_header
+{
+  struct jerry_context_data_header *next_p; /**< pointer to next context item */
+  const jerry_context_data_manager_t *manager_p; /**< manager responsible for deleting this item */
+} jerry_context_data_header_t;
+
+#define JERRY_CONTEXT_DATA_HEADER_USER_DATA(item_p) \
+  ((uint8_t *) (item_p + 1))
 
 /**
  * JerryScript context
@@ -63,8 +76,7 @@ typedef struct
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
-  void *user_context_p; /**< user-provided context-specific pointer */
-  ecma_user_context_deinit_t user_context_deinit_cb; /**< user-provided deleter for context-specific pointer */
+  jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */

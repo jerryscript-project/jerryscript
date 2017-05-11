@@ -173,28 +173,18 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 } /* jerry_init */
 
 /**
- * Initialize Jerry engine with custom user context.
- */
-void
-jerry_init_with_user_context (jerry_init_flag_t flags,  /**< combination of Jerry flags */
-                              jerry_user_context_init_t init_cb, /**< callback to call to create the user context or
-                                                                   *  NULL, in which case no user context will be
-                                                                   *  created */
-                              jerry_user_context_deinit_t deinit_cb) /**< callback to call to free the user context or
-                                                                       *  NULL if it does not need to be freed */
-{
-  jerry_init (flags);
-  JERRY_CONTEXT (user_context_p) = (init_cb ? init_cb () : NULL);
-  JERRY_CONTEXT (user_context_deinit_cb) = deinit_cb;
-} /* jerry_init_with_user_context */
-
-/**
  * Terminate Jerry engine
  */
 void
 jerry_cleanup (void)
 {
   jerry_assert_api_available ();
+
+  for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p), *next_p = NULL; this_p; this_p = next_p)
+  {
+    next_p = this_p->next_p;
+    this_p->manager_p->deinit_cb (this_p);
+  }
 
   ecma_finalize ();
 
@@ -207,23 +197,35 @@ jerry_cleanup (void)
 
   jmem_finalize ();
   jerry_make_api_unavailable ();
-
-  if (JERRY_CONTEXT (user_context_deinit_cb))
-  {
-    JERRY_CONTEXT (user_context_deinit_cb) (JERRY_CONTEXT (user_context_p));
-  }
 } /* jerry_cleanup */
 
 /**
- * Retrieve user context.
+ * Retrieve a context data item, or create a new one.
  *
- * @return the user-provided context-specific pointer
+ * @param manager_p pointer to the manager whose context data item should be returned.
+ *
+ * @return a pointer to the user-provided context-specific data item for the given manager, creating such a pointer if
+ * none was found.
  */
-void *
-jerry_get_user_context (void)
+jerry_context_data_header_t *
+jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
 {
-  return JERRY_CONTEXT (user_context_p);
-} /* jerry_get_user_context */
+  jerry_context_data_header_t *item_p;
+
+  for (item_p = JERRY_CONTEXT (context_data_p); item_p; item_p = item_p->next_p)
+  {
+    if (item_p->manager_p == manager_p)
+    {
+      return item_p;
+    }
+  }
+
+  item_p = manager_p->init_cb ();
+  item_p->manager_p = manager_p;
+  item_p->next_p = JERRY_CONTEXT (context_data_p);
+  JERRY_CONTEXT (context_data_p) = item_p;
+  return item_p;
+} /* jerry_get_context_data */
 
 /**
  * Register external magic string array

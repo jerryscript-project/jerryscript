@@ -195,15 +195,24 @@ typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
-/**
- * Function type for user context allocation
- */
-typedef void *(*jerry_user_context_init_t) (void);
 
 /**
- * Function type for user context deallocation
+ * User context item
  */
-typedef void (*jerry_user_context_deinit_t) (void *user_context_p);
+typedef struct jerry_context_data_header
+{
+  struct jerry_context_data_header *next_p; /**< pointer to next context item */
+  const struct jerry_context_data_manager *manager_p; /**< manager responsible for deleting this item */
+} jerry_context_data_header_t;
+
+/**
+ * User context item manager
+ */
+typedef struct jerry_context_data_manager
+{
+  jerry_context_data_header_t *(*init_cb) (void);  /**< callback responsible for creating a context item */
+  void (*deinit_cb) (jerry_context_data_header_t *); /**< callback responsible for deleting a context item */
+} jerry_context_data_manager_t;
 
 /**
  * Type information of a native pointer.
@@ -217,15 +226,12 @@ typedef struct
  * General engine functions.
  */
 void jerry_init (jerry_init_flag_t flags);
-void jerry_init_with_user_context (jerry_init_flag_t flags,
-                                   jerry_user_context_init_t init_cb,
-                                   jerry_user_context_deinit_t deinit_cb);
 void jerry_cleanup (void);
 void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
                                    const jerry_length_t *str_lengths_p);
 void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 void jerry_gc (void);
-void *jerry_get_user_context (void);
+jerry_context_data_header_t *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
 
 /**
  * Parser and executor functions.

@@ -72,7 +72,7 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
   JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
 
   native_pointer_p->data_p = data_p;
-  native_pointer_p->info_p = info_p;
+  native_pointer_p->u.info_p = info_p;
 
   return is_new;
 } /* ecma_create_native_property */

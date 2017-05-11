@@ -48,6 +48,14 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
                      ecma_standard_error_t_must_be_equal_to_jerry_error_t);
 
+JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
+                     && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES
+                     && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
+                     && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS
+                     && (int) ECMA_INIT_MEM_STATS_SEPARATE == (int) JERRY_INIT_MEM_STATS_SEPARATE
+                     && (int) ECMA_INIT_DEBUGGER == (int) JERRY_INIT_DEBUGGER,
+                     ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
+
 #ifndef JERRY_JS_PARSER
 #error JERRY_JS_PARSER must be defined with 0 (disabled) or 1 (enabled)
 #elif !JERRY_JS_PARSER && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
@@ -169,11 +177,11 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
  */
 void
 jerry_init_with_user_context (jerry_init_flag_t flags,  /**< combination of Jerry flags */
-                              jerry_user_context_init_cb init_cb, /**< callback to call to create the user context or
-                                                                    *  NULL, in which case no user context will be
-                                                                    *  created */
-                              jerry_user_context_deinit_cb deinit_cb) /**< callback to call to free the user context or
-                                                                        *  NULL if it does not need to be freed */
+                              jerry_user_context_init_t init_cb, /**< callback to call to create the user context or
+                                                                   *  NULL, in which case no user context will be
+                                                                   *  created */
+                              jerry_user_context_deinit_t deinit_cb) /**< callback to call to free the user context or
+                                                                       *  NULL if it does not need to be freed */
 {
   jerry_init (flags);
   JERRY_CONTEXT (user_context_p) = (init_cb ? init_cb () : NULL);
@@ -956,7 +964,7 @@ jerry_create_external_function (jerry_external_handler_t handler_p) /**< pointer
 {
   jerry_assert_api_available ();
 
-  ecma_object_t *func_obj_p = ecma_op_create_external_function_object ((ecma_external_pointer_t) handler_p);
+  ecma_object_t *func_obj_p = ecma_op_create_external_function_object (handler_p);
   return ecma_make_object_value (func_obj_p);
 } /* jerry_create_external_function */
 
@@ -2076,7 +2084,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
 
   if (out_native_info_p)
   {
-    *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->info_p;
+    *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->u.info_p;
   }
 
   return true;

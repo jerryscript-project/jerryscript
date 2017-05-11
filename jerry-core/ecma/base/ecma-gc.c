@@ -408,22 +408,20 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
 
   if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
   {
-    if (native_pointer_p->info_p != NULL)
+    if (native_pointer_p->u.callback_p != NULL)
     {
-      ecma_external_pointer_t freecb_p = (ecma_external_pointer_t) native_pointer_p->info_p;
-      ((jerry_object_free_callback_t) freecb_p) ((uintptr_t) native_pointer_p->data_p);
+      native_pointer_p->u.callback_p ((uintptr_t) native_pointer_p->data_p);
     }
   }
   else
   {
-    if (native_pointer_p->info_p != NULL)
+    if (native_pointer_p->u.info_p != NULL)
     {
-      jerry_object_free_callback_t free_cb;
-      free_cb = (jerry_object_free_callback_t) ((const jerry_object_native_info_t *) native_pointer_p->info_p)->free_cb;
+      ecma_object_native_free_callback_t free_cb = native_pointer_p->u.info_p->free_cb;
 
       if (free_cb != NULL)
       {
-        free_cb ((uintptr_t) native_pointer_p->data_p);
+        free_cb (native_pointer_p->data_p);
       }
     }
   }

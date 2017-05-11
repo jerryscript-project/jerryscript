@@ -496,7 +496,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
 
     /* k. */
     ecma_object_t *res_ele_p;
-    res_ele_p = ecma_op_create_external_function_object ((ecma_external_pointer_t) ecma_builtin_promise_all_handler);
+    res_ele_p = ecma_op_create_external_function_object (ecma_builtin_promise_all_handler);
     /* l. */
     ecma_op_object_put (res_ele_p,
                         str_already_called,

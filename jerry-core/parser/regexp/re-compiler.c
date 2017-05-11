@@ -601,7 +601,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   else
   {
 #ifdef REGEXP_DUMP_BYTE_CODE
-    if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_REGEXP_OPCODES)
+    if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_REGEXP_OPCODES)
     {
       re_dump_bytecode (&bc_ctx);
     }

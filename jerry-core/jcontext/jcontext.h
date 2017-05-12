@@ -62,7 +62,7 @@ typedef struct
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   void *user_context_p; /**< user-provided context-specific pointer */
-  jerry_user_context_deinit_cb user_context_deinit_cb; /**< user-provided deleter for context-specific pointer */
+  ecma_user_context_deinit_t user_context_deinit_cb; /**< user-provided deleter for context-specific pointer */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */
@@ -88,8 +88,8 @@ typedef struct
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
   uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */
   void *vm_exec_stop_user_p; /**< user pointer for vm_exec_stop_cb */
-  jerry_vm_exec_stop_callback_t vm_exec_stop_cb; /**< user function which returns whether the
-                                                  *   ECMAScript execution should be stopped */
+  ecma_vm_exec_stop_callback_t vm_exec_stop_cb; /**< user function which returns whether the
+                                                 *   ECMAScript execution should be stopped */
 #endif /* JERRY_VM_EXEC_STOP */
 
 #ifdef JERRY_DEBUGGER

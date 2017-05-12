@@ -4,5 +4,5 @@
             "target.uart_hwfc": 0
         }
     },
-    "macros": ["JERRY_JS_PARSER"]
+    "macros": ["JERRY_JS_PARSER 1"]
 }

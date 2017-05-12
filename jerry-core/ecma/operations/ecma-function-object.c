@@ -310,7 +310,7 @@ ecma_op_function_try_lazy_instantiate_property (ecma_object_t *object_p, /**< th
  * @return pointer to newly created external function object
  */
 ecma_object_t *
-ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< pointer to external native handler */
+ecma_op_create_external_function_object (ecma_external_handler_t handler_cb) /**< pointer to external native handler */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -328,7 +328,7 @@ ecma_op_create_external_function_object (ecma_external_pointer_t code_p) /**< po
    */
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
-  ext_func_obj_p->u.external_function = code_p;
+  ext_func_obj_p->u.external_handler_cb = handler_cb;
 
   ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
   ecma_builtin_helper_def_prop (function_obj_p,
@@ -536,12 +536,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
     ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
-    jerry_external_handler_t handler_p = (jerry_external_handler_t) ext_func_obj_p->u.external_function;
 
-    ret_value = handler_p (ecma_make_object_value (func_obj_p),
-                           this_arg_value,
-                           arguments_list_p,
-                           arguments_list_len);
+    ret_value = ext_func_obj_p->u.external_handler_cb (ecma_make_object_value (func_obj_p),
+                                                       this_arg_value,
+                                                       arguments_list_p,
+                                                       arguments_list_len);
   }
   else
   {

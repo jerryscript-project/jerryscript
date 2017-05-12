@@ -314,7 +314,7 @@ jerry_debugger_accept_connection (void)
   struct sockaddr_in addr;
   socklen_t sin_size = sizeof (struct sockaddr_in);
 
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_DEBUGGER);
+  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_DEBUGGER);
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons (JERRY_DEBUGGER_PORT);

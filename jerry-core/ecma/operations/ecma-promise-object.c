@@ -416,7 +416,7 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
   ecma_init_ecma_magic_string (&str_already_resolved, LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
   /* 2. */
   ecma_object_t *resolve_p;
-  resolve_p = ecma_op_create_external_function_object ((ecma_external_pointer_t) ecma_promise_resolve_handler);
+  resolve_p = ecma_op_create_external_function_object (ecma_promise_resolve_handler);
 
   /* 3. */
   ecma_op_object_put (resolve_p,
@@ -430,7 +430,7 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
                       false);
   /* 5. */
   ecma_object_t *reject_p;
-  reject_p = ecma_op_create_external_function_object ((ecma_external_pointer_t) ecma_promise_reject_handler);
+  reject_p = ecma_op_create_external_function_object (ecma_promise_reject_handler);
   /* 6. */
   ecma_op_object_put (reject_p,
                       &str_promise,

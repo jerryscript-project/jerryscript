@@ -21,7 +21,7 @@
       <ul class="nav navbar-nav navbar-right">
         {% for p in site.pages %}
           {% if p.title %}
-            {% if p.url != "/coding-standards/" and p.url != "/debugger/" and p.url != "/internals/" and p.url != "/port-api/" and p.url != "/reference-counting/" %}
+            {% if p.category == "navbar" %}
               {% if page.url == p.url %}
                 <li class="active"><a href="{{ p.url | prepend: site.github.url }}" >{{ p.title }}</a></li>
               {% else %}
@@ -32,11 +32,10 @@
         {% endfor %}
         <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Documents <span class="caret"></span></a>
           <ul class="dropdown-menu">
-            {% for p in site.pages %}
-              {% if p.title %}
-                {% if p.url == "/coding-standards/" or p.url == "/debugger/" or p.url == "/internals/" or p.url == "/port-api/" or p.url == "/reference-counting/" %}
-                  <li><a href="{{ p.url | prepend: site.github.url }}" >{{ p.title }}</a></li>
-                {% endif %}
+            {% assign doclist = site.pages | sort: 'title' %}
+            {% for p in doclist %}
+              {% if p.title and p.category == "documents" %}
+                <li><a href="{{ p.url | prepend: site.github.url }}" >{{ p.title }}</a></li>
               {% endif %}
             {% endfor %}
           </ul>

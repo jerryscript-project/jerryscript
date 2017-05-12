@@ -891,6 +891,7 @@ function DebuggerClient(address)
   this.setBreakpoint = function(str)
   {
     line = /^(.+):([1-9][0-9]*)$/.exec(str);
+    var found = false;
 
     if (line)
     {
@@ -906,6 +907,7 @@ function DebuggerClient(address)
             || sourceName.endsWith("\\" + line[1]))
         {
           insertBreakpoint(func.lines[line[2]]);
+          found = true;
         }
       }
     }
@@ -918,8 +920,13 @@ function DebuggerClient(address)
         if (func.name == str)
         {
           insertBreakpoint(func.lines[func.firstBreakpointLine]);
+          found = true;
         }
       }
+    }
+    if (!found)
+    {
+      appendLog("Breakpoint not found");
     }
   }
 

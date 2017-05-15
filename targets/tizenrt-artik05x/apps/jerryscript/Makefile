@@ -81,6 +81,7 @@ PRIORITY = $(CONFIG_JERRYSCRIPT_PRIORITY)
 STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)
 CFLAGS += -std=c99 -DJERRY_NDEBUG -DJERRY_JS_PARSER '-DCONFIG_MEM_HEAP_AREA_SIZE=$(CONFIG_JERRYSCRIPT_HEAPSIZE)'
 CFLAGS += -I$(ROOT_DIR)/ $(shell find $(ROOT_DIR)/jerryscript/jerry-core -type d | sed -r -e 's/^/-I/g')
+CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-ext/include
 
 ifeq ($(CONFIG_JERRYSCRIPT_MEM_STATS),y)
 	CFLAGS += -DJMEM_STATS
@@ -100,7 +101,7 @@ LINKLIBS=$(EXTRA_LIBS)
 
 
 ASRCS =
-CSRCS = jerry_port.c
+CSRCS =
 MAINSRC = jerry_main.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))

@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CURDIR		= `pwd`
 JERRYHEAP	?= 16
-BUILD_DIR	?= build/tizenrt-artik05x/
-LIBTARGET_DIR	?= ../tizenrt/build/output/libraries
+BUILD_DIR	?= build/tizenrt-artik05x
+LIBTARGET_DIR	?= $(abspath $(PWD)/../tizenrt/build/output/libraries)
 
 EXT_CFLAGS += -mcpu=cortex-r4 -mfpu=vfpv3
 EXT_CFLAGS += -fno-builtin -fno-strict-aliasing
@@ -46,10 +45,10 @@ libjerry:
 	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) \
 	 -DCMAKE_BUILD_TYPE=Release
 
-	make -C$(BUILD_DIR) jerry-core
-	make -C$(BUILD_DIR) jerry-libm
+	make -C$(BUILD_DIR) jerry-core jerry-libm jerry-ext
 	cp $(BUILD_DIR)/lib/libjerry-core.a $(LIBTARGET_DIR)
 	cp $(BUILD_DIR)/lib/libjerry-libm.a $(LIBTARGET_DIR)
+	cp $(BUILD_DIR)/lib/libjerry-ext.a $(LIBTARGET_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)

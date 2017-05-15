@@ -630,8 +630,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t value_index;
           ecma_value_t lit_value;
-          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                literal_start_p[literal_index]);
 
           READ_LITERAL_INDEX (value_index);
 
@@ -645,26 +643,36 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      literal_start_p[value_index]);
           }
 
-          if (self_reference == literal_start_p[value_index])
+          if (literal_index < register_end)
           {
-            ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
+            frame_ctx_p->registers_p[literal_index] = lit_value;
           }
           else
           {
-            vm_var_decl (frame_ctx_p, name_p);
+            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  literal_start_p[literal_index]);
 
-            ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
+            if (self_reference == literal_start_p[value_index])
+            {
+              ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
+            }
+            else
+            {
+              vm_var_decl (frame_ctx_p, name_p);
 
-            ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                                                            name_p,
-                                                                            is_strict,
-                                                                            lit_value);
-            ecma_free_value (put_value_result);
-          }
+              ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
 
-          if (value_index >= register_end)
-          {
-            ecma_free_value (lit_value);
+              ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+                                                                              name_p,
+                                                                              is_strict,
+                                                                              lit_value);
+              ecma_free_value (put_value_result);
+            }
+
+            if (value_index >= register_end)
+            {
+              ecma_free_value (lit_value);
+            }
           }
 
           literal_index++;

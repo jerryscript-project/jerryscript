@@ -20,7 +20,6 @@
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
 #include "jcontext.h"
-#include "jerryscript-port.h"
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 
@@ -288,8 +287,6 @@ ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
     JERRY_CONTEXT (job_queue_tail_p)->next_p = item_p;
     JERRY_CONTEXT (job_queue_tail_p) = item_p;
   }
-
-  jerry_port_job_enqueued ();
 } /* ecma_enqueue_job */
 
 /**
@@ -318,29 +315,6 @@ ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to
 } /* ecma_enqueue_promise_resolve_thenable_job */
 
 /**
- * Process an enqueued Promise job if the jobqueue is not empty.
- *
- * @return result of the processed job - if the jobqueue was non-empty,
- *         undefined - otherwise.
- */
-ecma_value_t
-ecma_process_enqueued_job (void)
-{
-  if (JERRY_CONTEXT (job_queue_head_p) == NULL)
-  {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-
-  ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
-  JERRY_CONTEXT (job_queue_head_p) = JERRY_CONTEXT (job_queue_head_p)->next_p;
-
-  void *job_p = item_p->job_p;
-  ecma_job_handler_t handler = item_p->handler;
-  jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
-  return handler (job_p);
-} /* ecma_process_enqueued_job */
-
-/**
  * Process enqueued Promise jobs until the first thrown error or until the
  * jobqueue becomes empty.
  *
@@ -354,8 +328,15 @@ ecma_process_all_enqueued_jobs (void)
 
   while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
   {
+    ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
+    JERRY_CONTEXT (job_queue_head_p) = JERRY_CONTEXT (job_queue_head_p)->next_p;
+
+    void *job_p = item_p->job_p;
+    ecma_job_handler_t handler = item_p->handler;
+    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+
     ecma_free_value (ret);
-    ret = ecma_process_enqueued_job ();
+    ret = handler (job_p);
   }
 
   return ret;

@@ -237,7 +237,6 @@ jerry_value_t jerry_parse_named_resource (const jerry_char_t *name_p, size_t nam
 jerry_value_t jerry_run (const jerry_value_t func_val);
 jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, bool is_strict);
 
-jerry_value_t jerry_run_enqueued_job (void);
 jerry_value_t jerry_run_all_enqueued_jobs (void);
 
 /**

@@ -45,7 +45,6 @@ void ecma_job_queue_init (void);
 void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
 void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
 
-ecma_value_t ecma_process_enqueued_job (void);
 ecma_value_t ecma_process_all_enqueued_jobs (void);
 
 /**

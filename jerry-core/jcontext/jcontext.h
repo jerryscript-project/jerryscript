@@ -106,7 +106,6 @@ typedef struct
 
 #ifdef JMEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
-  jmem_pools_stats_t jmem_pools_stats; /**< pools' memory usage statistics */
 #endif /* JMEM_STATS */
 
 #ifdef JERRY_VALGRIND_FREYA

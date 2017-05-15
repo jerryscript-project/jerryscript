@@ -153,22 +153,128 @@ jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severi
 
 #ifdef JMEM_STATS
 /**
- * Reset peak values in memory usage statistics
- */
-void
-jmem_stats_reset_peak (void)
-{
-  jmem_heap_stats_reset_peak ();
-  jmem_pools_stats_reset_peak ();
-} /* jmem_stats_reset_peak */
-
-/**
  * Print memory usage statistics
  */
 void
 jmem_stats_print (void)
 {
   jmem_heap_stats_print ();
-  jmem_pools_stats_print ();
 } /* jmem_stats_print */
+
+/**
+ * Register byte code allocation.
+ */
+void
+jmem_stats_allocate_byte_code_bytes (size_t byte_code_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  heap_stats->byte_code_bytes += byte_code_size;
+
+  if (heap_stats->byte_code_bytes >= heap_stats->peak_byte_code_bytes)
+  {
+    heap_stats->peak_byte_code_bytes = heap_stats->byte_code_bytes;
+  }
+} /* jmem_stats_allocate_byte_code_bytes */
+
+/**
+ * Register byte code free.
+ */
+void
+jmem_stats_free_byte_code_bytes (size_t byte_code_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  JERRY_ASSERT (heap_stats->byte_code_bytes >= byte_code_size);
+
+  heap_stats->byte_code_bytes -= byte_code_size;
+} /* jmem_stats_free_byte_code_bytes */
+
+/**
+ * Register string allocation.
+ */
+void
+jmem_stats_allocate_string_bytes (size_t string_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  heap_stats->string_bytes += string_size;
+
+  if (heap_stats->string_bytes >= heap_stats->peak_string_bytes)
+  {
+    heap_stats->peak_string_bytes = heap_stats->string_bytes;
+  }
+} /* jmem_stats_allocate_string_bytes */
+
+/**
+ * Register string free.
+ */
+void
+jmem_stats_free_string_bytes (size_t string_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  JERRY_ASSERT (heap_stats->string_bytes >= string_size);
+
+  heap_stats->string_bytes -= string_size;
+} /* jmem_stats_free_string_bytes */
+
+/**
+ * Register object allocation.
+ */
+void
+jmem_stats_allocate_object_bytes (size_t object_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  heap_stats->object_bytes += object_size;
+
+  if (heap_stats->object_bytes >= heap_stats->peak_object_bytes)
+  {
+    heap_stats->peak_object_bytes = heap_stats->object_bytes;
+  }
+} /* jmem_stats_allocate_object_bytes */
+
+/**
+ * Register object free.
+ */
+void
+jmem_stats_free_object_bytes (size_t object_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  JERRY_ASSERT (heap_stats->object_bytes >= object_size);
+
+  heap_stats->object_bytes -= object_size;
+} /* jmem_stats_free_object_bytes */
+
+/**
+ * Register property allocation.
+ */
+void
+jmem_stats_allocate_property_bytes (size_t property_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  heap_stats->property_bytes += property_size;
+
+  if (heap_stats->property_bytes >= heap_stats->peak_property_bytes)
+  {
+    heap_stats->peak_property_bytes = heap_stats->property_bytes;
+  }
+} /* jmem_stats_allocate_property_bytes */
+
+/**
+ * Register property free.
+ */
+void
+jmem_stats_free_property_bytes (size_t property_size)
+{
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  JERRY_ASSERT (heap_stats->property_bytes >= property_size);
+
+  heap_stats->property_bytes -= property_size;
+} /* jmem_stats_free_property_bytes */
+
 #endif /* JMEM_STATS */

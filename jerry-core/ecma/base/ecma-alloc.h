@@ -38,6 +38,18 @@ ecma_object_t *ecma_alloc_object (void);
 void ecma_dealloc_object (ecma_object_t *object_p);
 
 /**
+ * Allocate memory for extended object
+ *
+ * @return pointer to allocated memory
+ */
+ecma_extended_object_t *ecma_alloc_extended_object (size_t size);
+
+/**
+ * Dealloc memory of an extended object
+ */
+void ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p, size_t size);
+
+/**
  * Allocate memory for ecma-number
  *
  * @return pointer to allocated memory
@@ -86,6 +98,18 @@ ecma_string_t *ecma_alloc_string (void);
 void ecma_dealloc_string (ecma_string_t *string_p);
 
 /**
+ * Allocate memory for string with character data
+ *
+ * @return pointer to allocated memory
+ */
+ecma_string_t *ecma_alloc_string_buffer (size_t size);
+
+/**
+ * Dealloc memory of a string with character data
+ */
+void ecma_dealloc_string_buffer (ecma_string_t *string_p, size_t size);
+
+/**
  * Allocate memory for getter-setter pointer pair
  *
  * @return pointer to allocated memory
@@ -96,18 +120,6 @@ ecma_getter_setter_pointers_t *ecma_alloc_getter_setter_pointers (void);
  * Dealloc memory from getter-setter pointer pair
  */
 void ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_setter_pointers_p);
-
-/*
- * Allocate memory for extended object
- *
- * @return pointer to allocated memory
- */
-ecma_extended_object_t *ecma_alloc_extended_object (size_t size);
-
-/**
- * Dealloc memory of an extended object
- */
-void ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p, size_t size);
 
 /**
  * Allocate memory for ecma-property pair

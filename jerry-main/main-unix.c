@@ -97,7 +97,6 @@ print_help (const char *name)
           "  -h, --help\n"
           "  -v, --version\n"
           "  --mem-stats\n"
-          "  --mem-stats-separate\n"
           "  --parse-only\n"
           "  --show-opcodes\n"
           "  --show-regexp-opcodes\n"
@@ -409,14 +408,6 @@ main (int argc,
       {
         jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
         flags |= JERRY_INIT_MEM_STATS;
-      }
-    }
-    else if (!strcmp ("--mem-stats-separate", argv[i]))
-    {
-      if (check_feature (JERRY_FEATURE_MEM_STATS, argv[i]))
-      {
-        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
-        flags |= JERRY_INIT_MEM_STATS_SEPARATE;
       }
     }
     else if (!strcmp ("--parse-only", argv[i]))

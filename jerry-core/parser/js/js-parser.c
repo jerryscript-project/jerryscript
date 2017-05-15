@@ -1489,6 +1489,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
 
+#ifdef JMEM_STATS
+  jmem_stats_allocate_byte_code_bytes (total_size);
+#endif /* JMEM_STATS */
+
   byte_code_p = (uint8_t *) compiled_code_p;
   compiled_code_p->size = (uint16_t) (total_size >> JMEM_ALIGNMENT_LOG);
   compiled_code_p->refs = 1;

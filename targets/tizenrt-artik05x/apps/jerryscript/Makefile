@@ -100,7 +100,7 @@ EXTRA_LIBS += libjerry-core.a libjerry-libm.a
 LINKLIBS=$(EXTRA_LIBS)
 
 
-ASRCS =
+ASRCS = setjmp.S
 CSRCS =
 MAINSRC = jerry_main.c
 

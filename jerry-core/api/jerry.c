@@ -52,7 +52,6 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES
                      && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
                      && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS
-                     && (int) ECMA_INIT_MEM_STATS_SEPARATE == (int) JERRY_INIT_MEM_STATS_SEPARATE
                      && (int) ECMA_INIT_DEBUGGER == (int) JERRY_INIT_DEBUGGER,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
 
@@ -151,11 +150,6 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 
   /* Zero out all members. */
   memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
-
-  if (flags & JERRY_INIT_MEM_STATS_SEPARATE)
-  {
-    flags |= JERRY_INIT_MEM_STATS;
-  }
 
   JERRY_CONTEXT (jerry_init_flags) = flags;
 
@@ -326,14 +320,6 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   }
 
   ecma_free_value (parse_status);
-
-#ifdef JMEM_STATS
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_MEM_STATS_SEPARATE)
-  {
-    jmem_stats_print ();
-    jmem_stats_reset_peak ();
-  }
-#endif /* JMEM_STATS */
 
   is_strict = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();

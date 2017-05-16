@@ -187,7 +187,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
 
   if (likely (string_size <= UINT16_MAX))
   {
-    string_desc_p = jmem_heap_alloc_block (sizeof (ecma_string_t) + string_size);
+    string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + string_size);
 
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
     string_desc_p->u.common_uint32_field = 0;
@@ -198,7 +198,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
   }
   else
   {
-    string_desc_p = jmem_heap_alloc_block (sizeof (ecma_long_string_t) + string_size);
+    string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_long_string_t) + string_size);
 
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING | ECMA_STRING_REF_ONE;
     string_desc_p->u.common_uint32_field = 0;
@@ -275,7 +275,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
     if (likely (string_size <= UINT16_MAX))
     {
-      string_desc_p = jmem_heap_alloc_block (sizeof (ecma_string_t) + converted_string_size);
+      string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + converted_string_size);
 
       string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
       string_desc_p->u.common_uint32_field = 0;
@@ -286,7 +286,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
     }
     else
     {
-      string_desc_p = jmem_heap_alloc_block (sizeof (ecma_long_string_t) + converted_string_size);
+      string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_long_string_t) + converted_string_size);
 
       string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING | ECMA_STRING_REF_ONE;
       string_desc_p->u.common_uint32_field = 0;
@@ -428,7 +428,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
                 && lit_is_ex_utf8_string_magic (str_buf, str_size) == lit_get_magic_string_ex_count ());
 #endif /* !JERRY_NDEBUG */
 
-  ecma_string_t *string_desc_p = jmem_heap_alloc_block (sizeof (ecma_string_t) + str_size);
+  ecma_string_t *string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + str_size);
 
   string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
   string_desc_p->hash = lit_utf8_string_calc_hash (str_buf, str_size);
@@ -671,7 +671,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 
   if (likely (new_size <= UINT16_MAX))
   {
-    string_desc_p = jmem_heap_alloc_block (sizeof (ecma_string_t) + new_size);
+    string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + new_size);
 
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
     string_desc_p->u.common_uint32_field = 0;
@@ -682,7 +682,7 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
   }
   else
   {
-    string_desc_p = jmem_heap_alloc_block (sizeof (ecma_long_string_t) + new_size);
+    string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_long_string_t) + new_size);
 
     string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING | ECMA_STRING_REF_ONE;
     string_desc_p->u.common_uint32_field = 0;
@@ -763,14 +763,14 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       }
 #endif /* !JERRY_NDEBUG */
 
-      jmem_heap_free_block (string_p, string_p->u.utf8_string.size + sizeof (ecma_string_t));
+      ecma_dealloc_string_buffer (string_p, string_p->u.utf8_string.size + sizeof (ecma_string_t));
       return;
     }
     case ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING:
     {
       JERRY_ASSERT (string_p->u.long_utf8_string_size > UINT16_MAX);
 
-      jmem_heap_free_block (string_p, string_p->u.long_utf8_string_size + sizeof (ecma_long_string_t));
+      ecma_dealloc_string_buffer (string_p, string_p->u.long_utf8_string_size + sizeof (ecma_long_string_t));
       return;
     }
     case ECMA_STRING_CONTAINER_UINT32_IN_DESC:

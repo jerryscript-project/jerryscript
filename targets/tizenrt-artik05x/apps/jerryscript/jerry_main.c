@@ -16,12 +16,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <setjmp.h>
 
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
 #include "jmem.h"
+#include "setjmp.h"
 
 #include <apps/shell/tash.h> // To register tash command
 
@@ -546,28 +546,3 @@ jerry_register_cmd (void) {
   tash_cmdlist_install(tash_cmds);
   return 0;
 }
-
-/**
- * Compiler built-in setjmp function.
- *
- * @return 0 when called the first time
- *         1 when returns from a longjmp call
- */
-int
-setjmp (jmp_buf buf)
-{
-  return __builtin_setjmp (buf);
-} /* setjmp */
-
-/**
- * Compiler built-in longjmp function.
- *
- * Note:
- *   ignores value argument
- */
-void
-longjmp (jmp_buf buf, int value)
-{
-  /* Must be called with 1. */
-  __builtin_longjmp (buf, 1);
-} /* longjmp */

@@ -23,6 +23,8 @@
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
+#include "cli.h"
+
 /**
  * Maximum size of source code
  */
@@ -78,40 +80,6 @@ read_file (const char *file_name,
   *out_size_p = bytes_read;
   return (const uint32_t *) buffer;
 } /* read_file */
-
-static void
-print_usage (const char *name)
-{
-  printf ("Usage: %s [OPTION]... [FILE]...\n"
-          "Try '%s --help' for more information.\n",
-          name,
-          name);
-} /* print_usage */
-
-static void
-print_help (const char *name)
-{
-  printf ("Usage: %s [OPTION]... [FILE]...\n"
-          "\n"
-          "Options:\n"
-          "  -h, --help\n"
-          "  -v, --version\n"
-          "  --mem-stats\n"
-          "  --parse-only\n"
-          "  --show-opcodes\n"
-          "  --show-regexp-opcodes\n"
-          "  --start-debug-server\n"
-          "  --save-snapshot-for-global FILE\n"
-          "  --save-snapshot-for-eval FILE\n"
-          "  --save-literals-list-format FILE\n"
-          "  --save-literals-c-format FILE\n"
-          "  --exec-snapshot FILE\n"
-          "  --log-level [0-3]\n"
-          "  --abort-on-fail\n"
-          "  --no-prompt\n"
-          "\n",
-          name);
-} /* print_help */
 
 /**
  * Check whether an error is a SyntaxError or not
@@ -324,6 +292,68 @@ register_js_function (const char *name_p, /**< name of the function */
 } /* register_js_function */
 
 /**
+ * Command line option IDs
+ */
+typedef enum
+{
+  OPT_HELP,
+  OPT_VERSION,
+  OPT_MEM_STATS,
+  OPT_PARSE_ONLY,
+  OPT_SHOW_OP,
+  OPT_SHOW_RE_OP,
+  OPT_DEBUG_SERVER,
+  OPT_SAVE_SNAP_GLOBAL,
+  OPT_SAVE_SNAP_EVAL,
+  OPT_SAVE_LIT_LIST,
+  OPT_SAVE_LIT_C,
+  OPT_EXEC_SNAP,
+  OPT_LOG_LEVEL,
+  OPT_ABORT_ON_FAIL,
+  OPT_NO_PROMPT
+} main_opt_id_t;
+
+/**
+ * Command line options
+ */
+static cli_opt_t main_opts[] =
+{
+  CLI_OPT_DEF (.id = OPT_HELP, .opt = "-h", .longopt = "--help",
+               .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_VERSION, .opt = "-v", .longopt = "--version",
+               .help = "print tool and library version and exit"),
+  CLI_OPT_DEF (.id = OPT_MEM_STATS, .longopt = "--mem-stats",
+               .help = "dump memory statistics"),
+  CLI_OPT_DEF (.id = OPT_PARSE_ONLY, .longopt = "--parse-only",
+               .help = "don't execute JS input"),
+  CLI_OPT_DEF (.id = OPT_SHOW_OP, .longopt = "--show-opcodes",
+               .help = "dump parser byte-code"),
+  CLI_OPT_DEF (.id = OPT_SHOW_RE_OP, .longopt = "--show-regexp-opcodes",
+               .help = "dump regexp byte-code"),
+  CLI_OPT_DEF (.id = OPT_DEBUG_SERVER, .longopt = "--start-debug-server",
+               .help = "start debug server and wait for a connecting client"),
+  CLI_OPT_DEF (.id = OPT_SAVE_SNAP_GLOBAL, .longopt = "--save-snapshot-for-global", .argc = 1, .meta = "FILE",
+               .help = "save binary snapshot of parsed JS input (for execution in global context)"),
+  CLI_OPT_DEF (.id = OPT_SAVE_SNAP_EVAL, .longopt = "--save-snapshot-for-eval", .argc = 1, .meta = "FILE",
+               .help = "save binary snapshot of parsed JS input (for execution in local context by eval)"),
+  CLI_OPT_DEF (.id = OPT_SAVE_LIT_LIST, .longopt = "--save-literals-list-format", .argc = 1, .meta = "FILE",
+               .help = "export literals found in parsed JS input (in list format)"),
+  CLI_OPT_DEF (.id = OPT_SAVE_LIT_C, .longopt = "--save-literals-c-format", .argc = 1, .meta = "FILE",
+               .help = "export literals found in parsed JS input (in C source format)"),
+  CLI_OPT_DEF (.id = OPT_EXEC_SNAP, .longopt = "--exec-snapshot", .argc = 1, .meta = "FILE", .quant = CLI_QUANT_A,
+               .help = "execute input snapshot file(s)"),
+  CLI_OPT_DEF (.id = OPT_LOG_LEVEL, .longopt = "--log-level", .argc = 1, .meta = "NUM",
+               .help = "set log level (0-3)"),
+  CLI_OPT_DEF (.id = OPT_ABORT_ON_FAIL, .longopt = "--abort-on-fail",
+               .help = "segfault on internal failure (instead of non-zero exit code)"),
+  CLI_OPT_DEF (.id = OPT_NO_PROMPT, .longopt = "--no-prompt",
+               .help = "don't print prompt in REPL mode"),
+  CLI_OPT_DEF (.id = CLI_OPT_POSITIONAL, .meta = "FILE", .quant = CLI_QUANT_A,
+               .help = "input JS file(s)"),
+  CLI_OPT_DEF (.id = CLI_OPT_END)
+};
+
+/**
  * Check whether JerryScript has a requested feature enabled or not. If not,
  * print a warning message.
  *
@@ -354,14 +384,8 @@ check_usage (bool condition, /**< the condition that must hold */
 {
   if (!condition)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s", msg);
-    if (opt != NULL)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s", opt);
-    }
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
-
-    print_usage (name);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s%s\n", msg, opt != NULL ? opt : "");
+    cli_opt_usage (name, main_opts);
     exit (JERRY_STANDALONE_EXIT_CODE_FAIL);
   }
 } /* check_usage */
@@ -390,115 +414,129 @@ main (int argc,
   bool is_repl_mode = false;
   bool no_prompt = false;
 
-  for (int i = 1; i < argc; i++)
+  cli_opt_state_t cli_state = cli_opt_init (main_opts, argc - 1, argv + 1);
+  for (int id = cli_opt_process (&cli_state); id != CLI_OPT_END; id = cli_opt_process (&cli_state))
   {
-    if (!strcmp ("-h", argv[i]) || !strcmp ("--help", argv[i]))
+    switch (id)
     {
-      print_help (argv[0]);
-      return JERRY_STANDALONE_EXIT_CODE_OK;
-    }
-    else if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i]))
-    {
-      printf ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
-      return JERRY_STANDALONE_EXIT_CODE_OK;
-    }
-    else if (!strcmp ("--mem-stats", argv[i]))
-    {
-      if (check_feature (JERRY_FEATURE_MEM_STATS, argv[i]))
+      case OPT_HELP:
       {
-        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
-        flags |= JERRY_INIT_MEM_STATS;
+        cli_opt_usage (argv[0], main_opts);
+        printf ("\n");
+        cli_opt_help (main_opts);
+        return JERRY_STANDALONE_EXIT_CODE_OK;
       }
-    }
-    else if (!strcmp ("--parse-only", argv[i]))
-    {
-      is_parse_only = true;
-    }
-    else if (!strcmp ("--show-opcodes", argv[i]))
-    {
-      if (check_feature (JERRY_FEATURE_PARSER_DUMP, argv[i]))
+      case OPT_VERSION:
       {
-        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
-        flags |= JERRY_INIT_SHOW_OPCODES;
+        printf ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
+        return JERRY_STANDALONE_EXIT_CODE_OK;
       }
-    }
-    else if (!strcmp ("--show-regexp-opcodes", argv[i]))
-    {
-      if (check_feature (JERRY_FEATURE_REGEXP_DUMP, argv[i]))
+      case OPT_MEM_STATS:
       {
-        jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
-        flags |= JERRY_INIT_SHOW_REGEXP_OPCODES;
+        if (check_feature (JERRY_FEATURE_MEM_STATS, cli_state.arg[0]))
+        {
+          jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+          flags |= JERRY_INIT_MEM_STATS;
+        }
+        break;
       }
-    }
-    else if (!strcmp ("--start-debug-server", argv[i]))
-    {
-      if (check_feature (JERRY_FEATURE_DEBUGGER, argv[i]))
+      case OPT_PARSE_ONLY:
       {
-        flags |= JERRY_INIT_DEBUGGER;
+        is_parse_only = true;
+        break;
       }
-    }
-    else if (!strcmp ("--save-snapshot-for-global", argv[i])
-             || !strcmp ("--save-snapshot-for-eval", argv[i]))
-    {
-      check_usage (i + 1 < argc, argv[0], "Error: no file specified for ", argv[i]);
-      check_usage (save_snapshot_file_name_p == NULL, argv[0], "Error: snapshot file name already specified", NULL);
+      case OPT_SHOW_OP:
+      {
+        if (check_feature (JERRY_FEATURE_PARSER_DUMP, cli_state.arg[0]))
+        {
+          jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+          flags |= JERRY_INIT_SHOW_OPCODES;
+        }
+        break;
+      }
+      case OPT_SHOW_RE_OP:
+      {
+        if (check_feature (JERRY_FEATURE_REGEXP_DUMP, cli_state.arg[0]))
+        {
+          jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
+          flags |= JERRY_INIT_SHOW_REGEXP_OPCODES;
+        }
+        break;
+      }
+      case OPT_DEBUG_SERVER:
+      {
+        if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg[0]))
+        {
+          flags |= JERRY_INIT_DEBUGGER;
+        }
+        break;
+      }
+      case OPT_SAVE_SNAP_GLOBAL:
+      case OPT_SAVE_SNAP_EVAL:
+      {
+        check_usage (save_snapshot_file_name_p == NULL, argv[0], "Error: snapshot file name already specified", NULL);
+        if (check_feature (JERRY_FEATURE_SNAPSHOT_SAVE, cli_state.arg[0]))
+        {
+          is_save_snapshot_mode = true;
+          is_save_snapshot_mode_for_global_or_eval = cli_state.opt->id == OPT_SAVE_SNAP_GLOBAL;
+          save_snapshot_file_name_p = cli_state.arg[1];
+        }
+        break;
+      }
+      case OPT_SAVE_LIT_LIST:
+      case OPT_SAVE_LIT_C:
+      {
+        check_usage (save_literals_file_name_p == NULL, argv[0], "Error: literal file name already specified", NULL);
+        if (check_feature (JERRY_FEATURE_SNAPSHOT_SAVE, cli_state.arg[0]))
+        {
+          is_save_literals_mode = true;
+          is_save_literals_mode_in_c_format_or_list = cli_state.opt->id == OPT_SAVE_LIT_C;
+          save_literals_file_name_p = cli_state.arg[1];
+        }
+        break;
+      }
+      case OPT_EXEC_SNAP:
+      {
+        if (check_feature (JERRY_FEATURE_SNAPSHOT_EXEC, cli_state.arg[0]))
+        {
+          exec_snapshot_file_names[exec_snapshots_count++] = cli_state.arg[1];
+        }
+        break;
+      }
+      case OPT_LOG_LEVEL:
+      {
+        check_usage (strlen (cli_state.arg[1]) == 1 && cli_state.arg[1][0] >= '0' && cli_state.arg[1][0] <= '3',
+                     argv[0], "Error: wrong format for ", cli_state.arg[0]);
 
-      if (check_feature (JERRY_FEATURE_SNAPSHOT_SAVE, argv[i++]))
-      {
-        is_save_snapshot_mode = true;
-        is_save_snapshot_mode_for_global_or_eval = !strcmp ("--save-snapshot-for-global", argv[i - 1]);
-        save_snapshot_file_name_p = argv[i];
+        jerry_port_default_set_log_level ((jerry_log_level_t) (cli_state.arg[1][0] - '0'));
+        break;
       }
-    }
-    else if (!strcmp ("--exec-snapshot", argv[i]))
-    {
-      check_usage (i + 1 < argc, argv[0], "Error: no file specified for ", argv[i]);
-
-      if (check_feature (JERRY_FEATURE_SNAPSHOT_EXEC, argv[i++]))
+      case OPT_ABORT_ON_FAIL:
       {
-        exec_snapshot_file_names[exec_snapshots_count++] = argv[i];
+        jerry_port_default_set_abort_on_fail (true);
+        break;
       }
-    }
-    else if (!strcmp ("--save-literals-list-format", argv[i])
-             || !strcmp ("--save-literals-c-format", argv[i]))
-    {
-      check_usage (i + 1 < argc, argv[0], "Error: no file specified for ", argv[i]);
-      check_usage (save_literals_file_name_p == NULL, argv[0], "Error: literal file name already specified", NULL);
-
-      if (check_feature (JERRY_FEATURE_SNAPSHOT_SAVE, argv[i++]))
+      case OPT_NO_PROMPT:
       {
-        is_save_literals_mode = true;
-        is_save_literals_mode_in_c_format_or_list = !strcmp ("--save-literals-c-format", argv[i - 1]);
-        save_literals_file_name_p = argv[i];
+        no_prompt = true;
+        break;
       }
-    }
-    else if (!strcmp ("--log-level", argv[i]))
-    {
-      check_usage (i + 1 < argc, argv[0], "Error: no level specified for ", argv[i]);
-      check_usage (strlen (argv[i + 1]) == 1 && argv[i + 1][0] >= '0' && argv[i + 1][0] <= '3',
-                   argv[0], "Error: wrong format for ", argv[i]);
-
-      jerry_port_default_set_log_level ((jerry_log_level_t) (argv[++i][0] - '0'));
-    }
-    else if (!strcmp ("--abort-on-fail", argv[i]))
-    {
-      jerry_port_default_set_abort_on_fail (true);
-    }
-    else if (!strcmp ("--no-prompt", argv[i]))
-    {
-      no_prompt = true;
-    }
-    else if (!strcmp ("-", argv[i]))
-    {
-      file_names[files_counter++] = argv[i];
-    }
-    else if (!strncmp ("-", argv[i], 1))
-    {
-      check_usage (false, argv[0], "Error: unrecognized option: %s\n", argv[i]);
-    }
-    else
-    {
-      file_names[files_counter++] = argv[i];
+      case CLI_OPT_POSITIONAL:
+      {
+        file_names[files_counter++] = cli_state.arg[0];
+        break;
+      }
+      case CLI_OPT_INCOMPLETE:
+      {
+        check_usage (false, argv[0], "Error: incomplete option: ", cli_state.arg[0]);
+        break;
+      }
+      case CLI_OPT_UNKNOWN:
+      default:
+      {
+        check_usage (false, argv[0], "Error: unrecognized option: ", cli_state.arg[0]);
+        break;
+      }
     }
   }
 

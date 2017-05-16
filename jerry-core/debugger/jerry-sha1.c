@@ -40,9 +40,9 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#ifdef JERRY_DEBUGGER
-
 #include "jerry-debugger.h"
+
+#ifdef JERRY_DEBUGGER
 
 /**
  * SHA-1 context structure.

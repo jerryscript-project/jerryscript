@@ -48,7 +48,6 @@ macro(jerry_create_executable JERRY_NAME)
   set_property(TARGET ${JERRY_NAME}
                PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   target_compile_definitions(${JERRY_NAME} PRIVATE ${DEFINES_JERRY})
-  link_directories(${CMAKE_BINARY_DIR})
 
   target_link_libraries(${JERRY_NAME} jerry-core)
 

@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
+#include "jcontext.h"
+#include "jerry-debugger.h"
+#include "jerryscript-port.h"
+
 #ifdef JERRY_DEBUGGER
 
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#include "jcontext.h"
-#include "jerry-debugger.h"
-#include "jerryscript-port.h"
 
 /**
  * Debugger socket communication port.

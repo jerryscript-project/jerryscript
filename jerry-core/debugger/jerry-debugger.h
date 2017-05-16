@@ -16,10 +16,10 @@
 #ifndef JERRY_DEBUGGER_H
 #define JERRY_DEBUGGER_H
 
-#ifdef JERRY_DEBUGGER
-
 #include "jerry-debugger-ws.h"
 #include "ecma-globals.h"
+
+#ifdef JERRY_DEBUGGER
 
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
 

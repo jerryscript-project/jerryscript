@@ -19,10 +19,25 @@ project (Jerry C ASM)
 set(PLATFORM "${CMAKE_SYSTEM_NAME}")
 string(TOUPPER "${PLATFORM}" PLATFORM)
 
-# Remove rdynamic option
-set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
+# Determining compiler
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+  set(USING_GCC 1)
+endif()
 
-# Components
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  set(USING_CLANG 1)
+endif()
+
+if(CMAKE_C_COMPILER_ID MATCHES "TI")
+  set(USING_TI 1)
+endif()
+
+# Determining build type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "MinSizeRel")
+endif()
+
+# Optional components
 set(JERRY_CMDLINE         ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_MINIMAL OFF CACHE BOOL "Build jerry minimal command line tool?")
 set(JERRY_PORT_DEFAULT    ON  CACHE BOOL "Build default jerry port implementation?")
@@ -37,29 +52,26 @@ set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "MinSizeRel")
-endif()
-
+# Option overrides
 if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
-  set(JERRY_PORT_DEFAULT "ON")
+  set(JERRY_PORT_DEFAULT ON)
 
   set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE)")
 endif()
 
 if(JERRY_CMDLINE)
-  set(JERRY_EXT "ON")
+  set(JERRY_EXT ON)
 
   set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE)")
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
-  set(JERRY_LIBC         "OFF")
-  set(JERRY_LIBM         "OFF")
-  set(ENABLE_ALL_IN_ONE  "ON")
-  set(ENABLE_LTO         "OFF")
-  set(ENABLE_STATIC_LINK "OFF")
-  set(ENABLE_STRIP       "OFF")
+  set(JERRY_LIBC         OFF)
+  set(JERRY_LIBM         OFF)
+  set(ENABLE_ALL_IN_ONE  ON)
+  set(ENABLE_LTO         OFF)
+  set(ENABLE_STATIC_LINK OFF)
+  set(ENABLE_STRIP       OFF)
 
   set(JERRY_LIBC_MESSAGE         " (FORCED BY PLATFORM)")
   set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
@@ -69,22 +81,9 @@ if("${PLATFORM}" STREQUAL "DARWIN")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
 
-
-if(CMAKE_C_COMPILER_ID MATCHES "GNU")
-  set(USING_GCC 1)
-endif()
-
-if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-  set(USING_CLANG 1)
-endif()
-
-if(CMAKE_C_COMPILER_ID MATCHES "TI")
-  set(USING_TI 1)
-endif()
-
 if(USING_TI)
-  set(ENABLE_STATIC_LINK "ON")
-  set(ENABLE_STRIP       "OFF")
+  set(ENABLE_STATIC_LINK ON)
+  set(ENABLE_STRIP       OFF)
 
   set(ENABLE_STATIC_LINK_MESSAGE " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
@@ -118,6 +117,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/")
 
 # Archive targets output Directory
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/")
+
+# Remove rdynamic option
+set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 
 # Compile/link flags
 # Helper macros

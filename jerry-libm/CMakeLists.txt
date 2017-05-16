@@ -34,8 +34,7 @@ add_library(${JERRY_LIBM_NAME} STATIC ${SOURCE_LIBM})
 set_property(TARGET ${JERRY_LIBM_NAME}
              PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_LIBM}")
 
-target_include_directories(${JERRY_LIBM_NAME} PRIVATE ${INCLUDE_LIBM})
-target_include_directories(${JERRY_LIBM_NAME} INTERFACE ${INCLUDE_LIBM})
+target_include_directories(${JERRY_LIBM_NAME} PUBLIC ${INCLUDE_LIBM})
 
 install(TARGETS ${JERRY_LIBM_NAME} DESTINATION lib)
 install(DIRECTORY ${INCLUDE_LIBM}/ DESTINATION include/jerry-libm)

@@ -86,7 +86,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
 
   bool arg1;
   double arg2 = 0.0;
-  char arg3[5] = { 0 };
+  char arg3[5] = "1234";
   jerry_value_t arg4 = jerry_create_undefined ();
 
   jerryx_arg_t mapping[] =
@@ -114,8 +114,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
     TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
-    TEST_ASSERT (arg3[0] == 'a' && arg3[1] == 'b'
-                 && arg3[2] == 'c' && arg3[4] == '\0');
+    TEST_ASSERT (strcmp (arg3, "abc") == 0);
     TEST_ASSERT (jerry_value_is_function (arg4));
   }
   else if (validator1_count == 1)
@@ -123,8 +122,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
     TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
-    TEST_ASSERT (arg3[0] == 'a' && arg3[1] == 'b'
-                 && arg3[2] == 'c' && arg3[4] == '\0');
+    TEST_ASSERT (strcmp (arg3, "abc") == 0);
     TEST_ASSERT (jerry_value_is_undefined (arg4));
   }
   else

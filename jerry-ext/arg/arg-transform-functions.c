@@ -145,15 +145,19 @@ static jerry_value_t
 jerryx_arg_string_common_routine (jerry_value_t js_arg, /**< JS arg */
                                   const jerryx_arg_t *c_arg_p) /**< native arg */
 {
+  jerry_char_t *target_p = (jerry_char_t *) c_arg_p->dest;
+  jerry_size_t target_buf_size = (jerry_size_t) c_arg_p->extra_info;
   jerry_size_t size = jerry_string_to_char_buffer (js_arg,
-                                                   (jerry_char_t *) c_arg_p->dest,
-                                                   (jerry_size_t) c_arg_p->extra_info);
+                                                   target_p,
+                                                   target_buf_size);
 
-  if (size == 0)
+  if (size == 0 || size == target_buf_size)
   {
     return jerry_create_error (JERRY_ERROR_TYPE,
                                (jerry_char_t *) "The size of the buffer is not large enough.");
   }
+
+  target_p[size] = '\0';
 
   return jerry_create_undefined ();
 } /* jerryx_arg_string_common_routine */

@@ -86,7 +86,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
 
   bool arg1;
   double arg2 = 0.0;
-  char arg3[5];
+  char arg3[5] = { 0 };
   jerry_value_t arg4 = jerry_create_undefined ();
 
   jerryx_arg_t mapping[] =

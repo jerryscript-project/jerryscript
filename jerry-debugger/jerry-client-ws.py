@@ -39,27 +39,29 @@ JERRY_DEBUGGER_SOURCE_CODE_NAME_END = 10
 JERRY_DEBUGGER_FUNCTION_NAME = 11
 JERRY_DEBUGGER_FUNCTION_NAME_END = 12
 JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13
-JERRY_DEBUGGER_BREAKPOINT_HIT = 14
-JERRY_DEBUGGER_EXCEPTION_HIT = 15
-JERRY_DEBUGGER_BACKTRACE = 16
-JERRY_DEBUGGER_BACKTRACE_END = 17
-JERRY_DEBUGGER_EVAL_RESULT = 18
-JERRY_DEBUGGER_EVAL_RESULT_END = 19
-JERRY_DEBUGGER_EVAL_ERROR = 20
-JERRY_DEBUGGER_EVAL_ERROR_END = 21
+JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14
+JERRY_DEBUGGER_BREAKPOINT_HIT = 15
+JERRY_DEBUGGER_EXCEPTION_HIT = 16
+JERRY_DEBUGGER_BACKTRACE = 17
+JERRY_DEBUGGER_BACKTRACE_END = 18
+JERRY_DEBUGGER_EVAL_RESULT = 19
+JERRY_DEBUGGER_EVAL_RESULT_END = 20
+JERRY_DEBUGGER_EVAL_ERROR = 21
+JERRY_DEBUGGER_EVAL_ERROR_END = 22
 
 
 # Messages sent by the client to server.
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
 JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2
 JERRY_DEBUGGER_EXCEPTION_CONFIG = 3
-JERRY_DEBUGGER_STOP = 4
-JERRY_DEBUGGER_CONTINUE = 5
-JERRY_DEBUGGER_STEP = 6
-JERRY_DEBUGGER_NEXT = 7
-JERRY_DEBUGGER_GET_BACKTRACE = 8
-JERRY_DEBUGGER_EVAL = 9
-JERRY_DEBUGGER_EVAL_PART = 10
+JERRY_DEBUGGER_MEMSTATS = 4
+JERRY_DEBUGGER_STOP = 5
+JERRY_DEBUGGER_CONTINUE = 6
+JERRY_DEBUGGER_STEP = 7
+JERRY_DEBUGGER_NEXT = 8
+JERRY_DEBUGGER_GET_BACKTRACE = 9
+JERRY_DEBUGGER_EVAL = 10
+JERRY_DEBUGGER_EVAL_PART = 11
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -389,6 +391,12 @@ class DebuggerPrompt(Cmd):
 
         self.debugger.send_exception_config(enable)
 
+    def do_memstats(self, args):
+        """ Memory statistics """
+        self.exec_command(args, JERRY_DEBUGGER_MEMSTATS);
+        return
+
+    do_ms = do_memstats
 
 class Multimap(object):
 
@@ -929,6 +937,19 @@ def main():
                 print("Uncaught exception: %s" % (message))
             else:
                 print(message)
+
+            prompt.cmdloop()
+
+        elif buffer_type == JERRY_DEBUGGER_MEMSTATS_RECEIVE:
+
+            memory_stats = struct.unpack(debugger.byte_order + debugger.idx_format *5,
+                                         data[3: 3 + 4 *5])
+
+            print("Allocated bytes: %d" % (memory_stats[0]))
+            print("Byte code bytes: %d" % (memory_stats[1]))
+            print("String bytes: %d" % (memory_stats[2]))
+            print("Object bytes: %d" % (memory_stats[3]))
+            print("Property bytes: %d" % (memory_stats[4]))
 
             prompt.cmdloop()
 

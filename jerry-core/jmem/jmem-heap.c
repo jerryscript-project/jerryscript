@@ -575,16 +575,6 @@ jmem_heap_get_stats (jmem_heap_stats_t *out_heap_stats_p) /**< [out] heap stats 
 } /* jmem_heap_get_stats */
 
 /**
- * Reset peak values in memory usage statistics
- */
-void
-jmem_heap_stats_reset_peak (void)
-{
-  JERRY_CONTEXT (jmem_heap_stats).peak_allocated_bytes = JERRY_CONTEXT (jmem_heap_stats).allocated_bytes;
-  JERRY_CONTEXT (jmem_heap_stats).peak_waste_bytes = JERRY_CONTEXT (jmem_heap_stats).waste_bytes;
-} /* jmem_heap_stats_reset_peak */
-
-/**
  * Print heap memory usage statistics
  */
 void
@@ -595,18 +585,34 @@ jmem_heap_stats_print (void)
   JERRY_DEBUG_MSG ("Heap stats:\n"
                    "  Heap size = %zu bytes\n"
                    "  Allocated = %zu bytes\n"
-                   "  Waste = %zu bytes\n"
                    "  Peak allocated = %zu bytes\n"
+                   "  Waste = %zu bytes\n"
                    "  Peak waste = %zu bytes\n"
+                   "  Allocated byte code data = %zu bytes\n"
+                   "  Peak allocated byte code data = %zu bytes\n"
+                   "  Allocated string data = %zu bytes\n"
+                   "  Peak allocated string data = %zu bytes\n"
+                   "  Allocated object data = %zu bytes\n"
+                   "  Peak allocated object data = %zu bytes\n"
+                   "  Allocated property data = %zu bytes\n"
+                   "  Peak allocated property data = %zu bytes\n"
                    "  Skip-ahead ratio = %zu.%04zu\n"
                    "  Average alloc iteration = %zu.%04zu\n"
                    "  Average free iteration = %zu.%04zu\n"
                    "\n",
                    heap_stats->size,
                    heap_stats->allocated_bytes,
-                   heap_stats->waste_bytes,
                    heap_stats->peak_allocated_bytes,
+                   heap_stats->waste_bytes,
                    heap_stats->peak_waste_bytes,
+                   heap_stats->byte_code_bytes,
+                   heap_stats->peak_byte_code_bytes,
+                   heap_stats->string_bytes,
+                   heap_stats->peak_string_bytes,
+                   heap_stats->object_bytes,
+                   heap_stats->peak_object_bytes,
+                   heap_stats->property_bytes,
+                   heap_stats->peak_property_bytes,
                    heap_stats->skip_count / heap_stats->nonskip_count,
                    heap_stats->skip_count % heap_stats->nonskip_count * 10000 / heap_stats->nonskip_count,
                    heap_stats->alloc_iter_count / heap_stats->alloc_count,
@@ -643,18 +649,10 @@ jmem_heap_stat_alloc (size_t size) /**< Size of allocated block */
   {
     heap_stats->peak_allocated_bytes = heap_stats->allocated_bytes;
   }
-  if (heap_stats->allocated_bytes > heap_stats->global_peak_allocated_bytes)
-  {
-    heap_stats->global_peak_allocated_bytes = heap_stats->allocated_bytes;
-  }
 
   if (heap_stats->waste_bytes > heap_stats->peak_waste_bytes)
   {
     heap_stats->peak_waste_bytes = heap_stats->waste_bytes;
-  }
-  if (heap_stats->waste_bytes > heap_stats->global_peak_waste_bytes)
-  {
-    heap_stats->global_peak_waste_bytes = heap_stats->waste_bytes;
   }
 } /* jmem_heap_stat_alloc */
 

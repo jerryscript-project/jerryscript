@@ -1183,6 +1183,7 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;
+      literal_p->status_flags = (uint8_t) (literal_p->status_flags & ~LEXER_FLAG_UNUSED_IDENT);
       return;
     }
 
@@ -1611,13 +1612,16 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 
 /**
  * Construct a function literal object.
+ *
+ * @return function object literal index
  */
-void
+uint16_t
 lexer_construct_function_object (parser_context_t *context_p, /**< context */
                                  uint32_t extra_status_flags) /**< extra status flags */
 {
   ecma_compiled_code_t *compiled_code_p;
   lexer_literal_t *literal_p;
+  uint16_t result_index;
 
   if (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
   {
@@ -1629,20 +1633,19 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
     extra_status_flags |= PARSER_RESOLVE_THIS_FOR_CALLS;
   }
 
-  context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
-
   literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
   literal_p->type = LEXER_UNUSED_LITERAL;
   literal_p->status_flags = 0;
 
+  result_index = context_p->literal_count;
   context_p->literal_count++;
 
   compiled_code_p = parser_parse_function (context_p, extra_status_flags);
 
   literal_p->u.bytecode_p = compiled_code_p;
-
   literal_p->type = LEXER_FUNCTION_LITERAL;
-  context_p->status_flags |= PARSER_NO_REG_STORE;
+
+  return result_index;
 } /* lexer_construct_function_object */
 
 /**

@@ -119,30 +119,46 @@ void jmem_heap_free_block (void *ptr, const size_t size);
  */
 typedef struct
 {
-  size_t size; /**< size */
+  size_t size; /**< heap total size */
 
   size_t allocated_bytes; /**< currently allocated bytes */
   size_t peak_allocated_bytes; /**< peak allocated bytes */
-  size_t global_peak_allocated_bytes; /**< non-resettable peak allocated bytes */
 
-  size_t waste_bytes; /**< bytes waste due to blocks filled partially
-                       *   and due to block headers */
-  size_t peak_waste_bytes; /**< peak bytes waste */
-  size_t global_peak_waste_bytes; /**< non-resettable peak bytes waste */
+  size_t waste_bytes; /**< bytes waste due to blocks filled partially */
+  size_t peak_waste_bytes; /**< peak wasted bytes */
+
+  size_t byte_code_bytes; /**< allocated memory for byte code */
+  size_t peak_byte_code_bytes; /**< peak allocated memory for byte code */
+
+  size_t string_bytes; /**< allocated memory for strings */
+  size_t peak_string_bytes; /**< peak allocated memory for strings */
+
+  size_t object_bytes; /**< allocated memory for objects */
+  size_t peak_object_bytes; /**< peak allocated memory for objects */
+
+  size_t property_bytes; /**< allocated memory for properties */
+  size_t peak_property_bytes; /**< peak allocated memory for properties */
 
   size_t skip_count; /**< Number of skip-aheads during insertion of free block */
   size_t nonskip_count; /**< Number of times we could not skip ahead during
                          *   free block insertion */
 
-  size_t alloc_count; /**< Number of allocation of new pool chunk */
+  size_t alloc_count; /**< number of memory allocations */
+  size_t free_count; /**< number of memory frees */
   size_t alloc_iter_count; /**< Number of iterations required for allocations */
-
-  size_t free_count; /**< Number of freeing of pool chunk */
   size_t free_iter_count; /**< Number of iterations required for inserting free blocks */
 } jmem_heap_stats_t;
 
-void jmem_stats_reset_peak (void);
 void jmem_stats_print (void);
+void jmem_stats_allocate_byte_code_bytes (size_t property_size);
+void jmem_stats_free_byte_code_bytes (size_t property_size);
+void jmem_stats_allocate_string_bytes (size_t string_size);
+void jmem_stats_free_string_bytes (size_t string_size);
+void jmem_stats_allocate_object_bytes (size_t object_size);
+void jmem_stats_free_object_bytes (size_t string_size);
+void jmem_stats_allocate_property_bytes (size_t property_size);
+void jmem_stats_free_property_bytes (size_t property_size);
+
 #endif /* JMEM_STATS */
 
 jmem_cpointer_t jmem_compress_pointer (const void *pointer_p) __attr_pure___;
@@ -231,20 +247,6 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
  * \addtogroup poolman Memory pool manager
  * @{
  */
-#ifdef JMEM_STATS
-/**
- * Pools' memory usage statistics
- */
-typedef struct
-{
-  size_t pools_count;             /**< pools' count */
-  size_t peak_pools_count;        /**< peak pools' count */
-  size_t global_peak_pools_count; /**< non-resettable peak pools' count */
-  size_t free_chunks;             /**< free chunks count */
-  size_t new_alloc_count;         /**< Number of newly allocated pool chunks */
-  size_t reused_count;            /**< Number of reused pool chunks */
-} jmem_pools_stats_t;
-#endif /* JMEM_STATS */
 
 void *jmem_pools_alloc (size_t size);
 void jmem_pools_free (void *chunk_p, size_t size);

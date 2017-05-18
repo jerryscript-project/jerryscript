@@ -20,6 +20,7 @@
 #define JCONTEXT_H
 
 #include "ecma-builtins.h"
+#include "ecma-jobqueue.h"
 #include "jerry-debugger.h"
 #include "jmem.h"
 #include "re-bytecode.h"
@@ -84,6 +85,11 @@ typedef struct
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  ecma_job_queueitem_t *job_queue_head_p; /**< points to the head item of the jobqueue */
+  ecma_job_queueitem_t *job_queue_tail_p; /**< points to the tail item of the jobqueue*/
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+
 #ifdef JERRY_VM_EXEC_STOP
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
   uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */
@@ -106,7 +112,6 @@ typedef struct
 
 #ifdef JMEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
-  jmem_pools_stats_t jmem_pools_stats; /**< pools' memory usage statistics */
 #endif /* JMEM_STATS */
 
 #ifdef JERRY_VALGRIND_FREYA

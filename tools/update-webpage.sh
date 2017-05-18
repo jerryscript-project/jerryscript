@@ -52,10 +52,14 @@ for docfile in $docs_dir/*.md; do
   permalink=`echo $docfile_base | cut -d'.' -f 2 | tr '[:upper:]' '[:lower:]'`
   missing_title=`echo $permalink | tr '-' ' '`
 
+  # the first three documents belong to the navigation bar
+  category=$([[ $docfile_base =~ ^0[1-3] ]] && echo "navbar" || echo "documents")
+
   # generate appropriate header for each *.md
   echo "---"                                             >  $gh_pages_dir/$docfile_base
   echo "layout: page"                                    >> $gh_pages_dir/$docfile_base
   echo "title: ${titles[$docfile_base]:-$missing_title}" >> $gh_pages_dir/$docfile_base
+  echo "category: ${category}"                           >> $gh_pages_dir/$docfile_base
   echo "permalink: /$permalink/"                         >> $gh_pages_dir/$docfile_base
   echo "---"                                             >> $gh_pages_dir/$docfile_base
   echo                                                   >> $gh_pages_dir/$docfile_base

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-literal-storage.h"
 #include "ecma-helpers.h"
 #include "jcontext.h"
@@ -179,7 +180,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     number_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, number_list_p->next_cp);
   }
 
-  ecma_string_t *string_p = (ecma_string_t *) jmem_pools_alloc (sizeof (ecma_string_t));
+  ecma_string_t *string_p = ecma_alloc_string ();
   string_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_LITERAL_NUMBER;
   string_p->u.lit_number = num;
 

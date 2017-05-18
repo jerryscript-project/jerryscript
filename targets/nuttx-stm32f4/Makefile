@@ -60,7 +60,7 @@ jerry_libm_allin.c:
 
 .PHONY: jerry_ext_allin.c
 jerry_ext_allin.c:
-	find $(ROOT_DIR)/jerryscript/jerry-ext -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_ext_allin.c
+	find $(ROOT_DIR)/jerryscript/jerry-ext/handler -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_ext_allin.c
 
 ASRCS = setjmp.S
 CSRCS = jerry_core_allin.c jerry_libm_allin.c jerry_ext_allin.c

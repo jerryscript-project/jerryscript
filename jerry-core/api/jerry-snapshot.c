@@ -373,6 +373,10 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
   {
     bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (code_size);
 
+#ifdef JMEM_STATS
+    jmem_stats_allocate_byte_code_bytes (code_size);
+#endif /* JMEM_STATS */
+
     memcpy (bytecode_p, snapshot_data_p + offset, code_size);
   }
   else
@@ -383,6 +387,10 @@ snapshot_load_compiled_code (const uint8_t *snapshot_data_p, /**< snapshot data 
     uint32_t total_size = JERRY_ALIGNUP (code_size + 1 + sizeof (uint8_t *), JMEM_ALIGNMENT);
 
     bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (total_size);
+
+#ifdef JMEM_STATS
+    jmem_stats_allocate_byte_code_bytes (total_size);
+#endif /* JMEM_STATS */
 
     memcpy (bytecode_p, snapshot_data_p + offset, code_size);
 

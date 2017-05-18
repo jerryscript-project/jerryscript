@@ -1424,6 +1424,10 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       return;
     }
 #endif /* JERRY_DEBUGGER */
+
+#ifdef JMEM_STATS
+    jmem_stats_free_byte_code_bytes (((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
+#endif /* JMEM_STATS */
   }
   else
   {

@@ -393,7 +393,6 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 
   name_p = context_p->lit_object.literal_p;
-  context_p->status_flags |= PARSER_NO_REG_STORE;
 
   status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
   if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)

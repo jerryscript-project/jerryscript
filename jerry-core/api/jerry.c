@@ -52,7 +52,6 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES
                      && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
                      && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS
-                     && (int) ECMA_INIT_MEM_STATS_SEPARATE == (int) JERRY_INIT_MEM_STATS_SEPARATE
                      && (int) ECMA_INIT_DEBUGGER == (int) JERRY_INIT_DEBUGGER,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
 
@@ -151,11 +150,6 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 
   /* Zero out all members. */
   memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
-
-  if (flags & JERRY_INIT_MEM_STATS_SEPARATE)
-  {
-    flags |= JERRY_INIT_MEM_STATS;
-  }
 
   JERRY_CONTEXT (jerry_init_flags) = flags;
 
@@ -327,14 +321,6 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 
   ecma_free_value (parse_status);
 
-#ifdef JMEM_STATS
-  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_MEM_STATS_SEPARATE)
-  {
-    jmem_stats_print ();
-    jmem_stats_reset_peak ();
-  }
-#endif /* JMEM_STATS */
-
   is_strict = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
   ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
@@ -445,6 +431,26 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
                                     false,
                                     is_strict);
 } /* jerry_eval */
+
+/**
+ * Run enqueued Promise jobs until the first thrown error or until all get executed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of last executed job, may be error value.
+ */
+jerry_value_t
+jerry_run_all_enqueued_jobs (void)
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  return ecma_process_all_enqueued_jobs ();
+#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+} /* jerry_run_all_enqueued_jobs */
 
 /**
  * Get global object

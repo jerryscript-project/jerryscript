@@ -399,7 +399,7 @@ void lexer_expect_object_literal_id (parser_context_t *context_p, bool must_be_i
 void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool push_number_allowed, bool is_negative_number);
-void lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
+uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
 bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right);
 

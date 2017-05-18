@@ -41,8 +41,6 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
  * @{
  */
 #ifdef JMEM_STATS
-void jmem_pools_get_stats (jmem_pools_stats_t *);
-void jmem_pools_stats_reset_peak (void);
 void jmem_pools_stats_print (void);
 #endif /* JMEM_STATS */
 

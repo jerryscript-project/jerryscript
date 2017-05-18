@@ -43,8 +43,8 @@ endif()
 
 set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_COMMIT_HASH="${JERRY_COMMIT_HASH}")
 
-macro(jerry_create_executable JERRY_NAME SOURCE_JERRY_STANDALONE_MAIN)
-  add_executable(${JERRY_NAME} ${SOURCE_JERRY_STANDALONE_MAIN})
+macro(jerry_create_executable JERRY_NAME)
+  add_executable(${JERRY_NAME} ${ARGN})
   set_property(TARGET ${JERRY_NAME}
                PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   target_compile_definitions(${JERRY_NAME} PRIVATE ${DEFINES_JERRY})
@@ -57,7 +57,7 @@ endmacro()
 
 # Jerry standalones
 if(JERRY_CMDLINE)
-  jerry_create_executable("jerry" "main-unix.c")
+  jerry_create_executable("jerry" "main-unix.c" "cli.c")
   target_link_libraries("jerry" jerry-ext jerry-port-default)
 endif()
 

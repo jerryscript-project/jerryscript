@@ -363,7 +363,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\'"));
       }
 
-      ch = *parser_ctx_p->input_curr_p++;
+      ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
 
       if (ch == LIT_CHAR_LOWERCASE_B)
       {
@@ -503,7 +503,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       else if (lit_char_is_octal_digit ((ecma_char_t) ch)
                && ch != LIT_CHAR_0)
       {
-        parser_ctx_p->input_curr_p--;
+        lit_utf8_decr (&parser_ctx_p->input_curr_p);
         ch = (ecma_char_t) re_parse_octal (parser_ctx_p);
       }
     } /* ch == LIT_CHAR_BACKSLASH */

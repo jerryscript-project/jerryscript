@@ -46,6 +46,9 @@ ecma_init (void)
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = false;
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  ecma_job_queue_init ();
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 } /* ecma_init */
 
 /**

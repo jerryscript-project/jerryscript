@@ -433,6 +433,26 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
 } /* jerry_eval */
 
 /**
+ * Run enqueued Promise jobs until the first thrown error or until all get executed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of last executed job, may be error value.
+ */
+jerry_value_t
+jerry_run_all_enqueued_jobs (void)
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  return ecma_process_all_enqueued_jobs ();
+#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+} /* jerry_run_all_enqueued_jobs */
+
+/**
  * Get global object
  *
  * Note:

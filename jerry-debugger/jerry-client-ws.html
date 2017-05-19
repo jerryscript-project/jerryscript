@@ -108,6 +108,7 @@ function DebuggerClient(address)
   var lastBreakpointHit = null;
   var activeBreakpoints = { };
   var nextBreakpointIndex = 1;
+  var pendingBreakpoints = [ ];
   var backtraceFrame = 0;
   var evalResult = null;
 
@@ -722,6 +723,25 @@ function DebuggerClient(address)
         }
       }
 
+      if (pendingBreakpoints.length != 0)
+      {
+        appendLog("Available pending breakpoints");
+
+        for (var i in pendingBreakpoints)
+        {
+          if (Number.isInteger(pendingBreakpoints[i]))
+          {
+            pendingBreakpoints[i] = sourceName + ":" + pendingBreakpoints[i];
+          }
+          appendLog("Try to add: " + pendingBreakpoints[i]);
+          debuggerObj.setBreakpoint(pendingBreakpoints[i], false);
+        }
+      }
+      else
+      {
+        appendLog("No pending breakpoints");
+      }
+
       parseObj = null;
     }
   }
@@ -888,7 +908,7 @@ function DebuggerClient(address)
     appendLog("Breakpoint " + breakpoint.activeIndex + " at " + breakpointToString(breakpoint));
   }
 
-  this.setBreakpoint = function(str)
+  this.setBreakpoint = function(str, pending)
   {
     line = /^(.+):([1-9][0-9]*)$/.exec(str);
     var found = false;
@@ -927,6 +947,19 @@ function DebuggerClient(address)
     if (!found)
     {
       appendLog("Breakpoint not found");
+      if (pending)
+      {
+        if (line)
+        {
+          pendingBreakpoints.push(Number(line[2]));
+          appendLog("Pending breakpoint index: " + line[0] + " added");
+        }
+        else
+        {
+          pendingBreakpoints.push(str);
+          appendLog("Pending breakpoint function name: " + str + " added");
+        }
+      }
     }
   }
 
@@ -996,6 +1029,19 @@ function DebuggerClient(address)
     appendLog("Breakpoint " + index + " is deleted.");
   }
 
+  this.deletePendingBreakpoint = function(index)
+  {
+    if (index >= pendingBreakpoints.length)
+    {
+      appendLog("Pending breakpoint not found");
+    }
+    else
+    {
+      pendingBreakpoints.splice(index, 1);
+      appendLog("Pending breakpoint " + index + " is deleted.");
+    }
+  }
+
   this.listBreakpoints = function()
   {
     appendLog("List of active breakpoints:");
@@ -1010,6 +1056,18 @@ function DebuggerClient(address)
     if (!found)
     {
       appendLog("  no active breakpoints");
+    }
+
+    if (pendingBreakpoints.length != 0)
+    {
+      appendLog("List of pending breakpoints:");
+      for (var i in pendingBreakpoints)
+      {
+        appendLog("  pending breakpoint " + i + " at " + pendingBreakpoints[i]);
+      }
+    }
+    else {
+      appendLog("No pending breakpoints");
     }
   }
 
@@ -1148,7 +1206,9 @@ function debuggerCommand(event)
     appendLog("Debugger commands:\n" +
               "  connect <IP address:PORT> - connect to server (default is localhost:5001)\n" +
               "  break|b <file_name:line>|<function_name> - set breakpoint\n" +
+              "  fbreak <file_name:line>|<function_name> - set breakpoint if not found, add to pending list\n" +
               "  delete|d <id> - delete breakpoint\n" +
+              "  pendingdel <id> - delete pending breakpoint\n" +
               "  list - list breakpoints\n" +
               "  continue|c - continue execution\n" +
               "  step|s - step-in execution\n" +
@@ -1207,13 +1267,20 @@ function debuggerCommand(event)
   {
     case "b":
     case "break":
-      debuggerObj.setBreakpoint(args[2]);
+      debuggerObj.setBreakpoint(args[2], false);
+      break;
+
+    case "fbreak":
+      debuggerObj.setBreakpoint(args[2], true);
       break;
 
     case "d":
     case "delete":
       debuggerObj.deleteBreakpoint(args[2]);
       break;
+
+    case "pendingdel":
+      debuggerObj.deletePendingBreakpoint(args[2]);
 
     case "st":
     case "stop":

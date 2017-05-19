@@ -591,7 +591,8 @@ parser_scan_until (parser_context_t *context_p, /**< context */
                       || stack_top == SCAN_STACK_BLOCK_PROPERTY);
 
         if (context_p->token.type == LEXER_LITERAL
-            && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+            && (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+                || context_p->token.lit_location.type == LEXER_NUMBER_LITERAL))
         {
           lexer_next_token (context_p);
         }

@@ -319,7 +319,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       }
 
 #ifdef JMEM_STATS
-      jmem_stats_free_byte_code_bytes (((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
+      jmem_stats_free_byte_code_bytes (((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
 #endif /* JMEM_STATS */
 
       jmem_heap_free_block (byte_code_free_p,

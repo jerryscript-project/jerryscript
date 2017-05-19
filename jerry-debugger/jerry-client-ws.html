@@ -520,37 +520,37 @@ function DebuggerClient(address)
 
   function getBreakpoint(breakpointData)
   {
-      var returnValue = {};
-      var func = functions[breakpointData[0]];
-      var offset = breakpointData[1];
+    var returnValue = {};
+    var func = functions[breakpointData[0]];
+    var offset = breakpointData[1];
 
-      if (offset in functions)
-      {
-        returnValue.breakpoint = func.offsets[offset];
-        returnValue.at = true;
-        return returnValue;
-      }
-
-      if (offset < functions.firstBreakpointOffset)
-      {
-        returnValue.breakpoint = func.offsets[firstBreakpointOffset];
-        returnValue.at = true;
-        return returnValue;
-      }
-
-      nearest_offset = -1;
-
-      for (var current_offset in func.offsets)
-      {
-        if ((current_offset <= offset) && (current_offset > nearest_offset))
-        {
-          nearest_offset = current_offset;
-        }
-      }
-
-      returnValue.breakpoint = func.offsets[nearest_offset];
-      returnValue.at = false;
+    if (offset in func.offsets)
+    {
+      returnValue.breakpoint = func.offsets[offset];
+      returnValue.at = true;
       return returnValue;
+    }
+
+    if (offset < func.firstBreakpointOffset)
+    {
+      returnValue.breakpoint = func.offsets[func.firstBreakpointOffset];
+      returnValue.at = true;
+      return returnValue;
+    }
+
+    nearest_offset = -1;
+
+    for (var current_offset in func.offsets)
+    {
+      if ((current_offset <= offset) && (current_offset > nearest_offset))
+      {
+        nearest_offset = current_offset;
+      }
+    }
+
+    returnValue.breakpoint = func.offsets[nearest_offset];
+    returnValue.at = false;
+    return returnValue;
   }
 
   this.encodeMessage = encodeMessage;

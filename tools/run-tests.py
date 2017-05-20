@@ -61,7 +61,9 @@ JERRY_TESTS_OPTIONS = [
             ['--debug', '--snapshot-save=on', '--snapshot-exec=on'],
             ['--snapshot']),
     Options('jerry_tests-es2015-subset-debug',
-            ['--debug', '--profile=es2015-subset'])
+            ['--debug', '--profile=es2015-subset']),
+    Options('jerry_tests-debug-external-context',
+            ['--debug', '--jerry-libc=off', '--external-context=on'])
 ]
 
 # Test options for jerry-test-suite
@@ -120,6 +122,8 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-libc=off']),
     Options('buildoption_test-cpointer_32bit',
             ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
+    Options('buildoption_test-external_context',
+            ['--jerry-libc=off', '--external-context=on']),
 ]
 
 def get_arguments():

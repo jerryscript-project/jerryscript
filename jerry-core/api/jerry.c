@@ -2248,6 +2248,64 @@ jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string
                                     (lit_utf8_size_t) buf_size);
 } /* jerry_is_valid_cesu8_string */
 
+/*
+ * Create a jerry instance for external context.
+ *
+ * @return the pointer to the instance.
+ */
+jerry_instance_t *
+jerry_create_instance (uint32_t heap_size, /**< the size of heap */
+                       jerry_instance_alloc_t alloc, /**< the alloc function */
+                       void *cb_data_p) /**< the cb_data for alloc function */
+{
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+
+  uint32_t lcache_size = 0;
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  lcache_size = sizeof (jerry_hash_table_t);
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
+  uint32_t alloc_size = (uint32_t) (sizeof (jerry_instance_t) + lcache_size);
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  alloc_size = alloc_size + heap_size + JMEM_ALIGNMENT - 1;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+
+  jerry_instance_t *instance_p = (jerry_instance_t *) alloc (alloc_size, cb_data_p);
+  memset (instance_p, 0, alloc_size);
+
+  if (instance_p == NULL)
+  {
+    return NULL;
+  }
+
+  instance_p->heap_size = heap_size;
+  instance_p->lcache_p = instance_p->buffer;
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  uint8_t *unaligned_heap_p = instance_p->lcache_p + lcache_size;
+  uintptr_t alignment_mask = ~(uintptr_t) (JMEM_ALIGNMENT - 1);
+  instance_p->heap_p = (uint8_t *) (((uintptr_t) unaligned_heap_p + JMEM_ALIGNMENT - 1) & alignment_mask);
+
+  JERRY_ASSERT (((uintptr_t) instance_p->heap_p & (uintptr_t) (JMEM_ALIGNMENT - 1)) == 0);
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+
+  return instance_p;
+
+#else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
+
+  JERRY_UNUSED (heap_size);
+  JERRY_UNUSED (alloc);
+  JERRY_UNUSED (cb_data_p);
+
+  return NULL;
+
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+} /* jerry_create_instance */
+
+
+
 /**
  * If JERRY_VM_EXEC_STOP is defined the callback passed to this function is
  * periodically called with the user_p argument. If frequency is greater

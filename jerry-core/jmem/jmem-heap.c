@@ -103,11 +103,13 @@ jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 } /* jmem_heap_get_region_end */
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
+#ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
 /**
  * Check size of heap is corresponding to configuration
  */
 JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
                      size_of_mem_heap_must_be_less_than_or_equal_to_MEM_HEAP_SIZE);
+#endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
 #ifdef JMEM_STATS
 
@@ -148,8 +150,8 @@ void
 jmem_heap_init (void)
 {
 #ifndef JERRY_CPOINTER_32_BIT
-  JERRY_STATIC_ASSERT (((UINT16_MAX + 1) << JMEM_ALIGNMENT_LOG) >= JMEM_HEAP_SIZE,
-                       maximum_heap_size_for_16_bit_compressed_pointers_is_512K);
+  /* the maximum heap size for 16bit compressed pointers should be 512K */
+  JERRY_ASSERT (((UINT16_MAX + 1) << JMEM_ALIGNMENT_LOG) >= JMEM_HEAP_SIZE);
 #endif /* !JERRY_CPOINTER_32_BIT */
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
@@ -181,7 +183,7 @@ jmem_heap_finalize (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) == 0);
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_t));
+  VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), JMEM_HEAP_SIZE);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_finalize */
 

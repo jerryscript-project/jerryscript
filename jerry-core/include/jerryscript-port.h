@@ -127,6 +127,18 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
 double jerry_port_get_current_time (void);
 
 /**
+ * Get the current instance, which contains the current context, heap and other infomation.
+ * Each port should provide its own implementation of this interface.
+ *
+ *Note:
+ *    This port function will be called automatically by jerry-core
+ *    wnen JERRY_ENABLE_EXTERNAL_CONTEXT is defined. If not, this function will never be called.
+ *
+ * @return the pointer to the jerry instance.
+ */
+struct jerry_instance_t *jerry_port_get_current_instance (void);
+
+/**
  * @}
  */
 

@@ -19,6 +19,7 @@
  * @{
  */
 
+#ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
 /**
  * Global context.
  */
@@ -48,6 +49,7 @@ jmem_heap_t jerry_global_heap __attribute__ ((aligned (JMEM_ALIGNMENT))) JERRY_G
 jerry_hash_table_t jerry_global_hash_table;
 
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
 /**
  * @}

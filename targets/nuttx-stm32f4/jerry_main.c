@@ -370,10 +370,12 @@ int jerry_main (int argc, char *argv[])
     else if (!strcmp ("--mem-stats", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS;
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS_SEPARATE;
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
     }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {

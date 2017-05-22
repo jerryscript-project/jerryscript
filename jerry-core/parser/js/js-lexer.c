@@ -1197,6 +1197,11 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
   }
 
+  if (length == 0)
+  {
+    has_escape = false;
+  }
+
   literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
   literal_p->prop.length = (uint16_t) length;
   literal_p->type = literal_type;

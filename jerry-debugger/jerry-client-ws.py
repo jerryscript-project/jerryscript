@@ -42,12 +42,14 @@ JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13
 JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14
 JERRY_DEBUGGER_BREAKPOINT_HIT = 15
 JERRY_DEBUGGER_EXCEPTION_HIT = 16
-JERRY_DEBUGGER_BACKTRACE = 17
-JERRY_DEBUGGER_BACKTRACE_END = 18
-JERRY_DEBUGGER_EVAL_RESULT = 19
-JERRY_DEBUGGER_EVAL_RESULT_END = 20
-JERRY_DEBUGGER_EVAL_ERROR = 21
-JERRY_DEBUGGER_EVAL_ERROR_END = 22
+JERRY_DEBUGGER_EXCEPTION_STR = 17
+JERRY_DEBUGGER_EXCEPTION_STR_END = 18
+JERRY_DEBUGGER_BACKTRACE = 19
+JERRY_DEBUGGER_BACKTRACE_END = 20
+JERRY_DEBUGGER_EVAL_RESULT = 21
+JERRY_DEBUGGER_EVAL_RESULT_END = 22
+JERRY_DEBUGGER_EVAL_ERROR = 23
+JERRY_DEBUGGER_EVAL_ERROR_END = 24
 
 
 # Messages sent by the client to server.
@@ -813,6 +815,7 @@ def main():
     args = arguments_parse()
 
     debugger = JerryDebugger(args.address)
+    exception_string = ""
 
     non_interactive = args.non_interactive
 
@@ -865,6 +868,9 @@ def main():
 
             if buffer_type == JERRY_DEBUGGER_EXCEPTION_HIT:
                 print("Exception throw detected (to disable automatic stop type exception 0)")
+                if exception_string:
+                    print("Exception hint: %s" % (exception_string))
+                    exception_string = ""
 
             if breakpoint[1]:
                 breakpoint_info = "at"
@@ -879,6 +885,12 @@ def main():
             prompt.cmdloop()
             if prompt.quit:
                 break
+
+        elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR:
+            exception_string += data[3:]
+
+        elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR_END:
+            exception_string += data[3:]
 
         elif buffer_type in [JERRY_DEBUGGER_BACKTRACE, JERRY_DEBUGGER_BACKTRACE_END]:
             frame_index = 0

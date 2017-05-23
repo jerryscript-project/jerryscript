@@ -16,12 +16,14 @@
 #ifdef JERRY_DEBUGGER
 
 #include "byte-code.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-eval.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
 #include "jerry-debugger.h"
 #include "jerryscript-port.h"
+#include "lit-char-helpers.h"
 
 /**
  * Type cast the debugger send buffer into a specific type.
@@ -714,5 +716,152 @@ jerry_debugger_send_memstats (void)
 
   jerry_debugger_send (sizeof (jerry_debugger_send_memstats_t));
 } /* jerry_debugger_send_memstats */
+
+/*
+ * Converts an standard error into a string.
+ *
+ * @return standard error string
+ */
+static ecma_string_t *
+jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**< exception object */
+{
+  ecma_object_t *object_p = ecma_get_object_from_value (exception_obj_value);
+
+  ecma_object_t *prototype_p = ecma_get_object_prototype (object_p);
+
+  if (prototype_p == NULL
+      || ecma_get_object_type (prototype_p) != ECMA_OBJECT_TYPE_GENERAL
+      || !ecma_get_object_is_builtin (prototype_p))
+  {
+    return NULL;
+  }
+
+  lit_magic_string_id_t string_id;
+
+  switch (((ecma_extended_object_t *) prototype_p)->u.built_in.id)
+  {
+#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+    case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_EVAL_ERROR_UL;
+      break;
+    }
+    case ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_RANGE_ERROR_UL;
+      break;
+    }
+    case ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_REFERENCE_ERROR_UL;
+      break;
+    }
+    case ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_SYNTAX_ERROR_UL;
+      break;
+    }
+    case ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_TYPE_ERROR_UL;
+      break;
+    }
+    case ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_URI_ERROR_UL;
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+    case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
+    {
+      string_id = LIT_MAGIC_STRING_ERROR_UL;
+      break;
+    }
+    default:
+    {
+      return NULL;
+    }
+  }
+
+  lit_utf8_size_t size = lit_get_magic_string_size (string_id);
+  JERRY_ASSERT (size <= 14);
+
+  lit_utf8_byte_t data[16];
+  memcpy (data, lit_get_magic_string_utf8 (string_id), size);
+
+  ecma_string_t message_string;
+  ecma_init_ecma_magic_string (&message_string, LIT_MAGIC_STRING_MESSAGE);
+
+  ecma_property_t *property_p;
+  property_p = ecma_find_named_property (ecma_get_object_from_value (exception_obj_value),
+                                         &message_string);
+
+  if (property_p == NULL
+      || ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
+  {
+    return ecma_new_ecma_string_from_utf8 (data, size);
+  }
+
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+  if (!ecma_is_value_string (prop_value_p->value))
+  {
+    return ecma_new_ecma_string_from_utf8 (data, size);
+  }
+
+  data[size] = LIT_CHAR_COLON;
+  data[size + 1] = LIT_CHAR_SP;
+
+  ecma_string_t *type_string_p = ecma_new_ecma_string_from_utf8 (data, size + 2);
+
+  ecma_string_t *string_p = ecma_concat_ecma_strings (type_string_p,
+                                                      ecma_get_string_from_value (prop_value_p->value));
+  ecma_deref_ecma_string (type_string_p);
+  return string_p;
+} /* jerry_debugger_exception_object_to_string */
+
+/**
+ * Send string representation of exception to the client.
+ *
+ * @return true - if the data sent successfully to the debugger client,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_send_exception_string (ecma_value_t exception_value) /**< error value */
+{
+  ecma_string_t *string_p = NULL;
+
+  if (ecma_is_value_object (exception_value))
+  {
+    ecma_value_t object_value = ecma_get_value_from_error_value (exception_value);
+
+    string_p = jerry_debugger_exception_object_to_string (object_value);
+    if (string_p == NULL)
+    {
+      string_p = ecma_get_string_from_value (ecma_builtin_helper_object_to_string (object_value));
+    }
+  }
+  else if (ecma_is_value_string (exception_value))
+  {
+    string_p = ecma_get_string_from_value (exception_value);
+    ecma_ref_ecma_string (string_p);
+  }
+  else
+  {
+    exception_value = ecma_op_to_string (exception_value);
+    string_p = ecma_get_string_from_value (exception_value);
+  }
+
+  ECMA_STRING_TO_UTF8_STRING (string_p, string_data_p, string_size);
+
+  bool result = jerry_debugger_send_string (JERRY_DEBUGGER_EXCEPTION_STR,
+                                            string_data_p,
+                                            string_size);
+
+  ECMA_FINALIZE_UTF8_STRING (string_data_p, string_size);
+
+  ecma_deref_ecma_string (string_p);
+  return result;
+} /* jerry_debugger_send_exception_string */
 
 #endif /* JERRY_DEBUGGER */

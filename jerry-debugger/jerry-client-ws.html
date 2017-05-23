@@ -51,12 +51,14 @@ var JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13;
 var JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14;
 var JERRY_DEBUGGER_BREAKPOINT_HIT = 15;
 var JERRY_DEBUGGER_EXCEPTION_HIT = 16;
-var JERRY_DEBUGGER_BACKTRACE = 17;
-var JERRY_DEBUGGER_BACKTRACE_END = 18;
-var JERRY_DEBUGGER_EVAL_RESULT = 19;
-var JERRY_DEBUGGER_EVAL_RESULT_END = 20;
-var JERRY_DEBUGGER_EVAL_ERROR = 21;
-var JERRY_DEBUGGER_EVAL_ERROR_END = 22;
+var JERRY_DEBUGGER_EXCEPTION_STR = 17;
+var JERRY_DEBUGGER_EXCEPTION_STR_END = 18;
+var JERRY_DEBUGGER_BACKTRACE = 19;
+var JERRY_DEBUGGER_BACKTRACE_END = 20;
+var JERRY_DEBUGGER_EVAL_RESULT = 21;
+var JERRY_DEBUGGER_EVAL_RESULT_END = 22;
+var JERRY_DEBUGGER_EVAL_ERROR = 23;
+var JERRY_DEBUGGER_EVAL_ERROR_END = 24;
 
 var JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1;
 var JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2;
@@ -113,6 +115,7 @@ function DebuggerClient(address)
   var pendingBreakpoints = [ ];
   var backtraceFrame = 0;
   var evalResult = null;
+  var exceptionData = null;
 
   function assert(expr)
   {
@@ -830,6 +833,11 @@ function DebuggerClient(address)
         if (message[0] == JERRY_DEBUGGER_EXCEPTION_HIT)
         {
           appendLog("Exception throw detected (to disable automatic stop type exception 0)");
+          if (exceptionData)
+          {
+            appendLog("Exception hint: " + cesu8ToString(exceptionData));
+            exceptionData = null;
+          }
         }
 
         lastBreakpointHit = breakpoint;
@@ -844,6 +852,13 @@ function DebuggerClient(address)
                   + (breakpoint.at ? "at " : "around ")
                   + breakpointInfo
                   + breakpointToString(breakpoint));
+        return;
+      }
+
+      case JERRY_DEBUGGER_EXCEPTION_STR:
+      case JERRY_DEBUGGER_EXCEPTION_STR_END:
+      {
+        exceptionData = concatUint8Arrays(exceptionData, message);
         return;
       }
 

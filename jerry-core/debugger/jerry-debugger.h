@@ -102,12 +102,14 @@ typedef enum
   JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14, /**< memstats sent to the client*/
   JERRY_DEBUGGER_BREAKPOINT_HIT = 15, /**< notify breakpoint hit */
   JERRY_DEBUGGER_EXCEPTION_HIT = 16, /**< notify exception hit */
-  JERRY_DEBUGGER_BACKTRACE = 17, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 18, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 19, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 20, /**< last part of eval result */
-  JERRY_DEBUGGER_EVAL_ERROR = 21, /**< eval result when an error is occured */
-  JERRY_DEBUGGER_EVAL_ERROR_END = 22, /**< last part of eval result when an error is occured */
+  JERRY_DEBUGGER_EXCEPTION_STR = 17, /**< exception string fragment */
+  JERRY_DEBUGGER_EXCEPTION_STR_END = 18, /**< exception string last fragment */
+  JERRY_DEBUGGER_BACKTRACE = 19, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 20, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 21, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 22, /**< last part of eval result */
+  JERRY_DEBUGGER_EVAL_ERROR = 23, /**< eval result when an error is occured */
+  JERRY_DEBUGGER_EVAL_ERROR_END = 24, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
 
@@ -316,6 +318,7 @@ bool jerry_debugger_send_string (uint8_t message_type, const uint8_t *string_p, 
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
+bool jerry_debugger_send_exception_string (ecma_value_t exception_value);
 
 #endif /* JERRY_DEBUGGER */
 

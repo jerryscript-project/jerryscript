@@ -99,14 +99,15 @@ typedef enum
   JERRY_DEBUGGER_FUNCTION_NAME = 11, /**< function name fragment */
   JERRY_DEBUGGER_FUNCTION_NAME_END = 12, /**< function name last fragment */
   JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13, /**< invalidate byte code compressed pointer */
-  JERRY_DEBUGGER_BREAKPOINT_HIT = 14, /**< notify breakpoint hit */
-  JERRY_DEBUGGER_EXCEPTION_HIT = 15, /**< notify exception hit */
-  JERRY_DEBUGGER_BACKTRACE = 16, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 17, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 18, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 19, /**< last part of eval result */
-  JERRY_DEBUGGER_EVAL_ERROR = 20, /**< eval result when an error is occured */
-  JERRY_DEBUGGER_EVAL_ERROR_END = 21, /**< last part of eval result when an error is occured */
+  JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14, /**< memstats sent to the client*/
+  JERRY_DEBUGGER_BREAKPOINT_HIT = 15, /**< notify breakpoint hit */
+  JERRY_DEBUGGER_EXCEPTION_HIT = 16, /**< notify exception hit */
+  JERRY_DEBUGGER_BACKTRACE = 17, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 18, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 19, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 20, /**< last part of eval result */
+  JERRY_DEBUGGER_EVAL_ERROR = 21, /**< eval result when an error is occured */
+  JERRY_DEBUGGER_EVAL_ERROR_END = 22, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
 
@@ -114,17 +115,18 @@ typedef enum
   JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1, /**< free byte code compressed pointer */
   JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2, /**< update breakpoint status */
   JERRY_DEBUGGER_EXCEPTION_CONFIG = 3, /**< exception handler config */
-  JERRY_DEBUGGER_STOP = 4, /**< stop execution */
+  JERRY_DEBUGGER_MEMSTATS = 4, /**< list memory statistics */
+  JERRY_DEBUGGER_STOP = 5, /**< stop execution */
   /* The following messages are only available in breakpoint
    * mode and they switch the engine to run mode. */
-  JERRY_DEBUGGER_CONTINUE = 5, /**< continue execution */
-  JERRY_DEBUGGER_STEP = 6, /**< next breakpoint, step into functions */
-  JERRY_DEBUGGER_NEXT = 7, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_CONTINUE = 6, /**< continue execution */
+  JERRY_DEBUGGER_STEP = 7, /**< next breakpoint, step into functions */
+  JERRY_DEBUGGER_NEXT = 8, /**< next breakpoint in the same context */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 8, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 9, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 10, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 9, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 10, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 11, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**
@@ -217,6 +219,20 @@ typedef struct
 } jerry_debugger_receive_update_breakpoint_t;
 
 /**
+ * Outgoing message: send memory statistics
+ */
+typedef struct
+{
+  jerry_debugger_send_header_t header; /**< message header */
+  uint8_t type; /**< type of the message */
+  uint8_t allocated_bytes[sizeof (uint32_t)]; /**< allocated bytes */
+  uint8_t byte_code_bytes[sizeof (uint32_t)]; /**< byte code bytes */
+  uint8_t string_bytes[sizeof (uint32_t)]; /**< string bytes */
+  uint8_t object_bytes[sizeof (uint32_t)]; /**< object bytes */
+  uint8_t property_bytes[sizeof (uint32_t)]; /**< property bytes */
+} jerry_debugger_send_memstats_t;
+
+/**
  * Outgoing message: notify breakpoint hit.
  */
 typedef struct
@@ -299,6 +315,7 @@ void jerry_debugger_send_data (jerry_debugger_header_type_t type, const void *da
 bool jerry_debugger_send_string (uint8_t message_type, const uint8_t *string_p, size_t string_length);
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
+void jerry_debugger_send_memstats (void);
 
 #endif /* JERRY_DEBUGGER */
 

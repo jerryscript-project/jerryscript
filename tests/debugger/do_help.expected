@@ -4,8 +4,8 @@ Stopped at tests/debugger/do_help.js:15
 
 Documented commands (type help <topic>):
 ========================================
-b          bt        delete  eval       help  next        s   
-backtrace  c         dump    exception  list  pendingdel  src 
-break      continue  e       fbreak     n     quit        step
+b          bt        delete  eval       help      ms    pendingdel  src 
+backtrace  c         dump    exception  list      n     quit        step
+break      continue  e       fbreak     memstats  next  s         
 
 (jerry-debugger) quit

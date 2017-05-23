@@ -347,6 +347,14 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       return true;
     }
 
+    case JERRY_DEBUGGER_MEMSTATS:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
+
+      jerry_debugger_send_memstats ();
+      return true;
+    }
+
     case JERRY_DEBUGGER_STOP:
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
@@ -668,5 +676,43 @@ jerry_debugger_send_parse_function (uint32_t line, /**< line */
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_parse_function_t));
 } /* jerry_debugger_send_parse_function */
+
+/**
+ * Send memory statistics to the debugger client.
+ */
+void
+jerry_debugger_send_memstats (void)
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_memstats_t, memstats_p);
+  JERRY_DEBUGGER_INIT_SEND_MESSAGE (memstats_p);
+  JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE_FROM_TYPE (memstats_p, jerry_debugger_send_memstats_t);
+
+  memstats_p->type = JERRY_DEBUGGER_MEMSTATS_RECEIVE;
+
+#ifdef JMEM_STATS /* if jmem_stats are defined */
+  jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
+
+  uint32_t allocated_bytes = (uint32_t) heap_stats->allocated_bytes;
+  memcpy (memstats_p->allocated_bytes, &allocated_bytes, sizeof (uint32_t));
+  uint32_t byte_code_bytes = (uint32_t) heap_stats->byte_code_bytes;
+  memcpy (memstats_p->byte_code_bytes, &byte_code_bytes, sizeof (uint32_t));
+  uint32_t string_bytes = (uint32_t) heap_stats->string_bytes;
+  memcpy (memstats_p->string_bytes, &string_bytes, sizeof (uint32_t));
+  uint32_t object_bytes = (uint32_t) heap_stats->object_bytes;
+  memcpy (memstats_p->object_bytes, &object_bytes, sizeof (uint32_t));
+  uint32_t property_bytes = (uint32_t) heap_stats->property_bytes;
+  memcpy (memstats_p->property_bytes, &property_bytes, sizeof (uint32_t));
+#else /* if not, just put zeros */
+  memset (memstats_p->allocated_bytes, 0, sizeof (uint32_t));
+  memset (memstats_p->byte_code_bytes, 0, sizeof (uint32_t));
+  memset (memstats_p->string_bytes, 0, sizeof (uint32_t));
+  memset (memstats_p->object_bytes, 0, sizeof (uint32_t));
+  memset (memstats_p->property_bytes, 0, sizeof (uint32_t));
+#endif
+
+  jerry_debugger_send (sizeof (jerry_debugger_send_memstats_t));
+} /* jerry_debugger_send_memstats */
 
 #endif /* JERRY_DEBUGGER */

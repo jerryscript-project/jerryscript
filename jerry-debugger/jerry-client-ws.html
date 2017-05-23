@@ -48,25 +48,27 @@ var JERRY_DEBUGGER_SOURCE_CODE_NAME_END = 10;
 var JERRY_DEBUGGER_FUNCTION_NAME = 11;
 var JERRY_DEBUGGER_FUNCTION_NAME_END = 12;
 var JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13;
-var JERRY_DEBUGGER_BREAKPOINT_HIT = 14;
-var JERRY_DEBUGGER_EXCEPTION_HIT = 15;
-var JERRY_DEBUGGER_BACKTRACE = 16;
-var JERRY_DEBUGGER_BACKTRACE_END = 17;
-var JERRY_DEBUGGER_EVAL_RESULT = 18;
-var JERRY_DEBUGGER_EVAL_RESULT_END = 19;
-var JERRY_DEBUGGER_EVAL_ERROR = 20;
-var JERRY_DEBUGGER_EVAL_ERROR_END = 21;
+var JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14;
+var JERRY_DEBUGGER_BREAKPOINT_HIT = 15;
+var JERRY_DEBUGGER_EXCEPTION_HIT = 16;
+var JERRY_DEBUGGER_BACKTRACE = 17;
+var JERRY_DEBUGGER_BACKTRACE_END = 18;
+var JERRY_DEBUGGER_EVAL_RESULT = 19;
+var JERRY_DEBUGGER_EVAL_RESULT_END = 20;
+var JERRY_DEBUGGER_EVAL_ERROR = 21;
+var JERRY_DEBUGGER_EVAL_ERROR_END = 22;
 
 var JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1;
 var JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2;
 var JERRY_DEBUGGER_EXCEPTION_CONFIG = 3;
-var JERRY_DEBUGGER_STOP = 4;
-var JERRY_DEBUGGER_CONTINUE = 5;
-var JERRY_DEBUGGER_STEP = 6;
-var JERRY_DEBUGGER_NEXT = 7;
-var JERRY_DEBUGGER_GET_BACKTRACE = 8;
-var JERRY_DEBUGGER_EVAL = 9;
-var JERRY_DEBUGGER_EVAL_PART = 10;
+var JERRY_DEBUGGER_MEMSTATS = 4;
+var JERRY_DEBUGGER_STOP = 5;
+var JERRY_DEBUGGER_CONTINUE = 6;
+var JERRY_DEBUGGER_STEP = 7;
+var JERRY_DEBUGGER_NEXT = 8;
+var JERRY_DEBUGGER_GET_BACKTRACE = 9;
+var JERRY_DEBUGGER_EVAL = 10;
+var JERRY_DEBUGGER_EVAL_PART = 11;
 
 var textBox = document.getElementById("log");
 var commandBox = document.getElementById("command");
@@ -806,6 +808,18 @@ function DebuggerClient(address)
         return;
       }
 
+      case JERRY_DEBUGGER_MEMSTATS_RECEIVE:
+      {
+        var messagedata = decodeMessage("IIIII", message, 1);
+
+        appendLog("Allocated bytes: " + messagedata[0]);
+        appendLog("Byte code bytes: " + messagedata[1]);
+        appendLog("String bytes: " + messagedata[2]);
+        appendLog("Object bytes: " + messagedata[3]);
+        appendLog("Property bytes: " + messagedata[4]);
+        return;
+      }
+
       case JERRY_DEBUGGER_BREAKPOINT_HIT:
       case JERRY_DEBUGGER_EXCEPTION_HIT:
       {
@@ -1285,6 +1299,11 @@ function debuggerCommand(event)
     case "st":
     case "stop":
       debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_STOP ]);
+      break;
+
+    case "ms":
+    case "memstats":
+      debuggerObj.encodeMessage("B", [ JERRY_DEBUGGER_MEMSTATS ]);
       break;
 
     case "c":

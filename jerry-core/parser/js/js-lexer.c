@@ -1821,7 +1821,19 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   const re_compiled_code_t *re_bytecode_p = NULL;
   ecma_value_t completion_value;
 
-  ecma_string_t *pattern_str_p = ecma_new_ecma_string_from_utf8 (regex_start_p, length);
+  ecma_string_t *pattern_str_p = NULL;
+
+  if (lit_is_valid_cesu8_string (regex_start_p, length))
+  {
+    pattern_str_p = ecma_new_ecma_string_from_utf8 (regex_start_p, length);
+  }
+  else
+  {
+    JERRY_ASSERT (lit_is_valid_utf8_string (regex_start_p, length));
+    pattern_str_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (regex_start_p, length);
+  }
+
+
   completion_value = re_compile_bytecode (&re_bytecode_p,
                                           pattern_str_p,
                                           current_flags);

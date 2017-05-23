@@ -371,14 +371,17 @@ int jerry_main (int argc, char *argv[])
     }
     else if (!strcmp ("--mem-stats", argv[i]))
     {
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
       flags |= JERRY_INIT_MEM_STATS;
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
       flags |= JERRY_INIT_MEM_STATS_SEPARATE;
     }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
       flags |= JERRY_INIT_SHOW_OPCODES | JERRY_INIT_SHOW_REGEXP_OPCODES;
     }
     else if (!strcmp ("--log-level", argv[i]))

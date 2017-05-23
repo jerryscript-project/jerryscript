@@ -2550,7 +2550,10 @@ error:
           && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
           && !(JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION | JERRY_DEBUGGER_VM_IGNORE)))
       {
-        jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+        if (jerry_debugger_send_exception_string (result))
+        {
+          jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+        }
       }
 #endif /* JERRY_DEBUGGER */
     }

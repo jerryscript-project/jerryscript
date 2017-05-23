@@ -2,6 +2,9 @@ cmake/*
 docs/*
 jerry-libc/*
 jerry-main/*
+jerry-port/default/default-date.c
+jerry-port/default/default-fatal.c
+jerry-port/default/default-io.c
 targets/*
 tests/*
 third-party/*

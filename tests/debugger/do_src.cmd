@@ -2,7 +2,7 @@ b f
 n
 next
 s
-src
+source 0
 n
 step
 src

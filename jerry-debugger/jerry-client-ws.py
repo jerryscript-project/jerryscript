@@ -117,7 +117,7 @@ class JerryFunction(object):
     def __init__(self, is_func, byte_code_cp, source, source_name, line, column, name, lines, offsets):
         self.is_func = is_func
         self.byte_code_cp = byte_code_cp
-        self.source = source
+        self.source = re.split("\r\n|[\r\n]", source)
         self.source_name = source_name
         self.name = name
         self.lines = {}
@@ -312,11 +312,29 @@ class DebuggerPrompt(Cmd):
 
     def do_src(self, args):
         """ Get current source code """
-        if self.disable_args(args):
-            return
+        if args:
+            line_num = src_check_args(args)
+            if line_num >= 0:
+                print_source(self.debugger, line_num)
+            elif line_num == 0:
+                print_source(self.debugger, self.debugger.default_viewrange)
+            else:
+                return
 
-        if self.debugger.last_breakpoint_hit:
-            print(self.debugger.last_breakpoint_hit.function.source)
+    do_source = do_src
+
+    def do_display(self, args):
+        """ Toggle source code display after breakpoints """
+        if args:
+            line_num = src_check_args(args)
+            if line_num >= 0:
+                self.debugger.display = line_num
+            else:
+                return
+
+        else:
+            print("Non-negative integer number expected, 0 turns off this function")
+            return
 
     def do_dump(self, args):
         """ Dump all of the debugger data """
@@ -395,7 +413,7 @@ class DebuggerPrompt(Cmd):
 
     def do_memstats(self, args):
         """ Memory statistics """
-        self.exec_command(args, JERRY_DEBUGGER_MEMSTATS);
+        self.exec_command(args, JERRY_DEBUGGER_MEMSTATS)
         return
 
     do_ms = do_memstats
@@ -448,6 +466,8 @@ class JerryDebugger(object):
         self.active_breakpoint_list = {}
         self.pending_breakpoint_list = []
         self.line_list = Multimap()
+        self.display = 0
+        self.default_viewrange = 3
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
 
@@ -729,6 +749,42 @@ def parse_source(debugger, data):
         logging.debug("No pending breakpoints")
 
 
+def src_check_args(args):
+    try:
+        line_num = int(args)
+        if line_num < 0:
+            print("Error: Non-negative integer number expected")
+            return -1
+
+        return line_num
+    except ValueError as val_errno:
+        print("Error: Non-negative integer number expected: %s" % (val_errno))
+        return -1
+
+
+def print_source(debugger, line_num):
+    last_bp = debugger.last_breakpoint_hit
+    if not last_bp:
+        return
+
+    lines = last_bp.function.source
+    if last_bp.function.source_name:
+        print("Source: %s" % (last_bp.function.source_name))
+
+    if line_num == 0:
+        start = 0
+        end = len(last_bp.function.source) - 1
+    else:
+        start = max(last_bp.line - line_num, 0)
+        end = min(last_bp.line + line_num-1, len(last_bp.function.source)-1)
+
+    for i in range(start, end):
+        if i == last_bp.line - 1:
+            print("%4d > %s" % (i + 1, lines[i]))
+        else:
+            print("%4d   %s" % (i + 1, lines[i]))
+
+
 def release_function(debugger, data):
     byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
                                  data[3: 3 + debugger.cp_size])[0]
@@ -881,6 +937,8 @@ def main():
                 breakpoint_info += " breakpoint:%d" % (breakpoint[0].active_index)
 
             print("Stopped %s %s" % (breakpoint_info, breakpoint[0]))
+            if debugger.display:
+                print_source(prompt.debugger, debugger.display)
 
             prompt.cmdloop()
             if prompt.quit:

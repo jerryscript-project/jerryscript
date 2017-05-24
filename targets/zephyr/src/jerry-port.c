@@ -72,3 +72,13 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 
   return true;
 } /* jerry_port_get_time_zone */
+
+/**
+ * Provide the implementation of jerryx_port_handler_print_char.
+ * Uses 'printf' to print a single character to standard output.
+ */
+void
+jerryx_port_handler_print_char (char c) /**< the character to print */
+{
+  printf ("%c", c);
+} /* jerryx_port_handler_print_char */

@@ -34,7 +34,7 @@ ZEPHYRLIB   = $(ZEPHYR_BASE)/lib
 TARGET_ZEPHYR ?= ./targets/zephyr
 SOURCE_DIR = $(TARGET_ZEPHYR)/src
 
-export JERRY_INCLUDE = $(CURDIR)/jerry-core/include
+export JERRY_INCLUDE = -I$(CURDIR)/jerry-core/include -I$(CURDIR)/jerry-ext/include
 
 MDEF_FILE = $(realpath $(SOURCE_DIR)/../prj.mdef)
 CONF_FILE = $(realpath $(SOURCE_DIR)/../prj.conf)

@@ -22,8 +22,27 @@
 #include "getline-zephyr.h"
 
 #include "jerryscript.h"
+#include "jerryscript-port.h"
+#include "jerryscript-ext/handler.h"
 
 static jerry_value_t print_function;
+
+/**
+ * Register a JavaScript function in the global object.
+ */
+static void
+register_js_function (const char *name_p, /**< name of the function */
+                      jerry_external_handler_t handler_p) /**< function callback */
+{
+  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
+
+  if (jerry_value_has_error_flag (result_val))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
+  }
+
+  jerry_release_value (result_val);
+} /* register_js_function */
 
 static int shell_cmd_handler (char *source_buffer)
 {
@@ -69,6 +88,7 @@ void main (void)
 
   zephyr_getline_init ();
   jerry_init (JERRY_INIT_EMPTY);
+  register_js_function ("print", jerryx_handler_print);
   jerry_value_t global_obj_val = jerry_get_global_object ();
 
   jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");

@@ -167,28 +167,21 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 } /* jerry_init */
 
 /**
- * Initialize Jerry engine with custom user context.
- */
-void
-jerry_init_with_user_context (jerry_init_flag_t flags,  /**< combination of Jerry flags */
-                              jerry_user_context_init_t init_cb, /**< callback to call to create the user context or
-                                                                   *  NULL, in which case no user context will be
-                                                                   *  created */
-                              jerry_user_context_deinit_t deinit_cb) /**< callback to call to free the user context or
-                                                                       *  NULL if it does not need to be freed */
-{
-  jerry_init (flags);
-  JERRY_CONTEXT (user_context_p) = (init_cb ? init_cb () : NULL);
-  JERRY_CONTEXT (user_context_deinit_cb) = deinit_cb;
-} /* jerry_init_with_user_context */
-
-/**
  * Terminate Jerry engine
  */
 void
 jerry_cleanup (void)
 {
   jerry_assert_api_available ();
+
+  for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p), *next_p = NULL;
+       this_p != NULL;
+       this_p = next_p)
+  {
+    next_p = this_p->next_p;
+    this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
+  }
 
   ecma_finalize ();
 
@@ -201,23 +194,44 @@ jerry_cleanup (void)
 
   jmem_finalize ();
   jerry_make_api_unavailable ();
-
-  if (JERRY_CONTEXT (user_context_deinit_cb))
-  {
-    JERRY_CONTEXT (user_context_deinit_cb) (JERRY_CONTEXT (user_context_p));
-  }
 } /* jerry_cleanup */
 
 /**
- * Retrieve user context.
+ * Retrieve a context data item, or create a new one.
  *
- * @return the user-provided context-specific pointer
+ * @param manager_p pointer to the manager whose context data item should be returned.
+ *
+ * @return a pointer to the user-provided context-specific data item for the given manager, creating such a pointer if
+ * none was found.
  */
 void *
-jerry_get_user_context (void)
+jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
 {
-  return JERRY_CONTEXT (user_context_p);
-} /* jerry_get_user_context */
+  void *ret = NULL;
+  jerry_context_data_header_t *item_p;
+
+  for (item_p = JERRY_CONTEXT (context_data_p); item_p != NULL; item_p = item_p->next_p)
+  {
+    if (item_p->manager_p == manager_p)
+    {
+      return JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p);
+    }
+  }
+
+  item_p = jmem_heap_alloc_block (sizeof (jerry_context_data_header_t) + manager_p->bytes_needed);
+  item_p->manager_p = manager_p;
+  item_p->next_p = JERRY_CONTEXT (context_data_p);
+  JERRY_CONTEXT (context_data_p) = item_p;
+  ret = JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p);
+
+  memset (ret, 0, manager_p->bytes_needed);
+  if (manager_p->init_cb)
+  {
+    manager_p->init_cb (ret);
+  }
+
+  return ret;
+} /* jerry_get_context_data */
 
 /**
  * Register external magic string array

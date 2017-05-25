@@ -24,7 +24,7 @@ export BOARD
 TARGET_ZEPHYR ?= ./targets/zephyr
 TARGET_ZEPHYR_SRC_DIR = $(TARGET_ZEPHYR)/src
 
-TYPE  ?= jerry-core
+COMPONENTS  ?= jerry-core jerry-ext
 JERRYHEAP ?= 16
 JERRYPROFILE ?= minimal
 
@@ -61,9 +61,9 @@ EXT_CFLAGS += -D_XOPEN_SOURCE=700
 
 EXT_CFLAGS += -Wno-error=conversion
 
-EXTERNAL_LIB = $(INTERM)/lib/libjerry-core.a
+EXTERNAL_LIB = $(INTERM)/lib/libjerry-core.a $(INTERM)/lib/libjerry-ext.a
 
-LIBS = jerry-core
+LIBS = jerry-core jerry-ext
 
 BUILD_CONFIG = O="$(OUTPUT)" V=$(V) USER_LIBS="$(LIBS)" USER_LIB_INCLUDE_DIR="-L $(CURDIR)/$(INTERM)/lib" TARGET_ZEPHYR=$(TARGET_ZEPHYR)
 
@@ -94,7 +94,7 @@ endif
 	 -DJERRY_LIBC=OFF \
 	 $(EXT_JERRY_FLAGS)
 
-	make -C $(INTERM) $(TYPE)$(VARIETY) V=1
+	make -C $(INTERM) $(COMPONENTS) V=1
 
 $(OUTPUT)/Makefile.export: $(OUTPUT)/include/config/auto.conf
 	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) outputexports

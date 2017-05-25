@@ -6,3 +6,4 @@ targets/*
 tests/*
 third-party/*
 tools/*
+jerry-port/default/*

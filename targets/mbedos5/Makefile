@@ -19,9 +19,9 @@
 BOARD=$(subst [mbed] ,,$(shell mbed target))
 HEAPSIZE=16
 
-DEBUG=0
-NO_JS=0
-MBED_VERBOSE=0
+DEBUG?=0
+NO_JS?=0
+MBED_VERBOSE?=0
 
 MBED_CLI_FLAGS=-j0 --source . --source ../../
 

@@ -1424,7 +1424,7 @@ jerry_substring_to_utf8_char_buffer (const jerry_value_t value, /**< input strin
  * @return true  - if the property exists
  *         false - otherwise
  */
-bool
+jerry_value_t
 jerry_has_property (const jerry_value_t obj_val, /**< object value */
                     const jerry_value_t prop_name_val) /**< property name (string value) */
 {
@@ -1448,7 +1448,7 @@ jerry_has_property (const jerry_value_t obj_val, /**< object value */
  * @return true  - if the property exists
  *         false - otherwise
  */
-bool
+jerry_value_t
 jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
                         const jerry_value_t prop_name_val) /**< property name (string value) */
 {

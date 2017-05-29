@@ -79,6 +79,8 @@ def arguments_parse():
                         help="increase verbosity (default: %(default)s)")
     parser.add_argument("--non-interactive", action="store_true", default=False,
                         help="disable stop when newline is pressed (default: %(default)s)")
+    parser.add_argument("--color", action="store_true", default=False,
+                        help="enable color highlighting on source commands (default: %(default)s)")
 
     args = parser.parse_args()
 
@@ -468,6 +470,9 @@ class JerryDebugger(object):
         self.line_list = Multimap()
         self.display = 0
         self.default_viewrange = 3
+        self.green = ''
+        self.red = ''
+        self.nocolor = ''
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
 
@@ -587,6 +592,11 @@ class JerryDebugger(object):
                               JERRY_DEBUGGER_EXCEPTION_CONFIG,
                               enable)
         self.send_message(message)
+
+    def set_colors(self):
+        self.green = '\033[92m'
+        self.nocolor = '\033[0m'
+        self.red = '\033[31m'
 
     def get_message(self, blocking):
         # Connection was closed
@@ -780,9 +790,9 @@ def print_source(debugger, line_num):
 
     for i in range(start, end):
         if i == last_bp.line - 1:
-            print("%4d > %s" % (i + 1, lines[i]))
+            print("%s%4d%s %s>%s %s" % (debugger.green, i + 1, debugger.nocolor, debugger.red, debugger.nocolor, lines[i]))
         else:
-            print("%4d   %s" % (i + 1, lines[i]))
+            print("%s%4d%s   %s" % (debugger.green, i + 1, debugger.nocolor, lines[i]))
 
 
 def release_function(debugger, data):
@@ -873,6 +883,9 @@ def main():
     debugger = JerryDebugger(args.address)
     exception_string = ""
 
+    if args.color:
+        debugger.set_colors()
+
     non_interactive = args.non_interactive
 
     logging.debug("Connected to JerryScript on %d port", debugger.port)
@@ -934,7 +947,7 @@ def main():
                 breakpoint_info = "around"
 
             if breakpoint[0].active_index >= 0:
-                breakpoint_info += " breakpoint:%d" % (breakpoint[0].active_index)
+                breakpoint_info += " breakpoint:%s%d%s" % (debugger.red, breakpoint[0].active_index, debugger.nocolor)
 
             print("Stopped %s %s" % (breakpoint_info, breakpoint[0]))
             if debugger.display:

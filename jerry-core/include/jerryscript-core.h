@@ -354,8 +354,8 @@ jerry_value_t jerry_create_undefined (void);
 /**
  * General API functions of JS objects.
  */
-bool jerry_has_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
-bool jerry_has_own_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
+jerry_value_t jerry_has_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
+jerry_value_t jerry_has_own_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 bool jerry_delete_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 
 jerry_value_t jerry_get_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);

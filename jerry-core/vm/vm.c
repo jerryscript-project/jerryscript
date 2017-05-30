@@ -1772,7 +1772,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             if (-ECMA_INTEGER_MULTIPLY_MAX <= left_integer
                 && left_integer <= ECMA_INTEGER_MULTIPLY_MAX
                 && -ECMA_INTEGER_MULTIPLY_MAX <= right_integer
-                && right_integer <= ECMA_INTEGER_MULTIPLY_MAX)
+                && right_integer <= ECMA_INTEGER_MULTIPLY_MAX
+                && left_value != 0
+                && right_value != 0)
             {
               result = ecma_make_integer_value (left_integer * right_integer);
               break;

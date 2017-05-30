@@ -19,6 +19,7 @@
 #include "jerryscript-mbed-drivers/DigitalOut-js.h"
 #include "jerryscript-mbed-drivers/setInterval-js.h"
 #include "jerryscript-mbed-drivers/setTimeout-js.h"
+#include "jerryscript-mbed-drivers/print-js.h"
 #include "jerryscript-mbed-drivers/assert-js.h"
 #include "jerryscript-mbed-drivers/I2C-js.h"
 #include "jerryscript-mbed-drivers/gc-js.h"
@@ -32,6 +33,7 @@ DECLARE_JS_WRAPPER_REGISTRATION (base) {
     REGISTER_GLOBAL_FUNCTION(setTimeout);
     REGISTER_GLOBAL_FUNCTION(clearInterval);
     REGISTER_GLOBAL_FUNCTION(clearTimeout);
+    REGISTER_GLOBAL_FUNCTION(print);
     REGISTER_CLASS_CONSTRUCTOR(DigitalOut);
     REGISTER_CLASS_CONSTRUCTOR(I2C);
     REGISTER_CLASS_CONSTRUCTOR(InterruptIn);

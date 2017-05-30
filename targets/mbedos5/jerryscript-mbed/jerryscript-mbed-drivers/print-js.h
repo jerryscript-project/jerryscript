@@ -12,17 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _JERRYSCRIPT_MBED_UTIL_LOGGING_H
-#define _JERRYSCRIPT_MBED_UTIL_LOGGING_H
+#ifndef _JERRYSCRIPT_MBED_DRIVERS_PRINT_H
+#define _JERRYSCRIPT_MBED_DRIVERS_PRINT_H
 
-#include "mbed.h"
+#include "jerryscript-mbed-library-registry/wrap_tools.h"
 
-#ifdef DEBUG_WRAPPER
-#define LOG_PRINT(...) printf(__VA_ARGS__)
-#else
-#define LOG_PRINT(...) while(0) { }
-#endif
+DECLARE_GLOBAL_FUNCTION(print);
 
-#define LOG_PRINT_ALWAYS(...) printf(__VA_ARGS__)
-
-#endif  // _JERRYSCRIPT_MBED_UTIL_LOGGING_H
+#endif  // _JERRYSCRIPT_MBED_DRIVERS_PRINT_H

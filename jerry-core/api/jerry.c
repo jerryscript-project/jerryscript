@@ -2272,44 +2272,62 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
                        jerry_instance_alloc_t alloc, /**< the alloc function */
                        void *cb_data_p) /**< the cb_data for alloc function */
 {
+  JERRY_UNUSED (heap_size);
+
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
-  uint32_t lcache_size = 0;
-
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  lcache_size = sizeof (jerry_hash_table_t);
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-
-  uint32_t alloc_size = (uint32_t) (sizeof (jerry_instance_t) + lcache_size);
+  size_t total_size = sizeof (jerry_instance_t) + JMEM_ALIGNMENT;
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  alloc_size = alloc_size + heap_size + JMEM_ALIGNMENT - 1;
+  heap_size = JERRY_ALIGNUP (heap_size, JMEM_ALIGNMENT);
+
+  /* Minimum heap size is 1Kbyte. */
+  if (heap_size < 1024)
+  {
+    return NULL;
+  }
+
+  total_size += heap_size;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-  jerry_instance_t *instance_p = (jerry_instance_t *) alloc (alloc_size, cb_data_p);
-  memset (instance_p, 0, alloc_size);
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  total_size += sizeof (jerry_hash_table_t);
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
+  total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
+
+  jerry_instance_t *instance_p = (jerry_instance_t *) alloc (total_size, cb_data_p);
 
   if (instance_p == NULL)
   {
     return NULL;
   }
 
-  instance_p->heap_size = heap_size;
-  instance_p->lcache_p = instance_p->buffer;
+  memset (instance_p, 0, total_size);
+
+  uintptr_t instance_ptr = ((uintptr_t) instance_p) + sizeof (jerry_instance_t);
+  instance_ptr = JERRY_ALIGNUP (instance_ptr, (uintptr_t) JMEM_ALIGNMENT);
+
+  uint8_t *byte_p = (uint8_t *) instance_ptr;
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  uint8_t *unaligned_heap_p = instance_p->lcache_p + lcache_size;
-  uintptr_t alignment_mask = ~(uintptr_t) (JMEM_ALIGNMENT - 1);
-  instance_p->heap_p = (uint8_t *) (((uintptr_t) unaligned_heap_p + JMEM_ALIGNMENT - 1) & alignment_mask);
-
-  JERRY_ASSERT (((uintptr_t) instance_p->heap_p & (uintptr_t) (JMEM_ALIGNMENT - 1)) == 0);
+  instance_p->heap_p = (jmem_heap_t *) byte_p;
+  instance_p->heap_size = heap_size;
+  byte_p += heap_size;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  instance_p->lcache_p = byte_p;
+  byte_p += sizeof (jerry_hash_table_t);
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+
+  JERRY_ASSERT (byte_p <= ((uint8_t *) instance_p) + total_size);
+
+  JERRY_UNUSED (byte_p);
   return instance_p;
 
 #else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
-  JERRY_UNUSED (heap_size);
   JERRY_UNUSED (alloc);
   JERRY_UNUSED (cb_data_p);
 
@@ -2317,8 +2335,6 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 } /* jerry_create_instance */
-
-
 
 /**
  * If JERRY_VM_EXEC_STOP is defined the callback passed to this function is

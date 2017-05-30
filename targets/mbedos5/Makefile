@@ -63,7 +63,7 @@ library: .mbed ../../.mbedignore
 	mbed compile $(MBED_CLI_FLAGS) --library
 
 clean:
-	rm -rf .build/$(BOARD)
+	rm -rf ./BUILD/$(BOARD)
 
 js2c: js/main.js js/flash_leds.js
 	python ../../tools/js2c.py --ignore pins.js

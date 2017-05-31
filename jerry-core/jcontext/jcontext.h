@@ -133,22 +133,6 @@ typedef struct
 #endif /* JERRY_VALGRIND_FREYA */
 } jerry_context_t;
 
-/**
- * Description of jerry instance, which contains the meta data and buffer.
- */
-struct jerry_instance_t
-{
-  uint32_t heap_size; /**< size of the heap */
-#ifndef JERRY_SYSTEM_ALLOCATOR
-  uint8_t *heap_p; /**< point to the entrance of the heap in buffer */
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  uint8_t *lcache_p; /**< point to the entrance of the lcache in buffer */
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-  jerry_context_t context; /**< the context of the instance */
-  uint8_t buffer[]; /**< the flexible array for storing context, heap and lcache */
-};
-
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 /**
  * Hash table for caching the last access of properties.
@@ -161,24 +145,47 @@ typedef struct
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
+#ifndef JERRY_GET_CURRENT_INSTANCE
+
+/**
+ * Default function if JERRY_GET_CURRENT_INSTANCE is not defined.
+ */
+#define JERRY_GET_CURRENT_INSTANCE() (jerry_port_get_current_instance ())
+
+#endif /* !JERRY_GET_CURRENT_INSTANCE */
+
 /**
  * This part is for Jerry which enable external context.
  */
-
 typedef struct
 {
   jmem_heap_free_t first; /**< first node in free region list */
   uint8_t area[]; /**< heap area */
 } jmem_heap_t;
 
-#define JERRY_CONTEXT(field) (jerry_port_get_current_instance ()->context.field)
+/**
+ * Description of jerry instance which is the header of the context space.
+ */
+struct jerry_instance_t
+{
+  jerry_context_t context; /**< the context of the instance */
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
+  uint32_t heap_size; /**< size of the heap */
+#endif
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  uint8_t *lcache_p; /**< point to the entrance of the lcache in buffer */
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+};
+
+#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->context.field)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 
 static inline jmem_heap_t * __attr_always_inline___
 jerry_context_get_current_heap (void)
 {
-  return (jmem_heap_t *) (jerry_port_get_current_instance ()->heap_p);
+  return JERRY_GET_CURRENT_INSTANCE ()->heap_p;
 } /* jerry_context_get_current_heap */
 
 #define JERRY_HEAP_CONTEXT(field) (jerry_context_get_current_heap ()->field)
@@ -187,9 +194,9 @@ jerry_context_get_current_heap (void)
 #error "JMEM_HEAP_SIZE must not be defined if JERRY_ENABLE_EXTERNAL_CONTEXT is defined"
 #endif /* JMEM_HEAP_SIZE */
 
-#define JMEM_HEAP_SIZE (jerry_port_get_current_instance ()->heap_size)
+#define JMEM_HEAP_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size)
 
-#define JMEM_HEAP_AREA_SIZE (jerry_port_get_current_instance ()->heap_size - JMEM_ALIGNMENT)
+#define JMEM_HEAP_AREA_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size - JMEM_ALIGNMENT)
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
@@ -198,7 +205,7 @@ jerry_context_get_current_heap (void)
 static inline jerry_hash_table_t * __attr_always_inline___
 jerry_context_get_current_lcache (void)
 {
-  return (jerry_hash_table_t *) (jerry_port_get_current_instance ()->lcache_p);
+  return (jerry_hash_table_t *) (JERRY_GET_CURRENT_INSTANCE ()->lcache_p);
 } /* jerry_context_get_current_lcache */
 
 #define JERRY_HASH_TABLE_CONTEXT(field) (jerry_context_get_current_lcache ()->field)

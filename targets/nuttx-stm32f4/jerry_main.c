@@ -380,6 +380,7 @@ int jerry_main (int argc, char *argv[])
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_INIT_SHOW_OPCODES | JERRY_INIT_SHOW_REGEXP_OPCODES;
+      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
     }
     else if (!strcmp ("--log-level", argv[i]))
     {

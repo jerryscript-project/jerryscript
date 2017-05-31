@@ -2410,7 +2410,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             continue;
           }
 
-          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
+          if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
+              && (JERRY_CONTEXT (debugger_stop_context) == NULL
+                  || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
           {
             jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
           }

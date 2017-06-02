@@ -901,8 +901,8 @@ def main():
     if args.display:
         prompt.do_display(args.display)
 
-    if args.exception:
-        prompt.do_exception(args.exception)
+    if args.exception is not None:
+        prompt.do_exception(str(args.exception))
 
     while True:
         if not non_interactive and prompt.cont:

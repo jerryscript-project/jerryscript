@@ -81,6 +81,10 @@ def arguments_parse():
                         help="disable stop when newline is pressed (default: %(default)s)")
     parser.add_argument("--color", action="store_true", default=False,
                         help="enable color highlighting on source commands (default: %(default)s)")
+    parser.add_argument("--display", action="store", default=None, type=int,
+                        help="set display range")
+    parser.add_argument("--exception", action="store", default=None, type=int, choices=[0, 1],
+                        help="set exception config, usage 1: [Enable] or 0: [Disable]")
 
     args = parser.parse_args()
 
@@ -893,6 +897,12 @@ def main():
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "
     prompt.non_interactive = non_interactive
+
+    if args.display:
+        prompt.do_display(args.display)
+
+    if args.exception:
+        prompt.do_exception(args.exception)
 
     while True:
         if not non_interactive and prompt.cont:

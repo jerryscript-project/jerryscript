@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
+#include "debugger.h"
 #include "jcontext.h"
-#include "jerry-debugger.h"
 #include "jerryscript-port.h"
 
 #ifdef JERRY_DEBUGGER

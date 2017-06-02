@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+#include "debugger.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
 #include "jcontext.h"
-#include "jerry-debugger.h"
 #include "js-parser-internal.h"
 
 #if JERRY_JS_PARSER

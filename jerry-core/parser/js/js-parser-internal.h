@@ -19,7 +19,7 @@
 #include "common.h"
 
 #include "byte-code.h"
-#include "jerry-debugger.h"
+#include "debugger.h"
 #include "js-parser.h"
 #include "js-parser-limits.h"
 #include "js-lexer.h"

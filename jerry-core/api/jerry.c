@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 
+#include "debugger.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
@@ -32,7 +33,6 @@
 #include "ecma-promise-object.h"
 #include "jcontext.h"
 #include "jerryscript.h"
-#include "jerry-debugger.h"
 #include "js-parser.h"
 #include "re-compiler.h"
 

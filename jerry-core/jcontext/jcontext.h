@@ -19,10 +19,10 @@
 #ifndef JCONTEXT_H
 #define JCONTEXT_H
 
+#include "debugger.h"
 #include "ecma-builtins.h"
 #include "ecma-jobqueue.h"
 #include "jerryscript-port.h"
-#include "jerry-debugger.h"
 #include "jmem.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"

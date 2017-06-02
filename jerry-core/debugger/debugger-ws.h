@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef JERRY_DEBUGGER_WS_H
-#define JERRY_DEBUGGER_WS_H
+#ifndef DEBUGGER_WS_H
+#define DEBUGGER_WS_H
 
 #include "ecma-globals.h"
 
@@ -93,4 +93,4 @@ void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
 
 #endif /* JERRY_DEBUGGER */
 
-#endif /* JERRY_DEBUGGER_WS_H */
+#endif /* DEBUGGER_WS_H */

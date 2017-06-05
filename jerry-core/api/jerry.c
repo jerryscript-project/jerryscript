@@ -2100,9 +2100,12 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
     return false;
   }
 
-  *out_native_pointer_p = native_pointer_p->data_p;
+  if (out_native_pointer_p != NULL)
+  {
+    *out_native_pointer_p = native_pointer_p->data_p;
+  }
 
-  if (out_native_info_p)
+  if (out_native_info_p != NULL)
   {
     *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->u.info_p;
   }

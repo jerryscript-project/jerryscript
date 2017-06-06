@@ -219,6 +219,12 @@ if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   jerry_add_link_flags(-s)
 endif()
 
+# TODO: Remove workaround for gcc 7 bug if the
+# fallthrough comment detection is fixed.
+if (USING_GCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 7.0)
+  jerry_add_compile_flags(-Wno-implicit-fallthrough)
+endif()
+
 # External compiler & linker flags
 if(DEFINED EXTERNAL_COMPILE_FLAGS)
   jerry_add_compile_flags(${EXTERNAL_COMPILE_FLAGS})

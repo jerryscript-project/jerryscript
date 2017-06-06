@@ -36,12 +36,23 @@ set(FEATURE_VALGRIND_FREYA   OFF     CACHE BOOL   "Enable Valgrind-Freya support
 set(FEATURE_VM_EXEC_STOP     OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(MEM_HEAP_SIZE_KB         "512"   CACHE STRING "Size of memory heap, in kilobytes")
 
+# Option overrides
 if(FEATURE_SYSTEM_ALLOCATOR)
   set(FEATURE_CPOINTER_32_BIT ON)
+
+  set(FEATURE_CPOINTER_32_BIT_MESSAGE " (FORCED BY SYSTEM ALLOCATOR)")
+endif()
+
+if(NOT FEATURE_JS_PARSER)
+  set(FEATURE_SNAPSHOT_EXEC ON)
+  set(FEATURE_PARSER_DUMP   OFF)
+
+  set(FEATURE_SNAPSHOT_EXEC_MESSAGE " (FORCED BY DISABLED JS PARSER)")
+  set(FEATURE_PARSER_DUMP_MESSAGE   " (FORCED BY DISABLED JS PARSER)")
 endif()
 
 # Status messages
-message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT})
+message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT} ${FEATURE_CPOINTER_32_BIT_MESSAGE})
 message(STATUS "FEATURE_DEBUGGER          " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_DEBUGGER_PORT     " ${FEATURE_DEBUGGER_PORT})
 message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
@@ -49,10 +60,10 @@ message(STATUS "FEATURE_EXTERNAL_CONTEXT  " ${FEATURE_EXTERNAL_CONTEXT})
 message(STATUS "FEATURE_JS_PARSER         " ${FEATURE_JS_PARSER})
 message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
 message(STATUS "FEATURE_MEM_STRESS_TEST   " ${FEATURE_MEM_STRESS_TEST})
-message(STATUS "FEATURE_PARSER_DUMP       " ${FEATURE_PARSER_DUMP})
+message(STATUS "FEATURE_PARSER_DUMP       " ${FEATURE_PARSER_DUMP} ${FEATURE_PARSER_DUMP_MESSAGE})
 message(STATUS "FEATURE_PROFILE           " ${FEATURE_PROFILE})
 message(STATUS "FEATURE_REGEXP_DUMP       " ${FEATURE_REGEXP_DUMP})
-message(STATUS "FEATURE_SNAPSHOT_EXEC     " ${FEATURE_SNAPSHOT_EXEC})
+message(STATUS "FEATURE_SNAPSHOT_EXEC     " ${FEATURE_SNAPSHOT_EXEC} ${FEATURE_SNAPSHOT_EXEC_MESSAGE})
 message(STATUS "FEATURE_SNAPSHOT_SAVE     " ${FEATURE_SNAPSHOT_SAVE})
 message(STATUS "FEATURE_SYSTEM_ALLOCATOR  " ${FEATURE_SYSTEM_ALLOCATOR})
 message(STATUS "FEATURE_VALGRIND          " ${FEATURE_VALGRIND})
@@ -96,6 +107,7 @@ file(GLOB SOURCE_CORE_VM                        vm/*.c)
 
 set(SOURCE_CORE_FILES
     ${SOURCE_CORE_API}
+    ${SOURCE_CORE_DEBUGGER}
     ${SOURCE_CORE_ECMA_BASE}
     ${SOURCE_CORE_ECMA_BUILTINS}
     ${SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY}
@@ -108,10 +120,6 @@ set(SOURCE_CORE_FILES
     ${SOURCE_CORE_PARSER_REGEXP}
     ${SOURCE_CORE_VM})
 
-if(FEATURE_DEBUGGER)
-  set(SOURCE_CORE_FILES ${SOURCE_CORE_FILES} ${SOURCE_CORE_DEBUGGER})
-endif()
-
 # All-in-one build
 if(ENABLE_ALL_IN_ONE)
   set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.c")
@@ -122,13 +130,7 @@ if(ENABLE_ALL_IN_ONE)
     file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
   endforeach()
 
-  foreach(FILE ${SOURCE_PORT_FILES})
-    file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
-  endforeach()
-
-  set(SOURCE_CORE ${ALL_IN_FILE})
-else()
-  set(SOURCE_CORE ${SOURCE_CORE_FILES} ${SOURCE_PORT_FILES})
+  set(SOURCE_CORE_FILES ${ALL_IN_FILE})
 endif()
 
 # Third-party
@@ -166,15 +168,6 @@ if(FEATURE_JS_PARSER)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_JS_PARSER=1)
 else()
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_JS_PARSER=0)
-
-  if(NOT FEATURE_SNAPSHOT_EXEC MATCHES ON)
-    set(FEATURE_SNAPSHOT_EXEC ON)
-    message(STATUS "JS-Parser has been disabled, snapshot is now on")
-  endif()
-  if(FEATURE_PARSER_DUMP)
-    set(FEATURE_PARSER_DUMP OFF)
-    message(STATUS "Parser byte-code dumps has been disabled")
-  endif()
 endif()
 
 # Memory statistics
@@ -184,9 +177,11 @@ endif()
 
 # Enable debugger
 if(FEATURE_DEBUGGER)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
+  if(JERRY_LIBC)
+    message(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
+  endif()
 
-  # Debugger port
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER_PORT=${FEATURE_DEBUGGER_PORT})
 endif()
 
@@ -200,21 +195,18 @@ if(FEATURE_PARSER_DUMP)
   set(DEFINES_JERRY ${DEFINES_JERRY} PARSER_DUMP_BYTE_CODE)
 endif()
 
+# Profile
 if (NOT IS_ABSOLUTE ${FEATURE_PROFILE})
   set(FEATURE_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/profiles/${FEATURE_PROFILE}.profile")
 endif()
 
 if(EXISTS ${FEATURE_PROFILE})
-  FILE(READ "${FEATURE_PROFILE}" PROFILE_SETTINGS)
-  STRING(REGEX REPLACE "^#.*$" "" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
-  STRING(REGEX REPLACE "[\r|\n]" ";" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  file(READ "${FEATURE_PROFILE}" PROFILE_SETTINGS)
+  string(REGEX REPLACE "^#.*$" "" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  string(REGEX REPLACE "[\r|\n]" ";" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
   set(DEFINES_JERRY ${DEFINES_JERRY} ${PROFILE_SETTINGS})
 else()
-  MESSAGE(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
-endif()
-
-if(JERRY_LIBC AND FEATURE_DEBUGGER)
-  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
+  message(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
 endif()
 
 if(JERRY_LIBC AND FEATURE_SYSTEM_ALLOCATOR)
@@ -262,24 +254,18 @@ endif()
 math(EXPR MEM_HEAP_AREA_SIZE "${MEM_HEAP_SIZE_KB} * 1024")
 set(DEFINES_JERRY ${DEFINES_JERRY} CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE})
 
-add_library(${JERRY_CORE_NAME} STATIC ${SOURCE_CORE})
+add_library(${JERRY_CORE_NAME} STATIC ${SOURCE_CORE_FILES})
 
 target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
 target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
 
-set(JERRY_LIBS )
-
 if(JERRY_LIBM)
-  set(JERRY_LIBS ${JERRY_LIBS} jerry-libm)
-  target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libm/include")
+  target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
 endif()
 
 if(JERRY_LIBC)
-  set(JERRY_LIBS ${JERRY_LIBS} jerry-libc)
-  target_include_directories(${JERRY_CORE_NAME} SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/jerry-libc/include")
+  target_link_libraries(${JERRY_CORE_NAME} jerry-libc)
 endif()
-
-target_link_libraries(${JERRY_CORE_NAME} ${JERRY_LIBS})
 
 separate_arguments(EXTERNAL_LINK_LIBS)
 foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})

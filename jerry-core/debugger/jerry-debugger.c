@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef JERRY_DEBUGGER
-
 #include "byte-code.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
@@ -24,6 +22,8 @@
 #include "jerry-debugger.h"
 #include "jerryscript-port.h"
 #include "lit-char-helpers.h"
+
+#ifdef JERRY_DEBUGGER
 
 /**
  * Type cast the debugger send buffer into a specific type.

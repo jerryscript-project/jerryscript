@@ -29,13 +29,10 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
   set_property(TARGET ${TARGET_NAME}
                PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
 
-  link_directories(${CMAKE_BINARY_DIR})
-
-  set(TARGET_LIBS jerry-libm)
+  target_link_libraries(${TARGET_NAME} jerry-libm)
   if(JERRY_LIBC)
-    set(TARGET_LIBS ${TARGET_LIBS} jerry-libc)
+    target_link_libraries(${TARGET_NAME} jerry-libc)
   endif()
-  target_link_libraries(${TARGET_NAME} ${TARGET_LIBS})
 
   add_dependencies(unittests-libm ${TARGET_NAME})
 endforeach()

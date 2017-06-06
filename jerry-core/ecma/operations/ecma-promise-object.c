@@ -743,6 +743,11 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
                    ecma_value_t on_fulfilled, /**< on_fulfilled function */
                    ecma_value_t on_rejected) /**< on_rejected function */
 {
+  if (!ecma_is_value_object (promise))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+  }
+
   ecma_object_t *obj = ecma_get_object_from_value (promise);
 
   if (!ecma_is_promise (obj))

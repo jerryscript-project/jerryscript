@@ -44,52 +44,31 @@ instructions above.
 make is used to automate the process of fetching dependencies, and making sure that
 mbed-cli is called with the correct arguments.
 
+### nodejs
+
+npm is used to install the dependencies in the local node_modules folder.
+
+### gulp
+
+gulp is used to automate tasks, like cloning repositories or generate source files.
+If you create an own project, for more info see [mbed-js-gulp](https://github.com/ARMmbed/mbed-js-gulp).
+
 ### (optional) jshint
 
 jshint is used to statically check your JavaScript code, as part of the build process.
 This ensures that pins you are using in your code are available on your chosen target
 platform.
 
-### Python modules
-
-There are multiple Python module dependencies which can be installed with the
-following command invoked from your jerryscript/targets/mbedos5/tools directory:
-
-```bash
-pip install -r requirements.txt
-```
-
-If you have no pip installed but your are on an apt-managed system (e.g.,
-Ubuntu), issue the following command first:
-
-```bash
-apt-get -y install python-pip
-```
-
-(Otherwise, visit 
-[pip documentation](https://pip.pypa.io/en/stable/installing/) for more 
-information on how to install pip.)
-
 ## Quick Start
 
-Once you have all of your dependencies installed, you can build the project as follows:
+Once you have all of your dependencies installed, you can build the example project as follows:
 
 ```bash
-git clone https://github.com/jerryscript-project/jerryscript
-cd jerryscript/targets/mbedos5
-make getlibs
-# NRF52 Development Kit:
-make BOARD=NRF52_DK
-# FRDM K64F
-make BOARD=K64F
+git clone https://github.com/ARMmbed/mbed-js-example
+cd mbed-js-example
+npm install
+gulp --target=YOUR_TARGET_NAME
 ```
 
-The produced file (in .build/**[BOARD]**/GCC_ARM) can then be uploaded to your board, and will
+The produced file (in build/out/YOUR_TARGET_NAME) can then be uploaded to your board, and will
 run when you press reset.
-
-If you make a modification to main.js, you can simply rerun make, and it will remember your
-previous choice of board:
-
-```bash
-make
-```

@@ -19,14 +19,15 @@
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
 #include "ecma-property-hashmap.h"
-#ifdef JERRY_DEBUGGER
-#include "jcontext.h"
-#include "jerry-debugger.h"
-#endif /* JERRY_DEBUGGER */
 #include "jrt-bit-fields.h"
 #include "byte-code.h"
 #include "re-compiler.h"
 #include "ecma-builtins.h"
+
+#ifdef JERRY_DEBUGGER
+#include "debugger.h"
+#include "jcontext.h"
+#endif /* JERRY_DEBUGGER */
 
 /** \addtogroup ecma ECMA
  * @{

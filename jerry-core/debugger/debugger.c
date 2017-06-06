@@ -14,12 +14,12 @@
  */
 
 #include "byte-code.h"
+#include "debugger.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-eval.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
-#include "jerry-debugger.h"
 #include "jerryscript-port.h"
 #include "lit-char-helpers.h"
 

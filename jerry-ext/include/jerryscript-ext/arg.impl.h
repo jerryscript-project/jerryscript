@@ -17,44 +17,98 @@
 #define JERRYX_ARG_IMPL_H
 
 /* transform functions for each type. */
-jerry_value_t jerryx_arg_transform_number_strict (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                  const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_number_strict_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                           const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_number_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                    const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_number (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                           const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_boolean_strict (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                   const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_boolean_strict_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
+
+#define JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL(type) \
+  jerry_value_t jerryx_arg_transform_ ## type (jerryx_arg_js_iterator_t *js_arg_iter_p, \
+                                               const jerryx_arg_t *c_arg_p); \
+  jerry_value_t jerryx_arg_transform_ ## type ## _optional (jerryx_arg_js_iterator_t *js_arg_iter_p, \
                                                             const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_boolean_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                     const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_boolean (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                            const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_string_strict (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                  const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_string_strict_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                           const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_string_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                    const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_string (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                           const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_function (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                             const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_function_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                      const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_native_pointer (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                   const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_native_pointer_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                            const jerryx_arg_t *c_arg_p);
+
+#define JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT(type) \
+  JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (type) \
+  JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (type ## _strict)
+
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (uint8)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (int8)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (uint16)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (int16)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (uint32)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (int32)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (number)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (string)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (boolean)
+
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (function)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (native_pointer)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (object_props)
+
 jerry_value_t jerryx_arg_transform_ignore (jerryx_arg_js_iterator_t *js_arg_iter_p,
                                            const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_object_props (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                 const jerryx_arg_t *c_arg_p);
-jerry_value_t jerryx_arg_transform_object_props_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                                                          const jerryx_arg_t *c_arg_p);
+
+#undef JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL
+#undef JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT
+
+/**
+ * The structure indicates the options used to transform integer argument.
+ * It will be passed into jerryx_arg_t's  extra_info field.
+ */
+typedef struct
+{
+  uint8_t round; /**< rounding policy */
+  uint8_t clamp; /**< clamping policy */
+} jerryx_arg_int_option_t;
+
+/**
+ * The macro used to generate jerryx_arg_xxx for int type.
+ */
+#define JERRYX_ARG_INT(type) \
+  static inline jerryx_arg_t \
+  jerryx_arg_ ## type (type ## _t *dest, \
+                       jerryx_arg_round_t round_flag, \
+                       jerryx_arg_clamp_t clamp_flag, \
+                       jerryx_arg_coerce_t coerce_flag, \
+                       jerryx_arg_optional_t opt_flag) \
+  { \
+    jerryx_arg_transform_func_t func; \
+    if (coerce_flag == JERRYX_ARG_NO_COERCE) \
+    { \
+      if (opt_flag == JERRYX_ARG_OPTIONAL) \
+      { \
+        func = jerryx_arg_transform_ ## type ## _strict_optional; \
+      } \
+      else \
+      { \
+        func = jerryx_arg_transform_ ## type ## _strict; \
+      } \
+    } \
+    else \
+    { \
+      if (opt_flag == JERRYX_ARG_OPTIONAL) \
+      { \
+        func = jerryx_arg_transform_ ## type ## _optional; \
+      } \
+      else \
+      { \
+        func = jerryx_arg_transform_ ## type; \
+      } \
+    } \
+    const jerryx_arg_int_option_t int_option = { .round = round_flag, .clamp = clamp_flag }; \
+    return (jerryx_arg_t) \
+    { \
+      .func = func, \
+      .dest = (void *) dest, \
+      .extra_info = *(uintptr_t *) &int_option \
+    }; \
+  }
+
+JERRYX_ARG_INT (uint8)
+JERRYX_ARG_INT (int8)
+JERRYX_ARG_INT (uint16)
+JERRYX_ARG_INT (int16)
+JERRYX_ARG_INT (uint32)
+JERRYX_ARG_INT (int32)
+
+#undef JERRYX_ARG_INT
 
 /**
  * Create a validation/transformation step (`jerryx_arg_t`) that expects to

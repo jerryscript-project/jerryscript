@@ -50,6 +50,9 @@ const char *test_source = (
                            "  get: function() { throw new TypeError('prop2 error') }"
                            "});"
                            "test_validator_prop3(obj2);"
+                           "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
+                           "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
+                           "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 300.5, 300.5);"
                            );
 
 static const jerry_object_native_info_t thing_a_info =
@@ -77,6 +80,7 @@ static my_type_b_t my_thing_b;
 
 static int validator1_count = 0;
 static int validator2_count = 0;
+static int validator_int_count = 0;
 
 static int validator_prop_count = 0;
 
@@ -144,7 +148,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
 
   jerry_release_value (is_ok);
   jerry_release_value (arg4);
-  validator1_count ++;
+  validator1_count++;
 
   return jerry_create_undefined ();
 } /* test_validator1_handler */
@@ -218,7 +222,7 @@ test_validator2_handler (const jerry_value_t func_obj_val __attribute__((unused)
   }
 
   jerry_release_value (is_ok);
-  validator2_count ++;
+  validator2_count++;
 
   return jerry_create_undefined ();
 } /* test_validator2_handler */
@@ -256,7 +260,7 @@ test_validator_prop1_handler (const jerry_value_t func_obj_val __attribute__((un
   TEST_ASSERT (native2 == 1.5);
   TEST_ASSERT (native3 == 3);
 
-  validator_prop_count ++;
+  validator_prop_count++;
 
   return jerry_create_undefined ();
 } /* test_validator_prop1_handler */
@@ -308,7 +312,7 @@ test_validator_prop2_handler (const jerry_value_t func_obj_val __attribute__((un
     TEST_ASSERT (native3 == 3);
   }
 
-  validator_prop_count ++;
+  validator_prop_count++;
 
   return jerry_create_undefined ();
 } /* test_validator_prop2_handler */
@@ -340,11 +344,109 @@ test_validator_prop3_handler (const jerry_value_t func_obj_val __attribute__((un
   TEST_ASSERT (!native1);
   TEST_ASSERT (native2);
 
-  validator_prop_count ++;
+  validator_prop_count++;
   jerry_release_value (is_ok);
 
   return jerry_create_undefined ();
 } /* test_validator_prop3_handler */
+
+/*
+ * args_p[0-2] are uint8, args_p[3-5] are int8, args_p[6-8] are uint32, args_p[9-11] are int32.
+ */
+static jerry_value_t
+test_validator_int1_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                             const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                             const jerry_value_t args_p[], /**< arguments list */
+                             const jerry_length_t args_cnt) /**< arguments length */
+{
+  uint8_t num0, num1, num2;
+  int8_t num3, num4, num5;
+  uint32_t num6, num7, num8;
+  int32_t num9, num10, num11;
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_uint8 (&num0, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_uint8 (&num1, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_uint8 (&num2, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num3, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num4, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num5, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_uint32 (&num6, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_uint32 (&num7, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_uint32 (&num8, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int32 (&num9, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int32 (&num10, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int32 (&num11, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED)
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
+                                                   args_cnt,
+                                                   mapping,
+                                                   12);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (num0 == 0);
+  TEST_ASSERT (num1 == 255);
+  TEST_ASSERT (num2 == 128);
+  TEST_ASSERT (num3 == -128);
+  TEST_ASSERT (num4 == 127);
+  TEST_ASSERT (num5 == -127);
+  TEST_ASSERT (num6 == 0);
+  TEST_ASSERT (num7 == 4294967295);
+  TEST_ASSERT (num8 == 65536);
+  TEST_ASSERT (num9 == -2147483648);
+  TEST_ASSERT (num10 == 2147483647);
+  TEST_ASSERT (num11 == -2147483647);
+
+  jerry_release_value (is_ok);
+  validator_int_count++;
+
+  return jerry_create_undefined ();
+} /* test_validator_int1_handler */
+
+static jerry_value_t
+test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                             const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                             const jerry_value_t args_p[], /**< arguments list */
+                             const jerry_length_t args_cnt) /**< arguments length */
+{
+  int8_t num0, num1, num2, num3, num4, num5, num6, num7;
+  num6 = 123;
+  num7 = 123;
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_int8 (&num0, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num1, JERRYX_ARG_FLOOR, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num2, JERRYX_ARG_CEIL, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num3, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num4, JERRYX_ARG_FLOOR, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num5, JERRYX_ARG_CEIL, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num6, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num7, JERRYX_ARG_ROUND, JERRYX_ARG_NO_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
+                                                   args_cnt,
+                                                   mapping,
+                                                   8);
+
+  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (num0 == -2);
+  TEST_ASSERT (num1 == -2);
+  TEST_ASSERT (num2 == -1);
+  TEST_ASSERT (num3 == 2);
+  TEST_ASSERT (num4 == 1);
+  TEST_ASSERT (num5 == 2);
+  TEST_ASSERT (num6 == 127);
+  TEST_ASSERT (num7 == 123);
+
+  jerry_release_value (is_ok);
+  validator_int_count++;
+
+  return jerry_create_undefined ();
+} /* test_validator_int2_handler */
 
 static jerry_value_t
 create_object_a_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
@@ -405,6 +507,8 @@ main (void)
 
   register_js_function ("test_validator1", test_validator1_handler);
   register_js_function ("test_validator2", test_validator2_handler);
+  register_js_function ("test_validator_int1", test_validator_int1_handler);
+  register_js_function ("test_validator_int2", test_validator_int2_handler);
   register_js_function ("MyObjectA", create_object_a_handler);
   register_js_function ("MyObjectB", create_object_b_handler);
   register_js_function ("test_validator_prop1", test_validator_prop1_handler);
@@ -419,6 +523,7 @@ main (void)
   TEST_ASSERT (validator1_count == 4);
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);
+  TEST_ASSERT (validator_int_count == 2);
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);

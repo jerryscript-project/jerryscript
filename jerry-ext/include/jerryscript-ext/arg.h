@@ -106,13 +106,52 @@ typedef enum
   JERRYX_ARG_REQUIRED
 } jerryx_arg_optional_t;
 
+/**
+ * Indicates the rounding policy which will be chosen to transform an integer.
+ */
+typedef enum
+{
+  JERRYX_ARG_ROUND, /**< round */
+  JERRYX_ARG_FLOOR, /**< floor */
+  JERRYX_ARG_CEIL /**< ceil */
+} jerryx_arg_round_t;
+
+/**
+ * Indicates the clamping policy which will be chosen to transform an integer.
+ * If the policy is NO_CLAMP, and the number is out of range,
+ * then the transformer will throw a range error.
+ */
+typedef enum
+{
+  JERRYX_ARG_CLAMP,/**< clamp the number when it is out of range */
+  JERRYX_ARG_NO_CLAMP /**< throw a range error */
+} jerryx_arg_clamp_t;
+
 /* Inline functions for initializing jerryx_arg_t */
+
+#define JERRYX_ARG_INTEGER(type) \
+  static inline jerryx_arg_t \
+  jerryx_arg_ ## type (type ## _t *dest, \
+                       jerryx_arg_round_t round_flag, \
+                       jerryx_arg_clamp_t clamp_flag, \
+                       jerryx_arg_coerce_t coerce_flag, \
+                       jerryx_arg_optional_t opt_flag);
+
+JERRYX_ARG_INTEGER (uint8)
+JERRYX_ARG_INTEGER (int8)
+JERRYX_ARG_INTEGER (uint16)
+JERRYX_ARG_INTEGER (int16)
+JERRYX_ARG_INTEGER (uint32)
+JERRYX_ARG_INTEGER (int32)
+
+#undef JERRYX_ARG_INTEGER
+
 static inline jerryx_arg_t
-jerryx_arg_number (double *dest, jerryx_arg_coerce_t conv_flag, jerryx_arg_optional_t opt_flag);
+jerryx_arg_number (double *dest, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
-jerryx_arg_boolean (bool *dest, jerryx_arg_coerce_t conv_flag, jerryx_arg_optional_t opt_flag);
+jerryx_arg_boolean (bool *dest, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
-jerryx_arg_string (char *dest, uint32_t size, jerryx_arg_coerce_t conv_flag, jerryx_arg_optional_t opt_flag);
+jerryx_arg_string (char *dest, uint32_t size, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
 jerryx_arg_function (jerry_value_t *dest, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t

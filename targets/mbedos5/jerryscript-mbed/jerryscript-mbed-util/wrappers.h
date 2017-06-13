@@ -37,6 +37,9 @@ NAME_FOR_GLOBAL_FUNCTION(NAME) (const jerry_value_t function_obj_p, \
 #define REGISTER_GLOBAL_FUNCTION(NAME) \
   jsmbed_wrap_register_global_function ( # NAME, NAME_FOR_GLOBAL_FUNCTION(NAME) )
 
+#define REGISTER_GLOBAL_FUNCTION_WITH_HANDLER(NAME, HANDLER) \
+  jsmbed_wrap_register_global_function ( # NAME, HANDLER )
+
 // Class constructors
 #define DECLARE_CLASS_CONSTRUCTOR(CLASS) \
 jerry_value_t \

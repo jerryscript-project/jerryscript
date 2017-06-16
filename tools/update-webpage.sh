@@ -32,6 +32,7 @@ DEBUGGER_MD="07.DEBUGGER.md"
 CODING_STANDARDS_MD="08.CODING-STANDARDS.md"
 EXT_REFERENCE_ARG_MD="09.EXT-REFERENCE-ARG.md"
 EXT_REFERENCE_HANDLER_MD="10.EXT-REFERENCE-HANDLER.md"
+EXT_REFERENCE_AUTORELEASE_MD="11.EXT-REFERENCE-AUTORELEASE.md"
 
 declare -A titles
 
@@ -45,6 +46,7 @@ titles[$DEBUGGER_MD]="Debugger"
 titles[$CODING_STANDARDS_MD]="Coding Standards"
 titles[$EXT_REFERENCE_ARG_MD]="'Extension API: Argument Validation'"
 titles[$EXT_REFERENCE_HANDLER_MD]="'Extension API: External Function Handlers'"
+titles[$EXT_REFERENCE_AUTORELEASE_MD]="'Extension API: Autorelease Values'"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`

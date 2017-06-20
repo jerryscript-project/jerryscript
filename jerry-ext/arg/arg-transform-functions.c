@@ -63,7 +63,7 @@ jerryx_arg_transform_number_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
 } /* jerryx_arg_transform_number_strict */
 
 /**
- * Tranform a JS argument to a double. Type coercion is allowed.
+ * Transform a JS argument to a double. Type coercion is allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
@@ -251,7 +251,7 @@ jerryx_arg_transform_native_pointer (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
   if (!jerry_value_is_object (js_arg))
   {
     return jerry_create_error (JERRY_ERROR_TYPE,
-                               (jerry_char_t *) "It is not a object.");
+                               (jerry_char_t *) "It is not an object.");
   }
 
   const jerry_object_native_info_t *expected_info_p;
@@ -268,6 +268,27 @@ jerryx_arg_transform_native_pointer (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
 
   return jerry_create_undefined ();
 } /* jerryx_arg_transform_native_pointer */
+
+/**
+ * Check whether the JS object's properties have expected types, and transform them into native args.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_object_props (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                   const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
+
+  const jerryx_arg_object_props_t *object_props = (const jerryx_arg_object_props_t *) c_arg_p->extra_info;
+
+  return jerryx_arg_transform_object_properties (js_arg,
+                                                 object_props->name_p,
+                                                 object_props->name_cnt,
+                                                 object_props->c_arg_p,
+                                                 object_props->c_arg_cnt);
+} /* jerryx_arg_transform_object_props */
 
 /**
  * Define transformer for optional argument.
@@ -288,6 +309,7 @@ JERRYX_ARG_TRANSFORM_OPTIONAL (string)
 JERRYX_ARG_TRANSFORM_OPTIONAL (string_strict)
 JERRYX_ARG_TRANSFORM_OPTIONAL (function)
 JERRYX_ARG_TRANSFORM_OPTIONAL (native_pointer)
+JERRYX_ARG_TRANSFORM_OPTIONAL (object_props)
 
 /**
  * Ignore the JS argument.

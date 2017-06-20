@@ -22,6 +22,7 @@
 #include "test-common.h"
 
 #include <string.h>
+#include <jerryscript-ext/arg.h>
 
 const char *test_source = (
                            "var arg1 = true;"
@@ -40,6 +41,15 @@ const char *test_source = (
                            "test_validator2.call(obj_a, 5);"
                            "test_validator2.call(obj_b, 5);"
                            "test_validator2.call(obj_a, 1);"
+                           "var obj1 = {prop1:true, prop2:'1.5'};"
+                           "test_validator_prop1(obj1);"
+                           "test_validator_prop2(obj1);"
+                           "test_validator_prop2();"
+                           "var obj2 = {prop1:true};"
+                           "Object.defineProperty(obj2, 'prop2', {"
+                           "  get: function() { throw new TypeError('prop2 error') }"
+                           "});"
+                           "test_validator_prop3(obj2);"
                            );
 
 static const jerry_object_native_info_t thing_a_info =
@@ -67,6 +77,8 @@ static my_type_b_t my_thing_b;
 
 static int validator1_count = 0;
 static int validator2_count = 0;
+
+static int validator_prop_count = 0;
 
 /**
  * The handler should have following arguments:
@@ -211,6 +223,129 @@ test_validator2_handler (const jerry_value_t func_obj_val __attribute__((unused)
   return jerry_create_undefined ();
 } /* test_validator2_handler */
 
+/**
+ * Calling jerryx_arg_transform_object_properties directly.
+ */
+static jerry_value_t
+test_validator_prop1_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                              const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                              const jerry_value_t args_p[], /**< arguments list */
+                              const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+{
+  bool native1 = false;
+  double native2 = 0;
+  double native3 = 3;
+
+  const char *name_p[] = {"prop1", "prop2", "prop3"};
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native3, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL)
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
+                                                                (const jerry_char_t **) name_p,
+                                                                3,
+                                                                mapping,
+                                                                3);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (native1);
+  TEST_ASSERT (native2 == 1.5);
+  TEST_ASSERT (native3 == 3);
+
+  validator_prop_count ++;
+
+  return jerry_create_undefined ();
+} /* test_validator_prop1_handler */
+
+/**
+ * Calling jerryx_arg_transform_object_properties indirectly by
+ * using jerryx_arg_object_properties.
+ */
+static jerry_value_t
+test_validator_prop2_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                              const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                              const jerry_value_t args_p[], /**< arguments list */
+                              const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+{
+  bool native1 = false;
+  double native2 = 0;
+  double native3 = 3;
+
+  jerryx_arg_object_props_t prop_info;
+
+  const char *name_p[] = { "prop1", "prop2", "prop3" };
+
+  jerryx_arg_t prop_mapping[] =
+  {
+    jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native3, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL)
+  };
+
+  prop_info.name_p = (const jerry_char_t **) name_p;
+  prop_info.name_cnt = 3;
+  prop_info.c_arg_p = prop_mapping;
+  prop_info.c_arg_cnt = 3;
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_object_properties (&prop_info, JERRYX_ARG_OPTIONAL),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p, 1, mapping, 1);
+
+
+  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+
+  if (validator_prop_count == 1)
+  {
+    TEST_ASSERT (native1);
+    TEST_ASSERT (native2 == 1.5);
+    TEST_ASSERT (native3 == 3);
+  }
+
+  validator_prop_count ++;
+
+  return jerry_create_undefined ();
+} /* test_validator_prop2_handler */
+
+static jerry_value_t
+test_validator_prop3_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                              const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                              const jerry_value_t args_p[], /**< arguments list */
+                              const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+{
+  bool native1 = false;
+  bool native2 = true;
+
+  const char *name_p[] = { "prop1", "prop2" };
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_boolean (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_boolean (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
+                                                                (const jerry_char_t **) name_p,
+                                                                2,
+                                                                mapping,
+                                                                2);
+
+  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!native1);
+  TEST_ASSERT (native2);
+
+  validator_prop_count ++;
+  jerry_release_value (is_ok);
+
+  return jerry_create_undefined ();
+} /* test_validator_prop3_handler */
+
 static jerry_value_t
 create_object_a_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
                          const jerry_value_t this_val, /**< this value */
@@ -272,6 +407,9 @@ main (void)
   register_js_function ("test_validator2", test_validator2_handler);
   register_js_function ("MyObjectA", create_object_a_handler);
   register_js_function ("MyObjectB", create_object_b_handler);
+  register_js_function ("test_validator_prop1", test_validator_prop1_handler);
+  register_js_function ("test_validator_prop2", test_validator_prop2_handler);
+  register_js_function ("test_validator_prop3", test_validator_prop3_handler);
 
   jerry_value_t parsed_code_val = jerry_parse ((jerry_char_t *) test_source, strlen (test_source), false);
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
@@ -280,6 +418,7 @@ main (void)
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (validator1_count == 4);
   TEST_ASSERT (validator2_count == 3);
+  TEST_ASSERT (validator_prop_count == 4);
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);

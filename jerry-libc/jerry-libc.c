@@ -17,6 +17,7 @@
  * Jerry libc's common functions implementation
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -280,3 +281,76 @@ srand (unsigned int seed) /**< new seed */
   libc_random_gen_state[2] =
   libc_random_gen_state[3] = seed;
 } /* srand */
+
+/**
+ * Convert a string to a long integer.
+ *
+ * The function first discards leading whitespace characters. Then takes an
+ * optional sign followed by as many digits as possible and interprets them as a
+ * numerical value. Additional characters after those that form the number are
+ * ignored.
+ *
+ * Note:
+ *      If base is not 10, the behaviour is undefined.
+ *      If the value read is out-of-range, the behaviour is undefined.
+ *      The implementation never sets errno.
+ *
+ * @return the integer value of str.
+ */
+long int
+strtol (const char *nptr, /**< string representation of an integer number */
+        char **endptr, /**< [out] the address of the first non-number character */
+        int base) /**< numerical base or radix (MUST be 10) */
+{
+  assert (base == 10);
+  (void) base; /* Unused. */
+
+  const char *str = nptr;
+
+  /* Skip leading whitespaces. */
+  while (*str == ' ' || *str == '\t' || *str == '\r' || *str == '\n')
+  {
+    str++;
+  }
+
+  bool digits = false;
+  bool positive = true;
+  long int num = 0;
+
+  /* Process optional sign. */
+  if (*str == '-')
+  {
+    positive = false;
+    str++;
+  }
+  else if (*str == '+')
+  {
+    str++;
+  }
+
+  /* Process base-10 digits. */
+  while (*str >= '0' && *str <= '9')
+  {
+    num = num * 10 + (*str - '0');
+    digits = true;
+    str++;
+  }
+
+  /* Set endptr and return result*/
+  if (digits)
+  {
+    if (endptr)
+    {
+      *endptr = (char *) str;
+    }
+    return positive ? num : -num;
+  }
+  else
+  {
+    if (endptr)
+    {
+      *endptr = (char *) nptr;
+    }
+    return 0L;
+  }
+} /* strtol */

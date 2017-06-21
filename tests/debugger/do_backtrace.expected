@@ -28,4 +28,3 @@ Frame 1: tests/debugger/do_backtrace.js:25 (in foo() at line:21, col:1)
 Frame 2: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
 Frame 3: tests/debugger/do_backtrace.js:40
 (jerry-debugger) c
-Connection closed.

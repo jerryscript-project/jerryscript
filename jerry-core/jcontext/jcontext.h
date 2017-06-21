@@ -121,6 +121,7 @@ typedef struct
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
   uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
   int debugger_connection; /**< holds the file descriptor of the socket communication */
+  uint16_t debugger_port; /**< debugger socket communication port */
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JMEM_STATS

@@ -62,7 +62,6 @@ typedef enum
   ECMA_INIT_SHOW_OPCODES        = (1u << 0), /**< dump byte-code to log after parse */
   ECMA_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
   ECMA_INIT_MEM_STATS           = (1u << 2), /**< dump memory statistics */
-  ECMA_INIT_DEBUGGER            = (1u << 4), /**< enable all features required by debugging */
 } ecma_init_flag_t;
 
 /**

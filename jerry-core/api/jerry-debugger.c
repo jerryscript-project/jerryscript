@@ -88,3 +88,31 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
   JERRY_UNUSED (enable_stop_at_breakpoint);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_stop_at_breakpoint */
+
+/**
+ * Debugger server initialization. Must be called after jerry_init.
+ */
+void
+jerry_debugger_init (uint16_t port) /**< server port number */
+{
+#ifdef JERRY_DEBUGGER
+  JERRY_CONTEXT (debugger_port) = port;
+  jerry_debugger_accept_connection ();
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (port);
+#endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_init */
+
+/**
+ * Debugger server shutdown. Must be called before jerry_cleanup.
+ */
+void
+jerry_debugger_cleanup (void)
+{
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_close_connection ();
+  }
+#endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_cleanup */

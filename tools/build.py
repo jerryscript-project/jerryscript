@@ -74,8 +74,6 @@ def get_arguments():
                         help='build minimal version of the jerry command line tool (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable the jerry debugger (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-debugger-port', metavar='N', action='store', type=int, default=5001,
-                        help='add custom port number (default: %(default)s)')
     parser.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='build jerry-ext (default: %(default)s)')
     parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
@@ -162,7 +160,6 @@ def generate_build_options(arguments):
 
     build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
     build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
-    build_options.append('-DFEATURE_DEBUGGER_PORT=%d' % arguments.jerry_debugger_port)
     build_options.append('-DFEATURE_EXTERNAL_CONTEXT=%s' % arguments.external_context)
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)

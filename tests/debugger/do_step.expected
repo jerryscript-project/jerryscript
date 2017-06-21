@@ -23,4 +23,3 @@ Stopped at tests/debugger/do_step.js:29 (in f2() at line:26, col:1)
 Frame 0: tests/debugger/do_step.js:29 (in f2() at line:26, col:1)
 Frame 1: tests/debugger/do_step.js:33
 (jerry-debugger) c
-Connection closed.

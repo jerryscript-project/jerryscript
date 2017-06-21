@@ -51,8 +51,7 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
 JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES
                      && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
-                     && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS
-                     && (int) ECMA_INIT_DEBUGGER == (int) JERRY_INIT_DEBUGGER,
+                     && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
 
 #ifndef JERRY_JS_PARSER
@@ -157,13 +156,6 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 
   jmem_init ();
   ecma_init ();
-
-#ifdef JERRY_DEBUGGER
-  if (flags & JERRY_INIT_DEBUGGER)
-  {
-    jerry_debugger_accept_connection ();
-  }
-#endif /* JERRY_DEBUGGER */
 } /* jerry_init */
 
 /**
@@ -184,14 +176,6 @@ jerry_cleanup (void)
   }
 
   ecma_finalize ();
-
-#ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_close_connection ();
-  }
-#endif /* JERRY_DEBUGGER */
-
   jmem_finalize ();
   jerry_make_api_unavailable ();
 } /* jerry_cleanup */

@@ -24,4 +24,3 @@ Stopped at breakpoint:2 tests/debugger/do_break.js:36 (in test() at line:20, col
 (jerry-debugger) continue
 Stopped at breakpoint:3 tests/debugger/do_break.js:33 (in f() at line:31, col:3)
 (jerry-debugger) c
-Connection closed.

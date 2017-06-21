@@ -56,7 +56,7 @@ typedef enum
   JERRY_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
   JERRY_INIT_MEM_STATS           = (1u << 2), /**< dump memory statistics */
   JERRY_INIT_MEM_STATS_SEPARATE  = (1u << 3), /**< deprecated, an unused placeholder now */
-  JERRY_INIT_DEBUGGER            = (1u << 4), /**< enable all features required by debugging */
+  JERRY_INIT_DEBUGGER            = (1u << 4), /**< deprecated, an unused placeholder now */
 } jerry_init_flag_t;
 
 /**

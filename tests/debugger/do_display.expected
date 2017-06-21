@@ -50,4 +50,3 @@ Source: tests/debugger/do_display.js
 (jerry-debugger) c
 Stopped at breakpoint:4 tests/debugger/do_display.js:18 (in d() at line:18, col:1)
 (jerry-debugger) c
-Connection closed.

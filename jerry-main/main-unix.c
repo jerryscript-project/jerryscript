@@ -279,6 +279,7 @@ typedef enum
   OPT_SHOW_OP,
   OPT_SHOW_RE_OP,
   OPT_DEBUG_SERVER,
+  OPT_DEBUG_PORT,
   OPT_SAVE_SNAP_GLOBAL,
   OPT_SAVE_SNAP_EVAL,
   OPT_SAVE_LIT_LIST,
@@ -308,6 +309,8 @@ static const cli_opt_t main_opts[] =
                .help = "dump regexp byte-code"),
   CLI_OPT_DEF (.id = OPT_DEBUG_SERVER, .longopt = "start-debug-server",
                .help = "start debug server and wait for a connecting client"),
+  CLI_OPT_DEF (.id = OPT_DEBUG_PORT, .longopt = "debug-port", .meta = "NUM",
+               .help = "debug server port (default: 5001)"),
   CLI_OPT_DEF (.id = OPT_SAVE_SNAP_GLOBAL, .longopt = "save-snapshot-for-global", .meta = "FILE",
                .help = "save binary snapshot of parsed JS input (for execution in global context)"),
   CLI_OPT_DEF (.id = OPT_SAVE_SNAP_EVAL, .longopt = "save-snapshot-for-eval", .meta = "FILE",
@@ -399,6 +402,9 @@ main (int argc,
   bool is_save_literals_mode_in_c_format_or_list = false;
   const char *save_literals_file_name_p = NULL;
 
+  bool start_debug_server = false;
+  uint16_t debug_port = 5001;
+
   bool is_repl_mode = false;
   bool no_prompt = false;
 
@@ -453,7 +459,15 @@ main (int argc,
       {
         if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
         {
-          flags |= JERRY_INIT_DEBUGGER;
+          start_debug_server = true;
+        }
+        break;
+      }
+      case OPT_DEBUG_PORT:
+      {
+        if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
+        {
+          debug_port = (uint16_t) cli_consume_int (&cli_state);
         }
         break;
       }
@@ -567,6 +581,10 @@ main (int argc,
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
   jerry_init (flags);
+  if (start_debug_server)
+  {
+    jerry_debugger_init (debug_port);
+  }
 
   register_js_function ("assert", jerryx_handler_assert);
   register_js_function ("gc", jerryx_handler_gc);
@@ -769,6 +787,11 @@ main (int argc,
     }
   }
   jerry_release_value (ret_value);
+
+  if (start_debug_server)
+  {
+    jerry_debugger_cleanup ();
+  }
   jerry_cleanup ();
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
   free (instance_p);

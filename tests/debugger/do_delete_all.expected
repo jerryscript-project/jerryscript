@@ -14,4 +14,3 @@ Breakpoint 3 at tests/debugger/do_delete_all.js:21 (in delete_test() at line:20,
 (jerry-debugger) next
 Stopped at tests/debugger/do_delete_all.js:16
 (jerry-debugger) c
-Connection closed.

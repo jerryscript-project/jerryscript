@@ -19,4 +19,3 @@ Breakpoint 3 at tests/debugger/do_delete.js:18
 (jerry-debugger) list
 1: tests/debugger/do_delete.js:17
 (jerry-debugger) c
-Connection closed.

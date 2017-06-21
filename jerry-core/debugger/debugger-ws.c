@@ -25,13 +25,6 @@
 #include <unistd.h>
 
 /**
- * Debugger socket communication port.
- */
-#ifndef JERRY_DEBUGGER_PORT
-#define JERRY_DEBUGGER_PORT 5001
-#endif
-
-/**
  * Masking-key is available.
  */
 #define JERRY_DEBUGGER_WEBSOCKET_MASK_BIT 0x80
@@ -314,10 +307,8 @@ jerry_debugger_accept_connection (void)
   struct sockaddr_in addr;
   socklen_t sin_size = sizeof (struct sockaddr_in);
 
-  JERRY_ASSERT (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_DEBUGGER);
-
   addr.sin_family = AF_INET;
-  addr.sin_port = htons (JERRY_DEBUGGER_PORT);
+  addr.sin_port = htons (JERRY_CONTEXT (debugger_port));
   addr.sin_addr.s_addr = INADDR_ANY;
 
   if ((server_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)

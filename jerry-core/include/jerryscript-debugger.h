@@ -35,6 +35,9 @@ void jerry_debugger_stop (void);
 void jerry_debugger_continue (void);
 void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
 
+void jerry_debugger_init (uint16_t port);
+void jerry_debugger_cleanup (void);
+
 /**
  * @}
  */

@@ -29,7 +29,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     CHECK_ARGUMENT_COUNT(InterruptIn, rise, (args_count == 1));
 
     // Detach the rise callback when InterruptIn::rise(null) is called
-    if (jerry_value_is_null(args[1])) {
+    if (jerry_value_is_null(args[0])) {
         uintptr_t native_handle;
         jerry_get_object_native_handle(this_obj, &native_handle);
 
@@ -44,6 +44,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
             // Ensure that the EventLoop frees memory used by the callback.
             mbed::js::EventLoop::getInstance().dropCallback(cb_func);
         }
+        jerry_release_value(cb_func);
 
         this_interruptin->rise(0);
 
@@ -82,7 +83,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     CHECK_ARGUMENT_COUNT(InterruptIn, fall, (args_count == 1));
 
     // Detach the fall callback when InterruptIn::fall(null) is called
-    if (jerry_value_is_null(args[1])) {
+    if (jerry_value_is_null(args[0])) {
         uintptr_t native_handle;
         jerry_get_object_native_handle(this_obj, &native_handle);
 
@@ -97,6 +98,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
             // Ensure that the EventLoop frees memory used by the callback.
             mbed::js::EventLoop::getInstance().dropCallback(cb_func);
         }
+        jerry_release_value(cb_func);
 
         this_interruptin->fall(0);
 

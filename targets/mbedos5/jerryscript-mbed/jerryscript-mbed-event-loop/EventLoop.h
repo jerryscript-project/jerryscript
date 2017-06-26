@@ -52,9 +52,6 @@ class EventLoop {
     Callback<void()> wrapFunction(jerry_value_t f) {
         MBED_ASSERT(jerry_value_is_function(f));
 
-        // not sure if this is necessary?
-        jerry_acquire_value(f);
-
         // we need to return a callback that'll schedule this
         Callback<void(uint32_t)> cb_raw(this, &EventLoop::callback);
         BoundCallback<void(uint32_t)> *cb = new BoundCallback<void(uint32_t)>(cb_raw, f);
@@ -65,8 +62,6 @@ class EventLoop {
     }
 
     void dropCallback(jerry_value_t f) {
-        jerry_release_value(f);
-
         for (std::vector<std::pair<jerry_value_t, BoundCallback<void(uint32_t)>*> >::iterator it = bound_callbacks.begin(); it != bound_callbacks.end(); it++) {
             std::pair<jerry_value_t, BoundCallback<void(uint32_t)>*> element = *it;
 

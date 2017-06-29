@@ -229,6 +229,8 @@ jerry_debugger_sleep (unsigned milliseconds) /**< suspending time */
   , NULL);
 #elif defined (HAVE_UNISTD_H)
   usleep ((useconds_t) milliseconds * 1000);
+#else /* If neither of the libs found */
+  JERRY_UNUSED (milliseconds);
 #endif /* HAVE_TIME_H */
 } /* jerry_debugger_sleep */
 

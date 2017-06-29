@@ -117,6 +117,23 @@ class JerryBreakpoint(object):
         return ("Breakpoint(line:%d, offset:%d, active_index:%d)"
                 % (self.line, self.offset, self.active_index))
 
+class JerryPendingBreakpoint(object):
+    def __init__(self, line=None, source_name=None, function=None):
+        self.function = function
+        self.line = line
+        self.source_name = source_name
+
+        self.index = -1
+
+    def __str__(self):
+        result = self.source_name or ""
+        if self.line:
+            result += ":%d" % (self.line)
+        else:
+            result += "%s()" % (self.function)
+        return result
+
+
 
 class JerryFunction(object):
 
@@ -188,16 +205,9 @@ class DebuggerPrompt(Cmd):
         if args == "":
             print("Error: Breakpoint index expected")
         else:
-            set_breakpoint(self.debugger, False, args)
+            set_breakpoint(self.debugger, args)
 
     do_b = do_break
-
-    def do_fbreak(self, args):
-        """ Insert breakpoints on the given lines or functions, if not found add the pending list """
-        if args == "":
-            print("Error: Breakpoint index expected")
-        else:
-            set_breakpoint(self.debugger, True, args)
 
     def exec_command(self, args, command_id):
         self.stop = True
@@ -231,26 +241,32 @@ class DebuggerPrompt(Cmd):
     do_n = do_next
 
     def do_list(self, args):
-        """ Lists the available breakpoints, use 'pending' to list all the available pending breakpoints """
-        if args == "pending":
-            for index, breakpoint in enumerate(self.debugger.pending_breakpoint_list):
-                print("%d: %s" % (index, breakpoint))
-            return
+        """ Lists the available breakpoints """
+        if self.debugger.active_breakpoint_list:
+            print("=== %sActive breakpoints %s ===" % (self.debugger.green_bg, self.debugger.nocolor))
+            for breakpoint in self.debugger.active_breakpoint_list.values():
+                print(" %d: %s" % (breakpoint.active_index, breakpoint))
 
-        for breakpoint in self.debugger.active_breakpoint_list.values():
-            print("%d: %s" % (breakpoint.active_index, breakpoint))
+        if self.debugger.pending_breakpoint_list:
+            print("=== %sPending breakpoints%s ===" % (self.debugger.yellow_bg, self.debugger.nocolor))
+            for breakpoint in self.debugger.pending_breakpoint_list.values():
+                print(" %d: %s (pending)" % (breakpoint.index, breakpoint))
+
+        if not self.debugger.active_breakpoint_list and not self.debugger.pending_breakpoint_list:
+            print("No breakpoints")
 
     def do_delete(self, args):
-        """ Delete the given breakpoint, use 'delete all' to clear the breakpoints in the whole program"""
+        """ Delete the given breakpoint, use 'delete all|active|pending' to clear all the given breakpoints """
         if not args:
             print("Error: Breakpoint index expected")
             return
         elif args == "all":
-            for i in self.debugger.active_breakpoint_list.values():
-                breakpoint = self.debugger.active_breakpoint_list[i.active_index]
-                del self.debugger.active_breakpoint_list[i.active_index]
-                breakpoint.active_index = -1
-                self.debugger.send_breakpoint(breakpoint)
+            self.debugger.delete_active()
+            self.debugger.delete_pending()
+        elif args == "pending":
+            self.debugger.delete_pending()
+        elif args == "active":
+            self.debugger.delete_active()
         else:
             try:
                 breakpoint_index = int(args)
@@ -263,30 +279,10 @@ class DebuggerPrompt(Cmd):
                 del self.debugger.active_breakpoint_list[breakpoint_index]
                 breakpoint.active_index = -1
                 self.debugger.send_breakpoint(breakpoint)
+            elif breakpoint_index in self.debugger.pending_breakpoint_list:
+                del self.debugger.pending_breakpoint_list[breakpoint_index]
             else:
                 print("Error: Breakpoint %d not found" % (breakpoint_index))
-
-    def do_pendingdel(self, args):
-        """ Delete the given pending breakpoints from the list """
-        if not args:
-            print("Error: Pending breakpoint index expected")
-            return
-
-        else:
-            try:
-                breakpoint_index = int(args)
-            except ValueError as val_errno:
-                print("Error: Integer number expectes, %s" % (val_errno))
-                return
-
-            if breakpoint_index <= len(self.debugger.pending_breakpoint_list):
-                try:
-                    del self.debugger.pending_breakpoint_list[breakpoint_index]
-                except IndexError as index_errno:
-                    print("Error: Index not found, %s" % (index_errno))
-                    return
-            else:
-                print("Error: Pending breakpoint %d not found" % (breakpoint_index))
 
     def exec_backtrace(self, args):
         max_depth = 0
@@ -470,12 +466,15 @@ class JerryDebugger(object):
         self.last_breakpoint_hit = None
         self.next_breakpoint_index = 0
         self.active_breakpoint_list = {}
-        self.pending_breakpoint_list = []
+        self.pending_breakpoint_list = {}
         self.line_list = Multimap()
         self.display = 0
         self.default_viewrange = 3
         self.green = ''
         self.red = ''
+        self.yellow = ''
+        self.green_bg = ''
+        self.yellow_bg = ''
         self.nocolor = ''
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
@@ -560,6 +559,25 @@ class JerryDebugger(object):
                 message = message[bytes_send:]
             size -= bytes_send
 
+    def delete_active(self):
+        for i in self.active_breakpoint_list.values():
+            breakpoint = self.active_breakpoint_list[i.active_index]
+            del self.active_breakpoint_list[i.active_index]
+            breakpoint.active_index = -1
+            self.send_breakpoint(breakpoint)
+
+    def delete_pending(self):
+        self.pending_breakpoint_list.clear()
+
+    def breakpoint_pending_exists(self, breakpoint):
+        for existing_bp in self.pending_breakpoint_list.values():
+            if (breakpoint.line and existing_bp.source_name == breakpoint.source_name and \
+                  existing_bp.line == breakpoint.line) \
+               or (not breakpoint.line and existing_bp.function == breakpoint.function):
+                return True
+
+        return False
+
     def send_breakpoint(self, breakpoint):
         message = struct.pack(self.byte_order + "BBIBB" + self.cp_format + self.idx_format,
                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
@@ -601,6 +619,9 @@ class JerryDebugger(object):
         self.green = '\033[92m'
         self.nocolor = '\033[0m'
         self.red = '\033[31m'
+        self.yellow = '\033[93m'
+        self.green_bg = '\033[42m'
+        self.yellow_bg = '\033[43m'
 
     def get_message(self, blocking):
         # Connection was closed
@@ -756,9 +777,12 @@ def parse_source(debugger, data):
         logging.debug("Pending breakpoints list: %s", debugger.pending_breakpoint_list)
 
         for breakpoint in debugger.pending_breakpoint_list:
-            if isinstance(breakpoint, int):
-                breakpoint = source_code_name + ":" + str(breakpoint)
-            set_breakpoint(debugger, False, breakpoint)
+            if debugger.pending_breakpoint_list[breakpoint].line:
+                breakpoint = debugger.pending_breakpoint_list[breakpoint].source_name + ":" \
+                             + str(debugger.pending_breakpoint_list[breakpoint].line)
+            else:
+                breakpoint = debugger.pending_breakpoint_list[breakpoint].function
+            set_breakpoint(debugger, breakpoint)
     else:
         logging.debug("No pending breakpoints")
 
@@ -794,7 +818,8 @@ def print_source(debugger, line_num):
 
     for i in range(start, end):
         if i == last_bp.line - 1:
-            print("%s%4d%s %s>%s %s" % (debugger.green, i + 1, debugger.nocolor, debugger.red, debugger.nocolor, lines[i]))
+            print("%s%4d%s %s>%s %s" % (debugger.green, i + 1, debugger.nocolor, debugger.red, \
+                                        debugger.nocolor, lines[i]))
         else:
             print("%s%4d%s   %s" % (debugger.green, i + 1, debugger.nocolor, lines[i]))
 
@@ -818,25 +843,34 @@ def release_function(debugger, data):
 
 
 def enable_breakpoint(debugger, breakpoint):
-    if breakpoint.active_index < 0:
-        debugger.next_breakpoint_index += 1
+    if isinstance(breakpoint, JerryPendingBreakpoint):
+        if not debugger.breakpoint_pending_exists(breakpoint):
+            debugger.next_breakpoint_index += 1
+            breakpoint.index = debugger.next_breakpoint_index
+            debugger.pending_breakpoint_list[debugger.next_breakpoint_index] = breakpoint
+            print("%sPending breakpoint%s at %s" % (debugger.yellow, debugger.nocolor, breakpoint))
+        else:
+            print("%sPending breakpoint%s already exists" % (debugger.yellow, debugger.nocolor))
 
-        debugger.active_breakpoint_list[debugger.next_breakpoint_index] = breakpoint
-        breakpoint.active_index = debugger.next_breakpoint_index
-        debugger.send_breakpoint(breakpoint)
+    else:
+        if breakpoint.active_index < 0:
+            debugger.next_breakpoint_index += 1
+            debugger.active_breakpoint_list[debugger.next_breakpoint_index] = breakpoint
+            breakpoint.active_index = debugger.next_breakpoint_index
+            debugger.send_breakpoint(breakpoint)
 
-    print ("Breakpoint %d at %s" % (breakpoint.active_index, breakpoint))
+        print("%sBreakpoint %d %sat %s" % (debugger.green, breakpoint.active_index, debugger.nocolor, breakpoint))
 
 
-def set_breakpoint(debugger, pending, string):
+def set_breakpoint(debugger, string):
     line = re.match("(.*):(\\d+)$", string)
     found = False
 
     if line:
         source_name = line.group(1)
-        line = int(line.group(2))
+        new_line = int(line.group(2))
 
-        for breakpoint in debugger.line_list.get(line):
+        for breakpoint in debugger.line_list.get(new_line):
             func_source = breakpoint.function.source_name
             if (source_name == func_source or
                     func_source.endswith("/" + source_name) or
@@ -852,13 +886,16 @@ def set_breakpoint(debugger, pending, string):
                 found = True
 
     if not found:
-        print("Breakpoint not found")
-        if pending:
+        print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \
+             (debugger.yellow, debugger.nocolor))
+        ans = sys.stdin.readline()
+        if ans in ['yes\n', 'y\n']:
             if line:
-                debugger.pending_breakpoint_list.append(line)
+                breakpoint = JerryPendingBreakpoint(int(line.group(2)), line.group(1))
             else:
-                debugger.pending_breakpoint_list.append(string)
-            print ("Pending breakpoint added")
+                breakpoint = JerryPendingBreakpoint(function=string)
+            enable_breakpoint(debugger, breakpoint)
+
     return
 
 

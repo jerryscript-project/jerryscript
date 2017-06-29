@@ -19,6 +19,28 @@
 #include "mbed.h"
 
 /**
+ * InterruptIn#destructor
+ *
+ * Called if/when the InterruptIn object is GC'ed.
+ */
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn) (void *void_ptr) {
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
+
+    native_ptr->rise(0);
+    native_ptr->fall(0);
+    delete native_ptr;
+}
+
+/**
+ * Type infomation of the native InterruptIn pointer
+ *
+ * Set InterruptIn#destructor as the free callback.
+ */
+static const jerry_object_native_info_t native_obj_type_info = {
+    .free_cb = NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn)
+};
+
+/**
  * InterruptIn#rise (native JavaScript method)
  *
  * Register a rise callback for an InterruptIn
@@ -30,10 +52,16 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
 
     // Detach the rise callback when InterruptIn::rise(null) is called
     if (jerry_value_is_null(args[0])) {
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-        InterruptIn *this_interruptin = (InterruptIn*) native_handle;
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+        }
+
+        InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
         jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_rise");
         jerry_value_t cb_func = jerry_get_property(this_obj, property_name);
@@ -46,7 +74,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
         }
         jerry_release_value(cb_func);
 
-        this_interruptin->rise(0);
+        native_ptr->rise(0);
 
         return jerry_create_undefined();
     }
@@ -54,15 +82,22 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     // Assuming we actually have a callback now...
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, rise, 0, function);
 
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
-    InterruptIn *this_interruptin = reinterpret_cast<InterruptIn*>(native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+    }
+
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     jerry_value_t f = args[0];
 
     // Pass the function to EventLoop.
     mbed::Callback<void()> cb = mbed::js::EventLoop::getInstance().wrapFunction(f);
-    this_interruptin->rise(cb);
+    native_ptr->rise(cb);
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_rise");
@@ -84,10 +119,16 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
 
     // Detach the fall callback when InterruptIn::fall(null) is called
     if (jerry_value_is_null(args[0])) {
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-        InterruptIn *this_interruptin = (InterruptIn*) native_handle;
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+        }
+
+        InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
         jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_fall");
         jerry_value_t cb_func = jerry_get_property(this_obj, property_name);
@@ -100,7 +141,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
         }
         jerry_release_value(cb_func);
 
-        this_interruptin->fall(0);
+        native_ptr->fall(0);
 
         return jerry_create_undefined();
     }
@@ -108,15 +149,22 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     // Assuming we actually have a callback now...
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, fall, 0, function);
 
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
-    InterruptIn *this_interruptin = reinterpret_cast<InterruptIn*>(native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+    }
+
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     jerry_value_t f = args[0];
 
     // Pass the function to EventLoop.
     mbed::Callback<void()> cb = mbed::js::EventLoop::getInstance().wrapFunction(f);
-    this_interruptin->fall(cb);
+    native_ptr->fall(cb);
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_fall");
@@ -137,10 +185,16 @@ DECLARE_CLASS_FUNCTION(InterruptIn, mode) {
     CHECK_ARGUMENT_COUNT(InterruptIn, mode, (args_count == 1));
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, mode, 0, number);
 
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    InterruptIn *native_ptr = reinterpret_cast<InterruptIn*>(native_handle);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+    }
+
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     int pull = jerry_get_number_value(args[0]);
     native_ptr->mode((PinMode)pull);
@@ -156,9 +210,16 @@ DECLARE_CLASS_FUNCTION(InterruptIn, mode) {
 DECLARE_CLASS_FUNCTION(InterruptIn, disable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, disable_irq, (args_count == 0));
 
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
-    InterruptIn *native_ptr = reinterpret_cast<InterruptIn*>(native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+    }
+
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     native_ptr->disable_irq();
     return jerry_create_undefined();
@@ -172,25 +233,19 @@ DECLARE_CLASS_FUNCTION(InterruptIn, disable_irq) {
 DECLARE_CLASS_FUNCTION(InterruptIn, enable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, enable_irq, (args_count == 0));
 
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
-    InterruptIn *native_ptr = reinterpret_cast<InterruptIn*>(native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native InterruptIn pointer");
+    }
+
+    InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     native_ptr->enable_irq();
     return jerry_create_undefined();
-}
-
-/**
- * InterruptIn#destructor
- *
- * Called if/when the InterruptIn object is GC'ed.
- */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn) (uintptr_t handle) {
-    InterruptIn *native_ptr = reinterpret_cast<InterruptIn*>(handle);
-
-    native_ptr->rise(0);
-    native_ptr->fall(0);
-    delete native_ptr;
 }
 
 /**
@@ -205,10 +260,10 @@ DECLARE_CLASS_CONSTRUCTOR(InterruptIn) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, __constructor, 0, number);
     int pin = jerry_get_number_value(args[0]);
 
-    uintptr_t native_handle = (uintptr_t)new InterruptIn((PinName)pin);
+    InterruptIn *native_ptr = new InterruptIn((PinName)pin);
     jerry_value_t js_object = jerry_create_object();
 
-    jerry_set_object_native_handle(js_object, native_handle, NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn));
+    jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
     ATTACH_CLASS_FUNCTION(js_object, InterruptIn, rise);
     ATTACH_CLASS_FUNCTION(js_object, InterruptIn, fall);

@@ -14,7 +14,7 @@
  */
 
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 #include "cli.h"
 
@@ -36,6 +36,180 @@
  * Tab stop (for multi-column display) at:
  */
 #define CLI_LINE_TAB 24
+
+/**
+ * Declare a char VLA and concatenate a program name and a sub-command name
+ * (separated by a single space) into the new array. Useful for printing command
+ * line option usage summary for sub-commands.
+ *
+ * @param CMDNAME name of the new array variable.
+ * @param PROGNAME string containing the name of the program.
+ * @param CMD string continaing the name of the sub-command.
+ */
+#define CLI_CMD_NAME(CMDNAME, PROGNAME, CMD) \
+  char CMDNAME[strlen ((PROGNAME)) + strlen ((CMD)) + 2]; \
+  strncpy (CMDNAME, (PROGNAME), strlen ((PROGNAME))); \
+  CMDNAME[strlen ((PROGNAME))] = ' '; \
+  strncpy (CMDNAME + strlen ((PROGNAME)) + 1, (CMD), strlen ((CMD)) + 1)
+
+/*
+ * Command line option handling
+ */
+
+/**
+ * Initialize a command line option processor.
+ *
+ * @return the state that should be passed to other cli_ functions.
+ */
+cli_state_t
+cli_init (const cli_opt_t *options, /**< array of option definitions, terminated by CLI_OPT_DEFAULT */
+          int argc, /**< number of command line arguments */
+          char **argv) /**< array of command line arguments */
+{
+  return (cli_state_t)
+  {
+    .error = NULL,
+    .arg = NULL,
+    .argc = argc,
+    .argv = argv,
+    .opts = options
+  };
+} /* cli_init */
+
+/**
+ * Checks whether the current argument is an option.
+ *
+ * Note:
+ *   The state->error is not NULL on error and it contains the error message.
+ *
+ * @return the ID of the option that was found or a CLI_OPT_ constant otherwise.
+ */
+int
+cli_consume_option (cli_state_t *state) /**< state of the command line option processor */
+{
+  if (state->error != NULL)
+  {
+    return CLI_OPT_END;
+  }
+
+  if (state->argc <= 0)
+  {
+    state->arg = NULL;
+    return CLI_OPT_END;
+  }
+
+  const char *arg = state->argv[0];
+
+  state->arg = arg;
+
+  if (arg[0] != '-')
+  {
+    return CLI_OPT_DEFAULT;
+  }
+
+  if (arg[1] == '-')
+  {
+    arg += 2;
+
+    for (const cli_opt_t *opt = state->opts; opt->id != CLI_OPT_DEFAULT; opt++)
+    {
+      if (opt->longopt != NULL && strcmp (arg, opt->longopt) == 0)
+      {
+        state->argc--;
+        state->argv++;
+        return opt->id;
+      }
+    }
+
+    state->error = "Unknown long option";
+    return CLI_OPT_END;
+  }
+
+  arg++;
+
+  for (const cli_opt_t *opt = state->opts; opt->id != CLI_OPT_DEFAULT; opt++)
+  {
+    if (opt->opt != NULL && strcmp (arg, opt->opt) == 0)
+    {
+      state->argc--;
+      state->argv++;
+      return opt->id;
+    }
+  }
+
+  state->error = "Unknown option";
+  return CLI_OPT_END;
+} /* cli_consume_option */
+
+/**
+ * Returns the next argument as string.
+ *
+ * Note:
+ *   The state->error is not NULL on error and it contains the error message.
+ *
+ * @return argument string
+ */
+const char *
+cli_consume_string (cli_state_t *state) /**< state of the command line option processor */
+{
+  if (state->error != NULL)
+  {
+    return NULL;
+  }
+
+  if (state->argc <= 0)
+  {
+    state->error = "Expected string argument";
+    state->arg = NULL;
+    return NULL;
+  }
+
+  state->arg = state->argv[0];
+
+  state->argc--;
+  state->argv++;
+  return state->arg;
+} /* cli_consume_string */
+
+/**
+ * Returns the next argument as integer.
+ *
+ * Note:
+ *   The state->error is not NULL on error and it contains the error message.
+ *
+ * @return argument integer
+ */
+int
+cli_consume_int (cli_state_t *state) /**< state of the command line option processor */
+{
+  if (state->error != NULL)
+  {
+    return 0;
+  }
+
+  state->error = "Expected integer argument";
+
+  if (state->argc <= 0)
+  {
+    state->arg = NULL;
+    return 0;
+  }
+
+  state->arg = state->argv[0];
+
+  char *endptr;
+  long int value = strtol (state->arg, &endptr, 10);
+
+  if (*endptr != '\0')
+  {
+    return 0;
+  }
+
+  state->error = NULL;
+  state->argc--;
+  state->argv++;
+  return (int) value;
+} /* cli_consume_int */
 
 /*
  * Print helper functions
@@ -65,6 +239,78 @@ cli_print_prefix (const char *str, /**< string to print */
     printf ("%c", *str++);
   }
 } /* cli_print_prefix */
+
+/**
+ * Print usage summary of options.
+ */
+static void
+cli_opt_usage (const char *progname, /**< program name, typically argv[0] */
+               const cli_opt_t *opts) /**< array of command line option definitions, terminated by CLI_OPT_DEFAULT */
+{
+  int length = (int) strlen (progname);
+  const cli_opt_t *o = opts;
+
+  printf ("%s", progname);
+
+  while (o->id != CLI_OPT_DEFAULT)
+  {
+    const char *opt = o->opt;
+    int opt_length = 2 + 1;
+
+    if (opt == NULL)
+    {
+      opt = o->longopt;
+      opt_length++;
+    }
+
+    opt_length += (int) strlen (opt);
+
+    if (length + 1 + opt_length >= CLI_LINE_LENGTH)
+    {
+      length = CLI_LINE_INDENT - 1;
+      printf ("\n");
+      cli_print_pad (length);
+    }
+    length += opt_length;
+
+    printf (" [");
+
+    if (o->opt != NULL)
+    {
+      printf ("-%s", opt);
+    }
+    else
+    {
+      printf ("--%s", opt);
+    }
+
+    if (o->meta != NULL)
+    {
+      printf (" %s", o->meta);
+    }
+
+    printf ("]");
+
+    o++;
+  }
+
+  if (o->meta != NULL)
+  {
+    const char *opt = o->meta;
+    int opt_length = (int) (2 + strlen (opt));
+
+    if (length + 1 + opt_length >= CLI_LINE_LENGTH)
+    {
+      length = CLI_LINE_INDENT - 1;
+      printf ("\n");
+      cli_print_pad (length);
+    }
+
+    printf (" [%s]", opt);
+  }
+
+  printf ("\n\n");
+} /* cli_opt_usage */
 
 /**
  * Print a help message wrapped into the second column.
@@ -104,205 +350,47 @@ cli_print_help (const char *help) /**< the help message to print */
   }
 } /* cli_print_help */
 
-/*
- * Command line option handling
- */
-
-/**
- * Initialize a command line option processor.
- *
- * @return the state that should be passed iteratively to cli_opt_process.
- */
-cli_opt_state_t
-cli_opt_init (const cli_opt_t *opts, /**< array of option definitions, terminated by CLI_OPT_END */
-              int argc, /**< number of command line arguments */
-              char **argv) /**< array of command line arguments */
-{
-  return (cli_opt_state_t)
-  {
-    .opts = opts,
-    .argc = argc,
-    .argv = argv,
-    .opt = NULL,
-    .arg = NULL
-  };
-} /* cli_opt_init */
-
-/**
- * Perform one step of the command line option processor.
- *
- * @return the ID of the option that was found. (The definition of the found
- *         option (if any) is available via state->opt, while the option
- *         string and its arguments are available via state->arg[0..].)
- *         CLI_OPT_END signals that all command line arguments are consumed.
- */
-int
-cli_opt_process (cli_opt_state_t *state) /**< state of the command line option processor */
-{
-  if (state->argc <= 0)
-  {
-    state->opt = NULL;
-    state->arg = NULL;
-    return CLI_OPT_END;
-  }
-
-  state->arg = state->argv;
-
-  for (const cli_opt_t *o = state->opts; o->id != CLI_OPT_END; o++)
-  {
-    state->opt = o;
-
-    if (o->id == CLI_OPT_POSITIONAL && (state->arg[0][0] != '-' || !strcmp (state->arg[0], "-")))
-    {
-      state->argc--;
-      state->argv++;
-      return CLI_OPT_POSITIONAL;
-    }
-    else if ((o->opt != NULL && !strcmp (o->opt, state->arg[0]))
-        || (o->longopt != NULL && !strcmp (o->longopt, state->arg[0])))
-    {
-      if (state->argc > o->argc)
-      {
-        state->argc -= 1 + o->argc;
-        state->argv += 1 + o->argc;
-        return o->id;
-      }
-      else
-      {
-        state->argv += state->argc;
-        state->argc = 0;
-        return CLI_OPT_INCOMPLETE;
-      }
-    }
-  }
-
-  state->opt = NULL;
-  state->argc--;
-  state->argv++;
-  return CLI_OPT_UNKNOWN;
-} /* cli_opt_process */
-
-/**
- * Print usage summary of options.
- */
-void
-cli_opt_usage (const char *progname, /**< program name, typically argv[0] */
-               const cli_opt_t *opts) /**< array of command line option definitions, terminated by CLI_OPT_END */
-{
-  int length = (int) strlen (progname);
-  printf ("%s", progname);
-
-  for (const cli_opt_t *o = opts; o->id != CLI_OPT_END; o++)
-  {
-    const char *opt = o->opt != NULL ? o->opt : o->longopt;
-    opt = opt != NULL ? opt : o->meta;
-
-    int opt_length = (int) strlen (opt);
-    if (o->argc > 0)
-    {
-      opt_length += o->meta != NULL ? 1 + (int) strlen (o->meta) : o->argc * 2;
-    }
-    opt_length += o->quant == CLI_QUANT_Q || o->quant == CLI_QUANT_A ? 2 : 0;
-    opt_length += o->quant == CLI_QUANT_P || o->quant == CLI_QUANT_A ? 3 : 0;
-
-    if (length + 1 + opt_length >= CLI_LINE_LENGTH)
-    {
-      length = CLI_LINE_INDENT - 1;
-      printf ("\n");
-      cli_print_pad (length);
-    }
-    length += opt_length;
-
-    printf (" ");
-
-    if (o->quant == CLI_QUANT_Q || o->quant == CLI_QUANT_A)
-    {
-      printf ("[");
-    }
-
-    printf ("%s", opt);
-
-    if (o->argc > 0)
-    {
-      if (o->meta != NULL)
-      {
-        printf (" %s", o->meta);
-      }
-      else
-      {
-        for (int i = 0; i < o->argc; i++)
-        {
-          printf (" _");
-        }
-      }
-    }
-
-    if (o->quant == CLI_QUANT_Q || o->quant == CLI_QUANT_A)
-    {
-      printf ("]");
-    }
-
-    if (o->quant == CLI_QUANT_P || o->quant == CLI_QUANT_A)
-    {
-      printf ("...");
-    }
-  }
-
-  printf ("\n");
-} /* cli_opt_usage */
-
 /**
  * Print detailed help for options.
  */
 void
-cli_opt_help (const cli_opt_t *opts) /**< array of command line option definitions, terminated by CLI_OPT_END */
+cli_help (const char *progname, /**< program name, typically argv[0] */
+          const cli_opt_t *options) /**< array of command line option definitions, terminated by CLI_OPT_DEFAULT */
 {
-  for (const cli_opt_t *o = opts; o->id != CLI_OPT_END; o++)
+  cli_opt_usage (progname, options);
+
+  const cli_opt_t *opt = options;
+
+  while (opt->id != CLI_OPT_DEFAULT)
   {
     int length = CLI_LINE_INDENT;
-    cli_print_pad (length);
+    cli_print_pad (CLI_LINE_INDENT);
 
-    if (o->opt != NULL)
+    if (opt->opt != NULL)
     {
-      printf ("%s", o->opt);
-      length += (int) strlen (o->opt);
+      printf ("-%s", opt->opt);
+      length += (int) (strlen (opt->opt) + 1);
     }
 
-    if (o->opt != NULL && o->longopt != NULL)
+    if (opt->opt != NULL && opt->longopt != NULL)
     {
       printf (", ");
       length += 2;
     }
 
-    if (o->longopt != NULL)
+    if (opt->longopt != NULL)
     {
-      printf ("%s", o->longopt);
-      length += (int) strlen (o->longopt);
+      printf ("--%s", opt->longopt);
+      length += (int) (strlen (opt->longopt) + 2);
     }
 
-    if (o->opt == NULL && o->longopt == NULL)
+    if (opt->meta != NULL)
     {
-      printf ("%s", o->meta);
-      length += (int) strlen (o->meta);
-    }
-    else if (o->argc > 0)
-    {
-      if (o->meta != NULL)
-      {
-        printf (" %s", o->meta);
-        length += 1 + (int) strlen (o->meta);
-      }
-      else
-      {
-        for (int i = 0; i < o->argc; i++)
-        {
-          printf (" _");
-        }
-        length += o->argc * 2;
-      }
+      printf (" %s", opt->meta);
+      length += 1 + (int) strlen (opt->meta);
     }
 
-    if (o->help != NULL)
+    if (opt->help != NULL)
     {
       if (length >= CLI_LINE_TAB)
       {
@@ -312,118 +400,34 @@ cli_opt_help (const cli_opt_t *opts) /**< array of command line option definitio
       cli_print_pad (CLI_LINE_TAB - length);
       length = CLI_LINE_TAB;
 
-      cli_print_help (o->help);
+      cli_print_help (opt->help);
     }
 
     printf ("\n");
-  }
-} /* cli_opt_help */
-
-/*
- * Sub-command handling
- */
-
-/**
- * Initialize a sub-command processor.
- *
- * @return the state that should be passed to cli_cmd_process.
- */
-cli_cmd_state_t
-cli_cmd_init (const cli_cmd_t *cmds, /**< array of sub-command definitions, terminated by CLI_CMD_END */
-              int argc, /**< number of command line arguments */
-              char **argv) /**< array of command line arguments */
-{
-  return (cli_cmd_state_t)
-  {
-    .cmds = cmds,
-    .argc = argc,
-    .argv = argv,
-    .cmd = NULL,
-    .arg = NULL
-  };
-} /* cli_cmd_init */
-
-/**
- * Process first element of the command line and determine whether it is a
- * defined sub-command or not.
- *
- * @return the ID of the sub-command that was found.
- */
-int
-cli_cmd_process (cli_cmd_state_t *state) /**< state of the sub-command processor */
-{
-  if (state->argc <= 0 || state->argv[0][0] == '-')
-  {
-    state->cmd = NULL;
-    state->arg = NULL;
-    return CLI_CMD_NONE;
+    opt++;
   }
 
-  state->arg = state->argv;
-
-  for (const cli_cmd_t *c = state->cmds; c->id != CLI_CMD_END; c++)
+  if (opt->help != NULL)
   {
-    state->cmd = c;
+    int length = 0;
 
-    if (!strcmp (c->cmd, state->argv[0]))
+    if (opt->meta != NULL)
     {
-      state->argc--;
-      state->argv++;
-      state->cmd = c;
-      return c->id;
-    }
-  }
+      length = (int) (CLI_LINE_INDENT + strlen (opt->meta));
 
-  state->cmd = NULL;
-  state->argc--;
-  state->argv++;
-  return CLI_CMD_UNKNOWN;
-} /* cli_cmd_process */
-
-/**
- * Print usage summary of all sub-commands.
- */
-void
-cli_cmd_usage (const char *progname, /**< program name, typically argv[0] */
-               const cli_cmd_t *cmds) /**< array of sub-command definitions, terminated by CLI_CMD_END */
-{
-  for (const cli_cmd_t *c = cmds; c->id != CLI_CMD_END; c++)
-  {
-    if (c->cmd != NULL)
-    {
-      CLI_CMD_NAME (cmdname, progname, c->cmd);
-      cli_opt_usage (cmdname, c->opts);
-    }
-  }
-} /* cli_cmd_usage */
-
-/**
- * Print help of all sub-commands.
- */
-void
-cli_cmd_help (const cli_cmd_t *cmds) /**< array of sub-command definitions, terminated by CLI_CMD_END */
-{
-  for (const cli_cmd_t *c = cmds; c->id != CLI_CMD_END; c++)
-  {
-    int length = CLI_LINE_INDENT;
-    cli_print_pad (length);
-
-    printf ("%s", c->cmd);
-    length += (int) strlen (c->cmd);
-
-    if (c->help != NULL)
-    {
-      if (length >= CLI_LINE_TAB)
-      {
-        printf ("\n");
-        length = 0;
-      }
-      cli_print_pad (CLI_LINE_TAB - length);
-      length = CLI_LINE_TAB;
-
-      cli_print_help (c->help);
+      cli_print_pad (CLI_LINE_INDENT);
+      printf ("%s", opt->meta);
     }
 
+    if (length >= CLI_LINE_TAB)
+    {
+      printf ("\n");
+      length = 0;
+    }
+
+    cli_print_pad (CLI_LINE_TAB - length);
+
+    cli_print_help (opt->help);
     printf ("\n");
   }
-} /* cli_cmd_help */
+} /* cli_help */

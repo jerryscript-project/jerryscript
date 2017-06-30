@@ -102,6 +102,8 @@ DEBUGGER_TEST_OPTIONS = [
 
 # Test options for buildoption-test
 JERRY_BUILDOPTIONS = [
+    Options('buildoption_test-examples',
+            ['--examples=on']),
     Options('buildoption_test-lto',
             ['--lto=on']),
     Options('buildoption_test-error_messages',

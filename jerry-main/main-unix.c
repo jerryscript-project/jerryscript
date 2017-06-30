@@ -706,7 +706,7 @@ main (int argc,
           break;
         }
         source_buffer_tail ++;
-        len ++;
+        len++;
       }
       *source_buffer_tail = 0;
 

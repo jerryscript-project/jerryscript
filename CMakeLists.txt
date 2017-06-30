@@ -38,6 +38,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Optional components
+set(EXAMPLES              OFF CACHE BOOL "Build examples?")
 set(JERRY_CMDLINE         ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_MINIMAL OFF CACHE BOOL "Build jerry minimal command line tool?")
 set(JERRY_PORT_DEFAULT    ON  CACHE BOOL "Build default jerry port implementation?")
@@ -59,10 +60,10 @@ if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
   set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE)")
 endif()
 
-if(JERRY_CMDLINE)
+if(JERRY_CMDLINE OR EXAMPLES)
   set(JERRY_EXT ON)
 
-  set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE)")
+  set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE AND/OR EXAMPLES)")
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
@@ -97,6 +98,7 @@ message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN
 message(STATUS "ENABLE_LTO                " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} ${ENABLE_STATIC_LINK_MESSAGE})
 message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
+message(STATUS "EXAMPLES                  " ${EXAMPLES})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
 message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
 message(STATUS "JERRY_PORT_DEFAULT        " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
@@ -234,6 +236,12 @@ endif()
 
 if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
+endif()
+
+# Jerry's examples
+if(EXAMPLES)
+  jerry_add_compile_flags(-Wno-unused-parameter)
+  add_subdirectory(examples)
 endif()
 
 # Jerry's libc

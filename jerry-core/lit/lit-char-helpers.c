@@ -226,6 +226,14 @@ lit_char_is_identifier_start (const uint8_t *src_p) /**< pointer to a vaild UTF8
     return lit_char_is_identifier_start_character (*src_p);
   }
 
+  /* ECMAScript 2015 specification allows some code points in supplementary plane.
+   * However, we don't permit characters in supplementary characters as start of identifier.
+   */
+  if ((*src_p & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
+  {
+    return false;
+  }
+
   return lit_char_is_identifier_start_character (lit_utf8_peek_next (src_p));
 } /* lit_char_is_identifier_start */
 
@@ -260,6 +268,14 @@ lit_char_is_identifier_part (const uint8_t *src_p) /**< pointer to a vaild UTF8 
   if (*src_p <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
     return lit_char_is_identifier_part_character (*src_p);
+  }
+
+  /* ECMAScript 2015 specification allows some code points in supplementary plane.
+   * However, we don't permit characters in supplementary characters as part of identifier.
+   */
+  if ((*src_p & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
+  {
+    return false;
   }
 
   return lit_char_is_identifier_part_character (lit_utf8_peek_next (src_p));

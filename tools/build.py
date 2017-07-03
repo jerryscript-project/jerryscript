@@ -62,6 +62,8 @@ def get_arguments():
                         help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
     parser.add_argument('--debug', action='store_const', const='Debug', default='MinSizeRel', dest='build_type',
                         help='debug build')
+    parser.add_argument('--doctests', action='store_const', const='ON', default='OFF',
+                        help='build doctests')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable error messages (%(choices)s; default: %(default)s)')
     parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -172,6 +174,7 @@ def generate_build_options(arguments):
         build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)
 
     build_options.append('-DUNITTESTS=%s' % arguments.unittests)
+    build_options.append('-DDOCTESTS=%s' % arguments.doctests)
     build_options.append('-DCMAKE_VERBOSE_MAKEFILE=%s' % arguments.verbose)
 
     # developer options

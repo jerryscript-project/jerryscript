@@ -42,9 +42,13 @@ def get_binary_path(bin_dir_path):
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
     Options('unittests',
-            ['--unittests', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+            ['--unittests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
     Options('unittests-debug',
-            ['--unittests', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset'])
+            ['--unittests', '--jerry-cmdline=off', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+    Options('doctests',
+            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+    Options('doctests-debug',
+            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset'])
 ]
 
 # Test options for jerry-tests
@@ -152,7 +156,7 @@ def get_arguments():
     parser.add_argument('--jerry-debugger', action='store_true', default=False, help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true', default=False, help='Run jerry-tests')
     parser.add_argument('--jerry-test-suite', action='store_true', default=False, help='Run jerry-test-suite')
-    parser.add_argument('--unittests', action='store_true', default=False, help='Run unittests')
+    parser.add_argument('--unittests', action='store_true', default=False, help='Run unittests (including doctests)')
     parser.add_argument('--precommit', action='store_true', default=False, dest='all', help='Run all test')
     parser.add_argument('--test262', action='store_true', default=False, help='Run test262')
 

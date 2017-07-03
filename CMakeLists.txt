@@ -45,6 +45,7 @@ set(JERRY_EXT             ON  CACHE BOOL "Build jerry-ext?")
 set(JERRY_LIBC            ON  CACHE BOOL "Build and use jerry-libc?")
 set(JERRY_LIBM            ON  CACHE BOOL "Build and use jerry-libm?")
 set(UNITTESTS             OFF CACHE BOOL "Build unit tests?")
+set(DOCTESTS              OFF CACHE BOOL "Build doc tests?")
 
 # Optional build settings
 set(ENABLE_ALL_IN_ONE  OFF CACHE BOOL "Enable all-in-one build?")
@@ -53,16 +54,16 @@ set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
 # Option overrides
-if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
 
-  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE)")
+  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR TESTS)")
 endif()
 
-if(JERRY_CMDLINE)
+if(JERRY_CMDLINE OR DOCTESTS)
   set(JERRY_EXT ON)
 
-  set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE)")
+  set(JERRY_EXT_MESSAGE " (FORCED BY CMDLINE OR TESTS)")
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
@@ -104,6 +105,7 @@ message(STATUS "JERRY_EXT                 " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
 message(STATUS "UNITTESTS                 " ${UNITTESTS})
+message(STATUS "DOCTESTS                  " ${DOCTESTS})
 
 # Setup directories
 # Project binary dir
@@ -180,6 +182,8 @@ if (USING_GCC OR USING_CLANG)
 endif()
 if(("${PLATFORM}" STREQUAL "DARWIN"))
   jerry_add_link_flags(-lSystem)
+  set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
+  set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 else()
   jerry_add_link_flags(-Wl,-z,noexecstack)
 endif()
@@ -273,4 +277,9 @@ if(UNITTESTS)
   if(JERRY_EXT)
     add_subdirectory(tests/unit-ext)
   endif()
+endif()
+
+# Doctests
+if(DOCTESTS)
+  add_subdirectory(tests/unit-doc)
 endif()

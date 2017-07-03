@@ -1,5 +1,39 @@
 ############################################################################
-# configs/stm32_tiny/nsh/Make.defs
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This file is based on work under the following copyright and permission
+# notice:
+#
+############################################################################
+# Copyright 2017 Samsung Electronics All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+#
+############################################################################
+############################################################################
+# configs/artik053/tash/Make.defs
 #
 #   Copyright (C) 2011, 2012-2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -37,14 +71,8 @@ include ${TOPDIR}/.config
 include ${TOPDIR}/tools/Config.mk
 include ${TOPDIR}/arch/arm/src/armv7-r/Toolchain.defs
 
-ifeq ($(CONFIG_BOOT_RUNFROMFLASH),y)
-ifeq ($(CONFIG_BOARD_FOTA_SUPPORT),y)
-LDSCRIPT_OTA1 = ld_s5jt200_flash_ota1.script
-endif
-LDSCRIPT = ld_s5jt200_flash.script
-else
-LDSCRIPT = ld_s5jt200.script
-endif
+LDSCRIPT = flash.ld
+
 ifeq ($(CONFIG_UCLIBCXX_HAVE_LIBSUPCXX),y)
 LIBSUPXX = ${shell $(CC) --print-file-name=libsupc++.a}
 EXTRA_LIBPATHS = -L "${shell dirname "$(LIBSUPXX)"}"
@@ -65,9 +93,6 @@ else
   ARCHINCLUDES = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/../framework/include
   ARCHXXINCLUDES = -I. -isystem $(TOPDIR)/include -isystem $(TOPDIR)/include/cxx -isystem $(TOPDIR)/include/uClibc++
   ARCHSCRIPT = -T$(TOPDIR)/../build/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT)
-ifeq ($(CONFIG_BOARD_FOTA_SUPPORT),y)
-  ARCHSCRIPT_FOTA = -T$(TOPDIR)/../build/configs/$(CONFIG_ARCH_BOARD)/scripts/$(LDSCRIPT_OTA1)
-endif
 
 endif
 
@@ -96,26 +121,19 @@ ifeq ($(CONFIG_FRAME_POINTER),y)
   ARCHOPTIMIZATION += -fno-omit-frame-pointer -mapcs -mno-sched-prolog
 endif
 
-ifeq ($(CONFIG_ARM_UNWIND),y)
-  ARCHOPTIMIZATION += -fasynchronous-unwind-tables
-endif
-
-
 ARCHCFLAGS = -fno-builtin -mcpu=cortex-r4 -mfpu=vfpv3
 ARCHCXXFLAGS = -fno-builtin -fexceptions -mcpu=cortex-r4 -mfpu=vfpv3
 ifeq ($(QUICKBUILD),y)
 ARCHWARNINGS = -Wall -Werror -Wstrict-prototypes -Wshadow -Wundef -Wno-implicit-function-declaration -Wno-unused-function -Wno-unused-but-set-variable
 ARCHWARNINGSXX = -Wall -Werror -Wshadow -Wundef
 else
-#ARCHWARNINGS = -Wall -Werror -Wstrict-prototypes -Wshadow -Wundef -Wno-implicit-function-declaration -Wno-unused-function -Wno-unused-but-set-variable
-#ARCHWARNINGSXX = -Wall -Werror -Wshadow -Wundef
-ARCHWARNINGS = -Wall -Wstrict-prototypes -Wshadow -Wundef -Wno-implicit-function-declaration -Wno-unused-function -Wno-unused-but-set-variable
-ARCHWARNINGSXX = -Wall -Wshadow -Wundef 
+ARCHWARNINGS = -Wall -Werror -Wstrict-prototypes -Wshadow -Wundef -Wno-implicit-function-declaration -Wno-unused-function -Wno-unused-but-set-variable
+ARCHWARNINGSXX = -Wall -Werror -Wshadow -Wundef
 # only version 4.9 supports color diagnostics
 ifeq "$(ARCHMAJOR)" "4"
 ifeq "$(ARCHMINOR)" "9"
-    ARCHWARNINGS += -fdiagnostics-color=auto
-    ARCHWARNINGSCC += -fdiagnostics-color=auto
+  ARCHWARNINGS += -fdiagnostics-color=auto
+  ARCHWARNINGSCC += -fdiagnostics-color=auto
 endif
 endif
 
@@ -123,14 +141,12 @@ endif
 ARCHDEFINES =
 ARCHPICFLAGS = -fpic -msingle-pic-base -mpic-register=r10
 
-CFLAGS = $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe
+CFLAGS = $(ARCHCFLAGS) $(ARCHWARNINGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe -ffunction-sections -fdata-sections
 CPICFLAGS = $(ARCHPICFLAGS) $(CFLAGS)
 CXXFLAGS = $(ARCHCXXFLAGS) $(ARCHWARNINGSXX) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES) -pipe
 CXXPICFLAGS = $(ARCHPICFLAGS) $(CXXFLAGS)
 CPPFLAGS = $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRADEFINES)
 AFLAGS = $(CFLAGS) -D__ASSEMBLY__
-MAXOPTIMIZATION = -O2
-
 
 NXFLATLDFLAGS1 = -r -d -warn-common
 NXFLATLDFLAGS2 = $(NXFLATLDFLAGS1) -T$(TOPDIR)/binfmt/libnxflat/gnu-nxflat-pcrel.ld -no-check-sections
@@ -148,18 +164,14 @@ ifeq ($(CONFIG_DEBUG_SYMBOLS),y)
   LDFLAGS += -g
 endif
 
+LDFLAAGS += --gc-sections
 
 HOSTCC = gcc
 HOSTINCLUDES = -I.
 HOSTCFLAGS = -Wall -Wstrict-prototypes -Wshadow -Wundef -g -pipe
 HOSTLDFLAGS =
 
-#################### SIDK_S5JT200 DOWNLOAD LOGIC ###################################
-# function  : DOWNLOAD
-# prototype : DOWNLOAD <arguments>
-# arguments : [ALL | RESOURCE ]
-# example   : DOWNLOAD ALL; DOWNLOAD RESOURCE;
 define DOWNLOAD
-       @$(TOPDIR)/../build/configs/$(CONFIG_ARCH_BOARD)/$(CONFIG_ARCH_BOARD)_download.sh $(1)
+       @$(TOPDIR)/../build/configs/artik053/artik053_download.sh $(1)
 endef
-#################### END #######################################################
+

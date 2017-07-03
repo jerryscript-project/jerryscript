@@ -167,30 +167,6 @@ jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
 } /* jerry_value_is_syntax_error */
 
 /**
- * Convert string into unsigned integer
- *
- * @return converted number
- */
-static uint32_t
-str_to_uint (const char *num_str_p) /**< string to convert */
-{
-  assert (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES));
-
-  uint32_t result = 0;
-
-  while (*num_str_p != '\0')
-  {
-    assert (*num_str_p >= '0' && *num_str_p <= '9');
-
-    result *= 10;
-    result += (uint32_t) (*num_str_p - '0');
-    num_str_p++;
-  }
-
-  return result;
-} /* str_to_uint */
-
-/**
  * Print error value
  */
 static void
@@ -218,18 +194,18 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
 
     if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES) && jerry_value_is_syntax_error (error_value))
     {
-      uint32_t err_line = 0;
-      uint32_t err_col = 0;
+      unsigned int err_line = 0;
+      unsigned int err_col = 0;
 
       /* 1. parse column and line information */
-      for (uint32_t i = 0; i < sz; i++)
+      for (jerry_size_t i = 0; i < sz; i++)
       {
         if (!strncmp ((char *) (err_str_buf + i), "[line: ", 7))
         {
           i += 7;
 
           char num_str[8];
-          uint32_t j = 0;
+          unsigned int j = 0;
 
           while (i < sz && err_str_buf[i] != ',')
           {
@@ -239,7 +215,7 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
           }
           num_str[j] = '\0';
 
-          err_line = str_to_uint (num_str);
+          err_line = (unsigned int) strtol (num_str, NULL, 10);
 
           if (strncmp ((char *) (err_str_buf + i), ", column: ", 10))
           {
@@ -257,17 +233,17 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
           }
           num_str[j] = '\0';
 
-          err_col = str_to_uint (num_str);
+          err_col = (unsigned int) strtol (num_str, NULL, 10);
           break;
         }
       } /* for */
 
       if (err_line != 0 && err_col != 0)
       {
-        uint32_t curr_line = 1;
+        unsigned int curr_line = 1;
 
         bool is_printing_context = false;
-        uint32_t pos = 0;
+        unsigned int pos = 0;
 
         /* 2. seek and print */
         while (source_p[pos] != '\0')

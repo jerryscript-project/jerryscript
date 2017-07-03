@@ -39,7 +39,7 @@ jerry-tizenrt
 
 ```
 $ cp -r jerryscript/targets/tizenrt-artik05x/apps/jerryscript/ tizenrt/apps/system/
-$ cp -r jerryscript/targets/tizenrt-artik05x/configs/jerryscript/ tizenrt/build/configs/sidk_s5jt200/
+$ cp -r jerryscript/targets/tizenrt-artik05x/configs/jerryscript/ tizenrt/build/configs/artik053/
 ```
 
 Apply following diff in jerry-tizenrt/tizenrt/os/FlatLibs.mk.
@@ -55,6 +55,7 @@ TINYARALIBS += $(LIBRARIES_DIR)$(DELIM)libframework$(LIBEXT)
 +# Add library for Jerryscript
 +ifeq ($(CONFIG_JERRYSCRIPT),y)
 +TINYARALIBS += $(LIBRARIES_DIR)$(DELIM)libjerry-core$(LIBEXT)
++TINYARALIBS += $(LIBRARIES_DIR)$(DELIM)libjerry-ext$(LIBEXT)
 +TINYARALIBS += $(LIBRARIES_DIR)$(DELIM)libjerry-libm$(LIBEXT)
 +endif
 +
@@ -65,7 +66,7 @@ TINYARALIBS += $(LIBRARIES_DIR)$(DELIM)libframework$(LIBEXT)
 
 ```
 $ cd tizenrt/os/tools
-$ ./configure.sh sidk_s5jt200/jerryscript
+$ ./configure.sh artik053/jerryscript
 ```
 
 #### 4. Build JerryScript for TizenRT
@@ -87,7 +88,11 @@ Binaries are available in tizenrt/build/output/bin
 
 #### 6. Flash binary
 
-The official guide will be announced on [TizenRT page](https://github.com/Samsung/TizenRT).
+```
+make download ALL
+```
+
+For more information, see [How to program a binary](https://github.com/Samsung/TizenRT/blob/master/build/configs/artik053/README.md).
 
 
 #### 7. Run JerryScript

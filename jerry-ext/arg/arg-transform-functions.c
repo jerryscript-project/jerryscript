@@ -169,7 +169,7 @@ jerryx_arg_helper_process_double (double *d, /**< [in, out] the number to be pro
   jerry_value_t jerryx_arg_transform_ ## type ## suffix (jerryx_arg_js_iterator_t *js_arg_iter_p, \
                                                          const jerryx_arg_t *c_arg_p) \
   { \
-    double tmp; \
+    double tmp = 0.0; \
     jerry_value_t rv = jerryx_arg_transform_number ## suffix ## _common (js_arg_iter_p, &tmp); \
     if (jerry_value_has_error_flag (rv)) \
     { \

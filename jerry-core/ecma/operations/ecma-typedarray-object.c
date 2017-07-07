@@ -49,9 +49,9 @@
  *
  * @return ecma_number_t: the value of the element
  */
-static ecma_number_t
-get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the internal arraybuffer */
-                        lit_magic_string_id_t class_id) /**< class name of the typedarray */
+ecma_number_t
+ecma_get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the internal arraybuffer */
+                             lit_magic_string_id_t class_id) /**< class name of the typedarray */
 {
   switch (class_id)
   {
@@ -96,17 +96,17 @@ get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the internal 
       return 0;
     }
   }
-} /* get_typedarray_element */
+} /* ecma_get_typedarray_element */
 
 #undef GET_ELEMENT
 
 /**
  * set typedarray's element value
  */
-static void
-set_typedarray_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                        ecma_number_t value, /**< the number value to set */
-                        lit_magic_string_id_t class_id) /**< class name of the typedarray */
+void
+ecma_set_typedarray_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
+                             ecma_number_t value, /**< the number value to set */
+                             lit_magic_string_id_t class_id) /**< class name of the typedarray */
 {
   switch (class_id)
   {
@@ -215,7 +215,7 @@ set_typedarray_element (lit_utf8_byte_t *dst_p, /**< the location in the interna
       JERRY_UNREACHABLE ();
     }
   }
-} /* set_typedarray_element */
+} /* ecma_set_typedarray_element */
 
 /**
  * Create a TypedArray object by given array_length
@@ -352,8 +352,8 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
     for (uint32_t i = 0; i < array_length; i++)
     {
       /* Convert values from source to destination format. */
-      ecma_number_t tmp = get_typedarray_element (src_buf_p, src_class_id);
-      set_typedarray_element (dst_buf_p, tmp, class_id);
+      ecma_number_t tmp = ecma_get_typedarray_element (src_buf_p, src_class_id);
+      ecma_set_typedarray_element (dst_buf_p, tmp, class_id);
 
       src_buf_p += src_element_size;
       dst_buf_p += dst_element_size;
@@ -486,7 +486,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
 } /* ecma_op_typedarray_from */
 
 /**
- * Get the array length of the typedarray object
+ * Get the arraybuffer of the typedarray object
  *
  * @return the pointer to the internal arraybuffer
  */
@@ -810,7 +810,7 @@ ecma_op_typedarray_get_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
   ecma_length_t byte_pos = (index << shift) + offset;
   lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
   lit_utf8_byte_t *target_p = ecma_arraybuffer_get_buffer (arraybuffer_p) + byte_pos;
-  ecma_number_t value = get_typedarray_element (target_p, class_id);
+  ecma_number_t value = ecma_get_typedarray_element (target_p, class_id);
 
   return ecma_make_number_value (value);
 } /* ecma_op_typedarray_get_index_prop */
@@ -889,7 +889,7 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
   ecma_length_t byte_pos = (index << shift) + offset;
   lit_magic_string_id_t class_id = ecma_object_get_class_name (obj_p);
   lit_utf8_byte_t *target_p = ecma_arraybuffer_get_buffer (arraybuffer_p) + byte_pos;
-  set_typedarray_element (target_p, value_num, class_id);
+  ecma_set_typedarray_element (target_p, value_num, class_id);
 
   ECMA_OP_TO_NUMBER_FINALIZE (value_num);
 

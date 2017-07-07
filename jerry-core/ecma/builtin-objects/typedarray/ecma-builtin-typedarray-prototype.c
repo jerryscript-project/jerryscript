@@ -648,6 +648,116 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
 } /* ecma_builtin_typedarray_prototype_reverse */
 
 /**
+ * The %TypedArray%.prototype object's 'set' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.22, 22.2.3.22.1
+ *
+ * @return ecma value of undefined.
+ */
+ecma_value_t
+ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t arr_val, /**< array object */
+                                       ecma_value_t offset_val) /**< offset value */
+{
+  /* 1. */
+  if (ecma_is_typedarray (arr_val))
+  {
+    /* 22.2.3.22.2 %TypedArray%.prototype(typedArray [, offset ]) is not supported */
+    return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray.set(typedArray [,offset]) is not supported."));
+  }
+
+  /* 2.~ 4. */
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  /* 6.~ 8. targetOffset */
+  ecma_value_t ret_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (target_offset_num, offset_val, ret_val);
+  if (ecma_number_is_nan (target_offset_num))
+  {
+    target_offset_num = 0;
+  }
+  if (target_offset_num <= -1.0 || target_offset_num >= (double) UINT32_MAX + 0.5)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
+  }
+  uint32_t target_offset_uint32 = ecma_number_to_uint32 (target_offset_num);
+
+  /* 11. targetLength */
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_length_t target_length = ecma_typedarray_get_length (typedarray_p);
+
+  /* 13. targetElementSize */
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+
+  /* 14. targetType */
+  lit_magic_string_id_t target_class_id = ecma_object_get_class_name (typedarray_p);
+
+  /* 9., 15. */
+  lit_utf8_byte_t *target_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+
+  /* 16.~ 17. */
+  ECMA_TRY_CATCH (source_obj, ecma_op_to_object (arr_val), ret_val);
+
+  /* 18.~ 19. */
+  ecma_string_t length_str;
+  ecma_init_ecma_length_string (&length_str);
+  ecma_object_t *source_obj_p = ecma_get_object_from_value (source_obj);
+  ECMA_TRY_CATCH (source_length,
+                  ecma_op_object_get (source_obj_p, &length_str),
+                  ret_val);
+  ECMA_OP_TO_NUMBER_TRY_CATCH (source_length_num, source_length, ret_val);
+  if (ecma_number_is_nan (source_length_num) || source_length_num <= 0)
+  {
+    source_length_num = 0;
+  }
+  uint32_t source_length_uint32 = ecma_number_to_uint32 (source_length_num);
+  if ((ecma_number_t) source_length_uint32 != source_length_num)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid source length"));
+  }
+
+  /* 20. if srcLength + targetOffset > targetLength, throw a RangeError */
+  if ((int64_t) source_length_uint32 + target_offset_uint32 > target_length)
+  {
+    ret_val = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid range of index"));
+  }
+
+  /* 21.~ 25. */
+  uint32_t target_byte_index = target_offset_uint32 * element_size;
+  uint32_t k = 0;
+  while (k < source_length_uint32 && ecma_is_value_empty (ret_val))
+  {
+    ecma_string_t k_str;
+    ecma_init_ecma_string_from_uint32 (&k_str, k);
+    ECMA_TRY_CATCH (elem,
+                    ecma_op_object_get (source_obj_p, &k_str),
+                    ret_val);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (elem_num, elem, ret_val);
+    ecma_set_typedarray_element (target_buffer_p + target_byte_index, elem_num, target_class_id);
+    ECMA_OP_TO_NUMBER_FINALIZE (elem_num);
+    ECMA_FINALIZE (elem);
+    k++;
+    target_byte_index += element_size;
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (source_length_num);
+  ECMA_FINALIZE (source_length);
+  ECMA_FINALIZE (source_obj);
+  ECMA_OP_TO_NUMBER_FINALIZE (target_offset_num);
+
+  if (ecma_is_value_empty (ret_val))
+  {
+    ret_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  }
+  return ret_val;
+} /* ecma_builtin_typedarray_prototype_set */
+
+/**
  * @}
  * @}
  * @}

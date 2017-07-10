@@ -64,6 +64,8 @@ def get_arguments():
                         help='debug build')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable error messages (%(choices)s; default: %(default)s)')
+    parser.add_argument('--examples', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='build jerry examples (%(choices)s; default: %(default)s)')
     parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable external context (%(choices)s; default: %(default)s)')
     parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1,
@@ -146,6 +148,7 @@ def generate_build_options(arguments):
     build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
     build_options.append('-DFEATURE_CPOINTER_32_BIT=%s' % arguments.cpointer_32bit)
     build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
+    build_options.append('-DEXAMPLES=%s' % arguments.examples)
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
     build_options.append('-DJERRY_CMDLINE_MINIMAL=%s' % arguments.jerry_cmdline_minimal)
     build_options.append('-DJERRY_PORT_DEFAULT=%s' % arguments.jerry_port_default)

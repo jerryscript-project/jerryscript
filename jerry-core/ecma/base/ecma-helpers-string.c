@@ -298,6 +298,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
       data_p = (lit_utf8_byte_t *) (long_string_desc_p + 1);
     }
 
+    const lit_utf8_byte_t *const begin_data_p = data_p;
     pos = 0;
 
     while (pos < string_size)
@@ -324,7 +325,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
     JERRY_ASSERT (pos == string_size);
 
-    string_desc_p->hash = lit_utf8_string_calc_hash (data_p, converted_string_size);
+    string_desc_p->hash = lit_utf8_string_calc_hash (begin_data_p, converted_string_size);
   }
 
   return string_desc_p;

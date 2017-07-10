@@ -338,6 +338,30 @@ test_run_simple (const char *script_p) /**< source code to run */
   return jerry_run_simple ((const jerry_char_t *) script_p, script_size, JERRY_INIT_EMPTY);
 } /* test_run_simple */
 
+static bool
+strict_equals (jerry_value_t a,
+               jerry_value_t b)
+{
+  bool is_strict_equal;
+  const char *is_equal_src;
+  jerry_value_t args[2];
+  jerry_value_t is_equal_fn_val;
+  jerry_value_t res;
+
+  is_equal_src = "var isEqual = function(a, b) { return (a === b); }; isEqual";
+  is_equal_fn_val = jerry_eval ((jerry_char_t *) is_equal_src, strlen (is_equal_src), false);
+  TEST_ASSERT (!jerry_value_has_error_flag (is_equal_fn_val));
+  args[0] = a;
+  args[1] = b;
+  res = jerry_call_function (is_equal_fn_val, jerry_create_undefined (), args, 2);
+  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (jerry_value_is_boolean (res));
+  is_strict_equal = jerry_get_boolean_value (res);
+  jerry_release_value (res);
+  jerry_release_value (is_equal_fn_val);
+  return is_strict_equal;
+} /* strict_equals */
+
 int
 main (void)
 {
@@ -401,6 +425,9 @@ main (void)
   /* Test jerry_string_to_utf8_char_buffer, test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
   args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
   args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+
+  /* Test that the strings are equal / ensure hashes are equal */
+  TEST_ASSERT (strict_equals (args[0], args[1]));
 
   /* These sizes must be equal */
   utf8_sz = jerry_get_utf8_string_size (args[0]);

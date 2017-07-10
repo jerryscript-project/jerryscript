@@ -53,9 +53,9 @@ ROUTINE (LIT_MAGIC_STRING_LOCALE_COMPARE_UL, ecma_builtin_string_prototype_objec
 ROUTINE (LIT_MAGIC_STRING_MATCH, ecma_builtin_string_prototype_object_match, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_REPLACE, ecma_builtin_string_prototype_object_replace, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_SEARCH, ecma_builtin_string_prototype_object_search, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_SPLIT, ecma_builtin_string_prototype_object_split, 2, 2)
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
+ROUTINE (LIT_MAGIC_STRING_SPLIT, ecma_builtin_string_prototype_object_split, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_SUBSTRING, ecma_builtin_string_prototype_object_substring, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_TO_LOWER_CASE_UL, ecma_builtin_string_prototype_object_to_lower_case, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_LOWER_CASE_UL, ecma_builtin_string_prototype_object_to_locale_lower_case, 0, 0)

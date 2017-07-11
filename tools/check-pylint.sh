@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-find -name "*.py" \
+find ./tools ./jerry-debugger -name "*.py" \
     | xargs pylint --rcfile=tools/pylint/pylintrc

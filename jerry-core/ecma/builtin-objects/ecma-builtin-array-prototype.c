@@ -1113,16 +1113,16 @@ ecma_builtin_array_prototype_object_array_to_heap_helper (ecma_value_t array[], 
     }
   }
 
+  /*
+   * Loop ended, either current child does not exist, or is less than swap.
+   * This means that 'swap' should be placed in the parent node.
+   */
+  int parent = (child - 1) / 2;
+  JERRY_ASSERT (parent >= 0 && parent <= right);
+  array[parent] = swap;
+
   if (ecma_is_value_empty (ret_value))
   {
-    /*
-     * Loop ended, either current child does not exist, or is less than swap.
-     * This means that 'swap' should be placed in the parent node.
-     */
-    int parent = (child - 1) / 2;
-    JERRY_ASSERT (parent >= 0 && parent <= right);
-    array[parent] = swap;
-
     ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
   }
 

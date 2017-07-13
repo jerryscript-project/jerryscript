@@ -1,5 +1,6 @@
-fbreak f
-list pending
+break f
+y
+list
 n
 n
 c

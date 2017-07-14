@@ -250,6 +250,9 @@ ecma_number_t ecma_number_substract (ecma_number_t left_num, ecma_number_t right
 ecma_number_t ecma_number_multiply (ecma_number_t left_num, ecma_number_t right_num);
 ecma_number_t ecma_number_divide (ecma_number_t left_num, ecma_number_t right_num);
 lit_utf8_size_t ecma_number_to_decimal (ecma_number_t num, lit_utf8_byte_t *out_digits_p, int32_t *out_decimal_exp_p);
+lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,
+                                                             lit_utf8_byte_t *out_digits_p,
+                                                             int32_t *out_decimal_exp_p);
 
 /* ecma-helpers-values-collection.c */
 ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t values_buffer[], ecma_length_t values_number,

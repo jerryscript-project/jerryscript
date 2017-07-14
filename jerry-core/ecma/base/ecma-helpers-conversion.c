@@ -322,6 +322,8 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
 
+#define EPSILON 0.0000001
+
 /**
  * @}
  */
@@ -929,6 +931,137 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
 
   return ecma_errol0_dtoa ((double) num, out_digits_p, out_decimal_exp_p);
 } /* ecma_number_to_decimal */
+
+/**
+ * Calculate the number of digits from the given double value whithout franction part
+ *
+ * @return number of digits
+ */
+inline static int32_t __attr_always_inline___
+ecma_number_of_digits (double val) /**< ecma number */
+{
+  JERRY_ASSERT (fabs (fmod (val, 1.0)) < EPSILON);
+  int32_t exponent = 0;
+
+  while (val >= 1.0)
+  {
+    val /= 10.0;
+    exponent++;
+  }
+
+  return exponent;
+} /* ecma_number_of_digits */
+
+/**
+ * Convert double value to ASCII
+ */
+inline static void __attr_always_inline___
+ecma_double_to_ascii (double val, /**< ecma number */
+                      lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
+                      int32_t *exp_p) /**< [out] exponent */
+{
+  int32_t char_cnt = 0;
+  int32_t num_of_digits = ecma_number_of_digits (val);
+
+  double divider = 10.0;
+  double prev_residual;
+  double mod_res = fmod (val, divider);
+
+  buffer_p[num_of_digits - 1 - char_cnt++] = (lit_utf8_byte_t) ((int) mod_res + '0');
+  divider *= 10.0;
+  prev_residual = mod_res;
+
+  while (char_cnt < num_of_digits)
+  {
+    mod_res = fmod (val, divider);
+    double residual = mod_res - prev_residual;
+    buffer_p[num_of_digits - 1 - char_cnt++] = (lit_utf8_byte_t) ((int) (residual / (divider / 10.0)) + '0');
+
+    divider *= 10.0;
+    prev_residual = mod_res;
+  }
+
+  *exp_p = char_cnt;
+} /* ecma_double_to_ascii */
+
+/**
+ * Double to binary floating-point number conversion
+ *
+ * @return number of generated digits
+ */
+static inline lit_utf8_size_t __attr_always_inline___
+ecma_double_to_binary_floating_point (double val, /**< ecma number */
+                                      lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
+                                      int32_t *exp_p) /**< [out] exponent */
+{
+  int32_t i, char_cnt = 0;
+  double integer_part, fraction_part;
+
+  fraction_part = fmod (val, 1.0);
+  integer_part = floor (val);
+
+  lit_utf8_byte_t integer_part_buffer[ecma_number_of_digits (integer_part) + 1];
+
+  if (fabs (integer_part) < EPSILON)
+  {
+    buffer_p[0] = '0';
+    char_cnt++;
+  }
+  else if (integer_part < 10e16) /* Ensure that integer_part is not rounded */
+  {
+    while (integer_part > 0.0)
+    {
+      integer_part_buffer[char_cnt++] = (lit_utf8_byte_t) ((int) fmod (integer_part, 10.0) + '0');
+      integer_part = floor (integer_part / 10.0);
+    }
+
+    for (i = 0; i < char_cnt; i++)
+    {
+      buffer_p[i] = integer_part_buffer[char_cnt - i - 1];
+    }
+  }
+  else
+  {
+    ecma_double_to_ascii (val, buffer_p, &char_cnt);
+  }
+
+  *exp_p = char_cnt;
+
+  while (fraction_part > 0 && char_cnt < ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER - 1)
+  {
+    fraction_part *= 10;
+    double tmp = fraction_part;
+    fraction_part = fmod (fraction_part, 1.0);
+    integer_part = floor (tmp);
+    buffer_p[char_cnt++] = (lit_utf8_byte_t) ('0' + (int) integer_part);
+  }
+
+  buffer_p[char_cnt] = '\0';
+
+  return (lit_utf8_size_t) (char_cnt - *exp_p);
+} /* ecma_double_to_binary_floating_point */
+
+/**
+  * Perform conversion of ecma-number to equivalent binary floating-point number representation with decimal exponent
+  *
+  * Note:
+  *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
+  *         - parameter out_digits_p corresponds to s, the digits of the number;
+  *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
+  *         - return value corresponds to k, the number of digits.
+  */
+lit_utf8_size_t
+ecma_number_to_binary_floating_point_number (ecma_number_t num, /**< ecma-number */
+                                             lit_utf8_byte_t *out_digits_p, /**< [out] buffer to fill with digits */
+                                             int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+  JERRY_ASSERT (!ecma_number_is_zero (num));
+  JERRY_ASSERT (!ecma_number_is_infinity (num));
+  JERRY_ASSERT (!ecma_number_is_negative (num));
+
+  return ecma_double_to_binary_floating_point ((double) num, out_digits_p, out_decimal_exp_p);
+} /* ecma_number_to_binary_floating_point_number */
 
 /**
  * Convert ecma-number to zero-terminated string

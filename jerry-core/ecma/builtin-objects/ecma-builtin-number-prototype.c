@@ -125,6 +125,41 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< 
   return (lit_utf8_size_t) (p - to_digits_p);
 } /* ecma_builtin_number_prototype_helper_to_string */
 
+static inline lit_utf8_size_t __attr_always_inline___
+ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< number as string
+                                                                           * in binary-floating point number */
+                                               lit_utf8_size_t num_digits, /**< length of the string representation */
+                                               int32_t exponent, /**< decimal exponent */
+                                               lit_utf8_byte_t *to_digits_p, /**< [out] buffer to write */
+                                               lit_utf8_size_t to_num_digits) /**< requested number of digits */
+{
+  lit_utf8_byte_t *p = to_digits_p;
+  /* Add significant digits of the decimal part. */
+  while (exponent > 0)
+  {
+    *p++ = *digits_p++;
+    exponent--;
+    to_num_digits--;
+  }
+
+  if (to_num_digits > 0)
+  {
+    *p++ = '.';
+  }
+
+  if (to_num_digits > 0)
+  {
+    /* Add significant digits of the fraction part. */
+    while (to_num_digits > 0)
+    {
+      *p++ = num_digits == 1 ? '0' : *digits_p++;
+      to_num_digits--;
+    }
+  }
+
+  return (lit_utf8_size_t) (p - to_digits_p);
+} /* ecma_builtin_binary_floating_number_to_string */
+
 /**
  * Helper for rounding numbers
  *
@@ -135,14 +170,15 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
                                                                         *   form */
                                             lit_utf8_size_t num_digits, /**< length of the string representation */
                                             int32_t round_num, /**< number of digits to keep */
-                                            int32_t *exponent_p) /**< [in, out] decimal exponent */
+                                            int32_t *exponent_p, /**< [in, out] decimal exponent */
+                                            bool zero) /**< true if digits_p represents zero */
 {
   if (round_num < 1)
   {
     return 0;
   }
 
-  if ((lit_utf8_size_t) round_num >= num_digits)
+  if ((lit_utf8_size_t) round_num >= num_digits || zero)
   {
     return num_digits;
   }
@@ -509,7 +545,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
       bool is_negative = false;
       if (ecma_number_is_negative (this_num))
       {
-        is_negative = true;
+        is_negative = ecma_number_is_zero (this_num) ? false : true;
         this_num *= -1;
       }
 
@@ -537,15 +573,19 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
         lit_utf8_size_t num_digits;
         int32_t exponent;
+        int32_t frac_digits = ecma_number_to_int32 (arg_num);
 
         if (!ecma_number_is_zero (this_num))
         {
-          num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
+          num_digits = ecma_number_to_binary_floating_point_number (this_num, digits, &exponent);
         }
         else
         {
-          digits[0] = '0';
-          num_digits = 1;
+          for (int32_t i = 0; i <= frac_digits; i++)
+          {
+            digits[i] = '0';
+          }
+          num_digits = (lit_utf8_size_t) frac_digits + 1;
           exponent = 1;
         }
 
@@ -558,12 +598,11 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         else
         {
           /* 1. */
-          int32_t frac_digits = ecma_number_to_int32 (arg_num);
-
           num_digits = ecma_builtin_number_prototype_helper_round (digits,
-                                                                   num_digits,
+                                                                   num_digits + 1,
                                                                    exponent + frac_digits,
-                                                                   &exponent);
+                                                                   &exponent,
+                                                                   ecma_number_is_zero (this_num) ? true : false);
 
           /* Buffer that is used to construct the string. */
           int buffer_size = (exponent > 0) ? exponent + frac_digits + 2 : frac_digits + 3;
@@ -585,11 +624,11 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
 
           lit_utf8_size_t to_num_digits = ((exponent > 0) ? (lit_utf8_size_t) (exponent + frac_digits)
                                                           : (lit_utf8_size_t) (frac_digits + 1));
-          p += ecma_builtin_number_prototype_helper_to_string (digits,
-                                                               num_digits,
-                                                               exponent,
-                                                               p,
-                                                               to_num_digits);
+          p += ecma_builtin_binary_floating_number_to_string (digits,
+                                                              num_digits,
+                                                              exponent,
+                                                              p,
+                                                              to_num_digits);
 
           JERRY_ASSERT (p - buff < buffer_size);
           /* String terminator. */
@@ -698,7 +737,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
           frac_digits = ecma_number_to_int32 (arg_num);
         }
 
-        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, frac_digits + 1, &exponent);
+        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, frac_digits + 1, &exponent, false);
 
         /* frac_digits + 2 characters for number, 5 characters for exponent, 1 for \0. */
         int buffer_size = frac_digits + 2 + 5 + 1;
@@ -842,7 +881,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
 
         int32_t precision = ecma_number_to_int32 (arg_num);
 
-        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision, &exponent);
+        num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision, &exponent, false);
 
         int buffer_size;
         if (exponent  < -5 || exponent > precision)

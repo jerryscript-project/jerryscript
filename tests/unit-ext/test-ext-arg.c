@@ -33,6 +33,7 @@ const char *test_source = (
                            "arg1 = new Boolean(true);"
                            "arg3 = new String('abc');"
                            "test_validator1(arg1, arg2, arg3);"
+                           "test_validator1(arg1, arg2, '');"
                            "arg2 = new Number(10.5);"
                            "test_validator1(arg1, arg2, arg3);"
                            "test_validator1(arg1, 10.5, 'abcdef');"
@@ -139,6 +140,14 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "abc") == 0);
+    TEST_ASSERT (jerry_value_is_undefined (arg4));
+  }
+  else if (validator1_count == 2)
+  {
+    TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (arg1);
+    TEST_ASSERT (arg2 == 10.5);
+    TEST_ASSERT (strcmp (arg3, "") == 0);
     TEST_ASSERT (jerry_value_is_undefined (arg4));
   }
   else
@@ -520,7 +529,7 @@ main (void)
 
   jerry_value_t res = jerry_run (parsed_code_val);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
-  TEST_ASSERT (validator1_count == 4);
+  TEST_ASSERT (validator1_count == 5);
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);
   TEST_ASSERT (validator_int_count == 2);

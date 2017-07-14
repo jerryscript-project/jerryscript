@@ -259,10 +259,10 @@ jerryx_arg_string_common_routine (jerry_value_t js_arg, /**< JS arg */
                                                    target_p,
                                                    target_buf_size);
 
-  if (size == 0 || size == target_buf_size)
+  if ((size == target_buf_size) || (size == 0 && jerry_get_string_length (js_arg) != 0))
   {
     return jerry_create_error (JERRY_ERROR_TYPE,
-                               (jerry_char_t *) "The size of the buffer is not large enough.");
+                               (jerry_char_t *) "Buffer size is not large enough.");
   }
 
   target_p[size] = '\0';

@@ -161,6 +161,7 @@ void jmem_stats_free_object_bytes (size_t string_size);
 void jmem_stats_allocate_property_bytes (size_t property_size);
 void jmem_stats_free_property_bytes (size_t property_size);
 
+void jmem_heap_get_stats (jmem_heap_stats_t *);
 #endif /* JMEM_STATS */
 
 jmem_cpointer_t jmem_compress_pointer (const void *pointer_p) __attr_pure___;

@@ -909,14 +909,17 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
           {
             replace_str_curr_p++;
 
-            ecma_char_t next_character = *replace_str_curr_p;
-
-            if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
+            if (replace_str_curr_p < replace_str_end_p)
             {
-              uint32_t full_index = index * 10 + (uint32_t) (next_character - LIT_CHAR_0);
-              if (full_index > 0 && full_index < match_length)
+              ecma_char_t next_character = *replace_str_curr_p;
+
+              if (next_character >= LIT_CHAR_0 && next_character <= LIT_CHAR_9)
               {
-                index = match_length;
+                uint32_t full_index = index * 10 + (uint32_t) (next_character - LIT_CHAR_0);
+                if (full_index > 0 && full_index < match_length)
+                {
+                  index = match_length;
+                }
               }
             }
 

@@ -111,3 +111,21 @@ catch (e)
 {
   assert (e instanceof SyntaxError);
 }
+
+r = new RegExp ("^[\\u0061-\\u007a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\u0061-\\u007a]+").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\u0061-\\u007a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\x61-\\x7a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\x61-\\x7a]+").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\x61-\\x7a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");

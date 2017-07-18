@@ -104,6 +104,7 @@ jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
   if (jerry_value_has_error_flag (error_name)
       || !jerry_value_is_string (error_name))
   {
+    jerry_release_value (error_name);
     return false;
   }
 

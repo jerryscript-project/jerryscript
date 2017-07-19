@@ -518,48 +518,30 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
       }
     } /* ch == LIT_CHAR_BACKSLASH */
 
-    if (ch == LIT_CHAR_UNDEF)
+    if (start != LIT_CHAR_UNDEF)
     {
-      if (start != LIT_CHAR_UNDEF)
+      if (is_range)
       {
-        if (is_range)
+        if (start > ch)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, invalid range"));
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, wrong order"));
         }
         else
         {
-          append_char_class (re_ctx_p, start, start);
+          append_char_class (re_ctx_p, start, ch);
           start = LIT_CHAR_UNDEF;
-        }
-      }
-    }
-    else
-    {
-      if (start != LIT_CHAR_UNDEF)
-      {
-        if (is_range)
-        {
-          if (start > ch)
-          {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, wrong order"));
-          }
-          else
-          {
-            append_char_class (re_ctx_p, start, ch);
-            start = LIT_CHAR_UNDEF;
-            is_range = false;
-          }
-        }
-        else
-        {
-          append_char_class (re_ctx_p, start, start);
-          start = ch;
+          is_range = false;
         }
       }
       else
       {
+        append_char_class (re_ctx_p, start, start);
         start = ch;
       }
+    }
+    else
+    {
+      start = ch;
     }
   }
   while (token_type == RE_TOK_START_CHAR_CLASS || token_type == RE_TOK_START_INV_CHAR_CLASS);

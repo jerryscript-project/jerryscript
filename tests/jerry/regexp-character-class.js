@@ -129,3 +129,7 @@ assert (r == "abcdefghjklmnopqrstuvwxyz");
 
 r = new RegExp ("[\\x61-\\x7a]+$").exec("abcdefghjklmnopqrstuvwxyz");
 assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp("[\\u0800-\\uffff]", "g");
+assert (r.test ("\uffff"));
+assert (!r.test ("\uffff"));

@@ -45,19 +45,21 @@ static int load_javascript() {
 
         if (jerry_value_has_error_flag(parsed_code)) {
             LOG_PRINT_ALWAYS("jerry_parse failed [%s]\r\n", js_codes[src].name);
+            jerry_release_value(parsed_code);
             jsmbed_js_exit();
             return -1;
         }
 
         jerry_value_t returned_value = jerry_run(parsed_code);
+        jerry_release_value(parsed_code);
 
         if (jerry_value_has_error_flag(returned_value)) {
             LOG_PRINT_ALWAYS("jerry_run failed [%s]\r\n", js_codes[src].name);
+            jerry_release_value(returned_value);
             jsmbed_js_exit();
             return -1;
         }
 
-        jerry_release_value(parsed_code);
         jerry_release_value(returned_value);
     }
 

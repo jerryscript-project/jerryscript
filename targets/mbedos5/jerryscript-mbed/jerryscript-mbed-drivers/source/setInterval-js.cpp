@@ -28,11 +28,20 @@ DECLARE_GLOBAL_FUNCTION(setInterval) {
     CHECK_ARGUMENT_TYPE_ALWAYS(global, setInterval, 0, function);
     CHECK_ARGUMENT_TYPE_ALWAYS(global, setInterval, 1, number);
 
-    jerry_acquire_value(args[0]);
     int interval = int(jerry_get_number_value(args[1]));
 
     int id = mbed::js::EventLoop::getInstance().getQueue().call_every(interval, jerry_call_function, args[0], jerry_create_null(), (jerry_value_t*)NULL, 0);
 
+    jerry_value_t result = jerry_set_property_by_index(function_obj_p, id, args[0]);
+
+    if (jerry_value_has_error_flag(result)) {
+        jerry_release_value(result);
+        mbed::js::EventLoop::getInstance().getQueue().cancel(id);
+
+        return jerry_create_error(JERRY_ERROR_TYPE, (const jerry_char_t *) "Failed to run setInterval");
+    }
+
+    jerry_release_value(result);
     return jerry_create_number(id);
 }
 
@@ -50,6 +59,13 @@ DECLARE_GLOBAL_FUNCTION(clearInterval) {
     int id = int(jerry_get_number_value(args[0]));
 
     mbed::js::EventLoop::getInstance().getQueue().cancel(id);
+
+    jerry_value_t prop_name = jerry_create_string((const jerry_char_t*)"setInterval");
+    jerry_value_t func_obj = jerry_get_property(this_obj, prop_name);
+    jerry_release_value(prop_name);
+
+    jerry_delete_property_by_index(func_obj, id);
+    jerry_release_value(func_obj);
 
     return jerry_create_undefined();
 }

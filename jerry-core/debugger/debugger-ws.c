@@ -45,6 +45,13 @@
 #define JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE 4
 
 /**
+ *
+ */
+#define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
+  (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
+
+
+/**
  * Header for incoming packets.
  */
 typedef struct
@@ -433,16 +440,18 @@ JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MAX_RECEIVE_SIZE < 126,
  *         false - otherwise
  */
 bool
-jerry_debugger_receive (void)
+jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+  JERRY_ASSERT (message_data_p != NULL ? (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
+                                       : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
 
   JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
 
   uint8_t *recv_buffer_p = JERRY_CONTEXT (debugger_receive_buffer);
   bool resume_exec = false;
   uint8_t expected_message_type = 0;
-  void *message_data = NULL;
 
   while (true)
   {
@@ -532,7 +541,7 @@ jerry_debugger_receive (void)
                                          message_size,
                                          &resume_exec,
                                          &expected_message_type,
-                                         &message_data))
+                                         message_data_p))
     {
       return true;
     }

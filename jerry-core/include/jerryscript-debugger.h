@@ -28,12 +28,22 @@ extern "C"
  */
 
 /**
+ * Types for the client source wait and run method.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED = 0, /**< source is not received */
+  JERRY_DEBUGGER_SOURCE_RECEIVED = 1, /**< the source has been received */
+} jerry_debugger_wait_and_run_type_t;
+
+/**
  * Engine debugger functions.
  */
 bool jerry_debugger_is_connected (void);
 void jerry_debugger_stop (void);
 void jerry_debugger_continue (void);
 void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
+jerry_debugger_wait_and_run_type_t jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value);
 
 void jerry_debugger_init (uint16_t port);
 void jerry_debugger_cleanup (void);

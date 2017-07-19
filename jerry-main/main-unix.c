@@ -281,6 +281,7 @@ typedef enum
   OPT_SHOW_RE_OP,
   OPT_DEBUG_SERVER,
   OPT_DEBUG_PORT,
+  OPT_DEBUGGER_WAIT_SOURCE,
   OPT_SAVE_SNAP_GLOBAL,
   OPT_SAVE_SNAP_EVAL,
   OPT_SAVE_LIT_LIST,
@@ -312,6 +313,8 @@ static const cli_opt_t main_opts[] =
                .help = "start debug server and wait for a connecting client"),
   CLI_OPT_DEF (.id = OPT_DEBUG_PORT, .longopt = "debug-port", .meta = "NUM",
                .help = "debug server port (default: 5001)"),
+  CLI_OPT_DEF (.id = OPT_DEBUGGER_WAIT_SOURCE, .longopt = "debugger-wait-source",
+               .help = "wait for an executable source from the client"),
   CLI_OPT_DEF (.id = OPT_SAVE_SNAP_GLOBAL, .longopt = "save-snapshot-for-global", .meta = "FILE",
                .help = "save binary snapshot of parsed JS input (for execution in global context)"),
   CLI_OPT_DEF (.id = OPT_SAVE_SNAP_EVAL, .longopt = "save-snapshot-for-eval", .meta = "FILE",
@@ -407,6 +410,7 @@ main (int argc,
   uint16_t debug_port = 5001;
 
   bool is_repl_mode = false;
+  bool is_wait_mode = false;
   bool no_prompt = false;
 
   cli_state_t cli_state = cli_init (main_opts, argc - 1, argv + 1);
@@ -469,6 +473,14 @@ main (int argc,
         if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
         {
           debug_port = (uint16_t) cli_consume_int (&cli_state);
+        }
+        break;
+      }
+      case OPT_DEBUGGER_WAIT_SOURCE:
+      {
+        if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
+        {
+          is_wait_mode = true;
         }
         break;
       }
@@ -705,6 +717,21 @@ main (int argc,
       jerry_release_value (ret_value);
       ret_value = jerry_create_undefined ();
     }
+  }
+
+  if (is_wait_mode)
+  {
+    is_repl_mode = false;
+#ifdef JERRY_DEBUGGER
+    jerry_value_t wait_and_run_value;
+
+    if (jerry_debugger_wait_and_run_client_source (&wait_and_run_value) == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+    {
+      ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Connection aborted before source arrived.");
+    }
+
+    jerry_release_value (wait_and_run_value);
+#endif /* JERRY_DEBUGGER */
   }
 
   if (is_repl_mode)

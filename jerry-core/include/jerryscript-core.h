@@ -357,6 +357,7 @@ jerry_value_t jerry_create_undefined (void);
 jerry_value_t jerry_has_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_has_own_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 bool jerry_delete_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
+bool jerry_delete_property_by_index (const jerry_value_t obj_val, uint32_t index);
 
 jerry_value_t jerry_get_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_get_property_by_index (const jerry_value_t  obj_val, uint32_t index);

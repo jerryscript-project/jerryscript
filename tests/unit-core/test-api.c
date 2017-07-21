@@ -896,8 +896,14 @@ main (void)
   TEST_ASSERT (jerry_value_is_number (v_out)
                && jerry_get_number_value (v_out) == 10.5);
 
+  jerry_delete_property_by_index (array_obj_val, 5);
+  jerry_value_t v_und = jerry_get_property_by_index (array_obj_val, 5);
+
+  TEST_ASSERT (jerry_value_is_undefined (v_und));
+
   jerry_release_value (v_in);
   jerry_release_value (v_out);
+  jerry_release_value (v_und);
   jerry_release_value (array_obj_val);
 
   /* Test: init property descriptor */

@@ -1475,6 +1475,31 @@ jerry_delete_property (const jerry_value_t obj_val, /**< object value */
 } /* jerry_delete_property */
 
 /**
+ * Delete indexed property from the specified object.
+ *
+ * @return true  - if property was deleted successfully
+ *         false - otherwise
+ */
+bool
+jerry_delete_property_by_index (const jerry_value_t obj_val, /**< object value */
+                                uint32_t index) /**< index to be written */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (obj_val))
+  {
+    return false;
+  }
+
+  ecma_string_t str_idx;
+  ecma_init_ecma_string_from_uint32 (&str_idx, index);
+  ecma_value_t ret_value = ecma_op_object_delete (ecma_get_object_from_value (obj_val),
+                                                  &str_idx,
+                                                  false);
+  return ecma_is_value_true (ret_value);
+} /* jerry_delete_property_by_index */
+
+/**
  * Get value of a property to the specified object with the given name.
  *
  * Note:

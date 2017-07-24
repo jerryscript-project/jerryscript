@@ -689,12 +689,14 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
           {
             ret = ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
           }
-
-          new_byte_length = (ecma_length_t) new_length << element_size_shift;
-
-          if (new_byte_length + offset > buf_byte_length)
+          else
           {
-            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
+            new_byte_length = (ecma_length_t) new_length << element_size_shift;
+
+            if (new_byte_length + offset > buf_byte_length)
+            {
+              ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
+            }
           }
 
           ECMA_OP_TO_NUMBER_FINALIZE (num3);

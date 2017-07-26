@@ -821,6 +821,11 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
         if (cur_prop_p->types[1 - i] != ECMA_PROPERTY_TYPE_DELETED)
         {
           /* The other property is still valid. */
+          if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
+          {
+            ecma_property_hashmap_free (object_p);
+            ecma_property_hashmap_create (object_p);
+          }
           return;
         }
 

@@ -94,6 +94,9 @@ for docfile in $docs_dir/*.md; do
   sed -i -r -e 's/^!\[.*\]\(/&{{ site.github.url }}\//' $gh_pages_dir/$docfile_base
   sed -i -r -e 's/^!\[.*\]\(\{\{ site\.github\.url \}\}\/img.*$/&{: class="thumbnail center-block img-responsive" }/' $gh_pages_dir/$docfile_base
 
+  # turn filenames into permalinks
+  sed -i -r -e 's/docs\/[0-9]+\.(.*)\.md/\L\1/g' $gh_pages_dir/$docfile_base
+
   # replace span tags to div
   sed -i 's/<span class=/<div class=/g' $gh_pages_dir/$docfile_base
   sed -i 's/<\/span>/<\/div>/g' $gh_pages_dir/$docfile_base

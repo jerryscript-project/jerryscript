@@ -181,7 +181,7 @@ jerryx_module_native_resolver (const jerry_char_t *name, /**< name of the module
  */
 jerry_value_t
 jerryx_module_resolve (const jerry_char_t *name, /**< name of the module to load */
-                       jerryx_module_resolver_t *resolvers_p, /**< list of resolvers */
+                       const jerryx_module_resolver_t *resolvers_p, /**< list of resolvers */
                        size_t resolver_count) /**< number of resolvers in @p resolvers */
 {
   size_t index;

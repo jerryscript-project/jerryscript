@@ -69,6 +69,6 @@ typedef bool (*jerryx_module_resolver_t) (const jerry_char_t *name, jerry_value_
  * Load a copy of a module into the current context using the provided module resolvers, or return one that was already
  * loaded if it is found.
  */
-jerry_value_t jerryx_module_resolve (const jerry_char_t *name, jerryx_module_resolver_t *resolvers, size_t count);
+jerry_value_t jerryx_module_resolve (const jerry_char_t *name, const jerryx_module_resolver_t *resolvers, size_t count);
 
 #endif /* !JERRYX_MODULE_H */

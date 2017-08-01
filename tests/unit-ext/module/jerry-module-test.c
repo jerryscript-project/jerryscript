@@ -91,7 +91,7 @@ cache_check (const jerry_char_t *name,
   return false;
 } /* cache_check */
 
-static jerryx_module_resolver_t resolvers[3] =
+static const jerryx_module_resolver_t resolvers[3] =
 {
   jerryx_module_native_resolver,
   resolve_differently_handled_module,

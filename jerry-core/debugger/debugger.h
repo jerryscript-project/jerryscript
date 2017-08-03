@@ -29,6 +29,11 @@
 #define JERRY_DEBUGGER_MESSAGE_FREQUENCY 5
 
 /**
+ * Sleep time in milliseconds between each jerry_debugger_receive call
+ */
+#define JERRY_DEBUGGER_TIMEOUT 100
+
+/**
  * Limited resources available for the engine, so it is important to
  * check the maximum buffer size. It needs to be between 64 and 256 bytes.
  */
@@ -78,6 +83,7 @@ typedef enum
   JERRY_DEBUGGER_VM_STOP = 1u << 2, /**< stop at the next breakpoint regardless it is enabled */
   JERRY_DEBUGGER_VM_IGNORE = 1u << 3, /**< ignore all breakpoints */
   JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger stop at an exception */
+  JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 5, /**< debugger waiting for client code */
 } jerry_debugger_flags_t;
 
 /**
@@ -119,16 +125,18 @@ typedef enum
   JERRY_DEBUGGER_EXCEPTION_CONFIG = 3, /**< exception handler config */
   JERRY_DEBUGGER_MEMSTATS = 4, /**< list memory statistics */
   JERRY_DEBUGGER_STOP = 5, /**< stop execution */
+  JERRY_DEBUGGER_CLIENT_SOURCE = 6, /**< first message of client source */
+  JERRY_DEBUGGER_CLIENT_SOURCE_PART = 7, /**< next message of client source */
   /* The following messages are only available in breakpoint
    * mode and they switch the engine to run mode. */
-  JERRY_DEBUGGER_CONTINUE = 6, /**< continue execution */
-  JERRY_DEBUGGER_STEP = 7, /**< next breakpoint, step into functions */
-  JERRY_DEBUGGER_NEXT = 8, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_CONTINUE = 8, /**< continue execution */
+  JERRY_DEBUGGER_STEP = 9, /**< next breakpoint, step into functions */
+  JERRY_DEBUGGER_NEXT = 10, /**< next breakpoint in the same context */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 9, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 10, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 11, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 11, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 12, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 13, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**
@@ -288,27 +296,23 @@ typedef struct
   uint8_t eval_size[sizeof (uint32_t)]; /**< total size of the message */
 } jerry_debugger_receive_eval_first_t;
 
+
 /**
- * Incoming message: next message of evaluating expression.
+ * Incoming message: first message of client source.
  */
 typedef struct
 {
   uint8_t type; /**< type of the message */
-} jerry_debugger_receive_eval_part_t;
-
-/**
- * Data for evaluating expressions
- */
-typedef struct
-{
-  uint32_t eval_size; /**< total size of the eval string */
-  uint32_t eval_offset; /**< current offset in the eval string */
-} jerry_debugger_eval_data_t;
+  uint8_t code_size[sizeof (uint32_t)]; /**< total size of the message */
+} jerry_debugger_receive_client_source_first_t;
 
 void jerry_debugger_free_unreferenced_byte_code (void);
 
+void jerry_debugger_sleep (void);
+
 bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
-                                     bool *resume_exec_p, uint8_t *expected_message_p, void **message_data_p);
+                                     bool *resume_exec_p, uint8_t *expected_message_p,
+                                     jerry_debugger_uint8_data_t **message_data_p);
 void jerry_debugger_breakpoint_hit (uint8_t message_type);
 
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);

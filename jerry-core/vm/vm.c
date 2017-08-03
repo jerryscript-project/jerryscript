@@ -2405,7 +2405,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
 
-          if (jerry_debugger_receive ())
+          if (jerry_debugger_receive (NULL))
           {
             continue;
           }

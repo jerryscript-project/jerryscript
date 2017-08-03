@@ -17,8 +17,14 @@
 JERRY=$1
 DEBUGGER_CLIENT=$2
 TEST_CASE=$3
+CLIENT_ARGS=""
 
-START_DEBUG_SERVER="${JERRY} ${TEST_CASE}.js --start-debug-server &"
+if [[ $TEST_CASE == *"client_source"* ]]; then
+  START_DEBUG_SERVER="${JERRY} --start-debug-server --debugger-wait-source &"
+  CLIENT_ARGS="--client-source ${TEST_CASE}.js"
+else
+  START_DEBUG_SERVER="${JERRY} ${TEST_CASE}.js --start-debug-server &"
+fi
 
 echo "$START_DEBUG_SERVER"
 eval "$START_DEBUG_SERVER"
@@ -26,7 +32,7 @@ sleep 1s
 
 RESULT_TEMP=`mktemp ${TEST_CASE}.out.XXXXXXXXXX`
 
-(cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive) &> ${RESULT_TEMP}
+(cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) &> ${RESULT_TEMP}
 diff -U0 ${TEST_CASE}.expected ${RESULT_TEMP}
 STATUS_CODE=$?
 

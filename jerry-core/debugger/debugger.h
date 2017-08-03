@@ -18,6 +18,7 @@
 
 #include "debugger-ws.h"
 #include "ecma-globals.h"
+#include "jerryscript-core.h"
 
 #ifdef JERRY_DEBUGGER
 
@@ -121,6 +122,8 @@ typedef enum
   JERRY_DEBUGGER_EVAL_RESULT = 21, /**< eval result */
   JERRY_DEBUGGER_EVAL_RESULT_END = 22, /**< last part of eval result */
   JERRY_DEBUGGER_WAIT_FOR_SOURCE = 23, /**< engine waiting for a source code */
+  JERRY_DEBUGGER_OUTPUT_RESULT = 24, /**< output sent by the program to the debugger */
+  JERRY_DEBUGGER_OUTPUT_RESULT_END = 25, /**< last output result data */
 
   /* Messages sent by the client to server. */
 
@@ -146,13 +149,23 @@ typedef enum
 } jerry_debugger_header_type_t;
 
 /**
-  * Subtypes of send_eval.
+  * Subtypes of eval_result.
   */
 typedef enum
 {
   JERRY_DEBUGGER_EVAL_OK = 1, /**< eval result, no error */
   JERRY_DEBUGGER_EVAL_ERROR = 2, /**< eval result when an error is occured */
 } jerry_debugger_eval_subtype_t;
+
+/**
+  * Subtypes of output_result.
+  */
+typedef enum
+{
+  JERRY_DEBUGGER_OUTPUT_OK = 1, /**< output result, no error */
+  JERRY_DEBUGGER_OUTPUT_WARNING = 2, /**< output result, warning */
+  JERRY_DEBUGGER_OUTPUT_ERROR = 3, /**< output result, error */
+} jerry_debugger_output_subtype_t;
 
 /**
  * Delayed free of byte code data.
@@ -337,6 +350,7 @@ bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_co
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
 bool jerry_debugger_send_exception_string (ecma_value_t exception_value);
+void jerry_debugger_send_output (jerry_char_t buffer[], jerry_size_t str_size, uint8_t type);
 
 #endif /* JERRY_DEBUGGER */
 

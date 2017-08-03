@@ -815,6 +815,24 @@ jerry_debugger_send_parse_function (uint32_t line, /**< line */
 } /* jerry_debugger_send_parse_function */
 
 /**
+ * Send the output of the program to the debugger client.
+ * Currently only sends print output.
+ */
+void
+jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
+                            jerry_size_t str_size, /**< string size */
+                            uint8_t type) /**< type of output */
+{
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
+                                type,
+                                (const uint8_t *) buffer,
+                                sizeof (uint8_t) * str_size);
+  }
+} /* jerry_debugger_send_output */
+
+/**
  * Send memory statistics to the debugger client.
  */
 void

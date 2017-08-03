@@ -49,10 +49,17 @@ JERRY_DEBUGGER_BACKTRACE_END = 20
 JERRY_DEBUGGER_EVAL_RESULT = 21
 JERRY_DEBUGGER_EVAL_RESULT_END = 22
 JERRY_DEBUGGER_WAIT_FOR_SOURCE = 23
+JERRY_DEBUGGER_OUTPUT_RESULT = 24
+JERRY_DEBUGGER_OUTPUT_RESULT_END = 25
 
 # Subtypes of eval
 JERRY_DEBUGGER_EVAL_OK = 1
 JERRY_DEBUGGER_EVAL_ERROR = 2
+
+# Subtypes of output
+JERRY_DEBUGGER_OUTPUT_OK = 1
+JERRY_DEBUGGER_OUTPUT_WARNING = 2
+JERRY_DEBUGGER_OUTPUT_ERROR = 3
 
 
 # Messages sent by the client to server.
@@ -511,6 +518,7 @@ class JerryDebugger(object):
         self.yellow = ''
         self.green_bg = ''
         self.yellow_bg = ''
+        self.blue = ''
         self.nocolor = ''
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
@@ -658,6 +666,7 @@ class JerryDebugger(object):
         self.yellow = '\033[93m'
         self.green_bg = '\033[42m'
         self.yellow_bg = '\033[43m'
+        self.blue = '\033[94m'
 
     def get_message(self, blocking):
         # Connection was closed
@@ -1123,6 +1132,32 @@ def main():
 
         elif buffer_type == JERRY_DEBUGGER_WAIT_FOR_SOURCE:
             prompt.send_client_source()
+
+        elif buffer_type in [JERRY_DEBUGGER_OUTPUT_RESULT, JERRY_DEBUGGER_OUTPUT_RESULT_END]:
+            message = ""
+            msg_type = buffer_type
+            while True:
+                if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
+                    subtype = ord(data[-1])
+                    message += data[3:-1]
+                    break
+                else:
+                    message += data[3:]
+
+                data = debugger.get_message(True)
+                buffer_type = ord(data[2])
+                buffer_size = ord(data[1]) - 1
+
+                if buffer_type not in [msg_type, msg_type + 1]:
+                    raise Exception("Output data expected")
+
+            if subtype == JERRY_DEBUGGER_OUTPUT_OK:
+                print("%sout: %s%s" % (debugger.blue, debugger.nocolor, message))
+            elif subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
+                print("%swarning: %s%s" % (debugger.yellow, debugger.nocolor, message))
+            elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
+                print("%serr: %s%s" % (debugger.red, debugger.nocolor, message))
+
 
         else:
             raise Exception("Unknown message")

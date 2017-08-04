@@ -118,6 +118,7 @@ function DebuggerClient(address)
   var backtraceFrame = 0;
   var evalResult = null;
   var exceptionData = null;
+  var display = 0;
 
   function assert(expr)
   {
@@ -691,7 +692,7 @@ function DebuggerClient(address)
             return;
           }
 
-          func.source = source;
+          func.source = source.split(/\r\n|[\r\n]/);
           func.sourceName = sourceName;
           break;
         }
@@ -854,6 +855,11 @@ function DebuggerClient(address)
                   + (breakpoint.at ? "at " : "around ")
                   + breakpointInfo
                   + breakpointToString(breakpoint));
+                  
+        if (debuggerObj.display)
+        {
+          debuggerObj.printSource(debuggerObj.display);
+        }
         return;
       }
 
@@ -1163,11 +1169,57 @@ function DebuggerClient(address)
     }
   }
 
-  this.printSource = function()
+  this.printSource = function(line_num)
   {
-    if (lastBreakpointHit)
+    if (!lastBreakpointHit)
+      return;
+
+    lines = lastBreakpointHit.func.source;
+    if (line_num === 0)
     {
-      appendLog(lastBreakpointHit.func.source);
+      var start = 0;
+      var end = lastBreakpointHit.func.source.length - 1;
+    }
+    else
+    {
+      var start = Math.max(lastBreakpointHit.line - line_num, 0)
+      var end = Math.min(lastBreakpointHit.line + line_num - 1,
+                         lastBreakpointHit.func.source.length - 1)
+    }
+
+    if (lastBreakpointHit.func.sourceName)
+      appendLog("Source: " + lastBreakpointHit.func.sourceName);
+
+    for (i = start; i < end; i++)
+    {
+      var str = (i + 1).toString();
+      while (str.length < 4)
+      {
+        str = " " + str;
+      }
+
+      if (i == lastBreakpointHit.line - 1)
+      {
+        appendLog(str + " > " + lines[i]);
+      }
+      else
+      {
+        appendLog(str + "   " + lines[i]);
+      }
+    }
+  }
+
+  this.srcCheckArgs = function(line_num)
+  {
+    line_num = parseInt(line_num);
+    if (isNaN(line_num) || line_num < 0)
+    {
+      appendLog("Non-negative integer number expected");
+      return -1;
+    }
+    else
+    {
+      return line_num;
     }
   }
 
@@ -1367,8 +1419,34 @@ function debuggerCommand(event)
       debuggerObj.sendExceptionConfig(args[2]);
       break;
 
+    case "source":
     case "src":
-      debuggerObj.printSource();
+      if (!args[2])
+      {
+        debuggerObj.printSource(3);
+        break;
+      }
+      var line_num = debuggerObj.srcCheckArgs(args[2]);
+      if (line_num >= 0)
+      {
+        debuggerObj.printSource(line_num);
+        break;
+      }
+      break;
+
+    case "display":
+      if (!args[2])
+      {
+        appendLog("Non-negative integer number expected,\
+                  0 turns off the automatic source code display");
+        break;
+      }
+      var line_num = debuggerObj.srcCheckArgs(args[2]);
+      if (line_num >= 0)
+      {
+        debuggerObj.display = line_num;
+        break;
+      }
       break;
 
     case "list":

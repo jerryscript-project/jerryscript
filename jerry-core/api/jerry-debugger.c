@@ -134,6 +134,7 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
   {
     JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
     jerry_debugger_uint8_data_t *client_source_data_p = NULL;
+    jerry_debugger_wait_and_run_type_t ret_type = JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 
     while (true)
     {
@@ -164,14 +165,8 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
             *return_value = jerry_run (func_val);
             jerry_release_value (func_val);
 
-            return JERRY_DEBUGGER_SOURCE_RECEIVED;
-          }
-          else
-          {
-            jmem_heap_free_block (client_source_data_p,
-                                  client_source_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
-
-            return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
+            ret_type = JERRY_DEBUGGER_SOURCE_RECEIVED;
+            break;
           }
         }
       }
@@ -188,6 +183,8 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
       jmem_heap_free_block (client_source_data_p,
                             client_source_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
     }
+
+    return ret_type;
   }
 
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;

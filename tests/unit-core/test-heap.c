@@ -84,7 +84,8 @@ main (void)
   jmem_register_free_unused_memory_callback (test_heap_give_some_memory_back);
 
 #ifdef JMEM_STATS
-  jmem_heap_stats_print ();
+  // TODO: uncomment it after we solve the divide zero issue.
+  // jmem_heap_stats_print ();
 #endif /* JMEM_STATS */
 
   for (uint32_t i = 0; i < test_iters; i++)

@@ -42,9 +42,9 @@ def get_binary_path(bin_dir_path):
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
     Options('unittests',
-            ['--unittests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+            ['--unittests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset', '--mem-stats=on']),
     Options('unittests-debug',
-            ['--unittests', '--jerry-cmdline=off', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+            ['--unittests', '--jerry-cmdline=off', '--debug', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset', '--mem-stats=on']),
     Options('doctests',
             ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
     Options('doctests-debug',

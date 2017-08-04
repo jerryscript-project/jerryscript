@@ -83,7 +83,7 @@ main (void)
   }
 
 #ifdef JMEM_STATS
-  jmem_pools_stats_print ();
+  jmem_heap_stats_print ();
 #endif /* JMEM_STATS */
 
   jmem_finalize ();

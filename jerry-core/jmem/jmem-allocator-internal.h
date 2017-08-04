@@ -25,7 +25,6 @@
  */
 
 #ifdef JMEM_STATS
-void jmem_heap_get_stats (jmem_heap_stats_t *);
 void jmem_heap_stats_reset_peak (void);
 void jmem_heap_stats_print (void);
 #endif /* JMEM_STATS */

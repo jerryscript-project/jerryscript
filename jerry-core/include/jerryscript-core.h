@@ -159,6 +159,19 @@ typedef struct
 } jerry_property_descriptor_t;
 
 /**
+ * Description of JerryScript heap memory stats.
+ * It is for memory profiling.
+ */
+typedef struct
+{
+  size_t version; /**< the version of the stats struct */
+  size_t size; /**< heap total size */
+  size_t allocated_bytes; /**< currently allocated bytes */
+  size_t peak_allocated_bytes; /**< peak allocated bytes */
+  size_t reserved[4]; /**< padding for future extensions */
+} jerry_heap_stats_t;
+
+/**
  * Type of an external function handler.
  */
 typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_obj,
@@ -234,6 +247,8 @@ void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint3
 void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 void jerry_gc (void);
 void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
+
+bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);
 
 /**
  * Parser and executor functions.

@@ -160,7 +160,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   }
 
   ecma_value_t message = result;
-  uint8_t type = JERRY_DEBUGGER_EVAL_RESULT;
+  uint8_t type = JERRY_DEBUGGER_EVAL_OK;
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -183,7 +183,8 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
         ecma_free_value (result);
 
         const lit_utf8_byte_t *string_p = lit_get_magic_string_utf8 (id);
-        return jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_ERROR,
+        return jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT,
+                                           type,
                                            string_p,
                                            strlen ((const char *) string_p));
       }
@@ -201,7 +202,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   ecma_string_t *string_p = ecma_get_string_from_value (message);
 
   ECMA_STRING_TO_UTF8_STRING (string_p, buffer_p, buffer_size);
-  bool success = jerry_debugger_send_string (type, buffer_p, buffer_size);
+  bool success = jerry_debugger_send_string (JERRY_DEBUGGER_EVAL_RESULT, type, buffer_p, buffer_size);
   ECMA_FINALIZE_UTF8_STRING (buffer_p, buffer_size);
 
   ecma_free_value (message);
@@ -702,6 +703,7 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
  */
 bool
 jerry_debugger_send_string (uint8_t message_type, /**< message type */
+                            uint8_t sub_type, /**< subtype of the string */
                             const uint8_t *string_p, /**< string data */
                             size_t string_length) /**< length of string */
 {
@@ -728,10 +730,19 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
     string_p += max_fragment_len;
   }
 
+  if (sub_type != JERRY_DEBUGGER_NO_SUBTYPE)
+  {
+    string_length += 1;
+  }
+
   JERRY_DEBUGGER_SET_SEND_MESSAGE_SIZE (message_string_p, 1 + string_length);
   message_string_p->type = (uint8_t) (message_type + 1);
 
   memcpy (message_string_p->string, string_p, string_length);
+  if (sub_type != JERRY_DEBUGGER_NO_SUBTYPE)
+  {
+    message_string_p->string[string_length - 1] = sub_type;
+  }
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + string_length);
 } /* jerry_debugger_send_string */
@@ -960,6 +971,7 @@ jerry_debugger_send_exception_string (ecma_value_t exception_value) /**< error v
   ECMA_STRING_TO_UTF8_STRING (string_p, string_data_p, string_size);
 
   bool result = jerry_debugger_send_string (JERRY_DEBUGGER_EXCEPTION_STR,
+                                            JERRY_DEBUGGER_NO_SUBTYPE,
                                             string_data_p,
                                             string_size);
 

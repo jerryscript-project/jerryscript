@@ -2194,6 +2194,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
       jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
+                                  JERRY_DEBUGGER_NO_SUBTYPE,
                                   context_p->lit_object.literal_p->u.char_p,
                                   context_p->lit_object.literal_p->prop.length);
     }
@@ -2489,7 +2490,10 @@ parser_parse_script (const uint8_t *source_p, /**< source code */
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE, source_p, size);
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                source_p,
+                                size);
   }
 #endif /* JERRY_DEBUGGER */
 

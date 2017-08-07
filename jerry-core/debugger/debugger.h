@@ -34,6 +34,11 @@
 #define JERRY_DEBUGGER_TIMEOUT 100
 
 /**
+  * This constant represents that the string to be sent has no subtype.
+  */
+#define JERRY_DEBUGGER_NO_SUBTYPE 0
+
+/**
  * Limited resources available for the engine, so it is important to
  * check the maximum buffer size. It needs to be between 64 and 256 bytes.
  */
@@ -114,8 +119,6 @@ typedef enum
   JERRY_DEBUGGER_BACKTRACE_END = 20, /**< last backtrace data */
   JERRY_DEBUGGER_EVAL_RESULT = 21, /**< eval result */
   JERRY_DEBUGGER_EVAL_RESULT_END = 22, /**< last part of eval result */
-  JERRY_DEBUGGER_EVAL_ERROR = 23, /**< eval result when an error is occured */
-  JERRY_DEBUGGER_EVAL_ERROR_END = 24, /**< last part of eval result when an error is occured */
 
   /* Messages sent by the client to server. */
 
@@ -138,6 +141,15 @@ typedef enum
   JERRY_DEBUGGER_EVAL = 12, /**< first message of evaluating a string */
   JERRY_DEBUGGER_EVAL_PART = 13, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
+
+/**
+  * Subtypes of send_eval.
+  */
+typedef enum
+{
+  JERRY_DEBUGGER_EVAL_OK = 1, /**< eval result, no error */
+  JERRY_DEBUGGER_EVAL_ERROR = 2, /**< eval result when an error is occured */
+} jerry_debugger_eval_subtype_t;
 
 /**
  * Delayed free of byte code data.
@@ -318,7 +330,7 @@ void jerry_debugger_breakpoint_hit (uint8_t message_type);
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);
 bool jerry_debugger_send_configuration (uint8_t max_message_size);
 void jerry_debugger_send_data (jerry_debugger_header_type_t type, const void *data, size_t size);
-bool jerry_debugger_send_string (uint8_t message_type, const uint8_t *string_p, size_t string_length);
+bool jerry_debugger_send_string (uint8_t message_type, uint8_t sub_type, const uint8_t *string_p, size_t string_length);
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);

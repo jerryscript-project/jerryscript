@@ -406,6 +406,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
                                 name_p->u.char_p,
                                 name_p->prop.length);
 

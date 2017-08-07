@@ -48,8 +48,10 @@ JERRY_DEBUGGER_BACKTRACE = 19
 JERRY_DEBUGGER_BACKTRACE_END = 20
 JERRY_DEBUGGER_EVAL_RESULT = 21
 JERRY_DEBUGGER_EVAL_RESULT_END = 22
-JERRY_DEBUGGER_EVAL_ERROR = 23
-JERRY_DEBUGGER_EVAL_ERROR_END = 24
+
+# Subtypes of eval
+JERRY_DEBUGGER_EVAL_OK = 1
+JERRY_DEBUGGER_EVAL_ERROR = 2
 
 
 # Messages sent by the client to server.
@@ -1064,17 +1066,16 @@ def main():
             prompt.cmdloop()
 
         elif buffer_type in [JERRY_DEBUGGER_EVAL_RESULT,
-                             JERRY_DEBUGGER_EVAL_RESULT_END,
-                             JERRY_DEBUGGER_EVAL_ERROR,
-                             JERRY_DEBUGGER_EVAL_ERROR_END]:
+                             JERRY_DEBUGGER_EVAL_RESULT_END]:
 
             message = b""
             eval_type = buffer_type
             while True:
                 message += data[3:]
 
-                if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
-                                   JERRY_DEBUGGER_EVAL_ERROR_END]:
+                if buffer_type == JERRY_DEBUGGER_EVAL_RESULT_END:
+                    subtype = ord(message[-1])
+                    message = message[:-1]
                     break
 
                 data = debugger.get_message(True)
@@ -1085,7 +1086,7 @@ def main():
                                        eval_type + 1]:
                     raise Exception("Eval result expected")
 
-            if buffer_type == JERRY_DEBUGGER_EVAL_ERROR_END:
+            if subtype == JERRY_DEBUGGER_EVAL_ERROR:
                 print("Uncaught exception: %s" % (message))
             else:
                 print(message)

@@ -35,6 +35,7 @@ textarea {
   <div>
 </div>
 <script>
+// Messages sent by the server to client.
 var JERRY_DEBUGGER_CONFIGURATION = 1;
 var JERRY_DEBUGGER_PARSE_ERROR = 2;
 var JERRY_DEBUGGER_BYTE_CODE_CP = 3;
@@ -57,9 +58,12 @@ var JERRY_DEBUGGER_BACKTRACE = 19;
 var JERRY_DEBUGGER_BACKTRACE_END = 20;
 var JERRY_DEBUGGER_EVAL_RESULT = 21;
 var JERRY_DEBUGGER_EVAL_RESULT_END = 22;
-var JERRY_DEBUGGER_EVAL_ERROR = 23;
-var JERRY_DEBUGGER_EVAL_ERROR_END = 24;
 
+// Subtypes of eval
+var JERRY_DEBUGGER_EVAL_OK = 1;
+var JERRY_DEBUGGER_EVAL_ERROR = 2;
+
+// Messages sent by the client to server.
 var JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1;
 var JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2;
 var JERRY_DEBUGGER_EXCEPTION_CONFIG = 3;
@@ -855,7 +859,7 @@ function DebuggerClient(address)
                   + (breakpoint.at ? "at " : "around ")
                   + breakpointInfo
                   + breakpointToString(breakpoint));
-                  
+
         if (debuggerObj.display)
         {
           debuggerObj.printSource(debuggerObj.display);
@@ -896,19 +900,18 @@ function DebuggerClient(address)
 
       case JERRY_DEBUGGER_EVAL_RESULT:
       case JERRY_DEBUGGER_EVAL_RESULT_END:
-      case JERRY_DEBUGGER_EVAL_ERROR:
-      case JERRY_DEBUGGER_EVAL_ERROR_END:
       {
         evalResult = concatUint8Arrays(evalResult, message);
-
-        if (message[0] == JERRY_DEBUGGER_EVAL_RESULT_END)
+        var subType = evalResult[evalResult.length - 1];
+        evalResult = evalResult.slice(0, -1);
+        if (subType == JERRY_DEBUGGER_EVAL_OK)
         {
           appendLog(cesu8ToString(evalResult));
           evalResult = null;
           return;
         }
 
-        if (message[0] == JERRY_DEBUGGER_EVAL_ERROR_END)
+        if (subType == JERRY_DEBUGGER_EVAL_ERROR)
         {
           appendLog("Uncaught exception: " + cesu8ToString(evalResult));
           evalResult = null;

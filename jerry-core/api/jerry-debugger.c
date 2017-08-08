@@ -121,7 +121,8 @@ jerry_debugger_cleanup (void)
  * Sets whether the engine should wait and run a source.
  *
  * @return enum JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED - if the source is not received
- *              JERRY_DEBUGGER_SOURCE_RECEIVED - if the source received
+ *              JERRY_DEBUGGER_SOURCE_RECEIVED - if a source code received
+ *              JERRY_DEBUGGER_SOURCE_END - the end of the source codes
  */
 jerry_debugger_wait_and_run_type_t
 jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [out] parse and run return value */
@@ -136,12 +137,22 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
     jerry_debugger_uint8_data_t *client_source_data_p = NULL;
     jerry_debugger_wait_and_run_type_t ret_type = JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 
+    /* Notify the client about that the engine is waiting for a source. */
+    jerry_debugger_send_type (JERRY_DEBUGGER_WAIT_FOR_SOURCE);
+
     while (true)
     {
       if (jerry_debugger_receive (&client_source_data_p))
       {
         if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
         {
+          break;
+        }
+
+        /* Stop waiting for a new source file. */
+        if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_NO_SOURCE))
+        {
+          ret_type = JERRY_DEBUGGER_SOURCE_END;
           break;
         }
 

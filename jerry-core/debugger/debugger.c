@@ -568,6 +568,25 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the rec
       return true;
     }
 
+    case JERRY_DEBUGGER_NO_MORE_SOURCES:
+    {
+      if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Not in client source mode\n");
+        jerry_debugger_close_connection ();
+        return false;
+      }
+
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
+
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
+      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CLIENT_NO_SOURCE);
+
+      *resume_exec_p = true;
+
+      return true;
+    }
+
     default:
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unexpected message.");

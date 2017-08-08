@@ -21,7 +21,11 @@ CLIENT_ARGS=""
 
 if [[ $TEST_CASE == *"client_source"* ]]; then
   START_DEBUG_SERVER="${JERRY} --start-debug-server --debugger-wait-source &"
-  CLIENT_ARGS="--client-source ${TEST_CASE}.js"
+  if [[ $TEST_CASE == *"client_source_multiple"* ]]; then
+    CLIENT_ARGS="--client-source ${TEST_CASE}_2.js ${TEST_CASE}_1.js"
+  else
+    CLIENT_ARGS="--client-source ${TEST_CASE}.js"
+  fi
 else
   START_DEBUG_SERVER="${JERRY} ${TEST_CASE}.js --start-debug-server &"
 fi

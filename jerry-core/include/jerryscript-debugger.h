@@ -33,7 +33,8 @@ extern "C"
 typedef enum
 {
   JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED = 0, /**< source is not received */
-  JERRY_DEBUGGER_SOURCE_RECEIVED = 1, /**< the source has been received */
+  JERRY_DEBUGGER_SOURCE_RECEIVED = 1, /**< a source has been received */
+  JERRY_DEBUGGER_SOURCE_END = 2, /**< the end of the sources signal received */
 } jerry_debugger_wait_and_run_type_t;
 
 /**

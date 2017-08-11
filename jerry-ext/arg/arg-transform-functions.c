@@ -132,6 +132,12 @@ jerryx_arg_helper_process_double (double *d, /**< [in, out] the number to be pro
                                   double max, /**< the max value for clamping */
                                   jerryx_arg_int_option_t option) /**< the converting policies */
 {
+  if (isnan (*d))
+  {
+    return jerry_create_error (JERRY_ERROR_TYPE,
+                               (jerry_char_t *) "The number is NaN.");
+  }
+
   if (option.clamp == JERRYX_ARG_NO_CLAMP)
   {
     if (*d > max || *d < min)

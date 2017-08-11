@@ -53,7 +53,8 @@ const char *test_source = (
                            "test_validator_prop3(obj2);"
                            "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
                            "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
-                           "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 300.5, 300.5);"
+                           "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
+                           "test_validator_int3(NaN);"
                            );
 
 static const jerry_object_native_info_t thing_a_info =
@@ -420,9 +421,9 @@ test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unu
                              const jerry_value_t args_p[], /**< arguments list */
                              const jerry_length_t args_cnt) /**< arguments length */
 {
-  int8_t num0, num1, num2, num3, num4, num5, num6, num7;
-  num6 = 123;
-  num7 = 123;
+  int8_t num0, num1, num2, num3, num4, num5, num6, num7, num8, num9;
+  num8 = 123;
+  num9 = 123;
 
   jerryx_arg_t mapping[] =
   {
@@ -433,13 +434,15 @@ test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unu
     jerryx_arg_int8 (&num4, JERRYX_ARG_FLOOR, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
     jerryx_arg_int8 (&num5, JERRYX_ARG_CEIL, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
     jerryx_arg_int8 (&num6, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
-    jerryx_arg_int8 (&num7, JERRYX_ARG_ROUND, JERRYX_ARG_NO_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num7, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num8, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_int8 (&num9, JERRYX_ARG_ROUND, JERRYX_ARG_NO_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
   };
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
                                                    args_cnt,
                                                    mapping,
-                                                   8);
+                                                   10);
 
   TEST_ASSERT (jerry_value_has_error_flag (is_ok));
   TEST_ASSERT (num0 == -2);
@@ -449,13 +452,41 @@ test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unu
   TEST_ASSERT (num4 == 1);
   TEST_ASSERT (num5 == 2);
   TEST_ASSERT (num6 == 127);
-  TEST_ASSERT (num7 == 123);
+  TEST_ASSERT (num7 == -128);
+  TEST_ASSERT (num8 == 127);
+  TEST_ASSERT (num9 == 123);
 
   jerry_release_value (is_ok);
   validator_int_count++;
 
   return jerry_create_undefined ();
 } /* test_validator_int2_handler */
+
+static jerry_value_t
+test_validator_int3_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                             const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                             const jerry_value_t args_p[], /**< arguments list */
+                             const jerry_length_t args_cnt) /**< arguments length */
+{
+  int8_t num0;
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_int8 (&num0, JERRYX_ARG_ROUND, JERRYX_ARG_CLAMP, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
+                                                   args_cnt,
+                                                   mapping,
+                                                   1);
+
+  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+
+  jerry_release_value (is_ok);
+  validator_int_count++;
+
+  return jerry_create_undefined ();
+} /* test_validator_int3_handler */
 
 static jerry_value_t
 create_object_a_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
@@ -518,6 +549,7 @@ main (void)
   register_js_function ("test_validator2", test_validator2_handler);
   register_js_function ("test_validator_int1", test_validator_int1_handler);
   register_js_function ("test_validator_int2", test_validator_int2_handler);
+  register_js_function ("test_validator_int3", test_validator_int3_handler);
   register_js_function ("MyObjectA", create_object_a_handler);
   register_js_function ("MyObjectB", create_object_b_handler);
   register_js_function ("test_validator_prop1", test_validator_prop1_handler);
@@ -532,7 +564,7 @@ main (void)
   TEST_ASSERT (validator1_count == 5);
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);
-  TEST_ASSERT (validator_int_count == 2);
+  TEST_ASSERT (validator_int_count == 3);
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);

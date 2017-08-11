@@ -13,5 +13,8 @@
  * limitations under the License.
  */
 
-var a = new ArrayBuffer("string");
+var a = new ArrayBuffer(-0.3);
 assert(a.byteLength === 0);
+
+var b = new ArrayBuffer(-0.9);
+assert(b.byteLength === 0);

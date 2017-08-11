@@ -75,15 +75,14 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  uint32_t length = 0;
+  ecma_number_t length_num = 0;
 
   if (arguments_list_len > 0)
   {
-    ecma_number_t num;
 
     if (ecma_is_value_number (arguments_list_p[0]))
     {
-      num = ecma_get_number_from_value (arguments_list_p[0]);
+      length_num = ecma_get_number_from_value (arguments_list_p[0]);
     }
     else
     {
@@ -94,21 +93,27 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
         return to_number_value;
       }
 
-      num = ecma_get_number_from_value (to_number_value);
+      length_num = ecma_get_number_from_value (to_number_value);
 
       ecma_free_value (to_number_value);
     }
 
-    length = ecma_number_to_uint32 (num);
+    if (ecma_number_is_nan (length_num))
+    {
+      length_num = 0;
+    }
 
-    if (num != ((ecma_number_t) length)
-        || length > (UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1))
+    const uint32_t maximum_size_in_byte = UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1;
+
+    if (length_num <= -1.0 || length_num > (double) maximum_size_in_byte + 0.5)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
     }
   }
 
-  return ecma_make_object_value (ecma_arraybuffer_new_object (length));
+  uint32_t length_uint32 = ecma_number_to_uint32 (length_num);
+
+  return ecma_make_object_value (ecma_arraybuffer_new_object (length_uint32));
 } /* ecma_op_create_arraybuffer_object */
 
 /**

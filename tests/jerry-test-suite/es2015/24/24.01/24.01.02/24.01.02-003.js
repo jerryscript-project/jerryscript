@@ -15,3 +15,4 @@
 
 var a = new ArrayBuffer("5");
 assert(typeof a === 'object');
+assert(a.byteLength === 5);

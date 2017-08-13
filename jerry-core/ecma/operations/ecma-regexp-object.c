@@ -796,8 +796,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
 
         bc_p = old_bc_p;
-        /* FALLTHRU */
       }
+      /* FALLTHRU */
       case RE_OP_CAPTURE_GROUP_START:
       case RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START:
       case RE_OP_NON_CAPTURE_GROUP_START:
@@ -933,8 +933,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         bc_p = old_bc_p;
 
         /* If non-greedy fails and try to iterate... */
-        /* FALLTHRU */
       }
+      /* FALLTHRU */
       case RE_OP_CAPTURE_GREEDY_GROUP_END:
       case RE_OP_NON_CAPTURE_GREEDY_GROUP_END:
       {

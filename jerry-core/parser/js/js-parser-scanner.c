@@ -542,8 +542,8 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         {
           break;
         }
-        /* FALLTHRU */
       }
+      /* FALLTHRU */
       case SCAN_MODE_PRIMARY_EXPRESSION_AFTER_NEW:
       {
         if (parser_scan_primary_expression (context_p, type, stack_top, &mode))
@@ -558,8 +558,8 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         {
           break;
         }
-        /* FALLTHRU */
       }
+      /* FALLTHRU */
       case SCAN_MODE_PRIMARY_EXPRESSION_END:
       {
         if (parser_scan_primary_expression_end (context_p, type, stack_top, end_type, &mode))

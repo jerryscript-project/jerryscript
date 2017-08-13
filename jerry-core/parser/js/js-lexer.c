@@ -127,9 +127,8 @@ skip_spaces (parser_context_t *context_p) /**< context */
         {
           context_p->source_p++;
         }
-        /* FALLTHRU */
       }
-
+      /* FALLTHRU */
       case LIT_CHAR_LF:
       {
         context_p->line++;
@@ -140,9 +139,8 @@ skip_spaces (parser_context_t *context_p) /**< context */
         {
           mode = LEXER_SKIP_SPACES;
         }
-        /* FALLTHRU */
       }
-
+      /* FALLTHRU */
       case LIT_CHAR_VTAB:
       case LIT_CHAR_FF:
       case LIT_CHAR_SP:

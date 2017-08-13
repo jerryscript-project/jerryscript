@@ -838,8 +838,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           case 3:
           {
             branch_offset = *(byte_code_p++);
-            /* FALLTHRU */
           }
+	  /* FALLTHRU */
           default:
           {
             JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2
@@ -1172,8 +1172,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             *stack_top_p++ = left_value;
             *stack_top_p++ = right_value;
           }
-          /* FALLTHRU */
         }
+	/* FALLTHRU */
         case VM_OC_PROP_GET:
         case VM_OC_PROP_PRE_INCR:
         case VM_OC_PROP_PRE_DECR:
@@ -1206,8 +1206,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p += 2;
           left_value = result;
           right_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-          /* FALLTHRU */
         }
+	/* FALLTHRU */
         case VM_OC_PRE_INCR:
         case VM_OC_PRE_DECR:
         case VM_OC_POST_INCR:
@@ -1652,8 +1652,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             left_value = result;
           }
-          /* FALLTHRU */
         }
+	/* FALLTHRU */
         case VM_OC_TYPEOF:
         {
           result = opfunc_typeof (left_value);

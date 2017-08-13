@@ -631,14 +631,14 @@ search_in_conversion_table (ecma_char_t character,        /**< code unit */
           {
             output_buffer_p[2] = array[middle + 3];
             char_sequence++;
-            /* FALLTHRU */
           }
+	  /* FALLTHRU */
           case 2:
           {
             output_buffer_p[1] = array[middle + 2];
             char_sequence++;
-            /* FALLTHRU */
           }
+	  /* FALLTHRU */
           default:
           {
             output_buffer_p[0] = array[middle + 1];

@@ -116,8 +116,8 @@ vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte cod
     {
       branch_offset <<= 8;
       branch_offset |= *(++branch_offset_p);
-      /* FALLTHRU */
     }
+    /* FALLTHRU */
     case 2:
     {
       branch_offset <<= 8;

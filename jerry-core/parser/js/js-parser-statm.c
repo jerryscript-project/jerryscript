@@ -1966,9 +1966,8 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           context_p->token.extra_value = context_p->token.type;
           context_p->token.type = LEXER_EXPRESSION_START;
         }
-        /* FALLTHRU */
       }
-
+      /* FALLTHRU */
       default:
       {
         int options = PARSE_EXPR_BLOCK;

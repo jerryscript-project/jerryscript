@@ -70,6 +70,52 @@ try
   assert (e instanceof TypeError);
 }
 
+try
+{
+  eval ("'\\" + "101'");
+
+  assert (false);
+} catch (e)
+{
+  assert (e instanceof SyntaxError);
+}
+
+try
+{
+  var str1 = "'\\" + "0'";
+  var str2 = "'\\x" + "00'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
+}
+
+try
+{
+  var str1 = "'\\" + "0" + "\\" + "0" + "\\" + "0'";
+  var str2 = "'\\x" + "00" + "\\x" + "00" + "\\x" + "00'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
+}
+
+try
+{
+  var str1 = "'foo\\" + "0" + "bar'";
+  var str2 = "'foo\\x" + "00" + "bar'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
+}
+
 (function (a) {
   (function (a) {
   });

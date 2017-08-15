@@ -141,10 +141,11 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
                     ret_value);
 
     ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
-    ecma_string_t *locale_string_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
+    ecma_string_t magic_string_to_locale_string;
+    ecma_init_ecma_magic_string (&magic_string_to_locale_string, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
 
     ECMA_TRY_CATCH (to_locale_value,
-                    ecma_op_object_get (index_obj_p, locale_string_magic_string_p),
+                    ecma_op_object_get (index_obj_p, &magic_string_to_locale_string),
                     ret_value);
 
     if (ecma_op_is_callable (to_locale_value))
@@ -166,9 +167,6 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
     }
 
     ECMA_FINALIZE (to_locale_value);
-
-    ecma_deref_ecma_string (locale_string_magic_string_p);
-
     ECMA_FINALIZE (index_obj_value);
   }
 
@@ -332,11 +330,13 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
   if (ecma_is_value_object (value)
       && (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL))
   {
-    ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
+    ecma_string_t magic_string_length;
+    ecma_init_ecma_length_string (&magic_string_length);
+
     /* 5.b.ii */
     ECMA_TRY_CATCH (arg_len_value,
                     ecma_op_object_get (ecma_get_object_from_value (value),
-                                        magic_string_length_p),
+                                        &magic_string_length),
                     ret_value);
     ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, arg_len_value, ret_value);
 
@@ -383,7 +383,6 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
 
     ECMA_OP_TO_NUMBER_FINALIZE (arg_len_number);
     ECMA_FINALIZE (arg_len_value);
-    ecma_deref_ecma_string (magic_string_length_p);
   }
   else
   {

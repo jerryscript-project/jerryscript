@@ -924,10 +924,11 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
     /* 4.b */
     else if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_ARRAY_UL)
     {
-      ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+      ecma_string_t magic_string_length;
+      ecma_init_ecma_length_string (&magic_string_length);
 
       ECMA_TRY_CATCH (array_length,
-                      ecma_op_object_get (obj_p, length_str_p),
+                      ecma_op_object_get (obj_p, &magic_string_length),
                       ret_value);
 
       ECMA_OP_TO_NUMBER_TRY_CATCH (array_length_num,
@@ -1007,8 +1008,6 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
 
       ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);
       ECMA_FINALIZE (array_length);
-
-      ecma_deref_ecma_string (length_str_p);
     }
   }
 
@@ -1727,11 +1726,12 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   /* 5. */
   ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
 
-  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
 
   /* 6. */
   ECMA_TRY_CATCH (array_length,
-                  ecma_op_object_get (obj_p, length_str_p),
+                  ecma_op_object_get (obj_p, &magic_string_length),
                   ret_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (array_length_num,
@@ -1819,7 +1819,6 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);
   ECMA_FINALIZE (array_length);
 
-  ecma_deref_ecma_string (length_str_p);
   ecma_free_values_collection (partial_p, true);
 
   /* 11. */

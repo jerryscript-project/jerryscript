@@ -361,7 +361,7 @@ ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, /**< ecma-strin
 /**
  * Initialize a magic ecma-string
  */
-void
+inline void __attr_always_inline___
 ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, /**< ecma-string */
                              lit_magic_string_id_t id) /**< literal id */
 {
@@ -441,38 +441,6 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
   memcpy (data_p, str_buf, str_size);
   return string_desc_p;
 } /* ecma_new_ecma_string_from_number */
-
-/**
- * Allocate new ecma-string and fill it with reference to ECMA magic string
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id) /**< identifier of magic string */
-{
-  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
-
-  ecma_string_t *string_desc_p = ecma_alloc_string ();
-  ecma_init_ecma_string_from_magic_string_id (string_desc_p, id);
-
-  return string_desc_p;
-} /* ecma_new_ecma_string_from_magic_string_id */
-
-/**
- * Allocate new ecma-string and fill it with reference to ECMA magic string
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< identifier of externl magic string */
-{
-  JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
-
-  ecma_string_t *string_desc_p = ecma_alloc_string ();
-  ecma_init_ecma_string_from_magic_string_ex_id (string_desc_p, id);
-
-  return string_desc_p;
-} /* ecma_new_ecma_string_from_magic_string_ex_id */
 
 /**
  * Allocate new ecma-string and fill it with reference to length magic string
@@ -1443,11 +1411,11 @@ ecma_string_from_property_name (ecma_property_t property, /**< property name typ
     }
     case ECMA_STRING_CONTAINER_MAGIC_STRING:
     {
-      return ecma_new_ecma_string_from_magic_string_id ((lit_magic_string_id_t) prop_name_cp);
+      return ecma_get_magic_string ((lit_magic_string_id_t) prop_name_cp);
     }
     case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
     {
-      return ecma_new_ecma_string_from_magic_string_ex_id ((lit_magic_string_ex_id_t) prop_name_cp);
+      return ecma_get_magic_string_ex ((lit_magic_string_ex_id_t) prop_name_cp);
     }
     default:
     {
@@ -1960,7 +1928,12 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 ecma_string_t *
 ecma_get_magic_string (lit_magic_string_id_t id) /**< magic string id */
 {
-  return ecma_new_ecma_string_from_magic_string_id (id);
+  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+  ecma_init_ecma_string_from_magic_string_id (string_desc_p, id);
+
+  return string_desc_p;
 } /* ecma_get_magic_string */
 
 /**
@@ -1971,7 +1944,12 @@ ecma_get_magic_string (lit_magic_string_id_t id) /**< magic string id */
 ecma_string_t *
 ecma_get_magic_string_ex (lit_magic_string_ex_id_t id) /**< external magic string id */
 {
-  return ecma_new_ecma_string_from_magic_string_ex_id (id);
+  JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
+
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+  ecma_init_ecma_string_from_magic_string_ex_id (string_desc_p, id);
+
+  return string_desc_p;
 } /* ecma_get_magic_string_ex */
 
 /**

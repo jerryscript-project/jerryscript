@@ -226,11 +226,11 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
       function_name_magic_string_id = LIT_MAGIC_STRING_VALUE_OF_UL;
     }
 
-    ecma_string_t *function_name_p = ecma_get_magic_string (function_name_magic_string_id);
+    ecma_string_t magic_string_function_name;
+    ecma_init_ecma_magic_string (&magic_string_function_name, function_name_magic_string_id);
 
-    ecma_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
-
-    ecma_deref_ecma_string (function_name_p);
+    ecma_value_t function_value_get_completion = ecma_op_object_get (obj_p,
+                                                                     &magic_string_function_name);
 
     if (ECMA_IS_VALUE_ERROR (function_value_get_completion))
     {

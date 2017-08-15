@@ -133,32 +133,30 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   }
 
   /* 7. */
-  ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
 
   prop_value_p = ecma_create_named_data_property (obj_p,
-                                                  length_magic_string_p,
+                                                  &magic_string_length,
                                                   ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                   NULL);
 
   prop_value_p->value = ecma_make_uint32_value (arguments_number);
-
-  ecma_deref_ecma_string (length_magic_string_p);
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
   /* 13. */
   if (!is_strict)
   {
-    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
+    ecma_string_t magic_string_callee;
+    ecma_init_ecma_magic_string (&magic_string_callee, LIT_MAGIC_STRING_CALLEE);
 
     prop_value_p = ecma_create_named_data_property (obj_p,
-                                                    callee_magic_string_p,
+                                                    &magic_string_callee,
                                                     ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                     NULL);
 
     prop_value_p->value = ecma_make_object_value (func_obj_p);
-
-    ecma_deref_ecma_string (callee_magic_string_p);
   }
   else
   {
@@ -180,51 +178,51 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       prop_desc.is_configurable = false;
     }
 
-    ecma_string_t *callee_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE);
+    ecma_string_t magic_string_callee;
+    ecma_init_ecma_magic_string (&magic_string_callee, LIT_MAGIC_STRING_CALLEE);
 
     ecma_value_t completion = ecma_op_object_define_own_property (obj_p,
-                                                                  callee_magic_string_p,
+                                                                  &magic_string_callee,
                                                                   &prop_desc,
                                                                   false);
 
     JERRY_ASSERT (ecma_is_value_true (completion));
-    ecma_deref_ecma_string (callee_magic_string_p);
 
-    ecma_string_t *caller_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
+    ecma_string_t magic_string_caller;
+    ecma_init_ecma_magic_string (&magic_string_caller, LIT_MAGIC_STRING_CALLER);
     completion = ecma_op_object_define_own_property (obj_p,
-                                                     caller_magic_string_p,
+                                                     &magic_string_caller,
                                                      &prop_desc,
                                                      false);
     JERRY_ASSERT (ecma_is_value_true (completion));
-    ecma_deref_ecma_string (caller_magic_string_p);
 
     ecma_deref_object (thrower_p);
   }
 
-  ecma_string_t *arguments_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
+  ecma_string_t magic_string_arguments;
+  ecma_init_ecma_magic_string (&magic_string_arguments, LIT_MAGIC_STRING_ARGUMENTS);
 
   if (is_strict)
   {
     ecma_op_create_immutable_binding (lex_env_p,
-                                      arguments_string_p,
+                                      &magic_string_arguments,
                                       ecma_make_object_value (obj_p));
   }
   else
   {
     ecma_value_t completion = ecma_op_create_mutable_binding (lex_env_p,
-                                                              arguments_string_p,
+                                                              &magic_string_arguments,
                                                               false);
     JERRY_ASSERT (ecma_is_value_empty (completion));
 
     completion = ecma_op_set_mutable_binding (lex_env_p,
-                                              arguments_string_p,
+                                              &magic_string_arguments,
                                               ecma_make_object_value (obj_p),
                                               false);
 
     JERRY_ASSERT (ecma_is_value_empty (completion));
   }
 
-  ecma_deref_ecma_string (arguments_string_p);
   ecma_deref_object (obj_p);
 } /* ecma_op_create_arguments_object */
 

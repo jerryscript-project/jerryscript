@@ -205,10 +205,12 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
   JERRY_ASSERT (ecma_get_object_type (ecma_get_object_from_value (array)) == ECMA_OBJECT_TYPE_ARRAY);
 
   ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get (array_p, magic_string_length_p);
-  ecma_deref_ecma_string (magic_string_length_p);
+
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
+
+  ecma_value_t len_value = ecma_op_object_get (array_p, &magic_string_length);
   ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
   ecma_fast_free_value (len_value);
 
@@ -416,10 +418,12 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
   JERRY_ASSERT (ecma_get_object_type (ecma_get_object_from_value (array)) == ECMA_OBJECT_TYPE_ARRAY);
 
   ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get (array_p, magic_string_length_p);
-  ecma_deref_ecma_string (magic_string_length_p);
+
+  ecma_string_t magic_string_length;
+  ecma_init_ecma_length_string (&magic_string_length);
+
+  ecma_value_t len_value = ecma_op_object_get (array_p, &magic_string_length);
   ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
   ecma_fast_free_value (len_value);
 

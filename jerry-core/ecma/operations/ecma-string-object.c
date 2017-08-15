@@ -50,7 +50,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   if (arguments_list_len == 0)
   {
-    prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
+    prim_prop_str_value_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {

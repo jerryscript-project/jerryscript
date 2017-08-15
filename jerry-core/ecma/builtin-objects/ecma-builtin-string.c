@@ -123,7 +123,7 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 
   if (arguments_list_len == 0)
   {
-    ecma_string_t *str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
+    ecma_string_t *str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     ecma_value_t str_value = ecma_make_string_value (str_p);
 
     ret_value = str_value;

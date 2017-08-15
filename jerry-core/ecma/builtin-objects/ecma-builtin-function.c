@@ -78,16 +78,16 @@ ecma_builtin_function_helper_get_function_expression (const ecma_value_t *argume
   ecma_string_t *function_kw_str_p, *empty_str_p;
   ecma_string_t *expr_str_p, *concated_str_p;
 
-  left_parenthesis_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LEFT_PARENTHESIS_CHAR);
-  right_parenthesis_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_RIGHT_PARENTHESIS_CHAR);
+  left_parenthesis_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_PARENTHESIS_CHAR);
+  right_parenthesis_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_PARENTHESIS_CHAR);
 
-  left_brace_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
-  right_brace_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
+  left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
+  right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
 
   comma_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
 
-  function_kw_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_FUNCTION);
-  empty_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
+  function_kw_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_FUNCTION);
+  empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
   /* First, we only process the function arguments skipping the function body */
   ecma_length_t number_of_function_args = (arguments_list_len == 0 ? 0 : arguments_list_len - 1);

@@ -168,12 +168,11 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
     if (ecma_is_value_object (result))
     {
-      ecma_string_t *message_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
+      ecma_string_t magic_string_message;
+      ecma_init_ecma_magic_string (&magic_string_message, LIT_MAGIC_STRING_MESSAGE);
 
       message = ecma_op_object_find (ecma_get_object_from_value (result),
-                                     message_string_p);
-
-      ecma_deref_ecma_string (message_string_p);
+                                     &magic_string_message);
 
       if (!ecma_is_value_string (message)
           || ecma_string_is_empty (ecma_get_string_from_value (message)))

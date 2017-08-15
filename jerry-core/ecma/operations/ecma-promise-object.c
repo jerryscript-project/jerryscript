@@ -303,8 +303,9 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   }
 
   /* 8. */
-  ecma_string_t *str_then = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_THEN);
-  ecma_value_t then = ecma_op_object_get (ecma_get_object_from_value (argv[0]), str_then);
+  ecma_string_t magic_string_then;
+  ecma_init_ecma_magic_string (&magic_string_then, LIT_MAGIC_STRING_THEN);
+  ecma_value_t then = ecma_op_object_get (ecma_get_object_from_value (argv[0]), &magic_string_then);
 
   if (ECMA_IS_VALUE_ERROR (then))
   {
@@ -322,7 +323,6 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
     ecma_enqueue_promise_resolve_thenable_job (promise, argv[0], then);
   }
 
-  ecma_deref_ecma_string (str_then);
   ecma_free_value (then);
 
 end_of_resolve_function:

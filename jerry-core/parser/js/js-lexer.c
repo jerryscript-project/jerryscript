@@ -615,6 +615,16 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
 
+      if (*source_p == LIT_CHAR_0
+          && source_p + 1 < source_end_p
+          && (*(source_p + 1) < LIT_CHAR_0 || *(source_p + 1) > LIT_CHAR_9))
+      {
+        source_p++;
+        column++;
+        length++;
+        continue;
+      }
+
       /* Except \x, \u, and octal numbers, everything is
        * converted to a character which has the same byte length. */
       if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_3)

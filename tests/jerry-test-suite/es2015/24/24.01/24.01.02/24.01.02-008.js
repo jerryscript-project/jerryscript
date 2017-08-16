@@ -13,15 +13,6 @@
  * limitations under the License.
  */
 
-var name = "";
 var obj = {};
-try
-{
-  var a = new ArrayBuffer(obj);
-}
-catch (e)
-{
-  name = e.name;
-}
-
-assert(name === "RangeError");
+var a = new ArrayBuffer(obj);
+assert(a.byteLength === 0);

@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-var a = new ArrayBuffer("string");
+var a = new ArrayBuffer(undefined);
 assert(a.byteLength === 0);

@@ -13,5 +13,14 @@
  * limitations under the License.
  */
 
-var a = new ArrayBuffer("string");
-assert(a.byteLength === 0);
+var name = "";
+try
+{
+  var a = new ArrayBuffer(Math.pow(2, 32) - 1);
+}
+catch (e)
+{
+  name = e.name;
+}
+
+assert(name === "RangeError");

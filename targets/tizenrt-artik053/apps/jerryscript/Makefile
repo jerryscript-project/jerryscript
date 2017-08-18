@@ -75,7 +75,7 @@ CONFIG_JERRYSCRIPT_HEAPSIZE ?= 64000
 CONFIG_JERRY_DEBUGGER_PORT ?= 5001
 
 APPNAME = jerry
-# path to the project dir, "tizenrt-artik05x" by default
+# path to the project dir, "tizenrt-artik053" by default
 ROOT_DIR = ../../../..
 PRIORITY = $(CONFIG_JERRYSCRIPT_PRIORITY)
 STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)

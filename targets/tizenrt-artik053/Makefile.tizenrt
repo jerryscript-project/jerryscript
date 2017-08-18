@@ -13,8 +13,8 @@
 # limitations under the License.
 
 JERRYHEAP	?= 16
-BUILD_DIR	?= build/tizenrt-artik05x
-LIBTARGET_DIR	?= $(abspath $(PWD)/../tizenrt/build/output/libraries)
+BUILD_DIR	?= build/tizenrt-artik053
+LIBTARGET_DIR	?= $(abspath $(PWD)/../TizenRT/build/output/libraries)
 
 EXT_CFLAGS += -mcpu=cortex-r4 -mfpu=vfpv3
 EXT_CFLAGS += -fno-builtin -fno-strict-aliasing
@@ -22,7 +22,7 @@ EXT_CFLAGS += -fomit-frame-pointer
 EXT_CFLAGS += -fno-strength-reduce
 EXT_CFLAGS += -Wall -Werror -Wshadow
 EXT_CFLAGS += -Wno-error=conversion
-EXT_CFLAGS += -I. -isystem ../tizenrt/os/include
+EXT_CFLAGS += -I. -isystem ../TizenRT/os/include
 
 .PHONY: libjerry clean
 

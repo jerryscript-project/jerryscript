@@ -79,6 +79,8 @@ EXTRA_LIBPATHS = -L "${shell dirname "$(LIBSUPXX)"}"
 EXTRA_LIBS = -lsupc++
 endif
 
+EXTRA_LIBS += -ljerry-core -ljerry-libm -ljerry-ext
+
 ifeq ($(WINTOOL),y)
   # Windows-native toolchains
   DIRLINK = $(TOPDIR)/tools/copydir.sh

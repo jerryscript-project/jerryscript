@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <tinyara/fs/fs_utils.h>
 
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
@@ -70,7 +71,7 @@ static const uint8_t *
 read_file (const char *file_name, /**< source code */
            size_t *out_size_p) /**< [out] number of bytes successfully read from source */
 {
-  FILE *file = fopen (file_name, "r");
+  FILE *file = fopen (get_fullpath(file_name), "r");
   if (file == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: cannot open file: %s\n", file_name);
@@ -312,17 +313,14 @@ register_js_function (const char *name_p, /**< name of the function */
  */
 static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 
+
 /**
- * Main program.
- *
- * @return 0 if success, error code otherwise
+ * JerryScript command main
  */
-#ifdef CONFIG_BUILD_KERNEL
-int main (int argc, FAR char *argv[])
-#else
-int jerry_main (int argc, char *argv[])
-#endif
+static int
+jerry_cmd_main (int argc, char *argv[])
 {
+
   if (argc > JERRY_MAX_COMMAND_LINE_ARGS)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR,
@@ -455,7 +453,7 @@ int jerry_main (int argc, char *argv[])
   jerry_cleanup ();
 
   return ret_code;
-} /* main */
+} /* jerry_cmd_main */
 
 /**
  * Aborts the program.
@@ -518,10 +516,17 @@ jerryx_port_handler_print_char (char c) /**< the character to print */
   printf ("%c", c);
 } /* jerryx_port_handler_print_char */
 
-int
-jerry_register_cmd (void) {
-  const tash_cmdlist_t tash_cmds[] 
-      = { { "jerry", jerry_main, TASH_EXECMD_SYNC }, { 0, 0, 0 } };
-  tash_cmdlist_install(tash_cmds);
+/**
+* Main program.
+*
+* @return 0 if success, error code otherwise
+*/
+#ifdef CONFIG_BUILD_KERNEL
+int main (int argc, FAR char *argv[])
+#else
+int jerry_main (int argc, char *argv[])
+#endif
+{
+  tash_cmd_install("jerry", jerry_cmd_main, TASH_EXECMD_SYNC);
   return 0;
-}
+} /* main */

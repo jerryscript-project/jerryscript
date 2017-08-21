@@ -89,6 +89,7 @@ typedef enum
   JERRY_DEBUGGER_VM_IGNORE = 1u << 3, /**< ignore all breakpoints */
   JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger stop at an exception */
   JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 5, /**< debugger waiting for client code */
+  JERRY_DEBUGGER_CLIENT_NO_SOURCE = 1u << 6, /**< debugger leaving the client source loop */
 } jerry_debugger_flags_t;
 
 /**
@@ -119,6 +120,7 @@ typedef enum
   JERRY_DEBUGGER_BACKTRACE_END = 20, /**< last backtrace data */
   JERRY_DEBUGGER_EVAL_RESULT = 21, /**< eval result */
   JERRY_DEBUGGER_EVAL_RESULT_END = 22, /**< last part of eval result */
+  JERRY_DEBUGGER_WAIT_FOR_SOURCE = 23, /**< engine waiting for a source code */
 
   /* Messages sent by the client to server. */
 
@@ -130,16 +132,17 @@ typedef enum
   JERRY_DEBUGGER_STOP = 5, /**< stop execution */
   JERRY_DEBUGGER_CLIENT_SOURCE = 6, /**< first message of client source */
   JERRY_DEBUGGER_CLIENT_SOURCE_PART = 7, /**< next message of client source */
+  JERRY_DEBUGGER_NO_MORE_SOURCES = 8, /**< no more sources notification */
   /* The following messages are only available in breakpoint
    * mode and they switch the engine to run mode. */
-  JERRY_DEBUGGER_CONTINUE = 8, /**< continue execution */
-  JERRY_DEBUGGER_STEP = 9, /**< next breakpoint, step into functions */
-  JERRY_DEBUGGER_NEXT = 10, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_CONTINUE = 9, /**< continue execution */
+  JERRY_DEBUGGER_STEP = 10, /**< next breakpoint, step into functions */
+  JERRY_DEBUGGER_NEXT = 11, /**< next breakpoint in the same context */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 11, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 12, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 13, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 12, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 13, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 14, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**
@@ -307,7 +310,6 @@ typedef struct
   uint8_t type; /**< type of the message */
   uint8_t eval_size[sizeof (uint32_t)]; /**< total size of the message */
 } jerry_debugger_receive_eval_first_t;
-
 
 /**
  * Incoming message: first message of client source.

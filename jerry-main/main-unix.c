@@ -723,14 +723,28 @@ main (int argc,
   {
     is_repl_mode = false;
 #ifdef JERRY_DEBUGGER
-    jerry_value_t wait_and_run_value;
+    jerry_value_t run_result;
+    jerry_debugger_wait_and_run_type_t receive_status;
 
-    if (jerry_debugger_wait_and_run_client_source (&wait_and_run_value) == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+    do
     {
-      ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Connection aborted before source arrived.");
-    }
+      receive_status = jerry_debugger_wait_and_run_client_source (&run_result);
 
-    jerry_release_value (wait_and_run_value);
+      if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+      {
+        ret_value = jerry_create_error (JERRY_ERROR_COMMON,
+                                        (jerry_char_t *) "Connection aborted before source arrived.");
+      }
+
+      if (receive_status == JERRY_DEBUGGER_SOURCE_END)
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "No more client source.\n");
+      }
+
+      jerry_release_value (run_result);
+    }
+    while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
+
 #endif /* JERRY_DEBUGGER */
   }
 

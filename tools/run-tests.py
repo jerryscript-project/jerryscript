@@ -218,7 +218,7 @@ def run_jerry_debugger_tests(options):
             break
 
         for test_file in os.listdir(settings.DEBUGGER_TESTS_DIR):
-            if test_file.endswith(".js"):
+            if test_file.endswith(".cmd"):
                 test_case, _ = os.path.splitext(test_file)
                 test_case_path = os.path.join(settings.DEBUGGER_TESTS_DIR, test_case)
                 test_cmd = [

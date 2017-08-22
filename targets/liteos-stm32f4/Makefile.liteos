@@ -1,0 +1,55 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+BUILD_DIR  ?= build/liteosstm32f4
+COPYTARGET ?= targets/liteos-stm32f4/lib
+
+JERRYHEAP  ?= 16
+
+EXT_CFLAGS := -D__TARGET_LITEOS_STM32F4
+EXT_CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
+EXT_CFLAGS += -Wno-error=format=
+EXT_CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+EXT_CFLAGS += -ffreestanding -D ARM_MATH_CM4  -std=gnu99 --specs=rdimon.specs
+
+.PHONY: libjerry liteos-jerry flash clean
+
+all: libjerry liteos-jerry
+
+libjerry:
+	mkdir -p $(BUILD_DIR)
+	mkdir -p $(COPYTARGET)
+	cmake -B$(BUILD_DIR) -H./ \
+	 -DENABLE_LTO=OFF \
+	 -DFEATURE_VALGRIND=OFF \
+	 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_external.cmake \
+	 -DJERRY_LIBC=OFF \
+	 -DJERRY_CMDLINE=OFF \
+	 -DENABLE_ALL_IN_ONE=OFF \
+	 -DEXTERNAL_CMAKE_SYSTEM_PROCESSOR=armv7l \
+	 -DEXTERNAL_CMAKE_C_COMPILER=arm-none-eabi-gcc \
+	 -DEXTERNAL_CMAKE_C_COMPILER_ID=GNU \
+	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
+	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) 
+
+	make -C$(BUILD_DIR) jerry-core
+	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/libjerrycore.a
+
+liteos-jerry: libjerry
+	make -f ./targets/liteos-stm32f4/Makefile ARCH=arm PLAT=STM32F429I_DISCO CPU=cortex-m4 ARMV=armv7e-m V=2
+
+clean:
+	rm -rf $(COPYTARGET)
+	find . -iname '*.o' -delete
+	make -f ./targets/liteos-stm32f4/Makefile ARCH=arm PLAT=STM32F429I_DISCO CPU=cortex-m4 ARMV=armv7e-m V=2 clean

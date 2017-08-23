@@ -19,8 +19,6 @@
 #include "jerryscript.h"
 #include "jerryscript-port.h"
 
-
-
 /**
  * Set led value
  */
@@ -38,7 +36,7 @@ set_led  (const jerry_value_t func_value, /**< function object */
   int ledPin = jerry_get_number_value (args_p[0]);
   int value = jerry_get_number_value (args_p[1]);
 
-  LOS_EvbLedInit();
+  LOS_EvbLedInit ();
   LOS_EvbLedControl (ledPin, value);
 
   return jerry_create_boolean (true);

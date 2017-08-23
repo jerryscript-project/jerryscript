@@ -28,9 +28,9 @@ static UINT32 g_taskid;
 static void
 example_taskfunc (void)
 {
-  while(1)
+  while (1)
   {
-    run();
+    run ();
   }
 }/* example_taskfunc */
 
@@ -49,7 +49,7 @@ example_entry (void)
     .usTaskPrio = 10
   };
 
-  uwRet = LOS_TaskCreate(&g_taskid, &stTaskInitParam);
+  uwRet = LOS_TaskCreate (&g_taskid, &stTaskInitParam);
   if (uwRet != LOS_OK)
   {
     return;
@@ -66,15 +66,15 @@ main (void)
 {
   UINT32 uwRet;
 
-  LOS_EvbSetup();
-  uwRet = LOS_KernelInit();
+  LOS_EvbSetup ();
+  uwRet = LOS_KernelInit ();
   if (uwRet != LOS_OK) 
   {
     return LOS_NOK;
   }
-  LOS_EnableTick();
-  example_entry();
+  LOS_EnableTick ();
+  example_entry ();
 		
-  LOS_Start();
+  LOS_Start ();
   for (;;);
 }/* main */

@@ -33,7 +33,7 @@ Follow [this](https://github.com/LITEOS/LiteOS_Kernel) page to get the LiteOS so
 #### 3. Build JerryScript for LiteOS
 
 ```
-# Assume you are in folder `jerry-liteos/jerryscript`.Then run:
+# Assume you are in folder `jerry-liteos/jerryscript`. Then run:
 make -f ./targets/liteos-stm32f4/Makefile.liteos
 ```
 This step will generate the library `jerry-liteos/jerryscript/build/liteosstm32f4/lib/libjerry-core.a`

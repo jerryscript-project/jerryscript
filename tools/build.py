@@ -35,6 +35,25 @@ def default_toolchain():
                              'toolchain_%s_%s.cmake' % (sysname.lower(), machine.lower()))
     return toolchain if os.path.isfile(toolchain) else None
 
+def get_toolchain_from_arguments(arguments):
+    if arguments.emscripten_snapshot_compiler == 'ON':
+        if arguments.toolchain:
+            print('Cannot use --toolchain when using --emscripten-snapshot-compiler', file=sys.stderr)
+            sys.exit(-1)
+        if 'EMSCRIPTEN' not in os.environ:
+            print('No EMSCRIPTEN environment variable set.\n'
+              'Install the Emscripten SDK from https://kripken.github.io and\n'
+              'make sure to `source emsdk_env.sh` before building!', file=sys.stderr)
+            sys.exit(-1)
+        emx_root = os.environ['EMSCRIPTEN']
+        emx_toolchain = '%s/cmake/Modules/Platform/Emscripten.cmake' % emx_root
+        if not os.path.isfile(emx_toolchain):
+            print('Missing toolchain file at %s' % emx_toolchain, file=sys.stderr)
+            sys.exit(-1)
+        return emx_toolchain
+    else:
+        return arguments.toolchain
+
 def get_arguments():
     devhelp_preparser = argparse.ArgumentParser(add_help=False)
     devhelp_preparser.add_argument('--devhelp', action='store_true', default=False,
@@ -64,6 +83,9 @@ def get_arguments():
                         help='debug build')
     parser.add_argument('--doctests', action='store_const', const='ON', default='OFF',
                         help='build doctests')
+    parser.add_argument('--emscripten-snapshot-compiler', metavar='X', choices=['ON', 'OFF'], default='OFF',
+                        type=str.upper, help='build JerryScript snapshot-compiler.js'
+                                             ' with Emscripten (%(choices)s; default: %(default)s)')
     parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable error messages (%(choices)s; default: %(default)s)')
     parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -145,6 +167,7 @@ def generate_build_options(arguments):
     build_options.append('-DENABLE_ALL_IN_ONE=%s' % arguments.all_in_one)
     build_options.append('-DCMAKE_BUILD_TYPE=%s' % arguments.build_type)
     build_options.extend(arguments.cmake_param)
+    build_options.append('-DEMSCRIPTEN_SNAPSHOT_COMPILER=%s' % arguments.emscripten_snapshot_compiler)
     build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
     build_options.append('-DFEATURE_CPOINTER_32_BIT=%s' % arguments.cpointer_32bit)
     build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
@@ -170,8 +193,10 @@ def generate_build_options(arguments):
     build_options.append('-DENABLE_STRIP=%s' % arguments.strip)
     build_options.append('-DFEATURE_VM_EXEC_STOP=%s' % arguments.vm_exec_stop)
 
-    if arguments.toolchain:
-        build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)
+    toolchain = get_toolchain_from_arguments(arguments)
+    if toolchain:
+        print("Using toolchain: %s" % toolchain)
+        build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % toolchain)
 
     build_options.append('-DUNITTESTS=%s' % arguments.unittests)
     build_options.append('-DDOCTESTS=%s' % arguments.doctests)

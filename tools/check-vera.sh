@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+EMSCRIPTEN_SNAPSHOT_COMPILER_FILES=`find ./emscripten-snapshot-compiler -name "*.c" -or -name "*.h" -not -path "*node_modules/*"`
 JERRY_CORE_FILES=`find ./jerry-core -name "*.c" -or -name "*.h"`
 JERRY_EXT_FILES=`find ./jerry-ext -name "*.c" -or -name "*.h"`
 JERRY_PORT_FILES=`find ./jerry-port -name "*.c" -or -name "*.h"`
@@ -29,4 +30,4 @@ fi
 
 vera++ -r tools/vera++ -p jerry \
  -e --no-duplicate \
- $MANUAL_CHECK_FILES $JERRY_CORE_FILES $JERRY_EXT_FILES $JERRY_PORT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES
+ $MANUAL_CHECK_FILES $EMSCRIPTEN_SNAPSHOT_COMPILER_FILES $JERRY_CORE_FILES $JERRY_EXT_FILES $JERRY_PORT_FILES $JERRY_LIBC_FILES $JERRY_LIBM_FILES $JERRY_MAIN_FILES $UNIT_TEST_FILES

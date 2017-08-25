@@ -18,6 +18,24 @@
 #include "mbed.h"
 
 /**
+ * DigitalOut#destructor
+ *
+ * Called if/when the DigitalOut is GC'ed.
+ */
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(DigitalOut)(void* void_ptr) {
+    delete static_cast<DigitalOut*>(void_ptr);
+}
+
+/**
+ * Type infomation of the native DigitalOut pointer
+ *
+ * Set DigitalOut#destructor as the free callback.
+ */
+static const jerry_object_native_info_t native_obj_type_info = {
+    .free_cb = NAME_FOR_CLASS_NATIVE_DESTRUCTOR(DigitalOut)
+};
+
+/**
  * DigitalOut#write (native JavaScript method)
  *
  * Writes a binary value to a DigitalOut.
@@ -31,11 +49,17 @@ DECLARE_CLASS_FUNCTION(DigitalOut, write) {
     CHECK_ARGUMENT_TYPE_ALWAYS(DigitalOut, write, 0, number);
 
     // Extract native DigitalOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    DigitalOut* native_ptr = reinterpret_cast<DigitalOut*>(ptr_val);
-    
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native DigitalOut pointer");
+    }
+
+    DigitalOut* native_ptr = static_cast<DigitalOut*>(void_ptr);
+
     int arg0 = jerry_get_number_value(args[0]);
     native_ptr->write(arg0);
 
@@ -53,10 +77,16 @@ DECLARE_CLASS_FUNCTION(DigitalOut, read) {
     CHECK_ARGUMENT_COUNT(DigitalOut, read, (args_count == 0));
 
     // Extract native DigitalOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    DigitalOut* native_ptr = reinterpret_cast<DigitalOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native DigitalOut pointer");
+    }
+
+    DigitalOut* native_ptr = static_cast<DigitalOut*>(void_ptr);
 
     int result = native_ptr->read();
     return jerry_create_number(result);
@@ -72,22 +102,19 @@ DECLARE_CLASS_FUNCTION(DigitalOut, is_connected) {
     CHECK_ARGUMENT_COUNT(DigitalOut, is_connected, (args_count == 0));
 
     // Extract native DigitalOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    DigitalOut* native_ptr = reinterpret_cast<DigitalOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native DigitalOut pointer");
+    }
+
+    DigitalOut* native_ptr = static_cast<DigitalOut*>(void_ptr);
 
     int result = native_ptr->is_connected();
     return jerry_create_number(result);
-}
-
-/**
- * DigitalOut#destructor
- * 
- * Called if/when the DigitalOut is GC'ed.
- */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(DigitalOut)(const uintptr_t native_handle) {
-    delete reinterpret_cast<DigitalOut*>(native_handle);
 }
 
 /**
@@ -102,7 +129,7 @@ DECLARE_CLASS_CONSTRUCTOR(DigitalOut) {
     CHECK_ARGUMENT_TYPE_ALWAYS(DigitalOut, __constructor, 0, number);
     CHECK_ARGUMENT_TYPE_ON_CONDITION(DigitalOut, __constructor, 1, number, (args_count == 2));
 
-    uintptr_t native_ptr;
+    DigitalOut* native_ptr;
 
     // Call correct overload of DigitalOut::DigitalOut depending on the
     // arguments passed.
@@ -110,17 +137,17 @@ DECLARE_CLASS_CONSTRUCTOR(DigitalOut) {
 
     switch (args_count) {
         case 1:
-            native_ptr = (uintptr_t) new DigitalOut(pin_name);
+            native_ptr = new DigitalOut(pin_name);
             break;
         case 2:
             int value = static_cast<int>(jerry_get_number_value(args[1]));
-            native_ptr = (uintptr_t) new DigitalOut(pin_name, value);
+            native_ptr = new DigitalOut(pin_name, value);
             break;
     }
 
     // create the jerryscript object
     jerry_value_t js_object = jerry_create_object();
-    jerry_set_object_native_handle(js_object, native_ptr, NAME_FOR_CLASS_NATIVE_DESTRUCTOR(DigitalOut));
+    jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
     // attach methods
     ATTACH_CLASS_FUNCTION(js_object, DigitalOut, write);

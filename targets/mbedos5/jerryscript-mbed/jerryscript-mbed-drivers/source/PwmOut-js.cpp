@@ -18,6 +18,24 @@
 #include "mbed.h"
 
 /**
+ * PwmOut#destructor
+ *
+ * Called if/when the PwmOut is GC'ed.
+ */
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut)(void* void_ptr) {
+    delete static_cast<PwmOut*>(void_ptr);
+}
+
+/**
+ * Type infomation of the native PwmOut pointer
+ *
+ * Set PwmOut#destructor as the free callback.
+ */
+static const jerry_object_native_info_t native_obj_type_info = {
+    .free_cb = NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut)
+};
+
+/**
  * PwmOut#write (native JavaScript method)
  *
  * Set the ouput duty-cycle, specified as a percentage (float)
@@ -33,10 +51,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, write) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, write, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->write(static_cast<float>(arg0));
@@ -61,10 +85,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, read) {
     CHECK_ARGUMENT_COUNT(PwmOut, read, (args_count == 0));
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     float result = native_ptr->read();
     return jerry_create_number(result);
@@ -84,10 +114,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, period) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, period, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->period(static_cast<float>(arg0));
@@ -105,10 +141,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, period_ms) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, period_ms, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->period_ms(static_cast<int>(arg0));
@@ -126,10 +168,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, period_us) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, period_us, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->period_us(static_cast<int>(arg0));
@@ -147,10 +195,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, pulsewidth, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->pulsewidth(static_cast<float>(arg0));
@@ -168,10 +222,16 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth_ms) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, pulsewidth_ms, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->pulsewidth_ms(static_cast<int>(arg0));
@@ -189,24 +249,21 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth_us) {
     CHECK_ARGUMENT_TYPE_ALWAYS(PwmOut, pulsewidth_us, 0, number);
 
     // Extract native PwmOut pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    PwmOut* native_ptr = reinterpret_cast<PwmOut*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native PwmOut pointer");
+    }
+
+    PwmOut* native_ptr = static_cast<PwmOut*>(void_ptr);
 
     double arg0 = jerry_get_number_value(args[0]);
     native_ptr->pulsewidth_us(static_cast<int>(arg0));
 
     return jerry_create_undefined();
-}
-
-/**
- * PwmOut#destructor
- *
- * Called if/when the PwmOut is GC'ed.
- */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut)(const uintptr_t native_handle) {
-    delete reinterpret_cast<PwmOut*>(native_handle);
 }
 
 /**
@@ -222,11 +279,11 @@ DECLARE_CLASS_CONSTRUCTOR(PwmOut) {
     PinName pin_name = PinName(jerry_get_number_value(args[0]));
 
     // Create the native object
-    uintptr_t native_ptr = (uintptr_t) new PwmOut(pin_name);
+    PwmOut* native_ptr = new PwmOut(pin_name);
 
     // create the jerryscript object
     jerry_value_t js_object = jerry_create_object();
-    jerry_set_object_native_handle(js_object, native_ptr, NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut));
+    jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
     // attach methods
     ATTACH_CLASS_FUNCTION(js_object, PwmOut, write);

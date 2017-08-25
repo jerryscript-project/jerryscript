@@ -18,6 +18,24 @@
 #include "mbed.h"
 
 /**
+ * AnalogIn#destructor
+ *
+ * Called if/when the AnalogIn is GC'ed.
+ */
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(AnalogIn)(void* void_ptr) {
+    delete static_cast<AnalogIn*>(void_ptr);
+}
+
+/**
+ * Type infomation of the native AnalogIn pointer
+ *
+ * Set AnalogIn#destructor as the free callback.
+ */
+static const jerry_object_native_info_t native_obj_type_info = {
+    .free_cb = NAME_FOR_CLASS_NATIVE_DESTRUCTOR(AnalogIn)
+};
+
+/**
  * AnalogIn#read (native JavaScript method)
  *
  * Read the input voltage, represented as a float in the range [0.0, 1.0]
@@ -28,10 +46,16 @@ DECLARE_CLASS_FUNCTION(AnalogIn, read) {
     CHECK_ARGUMENT_COUNT(AnalogIn, read, (args_count == 0));
 
     // Extract native AnalogIn pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    AnalogIn* native_ptr = reinterpret_cast<AnalogIn*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native AnalogIn pointer");
+    }
+
+    AnalogIn* native_ptr = static_cast<AnalogIn*>(void_ptr);
 
     float result = native_ptr->read();
     return jerry_create_number(result);
@@ -48,22 +72,19 @@ DECLARE_CLASS_FUNCTION(AnalogIn, read_u16) {
     CHECK_ARGUMENT_COUNT(AnalogIn, read_u16, (args_count == 0));
 
     // Extract native AnalogIn pointer
-    uintptr_t ptr_val;
-    jerry_get_object_native_handle(this_obj, &ptr_val);
+    void* void_ptr;
+    const jerry_object_native_info_t* type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    AnalogIn* native_ptr = reinterpret_cast<AnalogIn*>(ptr_val);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native AnalogIn pointer");
+    }
+
+    AnalogIn* native_ptr = static_cast<AnalogIn*>(void_ptr);
 
     uint16_t result = native_ptr->read_u16();
     return jerry_create_number(result);
-}
-
-/**
- * AnalogIn#destructor
- *
- * Called if/when the AnalogIn is GC'ed.
- */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(AnalogIn)(const uintptr_t native_handle) {
-    delete reinterpret_cast<AnalogIn*>(native_handle);
 }
 
 /**
@@ -79,11 +100,11 @@ DECLARE_CLASS_CONSTRUCTOR(AnalogIn) {
     PinName pin_name = PinName(jerry_get_number_value(args[0]));
 
     // create native object
-    uintptr_t native_ptr = (uintptr_t) new AnalogIn(pin_name);
+    AnalogIn* native_ptr = new AnalogIn(pin_name);
 
     // create the jerryscript object
     jerry_value_t js_object = jerry_create_object();
-    jerry_set_object_native_handle(js_object, native_ptr, NAME_FOR_CLASS_NATIVE_DESTRUCTOR(AnalogIn));
+    jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
     // attach methods
     ATTACH_CLASS_FUNCTION(js_object, AnalogIn, read);

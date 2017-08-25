@@ -19,6 +19,24 @@
 #include "mbed.h"
 
 /**
+ * I2C#destructor
+ *
+ * Called if/when the I2C object is GC'ed.
+ */
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C) (void *void_ptr) {
+    delete static_cast<I2C*>(void_ptr);
+}
+
+/**
+ * Type infomation of the native I2C pointer
+ *
+ * Set I2C#destructor as the free callback.
+ */
+static const jerry_object_native_info_t native_obj_type_info = {
+    .free_cb = NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C)
+};
+
+/**
  * I2C#frequency (native JavaScript method)
  *
  * Set the frequency of the I2C bus.
@@ -30,9 +48,16 @@ DECLARE_CLASS_FUNCTION(I2C, frequency) {
     CHECK_ARGUMENT_TYPE_ALWAYS(I2C, frequency, 0, number);
 
     // Unwrap native I2C object
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
-    I2C* native_ptr = reinterpret_cast<I2C*>(native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native I2C pointer");
+    }
+
+    I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
     int hz = jerry_get_number_value(args[0]);
     native_ptr->frequency(hz);
@@ -66,9 +91,16 @@ DECLARE_CLASS_FUNCTION(I2C, read) {
 
     if (args_count == 1) {
         CHECK_ARGUMENT_TYPE_ALWAYS(I2C, read, 0, number);
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
-        I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native I2C pointer");
+        }
+
+        I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
         int data = jerry_get_number_value(args[0]);
         int result = native_ptr->read(data);
@@ -81,9 +113,16 @@ DECLARE_CLASS_FUNCTION(I2C, read) {
 
         CHECK_ARGUMENT_TYPE_ON_CONDITION(I2C, read, 3, boolean, (args_count == 4));
 
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
-        I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native I2C pointer");
+        }
+
+        I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
         const uint32_t data_len = jerry_get_array_length(args[1]);
 
@@ -149,10 +188,16 @@ DECLARE_CLASS_FUNCTION(I2C, write) {
         CHECK_ARGUMENT_TYPE_ALWAYS(I2C, write, 0, number);
 
         // Extract native I2C object
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-        I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native I2C pointer");
+        }
+
+        I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
         // Unwrap arguments
         int data = jerry_get_number_value(args[0]);
@@ -167,10 +212,16 @@ DECLARE_CLASS_FUNCTION(I2C, write) {
         CHECK_ARGUMENT_TYPE_ON_CONDITION(I2C, write, 3, boolean, (args_count == 4));
 
         // Extract native I2C object
-        uintptr_t native_handle;
-        jerry_get_object_native_handle(this_obj, &native_handle);
+        void *void_ptr;
+        const jerry_object_native_info_t *type_ptr;
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-        I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+        if (!has_ptr || type_ptr != &native_obj_type_info) {
+            return jerry_create_error(JERRY_ERROR_TYPE,
+                                      (const jerry_char_t *) "Failed to get native I2C pointer");
+        }
+
+        I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
         // Unwrap arguments
         int address = jerry_get_number_value(args[0]);
@@ -198,15 +249,20 @@ DECLARE_CLASS_FUNCTION(I2C, write) {
  *
  * Creates a start condition on the I2C bus.
  */
-DECLARE_CLASS_FUNCTION(I2C, start)
-{
+DECLARE_CLASS_FUNCTION(I2C, start) {
     CHECK_ARGUMENT_COUNT(I2C, start, (args_count == 0));
 
     // Extract native I2C object
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native I2C pointer");
+    }
+
+    I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
     native_ptr->start();
     return jerry_create_undefined();
@@ -217,27 +273,23 @@ DECLARE_CLASS_FUNCTION(I2C, start)
  *
  * Creates a stop condition on the I2C bus.
  */
-DECLARE_CLASS_FUNCTION(I2C, stop)
-{
+DECLARE_CLASS_FUNCTION(I2C, stop) {
     CHECK_ARGUMENT_COUNT(I2C, stop, (args_count == 0));
 
     // Extract native I2C object
-    uintptr_t native_handle;
-    jerry_get_object_native_handle(this_obj, &native_handle);
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
 
-    I2C *native_ptr = reinterpret_cast<I2C*>(native_handle);
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native I2C pointer");
+    }
+
+    I2C *native_ptr = static_cast<I2C*>(void_ptr);
 
     native_ptr->stop();
     return jerry_create_undefined();
-}
-
-/**
- * I2C#destructor
- *
- * Called if/when the I2C object is GC'ed.
- */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C) (uintptr_t handle) {
-    delete reinterpret_cast<I2C*>(handle);
 }
 
 /**
@@ -255,10 +307,10 @@ DECLARE_CLASS_CONSTRUCTOR(I2C) {
     int sda = jerry_get_number_value(args[0]);
     int scl = jerry_get_number_value(args[1]);
 
-    uintptr_t native_handle = (uintptr_t)new I2C((PinName)sda, (PinName)scl);
+    I2C *native_ptr = new I2C((PinName)sda, (PinName)scl);
 
     jerry_value_t js_object = jerry_create_object();
-    jerry_set_object_native_handle(js_object, native_handle, NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C));
+    jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
     ATTACH_CLASS_FUNCTION(js_object, I2C, frequency);
     ATTACH_CLASS_FUNCTION(js_object, I2C, read);

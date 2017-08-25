@@ -1379,6 +1379,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   size_t offset;
   size_t length;
   size_t total_size;
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  size_t total_size_used;
+#endif
   size_t initializers_length;
   uint8_t real_offset;
   uint8_t *byte_code_p;
@@ -1610,9 +1613,20 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
   total_size += length + context_p->literal_count * sizeof (jmem_cpointer_t);
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  total_size_used = total_size;
+#endif
   total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
 
   compiled_code_p = (ecma_compiled_code_t *) parser_malloc (context_p, total_size);
+
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  // Avoid getting junk bytes at the end when bytes at the end remain unused:
+  if (total_size_used < total_size)
+  {
+    memset (((uint8_t *) compiled_code_p) + total_size_used, 0, total_size - total_size_used);
+  }
+#endif
 
 #ifdef JMEM_STATS
   jmem_stats_allocate_byte_code_bytes (total_size);

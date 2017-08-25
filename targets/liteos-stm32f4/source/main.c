@@ -76,5 +76,4 @@ main (void)
   example_entry ();
 		
   LOS_Start ();
-  for (;;);
 }/* main */

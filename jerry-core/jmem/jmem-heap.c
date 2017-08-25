@@ -503,15 +503,9 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   /* Update next. */
   if (jmem_heap_get_region_end (block_p) == next_p)
   {
-    if (unlikely (next_p == JERRY_CONTEXT (jmem_heap_list_skip_p)))
-    {
-      JERRY_CONTEXT (jmem_heap_list_skip_p) = block_p;
-    }
-
     /* Can be merged. */
     block_p->size += next_p->size;
     block_p->next_offset = next_p->next_offset;
-
   }
   else
   {

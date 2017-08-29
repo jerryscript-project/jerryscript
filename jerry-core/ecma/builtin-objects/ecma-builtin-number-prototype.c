@@ -290,10 +290,10 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
       }
 
       int buff_size = 1;
-      if (is_scale_negative)
+      if (is_scale_negative || scale == 0)
       {
         double counter = this_arg_number;
-        while (counter > radix)
+        while (counter >= radix)
         {
           counter /= radix;
           buff_size++;

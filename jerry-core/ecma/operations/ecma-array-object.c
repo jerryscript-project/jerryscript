@@ -162,7 +162,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
   {
     ecma_value_t compared_num_val = ecma_op_to_number (new_value);
 
-    if (ECMA_IS_VALUE_ERROR (completion))
+    if (ECMA_IS_VALUE_ERROR (compared_num_val))
     {
       return compared_num_val;
     }

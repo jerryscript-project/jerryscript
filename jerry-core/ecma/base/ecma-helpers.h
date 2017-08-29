@@ -201,7 +201,8 @@ const lit_utf8_byte_t *ecma_string_raw_chars (const ecma_string_t *string_p, lit
 void ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, uint32_t uint32_number);
 void ecma_init_ecma_length_string (ecma_string_t *string_desc_p);
 void ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, lit_magic_string_id_t id);
-bool ecma_string_is_empty (const ecma_string_t *str_p);
+bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);
+bool ecma_string_is_empty (const ecma_string_t *string_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);
 
 jmem_cpointer_t ecma_string_to_property_name (ecma_string_t *prop_name_p, ecma_property_t *name_type_p);

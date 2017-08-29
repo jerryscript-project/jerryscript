@@ -231,7 +231,11 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       }
 
       /* Get prototype physical property. */
-      property_p = ecma_op_function_try_lazy_instantiate_property (object_p, property_name_p);
+      property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
+    else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+    {
+      property_p = ecma_op_bound_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
 
     if (property_p == NULL)
@@ -529,7 +533,11 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       }
 
       /* Get prototype physical property. */
-      property_p = ecma_op_function_try_lazy_instantiate_property (object_p, property_name_p);
+      property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
+    else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+    {
+      property_p = ecma_op_bound_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
 
     if (property_p == NULL)
@@ -816,7 +824,11 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       }
 
       /* Get prototype physical property. */
-      property_p = ecma_op_function_try_lazy_instantiate_property (object_p, property_name_p);
+      property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
+    else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+    {
+      property_p = ecma_op_bound_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
   }
 

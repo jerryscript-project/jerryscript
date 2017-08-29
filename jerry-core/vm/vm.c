@@ -302,10 +302,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   if (is_function)
   {
-    bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-
     ecma_object_t *func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                                is_strict,
                                                                 bytecode_p);
 
     return ecma_make_object_value (func_obj_p);

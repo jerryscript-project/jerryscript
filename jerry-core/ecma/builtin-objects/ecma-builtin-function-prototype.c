@@ -237,122 +237,63 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     /* 4. 11. 18. */
     ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-    ecma_length_t args_length = (arguments_number >= 1) ? arguments_number : 1;
+    ecma_length_t args_length = arguments_number;
+    ecma_object_t *function_p;
+    ecma_extended_object_t *ext_function_p;
 
-    size_t obj_size = sizeof (ecma_extended_object_t) + (args_length * sizeof (ecma_value_t));
+    if (arguments_number == 0
+        || (arguments_number == 1 && !ecma_is_value_integer_number (arguments_list_p[0])))
+    {
+      args_length = 1;
 
-    ecma_object_t *function_p = ecma_create_object (prototype_obj_p,
-                                                    obj_size,
-                                                    ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+      function_p = ecma_create_object (prototype_obj_p,
+                                       sizeof (ecma_extended_object_t),
+                                       ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+      /* 8. */
+      ext_function_p = (ecma_extended_object_t *) function_p;
+      ext_function_p->u.bound_function.args_len_or_this = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+      if (arguments_number != 0)
+      {
+        ext_function_p->u.bound_function.args_len_or_this = ecma_copy_value_if_not_object (arguments_list_p[0]);
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (arguments_number > 0);
+
+      size_t obj_size = sizeof (ecma_extended_object_t) + (args_length * sizeof (ecma_value_t));
+
+      function_p = ecma_create_object (prototype_obj_p,
+                                       obj_size,
+                                       ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+      /* 8. */
+      ext_function_p = (ecma_extended_object_t *) function_p;
+
+      ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) args_length);
+      ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
+      ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+
+      for (ecma_length_t i = 0; i < arguments_number; i++)
+      {
+        *args_p++ = ecma_copy_value_if_not_object (arguments_list_p[i]);
+      }
+    }
 
     ecma_deref_object (prototype_obj_p);
-
-    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) function_p;
 
     /* 7. */
     ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
     ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
                                      this_arg_obj_p);
 
-    /* 8. */
-    ext_function_p->u.bound_function.args_length = args_length;
-    ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
-
-    *args_p = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-
-    if (arguments_number > 0)
-    {
-      *args_p = ecma_copy_value_if_not_object (arguments_list_p[0]);
-    }
-
-    if (arguments_number > 1)
-    {
-      for (ecma_length_t i = 1; i < arguments_number; i++)
-      {
-        ++args_p;
-        *args_p = ecma_copy_value_if_not_object (arguments_list_p[i]);
-      }
-    }
-
     /*
      * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
      *
      * See also: ecma_object_get_class_name
      */
-
-    /* 16. */
-    ecma_number_t length = ECMA_NUMBER_ZERO;
-    ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
-
-    /* 15. */
-    if (ecma_object_get_class_name (this_arg_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)
-    {
-      ecma_value_t get_len_value = ecma_op_object_get (this_arg_obj_p, magic_string_length_p);
-      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
-      JERRY_ASSERT (ecma_is_value_number (get_len_value));
-
-      /* 15.a */
-      length = ecma_get_number_from_value (get_len_value) - ((ecma_number_t) (args_length - 1));
-      ecma_free_value (get_len_value);
-
-      /* 15.b */
-      if (ecma_number_is_negative (length))
-      {
-        length = ECMA_NUMBER_ZERO;
-      }
-    }
-
-    /* 17. */
-    ecma_value_t completion = ecma_builtin_helper_def_prop (function_p,
-                                                            magic_string_length_p,
-                                                            ecma_make_number_value (length),
-                                                            false, /* Writable */
-                                                            false, /* Enumerable */
-                                                            false, /* Configurable */
-                                                            false); /* Failure handling */
-
-    JERRY_ASSERT (ecma_is_value_boolean (completion));
-
-    ecma_deref_ecma_string (magic_string_length_p);
-
-    /* 19-21. */
-    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
-
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = false;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = false;
-
-      prop_desc.is_get_defined = true;
-      prop_desc.get_p = thrower_p;
-
-      prop_desc.is_set_defined = true;
-      prop_desc.set_p = thrower_p;
-    }
-
-    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
-    completion = ecma_op_object_define_own_property (function_p,
-                                                     magic_string_caller_p,
-                                                     &prop_desc,
-                                                     false);
-
-    JERRY_ASSERT (ecma_is_value_boolean (completion));
-
-    ecma_deref_ecma_string (magic_string_caller_p);
-
-    ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    completion = ecma_op_object_define_own_property (function_p,
-                                                     magic_string_arguments_p,
-                                                     &prop_desc,
-                                                     false);
-
-    JERRY_ASSERT (ecma_is_value_boolean (completion));
-
-    ecma_deref_ecma_string (magic_string_arguments_p);
-    ecma_deref_object (thrower_p);
 
     /* 22. */
     ret_value = ecma_make_object_value (function_p);

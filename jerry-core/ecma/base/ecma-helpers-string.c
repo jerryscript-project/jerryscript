@@ -1337,29 +1337,41 @@ ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
 } /* ecma_string_raw_chars */
 
 /**
- * Checks whether ecma string is empty or not
+ * Checks whether the string equals to the magic string id.
  *
- * @return true  - if empty
+ * @return true - if the string equals to the magic string id
  *         false - otherwise
  */
-bool
-ecma_string_is_empty (const ecma_string_t *str_p) /**< ecma-string */
+inline bool __attr_always_inline___
+ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, /**< property name */
+                                      lit_magic_string_id_t id) /**< magic string id */
 {
-  return (ECMA_STRING_GET_CONTAINER (str_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
-          && str_p->u.magic_string_id == LIT_MAGIC_STRING__EMPTY);
+  return (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
+          && string_p->u.magic_string_id == id);
+} /* ecma_compare_ecma_string_to_magic_id */
+
+/**
+ * Checks whether ecma string is empty or not
+ *
+ * @return true - if the string is an empty string
+ *         false - otherwise
+ */
+inline bool __attr_always_inline___
+ecma_string_is_empty (const ecma_string_t *string_p) /**< ecma-string */
+{
+  return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING__EMPTY);
 } /* ecma_string_is_empty */
 
 /**
  * Checks whether the string equals to "length".
  *
- * @return true if the string equals to "length"
- *         false otherwise
+ * @return true - if the string equals to "length"
+ *         false - otherwise
  */
 inline bool __attr_always_inline___
 ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
 {
-  return (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
-          && string_p->u.magic_string_id == LIT_MAGIC_STRING_LENGTH);
+  return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING_LENGTH);
 } /* ecma_string_is_length */
 
 /**

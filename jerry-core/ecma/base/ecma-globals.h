@@ -768,7 +768,7 @@ typedef struct
     struct
     {
       ecma_value_t target_function; /**< target function */
-      ecma_length_t args_length; /**< length of arguments */
+      ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
 
     ecma_external_handler_t external_handler_cb; /**< external function */

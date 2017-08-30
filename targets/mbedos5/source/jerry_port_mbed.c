@@ -46,15 +46,6 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 #endif /* JSMBED_OVERRIDE_JERRY_PORT_LOG */
 
 /**
- * Implementation of jerry_port_fatal.
- */
-void
-jerry_port_fatal (jerry_fatal_code_t code) /**< fatal code enum item */
-{
-  exit (code);
-} /* jerry_port_fatal */
-
-/**
  * Implementation of jerry_port_get_time_zone.
  *
  * @return true - if success

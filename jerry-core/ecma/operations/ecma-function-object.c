@@ -98,16 +98,8 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
  */
 ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
-                                bool is_decl_in_strict_mode, /**< is function declared in strict mode code? */
                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
 {
-  bool is_strict_mode_code = is_decl_in_strict_mode;
-
-  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
-  {
-    is_strict_mode_code = true;
-  }
-
   /* 1., 4., 13. */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -144,45 +136,8 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   /*
    * 'length' and 'prototype' properties are instantiated lazily
    *
-   * See also: ecma_op_function_try_lazy_instantiate_property
+   * See also: ecma_op_function_try_to_lazy_instantiate_property
    */
-
-  /* 19. */
-  if (is_strict_mode_code)
-  {
-    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
-
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
-    {
-      prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = false;
-
-      prop_desc.is_configurable_defined = true;
-      prop_desc.is_configurable = false;
-
-      prop_desc.is_get_defined = true;
-      prop_desc.get_p = thrower_p;
-
-      prop_desc.is_set_defined = true;
-      prop_desc.set_p = thrower_p;
-    }
-
-    ecma_string_t *magic_string_caller_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
-    ecma_op_object_define_own_property (func_p,
-                                        magic_string_caller_p,
-                                        &prop_desc,
-                                        false);
-    ecma_deref_ecma_string (magic_string_caller_p);
-
-    ecma_string_t *magic_string_arguments_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    ecma_op_object_define_own_property (func_p,
-                                        magic_string_arguments_p,
-                                        &prop_desc,
-                                        false);
-    ecma_deref_ecma_string (magic_string_arguments_p);
-
-    ecma_deref_object (thrower_p);
-  }
 
   return func_p;
 } /* ecma_op_create_function_object */
@@ -192,7 +147,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
  * adding them to corresponding string collections
  *
  * See also:
- *          ecma_op_function_try_lazy_instantiate_property
+ *          ecma_op_function_try_to_lazy_instantiate_property
  */
 void
 ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties into
@@ -237,68 +192,74 @@ ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true -
  *         NULL - otherwise
  */
 ecma_property_t *
-ecma_op_function_try_lazy_instantiate_property (ecma_object_t *object_p, /**< the function object */
-                                                ecma_string_t *property_name_p) /**< property name */
+ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< the function object */
+                                                   ecma_string_t *property_name_p) /**< property name */
 {
-  static const char prototype_str_p[] = "prototype";
-
   JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
 
-  ecma_string_container_t container = ECMA_STRING_GET_CONTAINER (property_name_p);
-
-  /* Check whether the property_name_p is prototype */
-  if (container == ECMA_STRING_CONTAINER_MAGIC_STRING)
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
   {
-    if (property_name_p->u.magic_string_id != LIT_MAGIC_STRING_PROTOTYPE)
+    /* ECMA-262 v5, 13.2, 16-18 */
+
+    /* 16. */
+    ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
+
+    /* 17. */
+    ecma_string_t magic_string_constructor;
+    ecma_init_ecma_magic_string (&magic_string_constructor, LIT_MAGIC_STRING_CONSTRUCTOR);
+
+    ecma_property_value_t *constructor_prop_value_p;
+    constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
+                                                                &magic_string_constructor,
+                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                NULL);
+
+    constructor_prop_value_p->value = ecma_make_object_value (object_p);
+
+    /* 18. */
+    ecma_property_t *prototype_prop_p;
+    ecma_property_value_t *prototype_prop_value_p;
+    prototype_prop_value_p = ecma_create_named_data_property (object_p,
+                                                              property_name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              &prototype_prop_p);
+
+    prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
+
+    ecma_deref_object (proto_object_p);
+
+    return prototype_prop_p;
+  }
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
+      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
+  {
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+    const ecma_compiled_code_t *bytecode_data_p;
+    bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                       ext_func_p->u.function.bytecode_cp);
+
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
     {
-      return NULL;
+      ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+
+      ecma_property_t *caller_prop_p;
+      /* The property_name_p argument contans the name. */
+      ecma_create_named_accessor_property (object_p,
+                                           property_name_p,
+                                           thrower_p,
+                                           thrower_p,
+                                           ECMA_PROPERTY_FIXED,
+                                           &caller_prop_p);
+
+      ecma_deref_object (thrower_p);
+      return caller_prop_p;
     }
   }
-  else if (container != ECMA_STRING_CONTAINER_HEAP_UTF8_STRING
-           || property_name_p->u.utf8_string.size != (sizeof (prototype_str_p) - 1))
-  {
-    return NULL;
-  }
-  else
-  {
-    if (strncmp ((char *) (property_name_p + 1), prototype_str_p, (sizeof (prototype_str_p) - 1)) != 0)
-    {
-      return NULL;
-    }
-  }
 
-  /* ECMA-262 v5, 13.2, 16-18 */
-
-  /* 16. */
-  ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
-
-  /* 17. */
-  ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
-
-  ecma_property_value_t *constructor_prop_value_p;
-  constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
-                                                              magic_string_constructor_p,
-                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                              NULL);
-
-  constructor_prop_value_p->value = ecma_make_object_value (object_p);
-
-  ecma_deref_ecma_string (magic_string_constructor_p);
-
-  /* 18. */
-  ecma_property_t *prototype_prop_p;
-  ecma_property_value_t *prototype_prop_value_p;
-  prototype_prop_value_p = ecma_create_named_data_property (object_p,
-                                                            property_name_p,
-                                                            ECMA_PROPERTY_FLAG_WRITABLE,
-                                                            &prototype_prop_p);
-
-  prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
-
-  ecma_deref_object (proto_object_p);
-
-  return prototype_prop_p;
-} /* ecma_op_function_try_lazy_instantiate_property */
+  return NULL;
+} /* ecma_op_function_try_to_lazy_instantiate_property */
 
 /**
  * External function object creation operation.
@@ -555,10 +516,20 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                          ext_function_p->u.bound_function.target_function);
 
     /* 4. */
-    ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+    ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+    ecma_value_t bound_this_value;
+    ecma_length_t args_length;
 
-    ecma_value_t bound_this_value = *args_p;
-    ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+    if (!ecma_is_value_integer_number (args_len_or_this))
+    {
+      bound_this_value = args_len_or_this;
+      args_length = 1;
+    }
+    else
+    {
+      bound_this_value = *(ecma_value_t *) (ext_function_p + 1);
+      args_length = (ecma_length_t) ecma_get_integer_from_value (args_len_or_this);
+    }
 
     JERRY_ASSERT (args_length > 0);
 
@@ -568,6 +539,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_length_t merged_args_list_len = args_length + arguments_list_len;
 
       JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+
+      ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
       memcpy (merged_args_list_p, args_p + 1, args_length * sizeof (ecma_value_t));
       memcpy (merged_args_list_p + args_length, arguments_list_p, arguments_list_len * sizeof (ecma_value_t));
@@ -741,7 +714,14 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     else
     {
       /* 4. */
-      ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+      ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+
+      ecma_length_t args_length = 1;
+
+      if (ecma_is_value_integer_number (args_len_or_this))
+      {
+        args_length = (ecma_length_t) ecma_get_integer_from_value (args_len_or_this);
+      }
 
       JERRY_ASSERT (args_length > 0);
 
@@ -776,6 +756,85 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   return ret_value;
 } /* ecma_op_function_construct */
+
+/**
+ * Create specification defined non-configurable properties for bound functions.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.3.4.5
+ *
+ * @return pointer property, if one was instantiated,
+ *         NULL - otherwise.
+ */
+ecma_property_t *
+ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< object */
+                                                         ecma_string_t *property_name_p) /**< property's name */
+{
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+  if (ecma_string_is_length (property_name_p))
+  {
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+    ecma_object_t *target_func_obj_p;
+    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                         ext_function_p->u.bound_function.target_function);
+
+    ecma_integer_value_t length = 0;
+
+    if (ecma_object_get_class_name (target_func_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)
+    {
+      /* The property_name_p argument contans the 'length' string. */
+      ecma_value_t get_len_value = ecma_op_object_get (target_func_obj_p, property_name_p);
+
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
+      JERRY_ASSERT (ecma_is_value_integer_number (get_len_value));
+
+      ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+      ecma_integer_value_t args_length = 1;
+
+      if (ecma_is_value_integer_number (args_len_or_this))
+      {
+        args_length = ecma_get_integer_from_value (args_len_or_this);
+      }
+
+      length = ecma_get_integer_from_value (get_len_value) - (args_length - 1);
+
+      if (length < 0)
+      {
+        length = 0;
+      }
+    }
+
+    ecma_property_t *len_prop_p;
+    ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
+                                                                               property_name_p,
+                                                                               ECMA_PROPERTY_FIXED,
+                                                                               &len_prop_p);
+
+    len_prop_value_p->value = ecma_make_integer_value (length);
+    return len_prop_p;
+  }
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
+      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
+  {
+    ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+
+    ecma_property_t *caller_prop_p;
+    /* The string_p argument contans the name. */
+    ecma_create_named_accessor_property (object_p,
+                                         property_name_p,
+                                         thrower_p,
+                                         thrower_p,
+                                         ECMA_PROPERTY_FIXED,
+                                         &caller_prop_p);
+
+    ecma_deref_object (thrower_p);
+    return caller_prop_p;
+  }
+
+  return NULL;
+} /* ecma_op_bound_function_try_to_lazy_instantiate_property */
 
 /**
  * @}

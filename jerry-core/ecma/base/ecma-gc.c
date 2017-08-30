@@ -336,12 +336,23 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         ecma_gc_set_object_visited (target_func_obj_p, true);
 
-        ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+        ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+
+        if (!ecma_is_value_integer_number (args_len_or_this))
+        {
+          if (ecma_is_value_object (args_len_or_this))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (args_len_or_this), true);
+          }
+          break;
+        }
+
+        ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
         ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
         JERRY_ASSERT (args_length > 0);
 
-        for (ecma_length_t i = 0; i < args_length; i++)
+        for (ecma_integer_value_t i = 0; i < args_length; i++)
         {
           if (ecma_is_value_object (args_p[i]))
           {
@@ -659,15 +670,25 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
     if (object_type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
     {
       ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
-      ecma_length_t args_length = ext_function_p->u.bound_function.args_length;
+
+      ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+
+      if (!ecma_is_value_integer_number (args_len_or_this))
+      {
+        ecma_free_value_if_not_object (args_len_or_this);
+        ecma_dealloc_extended_object (ext_function_p, sizeof (ecma_extended_object_t));
+        return;
+      }
+
+      ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
       ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
-      for (ecma_length_t i = 0; i < args_length; i++)
+      for (ecma_integer_value_t i = 0; i < args_length; i++)
       {
         ecma_free_value_if_not_object (args_p[i]);
       }
 
-      size_t args_size = args_length * sizeof (ecma_value_t);
+      size_t args_size = ((size_t) args_length) * sizeof (ecma_value_t);
       ecma_dealloc_extended_object (ext_function_p, sizeof (ecma_extended_object_t) + args_size);
       return;
     }

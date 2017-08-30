@@ -353,10 +353,8 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 
   ecma_free_value (parse_status);
 
-  is_strict = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
   ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
-                                                              is_strict,
                                                               bytecode_data_p);
   ecma_bytecode_deref (bytecode_data_p);
 

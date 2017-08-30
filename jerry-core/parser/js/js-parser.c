@@ -164,6 +164,13 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
   {
     if (literal_p->status_flags & LEXER_FLAG_UNUSED_IDENT)
     {
+#ifndef PARSER_DUMP_BYTE_CODE
+      if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
+      {
+        jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
+      }
+#endif /* !PARSER_DUMP_BYTE_CODE */
+
       context_p->literal_count--;
       continue;
     }

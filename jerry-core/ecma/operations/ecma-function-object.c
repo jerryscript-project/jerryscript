@@ -143,125 +143,6 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 } /* ecma_op_create_function_object */
 
 /**
- * List names of a Function object's lazy instantiated properties,
- * adding them to corresponding string collections
- *
- * See also:
- *          ecma_op_function_try_to_lazy_instantiate_property
- */
-void
-ecma_op_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties into
-                                                                      *          main collection and non-enumerable
-                                                                      *          to collection of 'skipped
-                                                                      *          non-enumerable' properties,
-                                                                      *   false - list all properties into main
-                                                                      *           collection.
-                                                                      */
-                                           ecma_collection_header_t *main_collection_p, /**< 'main' collection */
-                                           ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                             *   'non-enumerable'
-                                                                                             *   collection */
-{
-  ecma_collection_header_t *for_enumerable_p = main_collection_p;
-  JERRY_UNUSED (for_enumerable_p);
-
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
-
-  ecma_string_t *name_p;
-
-  /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  name_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
-  ecma_deref_ecma_string (name_p);
-
-  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
-  ecma_deref_ecma_string (name_p);
-} /* ecma_op_function_list_lazy_property_names */
-
-/**
- * Lazy instantation of non-builtin ecma function object's properties
- *
- * Warning:
- *         Only non-configurable properties could be instantiated lazily in this function,
- *         as configurable properties could be deleted and it would be incorrect
- *         to reinstantiate them in the function in second time.
- *
- * @return pointer to newly instantiated property, if a property was instantiated,
- *         NULL - otherwise
- */
-ecma_property_t *
-ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< the function object */
-                                                   ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
-
-  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
-  {
-    /* ECMA-262 v5, 13.2, 16-18 */
-
-    /* 16. */
-    ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
-
-    /* 17. */
-    ecma_string_t magic_string_constructor;
-    ecma_init_ecma_magic_string (&magic_string_constructor, LIT_MAGIC_STRING_CONSTRUCTOR);
-
-    ecma_property_value_t *constructor_prop_value_p;
-    constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
-                                                                &magic_string_constructor,
-                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                NULL);
-
-    constructor_prop_value_p->value = ecma_make_object_value (object_p);
-
-    /* 18. */
-    ecma_property_t *prototype_prop_p;
-    ecma_property_value_t *prototype_prop_value_p;
-    prototype_prop_value_p = ecma_create_named_data_property (object_p,
-                                                              property_name_p,
-                                                              ECMA_PROPERTY_FLAG_WRITABLE,
-                                                              &prototype_prop_p);
-
-    prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
-
-    ecma_deref_object (proto_object_p);
-
-    return prototype_prop_p;
-  }
-
-  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
-      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
-  {
-    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
-    const ecma_compiled_code_t *bytecode_data_p;
-    bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                       ext_func_p->u.function.bytecode_cp);
-
-    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
-    {
-      ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
-
-      ecma_property_t *caller_prop_p;
-      /* The property_name_p argument contans the name. */
-      ecma_create_named_accessor_property (object_p,
-                                           property_name_p,
-                                           thrower_p,
-                                           thrower_p,
-                                           ECMA_PROPERTY_FIXED,
-                                           &caller_prop_p);
-
-      ecma_deref_object (thrower_p);
-      return caller_prop_p;
-    }
-  }
-
-  return NULL;
-} /* ecma_op_function_try_to_lazy_instantiate_property */
-
-/**
  * External function object creation operation.
  *
  * Note:
@@ -290,17 +171,6 @@ ecma_op_create_external_function_object (ecma_external_handler_t handler_cb) /**
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
   ext_func_obj_p->u.external_handler_cb = handler_cb;
-
-  ecma_string_t *magic_string_prototype_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_builtin_helper_def_prop (function_obj_p,
-                                magic_string_prototype_p,
-                                ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
-                                true, /* Writable */
-                                false, /* Enumerable */
-                                false, /* Configurable */
-                                false); /* Failure handling */
-
-  ecma_deref_ecma_string (magic_string_prototype_p);
 
   return function_obj_p;
 } /* ecma_op_create_external_function_object */
@@ -758,6 +628,118 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_construct */
 
 /**
+ * Lazy instantation of non-builtin ecma function object's properties
+ *
+ * Warning:
+ *         Only non-configurable properties could be instantiated lazily in this function,
+ *         as configurable properties could be deleted and it would be incorrect
+ *         to reinstantiate them in the function in second time.
+ *
+ * @return pointer to newly instantiated property, if a property was instantiated,
+ *         NULL - otherwise
+ */
+ecma_property_t *
+ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< the function object */
+                                                   ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+  {
+    /* ECMA-262 v5, 13.2, 16-18 */
+
+    /* 16. */
+    ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
+
+    /* 17. */
+    ecma_string_t magic_string_constructor;
+    ecma_init_ecma_magic_string (&magic_string_constructor, LIT_MAGIC_STRING_CONSTRUCTOR);
+
+    ecma_property_value_t *constructor_prop_value_p;
+    constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
+                                                                &magic_string_constructor,
+                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                NULL);
+
+    constructor_prop_value_p->value = ecma_make_object_value (object_p);
+
+    /* 18. */
+    ecma_property_t *prototype_prop_p;
+    ecma_property_value_t *prototype_prop_value_p;
+    prototype_prop_value_p = ecma_create_named_data_property (object_p,
+                                                              property_name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              &prototype_prop_p);
+
+    prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
+
+    ecma_deref_object (proto_object_p);
+
+    return prototype_prop_p;
+  }
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
+      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
+  {
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+    const ecma_compiled_code_t *bytecode_data_p;
+    bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                       ext_func_p->u.function.bytecode_cp);
+
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
+    {
+      ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
+
+      ecma_property_t *caller_prop_p;
+      /* The property_name_p argument contans the name. */
+      ecma_create_named_accessor_property (object_p,
+                                           property_name_p,
+                                           thrower_p,
+                                           thrower_p,
+                                           ECMA_PROPERTY_FIXED,
+                                           &caller_prop_p);
+
+      ecma_deref_object (thrower_p);
+      return caller_prop_p;
+    }
+  }
+
+  return NULL;
+} /* ecma_op_function_try_to_lazy_instantiate_property */
+
+/**
+ * Create specification defined non-configurable properties for external functions.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.3.4.5
+ *
+ * @return pointer property, if one was instantiated,
+ *         NULL - otherwise.
+ */
+ecma_property_t *
+ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< object */
+                                                            ecma_string_t *property_name_p) /**< property's name */
+{
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+  {
+    ecma_property_t *prototype_prop_p;
+    ecma_property_value_t *prototype_prop_value_p;
+    prototype_prop_value_p = ecma_create_named_data_property (object_p,
+                                                              property_name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              &prototype_prop_p);
+
+    prototype_prop_value_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return prototype_prop_p;
+  }
+
+  return NULL;
+} /* ecma_op_external_function_try_to_lazy_instantiate_property */
+
+/**
  * Create specification defined non-configurable properties for bound functions.
  *
  * See also:
@@ -835,6 +817,134 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
 
   return NULL;
 } /* ecma_op_bound_function_try_to_lazy_instantiate_property */
+
+/**
+ * List names of a Function object's lazy instantiated properties,
+ * adding them to corresponding string collections
+ *
+ * See also:
+ *          ecma_op_function_try_to_lazy_instantiate_property
+ */
+void
+ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functionobject */
+                                           bool separate_enumerable, /**< true - list enumerable properties into
+                                                                      *          main collection and non-enumerable
+                                                                      *          to collection of 'skipped
+                                                                      *          non-enumerable' properties,
+                                                                      *   false - list all properties into main
+                                                                      *           collection.
+                                                                      */
+                                           ecma_collection_header_t *main_collection_p, /**< 'main' collection */
+                                           ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                             *   'non-enumerable'
+                                                                                             *   collection */
+{
+  JERRY_UNUSED (main_collection_p);
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+  ecma_string_t *name_p = ecma_new_ecma_length_string ();
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+
+  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+  const ecma_compiled_code_t *bytecode_data_p;
+  bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                     ext_func_p->u.function.bytecode_cp);
+
+  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
+  {
+    /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+    name_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_deref_ecma_string (name_p);
+
+    /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+    name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_deref_ecma_string (name_p);
+  }
+} /* ecma_op_function_list_lazy_property_names */
+
+/**
+ * List names of an External Function object's lazy instantiated properties,
+ * adding them to corresponding string collections
+ *
+ * See also:
+ *          ecma_op_external_function_try_to_lazy_instantiate_property
+ */
+void
+ecma_op_external_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties
+                                                                               *          into main collection and
+                                                                               *          non-enumerable to collection
+                                                                               *          of 'skipped non-enumerable'
+                                                                               *          properties,
+                                                                               *   false - list all properties into
+                                                                               *           main collection.
+                                                                               */
+                                                   ecma_collection_header_t *main_collection_p, /**< 'main'
+                                                                                                 *    collection */
+                                                   ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                                     *   collection */
+{
+  JERRY_UNUSED (main_collection_p);
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+  ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+} /* ecma_op_external_function_list_lazy_property_names */
+
+/**
+ * List names of a Bound Function object's lazy instantiated properties,
+ * adding them to corresponding string collections
+ *
+ * See also:
+ *          ecma_op_bound_function_try_to_lazy_instantiate_property
+ */
+void
+ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties
+                                                                            *          into main collection and
+                                                                            *          non-enumerable to collection
+                                                                            *          of 'skipped non-enumerable'
+                                                                            *          properties,
+                                                                            *   false - list all properties into
+                                                                            *           main collection.
+                                                                            */
+                                                 ecma_collection_header_t *main_collection_p, /**< 'main'
+                                                                                               *    collection */
+                                                 ecma_collection_header_t *non_enum_collection_p) /**< skipped
+                                                                                                   *   'non-enumerable'
+                                                                                                   *   collection */
+{
+  JERRY_UNUSED (main_collection_p);
+
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+  ecma_string_t *name_p = ecma_new_ecma_length_string ();
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+
+  /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+
+  /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+  name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_deref_ecma_string (name_p);
+} /* ecma_op_bound_function_list_lazy_property_names */
 
 /**
  * @}

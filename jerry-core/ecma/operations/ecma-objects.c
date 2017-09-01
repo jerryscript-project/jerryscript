@@ -233,6 +233,10 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
+    else if (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+    {
+      property_p = ecma_op_external_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
     else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
     {
       property_p = ecma_op_bound_function_try_to_lazy_instantiate_property (object_p, property_name_p);
@@ -535,6 +539,10 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
+    else if (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+    {
+      property_p = ecma_op_external_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
     else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
     {
       property_p = ecma_op_bound_function_try_to_lazy_instantiate_property (object_p, property_name_p);
@@ -825,6 +833,10 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
+    }
+    else if (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+    {
+      property_p = ecma_op_external_function_try_to_lazy_instantiate_property (object_p, property_name_p);
     }
     else if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
     {
@@ -1361,8 +1373,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       switch (type)
       {
         case ECMA_OBJECT_TYPE_GENERAL:
-        case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
         {
           break;
         }
@@ -1378,9 +1388,24 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         }
         case ECMA_OBJECT_TYPE_FUNCTION:
         {
-          ecma_op_function_list_lazy_property_names (is_enumerable_only,
+          ecma_op_function_list_lazy_property_names (obj_p,
+                                                     is_enumerable_only,
                                                      prop_names_p,
                                                      skipped_non_enumerable_p);
+          break;
+        }
+        case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+        {
+          ecma_op_external_function_list_lazy_property_names (is_enumerable_only,
+                                                              prop_names_p,
+                                                              skipped_non_enumerable_p);
+          break;
+        }
+        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+        {
+          ecma_op_bound_function_list_lazy_property_names (is_enumerable_only,
+                                                           prop_names_p,
+                                                           skipped_non_enumerable_p);
           break;
         }
         case ECMA_OBJECT_TYPE_CLASS:
@@ -1504,15 +1529,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             ecma_append_to_values_collection (skipped_non_enumerable_p,
                                               ecma_make_string_value (name_p),
                                               true);
-
-            uint8_t hash = (uint8_t) name_p->hash;
-            uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-            uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
-
-            if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
-            {
-              names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
-            }
           }
 
           ecma_deref_ecma_string (name_p);
@@ -1541,7 +1557,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    /* Second pass: collecting properties names into arrays */
+    /* Second pass: collecting property names into arrays. */
     JMEM_DEFINE_LOCAL_ARRAY (names_p,
                              array_index_named_properties_count + string_named_properties_count,
                              ecma_string_t *);
@@ -1622,7 +1638,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
          i < array_index_named_properties_count + string_named_properties_count;
          i++)
     {
-      bool is_append;
+      bool is_append = true;
 
       ecma_string_t *name_p = names_p[i];
 
@@ -1632,16 +1648,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
       {
-        /* no name with the hash is in constructed collection */
-        is_append = true;
-
+        /* This hash has not been used before (for non-skipped). */
         names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
       }
       else
       {
-        /* name with same hash already occured */
-        bool is_equal_found = false;
-
+        /* Name with same hash has already occured. */
         ecma_collection_iterator_init (&iter, ret_p);
 
         while (ecma_collection_iterator_next (&iter))
@@ -1650,10 +1662,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           if (ecma_compare_ecma_strings (name_p, iter_name_p))
           {
-            is_equal_found = true;
+            is_append = false;
+            break;
           }
         }
+      }
 
+      if (is_append)
+      {
         ecma_collection_iterator_init (&iter, skipped_non_enumerable_p);
         while (ecma_collection_iterator_next (&iter))
         {
@@ -1661,11 +1677,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           if (ecma_compare_ecma_strings (name_p, iter_name_p))
           {
-            is_equal_found = true;
+            is_append = false;
+            break;
           }
         }
-
-        is_append = !is_equal_found;
       }
 
       if (is_append)

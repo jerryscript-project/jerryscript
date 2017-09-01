@@ -32,14 +32,6 @@ bool ecma_is_constructor (ecma_value_t value);
 ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
 
-void
-ecma_op_function_list_lazy_property_names (bool separate_enumerable,
-                                           ecma_collection_header_t *main_collection_p,
-                                           ecma_collection_header_t *non_enum_collection_p);
-
-ecma_property_t *
-ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-
 ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_handler_t handler_cb);
 
@@ -55,7 +47,29 @@ ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
 ecma_property_t *
+ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+
+ecma_property_t *
+ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+
+ecma_property_t *
 ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+
+void
+ecma_op_function_list_lazy_property_names (ecma_object_t *object_p,
+                                           bool separate_enumerable,
+                                           ecma_collection_header_t *main_collection_p,
+                                           ecma_collection_header_t *non_enum_collection_p);
+
+void
+ecma_op_external_function_list_lazy_property_names (bool separate_enumerable,
+                                                    ecma_collection_header_t *main_collection_p,
+                                                    ecma_collection_header_t *non_enum_collection_p);
+
+void
+ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable,
+                                                 ecma_collection_header_t *main_collection_p,
+                                                 ecma_collection_header_t *non_enum_collection_p);
 
 /**
  * @}

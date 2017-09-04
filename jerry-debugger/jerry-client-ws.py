@@ -1089,33 +1089,47 @@ def main():
 
             prompt.cmdloop()
 
+
         elif buffer_type in [JERRY_DEBUGGER_EVAL_RESULT,
-                             JERRY_DEBUGGER_EVAL_RESULT_END]:
-
+                             JERRY_DEBUGGER_EVAL_RESULT_END,
+                             JERRY_DEBUGGER_OUTPUT_RESULT,
+                             JERRY_DEBUGGER_OUTPUT_RESULT_END]:
             message = b""
-            eval_type = buffer_type
+            msg_type = buffer_type
             while True:
-                message += data[3:]
-
-                if buffer_type == JERRY_DEBUGGER_EVAL_RESULT_END:
-                    subtype = ord(message[-1])
-                    message = message[:-1]
+                if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
+                                   JERRY_DEBUGGER_OUTPUT_RESULT_END]:
+                    subtype = ord(data[-1])
+                    message += data[3:-1]
                     break
+                else:
+                    message += data[3:]
 
                 data = debugger.get_message(True)
                 buffer_type = ord(data[2])
                 buffer_size = ord(data[1]) - 1
+                # Checks if the next frame would be an invalid data frame.
+                # If it is not the message type, or the end type of it, an exception is thrown.
+                if buffer_type not in [msg_type, msg_type + 1]:
+                    raise Exception("Invalid data caught")
 
-                if buffer_type not in [eval_type,
-                                       eval_type + 1]:
-                    raise Exception("Eval result expected")
+            # Subtypes of output
+            if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
+                if subtype == JERRY_DEBUGGER_OUTPUT_OK:
+                    print("%sout: %s%s" % (debugger.blue, debugger.nocolor, message))
+                elif subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
+                    print("%swarning: %s%s" % (debugger.yellow, debugger.nocolor, message))
+                elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
+                    print("%serr: %s%s" % (debugger.red, debugger.nocolor, message))
 
-            if subtype == JERRY_DEBUGGER_EVAL_ERROR:
-                print("Uncaught exception: %s" % (message))
-            else:
-                print(message)
+            # Subtypes of eval
+            elif buffer_type == JERRY_DEBUGGER_EVAL_RESULT_END:
+                if subtype == JERRY_DEBUGGER_EVAL_ERROR:
+                    print("Uncaught exception: %s" % (message))
+                else:
+                    print(message)
 
-            prompt.cmdloop()
+                prompt.cmdloop()
 
         elif buffer_type == JERRY_DEBUGGER_MEMSTATS_RECEIVE:
 
@@ -1132,31 +1146,6 @@ def main():
 
         elif buffer_type == JERRY_DEBUGGER_WAIT_FOR_SOURCE:
             prompt.send_client_source()
-
-        elif buffer_type in [JERRY_DEBUGGER_OUTPUT_RESULT, JERRY_DEBUGGER_OUTPUT_RESULT_END]:
-            message = ""
-            msg_type = buffer_type
-            while True:
-                if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
-                    subtype = ord(data[-1])
-                    message += data[3:-1]
-                    break
-                else:
-                    message += data[3:]
-
-                data = debugger.get_message(True)
-                buffer_type = ord(data[2])
-                buffer_size = ord(data[1]) - 1
-
-                if buffer_type not in [msg_type, msg_type + 1]:
-                    raise Exception("Output data expected")
-
-            if subtype == JERRY_DEBUGGER_OUTPUT_OK:
-                print("%sout: %s%s" % (debugger.blue, debugger.nocolor, message))
-            elif subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
-                print("%swarning: %s%s" % (debugger.yellow, debugger.nocolor, message))
-            elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
-                print("%serr: %s%s" % (debugger.red, debugger.nocolor, message))
 
 
         else:

@@ -252,6 +252,10 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
       /* 8. */
       ext_function_p = (ecma_extended_object_t *) function_p;
+      ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
+                                       this_arg_obj_p);
+
       ext_function_p->u.bound_function.args_len_or_this = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
       if (arguments_number != 0)
@@ -271,23 +275,25 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
       /* 8. */
       ext_function_p = (ecma_extended_object_t *) function_p;
+      ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
+                                       this_arg_obj_p);
 
-      ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) args_length);
-      ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
+      /* NOTE: This solution provides temporary false data about the object's size
+         but prevents GC from freeing it until it's not fully initialized. */
+      ext_function_p->u.bound_function.args_len_or_this = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
       ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
       for (ecma_length_t i = 0; i < arguments_number; i++)
       {
         *args_p++ = ecma_copy_value_if_not_object (arguments_list_p[i]);
       }
+
+      ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) args_length);
+      ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
     }
 
     ecma_deref_object (prototype_obj_p);
-
-    /* 7. */
-    ecma_object_t *this_arg_obj_p = ecma_get_object_from_value (this_arg);
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
-                                     this_arg_obj_p);
 
     /*
      * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.

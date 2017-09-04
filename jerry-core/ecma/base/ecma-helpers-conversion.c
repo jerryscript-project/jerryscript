@@ -981,10 +981,10 @@ ecma_number_of_digits (double val) /**< ecma number */
 inline static void __attr_always_inline___
 ecma_double_to_ascii (double val, /**< ecma number */
                       lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
+                      int32_t num_of_digits, /**< number of digits */
                       int32_t *exp_p) /**< [out] exponent */
 {
   int32_t char_cnt = 0;
-  int32_t num_of_digits = ecma_number_of_digits (val);
 
   double divider = 10.0;
   double prev_residual;
@@ -1017,35 +1017,38 @@ ecma_double_to_binary_floating_point (double val, /**< ecma number */
                                       lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
                                       int32_t *exp_p) /**< [out] exponent */
 {
-  int32_t i, char_cnt = 0;
+  int32_t char_cnt = 0;
   double integer_part, fraction_part;
 
   fraction_part = fmod (val, 1.0);
   integer_part = floor (val);
-
-  lit_utf8_byte_t integer_part_buffer[ecma_number_of_digits (integer_part) + 1];
+  int32_t num_of_digits = ecma_number_of_digits (integer_part);
 
   if (fabs (integer_part) < EPSILON)
   {
     buffer_p[0] = '0';
     char_cnt++;
   }
-  else if (integer_part < 10e16) /* Ensure that integer_part is not rounded */
+  else if (num_of_digits <= 16) /* Ensure that integer_part is not rounded */
   {
     while (integer_part > 0.0)
     {
-      integer_part_buffer[char_cnt++] = (lit_utf8_byte_t) ((int) fmod (integer_part, 10.0) + '0');
+      buffer_p[num_of_digits - 1 - char_cnt++] = (lit_utf8_byte_t) ((int) fmod (integer_part, 10.0) + '0');
       integer_part = floor (integer_part / 10.0);
     }
-
-    for (i = 0; i < char_cnt; i++)
-    {
-      buffer_p[i] = integer_part_buffer[char_cnt - i - 1];
-    }
+  }
+  else if (num_of_digits <= 21)
+  {
+    ecma_double_to_ascii (integer_part, buffer_p, num_of_digits, &char_cnt);
   }
   else
   {
-    ecma_double_to_ascii (val, buffer_p, &char_cnt);
+    /* According to ECMA-262 v5, 15.7.4.5, step 7: if x >= 10^21, then execution will continue with
+     * ToString(x) so in this case no further conversions are required. Number 21 in the else if condition
+     * above must be kept in sync with the number 21 in ecma_builtin_number_prototype_object_to_fixed
+     * method, step 7. */
+    *exp_p = num_of_digits;
+    return 0;
   }
 
   *exp_p = char_cnt;

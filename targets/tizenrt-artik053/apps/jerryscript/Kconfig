@@ -46,11 +46,4 @@ config JERRYSCRIPT_SHOW_OPCODES
 config JERRYSCRIPT_DEBUGGER
 	bool "Jerryscript debugger"
 	default n
-
-if JERRYSCRIPT_DEBUGGER
-config JERRYSCRIPT_DEBUGGER_PORT
-	int "Jerryscript debugger port"
-	default 5001
-endif
-
 endif

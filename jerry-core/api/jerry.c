@@ -167,6 +167,13 @@ jerry_cleanup (void)
 {
   jerry_assert_api_available ();
 
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_close_connection ();
+  }
+#endif /* JERRY_DEBUGGER */
+
   for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p), *next_p = NULL;
        this_p != NULL;
        this_p = next_p)

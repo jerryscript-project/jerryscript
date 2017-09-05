@@ -830,10 +830,6 @@ main (int argc,
 
   jerry_release_value (ret_value);
 
-  if (start_debug_server)
-  {
-    jerry_debugger_cleanup ();
-  }
   jerry_cleanup ();
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
   free (instance_p);

@@ -53,6 +53,7 @@ print_help (char *name)
           "  --mem-stats-separate\n"
           "  --show-opcodes\n"
           "  --start-debug-server\n"
+          "  --debug-server-port [port]\n"
           "\n",
           name);
 } /* print_help */
@@ -357,6 +358,8 @@ int jerry_main (int argc, char *argv[])
   const char *file_names[JERRY_MAX_COMMAND_LINE_ARGS];
   int i;
   int files_counter = 0;
+  bool start_debug_server = false;
+  uint16_t debug_port = 5001;
 
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
@@ -396,7 +399,19 @@ int jerry_main (int argc, char *argv[])
     }
     else if (!strcmp ("--start-debug-server", argv[i]))
     {
-      flags |= JERRY_INIT_DEBUGGER;
+      start_debug_server = true;
+    }
+    else if (!strcmp ("--debug-server-port", argv[i]))
+    {
+      if (++i < argc)
+      {
+        debug_port = str_to_uint (argv[i]);
+      }
+      else
+      {
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: wrong format or invalid argument\n");
+        return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      }
     }
     else
     {
@@ -405,6 +420,11 @@ int jerry_main (int argc, char *argv[])
   }
 
   jerry_init (flags);
+
+  if (start_debug_server)
+  {
+    jerry_debugger_init (debug_port);
+  }
 
   register_js_function ("assert", jerryx_handler_assert);
   register_js_function ("gc", jerryx_handler_gc);

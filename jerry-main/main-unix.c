@@ -817,17 +817,17 @@ main (int argc,
 
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
-  else
-  {
-    jerry_release_value (ret_value);
-    ret_value = jerry_run_all_enqueued_jobs ();
 
-    if (jerry_value_has_error_flag (ret_value))
-    {
-      print_unhandled_exception (ret_value);
-      ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
+  jerry_release_value (ret_value);
+
+  ret_value = jerry_run_all_enqueued_jobs ();
+
+  if (jerry_value_has_error_flag (ret_value))
+  {
+    print_unhandled_exception (ret_value);
+    ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
+
   jerry_release_value (ret_value);
 
   if (start_debug_server)

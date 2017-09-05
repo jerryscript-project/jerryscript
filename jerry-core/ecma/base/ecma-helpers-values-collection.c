@@ -318,7 +318,8 @@ bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< context of iterator */
 {
   if (iterator_p->header_p == NULL
-      || unlikely (iterator_p->header_p->unit_number == 0))
+      || unlikely (iterator_p->header_p->unit_number == 0)
+      || unlikely (iterator_p->header_p->first_chunk_cp == JMEM_CP_NULL))
   {
     return false;
   }

@@ -104,20 +104,6 @@ jerry_debugger_init (uint16_t port) /**< server port number */
 } /* jerry_debugger_init */
 
 /**
- * Debugger server shutdown. Must be called before jerry_cleanup.
- */
-void
-jerry_debugger_cleanup (void)
-{
-#ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_close_connection ();
-  }
-#endif /* JERRY_DEBUGGER */
-} /* jerry_debugger_cleanup */
-
-/**
  * Sets whether the engine should wait and run a source.
  *
  * @return enum JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED - if the source is not received

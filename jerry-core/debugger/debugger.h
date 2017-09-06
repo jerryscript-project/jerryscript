@@ -18,7 +18,6 @@
 
 #include "debugger-ws.h"
 #include "ecma-globals.h"
-#include "jerryscript-core.h"
 
 #ifdef JERRY_DEBUGGER
 
@@ -350,7 +349,6 @@ bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_co
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
 bool jerry_debugger_send_exception_string (ecma_value_t exception_value);
-void jerry_debugger_send_output (jerry_char_t buffer[], jerry_size_t str_size, uint8_t type);
 
 #endif /* JERRY_DEBUGGER */
 

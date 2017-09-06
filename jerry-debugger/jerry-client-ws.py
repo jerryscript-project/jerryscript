@@ -58,8 +58,10 @@ JERRY_DEBUGGER_EVAL_ERROR = 2
 
 # Subtypes of output
 JERRY_DEBUGGER_OUTPUT_OK = 1
-JERRY_DEBUGGER_OUTPUT_WARNING = 2
-JERRY_DEBUGGER_OUTPUT_ERROR = 3
+JERRY_DEBUGGER_OUTPUT_ERROR = 2
+JERRY_DEBUGGER_OUTPUT_WARNING = 3
+JERRY_DEBUGGER_OUTPUT_DEBUG = 4
+JERRY_DEBUGGER_OUTPUT_TRACE = 5
 
 
 # Messages sent by the client to server.
@@ -1115,12 +1117,15 @@ def main():
 
             # Subtypes of output
             if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
-                if subtype == JERRY_DEBUGGER_OUTPUT_OK:
+                if subtype in [JERRY_DEBUGGER_OUTPUT_OK,
+                               JERRY_DEBUGGER_OUTPUT_DEBUG]:
                     print("%sout: %s%s" % (debugger.blue, debugger.nocolor, message))
                 elif subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
                     print("%swarning: %s%s" % (debugger.yellow, debugger.nocolor, message))
                 elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
                     print("%serr: %s%s" % (debugger.red, debugger.nocolor, message))
+                elif subtype == JERRY_DEBUGGER_OUTPUT_TRACE:
+                    print("%strace: %s%s" % (debugger.blue, debugger.nocolor, message))
 
             # Subtypes of eval
             elif buffer_type == JERRY_DEBUGGER_EVAL_RESULT_END:

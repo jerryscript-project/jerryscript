@@ -1203,9 +1203,9 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
 
   *prop_desc_p = ecma_make_empty_property_descriptor ();
 
-  prop_desc_p->is_enumerable = ecma_is_property_enumerable (property);
+  prop_desc_p->is_enumerable = ECMA_CONVERT_BOOL_TO_FIELD(ecma_is_property_enumerable (property));
   prop_desc_p->is_enumerable_defined = true;
-  prop_desc_p->is_configurable = ecma_is_property_configurable (property);
+  prop_desc_p->is_configurable = ECMA_CONVERT_BOOL_TO_FIELD(ecma_is_property_configurable (property));
   prop_desc_p->is_configurable_defined = true;
 
   ecma_property_types_t type = ECMA_PROPERTY_GET_TYPE (property);
@@ -1223,7 +1223,7 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
     }
 
     prop_desc_p->is_value_defined = true;
-    prop_desc_p->is_writable = ecma_is_property_writable (property);
+    prop_desc_p->is_writable = ECMA_CONVERT_BOOL_TO_FIELD(ecma_is_property_writable (property));
     prop_desc_p->is_writable_defined = true;
   }
   else

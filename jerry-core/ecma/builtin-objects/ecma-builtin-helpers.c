@@ -674,16 +674,16 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
   prop_desc.is_value_defined = true;
-  prop_desc.value = value;
+  prop_desc.value = ECMA_CONVERT_BOOL_TO_FIELD(value);
 
   prop_desc.is_writable_defined = true;
-  prop_desc.is_writable = writable;
+  prop_desc.is_writable = ECMA_CONVERT_BOOL_TO_FIELD(writable);
 
   prop_desc.is_enumerable_defined = true;
-  prop_desc.is_enumerable = enumerable;
+  prop_desc.is_enumerable = ECMA_CONVERT_BOOL_TO_FIELD(enumerable);
 
   prop_desc.is_configurable_defined = true;
-  prop_desc.is_configurable = configurable;
+  prop_desc.is_configurable = ECMA_CONVERT_BOOL_TO_FIELD(configurable);
 
   return ecma_op_object_define_own_property (obj_p,
                                              index_p,

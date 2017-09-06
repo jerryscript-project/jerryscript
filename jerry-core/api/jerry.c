@@ -1697,14 +1697,14 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-  prop_desc.is_enumerable_defined = prop_desc_p->is_enumerable_defined;
-  prop_desc.is_enumerable = prop_desc_p->is_enumerable_defined ? prop_desc_p->is_enumerable : false;
+  prop_desc.is_enumerable_defined = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_enumerable_defined);
+  prop_desc.is_enumerable = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_enumerable_defined ? prop_desc_p->is_enumerable : false);
 
-  prop_desc.is_configurable_defined = prop_desc_p->is_configurable_defined;
-  prop_desc.is_configurable = prop_desc_p->is_configurable_defined ? prop_desc_p->is_configurable : false;
+  prop_desc.is_configurable_defined = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_configurable_defined);
+  prop_desc.is_configurable = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_configurable_defined ? prop_desc_p->is_configurable : false);
 
   /* Copy data property info. */
-  prop_desc.is_value_defined = prop_desc_p->is_value_defined;
+  prop_desc.is_value_defined = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_value_defined);
 
   if (prop_desc_p->is_value_defined)
   {
@@ -1716,8 +1716,8 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
     prop_desc.value = prop_desc_p->value;
   }
 
-  prop_desc.is_writable_defined = prop_desc_p->is_writable_defined;
-  prop_desc.is_writable = prop_desc_p->is_writable_defined ? prop_desc_p->is_writable : false;
+  prop_desc.is_writable_defined = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_writable_defined);
+  prop_desc.is_writable = ECMA_CONVERT_BOOL_TO_FIELD(prop_desc_p->is_writable_defined ? prop_desc_p->is_writable : false);
 
   /* Copy accessor property info. */
   if (prop_desc_p->is_get_defined)

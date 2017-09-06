@@ -17,6 +17,7 @@
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "debugger.h"
 
 #ifndef DISABLE_EXTRA_API
 
@@ -60,9 +61,10 @@ jerry_port_default_set_log_level (jerry_log_level_t level) /**< log level */
 #endif /* !DISABLE_EXTRA_API */
 
 /**
- * Default implementation of jerry_port_log. Prints log message to standard
- * error with 'vfprintf' if message level is less than or equal to the set log
- * level.
+ * Default implementation of jerry_port_log. Prints log message to a buffer
+ * then prints the buffer to the standard error with 'fprintf' if message
+ * level is less than or equal to the set log level.
+ * Additionally, sends the message to the debugger client.
  *
  * Note:
  *      Changing the log level from JERRY_LOG_LEVEL_ERROR is only possible if
@@ -78,7 +80,17 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
   {
     va_list args;
     va_start (args, format);
+#ifdef JERRY_DEBUGGER
+    char buffer[256];
+    int length = 0;
+    length = vsnprintf (buffer, 255, format, args);
+    buffer[length] = '\0';
+    fprintf (stderr, "%s", buffer);
+    jerry_char_t *jbuffer = (jerry_char_t *) buffer;
+    jerry_debugger_send_output (jbuffer, (jerry_size_t) length, (uint8_t) (level + 2));
+#else /* If jerry-debugger isn't defined, libc is turned on */
     vfprintf (stderr, format, args);
+#endif /* JERRY_DEBUGGER */
     va_end (args);
   }
 } /* jerry_port_log */

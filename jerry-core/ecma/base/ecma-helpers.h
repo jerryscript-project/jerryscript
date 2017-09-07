@@ -109,6 +109,13 @@
     JERRY_ASSERT (utf8_ptr != NULL); \
     jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
   }
+/**
+ * This is very ugly macro but there is not better solution,
+ * which will work for bit fields in versions of GCC used in MCU-s
+ * See:
+ * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=39170
+ */
+#define ECMA_CONVERT_BOOL_TO_FIELD(x) ((x) ? 1 : 0)
 
 /* ecma-helpers-value.c */
 bool ecma_is_value_direct (ecma_value_t value) __attr_const___;

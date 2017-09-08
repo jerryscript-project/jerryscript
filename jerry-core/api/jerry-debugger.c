@@ -109,6 +109,7 @@ jerry_debugger_init (uint16_t port) /**< server port number */
  * @return enum JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED - if the source is not received
  *              JERRY_DEBUGGER_SOURCE_RECEIVED - if a source code received
  *              JERRY_DEBUGGER_SOURCE_END - the end of the source codes
+ *              JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED - the end of the context
  */
 jerry_debugger_wait_and_run_type_t
 jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [out] parse and run return value */
@@ -135,10 +136,21 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
           break;
         }
 
+        /* Stop executing the current context. */
+        if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONTEXT_RESET_MODE))
+        {
+          ret_type = JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED;
+          JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags)
+                                           & ~JERRY_DEBUGGER_CONTEXT_RESET_MODE);
+          break;
+        }
+
         /* Stop waiting for a new source file. */
         if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_NO_SOURCE))
         {
           ret_type = JERRY_DEBUGGER_SOURCE_END;
+          JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags)
+                                           & ~JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
           break;
         }
 

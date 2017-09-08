@@ -90,6 +90,7 @@ typedef enum
   JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger stop at an exception */
   JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 5, /**< debugger waiting for client code */
   JERRY_DEBUGGER_CLIENT_NO_SOURCE = 1u << 6, /**< debugger leaving the client source loop */
+  JERRY_DEBUGGER_CONTEXT_RESET_MODE = 1u << 7, /**< debugger and engine reinitialization mode */
 } jerry_debugger_flags_t;
 
 /**
@@ -135,16 +136,17 @@ typedef enum
   JERRY_DEBUGGER_CLIENT_SOURCE = 6, /**< first message of client source */
   JERRY_DEBUGGER_CLIENT_SOURCE_PART = 7, /**< next message of client source */
   JERRY_DEBUGGER_NO_MORE_SOURCES = 8, /**< no more sources notification */
+  JERRY_DEBUGGER_CONTEXT_RESET = 9, /**< context reset request */
   /* The following messages are only available in breakpoint
    * mode and they switch the engine to run mode. */
-  JERRY_DEBUGGER_CONTINUE = 9, /**< continue execution */
-  JERRY_DEBUGGER_STEP = 10, /**< next breakpoint, step into functions */
-  JERRY_DEBUGGER_NEXT = 11, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_CONTINUE = 10, /**< continue execution */
+  JERRY_DEBUGGER_STEP = 11, /**< next breakpoint, step into functions */
+  JERRY_DEBUGGER_NEXT = 12, /**< next breakpoint in the same context */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 12, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 13, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 14, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 13, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 14, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 15, /**< next message of evaluating a string */
 } jerry_debugger_header_type_t;
 
 /**

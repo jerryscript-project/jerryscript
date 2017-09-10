@@ -1,0 +1,9 @@
+mbed-os
+mbed-events
+.build
+.mbed
+.temp/
+mbed_settings.py
+js/pins.js
+source/pins.cpp
+source/jerry-targetjs.h

@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 #ifndef RE_COMPILER_H
 #define RE_COMPILER_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #include "ecma-globals.h"
 #include "re-bytecode.h"
@@ -48,9 +47,9 @@ typedef struct
 } re_compiler_ctx_t;
 
 ecma_value_t
-re_compile_bytecode (const re_compiled_code_t **, ecma_string_t *, uint16_t);
+re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, ecma_string_t *pattern_str_p, uint16_t flags);
 
-void re_cache_gc_run ();
+void re_cache_gc_run (void);
 
 /**
  * @}
@@ -58,5 +57,5 @@ void re_cache_gc_run ();
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !RE_COMPILER_H */

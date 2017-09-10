@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +19,7 @@
 #include "config.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -39,7 +38,11 @@
  * The offset is shifted right by JMEM_ALIGNMENT_LOG.
  * Least significant JMEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
  */
-#define ECMA_POINTER_FIELD_WIDTH JMEM_CP_WIDTH
+#ifdef JERRY_CPOINTER_32_BIT
+#define ECMA_POINTER_FIELD_WIDTH 32
+#else /* !JERRY_CPOINTER_32_BIT */
+#define ECMA_POINTER_FIELD_WIDTH 16
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * The NULL value for compressed pointers
@@ -49,6 +52,17 @@
 /**
  * @}
  */
+
+/**
+ * JerryScript init flags.
+ */
+typedef enum
+{
+  ECMA_INIT_EMPTY               = (0u),      /**< empty flag set */
+  ECMA_INIT_SHOW_OPCODES        = (1u << 0), /**< dump byte-code to log after parse */
+  ECMA_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
+  ECMA_INIT_MEM_STATS           = (1u << 2), /**< dump memory statistics */
+} ecma_init_flag_t;
 
 /**
  * Type of ecma value
@@ -79,6 +93,7 @@ typedef enum
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
   ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
   ECMA_SIMPLE_VALUE_NULL, /**< null value */
+  ECMA_SIMPLE_VALUE_NOT_FOUND, /**< a special value returned by ecma_op_object_find */
   ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
   ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma values */
 } ecma_simple_value_t;
@@ -192,29 +207,66 @@ typedef int32_t ecma_integer_value_t;
 typedef uintptr_t ecma_external_pointer_t;
 
 /**
- * Internal properties' identifiers.
+ * Callback which tells whether the ECMAScript execution should be stopped.
+ */
+typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
+
+/**
+ * Function type for user context deallocation
+ */
+typedef void (*ecma_user_context_deinit_t) (void *user_context_p);
+
+/**
+ * Type of an external function handler.
+ */
+typedef ecma_value_t (*ecma_external_handler_t) (const ecma_value_t function_obj,
+                                                 const ecma_value_t this_val,
+                                                 const ecma_value_t args_p[],
+                                                 const ecma_length_t args_count);
+
+/**
+ * Native free callback of an object (deprecated).
+ */
+typedef void (*ecma_object_free_callback_t) (const uintptr_t native_p);
+
+/**
+ * Native free callback of an object.
+ */
+typedef void (*ecma_object_native_free_callback_t) (void *native_p);
+
+/**
+ * Type information of a native pointer.
+ */
+typedef struct
+{
+  ecma_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
+} ecma_object_native_info_t;
+
+/**
+ * Representation for native pointer data.
+ */
+typedef struct
+{
+  void *data_p; /**< points to the data of the object */
+  union
+  {
+    ecma_object_free_callback_t callback_p; /**< callback */
+    ecma_object_native_info_t *info_p; /**< native info */
+  } u;
+} ecma_native_pointer_t;
+
+/**
+ * Special property identifiers.
  */
 typedef enum
 {
-  ECMA_INTERNAL_PROPERTY_CLASS, /**< [[Class]] */
-  ECMA_INTERNAL_PROPERTY_SCOPE, /**< [[Scope]] */
-  ECMA_INTERNAL_PROPERTY_PARAMETERS_MAP, /**< [[ParametersMap]] */
-  ECMA_INTERNAL_PROPERTY_REGEXP_BYTECODE, /**< pointer to RegExp bytecode array */
+  ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
 
-  ECMA_INTERNAL_PROPERTY_NATIVE_HANDLE, /**< native handle associated with an object */
-  ECMA_INTERNAL_PROPERTY_FREE_CALLBACK, /**< object's native free callback */
-  ECMA_INTERNAL_PROPERTY_ECMA_VALUE, /**< [[Primitive value]] for String, Number, and Boolean */
-  ECMA_INTERNAL_PROPERTY_DATE_FLOAT, /**< float number value type for date objects */
+  /* Note: when new special types are added
+   * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
+  ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
 
-  /** Bound function internal properties **/
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_TARGET_FUNCTION,
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_THIS,
-  ECMA_INTERNAL_PROPERTY_BOUND_FUNCTION_BOUND_ARGS,
-
-  ECMA_INTERNAL_PROPERTY_INSTANTIATED_MASK_32_63, /**< Bit-mask of non-instantiated
-                                                   *   built-in's properties (bits 32-63) */
-
-  ECMA_INTERNAL_PROPERTY__COUNT /**< Number of internal properties' types */
+  ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
 } ecma_internal_property_id_t;
 
 /**
@@ -261,28 +313,49 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_TYPE_DELETED, /**< deleted property */
-  ECMA_PROPERTY_TYPE_INTERNAL, /**< internal property */
+  ECMA_PROPERTY_TYPE_SPECIAL, /**< internal property */
   ECMA_PROPERTY_TYPE_NAMEDDATA, /**< property is named data */
   ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< property is named accessor */
+  ECMA_PROPERTY_TYPE_VIRTUAL, /**< property is virtual */
 
-  ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX = ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< highest value for
-                                                                             *   property pair types. */
-
-  ECMA_PROPERTY_TYPE_HASHMAP, /**< hash map for fast property access */
-
-  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_HASHMAP, /**< highest value for property types. */
+  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_VIRTUAL, /**< highest value for property types. */
 } ecma_property_types_t;
 
 /**
  * Property type mask.
  */
-#define ECMA_PROPERTY_TYPE_MASK 0x7
+#define ECMA_PROPERTY_TYPE_MASK 0x3
 
 /**
  * Property flags base shift.
  */
-#define ECMA_PROPERTY_FLAG_SHIFT 3
+#define ECMA_PROPERTY_FLAG_SHIFT 2
+
+/**
+ * Define special property type.
+ */
+#define ECMA_SPECIAL_PROPERTY_VALUE(type) \
+  ((uint8_t) (ECMA_PROPERTY_TYPE_SPECIAL | ((type) << ECMA_PROPERTY_FLAG_SHIFT)))
+
+/**
+ * Type of deleted property.
+ */
+#define ECMA_PROPERTY_TYPE_DELETED ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_DELETED)
+
+/**
+ * Type of hash-map property.
+ */
+#define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
+
+/**
+ * Type of property not found.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND ECMA_PROPERTY_TYPE_DELETED
+
+/**
+ * Type of property not found and no more searching in the proto chain.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP ECMA_PROPERTY_TYPE_HASHMAP
 
 /**
  * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -315,9 +388,25 @@ typedef enum
   (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_WRITABLE)
 
 /**
+ * Property flags enumerable, writable.
+ */
+#define ECMA_PROPERTY_ENUMERABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
  * No attributes can be changed for this property.
  */
 #define ECMA_PROPERTY_FIXED 0
+
+/**
+ * Shift for property name part.
+ */
+#define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
+
+/**
+ * Property name is a generic string.
+ */
+#define ECMA_PROPERTY_NAME_TYPE_STRING 3
 
 /**
  * Abstract property representation.
@@ -327,17 +416,10 @@ typedef enum
  * a packed struct would only consume sizeof(ecma_value_t)+1 memory
  * bytes, accessing such structure is inefficient from the CPU viewpoint
  * because the value is not naturally aligned. To improve performance,
- * multiple type bytes and values are packed together. The maximum
- * number of packed items is sizeof(ecma_value_t). The memory layout is
- * the following when the maximum number of items is present:
+ * two type bytes and values are packed together. The memory layout is
+ * the following:
  *
- *  [type 1, type 2, type 3, type 4][value 1][value 2][value 3][value 4]
- *
- * This way no memory is wasted and values are naturally aligned.
- *
- * For property pairs, only two values are used:
- *
- *  [type 1, type 2, unused 1, unused 2][value 1][value 2]
+ *  [type 1, type 2, unused byte 1, unused byte 2][value 1][value 2]
  *
  * The unused two bytes are used to store a compressed pointer for the
  * next property pair.
@@ -346,10 +428,7 @@ typedef enum
  * from the property address. However, property pointers cannot be compressed
  * anymore.
  */
-typedef struct
-{
-  uint8_t type_and_flags; /**< ecma_property_types_t (3 bit) and ecma_property_flags_t */
-} ecma_property_t;
+typedef uint8_t ecma_property_t; /**< ecma_property_types_t (3 bit) and ecma_property_flags_t */
 
 /**
  * Number of items in a property pair.
@@ -361,9 +440,16 @@ typedef struct
  */
 typedef struct
 {
+#ifdef JERRY_CPOINTER_32_BIT
+  jmem_cpointer_t next_property_cp; /**< next cpointer */
+#endif /* JERRY_CPOINTER_32_BIT */
   ecma_property_t types[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< two property type slot. The first represent
                                                          *   the type of this property (e.g. property pair) */
+#ifdef JERRY_CPOINTER_32_BIT
+  uint16_t padding; /**< an unused value */
+#else /* !JERRY_CPOINTER_32_BIT */
   jmem_cpointer_t next_property_cp; /**< next cpointer */
+#endif /* JERRY_CPOINTER_32_BIT */
 } ecma_property_header_t;
 
 /**
@@ -381,7 +467,11 @@ typedef struct
 typedef union
 {
   ecma_value_t value; /**< value of a property */
+#ifdef JERRY_CPOINTER_32_BIT
+  jmem_cpointer_t getter_setter_pair_cp; /**< cpointer to getter setter pair */
+#else /* !JERRY_CPOINTER_32_BIT */
   ecma_getter_setter_pointers_t getter_setter_pair; /**< getter setter pair */
+#endif /* JERRY_CPOINTER_32_BIT */
 } ecma_property_value_t;
 
 /**
@@ -397,66 +487,127 @@ typedef struct
 /**
  * Get property type.
  */
-#define ECMA_PROPERTY_GET_TYPE(property_p) \
-  ((ecma_property_types_t) ((property_p)->type_and_flags & ECMA_PROPERTY_TYPE_MASK))
+#define ECMA_PROPERTY_GET_TYPE(property) \
+  ((ecma_property_types_t) ((property) & ECMA_PROPERTY_TYPE_MASK))
+
+/**
+ * Get property name type.
+ */
+#define ECMA_PROPERTY_GET_NAME_TYPE(property) \
+  ((property) >> ECMA_PROPERTY_NAME_TYPE_SHIFT)
 
 /**
  * Returns true if the property pointer is a property pair.
  */
 #define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
-  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types + 0) <= ECMA_PROPERTY_TYPE_PROPERTY_PAIR__MAX)
+  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) != ECMA_PROPERTY_TYPE_VIRTUAL \
+   && (property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
+
+/**
+ * Returns true if the property is named property.
+ */
+#define ECMA_PROPERTY_IS_NAMED_PROPERTY(property) \
+  (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_SPECIAL)
 
 /**
  * Returns the internal property type
  */
-#define ECMA_PROPERTY_GET_INTERNAL_PROPERTY_TYPE(property_p) \
-  ((ecma_internal_property_id_t) ((property_p)->type_and_flags >> ECMA_PROPERTY_FLAG_SHIFT))
+#define ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE(property_p) \
+  ((ecma_internal_property_id_t) (*(property_p) >> ECMA_PROPERTY_FLAG_SHIFT))
 
 /**
- * Computing the data offset of a property.
+ * Add the offset part to a property for computing its property data pointer.
  */
-#define ECMA_PROPERTY_VALUE_OFFSET(property_p) \
-  ((((uintptr_t) (property_p)) & (sizeof (ecma_property_value_t) - 1)) + 1)
+#define ECMA_PROPERTY_VALUE_ADD_OFFSET(property_p) \
+  ((uintptr_t) ((((uint8_t *) (property_p)) + (sizeof (ecma_property_value_t) * 2 - 1))))
 
 /**
- * Computing the base address of property data list.
+ * Align the property for computing its property data pointer.
  */
-#define ECMA_PROPERTY_VALUE_BASE_PTR(property_p) \
-  ((ecma_property_value_t *) (((uintptr_t) (property_p)) & ~(sizeof (ecma_property_value_t) - 1)))
+#define ECMA_PROPERTY_VALUE_DATA_PTR(property_p) \
+  (ECMA_PROPERTY_VALUE_ADD_OFFSET (property_p) & ~(sizeof (ecma_property_value_t) - 1))
 
 /**
- * Pointer to property data.
+ * Compute the property data pointer of a property.
+ * The property must be part of a property pair.
  */
 #define ECMA_PROPERTY_VALUE_PTR(property_p) \
-  (ECMA_PROPERTY_VALUE_BASE_PTR (property_p) + ECMA_PROPERTY_VALUE_OFFSET (property_p))
+  ((ecma_property_value_t *) ECMA_PROPERTY_VALUE_DATA_PTR (property_p))
 
 /**
- * Internal object types
+ * Depth limit for property search (maximum prototype chain depth).
+ */
+#define ECMA_PROPERTY_SEARCH_DEPTH_LIMIT 128
+
+/**
+ * Property reference. It contains the value pointer
+ * for real, and the value itself for virtual properties.
+ */
+typedef union
+{
+  ecma_property_value_t *value_p; /**< property value pointer for real properties */
+  ecma_value_t virtual_value; /**< property value for virtual properties */
+} ecma_property_ref_t;
+
+/**
+ * Extended property reference, which also contains the
+ * property descriptor pointer for real properties.
+ */
+typedef struct
+{
+  ecma_property_ref_t property_ref; /**< property reference */
+  ecma_property_t *property_p; /**< property descriptor pointer for real properties */
+} ecma_extended_property_ref_t;
+
+/**
+ * Option flags for ecma_op_object_get_property.
  */
 typedef enum
 {
-  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5), Function (15.3),
-                                 Arguments (10.6), Array (15.4) specification-defined objects */
-  ECMA_OBJECT_TYPE_FUNCTION = 1, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 2, /**< External (host) function object */
-  ECMA_OBJECT_TYPE_ARRAY = 3, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_STRING = 4, /**< String objects (15.5) */
-  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_ARGUMENTS = 6, /**< Arguments object (10.6) */
+  ECMA_PROPERTY_GET_NO_OPTIONS = 0, /**< no option flags for ecma_op_object_get_property */
+  ECMA_PROPERTY_GET_VALUE = 1u << 0, /**< fill virtual_value field for virtual properties */
+  ECMA_PROPERTY_GET_EXT_REFERENCE = 1u << 1, /**< get extended reference to the property */
+} ecma_property_get_option_bits_t;
 
-  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_ARGUMENTS /**< maximum value */
+/**
+ * Internal object types.
+ */
+typedef enum
+{
+  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5),
+                                 *   Function (15.3), Arguments (10.6), Array (15.4) objects */
+  ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
+  ECMA_OBJECT_TYPE_FUNCTION = 2, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 3, /**< External (host) function object */
+  ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
+
+  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_PSEUDO_ARRAY /**< maximum value */
 } ecma_object_type_t;
 
 /**
- * Types of lexical environments
+ * Types of objects with class property.
+ */
+typedef enum
+{
+  ECMA_PSEUDO_ARRAY_ARGUMENTS = 0, /**< Arguments object (10.6) */
+  ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
+  ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
+
+  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO /**< maximum value */
+} ecma_pseudo_array_type_t;
+
+/**
+ * Types of lexical environments.
  */
 typedef enum
 {
   /* ECMA_OBJECT_TYPE_GENERAL (0) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_FUNCTION (1) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (2) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_ARRAY (3) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_STRING (4) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_CLASS (1) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_FUNCTION (2) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (3) with built-in flag. */
+  /* ECMA_OBJECT_TYPE_ARRAY (4) with built-in flag. */
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 5, /**< declarative lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 6, /**< object-bound lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 7, /**< object-bound lexical environment
@@ -503,7 +654,7 @@ typedef enum
  * Description of ECMA-object or lexical environment
  * (depending on is_lexical_environment).
  */
-typedef struct ecma_object_t
+typedef struct
 {
   /** type : 3 bit : ecma_object_type_t or ecma_lexical_environment_type_t
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
@@ -524,6 +675,23 @@ typedef struct ecma_object_t
 } ecma_object_t;
 
 /**
+ * Description of built-in properties of an object.
+ */
+typedef struct
+{
+  uint8_t id; /**< built-in id */
+  uint8_t length_and_bitset_size; /**< length for built-in functions and
+                                   *   bit set size for all built-ins */
+  uint16_t routine_id; /**< routine id for built-in functions */
+  uint32_t instantiated_bitset[1]; /**< bit set for instantiated properties */
+} ecma_built_in_props_t;
+
+/**
+ * Start position of bit set size in length_and_bitset_size field.
+ */
+#define ECMA_BUILT_IN_BITSET_SHIFT 5
+
+/**
  * Description of extended ECMA-object.
  *
  * The extended object is an object with extra fields.
@@ -537,16 +705,24 @@ typedef struct
    */
   union
   {
+    ecma_built_in_props_t built_in; /**< built-in object part */
+
     /*
-     * Description of built-in objects.
+     * Description of objects with class.
      */
     struct
     {
-      uint8_t id; /**< built-in id */
-      uint8_t length; /**< length for built-in functions */
-      uint16_t routine_id; /**< routine id for built-in functions */
-      uint32_t instantiated_bitset; /**< bit set for instantiated properties */
-    } built_in;
+      uint16_t class_id; /**< class id of the object */
+
+      /*
+       * Description of extra fields. These extra fields depends on the class_id.
+       */
+      union
+      {
+        ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+        uint32_t length; /**< length related property  (e.g. length of ArrayBuffer) */
+      } u;
+    } class_prop;
 
     /*
      * Description of function objects.
@@ -557,9 +733,56 @@ typedef struct
       ecma_value_t bytecode_cp; /**< function byte code */
     } function;
 
-    ecma_external_pointer_t external_function; /**< external function */
+    /*
+     * Description of array objects.
+     */
+    struct
+    {
+      uint32_t length; /**< length property value */
+      ecma_property_t length_prop; /**< length property */
+    } array;
+
+    /*
+     * Description of pseudo array objects.
+     */
+    struct
+    {
+      uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray*/
+      uint8_t extra_info; /**< extra infomations about the object.
+                            *  e.g. element_width_shift for typed arrays */
+      union
+      {
+        uint16_t length; /**< for arguments: length of names */
+        uint16_t class_id; /**< for typedarray: the specific class name */
+      } u1;
+      union
+      {
+        ecma_value_t lex_env_cp; /**< for arguments: lexical environment */
+        ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
+      } u2;
+    } pseudo_array;
+
+    /*
+     * Description of bound function object.
+     */
+    struct
+    {
+      ecma_value_t target_function; /**< target function */
+      ecma_value_t args_len_or_this; /**< length of arguments or this value */
+    } bound_function;
+
+    ecma_external_handler_t external_handler_cb; /**< external function */
   } u;
 } ecma_extended_object_t;
+
+/**
+ * Description of built-in extended ECMA-object.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  ecma_built_in_props_t built_in; /**< built-in object part */
+} ecma_extended_built_in_object_t;
 
 /**
  * Description of ECMA property descriptor
@@ -778,12 +1001,9 @@ typedef double ecma_number_t;
 #define ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32 10
 
 /**
- * Maximum value of valid array index
- *
- * See also:
- *          ECMA-262 v5, 15.4
+ * String is not a valid array index.
  */
-#define ECMA_MAX_VALUE_OF_VALID_ARRAY_INDEX ((uint32_t) (-1))
+#define ECMA_STRING_NOT_ARRAY_INDEX UINT32_MAX
 
 /**
  * Description of a collection's header.
@@ -817,11 +1037,14 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
+  ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                           *   maximum size is 2^16. */
+  ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
+                                                *   maximum size is 2^32. */
 
   ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
                                *   so no string processing function supports this type except
@@ -866,7 +1089,7 @@ typedef enum
 /**
  * ECMA string-value descriptor
  */
-typedef struct ecma_string_t
+typedef struct
 {
   /** Reference counter for the string */
   uint16_t refs_and_container;
@@ -880,30 +1103,31 @@ typedef struct ecma_string_t
   union
   {
     /**
-    * Actual data of an utf-8 string type
-    */
+     * Actual data of an utf-8 string type
+     */
     struct
     {
-      uint16_t size; /**< Size of this utf-8 string in bytes */
-      uint16_t length; /**< Length of this utf-8 string in characters */
+      uint16_t size; /**< size of this utf-8 string in bytes */
+      uint16_t length; /**< length of this utf-8 string in characters */
     } utf8_string;
 
-    /** UInt32-represented number placed locally in the descriptor */
-    uint32_t uint32_number;
-
-    /** Identifier of magic string */
-    lit_magic_string_id_t magic_string_id;
-
-    /** Identifier of external magic string */
-    lit_magic_string_ex_id_t magic_string_ex_id;
-
-    /** Literal number */
-    ecma_value_t lit_number;
-
-    /** For zeroing and comparison in some cases */
-    uint32_t common_field;
+    lit_utf8_size_t long_utf8_string_size; /**< size of this long utf-8 string in bytes */
+    uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
+    uint32_t magic_string_id; /**< identifier of a magic string (lit_magic_string_id_t) */
+    uint32_t magic_string_ex_id; /**< identifier of an external magic string (lit_magic_string_ex_id_t) */
+    ecma_value_t lit_number; /**< literal number (note: not a regular string type) */
+    uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
   } u;
 } ecma_string_t;
+
+/**
+ * Long ECMA string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+  lit_utf8_size_t long_utf8_string_length; /**< length of this long utf-8 string in bytes */
+} ecma_long_string_t;
 
 /**
  * Compiled byte code data.
@@ -919,6 +1143,95 @@ typedef struct
                                       *    If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;
 
+/**
+ * An object's GC color
+ *
+ * Tri-color marking:
+ *   WHITE_GRAY, unvisited -> WHITE: not referenced by a live object or the reference not found yet
+ *   WHITE_GRAY, visited   -> GRAY: referenced by some live object
+ *   BLACK                 -> BLACK: all referenced objects are gray or black
+ */
+typedef enum
+{
+  ECMA_GC_COLOR_WHITE_GRAY, /**< white or gray */
+  ECMA_GC_COLOR_BLACK, /**< black */
+  ECMA_GC_COLOR__COUNT /**< number of colors */
+} ecma_gc_color_t;
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+
+/**
+ * The lowest state of the ecma_prop_hashmap_alloc_state counter.
+ * If ecma_prop_hashmap_alloc_state other other than this value, it is
+ * disabled.
+ */
+#define ECMA_PROP_HASHMAP_ALLOC_ON 0
+
+/**
+ * The highest state of the ecma_prop_hashmap_alloc_state counter.
+ */
+#define ECMA_PROP_HASHMAP_ALLOC_MAX 4
+
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
+/**
+ * Number of values in a literal storage item
+ */
+#define ECMA_LIT_STORAGE_VALUE_COUNT 3
+
+/**
+ * Literal storage item
+ */
+typedef struct
+{
+  jmem_cpointer_t next_cp; /**< cpointer ot next item */
+  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
+} ecma_lit_storage_item_t;
+
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
+/**
+ * Entry of LCache hash table
+ */
+typedef struct
+{
+  /** Pointer to a property of the object */
+  ecma_property_t *prop_p;
+
+  /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
+  jmem_cpointer_t object_cp;
+
+  /** Compressed pointer to property's name */
+  jmem_cpointer_t prop_name_cp;
+} ecma_lcache_hash_entry_t;
+
+/**
+ * Number of rows in LCache's hash table
+ */
+#define ECMA_LCACHE_HASH_ROWS_COUNT 128
+
+/**
+ * Number of entries in a row of LCache's hash table
+ */
+#define ECMA_LCACHE_HASH_ROW_LENGTH 2
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+
+/**
+ * Some internal properties of TypedArray object.
+ * It is only used when the offset is not 0, and
+ * the array-length is not buffer-length / element_size.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  ecma_length_t byte_offset; /**< the byteoffset of the above arraybuffer */
+  ecma_length_t array_length; /**< the array length */
+} ecma_extended_typedarray_object_t;
+
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 /**
  * @}
  * @}

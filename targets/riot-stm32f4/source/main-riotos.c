@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +13,34 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "shell.h"
-#include "jerry.h"
+#include "jerryscript.h"
+#include "jerryscript-ext/handler.h"
+
+/**
+ * Standalone Jerry exit codes
+ */
+#define JERRY_STANDALONE_EXIT_CODE_OK   (0)
+#define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
+
+/**
+ * Register a JavaScript function in the global object.
+ */
+static void
+register_js_function (const char *name_p, /**< name of the function */
+                      jerry_external_handler_t handler_p) /**< function callback */
+{
+  jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
+
+  if (jerry_value_has_error_flag (result_val))
+  {
+    printf ("Warning: failed to register '%s' method.", name_p);
+  }
+
+  jerry_release_value (result_val);
+} /* register_js_function */
 
 /**
  * Jerryscript simple test
@@ -26,15 +50,44 @@ int test_jerry (int argc, char **argv)
   /* Suppress compiler errors */
   (void) argc;
   (void) argv;
+
+  jerry_value_t ret_value = jerry_create_undefined ();
+
   const jerry_char_t script[] = "print ('Hello, World!');";
+  size_t script_size = strlen ((const char *) script);
   printf ("This test run the following script code: [%s]\n\n", script);
 
-  size_t script_size = strlen ((const char *) script);
-  jerry_completion_code_t return_code = jerry_run_simple (script,
-                                                          script_size,
-                                                          JERRY_FLAG_EMPTY);
+  /* Initialize engine */
+  jerry_init (JERRY_INIT_EMPTY);
 
-  return return_code;
+  /* Register the print function in the global object. */
+  register_js_function ("print", jerryx_handler_print);
+
+  /* Setup Global scope code */
+  ret_value = jerry_parse (script, script_size, false);
+
+  if (!jerry_value_has_error_flag (ret_value))
+  {
+    /* Execute the parsed source code in the Global scope */
+    ret_value = jerry_run (ret_value);
+  }
+
+  int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
+
+  if (jerry_value_has_error_flag (ret_value))
+  {
+    printf ("Script Error!");
+
+    ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  jerry_release_value (ret_value);
+
+  /* Cleanup engine */
+  jerry_cleanup ();
+
+  return ret_code;
+
 } /* test_jerry */
 
 const shell_command_t shell_commands[] = {

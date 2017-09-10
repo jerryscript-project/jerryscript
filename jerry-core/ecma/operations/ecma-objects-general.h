@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,19 +26,16 @@
  * @{
  */
 
-extern ecma_value_t ecma_reject (bool);
-extern ecma_object_t *ecma_op_create_object_object_noarg (void);
-extern ecma_value_t ecma_op_create_object_object_arg (ecma_value_t);
-extern ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *);
+ecma_value_t ecma_reject (bool is_throw);
+ecma_object_t *ecma_op_create_object_object_noarg (void);
+ecma_value_t ecma_op_create_object_object_arg (ecma_value_t value);
+ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prototype_p);
 
-extern ecma_value_t ecma_op_general_object_get (ecma_object_t *, ecma_string_t *);
-extern ecma_property_t *ecma_op_general_object_get_own_property (ecma_object_t *, ecma_string_t *);
-extern ecma_property_t *ecma_op_general_object_get_property (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_general_object_put (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
-extern ecma_value_t ecma_op_general_object_delete (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_general_object_default_value (ecma_object_t *, ecma_preferred_type_hint_t);
-extern ecma_value_t ecma_op_general_object_define_own_property (ecma_object_t *, ecma_string_t *,
-                                                                const ecma_property_descriptor_t *, bool);
+ecma_value_t ecma_op_general_object_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_throw);
+ecma_value_t ecma_op_general_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
+ecma_value_t ecma_op_general_object_define_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
+                                                         const ecma_property_descriptor_t *property_desc_p,
+                                                         bool is_throw);
 
 /**
  * @}

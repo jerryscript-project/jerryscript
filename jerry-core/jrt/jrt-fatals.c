@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#define JERRY_INTERNAL
-#include "jerry-internal.h"
-
 /*
  * Exit with specified status code.
  *
@@ -33,13 +30,11 @@ void __noreturn
 jerry_fatal (jerry_fatal_code_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
-  printf ("Error: ");
-
   switch (code)
   {
     case ERR_OUT_OF_MEMORY:
     {
-      printf ("ERR_OUT_OF_MEMORY\n");
+      JERRY_ERROR_MSG ("Error: ERR_OUT_OF_MEMORY\n");
       break;
     }
     case ERR_SYSCALL:
@@ -49,17 +44,12 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
     }
     case ERR_REF_COUNT_LIMIT:
     {
-      printf ("ERR_REF_COUNT_LIMIT\n");
-      break;
-    }
-    case ERR_UNIMPLEMENTED_CASE:
-    {
-      printf ("ERR_UNIMPLEMENTED_CASE\n");
+      JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:
     {
-      printf ("ERR_FAILED_INTERNAL_ASSERTION\n");
+      JERRY_ERROR_MSG ("Error: ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
     }
   }
@@ -73,6 +63,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 } /* jerry_fatal */
 
+#ifndef JERRY_NDEBUG
 /**
  * Handle failed assertion
  */
@@ -82,15 +73,11 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-#ifndef JERRY_NDEBUG
-  printf ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
-          assertion, file, function, (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) assertion;
-  (void) file;
-  (void) function;
-  (void) line;
-#endif /* !JERRY_NDEBUG */
+  JERRY_ERROR_MSG ("ICE: Assertion '%s' failed at %s(%s):%lu.\n",
+                   assertion,
+                   file,
+                   function,
+                   (unsigned long) line);
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
@@ -99,52 +86,15 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
  * Handle execution of control path that should be unreachable
  */
 void __noreturn
-jerry_unreachable (const char *comment, /**< comment to unreachable mark if exists,
-                                             NULL - otherwise */
-                   const char *file, /**< file name */
+jerry_unreachable (const char *file, /**< file name */
                    const char *function, /**< function name */
                    const uint32_t line) /**< line */
 {
-#ifndef JERRY_NDEBUG
-  printf ("ICE: Unreachable control path at %s(%s):%lu was executed", file, function, (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) file;
-  (void) function;
-  (void) line;
-#endif /* !JERRY_NDEBUG */
-
-  if (comment != NULL)
-  {
-    printf ("(%s)", comment);
-  }
-  printf (".\n");
+  JERRY_ERROR_MSG ("ICE: Unreachable control path at %s(%s):%lu was executed.\n",
+                   file,
+                   function,
+                   (unsigned long) line);
 
   jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
-
-/**
- * Handle unimplemented case execution
- */
-void __noreturn
-jerry_unimplemented (const char *comment, /**< comment to unimplemented mark if exists,
-                                               NULL - otherwise */
-                     const char *file, /**< file name */
-                     const char *function, /**< function name */
-                     const uint32_t line) /**< line */
-{
-#ifndef JERRY_NDEBUG
-  printf ("SORRY: Unimplemented case at %s(%s):%lu was executed", file, function, (unsigned long) line);
-#else /* JERRY_NDEBUG */
-  (void) file;
-  (void) function;
-  (void) line;
 #endif /* !JERRY_NDEBUG */
-
-  if (comment != NULL)
-  {
-    printf ("(%s)", comment);
-  }
-  printf (".\n");
-
-  jerry_fatal (ERR_UNIMPLEMENTED_CASE);
-} /* jerry_unimplemented */

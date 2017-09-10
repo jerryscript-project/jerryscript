@@ -1,0 +1,8 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_eval_syntax.js:24
+(jerry-debugger) n
+Stopped at tests/debugger/do_eval_syntax.js:26
+(jerry-debugger) eval loop
+Uncaught exception: Error
+(jerry-debugger) c
+out: bar function

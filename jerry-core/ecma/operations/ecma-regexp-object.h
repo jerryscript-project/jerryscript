@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 #ifndef ECMA_REGEXP_OBJECT_H
 #define ECMA_REGEXP_OBJECT_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #include "ecma-globals.h"
 #include "re-compiler.h"
@@ -53,18 +52,19 @@ typedef struct
   uint16_t flags;                       /**< RegExp flags */
 } re_matcher_ctx_t;
 
-ecma_value_t ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *);
-ecma_value_t ecma_op_create_regexp_object (ecma_string_t *, ecma_string_t *);
-ecma_value_t ecma_regexp_exec_helper (ecma_value_t, ecma_value_t, bool);
-ecma_char_t re_canonicalize (ecma_char_t, bool);
-void re_set_result_array_properties (ecma_object_t *, ecma_string_t *, uint32_t, int32_t);
-ecma_value_t re_parse_regexp_flags (ecma_string_t *, uint16_t *);
-void re_initialize_props (ecma_object_t *, ecma_string_t *, uint16_t);
+ecma_value_t ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p);
+ecma_value_t ecma_op_create_regexp_object (ecma_string_t *pattern_p, ecma_string_t *flags_str_p);
+ecma_value_t ecma_regexp_exec_helper (ecma_value_t regexp_value, ecma_value_t input_string, bool ignore_global);
+ecma_char_t re_canonicalize (ecma_char_t ch, bool is_ignorecase);
+void re_set_result_array_properties (ecma_object_t *array_obj_p, ecma_string_t *input_str_p, uint32_t num_of_elements,
+                                     int32_t index);
+ecma_value_t re_parse_regexp_flags (ecma_string_t *flags_str_p, uint16_t *flags_p);
+void re_initialize_props (ecma_object_t *re_obj_p, ecma_string_t *source_p, uint16_t flags);
 
 /**
  * @}
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !ECMA_REGEXP_OBJECT_H */

@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,5 +27,11 @@
 #define __attr_used___     __attribute__((used))
 #define __attr_noreturn___ __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
+#define __attr_weak___     __attribute__((weak))
+
+#ifdef ENABLE_INIT_FINI
+void libc_init_array (void);
+void libc_fini_array (void);
+#endif /* ENABLE_INIT_FINI */
 
 #endif /* !DEFS_H */

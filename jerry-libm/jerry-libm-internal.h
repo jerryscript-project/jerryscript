@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,34 +49,34 @@
 /*
  * ANSI/POSIX
  */
-extern double acos (double);
-extern double asin (double);
-extern double atan (double);
-extern double atan2 (double, double);
-extern double cos (double);
-extern double sin (double);
-extern double tan (double);
+double acos (double x);
+double asin (double x);
+double atan (double x);
+double atan2 (double y, double x);
+double cos (double x);
+double sin (double x);
+double tan (double x);
 
-extern double exp (double);
-extern double log (double);
+double exp (double x);
+double log (double x);
 
-extern double pow (double, double);
-extern double sqrt (double);
+double pow (double x, double y);
+double sqrt (double x);
 
-extern double ceil (double);
-extern double fabs (double);
-extern double floor (double);
-extern double fmod (double, double);
+double ceil (double x);
+double fabs (double x);
+double floor (double x);
+double fmod (double x, double y);
 
-extern int isnan (double);
-extern int finite (double);
+int isnan (double x);
+int finite (double x);
 
-double nextafter (double, double);
+double nextafter (double x, double y);
 
 /*
  * Functions callable from C, intended to support IEEE arithmetic.
  */
-extern double copysign (double, double);
-extern double scalbn (double, int);
+double copysign (double x, double y);
+double scalbn (double x, int n);
 
 #endif /* !JERRY_LIBM_INTERNAL_H */

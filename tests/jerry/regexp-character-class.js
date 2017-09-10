@@ -1,5 +1,4 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,3 +111,25 @@ catch (e)
 {
   assert (e instanceof SyntaxError);
 }
+
+r = new RegExp ("^[\\u0061-\\u007a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\u0061-\\u007a]+").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\u0061-\\u007a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\x61-\\x7a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("^[\\x61-\\x7a]+").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp ("[\\x61-\\x7a]+$").exec("abcdefghjklmnopqrstuvwxyz");
+assert (r == "abcdefghjklmnopqrstuvwxyz");
+
+r = new RegExp("[\\u0800-\\uffff]", "g");
+assert (r.test ("\uffff"));
+assert (!r.test ("\uffff"));

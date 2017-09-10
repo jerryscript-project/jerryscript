@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +14,8 @@
  */
 
 #include "js-parser-internal.h"
+
+#if JERRY_JS_PARSER
 
 /** \addtogroup mem Memory allocation
  * @{
@@ -39,8 +40,9 @@ parser_malloc (parser_context_t *context_p, /**< context */
   void *result;
 
   JERRY_ASSERT (size > 0);
-  result = jmem_heap_alloc_block (size);
-  if (result == 0)
+  result = jmem_heap_alloc_block_null_on_error (size);
+
+  if (result == NULL)
   {
     parser_raise_error (context_p, PARSER_ERR_OUT_OF_MEMORY);
   }
@@ -675,3 +677,5 @@ parser_stack_iterator_write (parser_stack_iterator_t *iterator, /**< iterator */
  * @}
  * @}
  */
+
+#endif /* JERRY_JS_PARSER */

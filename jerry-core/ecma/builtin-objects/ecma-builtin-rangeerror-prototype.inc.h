@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,42 +17,28 @@
  * RangeError.prototype built-in description
  */
 
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef STRING_VALUE
-# define STRING_VALUE(name, magic_string_id, prop_attributes)
-#endif /* !STRING_VALUE */
-
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE)
+#ifndef CONFIG_DISABLE_ERROR_BUILTINS
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.11.7.8
+/* ECMA-262 v5, 15.11.7.8 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_RANGE_ERROR,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-// 15.11.7.9
+/* ECMA-262 v5, 15.11.7.9 */
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_RANGE_ERROR_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-// 15.11.7.10
+/* ECMA-262 v5, 15.11.7.10 */
 STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
               LIT_MAGIC_STRING__EMPTY,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#undef OBJECT_ID
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
+#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

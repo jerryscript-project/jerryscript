@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,6 @@
 #ifndef VM_STACK_H
 #define VM_STACK_H
 
-#include "config.h"
 #include "ecma-globals.h"
 
 /** \addtogroup vm Virtual machine
@@ -67,9 +65,9 @@ typedef enum
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
 } vm_stack_context_type_t;
 
-extern ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *, ecma_value_t *);
-extern bool vm_stack_find_finally (vm_frame_ctx_t *, ecma_value_t **,
-                                   vm_stack_context_type_t, uint32_t);
+ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
+bool vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_ref_p,
+                            vm_stack_context_type_t finally_type, uint32_t search_limit);
 
 /**
  * @}

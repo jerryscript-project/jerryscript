@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_number_t ecma_op_number_remainder (ecma_number_t, ecma_number_t);
+ecma_number_t ecma_op_number_remainder (ecma_number_t left_num, ecma_number_t right_num);
 
 /**
  * @}

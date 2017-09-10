@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #define ECMA_GC_H
 
 #include "ecma-globals.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -26,12 +26,11 @@
  * @{
  */
 
-extern void ecma_gc_init (void);
-extern void ecma_init_gc_info (ecma_object_t *);
-extern void ecma_ref_object (ecma_object_t *);
-extern void ecma_deref_object (ecma_object_t *);
-extern void ecma_gc_run (void);
-extern void ecma_free_unused_memory (jmem_free_unused_memory_severity_t);
+void ecma_init_gc_info (ecma_object_t *object_p);
+void ecma_ref_object (ecma_object_t *object_p);
+void ecma_deref_object (ecma_object_t *object_p);
+void ecma_gc_run (jmem_free_unused_memory_severity_t severity);
+void ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity);
 
 /**
  * @}

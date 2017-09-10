@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +23,7 @@
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
+#ifndef CONFIG_DISABLE_DATE_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -320,11 +319,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
       else if (date_str_curr_p < date_str_end_p
                && (*date_str_curr_p == '+' || *date_str_curr_p == '-'))
       {
-        ecma_length_t remaining_length;
-        remaining_length = lit_utf8_string_length (date_str_curr_p,
-                                                   (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) - 1;
+        ecma_length_t remaining_date_length;
+        remaining_date_length = lit_utf8_string_length (date_str_curr_p,
+                                                        (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) - 1;
 
-        if (remaining_length == 5)
+        if (remaining_date_length == 5)
         {
           bool is_negative = false;
 
@@ -481,9 +480,12 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             false,
-                                             true,
-                                             ECMA_OBJECT_TYPE_GENERAL);
+                                             sizeof (ecma_extended_object_t),
+                                             ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
+
   ecma_deref_object (prototype_obj_p);
 
   if (arguments_list_len == 0)
@@ -523,7 +525,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     ECMA_FINALIZE (prim_comp_value);
   }
-  else if (arguments_list_len >= 2)
+  else
   {
     ECMA_TRY_CATCH (time_value,
                     ecma_date_construct_helper (arguments_list_p, arguments_list_len),
@@ -534,10 +536,6 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     ECMA_FINALIZE (time_value);
   }
-  else
-  {
-    prim_value_num = ecma_number_make_nan ();
-  }
 
   if (ecma_is_value_empty (ret_value))
   {
@@ -546,16 +544,11 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       prim_value_num = ecma_number_make_nan ();
     }
 
-    ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_CLASS);
-    ecma_set_internal_property_value (class_prop_p, LIT_MAGIC_STRING_DATE_UL);
+    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
 
-    ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                        ECMA_INTERNAL_PROPERTY_DATE_FLOAT);
-
-    ecma_number_t *prim_value_num_p = ecma_alloc_number ();
-    *prim_value_num_p = prim_value_num;
-    ECMA_SET_INTERNAL_VALUE_POINTER (ECMA_PROPERTY_VALUE_PTR (prim_value_prop_p)->value, prim_value_num_p);
+    ecma_number_t *date_num_p = ecma_alloc_number ();
+    *date_num_p = prim_value_num;
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, date_num_p);
 
     ret_value = ecma_make_object_value (obj_p);
   }
@@ -574,4 +567,4 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN */
+#endif /* !CONFIG_DISABLE_DATE_BUILTIN */

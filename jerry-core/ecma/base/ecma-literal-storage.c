@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +13,10 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-literal-storage.h"
 #include "ecma-helpers.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -23,36 +24,6 @@
  * \addtogroup ecmalitstorage Literal storage
  * @{
  */
-
-/**
- * Number of values in a literal storage item
- */
-#define ECMA_LIT_STORAGE_VALUE_COUNT 3
-
-/**
- * Literal storage item
- */
-typedef struct
-{
-  jmem_cpointer_t next_cp; /**< cpointer ot next item */
-  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
-} ecma_lit_storage_item_t;
-
-JERRY_STATIC_ASSERT (sizeof (ecma_lit_storage_item_t) <= sizeof (uint64_t),
-                     size_of_ecma_lit_storage_item_t_must_be_less_than_or_equal_to_8_bytes);
-
-static ecma_lit_storage_item_t *string_list_first_p;
-static ecma_lit_storage_item_t *number_list_first_p;
-
-/**
- * Initialize literal storage
- */
-void
-ecma_init_lit_storage (void)
-{
-  string_list_first_p = NULL;
-  number_list_first_p = NULL;
-} /* ecma_init_lit_storage */
 
 /**
  * Free string list
@@ -76,7 +47,7 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 
     ecma_lit_storage_item_t *prev_item = string_list_p;
     string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
-    jmem_pools_free (prev_item);
+    jmem_pools_free (prev_item, sizeof (ecma_lit_storage_item_t));
   }
 } /* ecma_free_string_list */
 
@@ -86,8 +57,8 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 void
 ecma_finalize_lit_storage (void)
 {
-  ecma_free_string_list (string_list_first_p);
-  ecma_free_string_list (number_list_first_p);
+  ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
+  ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
 } /* ecma_finalize_lit_storage */
 
 /**
@@ -101,7 +72,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
 {
   ecma_string_t *string_p = ecma_new_ecma_string_from_utf8 (chars_p, size);
 
-  ecma_lit_storage_item_t *string_list_p = string_list_first_p;
+  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
   while (string_list_p != NULL)
@@ -141,7 +112,8 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     return result;
   }
 
-  ecma_lit_storage_item_t *new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc ();
+  ecma_lit_storage_item_t *new_item_p;
+  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
 
   new_item_p->values[0] = result;
   for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
@@ -149,8 +121,8 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, string_list_first_p);
-  string_list_first_p = new_item_p;
+  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (string_list_first_p));
+  JERRY_CONTEXT (string_list_first_p) = new_item_p;
 
   return result;
 } /* ecma_find_or_create_literal_string */
@@ -165,7 +137,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 {
   ecma_value_t num = ecma_make_number_value (number_arg);
 
-  ecma_lit_storage_item_t *number_list_p = number_list_first_p;
+  ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
   while (number_list_p != NULL)
@@ -208,7 +180,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     number_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, number_list_p->next_cp);
   }
 
-  ecma_string_t *string_p = (ecma_string_t *) jmem_pools_alloc ();
+  ecma_string_t *string_p = ecma_alloc_string ();
   string_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_LITERAL_NUMBER;
   string_p->u.lit_number = num;
 
@@ -221,7 +193,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     return result;
   }
 
-  ecma_lit_storage_item_t *new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc ();
+  ecma_lit_storage_item_t *new_item_p;
+  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
 
   new_item_p->values[0] = result;
   for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
@@ -229,8 +202,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, number_list_first_p);
-  number_list_first_p = new_item_p;
+  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (number_list_first_p));
+  JERRY_CONTEXT (number_list_first_p) = new_item_p;
 
   return result;
 } /* ecma_find_or_create_literal_number */
@@ -250,11 +223,11 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 /**
  * Save literals to specified snapshot buffer.
  *
- * @return true, if save was performed successfully (i.e. buffer size is sufficient),
- *         false - otherwise.
+ * @return true - if save was performed successfully (i.e. buffer size is sufficient),
+ *         false - otherwise
  */
 bool
-ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot buffer */
+ecma_save_literals_for_snapshot (uint32_t *buffer_p, /**< [out] output snapshot buffer */
                                  size_t buffer_size, /**< size of the buffer */
                                  size_t *in_out_buffer_offset_p, /**< [in,out] write position in the buffer */
                                  lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< [out] map from literal identifiers
@@ -268,7 +241,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
   uint32_t number_count = 0;
   uint32_t lit_table_size = 2 * sizeof (uint32_t);
 
-  ecma_lit_storage_item_t *string_list_p = string_list_first_p;
+  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
 
   while (string_list_p != NULL)
   {
@@ -288,7 +261,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
     string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
   }
 
-  ecma_lit_storage_item_t *number_list_p = number_list_first_p;
+  ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
 
   while (number_list_p != NULL)
   {
@@ -322,7 +295,8 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
   map_p = jmem_heap_alloc_block (total_count * sizeof (lit_mem_to_snapshot_id_map_entry_t));
 
   /* Set return values (no error is possible from here). */
-  buffer_p += *in_out_buffer_offset_p;
+  JERRY_ASSERT ((*in_out_buffer_offset_p % sizeof (uint32_t)) == 0);
+  buffer_p += *in_out_buffer_offset_p / sizeof (uint32_t);
   *in_out_buffer_offset_p += lit_table_size;
   *out_map_p = map_p;
   *out_map_len_p = total_count;
@@ -334,11 +308,13 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
    * constant so the first literal must have offset one. */
   uint32_t literal_offset = JERRY_SNAPSHOT_LITERAL_ALIGNMENT;
 
-  ((uint32_t *) buffer_p)[0] = string_count;
-  ((uint32_t *) buffer_p)[1] = number_count;
-  buffer_p += 2 * sizeof (uint32_t);
+  buffer_p[0] = string_count;
+  buffer_p[1] = number_count;
+  buffer_p += 2;
 
-  string_list_p = string_list_first_p;
+  string_list_p = JERRY_CONTEXT (string_list_first_p);
+
+  uint16_t *destination_p = (uint16_t *) buffer_p;
 
   while (string_list_p != NULL)
   {
@@ -355,13 +331,14 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
 
         ecma_length_t length = ecma_string_get_size (string_p);
 
-        *((uint16_t *) buffer_p) = (uint16_t) length;
-        ecma_string_to_utf8_bytes (string_p, buffer_p + sizeof (uint16_t), length);
+        *destination_p = (uint16_t) length;
+        ecma_string_to_utf8_bytes (string_p, ((lit_utf8_byte_t *) destination_p) + sizeof (uint16_t), length);
 
         length = JERRY_ALIGNUP (sizeof (uint16_t) + length,
                                 JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
 
-        buffer_p += length;
+        JERRY_ASSERT ((length % sizeof (uint16_t)) == 0);
+        destination_p += length / sizeof (uint16_t);
         literal_offset += length;
       }
     }
@@ -369,7 +346,7 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
     string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
   }
 
-  number_list_p = number_list_first_p;
+  number_list_p = JERRY_CONTEXT (number_list_first_p);
 
   while (number_list_p != NULL)
   {
@@ -387,12 +364,13 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
         JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
 
         ecma_number_t num = ecma_get_number_from_value (value_p->u.lit_number);
-        memcpy (buffer_p, &num, sizeof (ecma_number_t));
+        memcpy (destination_p, &num, sizeof (ecma_number_t));
 
         ecma_length_t length = JERRY_ALIGNUP (sizeof (ecma_number_t),
                                               JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
 
-        buffer_p += length;
+        JERRY_ASSERT ((length % sizeof (uint16_t)) == 0);
+        destination_p += length / sizeof (uint16_t);
         literal_offset += length;
       }
     }
@@ -412,11 +390,11 @@ ecma_save_literals_for_snapshot (uint8_t *buffer_p, /**< [out] output snapshot b
  *
  * Note: always inline because it is used only once.
  *
- * @return true, if load was performed successfully
- *         false - otherwise (i.e. buffer length is incorrect).
+ * @return true - if load was performed successfully
+ *         false - otherwise (i.e. buffer length is incorrect)
  */
 static inline bool __attr_always_inline___
-ecma_load_literals_from_buffer (const uint8_t *buffer_p, /**< buffer with literal table in snapshot */
+ecma_load_literals_from_buffer (const uint16_t *buffer_p, /**< buffer with literal table in snapshot */
                                 uint32_t lit_table_size, /**< size of literal table in snapshot */
                                 lit_mem_to_snapshot_id_map_entry_t *map_p, /**< literal map */
                                 uint32_t string_count, /**< number of strings */
@@ -435,7 +413,7 @@ ecma_load_literals_from_buffer (const uint8_t *buffer_p, /**< buffer with litera
       return false;
     }
 
-    lit_utf8_size_t length = *((uint16_t *) buffer_p);
+    lit_utf8_size_t length = *buffer_p;
     lit_utf8_size_t aligned_length = JERRY_ALIGNUP (sizeof (uint16_t) + length,
                                                     JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
 
@@ -445,11 +423,12 @@ ecma_load_literals_from_buffer (const uint8_t *buffer_p, /**< buffer with litera
       return false;
     }
 
-    map_p->literal_id = ecma_find_or_create_literal_string (buffer_p + sizeof (uint16_t), length);
+    map_p->literal_id = ecma_find_or_create_literal_string (((lit_utf8_byte_t *) buffer_p) + sizeof (uint16_t), length);
     map_p->literal_offset = (jmem_cpointer_t) (literal_offset >> JERRY_SNAPSHOT_LITERAL_ALIGNMENT_LOG);
     map_p++;
 
-    buffer_p += aligned_length;
+    JERRY_ASSERT ((aligned_length % sizeof (uint16_t)) == 0);
+    buffer_p += aligned_length / sizeof (uint16_t);
     literal_offset += aligned_length;
 
     string_count--;
@@ -474,7 +453,8 @@ ecma_load_literals_from_buffer (const uint8_t *buffer_p, /**< buffer with litera
     ecma_length_t length = JERRY_ALIGNUP (sizeof (ecma_number_t),
                                           JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
 
-    buffer_p += length;
+    JERRY_ASSERT ((length % sizeof (uint16_t)) == 0);
+    buffer_p += length / sizeof (uint16_t);
     literal_offset += length;
 
     number_count--;
@@ -486,11 +466,11 @@ ecma_load_literals_from_buffer (const uint8_t *buffer_p, /**< buffer with litera
 /**
  * Load literals from snapshot.
  *
- * @return true, if load was performed successfully (i.e. literals saved in the snapshot are consistent),
- *         false - otherwise (i.e. snapshot is incorrect).
+ * @return true - if load was performed successfully (i.e. literals saved in the snapshot are consistent),
+ *         false - otherwise (i.e. snapshot is incorrect)
  */
 bool
-ecma_load_literals_from_snapshot (const uint8_t *buffer_p, /**< buffer with literal table in snapshot */
+ecma_load_literals_from_snapshot (const uint32_t *buffer_p, /**< buffer with literal table in snapshot */
                                   uint32_t lit_table_size, /**< size of literal table in snapshot */
                                   lit_mem_to_snapshot_id_map_entry_t **out_map_p, /**< [out] map from literal offsets
                                                                                    *   in snapshot to identifiers
@@ -506,9 +486,9 @@ ecma_load_literals_from_snapshot (const uint8_t *buffer_p, /**< buffer with lite
     return false;
   }
 
-  uint32_t string_count = ((uint32_t *) buffer_p)[0];
-  uint32_t number_count = ((uint32_t *) buffer_p)[1];
-  buffer_p += 2 * sizeof (uint32_t);
+  uint32_t string_count = buffer_p[0];
+  uint32_t number_count = buffer_p[1];
+  buffer_p += 2;
 
   uint32_t total_count = string_count + number_count;
   lit_mem_to_snapshot_id_map_entry_t *map_p;
@@ -523,7 +503,7 @@ ecma_load_literals_from_snapshot (const uint8_t *buffer_p, /**< buffer with lite
   map_p = jmem_heap_alloc_block (total_count * sizeof (lit_mem_to_snapshot_id_map_entry_t));
   *out_map_p = map_p;
 
-  if (ecma_load_literals_from_buffer (buffer_p, lit_table_size, map_p, string_count, number_count))
+  if (ecma_load_literals_from_buffer ((uint16_t *) buffer_p, lit_table_size, map_p, string_count, number_count))
   {
     return true;
   }

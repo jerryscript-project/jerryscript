@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,3 +88,8 @@ scalbn (double x, int n)
   __HI (x) = (hx & 0x800fffff) | (k << 20);
   return x * twom54;
 } /* scalbn */
+
+#undef two54
+#undef twom54
+#undef huge
+#undef tiny

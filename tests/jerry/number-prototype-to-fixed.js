@@ -1,5 +1,4 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,11 +31,17 @@ assert((-Infinity).toFixed(0) === "-Infinity");
 assert(NaN.toFixed(0) === "NaN");
 assert((0.0).toFixed(0) === "0");
 assert((0.0).toFixed(1) === "0.0");
-assert((-0.0).toFixed(0) === "-0");
-assert((-0.0).toFixed(1) === "-0.0");
-assert((123456789012345678901.0).toFixed(20) === "123456789012345680000.00000000000000000000");
+assert((-0.0).toFixed(0) === "0");
+assert((-0.0).toFixed(1) === "0.0");
+assert((123456789012345678901.0).toFixed(20) === "123456789012345683968.00000000000000000000");
 assert((123.56).toFixed(NaN) === "124");
 assert((123.56).toFixed(-0.9) === "124");
+assert((0.095).toFixed(2) === "0.10");
+assert((0.995).toFixed(2) === "0.99");
+assert((9.995).toFixed(2) === "9.99");
+assert((7.995).toFixed(2) === "8.00");
+assert((8.995).toFixed(2) === "8.99");
+assert((99.995).toFixed(2) === "100.00");
 
 try {
     Number.prototype.toExponential.call(new Object());

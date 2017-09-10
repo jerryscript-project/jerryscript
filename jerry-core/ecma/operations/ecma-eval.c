@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +81,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
                            bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
                            bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
 {
+#if JERRY_JS_PARSER
   JERRY_ASSERT (code_p != NULL);
 
   ecma_compiled_code_t *bytecode_data_p;
@@ -99,6 +99,14 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   }
 
   return vm_run_eval (bytecode_data_p, is_direct);
+#else /* !JERRY_JS_PARSER */
+  JERRY_UNUSED (code_p);
+  JERRY_UNUSED (code_buffer_size);
+  JERRY_UNUSED (is_direct);
+  JERRY_UNUSED (is_called_from_strict_mode_code);
+
+  return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+#endif /* JERRY_JS_PARSER */
 } /* ecma_op_eval_chars_buffer */
 
 /**

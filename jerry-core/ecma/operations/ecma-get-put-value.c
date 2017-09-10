@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +30,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmaoperations ECMA-defined operations
+ * \addtogroup lexicalenvironment Lexical environment
  * @{
  */
 
@@ -50,17 +49,25 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 {
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
-  // 3.
+  /* 3. */
   if (unlikely (is_unresolvable_reference))
   {
-    return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+    ecma_value_t var_name_val = ecma_make_string_value (var_name_string_p);
+    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                                      "% is not defined",
+                                                                      var_name_val);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+    ecma_value_t error_value = ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+    return error_value;
   }
 
-  // 5.
+  /* 5. */
   JERRY_ASSERT (ref_base_lex_env_p != NULL
                 && ecma_is_lexical_environment (ref_base_lex_env_p));
 
-  // 5.a
+  /* 5.a */
   return ecma_op_get_binding_value (ref_base_lex_env_p,
                                     var_name_string_p,
                                     is_strict);
@@ -75,67 +82,55 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_get_value_object_base (ecma_value_t base, /**< base value */
+ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
                                ecma_string_t *property_name_p) /**< property name */
 {
-  // 4.a
-  if (ecma_is_value_object (base))
+  if (ecma_is_value_object (base_value))
   {
-    // 4.b case 1
-    ecma_object_t *obj_p = ecma_get_object_from_value (base);
+    ecma_object_t *obj_p = ecma_get_object_from_value (base_value);
     JERRY_ASSERT (obj_p != NULL
                   && !ecma_is_lexical_environment (obj_p));
 
     return ecma_op_object_get (obj_p, property_name_p);
   }
 
-  JERRY_ASSERT (ecma_is_value_boolean (base)
-                || ecma_is_value_number (base)
-                || ecma_is_value_string (base));
+  JERRY_ASSERT (ecma_is_value_boolean (base_value)
+                || ecma_is_value_number (base_value)
+                || ecma_is_value_string (base_value));
 
-  // 4.b case 2
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  // 1.
-  ECMA_TRY_CATCH (obj_base, ecma_op_to_object (base), ret_value);
+  ECMA_TRY_CATCH (object_base, ecma_op_to_object (base_value), ret_value);
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_base);
-  JERRY_ASSERT (obj_p != NULL
-                && !ecma_is_lexical_environment (obj_p));
+  ecma_object_t *object_p = ecma_get_object_from_value (object_base);
+  JERRY_ASSERT (object_p != NULL
+                && !ecma_is_lexical_environment (object_p));
 
-  // 2.
-  ecma_property_t *prop_p = ecma_op_object_get_property (obj_p, property_name_p);
+  ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-  if (prop_p == NULL)
+  /* Circular reference is possible in JavaScript and testing it is complicated. */
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
+
+  do
   {
-    // 3.
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-  else if (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
-  {
-    // 4.
-    ret_value = ecma_copy_value (ecma_get_named_data_property_value (prop_p));
-  }
-  else
-  {
-    // 5.
-    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+    ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
-    ecma_object_t *obj_p = ecma_get_named_accessor_property_getter (prop_p);
-
-    // 6.
-    if (obj_p == NULL)
+    if (ecma_is_value_found (value))
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = value;
+      break;
     }
-    else
-    {
-      // 7.
-      ret_value = ecma_op_function_call (obj_p, base, NULL, 0);
-    }
-  }
 
-  ECMA_FINALIZE (obj_base);
+    if (--max_depth == 0)
+    {
+      break;
+    }
+
+    object_p = ecma_get_object_prototype (object_p);
+  }
+  while (object_p != NULL);
+
+  ECMA_FINALIZE (object_base);
 
   return ret_value;
 } /* ecma_op_get_value_object_base */
@@ -156,17 +151,25 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 {
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
-  // 3.
+  /* 3. */
   if (unlikely (is_unresolvable_reference))
   {
-    // 3.a.
+    /* 3.a. */
     if (is_strict)
     {
-      return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+      ecma_value_t var_name_val = ecma_make_string_value (var_name_string_p);
+      ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                                        "% is not defined",
+                                                                        var_name_val);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+      ecma_value_t error_value = ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+      return error_value;
     }
     else
     {
-      // 3.b.
+      /* 3.b. */
       ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
       ecma_value_t completion = ecma_op_object_put (global_object_p,
@@ -182,11 +185,11 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     }
   }
 
-  // 5.
+  /* 5. */
   JERRY_ASSERT (ref_base_lex_env_p != NULL
                 && ecma_is_lexical_environment (ref_base_lex_env_p));
 
-  // 5.a
+  /* 5.a */
   return ecma_op_set_mutable_binding (ref_base_lex_env_p,
                                       var_name_string_p,
                                       value,

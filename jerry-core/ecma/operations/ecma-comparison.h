@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@
  * @{
  */
 
-extern ecma_value_t ecma_op_abstract_equality_compare (ecma_value_t, ecma_value_t);
-extern bool ecma_op_strict_equality_compare (ecma_value_t, ecma_value_t);
-extern ecma_value_t ecma_op_abstract_relational_compare (ecma_value_t, ecma_value_t, bool);
+ecma_value_t ecma_op_abstract_equality_compare (ecma_value_t x, ecma_value_t y);
+bool ecma_op_strict_equality_compare (ecma_value_t x, ecma_value_t y);
+ecma_value_t ecma_op_abstract_relational_compare (ecma_value_t x, ecma_value_t y, bool left_first);
 
 /**
  * @}

@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -205,3 +204,15 @@ exp (double x) /* default IEEE double exp */
     return y * twom1000;
   }
 } /* exp */
+
+#undef one
+#undef huge
+#undef twom1000
+#undef o_threshold
+#undef u_threshold
+#undef invln2
+#undef P1
+#undef P2
+#undef P3
+#undef P4
+#undef P5

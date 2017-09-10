@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
  * @{
  */
 
-extern ecma_value_t ecma_op_create_boolean_object (ecma_value_t);
+ecma_value_t ecma_op_create_boolean_object (ecma_value_t arg);
 
 /**
  * @}

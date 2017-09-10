@@ -1,0 +1,11 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_help.js:15
+(jerry-debugger) help
+
+Documented commands (type help <topic>):
+========================================
+b          bt        delete   e          help      ms    quit    src 
+backtrace  c         display  eval       list      n     s       step
+break      continue  dump     exception  memstats  next  source
+
+(jerry-debugger) quit

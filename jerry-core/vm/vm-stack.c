@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +67,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
     case VM_CONTEXT_FOR_IN:
     {
-      jmem_cpointer_t current = (uint16_t) vm_stack_top_p[-2];
+      jmem_cpointer_t current = (jmem_cpointer_t) vm_stack_top_p[-2];
 
       while (current != JMEM_CP_NULL)
       {
@@ -116,13 +115,13 @@ vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte cod
     case 3:
     {
       branch_offset <<= 8;
-      branch_offset |= *(branch_offset_p++);
+      branch_offset |= *(++branch_offset_p);
       /* FALLTHRU */
     }
     case 2:
     {
       branch_offset <<= 8;
-      branch_offset |= *(branch_offset_p++);
+      branch_offset |= *(++branch_offset_p);
       break;
     }
   }
@@ -133,8 +132,8 @@ vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte cod
 /**
  * Find a finally up to the end position.
  *
- * @return true if 'finally' found,
- *         false otherwise
+ * @return true - if 'finally' found,
+ *         false - otherwise
  */
 bool
 vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
@@ -175,7 +174,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         return false;
       }
 
-      byte_code_p = frame_ctx_p->byte_code_start_p + VM_GET_CONTEXT_END (vm_stack_top_p[-1]);
+      byte_code_p = frame_ctx_p->byte_code_start_p + context_end;
 
       if (context_type == VM_CONTEXT_TRY)
       {

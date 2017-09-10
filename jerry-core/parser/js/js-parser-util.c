@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +14,8 @@
  */
 
 #include "js-parser-internal.h"
+
+#if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -92,6 +93,8 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
   if (PARSER_IS_BASIC_OPCODE (context_p->last_cbc_opcode))
   {
     cbc_opcode_t opcode = (cbc_opcode_t) context_p->last_cbc_opcode;
+
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
 
     PARSER_APPEND_TO_BYTE_CODE (context_p, opcode);
@@ -101,6 +104,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
   {
     cbc_ext_opcode_t opcode = (cbc_ext_opcode_t) PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     parser_emit_two_bytes (context_p, CBC_EXT_OPCODE, opcode);
     context_p->byte_code_size += 2;
@@ -170,13 +174,13 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
       name_p = cbc_ext_names[PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode)];
     }
 
-    printf ("  [%3d] %s", (int) context_p->stack_depth, name_p);
+    JERRY_DEBUG_MSG ("  [%3d] %s", (int) context_p->stack_depth, name_p);
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {
       uint16_t literal_index = context_p->last_cbc.literal_index;
       lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-      printf (" idx:%d->", literal_index);
+      JERRY_DEBUG_MSG (" idx:%d->", literal_index);
       util_print_literal (literal_p);
     }
 
@@ -184,25 +188,25 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
     {
       uint16_t literal_index = context_p->last_cbc.value;
       lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-      printf (" idx:%d->", literal_index);
+      JERRY_DEBUG_MSG (" idx:%d->", literal_index);
       util_print_literal (literal_p);
 
       if (!(flags & CBC_HAS_LITERAL_ARG))
       {
         literal_index = context_p->last_cbc.third_literal_index;
 
-        lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
-        printf (" idx:%d->", literal_index);
+        literal_p = PARSER_GET_LITERAL (literal_index);
+        JERRY_DEBUG_MSG (" idx:%d->", literal_index);
         util_print_literal (literal_p);
       }
     }
 
     if (flags & CBC_HAS_BYTE_ARG)
     {
-      printf (" byte_arg:%d", (int) context_p->last_cbc.value);
+      JERRY_DEBUG_MSG (" byte_arg:%d", (int) context_p->last_cbc.value);
     }
 
-    printf ("\n");
+    JERRY_DEBUG_MSG ("\n");
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -301,7 +305,7 @@ parser_emit_cbc_call (parser_context_t *context_p, /**< context */
  */
 void
 parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
-                             int is_negative_number) /**< sign is negative */
+                             bool is_negative_number) /**< sign is negative */
 {
   uint16_t value = context_p->lit_object.index;
 
@@ -327,7 +331,10 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
       real_value = -real_value;
     }
 
-    printf ("  [%3d] %s number:%d\n", (int) context_p->stack_depth, cbc_names[opcode], real_value);
+    JERRY_DEBUG_MSG ("  [%3d] %s number:%d\n",
+                     (int) context_p->stack_depth,
+                     cbc_names[opcode],
+                     real_value);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -365,6 +372,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 
   if (PARSER_IS_BASIC_OPCODE (opcode))
   {
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
     extra_byte_code_increase = 0;
   }
@@ -373,6 +381,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
     PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_EXT_OPCODE);
     opcode = (uint16_t) PARSER_GET_EXT_OPCODE (opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     extra_byte_code_increase = 1;
   }
@@ -391,11 +400,11 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
   {
     if (extra_byte_code_increase == 0)
     {
-      printf ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_names[opcode]);
+      JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_names[opcode]);
     }
     else
     {
-      printf ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_ext_names[opcode]);
+      JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_ext_names[opcode]);
     }
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
@@ -474,6 +483,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 
   if (PARSER_IS_BASIC_OPCODE (opcode))
   {
+    JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
 
 #ifdef PARSER_DUMP_BYTE_CODE
@@ -485,6 +495,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
     PARSER_APPEND_TO_BYTE_CODE (context_p, CBC_EXT_OPCODE);
     opcode = (uint16_t) PARSER_GET_EXT_OPCODE (opcode);
 
+    JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
     context_p->byte_code_size++;
 
@@ -506,7 +517,7 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    printf ("  [%3d] %s\n", (int) context_p->stack_depth, name);
+    JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, name);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -636,8 +647,9 @@ parser_set_continues_to_current_position (parser_context_t *context_p, /**< cont
   }
 } /* parser_set_continues_to_current_position */
 
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
 /**
- * Returns with the striong representation of the error
+ * Returns with the string representation of the error
  */
 const char *
 parser_error_to_string (parser_error_t error) /**< error code */
@@ -714,7 +726,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_UNSUPPORTED_REGEXP:
     {
-      return "Regexp is not supported in compact profile.";
+      return "Regexp is not supported in the selected profile.";
     }
     case PARSER_ERR_IDENTIFIER_TOO_LONG:
     {
@@ -726,11 +738,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_NUMBER_TOO_LONG:
     {
-      return "Number too long.";
+      return "Number is too long.";
     }
     case PARSER_ERR_REGEXP_TOO_LONG:
     {
-      return "Regexp too long.";
+      return "Regexp is too long.";
     }
     case PARSER_ERR_UNTERMINATED_MULTILINE_COMMENT:
     {
@@ -762,11 +774,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_EVAL_NOT_ALLOWED:
     {
-      return "Eval is not allowed to use here in strict mode.";
+      return "Eval is not allowed to be used here in strict mode.";
     }
     case PARSER_ERR_ARGUMENTS_NOT_ALLOWED:
     {
-      return "Arguments is not allowed to use here in strict mode.";
+      return "Arguments is not allowed to be used here in strict mode.";
     }
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
@@ -774,11 +786,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_EVAL_CANNOT_ASSIGNED:
     {
-      return "Eval cannot assigned in strict mode.";
+      return "Eval cannot be assigned to in strict mode.";
     }
     case PARSER_ERR_ARGUMENTS_CANNOT_ASSIGNED:
     {
-      return "Arguments cannot assigned in strict mode.";
+      return "Arguments cannot be assigned to in strict mode.";
     }
     case PARSER_ERR_WITH_NOT_ALLOWED:
     {
@@ -786,7 +798,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_MULTIPLE_DEFAULTS_NOT_ALLOWED:
     {
-      return "Multiple default cases not allowed.";
+      return "Multiple default cases are not allowed.";
     }
     case PARSER_ERR_DEFAULT_NOT_IN_SWITCH:
     {
@@ -890,7 +902,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_INVALID_BREAK_LABEL:
     {
-      return "Labelled statement targeted by a break not found.";
+      return "Labeled statement targeted by a break not found.";
     }
     case PARSER_ERR_INVALID_CONTINUE:
     {
@@ -898,7 +910,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_INVALID_CONTINUE_LABEL:
     {
-      return "Labelled statement targeted by a continue noty found.";
+      return "Labeled statement targeted by a continue not found.";
     }
     case PARSER_ERR_INVALID_RETURN:
     {
@@ -918,20 +930,21 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_NON_STRICT_ARG_DEFINITION:
     {
-      return "Non strict argument definition.";
+      return "Non-strict argument definition.";
     }
     default:
     {
-      break;
+      JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);
+      return "No error.";
     }
   }
-
-  JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);
-  return "No error.";
 } /* parser_error_to_string */
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
 /**
  * @}
  * @}
  * @}
  */
+
+#endif /* JERRY_JS_PARSER */

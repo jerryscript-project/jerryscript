@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,3 +159,17 @@ atan (double x)
     return (hx < 0) ? -z : z;
   }
 } /* atan */
+
+#undef aT0
+#undef aT1
+#undef aT2
+#undef aT3
+#undef aT4
+#undef aT5
+#undef aT6
+#undef aT7
+#undef aT8
+#undef aT9
+#undef aT10
+#undef one
+#undef huge

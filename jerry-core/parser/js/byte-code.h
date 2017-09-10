@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +15,8 @@
 
 #ifndef BYTE_CODE_H
 #define BYTE_CODE_H
+
+#include "ecma-globals.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -316,6 +317,10 @@
               VM_OC_RET) \
   CBC_OPCODE (CBC_RETURN_WITH_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_RET | VM_OC_GET_LITERAL) \
+  CBC_OPCODE (CBC_BREAKPOINT_ENABLED, CBC_NO_FLAG, 0, \
+              VM_OC_BREAKPOINT_ENABLED) \
+  CBC_OPCODE (CBC_BREAKPOINT_DISABLED, CBC_NO_FLAG, 0, \
+              VM_OC_BREAKPOINT_DISABLED) \
   \
   /* Unary opcodes. */ \
   CBC_UNARY_OPERATION (CBC_PLUS, \
@@ -632,16 +637,24 @@ typedef struct
   uint16_t ident_end;               /**< end position of the identifier group */
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
+#ifdef JERRY_CPOINTER_32_BIT
+  uint16_t padding;                 /**< an unused value */
+#endif
 } cbc_uint16_arguments_t;
 
-/* When CBC_CODE_FLAGS_FULL_LITERAL_ENCODING
- * is not set the small encoding is used. */
-#define CBC_CODE_FLAGS_FUNCTION 0x01
-#define CBC_CODE_FLAGS_FULL_LITERAL_ENCODING 0x02
-#define CBC_CODE_FLAGS_UINT16_ARGUMENTS 0x04
-#define CBC_CODE_FLAGS_STRICT_MODE 0x08
-#define CBC_CODE_FLAGS_ARGUMENTS_NEEDED 0x10
-#define CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED 0x20
+/**
+ * Compact byte code status flags.
+ */
+typedef enum
+{
+  CBC_CODE_FLAGS_FUNCTION = (1u << 0), /**< compiled code is JavaScript function */
+  CBC_CODE_FLAGS_FULL_LITERAL_ENCODING = (1u << 1), /**< full literal encoding mode is enabled */
+  CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 2), /**< compiled code data is cbc_uint16_arguments_t */
+  CBC_CODE_FLAGS_STRICT_MODE = (1u << 3), /**< strict mode is enabled */
+  CBC_CODE_FLAGS_ARGUMENTS_NEEDED = (1u << 4), /**< arguments object must be constructed */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
+} cbc_code_flags;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

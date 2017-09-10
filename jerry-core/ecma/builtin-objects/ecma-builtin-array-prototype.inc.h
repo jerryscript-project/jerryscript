@@ -1,5 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
- * Copyright 2015 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,29 +17,14 @@
  * Array.prototype built-in description
  */
 
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE)
+#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.4.4.1
+/* ECMA-262 v5, 15.4.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_ARRAY,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
@@ -48,7 +32,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 /* Number properties:
  *  (property name, object pointer getter) */
 
-// 15.4.4
+/* ECMA-262 v5, 15.4.4 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_FLAG_WRITABLE)
@@ -77,10 +61,6 @@ ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2,
 ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, NON_FIXED, 1)
 
-#undef OBJECT_ID
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
+#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

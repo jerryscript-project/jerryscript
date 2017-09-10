@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 #ifndef RE_PARSER_H
 #define RE_PARSER_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /** \addtogroup parser Parser
  * @{
@@ -102,10 +101,11 @@ typedef struct
 typedef void (*re_char_class_callback) (void *re_ctx_p, ecma_char_t start, ecma_char_t end);
 
 ecma_value_t
-re_parse_char_class (re_parser_ctx_t *, re_char_class_callback, void *, re_token_t *);
+re_parse_char_class (re_parser_ctx_t *parser_ctx_p, re_char_class_callback append_char_class, void *re_ctx_p,
+                     re_token_t *out_token_p);
 
 ecma_value_t
-re_parse_next_token (re_parser_ctx_t *, re_token_t *);
+re_parse_next_token (re_parser_ctx_t *parser_ctx_p, re_token_t *out_token_p);
 
 /**
  * @}
@@ -113,5 +113,5 @@ re_parse_next_token (re_parser_ctx_t *, re_token_t *);
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !RE_PARSER_H */

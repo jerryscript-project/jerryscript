@@ -1,0 +1,22 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/client_source_multiple_2.js:15
+(jerry-debugger) n
+out: multiple-client-source-test-file-2
+Stopped at tests/debugger/client_source_multiple_1.js:15
+(jerry-debugger) n
+out: multiple-client-source-test-file-1
+Stopped at tests/debugger/client_source_multiple_1.js:27
+(jerry-debugger) s
+Stopped at tests/debugger/client_source_multiple_1.js:18 (in foo() at line:17, col:1)
+(jerry-debugger) s
+out: foo
+Stopped at tests/debugger/client_source_multiple_1.js:19 (in foo() at line:17, col:1)
+(jerry-debugger) s
+Stopped at tests/debugger/client_source_multiple_2.js:18 (in bar() at line:17, col:1)
+(jerry-debugger) s
+out: bar
+Stopped at tests/debugger/client_source_multiple_2.js:19 (in bar() at line:17, col:1)
+(jerry-debugger) c
+out: str-argument: called-from-test-file-1
+out: crossFoo
+out: str-argument: called-from-test-file-2

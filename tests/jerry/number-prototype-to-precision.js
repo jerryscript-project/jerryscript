@@ -1,5 +1,4 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +35,11 @@ assert((123456789012345678901.0).toPrecision("6") === "1.23457e+20");
 
 assert((123.56).toPrecision(1.3) === "1e+2");
 assert((123.56).toPrecision(21.9) === "123.560000000000000000");
+
+assert(Number(982).toPrecision(1) === "1e+3");
+assert(Number(982).toPrecision(2) === "9.8e+2");
+assert(Number(1499).toPrecision(1) === "1e+3");
+assert(Number(1500).toPrecision(1) === "2e+3");
 
 try {
     (12).toPrecision(0);

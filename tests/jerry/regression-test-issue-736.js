@@ -1,4 +1,4 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ try {
 }
 
 try {
-  eval("var x; x instanceof assert;");
+  eval("var x = {}; x instanceof assert;");
   assert(false);
 } catch(e) {
   assert(e instanceof TypeError);

@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +29,9 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
+#include "lit-globals.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -75,15 +75,15 @@ typedef enum
 typedef struct
 {
   ecma_json_token_type_t type; /**< type of the current token */
-  lit_utf8_byte_t *current_p; /**< current position of the string processed by the parser */
+  const lit_utf8_byte_t *current_p; /**< current position of the string processed by the parser */
   const lit_utf8_byte_t *end_p; /**< end of the string processed by the parser */
+
+  /**
+   * Fields depending on type.
+   */
   union
   {
-    struct
-    {
-      const lit_utf8_byte_t *start_p; /**< when type is string_token, it contains the start of the string */
-      lit_utf8_size_t size; /**< when type is string_token, it contains the size of the string */
-    } string;
+    ecma_string_t *string_p; /**< when type is string_token it contains the string */
     ecma_number_t number; /**< when type is number_token, it contains the value of the number */
   } u;
 } ecma_json_token_t;
@@ -94,19 +94,21 @@ typedef struct
  * @return true if the match is successful
  */
 static bool
-ecma_builtin_json_check_id (lit_utf8_byte_t *string_p, /**< start position */
-                            const char *id_p) /**< string identifier */
+ecma_builtin_json_check_id (const lit_utf8_byte_t *string_p, /**< start position */
+                            const lit_utf8_byte_t *end_p, /**< input end */
+                            const char *string_id_p) /**< string identifier */
 {
   /*
    * String comparison must not depend on lit_utf8_byte_t definition.
    */
-  JERRY_ASSERT (*string_p == *id_p);
+  JERRY_ASSERT (*string_p == *string_id_p);
 
-  do
+  string_p++;
+  string_id_p++;
+
+  while (string_p < end_p)
   {
-    string_p++;
-    id_p++;
-    if (*id_p == LIT_CHAR_NULL)
+    if (*string_id_p == LIT_CHAR_NULL)
     {
       /* JSON lexer accepts input strings such as falsenull and
        * returns with multiple tokens (false and null in this case).
@@ -117,10 +119,17 @@ ecma_builtin_json_check_id (lit_utf8_byte_t *string_p, /**< start position */
        * type. */
       return true;
     }
-  }
-  while (*string_p == *id_p);
 
-  return false;
+    if (*string_p != *string_id_p)
+    {
+      return false;
+    }
+
+    string_p++;
+    string_id_p++;
+  }
+
+  return (*string_id_p == LIT_CHAR_NULL);
 } /* ecma_builtin_json_check_id */
 
 /**
@@ -129,51 +138,40 @@ ecma_builtin_json_check_id (lit_utf8_byte_t *string_p, /**< start position */
 static void
 ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument */
 {
-  lit_utf8_byte_t *current_p = token_p->current_p;
-  lit_utf8_byte_t *write_p = current_p;
+  const lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *end_p = token_p->end_p;
+  bool has_escape_sequence = false;
+  lit_utf8_size_t buffer_size = 0;
 
-  token_p->u.string.start_p = current_p;
-
-  while (*current_p != LIT_CHAR_DOUBLE_QUOTE)
+  /* First step: syntax checking. */
+  while (true)
   {
-    if (*current_p <= 0x1f)
+    if (current_p >= end_p || *current_p <= 0x1f)
     {
       return;
     }
+
+    if (*current_p == LIT_CHAR_DOUBLE_QUOTE)
+    {
+      break;
+    }
+
     if (*current_p == LIT_CHAR_BACKSLASH)
     {
       current_p++;
+      has_escape_sequence = true;
+
       switch (*current_p)
       {
         case LIT_CHAR_DOUBLE_QUOTE:
         case LIT_CHAR_SLASH:
         case LIT_CHAR_BACKSLASH:
-        {
-          break;
-        }
         case LIT_CHAR_LOWERCASE_B:
-        {
-          *current_p = LIT_CHAR_BS;
-          break;
-        }
         case LIT_CHAR_LOWERCASE_F:
-        {
-          *current_p = LIT_CHAR_FF;
-          break;
-        }
         case LIT_CHAR_LOWERCASE_N:
-        {
-          *current_p = LIT_CHAR_LF;
-          break;
-        }
         case LIT_CHAR_LOWERCASE_R:
-        {
-          *current_p = LIT_CHAR_CR;
-          break;
-        }
         case LIT_CHAR_LOWERCASE_T:
         {
-          *current_p = LIT_CHAR_TAB;
           break;
         }
         case LIT_CHAR_LOWERCASE_U:
@@ -186,7 +184,9 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
           }
 
           current_p += 5;
-          write_p += lit_code_unit_to_utf8 (code_unit, write_p);
+
+          lit_utf8_byte_t char_buffer[LIT_UTF8_MAX_BYTES_IN_CODE_UNIT];
+          buffer_size += lit_code_unit_to_utf8 (code_unit, char_buffer);
           continue;
         }
         default:
@@ -195,12 +195,92 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         }
       }
     }
+
+    buffer_size++;
+    current_p++;
+  }
+
+  token_p->type = string_token;
+
+  if (!has_escape_sequence)
+  {
+    token_p->u.string_p = ecma_new_ecma_string_from_utf8 (token_p->current_p, buffer_size);
+    token_p->current_p = current_p + 1;
+    return;
+  }
+
+  JMEM_DEFINE_LOCAL_ARRAY (buffer_p, buffer_size, lit_utf8_byte_t);
+
+  lit_utf8_byte_t *write_p = buffer_p;
+  current_p = token_p->current_p;
+
+  while (*current_p != LIT_CHAR_DOUBLE_QUOTE)
+  {
+    if (*current_p == LIT_CHAR_BACKSLASH)
+    {
+      current_p++;
+
+      lit_utf8_byte_t special_character;
+
+      switch (*current_p)
+      {
+        case LIT_CHAR_LOWERCASE_B:
+        {
+          special_character = LIT_CHAR_BS;
+          break;
+        }
+        case LIT_CHAR_LOWERCASE_F:
+        {
+          special_character = LIT_CHAR_FF;
+          break;
+        }
+        case LIT_CHAR_LOWERCASE_N:
+        {
+          special_character = LIT_CHAR_LF;
+          break;
+        }
+        case LIT_CHAR_LOWERCASE_R:
+        {
+          special_character = LIT_CHAR_CR;
+          break;
+        }
+        case LIT_CHAR_LOWERCASE_T:
+        {
+          special_character = LIT_CHAR_TAB;
+          break;
+        }
+        case LIT_CHAR_LOWERCASE_U:
+        {
+          ecma_char_t code_unit;
+
+          lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit);
+
+          current_p += 5;
+          write_p += lit_code_unit_to_utf8 (code_unit, write_p);
+          continue;
+        }
+        default:
+        {
+          special_character = *current_p;
+          break;
+        }
+      }
+
+      *write_p++ = special_character;
+      current_p++;
+      continue;
+    }
+
     *write_p++ = *current_p++;
   }
 
-  token_p->u.string.size = (lit_utf8_size_t) (write_p - token_p->u.string.start_p);
+  JERRY_ASSERT (write_p == buffer_p + buffer_size);
+
+  token_p->u.string_p = ecma_new_ecma_string_from_utf8 (buffer_p, buffer_size);
+
+  JMEM_FINALIZE_LOCAL_ARRAY (buffer_p);
+
   token_p->current_p = current_p + 1;
-  token_p->type = string_token;
 } /* ecma_builtin_json_parse_string */
 
 /**
@@ -209,18 +289,27 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
 static void
 ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument */
 {
-  lit_utf8_byte_t *current_p = token_p->current_p;
-  lit_utf8_byte_t *start_p = current_p;
+  const lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *end_p = token_p->end_p;
+  const lit_utf8_byte_t *start_p = current_p;
+
+  JERRY_ASSERT (current_p < end_p);
 
   if (*current_p == LIT_CHAR_MINUS)
   {
     current_p++;
   }
 
+  if (current_p >= end_p)
+  {
+    return;
+  }
+
   if (*current_p == LIT_CHAR_0)
   {
     current_p++;
-    if (lit_char_is_decimal_digit (*current_p))
+
+    if (current_p < end_p && lit_char_is_decimal_digit (*current_p))
     {
       return;
     }
@@ -231,13 +320,14 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (lit_char_is_decimal_digit (*current_p));
+    while (current_p < end_p && lit_char_is_decimal_digit (*current_p));
   }
 
-  if (*current_p == LIT_CHAR_DOT)
+  if (current_p < end_p && *current_p == LIT_CHAR_DOT)
   {
     current_p++;
-    if (!lit_char_is_decimal_digit (*current_p))
+
+    if (current_p >= end_p || !lit_char_is_decimal_digit (*current_p))
     {
       return;
     }
@@ -246,18 +336,19 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (lit_char_is_decimal_digit (*current_p));
+    while (current_p < end_p && lit_char_is_decimal_digit (*current_p));
   }
 
-  if (*current_p == LIT_CHAR_LOWERCASE_E || *current_p == LIT_CHAR_UPPERCASE_E)
+  if (current_p < end_p && (*current_p == LIT_CHAR_LOWERCASE_E || *current_p == LIT_CHAR_UPPERCASE_E))
   {
     current_p++;
-    if (*current_p == LIT_CHAR_PLUS || *current_p == LIT_CHAR_MINUS)
+
+    if (current_p < end_p && (*current_p == LIT_CHAR_PLUS || *current_p == LIT_CHAR_MINUS))
     {
       current_p++;
     }
 
-    if (!lit_char_is_decimal_digit (*current_p))
+    if (current_p >= end_p || !lit_char_is_decimal_digit (*current_p))
     {
       return;
     }
@@ -266,8 +357,9 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
     {
       current_p++;
     }
-    while (lit_char_is_decimal_digit (*current_p));
+    while (current_p < end_p && lit_char_is_decimal_digit (*current_p));
   }
+
   token_p->type = number_token;
   token_p->u.number = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (current_p - start_p));
 
@@ -281,12 +373,14 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
  * argument and advances the string pointer.
  */
 static void
-ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argument */
+ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p, /**< token argument */
+                                    bool parse_string) /**< strings are allowed to parse */
 {
-  lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *end_p = token_p->end_p;
   token_p->type = invalid_token;
 
-  while (current_p < token_p->end_p
+  while (current_p < end_p
          && (*current_p == LIT_CHAR_SP
              || *current_p == LIT_CHAR_CR
              || *current_p == LIT_CHAR_LF
@@ -295,7 +389,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     current_p++;
   }
 
-  if (current_p == token_p->end_p)
+  if (current_p == end_p)
   {
     token_p->type = end_token;
     return;
@@ -335,13 +429,16 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     }
     case LIT_CHAR_DOUBLE_QUOTE:
     {
-      token_p->current_p = current_p + 1;
-      ecma_builtin_json_parse_string (token_p);
+      if (parse_string)
+      {
+        token_p->current_p = current_p + 1;
+        ecma_builtin_json_parse_string (token_p);
+      }
       return;
     }
     case LIT_CHAR_LOWERCASE_N:
     {
-      if (ecma_builtin_json_check_id (current_p, "null"))
+      if (ecma_builtin_json_check_id (current_p, token_p->end_p, "null"))
       {
         token_p->type = null_token;
         token_p->current_p = current_p + 4;
@@ -351,7 +448,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     }
     case LIT_CHAR_LOWERCASE_T:
     {
-      if (ecma_builtin_json_check_id (current_p, "true"))
+      if (ecma_builtin_json_check_id (current_p, token_p->end_p, "true"))
       {
         token_p->type = true_token;
         token_p->current_p = current_p + 4;
@@ -361,7 +458,7 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
     }
     case LIT_CHAR_LOWERCASE_F:
     {
-      if (ecma_builtin_json_check_id (current_p, "false"))
+      if (ecma_builtin_json_check_id (current_p, token_p->end_p, "false"))
       {
         token_p->type = false_token;
         token_p->current_p = current_p + 5;
@@ -392,24 +489,29 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p) /**< token argum
 static bool
 ecma_builtin_json_check_right_square_token (ecma_json_token_t *token_p) /**< token argument */
 {
-  lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *current_p = token_p->current_p;
+  const lit_utf8_byte_t *end_p = token_p->end_p;
 
   /*
    * No need for end check since the string is zero terminated.
    */
-  while (*current_p == LIT_CHAR_SP || *current_p == LIT_CHAR_CR
-         || *current_p == LIT_CHAR_LF || *current_p == LIT_CHAR_TAB)
+  while (current_p < end_p
+         && (*current_p == LIT_CHAR_SP
+             || *current_p == LIT_CHAR_CR
+             || *current_p == LIT_CHAR_LF
+             || *current_p == LIT_CHAR_TAB))
   {
     current_p++;
   }
 
   token_p->current_p = current_p;
 
-  if (*current_p == LIT_CHAR_RIGHT_SQUARE)
+  if (current_p < end_p && *current_p == LIT_CHAR_RIGHT_SQUARE)
   {
     token_p->current_p = current_p + 1;
     return true;
   }
+
   return false;
 } /* ecma_builtin_json_check_right_square_token */
 
@@ -445,7 +547,7 @@ ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object 
 static ecma_value_t
 ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument */
 {
-  ecma_builtin_json_parse_next_token (token_p);
+  ecma_builtin_json_parse_next_token (token_p, true);
 
   switch (token_p->type)
   {
@@ -455,8 +557,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
     }
     case string_token:
     {
-      ecma_string_t *string_p = ecma_new_ecma_string_from_utf8 (token_p->u.string.start_p, token_p->u.string.size);
-      return ecma_make_string_value (string_p);
+      return ecma_make_string_value (token_p->u.string_p);
     }
     case null_token:
     {
@@ -477,7 +578,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
 
       while (true)
       {
-        ecma_builtin_json_parse_next_token (token_p);
+        ecma_builtin_json_parse_next_token (token_p, !parse_comma);
 
         if (token_p->type == right_brace_token)
         {
@@ -490,7 +591,8 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           {
             break;
           }
-          ecma_builtin_json_parse_next_token (token_p);
+
+          ecma_builtin_json_parse_next_token (token_p, true);
         }
 
         if (token_p->type != string_token)
@@ -498,12 +600,13 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           break;
         }
 
-        const lit_utf8_byte_t *string_start_p = token_p->u.string.start_p;
-        lit_utf8_size_t string_size = token_p->u.string.size;
-        ecma_builtin_json_parse_next_token (token_p);
+        ecma_string_t *name_p = token_p->u.string_p;
+
+        ecma_builtin_json_parse_next_token (token_p, false);
 
         if (token_p->type != colon_token)
         {
+          ecma_deref_ecma_string (name_p);
           break;
         }
 
@@ -511,13 +614,14 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
 
         if (ecma_is_value_undefined (value))
         {
+          ecma_deref_ecma_string (name_p);
           break;
         }
 
-        ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (string_start_p, string_size);
         ecma_builtin_json_define_value_property (object_p, name_p, value);
         ecma_deref_ecma_string (name_p);
         ecma_free_value (value);
+
         parse_comma = true;
       }
 
@@ -546,7 +650,8 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
 
         if (parse_comma)
         {
-          ecma_builtin_json_parse_next_token (token_p);
+          ecma_builtin_json_parse_next_token (token_p, false);
+
           if (token_p->type != comma_token)
           {
             break;
@@ -668,9 +773,9 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
     arguments_list[0] = ecma_make_string_value (name_p);
     arguments_list[1] = value_get;
 
-   /*
-    * The completion value can be anything including exceptions.
-    */
+    /*
+     * The completion value can be anything including exceptions.
+     */
     ret_value = ecma_op_function_call (reviver_p,
                                        ecma_make_object_value (holder_p),
                                        arguments_list,
@@ -708,15 +813,8 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
                   ret_value);
 
   const ecma_string_t *string_p = ecma_get_string_from_value (string);
-  const ecma_length_t string_size = (ecma_length_t) ecma_string_get_size (string_p);
-  const lit_utf8_size_t buffer_size = sizeof (lit_utf8_byte_t) * (string_size + 1);
 
-  JMEM_DEFINE_LOCAL_ARRAY (str_start_p, buffer_size, lit_utf8_byte_t);
-
-  const lit_utf8_size_t sz = ecma_string_copy_to_utf8_buffer (string_p, str_start_p, buffer_size);
-  JERRY_ASSERT (sz == string_size);
-
-  str_start_p[string_size] = LIT_BYTE_NULL;
+  ECMA_STRING_TO_UTF8_STRING (string_p, str_start_p, string_size);
 
   ecma_json_token_t token;
   token.current_p = str_start_p;
@@ -726,7 +824,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
 
   if (!ecma_is_value_undefined (final_result))
   {
-    ecma_builtin_json_parse_next_token (&token);
+    ecma_builtin_json_parse_next_token (&token, false);
 
     if (token.type != end_token)
     {
@@ -737,7 +835,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
 
   if (ecma_is_value_undefined (final_result))
   {
-    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error."));
   }
   else
   {
@@ -746,12 +844,13 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
       ecma_object_t *object_p = ecma_op_create_object_object_noarg ();
       ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-      ecma_property_t *property_p;
-      property_p = ecma_create_named_data_property (object_p,
-                                                    name_p,
-                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      ecma_property_value_t *prop_value_p;
+      prop_value_p = ecma_create_named_data_property (object_p,
+                                                      name_p,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                      NULL);
 
-      ecma_named_data_property_assign_value (object_p, property_p, final_result);
+      ecma_named_data_property_assign_value (object_p, prop_value_p, final_result);
       ecma_free_value (final_result);
 
       ret_value = ecma_builtin_json_walk (ecma_get_object_from_value (arg2),
@@ -766,7 +865,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
     }
   }
 
-  JMEM_FINALIZE_LOCAL_ARRAY (str_start_p);
+  ECMA_FINALIZE_UTF8_STRING (str_start_p, string_size);
 
   ECMA_FINALIZE (string);
   return ret_value;
@@ -825,7 +924,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
     /* 4.b */
     else if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_ARRAY_UL)
     {
-      ecma_string_t *length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+      ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
 
       ECMA_TRY_CATCH (array_length,
                       ecma_op_object_get (obj_p, length_str_p),
@@ -835,11 +934,10 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
                                    array_length,
                                    ret_value);
 
-      uint32_t array_length = ecma_number_to_uint32 (array_length_num);
       uint32_t index = 0;
 
       /* 4.b.ii */
-      while ((index < array_length) && ecma_is_value_empty (ret_value))
+      while ((index < ecma_number_to_uint32 (array_length_num)) && ecma_is_value_empty (ret_value))
       {
         ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
 
@@ -961,23 +1059,24 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
 
         /* 6.a */
         int32_t num_of_spaces = ecma_number_to_int32 (array_length_num);
-        int32_t space = (num_of_spaces > 10) ? 10 : num_of_spaces;
+        num_of_spaces = (num_of_spaces > 10) ? 10 : num_of_spaces;
 
         /* 6.b */
-        if (space < 1)
+        if (num_of_spaces < 1)
         {
           context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
         }
         else
         {
-          JMEM_DEFINE_LOCAL_ARRAY (space_buff, space, char);
+          JMEM_DEFINE_LOCAL_ARRAY (space_buff, num_of_spaces, char);
 
-          for (int32_t i = 0; i < space; i++)
+          for (int32_t i = 0; i < num_of_spaces; i++)
           {
             space_buff[i] = LIT_CHAR_SP;
           }
 
-          context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff, (lit_utf8_size_t) space);
+          context.gap_str_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) space_buff,
+                                                              (lit_utf8_size_t) num_of_spaces);
 
           JMEM_FINALIZE_LOCAL_ARRAY (space_buff);
         }
@@ -1411,7 +1510,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   /* 1. */
   if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -1445,11 +1544,15 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     while (ecma_collection_iterator_next (&iter))
     {
       ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
-      ecma_property_t *property_p = ecma_op_object_get_own_property (obj_p, property_name_p);
 
-      JERRY_ASSERT (ecma_is_property_enumerable (property_p));
+      ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                                  property_name_p,
+                                                                  NULL,
+                                                                  ECMA_PROPERTY_GET_NO_OPTIONS);
 
-      if (ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      JERRY_ASSERT (ecma_is_property_enumerable (property));
+
+      if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
         ecma_append_to_values_collection (property_keys_p, *iter.current_value_p, true);
       }
@@ -1607,7 +1710,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   /* 1. */
   if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -1624,7 +1727,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   /* 5. */
   ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
 
-  ecma_string_t *length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
 
   /* 6. */
   ECMA_TRY_CATCH (array_length,
@@ -1635,11 +1738,9 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
                                array_length,
                                ret_value);
 
-  uint32_t array_length = ecma_number_to_uint32 (array_length_num);
-
   /* 7. - 8. */
   for (uint32_t index = 0;
-       index < array_length && ecma_is_value_empty (ret_value);
+       index < ecma_number_to_uint32 (array_length_num) && ecma_is_value_empty (ret_value);
        index++)
   {
 
@@ -1738,4 +1839,4 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN */
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */

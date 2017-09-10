@@ -1,0 +1,30 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_delete.js:15
+(jerry-debugger) next
+out: delete tests
+Stopped at tests/debugger/do_delete.js:17
+(jerry-debugger) b do_delete.js:17
+Breakpoint 1 at tests/debugger/do_delete.js:17
+(jerry-debugger) b do_delete.js:21
+No breakpoint found, do you want to add a pending breakpoint? (y or [n])
+Pending breakpoint at do_delete.js:21
+(jerry-debugger) b do_delete.js:19
+Breakpoint 3 at tests/debugger/do_delete.js:19
+(jerry-debugger) b do_delete.js:18
+Breakpoint 4 at tests/debugger/do_delete.js:18
+(jerry-debugger) list
+=== Active breakpoints  ===
+ 1: tests/debugger/do_delete.js:17
+ 3: tests/debugger/do_delete.js:19
+ 4: tests/debugger/do_delete.js:18
+=== Pending breakpoints ===
+ 2: do_delete.js:21 (pending)
+(jerry-debugger) delete 2
+(jerry-debugger) delete 3
+(jerry-debugger) list
+=== Active breakpoints  ===
+ 1: tests/debugger/do_delete.js:17
+ 4: tests/debugger/do_delete.js:18
+(jerry-debugger) c
+Stopped at breakpoint:4 tests/debugger/do_delete.js:18
+(jerry-debugger) c

@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +38,7 @@
  *      3. Return x**y = 2**n*exp(y'*log2)
  *
  * Special cases:
+ *      0.  +1 ** (anything) is 1
  *      1.  (anything) ** 0  is 1
  *      2.  (anything) ** 1  is itself
  *      3.  (anything) ** NAN is NAN
@@ -47,7 +47,7 @@
  *      6.  +-(|x| > 1) **  -INF is +0
  *      7.  +-(|x| < 1) **  +INF is +0
  *      8.  +-(|x| < 1) **  -INF is +INF
- *      9.  +-1         ** +-INF is NAN
+ *      9.  -1          ** +-INF is 1
  *      10. +0 ** (+anything except 0, NAN)               is +0
  *      11. -0 ** (+anything except 0, NAN, odd integer)  is +0
  *      12. +0 ** (-anything except 0, NAN)               is +INF
@@ -72,7 +72,6 @@
  * to produce the hexadecimal values shown.
  */
 
-static const double one = 1.0;
 static const double bp[] =
 {
   1.0,
@@ -90,6 +89,7 @@ static const double dp_l[] =
 };
 
 #define zero     0.0
+#define one      1.0
 #define two      2.0
 #define two53    9007199254740992.0 /* 0x43400000, 0x00000000 */
 #define huge     1.0e300
@@ -132,6 +132,12 @@ pow (double x, double y)
   ly = __LO (y);
   ix = hx & 0x7fffffff;
   iy = hy & 0x7fffffff;
+
+  /* x == one: 1**y = 1 */
+  if (((hx - 0x3ff00000) | lx) == 0)
+  {
+    return one;
+  }
 
   /* y == zero: x**0 = 1 */
   if ((iy | ly) == 0)
@@ -184,9 +190,9 @@ pow (double x, double y)
   {
     if (iy == 0x7ff00000) /* y is +-inf */
     {
-      if (((ix - 0x3ff00000) | lx) == 0) /* inf**+-1 is NaN */
+      if (((ix - 0x3ff00000) | lx) == 0) /* +-1**+-inf is 1 */
       {
-        return y - y;
+        return one;
       }
       else if (ix >= 0x3ff00000) /* (|x|>1)**+-inf = inf,0 */
       {
@@ -438,3 +444,31 @@ pow (double x, double y)
   }
   return s * z;
 } /* pow */
+
+#undef zero
+#undef one
+#undef two
+#undef two53
+#undef huge
+#undef tiny
+#undef L1
+#undef L2
+#undef L3
+#undef L4
+#undef L5
+#undef L6
+#undef P1
+#undef P2
+#undef P3
+#undef P4
+#undef P5
+#undef lg2
+#undef lg2_h
+#undef lg2_l
+#undef ovt
+#undef cp
+#undef cp_h
+#undef cp_l
+#undef ivln2
+#undef ivln2_h
+#undef ivln2_l

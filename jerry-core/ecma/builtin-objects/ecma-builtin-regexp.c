@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +22,7 @@
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -81,7 +80,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
 
   if (ecma_is_value_object (pattern_value)
-      && ecma_object_get_class_name (ecma_get_object_from_value (pattern_value)) == LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_object_class_is (ecma_get_object_from_value (pattern_value), LIT_MAGIC_STRING_REGEXP_UL))
   {
     if (ecma_is_value_undefined (flags_value))
     {
@@ -157,4 +156,4 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

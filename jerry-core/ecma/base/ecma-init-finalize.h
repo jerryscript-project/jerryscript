@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@
  * @{
  */
 
-extern void ecma_init (void);
-extern void ecma_finalize (void);
+void ecma_init (void);
+void ecma_finalize (void);
 
 /**
  * @}

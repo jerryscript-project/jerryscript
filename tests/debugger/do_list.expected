@@ -1,0 +1,11 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_list.js:15
+(jerry-debugger) b do_list.js:18
+Breakpoint 1 at tests/debugger/do_list.js:18
+(jerry-debugger) b do_list.js:19
+Breakpoint 2 at tests/debugger/do_list.js:19
+(jerry-debugger) list
+=== Active breakpoints  ===
+ 1: tests/debugger/do_list.js:18
+ 2: tests/debugger/do_list.js:19
+(jerry-debugger) quit

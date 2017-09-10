@@ -1,4 +1,4 @@
-/* Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,40 +18,25 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "jerry-core/jerry-port.h"
+#include "jerry-core/include/jerryscript-port.h"
 
 #include "mbed-hal/us_ticker_api.h"
 
 /**
- * Provide log message to filestream implementation for the engine.
+ * Provide log message implementation for the engine.
  */
-int
-jerry_port_logmsg (FILE *stream, /**< stream pointer */
-                   const char *format, /**< format string */
-                   ...) /**< parameters */
+void
+jerry_port_log (jerry_log_level_t level, /**< log level */
+                const char *format, /**< format string */
+                ...)  /**< parameters */
 {
-  va_list args;
-  int count;
-  va_start (args, format);
-  count = vfprintf (stream, format, args);
-  va_end (args);
-  return count;
-} /* jerry_port_logmsg */
+  (void) level; /* ignore log level */
 
-/**
- * Provide error message to console implementation for the engine.
- */
-int
-jerry_port_errormsg (const char *format, /**< format string */
-                     ...) /**< parameters */
-{
   va_list args;
-  int count;
   va_start (args, format);
-  count = vfprintf (stderr, format, args);
+  vfprintf (stderr, format, args);
   va_end (args);
-  return count;
-} /* jerry_port_errormsg */
+} /* jerry_port_log */
 
 /**
  * Implementation of jerry_port_fatal.
@@ -64,7 +49,7 @@ jerry_port_fatal (jerry_fatal_code_t code) /**< fatal code enum item */
 
 /**
  * Implementation of jerry_port_get_time_zone.
- * 
+ *
  * @return true - if success
  */
 bool
@@ -78,10 +63,12 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< timezone pointer */
 /**
  * Implementation of jerry_port_get_current_time.
  *
- * @return current timer's counter value in microseconds 
+ * @return current timer's counter value in milliseconds
  */
 double
-jerry_port_get_current_time ()
+jerry_port_get_current_time (void)
 {
-  return (double) us_ticker_read ();
+  /* Note: if the target has its own RTC, this value should be extended by the
+   * RTC's one. */
+  return (double) us_ticker_read () / 1000;
 } /* jerry_port_get_current_time */

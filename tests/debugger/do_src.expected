@@ -1,0 +1,20 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_src.js:19
+(jerry-debugger) b f
+Breakpoint 1 at tests/debugger/do_src.js:16 (in f() at line:15, col:1)
+(jerry-debugger) n
+Stopped at breakpoint:1 tests/debugger/do_src.js:16 (in f() at line:15, col:1)
+(jerry-debugger) next
+out: F1
+Stopped at tests/debugger/do_src.js:20
+(jerry-debugger) s
+Stopped at <unknown>:1
+(jerry-debugger) source 0
+   1 > f = function f() {
+(jerry-debugger) n
+Stopped at tests/debugger/do_src.js:21
+(jerry-debugger) step
+Stopped at <unknown>:2 (in f() at line:1, col:5)
+(jerry-debugger) src
+(jerry-debugger) c
+out: F2

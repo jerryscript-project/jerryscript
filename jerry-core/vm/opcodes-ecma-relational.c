@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,7 +184,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'instanceof' check."));
   }
   else
   {
@@ -219,7 +218,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
 
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
   else
   {
@@ -228,14 +227,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
     ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (str_left_value);
     ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
 
-    if (ecma_op_object_get_property (right_value_obj_p, left_value_prop_name_p) != NULL)
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-    }
-    else
-    {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
+    ret_value = ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p));
 
     ECMA_FINALIZE (str_left_value);
   }

@@ -1,0 +1,3 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_quit.js:15
+(jerry-debugger) quit

@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +14,11 @@
  */
 
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-reference.h"
@@ -65,8 +66,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
  */
 ecma_value_t
 ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical environment */
-                                 ecma_string_t *name_p, /**< identifier's name */
-                                 bool is_strict) /**< strict mode */
+                                 ecma_string_t *name_p) /**< identifier's name */
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
@@ -78,23 +78,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       if (property_p != NULL)
       {
-        ecma_value_t prop_value = ecma_get_named_data_property_value (property_p);
-
-        /* is the binding mutable? */
-        if (unlikely (!ecma_is_property_writable (property_p)
-                      && ecma_is_value_empty (prop_value)))
-        {
-          /* unitialized mutable binding */
-          if (is_strict)
-          {
-            return ecma_raise_reference_error (ECMA_ERR_MSG (""));
-          }
-          else
-          {
-            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-          }
-        }
-        return ecma_fast_copy_value (prop_value);
+        return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
     }
     else
@@ -104,18 +88,50 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-      ecma_property_t *property_p = ecma_op_object_get_property (binding_obj_p, name_p);
+      ecma_property_t *property_p = ecma_lcache_lookup (binding_obj_p, name_p);
 
       if (property_p != NULL)
       {
-        return ecma_op_object_get (binding_obj_p, name_p);
+        ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+        if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+        {
+          return ecma_fast_copy_value (prop_value_p->value);
+        }
+
+        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+
+        ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (prop_value_p);
+
+        if (getter_p == NULL)
+        {
+          return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        }
+
+        ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
+        return ecma_op_function_call (getter_p, base_value, NULL, 0);
+      }
+
+      ecma_value_t prop_value = ecma_op_object_find (binding_obj_p, name_p);
+
+      if (ecma_is_value_found (prop_value))
+      {
+        return prop_value;
       }
     }
 
     lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
 
-  return ecma_raise_reference_error (ECMA_ERR_MSG (""));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+  ecma_value_t name_val = ecma_make_string_value (name_p);
+  ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                                    "% is not defined",
+                                                                    name_val);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+  ecma_value_t error_value = ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+  return error_value;
 } /* ecma_op_resolve_reference_value */
 
 /**

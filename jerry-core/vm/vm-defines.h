@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +39,7 @@ typedef const uint8_t *vm_instr_counter_t;
 /**
  * Context of interpreter, related to a JS stack frame
  */
-typedef struct
+typedef struct vm_frame_ctx_t
 {
   const ecma_compiled_code_t *bytecode_header_p;      /**< currently executed byte-code data */
   uint8_t *byte_code_p;                               /**< current byte code pointer */
@@ -49,6 +48,7 @@ typedef struct
   ecma_value_t *stack_top_p;                          /**< stack top pointer */
   jmem_cpointer_t *literal_start_p;                   /**< literal list start pointer */
   ecma_object_t *lex_env_p;                           /**< current lexical environment */
+  struct vm_frame_ctx_t *prev_context_p;              /**< previous context */
   ecma_value_t this_binding;                          /**< this binding */
   ecma_value_t call_block_result;                     /**< preserve block result during a call */
   uint16_t context_depth;                             /**< current context depth */

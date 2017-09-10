@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +25,6 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
-
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -60,10 +57,10 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  // 2.
+  /* 2. */
   if (!ecma_is_value_object (this_arg))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object."));
   }
   else
   {
@@ -144,7 +141,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
           JMEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
           lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
 
-          lit_utf8_size_t bytes = ecma_string_copy_to_utf8_buffer (name_string_p, ret_str_buffer_p, name_size);
+          lit_utf8_size_t bytes = ecma_string_copy_to_cesu8_buffer (name_string_p, ret_str_buffer_p, name_size);
           JERRY_ASSERT (bytes == name_size);
           ret_str_buffer_p = ret_str_buffer_p + bytes;
           JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
@@ -159,7 +156,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
                                                               space_size);
           JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
 
-          bytes = ecma_string_copy_to_utf8_buffer (msg_string_p, ret_str_buffer_p, msg_size);
+          bytes = ecma_string_copy_to_cesu8_buffer (msg_string_p, ret_str_buffer_p, msg_size);
           JERRY_ASSERT (bytes == msg_size);
           ret_str_buffer_p = ret_str_buffer_p + bytes;
           JERRY_ASSERT (ret_str_buffer_p == ret_str_buffer + size);
@@ -195,5 +192,3 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
  * @}
  * @}
  */
-
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */

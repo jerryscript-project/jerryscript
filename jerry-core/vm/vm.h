@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,6 +203,8 @@ typedef enum
   VM_OC_FINALLY,                 /**< finally */
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
+  VM_OC_BREAKPOINT_ENABLED,       /**< enabled breakpoint for debugger */
+  VM_OC_BREAKPOINT_DISABLED,      /**< disabled breakpoint for debugger */
 } vm_oc_types;
 
 /**
@@ -275,15 +276,15 @@ typedef enum
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 
-extern ecma_value_t vm_run_global (const ecma_compiled_code_t *);
-extern ecma_value_t vm_run_eval (ecma_compiled_code_t *, bool);
+ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
+ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, bool is_direct);
 
-extern ecma_value_t vm_run (const ecma_compiled_code_t *, ecma_value_t,
-                            ecma_object_t *, bool, const ecma_value_t *,
-                            ecma_length_t);
+ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
+                     ecma_object_t *lex_env_p, bool is_eval_code, const ecma_value_t *arg_list_p,
+                     ecma_length_t arg_list_len);
 
-extern bool vm_is_strict_mode (void);
-extern bool vm_is_direct_eval_form_call (void);
+bool vm_is_strict_mode (void);
+bool vm_is_direct_eval_form_call (void);
 
 /**
  * @}

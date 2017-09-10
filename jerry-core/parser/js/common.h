@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,18 +32,9 @@
  * @{
  */
 
-#ifndef JERRY_NDEBUG
-#define PARSER_DEBUG
-#endif /* !JERRY_NDEBUG */
-
-#ifndef JERRY_NDEBUG
-/* Note: This flag is independent from debug mode. */
-#define PARSER_DUMP_BYTE_CODE
-#endif /* !JERRY_NDEBUG */
-
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
-#include "jmem-heap.h"
+#include "jmem.h"
 
 /* Immediate management. */
 
@@ -77,10 +67,12 @@ typedef enum
 #define LEXER_FLAG_FUNCTION_NAME 0x08
 /* This local identifier is a function argument. */
 #define LEXER_FLAG_FUNCTION_ARGUMENT 0x10
+/* This local identifier is not used in the current context. */
+#define LEXER_FLAG_UNUSED_IDENT 0x20
 /* No space is allocated for this character literal. */
-#define LEXER_FLAG_SOURCE_PTR 0x20
+#define LEXER_FLAG_SOURCE_PTR 0x40
 /* Initialize this variable after the byte code is freed. */
-#define LEXER_FLAG_LATE_INIT 0x40
+#define LEXER_FLAG_LATE_INIT 0x80
 
 /**
  * Literal data.
@@ -109,7 +101,7 @@ typedef struct
   uint8_t status_flags;                  /**< status flags */
 } lexer_literal_t;
 
-void util_free_literal (lexer_literal_t *);
+void util_free_literal (lexer_literal_t *literal_p);
 
 #ifdef PARSER_DUMP_BYTE_CODE
 void util_print_literal (lexer_literal_t *);
@@ -136,11 +128,6 @@ void util_print_literal (lexer_literal_t *);
 #define PARSER_TRY_END \
     } \
   }
-
-/* Other */
-
-#define PARSER_INLINE inline
-#define PARSER_NOINLINE __attribute__ ((noinline))
 
 /**
  * @}

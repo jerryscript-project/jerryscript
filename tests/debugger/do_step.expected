@@ -1,0 +1,25 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_step.js:32
+(jerry-debugger) step
+Stopped at tests/debugger/do_step.js:22 (in f1() at line:15, col:1)
+(jerry-debugger) step
+Stopped at tests/debugger/do_step.js:19 (in g() at line:17, col:3)
+(jerry-debugger) backtrace
+Frame 0: tests/debugger/do_step.js:19 (in g() at line:17, col:3)
+Frame 1: tests/debugger/do_step.js:22 (in f1() at line:15, col:1)
+Frame 2: tests/debugger/do_step.js:32
+(jerry-debugger) next
+Stopped at tests/debugger/do_step.js:23 (in f1() at line:15, col:1)
+(jerry-debugger) bt
+Frame 0: tests/debugger/do_step.js:23 (in f1() at line:15, col:1)
+Frame 1: tests/debugger/do_step.js:32
+(jerry-debugger) next
+Stopped at tests/debugger/do_step.js:33
+(jerry-debugger) s
+Stopped at tests/debugger/do_step.js:28 (in f2() at line:26, col:1)
+(jerry-debugger) n
+Stopped at tests/debugger/do_step.js:29 (in f2() at line:26, col:1)
+(jerry-debugger) bt
+Frame 0: tests/debugger/do_step.js:29 (in f2() at line:26, col:1)
+Frame 1: tests/debugger/do_step.js:33
+(jerry-debugger) c

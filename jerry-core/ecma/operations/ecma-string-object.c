@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,12 +48,9 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   ecma_string_t *prim_prop_str_value_p;
 
-  ecma_number_t length_value;
-
   if (arguments_list_len == 0)
   {
     prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-    length_value = ECMA_NUMBER_ZERO;
   }
   else
   {
@@ -70,145 +66,30 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
       JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
 
       prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);
-
-      ecma_length_t string_len = ecma_string_get_length (prim_prop_str_value_p);
-      length_value = ((ecma_number_t) (uint32_t) string_len);
     }
   }
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
+#ifndef CONFIG_DISABLE_STRING_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_STRING_PROTOTYPE);
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#else /* CONFIG_DISABLE_STRING_BUILTIN */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN */
+#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             false,
-                                             true,
-                                             ECMA_OBJECT_TYPE_STRING);
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (prototype_obj_p);
 
-  /*
-   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_STRING type.
-   *
-   * See also: ecma_object_get_class_name
-   */
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
+  ext_object_p->u.class_prop.u.value = ecma_make_string_value (prim_prop_str_value_p);
 
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_set_internal_property_value (prim_value_prop_p, ecma_make_string_value (prim_prop_str_value_p));
-
-  // 15.5.5.1
-  ecma_string_t *length_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-  ecma_property_t *length_prop_p = ecma_create_named_data_property (obj_p,
-                                                                    length_magic_string_p,
-                                                                    ECMA_PROPERTY_FIXED);
-
-  ecma_set_named_data_property_value (length_prop_p, ecma_make_number_value (length_value));
-  ecma_deref_ecma_string (length_magic_string_p);
-
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_string_object */
 
 /**
- * [[GetOwnProperty]] ecma String object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *          ECMA-262 v5, 15.5.5.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_property_t *
-ecma_op_string_object_get_own_property (ecma_object_t *obj_p, /**< a String object */
-                                        ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
-
-  // 1.
-  ecma_property_t *prop_p = ecma_op_general_object_get_own_property (obj_p, property_name_p);
-
-  // 2.
-  if (prop_p != NULL)
-  {
-    return prop_p;
-  }
-
-  // 3., 5.
-  uint32_t uint32_index;
-  ecma_string_t *new_prop_name_p;
-
-  if (ECMA_STRING_GET_CONTAINER (property_name_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-  {
-    uint32_index = property_name_p->u.uint32_number;
-
-    new_prop_name_p = property_name_p;
-    ecma_ref_ecma_string (new_prop_name_p);
-  }
-  else
-  {
-    ecma_number_t index = ecma_string_to_number (property_name_p);
-    uint32_index = ecma_number_to_uint32 (index);
-
-    ecma_string_t *to_str_p = ecma_new_ecma_string_from_uint32 (uint32_index);
-
-    bool are_equal = ecma_compare_ecma_strings (to_str_p, property_name_p);
-
-    if (!are_equal)
-    {
-      ecma_deref_ecma_string (to_str_p);
-
-      return NULL;
-    }
-    else
-    {
-      new_prop_name_p = to_str_p;
-    }
-  }
-
-  // 4.
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p;
-  prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
-
-  // 6.
-  ecma_length_t length = ecma_string_get_length (prim_value_str_p);
-
-  ecma_property_t *new_prop_p;
-
-  if (uint32_index >= (uint32_t) length)
-  {
-    // 7.
-    new_prop_p = NULL;
-  }
-  else
-  {
-    // 8.
-    ecma_char_t c = ecma_string_get_char_at_pos (prim_value_str_p, uint32_index);
-
-    // 9.
-    ecma_string_t *new_prop_str_value_p = ecma_new_ecma_string_from_code_unit (c);
-
-    new_prop_p = ecma_create_named_data_property (obj_p,
-                                                  new_prop_name_p,
-                                                  ECMA_PROPERTY_FLAG_ENUMERABLE);
-
-    ecma_set_named_data_property_value (new_prop_p,
-                                        ecma_make_string_value (new_prop_str_value_p));
-  }
-
-  ecma_deref_ecma_string (new_prop_name_p);
-
-  return new_prop_p;
-} /* ecma_op_string_object_get_own_property */
-
-/**
  * List names of a String object's lazy instantiated properties
- *
- * See also:
- *          ecma_op_string_object_get_own_property
  *
  * @return string values collection
  */
@@ -225,20 +106,18 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
                                                                                        *   collection */
                                          ecma_collection_header_t *non_enum_collection_p) /**< skipped
                                                                                            *   'non-enumerable'
-                                                                                           *   collection
-                                                                                                        */
+                                                                                           *   collection */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_STRING);
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
 
   ecma_collection_header_t *for_enumerable_p = main_collection_p;
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? main_collection_p : non_enum_collection_p;
-  (void) for_non_enumerable_p;
+  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
-  ecma_property_t *prim_value_prop_p = ecma_get_internal_property (obj_p,
-                                                                   ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
-  ecma_string_t *prim_value_str_p;
-  prim_value_str_p = ecma_get_string_from_value (ecma_get_internal_property_value (prim_value_prop_p));
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL);
+
+  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (ext_object_p->u.class_prop.u.value);
 
   ecma_length_t length = ecma_string_get_length (prim_value_str_p);
 
@@ -251,6 +130,10 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
 
     ecma_deref_ecma_string (name_p);
   }
+
+  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), true);
+  ecma_deref_ecma_string (length_str_p);
 } /* ecma_op_string_list_lazy_property_names */
 
 /**

@@ -1,4 +1,4 @@
-// Copyright 2014 Samsung Electronics Co., Ltd.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,52 @@ try
 } catch (e)
 {
   assert (e instanceof TypeError);
+}
+
+try
+{
+  eval ("'\\" + "101'");
+
+  assert (false);
+} catch (e)
+{
+  assert (e instanceof SyntaxError);
+}
+
+try
+{
+  var str1 = "'\\" + "0'";
+  var str2 = "'\\x" + "00'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
+}
+
+try
+{
+  var str1 = "'\\" + "0" + "\\" + "0" + "\\" + "0'";
+  var str2 = "'\\x" + "00" + "\\x" + "00" + "\\x" + "00'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
+}
+
+try
+{
+  var str1 = "'foo\\" + "0" + "bar'";
+  var str2 = "'foo\\x" + "00" + "bar'";
+  eval (str1);
+
+  assert (eval (str1) === eval (str2));
+} catch (e)
+{
+  assert (false);
 }
 
 (function (a) {

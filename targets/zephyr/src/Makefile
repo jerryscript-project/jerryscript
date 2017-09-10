@@ -1,4 +1,4 @@
-# Copyright © 2016 Intel Corporation
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,6 @@ $(info Compiling application)
 endif
 
 # Adding path for jerry script APIs
-ZEPHYRINCLUDE += -I$(JERRY_INCLUDE)
+ZEPHYRINCLUDE += $(JERRY_INCLUDE)
 
-obj-y += main-zephyr.o
+obj-y += main-zephyr.o getline-zephyr.o jerry-port.o

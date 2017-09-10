@@ -1,14 +1,11 @@
 # Produced files
-
-build/bin
-build/obj*
-build/prerequisites
-build/tests
+.mbedignore
+build/*
 
 # IDE related files
 nbproject
-**.sublime-project
-**.sublime-workspace
+*.sublime-project
+*.sublime-workspace
 .idea
 
 # Random Trash
@@ -17,33 +14,32 @@ nbproject
 *~
 core
 vgcore.*
-**.orig
-**.directory
-**.patch
+*.orig
+*.directory
+*.patch
 .tags*
 cscope.*
+__pycache__
+*.pyc
+.DS_Store
 
 # ctags and ID database
 tags
 ID
 
-# Prerequisites
-.prerequisites
-third-party/STM32F3-Discovery_FW_V1.1.0
-third-party/STM32F4-Discovery_FW_V1.1.0
-third-party/nuttx
-third-party/vera++
-third-party/cppcheck
-
 # targets
-jerry_targetjs.h
-targets/mbedk64f/libjerry
-targets/mbedk64f/build
-targets/mbedk64f/yotta_modules
-targets/mbedk64f/yotta_targets
+jerry-targetjs.h
+targets/mbed/libjerry
+targets/mbed/build
+targets/mbed/yotta_modules
+targets/mbed/yotta_targets
 .output
 targets/esp8266/output.map
 targets/esp8266/libs
 
 # Generated documentation
 docs/doxygen
+
+# Tests
+tests/test262/
+tests/unit-doc/*.c

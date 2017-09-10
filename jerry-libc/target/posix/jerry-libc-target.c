@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +40,10 @@
 
 #include "jerry-libc-defs.h"
 
-extern long int syscall_0 (long int syscall_no);
-extern long int syscall_1 (long int syscall_no, long int arg1);
-extern long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
-extern long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
+long int syscall_0 (long int syscall_no);
+long int syscall_1 (long int syscall_no, long int arg1);
+long int syscall_2 (long int syscall_no, long int arg1, long int arg2);
+long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int arg3);
 
 /**
  * Exit - cause normal process termination with specified status code
@@ -52,6 +51,10 @@ extern long int syscall_3 (long int syscall_no, long int arg1, long int arg2, lo
 void __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
+#ifdef ENABLE_INIT_FINI
+  libc_fini_array ();
+#endif /* ENABLE_INIT_FINI */
+
   syscall_1 (SYSCALL_NO (close), (long int) stdin);
   syscall_1 (SYSCALL_NO (close), (long int) stdout);
   syscall_1 (SYSCALL_NO (close), (long int) stderr);
@@ -134,13 +137,13 @@ fopen (const char *path, /**< file path */
       create_if_not_exist = true;
       if (mode[1] == '+')
       {
-        assert (!"unsupported mode a+");
+        assert (false && "unsupported mode a+");
       }
       break;
     }
     default:
     {
-      assert (!"unsupported mode");
+      assert (false && "unsupported mode");
     }
   }
 
@@ -178,7 +181,7 @@ fopen (const char *path, /**< file path */
 
   long int ret = syscall_3 (SYSCALL_NO (open), (long int) path, flags, access);
 
-  return (void *) (uintptr_t) (ret);
+  return ((ret < 0) ? NULL : (void *) (uintptr_t) (ret));
 } /* fopen */
 
 /**
@@ -272,7 +275,7 @@ gettimeofday (void *tp,  /**< struct timeval */
   return (int) syscall_2 (SYSCALL_NO (gettimeofday), (long int) tp, (long int) tzp);
 } /* gettimeofday */
 
-// FIXME
+/* FIXME */
 #if 0
 /**
  * Setup new memory limits

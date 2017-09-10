@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,19 @@
   syscall; \
   ret;
 
+#ifdef ENABLE_INIT_FINI
 /*
+ * call libc_init_array
+ */
+#define _INIT             \
+  call libc_init_array;
+#else /* !ENABLE_INIT_FINI */
+#define _INIT
+#endif /* ENABLE_INIT_FINI */
+
+/*
+ * call libc_init_array
+ *
  * mov argc ([%rsp]) -> %rdi
  * mov argv (%rsp + 0x8) -> %rsi
  *
@@ -76,15 +88,17 @@
  * infinite loop
  */
 #define _START            \
-   mov (%rsp), %rdi;      \
-   mov %rsp, %rsi;        \
-   add $8, %rsi;          \
-   callq main;            \
+  _INIT;                  \
                           \
-   mov %rax, %rdi;        \
-   callq exit;            \
-   1:                     \
-   jmp 1b
+  mov (%rsp), %rdi;       \
+  mov %rsp, %rsi;         \
+  add $8, %rsi;           \
+  callq main;             \
+                          \
+  mov %rax, %rdi;         \
+  callq exit;             \
+  1:                      \
+  jmp 1b;
 
 /*
  * setjmp

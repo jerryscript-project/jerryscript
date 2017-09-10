@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,50 +17,39 @@
  * Number built-in description
  */
 
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
-
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_NUMBER)
+#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
-// 15.7.3
+/* ECMA-262 v5, 15.7.3 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FIXED)
 
-// 15.7.3.4
+/* ECMA-262 v5, 15.7.3.4 */
 NUMBER_VALUE (LIT_MAGIC_STRING_NAN,
               ECMA_BUILTIN_NUMBER_NAN,
               ECMA_PROPERTY_FIXED)
 
-// 15.7.3.2
+/* ECMA-262 v5, 15.7.3.2 */
 NUMBER_VALUE (LIT_MAGIC_STRING_MAX_VALUE_U,
               ECMA_BUILTIN_NUMBER_MAX,
               ECMA_PROPERTY_FIXED)
 
-// 15.7.3.3
+/* ECMA-262 v5, 15.7.3.3 */
 NUMBER_VALUE (LIT_MAGIC_STRING_MIN_VALUE_U,
               ECMA_BUILTIN_NUMBER_MIN,
               ECMA_PROPERTY_FIXED)
 
-// 15.7.3.5
+/* ECMA-262 v5, 15.7.3.5 */
 NUMBER_VALUE (LIT_MAGIC_STRING_POSITIVE_INFINITY_U,
               ECMA_BUILTIN_NUMBER_POSITIVE_INFINITY,
               ECMA_PROPERTY_FIXED)
 
-// 15.7.3.6
+/* ECMA-262 v5, 15.7.3.6 */
 NUMBER_VALUE (LIT_MAGIC_STRING_NEGATIVE_INFINITY_U,
               ECMA_BUILTIN_NUMBER_NEGATIVE_INFINITY,
               ECMA_PROPERTY_FIXED)
@@ -68,14 +57,11 @@ NUMBER_VALUE (LIT_MAGIC_STRING_NEGATIVE_INFINITY_U,
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.7.3.1
+/* ECMA-262 v5, 15.7.3.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#undef OBJECT_ID
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
+#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -1,0 +1,26 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_delete_all.js:15
+(jerry-debugger) break do_delete_all.js:17
+Breakpoint 1 at tests/debugger/do_delete_all.js:17
+(jerry-debugger) b do_delete_all.js:18
+Breakpoint 2 at tests/debugger/do_delete_all.js:18
+(jerry-debugger) b do_delete_all.js:21
+Breakpoint 3 at tests/debugger/do_delete_all.js:21 (in delete_test() at line:20, col:1)
+(jerry-debugger) b do_delete_all:350
+No breakpoint found, do you want to add a pending breakpoint? (y or [n])
+Pending breakpoint at do_delete_all:350
+(jerry-debugger) b do_delete_all:37
+No breakpoint found, do you want to add a pending breakpoint? (y or [n])
+Pending breakpoint at do_delete_all:37
+(jerry-debugger) list
+=== Active breakpoints  ===
+ 1: tests/debugger/do_delete_all.js:17
+ 2: tests/debugger/do_delete_all.js:18
+ 3: tests/debugger/do_delete_all.js:21 (in delete_test() at line:20, col:1)
+=== Pending breakpoints ===
+ 4: do_delete_all:350 (pending)
+ 5: do_delete_all:37 (pending)
+(jerry-debugger) delete all
+(jerry-debugger) next
+Stopped at tests/debugger/do_delete_all.js:16
+(jerry-debugger) c

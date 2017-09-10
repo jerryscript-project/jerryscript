@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@
  * @{
  */
 
-extern void ecma_lcache_init (void);
-extern void ecma_lcache_insert (ecma_object_t *, ecma_string_t *, ecma_property_t *);
-extern ecma_property_t *ecma_lcache_lookup (ecma_object_t *, const ecma_string_t *);
-extern void ecma_lcache_invalidate (ecma_object_t *, ecma_string_t *, ecma_property_t *);
+void ecma_lcache_init (void);
+void ecma_lcache_insert (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *prop_p);
+ecma_property_t *ecma_lcache_lookup (ecma_object_t *object_p, const ecma_string_t *prop_name_p);
+void ecma_lcache_invalidate (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *prop_p);
 
 /**
  * @}

@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,24 +80,37 @@
   \
   pop {r4-r12, pc};
 
+#ifdef ENABLE_INIT_FINI
 /*
+ * bl libc_init_array
+ */
+#define _INIT           \
+  bl libc_init_array;
+#else /* !ENABLE_INIT_FINI */
+#define _INIT
+#endif /* ENABLE_INIT_FINI */
+
+/*
+ * bl libc_init_array
+ *
  * ldr argc ([sp + 0x0]) -> r0
  * add argv (sp + 0x4) -> r1
- *
  * bl main
  *
  * bl exit
  *
  * infinite loop
  */
-#define _START            \
-   ldr r0, [sp, #0];      \
-   add r1, sp, #4;        \
-   bl main;               \
-                          \
-   bl exit;               \
-   1:                     \
-   b 1b
+#define _START          \
+  _INIT;                \
+                        \
+  ldr r0, [sp, #0];     \
+  add r1, sp, #4;       \
+  bl main;              \
+                        \
+  bl exit;              \
+  1:                    \
+  b 1b;
 
 /**
  * If hard-float mode:

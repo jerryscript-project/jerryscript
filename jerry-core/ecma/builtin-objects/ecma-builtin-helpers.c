@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,9 +82,9 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
   /* Building string "[object #type#]" where type is 'Undefined',
      'Null' or one of possible object's classes.
-     The string with null character is maximum 19 characters long. */
-  const lit_utf8_size_t buffer_size = 19;
-  JMEM_DEFINE_LOCAL_ARRAY (str_buffer, buffer_size, lit_utf8_byte_t);
+     The string with null character is maximum 27 characters long. */
+  const lit_utf8_size_t buffer_size = 27;
+  lit_utf8_byte_t str_buffer[buffer_size];
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
 
@@ -106,8 +105,6 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   }
 
   ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
-
-  JMEM_FINALIZE_LOCAL_ARRAY (str_buffer);
 
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_helper_object_to_string */
@@ -165,7 +162,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
     }
     else
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
     }
 
     ECMA_FINALIZE (to_locale_value);
@@ -335,7 +332,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
   if (ecma_is_value_object (value)
       && (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL))
   {
-    ecma_string_t *magic_string_length_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+    ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
     /* 5.b.ii */
     ECMA_TRY_CATCH (arg_len_value,
                     ecma_op_object_get (ecma_get_object_from_value (value),
@@ -353,16 +350,15 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
       ecma_string_t *array_index_string_p = ecma_new_ecma_string_from_uint32 (array_index);
 
       /* 5.b.iii.2 */
-      if (ecma_op_object_get_property (ecma_get_object_from_value (value),
-                                       array_index_string_p) != NULL)
-      {
-        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
+      ECMA_TRY_CATCH (get_value,
+                      ecma_op_object_find (ecma_get_object_from_value (value),
+                                           array_index_string_p),
+                      ret_value);
 
+      if (ecma_is_value_found (get_value))
+      {
         /* 5.b.iii.3.a */
-        ECMA_TRY_CATCH (get_value,
-                        ecma_op_object_get (ecma_get_object_from_value (value),
-                                            array_index_string_p),
-                        ret_value);
+        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
 
         /* 5.b.iii.3.b */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
@@ -375,10 +371,10 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
                                                               false); /* Failure handling */
 
         JERRY_ASSERT (ecma_is_value_true (put_comp));
-
-        ECMA_FINALIZE (get_value);
         ecma_deref_ecma_string (new_array_index_string_p);
       }
+
+      ECMA_FINALIZE (get_value);
 
       ecma_deref_ecma_string (array_index_string_p);
     }

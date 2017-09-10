@@ -1,0 +1,17 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_pending_breakpoints.js:15
+(jerry-debugger) break f
+No breakpoint found, do you want to add a pending breakpoint? (y or [n])
+Pending breakpoint at f()
+(jerry-debugger) list
+=== Pending breakpoints ===
+ 1: f() (pending)
+(jerry-debugger) n
+out: pending-breakpoints
+Stopped at tests/debugger/do_pending_breakpoints.js:17
+(jerry-debugger) n
+Breakpoint 2 at <unknown>:1 (in f() at line:1, col:1)
+Stopped at tests/debugger/do_pending_breakpoints.js:19
+(jerry-debugger) c
+Stopped at breakpoint:2 <unknown>:1 (in f() at line:1, col:1)
+(jerry-debugger) c

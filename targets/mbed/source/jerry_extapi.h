@@ -1,4 +1,4 @@
-/* Copyright 2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,6 @@
 
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
-
-#define API_DATA_IS_OBJECT(val_p) \
-    ((val_p)->type == JERRY_API_DATA_TYPE_OBJECT)
-
-#define API_DATA_IS_FUNCTION(val_p) \
-    (API_DATA_IS_OBJECT (val_p) && \
-    jerry_api_is_function ((val_p)->u.v_object))
-
-#define JS_VALUE_TO_NUMBER(val_p) \
-    ((val_p)->type == JERRY_API_DATA_TYPE_FLOAT32 ? \
-       static_cast<double>((val_p)->u.v_float32) : \
-    (val_p)->type == JERRY_API_DATA_TYPE_FLOAT64 ? \
-       static_cast<double>((val_p)->u.v_float64) : \
-    static_cast<double>((val_p)->u.v_uint32))
 
 void js_register_functions (void);
 

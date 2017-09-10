@@ -1,4 +1,4 @@
-# Copyright 2015-2016 Samsung Electronics Co., Ltd.
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,232 +13,271 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (JerryCore C ASM)
+set(JERRY_CORE_NAME jerry-core)
+project (${JERRY_CORE_NAME} C)
 
-# Definitions
- # Get version information from git
-  execute_process(COMMAND git symbolic-ref -q HEAD
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                  OUTPUT_VARIABLE JERRY_GIT_BRANCH
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND git rev-parse HEAD
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                  OUTPUT_VARIABLE JERRY_GIT_COMMIT
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
- # Get build date
-  execute_process(COMMAND date +%d/%m/%Y
-                  OUTPUT_VARIABLE JERRY_BUILD_DATE
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Optional features
+set(FEATURE_CPOINTER_32_BIT  OFF     CACHE BOOL   "Enable 32 bit compressed pointers?")
+set(FEATURE_DEBUGGER         OFF     CACHE BOOL   "Enable JerryScript debugger?")
+set(FEATURE_ERROR_MESSAGES   OFF     CACHE BOOL   "Enable error messages?")
+set(FEATURE_EXTERNAL_CONTEXT OFF     CACHE BOOL   "Enable external context?")
+set(FEATURE_JS_PARSER        ON      CACHE BOOL   "Enable js-parser?")
+set(FEATURE_MEM_STATS        OFF     CACHE BOOL   "Enable memory statistics?")
+set(FEATURE_MEM_STRESS_TEST  OFF     CACHE BOOL   "Enable mem-stress test?")
+set(FEATURE_PARSER_DUMP      OFF     CACHE BOOL   "Enable parser byte-code dumps?")
+set(FEATURE_PROFILE          "es5.1" CACHE STRING "Use default or other profile?")
+set(FEATURE_REGEXP_DUMP      OFF     CACHE BOOL   "Enable regexp byte-code dumps?")
+set(FEATURE_SNAPSHOT_EXEC    OFF     CACHE BOOL   "Enable executing snapshot files?")
+set(FEATURE_SNAPSHOT_SAVE    OFF     CACHE BOOL   "Enable saving snapshot files?")
+set(FEATURE_SYSTEM_ALLOCATOR OFF     CACHE BOOL   "Enable system allocator?")
+set(FEATURE_VALGRIND         OFF     CACHE BOOL   "Enable Valgrind support?")
+set(FEATURE_VALGRIND_FREYA   OFF     CACHE BOOL   "Enable Valgrind-Freya support?")
+set(FEATURE_VM_EXEC_STOP     OFF     CACHE BOOL   "Enable VM execution stopping?")
+set(MEM_HEAP_SIZE_KB         "512"   CACHE STRING "Size of memory heap, in kilobytes")
 
-  set(DEFINES_JERRY
-      JERRY_ENABLE_SNAPSHOT_SAVE
-      JERRY_ENABLE_SNAPSHOT_EXEC
-      JERRY_BUILD_DATE="${JERRY_BUILD_DATE}"
-      JERRY_COMMIT_HASH="${JERRY_GIT_COMMIT}"
-      JERRY_BRANCH_NAME="${JERRY_GIT_BRANCH}")
+# Option overrides
+if(FEATURE_SYSTEM_ALLOCATOR)
+  set(FEATURE_CPOINTER_32_BIT ON)
 
- # Build modes
-  # Debug
-   set(DEFINES_JERRY_DEBUG JERRY_ENABLE_PRETTY_PRINTER)
+  set(FEATURE_CPOINTER_32_BIT_MESSAGE " (FORCED BY SYSTEM ALLOCATOR)")
+endif()
 
-  # Release
-   set(DEFINES_JERRY_RELEASE JERRY_NDEBUG)
+if(NOT FEATURE_JS_PARSER)
+  set(FEATURE_SNAPSHOT_EXEC ON)
+  set(FEATURE_PARSER_DUMP   OFF)
 
-  # Unit tests
-   set(DEFINES_JERRY_UNITTESTS JERRY_ENABLE_PRETTY_PRINTER)
+  set(FEATURE_SNAPSHOT_EXEC_MESSAGE " (FORCED BY DISABLED JS PARSER)")
+  set(FEATURE_PARSER_DUMP_MESSAGE   " (FORCED BY DISABLED JS PARSER)")
+endif()
 
- # Modifiers
-  # Full profile
-   set(DEFINES_FULL_PROFILE CONFIG_ECMA_NUMBER_TYPE=CONFIG_ECMA_NUMBER_FLOAT64)
-
-  # Compact profile
-   set(DEFINES_COMPACT_PROFILE
-       CONFIG_ECMA_COMPACT_PROFILE)
-
-  # Minimal compact profile
-   set(DEFINES_COMPACT_PROFILE_MINIMAL
-       CONFIG_ECMA_COMPACT_PROFILE
-#
-# Date and RegExp built-in objects are also disabled in non-minimal compact profile build
-#
-# CONFIG_ECMA_COMPACT_PROFILE_DISABLE_DATE_BUILTIN
-# CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
-#
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_STRING_BUILTIN
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_BOOLEAN_BUILTIN
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ARRAY_BUILTIN
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_MATH_BUILTIN
-       CONFIG_ECMA_COMPACT_PROFILE_DISABLE_JSON_BUILTIN)
-
- # Memory management stress-test mode
-  set(DEFINES_MEM_STRESS_TEST
-      JMEM_GC_BEFORE_EACH_ALLOC)
-
- # Memory statistics
-  set(DEFINES_MEMORY_STATISTICS JMEM_STATS)
-
- # Valgrind
-  set(DEFINES_JERRY_VALGRIND JERRY_VALGRIND)
-
- # Valgrind Freya
-  set(DEFINES_JERRY_VALGRIND_FREYA JERRY_VALGRIND_FREYA)
-
- # Platform-specific
-  # Linux
-
-  # MCU
-   # stm32f3
-    math(EXPR MEM_HEAP_AREA_SIZE_16K "16 * 1024")
-    set(DEFINES_JERRY_MCU_STM32F3 CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE_16K})
-   # stm32f4
-    math(EXPR MEM_HEAP_AREA_SIZE_16K "16 * 1024")
-    set(DEFINES_JERRY_MCU_STM32F4 CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE_16K})
-
-  # External
-   if(DEFINED EXTERNAL_MEM_HEAP_SIZE_KB)
-    math(EXPR MEM_HEAP_AREA_SIZE_EXTERNAL "${EXTERNAL_MEM_HEAP_SIZE_KB} * 1024")
-    set(DEFINES_JERRY_EXTERNAL CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE_EXTERNAL})
-   endif()
+# Status messages
+message(STATUS "FEATURE_CPOINTER_32_BIT   " ${FEATURE_CPOINTER_32_BIT} ${FEATURE_CPOINTER_32_BIT_MESSAGE})
+message(STATUS "FEATURE_DEBUGGER          " ${FEATURE_DEBUGGER})
+message(STATUS "FEATURE_ERROR_MESSAGES    " ${FEATURE_ERROR_MESSAGES})
+message(STATUS "FEATURE_EXTERNAL_CONTEXT  " ${FEATURE_EXTERNAL_CONTEXT})
+message(STATUS "FEATURE_JS_PARSER         " ${FEATURE_JS_PARSER})
+message(STATUS "FEATURE_MEM_STATS         " ${FEATURE_MEM_STATS})
+message(STATUS "FEATURE_MEM_STRESS_TEST   " ${FEATURE_MEM_STRESS_TEST})
+message(STATUS "FEATURE_PARSER_DUMP       " ${FEATURE_PARSER_DUMP} ${FEATURE_PARSER_DUMP_MESSAGE})
+message(STATUS "FEATURE_PROFILE           " ${FEATURE_PROFILE})
+message(STATUS "FEATURE_REGEXP_DUMP       " ${FEATURE_REGEXP_DUMP})
+message(STATUS "FEATURE_SNAPSHOT_EXEC     " ${FEATURE_SNAPSHOT_EXEC} ${FEATURE_SNAPSHOT_EXEC_MESSAGE})
+message(STATUS "FEATURE_SNAPSHOT_SAVE     " ${FEATURE_SNAPSHOT_SAVE})
+message(STATUS "FEATURE_SYSTEM_ALLOCATOR  " ${FEATURE_SYSTEM_ALLOCATOR})
+message(STATUS "FEATURE_VALGRIND          " ${FEATURE_VALGRIND})
+message(STATUS "FEATURE_VALGRIND_FREYA    " ${FEATURE_VALGRIND_FREYA})
+message(STATUS "FEATURE_VM_EXEC_STOP      " ${FEATURE_VM_EXEC_STOP})
+message(STATUS "MEM_HEAP_SIZE_KB          " ${MEM_HEAP_SIZE_KB})
 
 # Include directories
- set(INCLUDE_CORE
-     ${CMAKE_SOURCE_DIR}/jerry-core
-     ${CMAKE_SOURCE_DIR}/jerry-core/lit
-     ${CMAKE_SOURCE_DIR}/jerry-core/rcs
-     ${CMAKE_SOURCE_DIR}/jerry-core/jmem
-     ${CMAKE_SOURCE_DIR}/jerry-core/vm
-     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/builtin-objects
-     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/base
-     ${CMAKE_SOURCE_DIR}/jerry-core/ecma/operations
-     ${CMAKE_SOURCE_DIR}/jerry-core/parser/js
-     ${CMAKE_SOURCE_DIR}/jerry-core/parser/regexp
-     ${CMAKE_SOURCE_DIR}/jerry-core/jrt)
-
- # Third-party
-  # Valgrind
-   set(INCLUDE_THIRD_PARTY_VALGRIND ${CMAKE_SOURCE_DIR}/third-party/valgrind)
+set(INCLUDE_CORE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/api"
+    "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ecma/base"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jcontext"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jmem"
+    "${CMAKE_CURRENT_SOURCE_DIR}/jrt"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lit"
+    "${CMAKE_CURRENT_SOURCE_DIR}/parser/js"
+    "${CMAKE_CURRENT_SOURCE_DIR}/parser/regexp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vm")
 
 # Sources
- # Jerry core
-  file(GLOB SOURCE_CORE_API                   *.c)
-  file(GLOB SOURCE_CORE_LIT                   lit/*.c)
-  file(GLOB SOURCE_CORE_RCS                   rcs/*.c)
-  file(GLOB SOURCE_CORE_MEM                   jmem/*.c)
-  file(GLOB SOURCE_CORE_VM                    vm/*.c)
-  file(GLOB SOURCE_CORE_ECMA_BUILTINS         ecma/builtin-objects/*.c)
-  file(GLOB SOURCE_CORE_ECMA_BASE             ecma/base/*.c)
-  file(GLOB SOURCE_CORE_ECMA_OPERATIONS       ecma/operations/*.c)
-  file(GLOB SOURCE_CORE_PARSER_JS             parser/js/*.c)
-  file(GLOB SOURCE_CORE_PARSER_REGEXP         parser/regexp/*.c)
-  file(GLOB SOURCE_CORE_JRT                   jrt/*.c)
+# Jerry core
+file(GLOB SOURCE_CORE_API                       api/*.c)
+file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
+file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
+file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
+file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
+file(GLOB SOURCE_CORE_ECMA_OPERATIONS           ecma/operations/*.c)
+file(GLOB SOURCE_CORE_JCONTEXT                  jcontext/*.c)
+file(GLOB SOURCE_CORE_JMEM                      jmem/*.c)
+file(GLOB SOURCE_CORE_JRT                       jrt/*.c)
+file(GLOB SOURCE_CORE_LIT                       lit/*.c)
+file(GLOB SOURCE_CORE_PARSER_JS                 parser/js/*.c)
+file(GLOB SOURCE_CORE_PARSER_REGEXP             parser/regexp/*.c)
+file(GLOB SOURCE_CORE_VM                        vm/*.c)
 
-  set(SOURCE_CORE_FILES
-      ${SOURCE_CORE_API}
-      ${SOURCE_CORE_LIT}
-      ${SOURCE_CORE_RCS}
-      ${SOURCE_CORE_MEM}
-      ${SOURCE_CORE_VM}
-      ${SOURCE_CORE_ECMA_BUILTINS}
-      ${SOURCE_CORE_ECMA_BASE}
-      ${SOURCE_CORE_ECMA_OPERATIONS}
-      ${SOURCE_CORE_PARSER_JS}
-      ${SOURCE_CORE_PARSER_REGEXP}
-      ${SOURCE_CORE_JRT})
+set(SOURCE_CORE_FILES
+    ${SOURCE_CORE_API}
+    ${SOURCE_CORE_DEBUGGER}
+    ${SOURCE_CORE_ECMA_BASE}
+    ${SOURCE_CORE_ECMA_BUILTINS}
+    ${SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY}
+    ${SOURCE_CORE_ECMA_OPERATIONS}
+    ${SOURCE_CORE_JCONTEXT}
+    ${SOURCE_CORE_JMEM}
+    ${SOURCE_CORE_JRT}
+    ${SOURCE_CORE_LIT}
+    ${SOURCE_CORE_PARSER_JS}
+    ${SOURCE_CORE_PARSER_REGEXP}
+    ${SOURCE_CORE_VM})
 
- # Jerry port
- if(NOT ("${PORT_DIR}" STREQUAL ""))
-  file(GLOB SOURCE_PORT_FILES ${PORT_DIR}/*.c)
-  if (NOT USE_JERRY_LIBC)
-   set (DEFINES_JERRY ${DEFINES_JERRY} _BSD_SOURCE)
-  endif()
- endif()
-
- # All-in-one build
- if("${ENABLE_ALL_IN_ONE}" STREQUAL "ON")
+# All-in-one build
+if(ENABLE_ALL_IN_ONE)
   set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerry-all-in.c")
   list(SORT SOURCE_CORE_FILES)
   file(REMOVE ${ALL_IN_FILE})
 
   foreach(FILE ${SOURCE_CORE_FILES})
-   file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
+    file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
   endforeach()
 
-  foreach(FILE ${SOURCE_PORT_FILES})
-   file(APPEND ${ALL_IN_FILE} "#include \"${FILE}\"\n")
-  endforeach()
+  set(SOURCE_CORE_FILES ${ALL_IN_FILE})
+endif()
 
-  set(SOURCE_CORE ${ALL_IN_FILE})
- else()
-  set(SOURCE_CORE ${SOURCE_CORE_FILES} ${SOURCE_PORT_FILES})
- endif()
+# Third-party
+# Valgrind
+set(INCLUDE_THIRD_PARTY_VALGRIND "${CMAKE_SOURCE_DIR}/third-party/valgrind")
 
-# Per-option configuration
- # Valgrind
- if("${ENABLE_VALGRIND}" STREQUAL "ON")
-  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_VALGRIND})
-  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
- endif()
+# build mode specific compile/link flags
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_NDEBUG)
+endif()
 
- # Valgrind Freya
- if("${ENABLE_VALGRIND_FREYA}" STREQUAL "ON")
-  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_VALGRIND_FREYA})
-  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
- endif()
-
- # JERRY_HEAP_SECTION_ATTR
- if(DEFINED JERRY_HEAP_SECTION_ATTR)
+# Jerry heap-section
+if(DEFINED JERRY_HEAP_SECTION_ATTR)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_HEAP_SECTION_ATTR=${JERRY_HEAP_SECTION_ATTR})
- endif()
+endif()
 
- # Log
-  if("${ENABLE_LOG}" STREQUAL "ON")
-   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOG)
+# Checks the optional features
+# Enable 32 bit cpointers
+if(FEATURE_CPOINTER_32_BIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_CPOINTER_32_BIT)
+endif()
+
+# Fill error messages for builtin error objects
+if(FEATURE_ERROR_MESSAGES)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_ERROR_MESSAGES)
+endif()
+
+# Use external context instead of static one
+if(FEATURE_EXTERNAL_CONTEXT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_EXTERNAL_CONTEXT)
+endif()
+
+# JS-Parser
+if(FEATURE_JS_PARSER)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_JS_PARSER=1)
+else()
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_JS_PARSER=0)
+endif()
+
+# Memory statistics
+if(FEATURE_MEM_STATS)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_STATS)
+endif()
+
+# Enable debugger
+if(FEATURE_DEBUGGER)
+  if(JERRY_LIBC)
+    message(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
   endif()
 
- # Fill error messages for builtin error objects
-  if("${ENABLE_ERROR_MESSAGES}" STREQUAL "ON")
-   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_ERROR_MESSAGES)
+  # Sleep function availability check
+  INCLUDE (CheckIncludeFiles)
+  CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
+  CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
+  if(HAVE_TIME_H)
+    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_TIME_H)
+  elseif(HAVE_UNISTD_H)
+    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_UNISTD_H)
   endif()
 
-# Platform-specific configuration
- set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_${PLATFORM_EXT}})
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
+endif()
 
-# Targets declaration
- function(declare_targets_for_build_mode BUILD_MODE)
-  set(TARGET_NAME ${BUILD_MODE_PREFIX_${BUILD_MODE}})
-  set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_JERRY_${BUILD_MODE}})
+# Memory management stress-test mode
+if(FEATURE_MEM_STRESS_TEST)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_GC_BEFORE_EACH_ALLOC)
+endif()
 
-  function(declare_target_with_modifiers ) # modifiers are passed in ARGN implicit argument
-   foreach(MODIFIER ${ARGN})
-    set(TARGET_NAME ${TARGET_NAME}${MODIFIER_SUFFIX_${MODIFIER}})
-    set(DEFINES_JERRY ${DEFINES_JERRY} ${DEFINES_${MODIFIER}})
-   endforeach()
+# Parser byte-code dumps
+if(FEATURE_PARSER_DUMP)
+  set(DEFINES_JERRY ${DEFINES_JERRY} PARSER_DUMP_BYTE_CODE)
+endif()
 
-   add_library(${TARGET_NAME}.jerry-core STATIC ${SOURCE_CORE})
-   set_property(TARGET ${TARGET_NAME}.jerry-core
-                PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_JERRY} ${C_FLAGS_JERRY} ${FLAGS_COMMON_${BUILD_MODE}}")
-   target_compile_definitions(${TARGET_NAME}.jerry-core PRIVATE ${DEFINES_JERRY})
-   target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_CORE})
-   target_include_directories(${TARGET_NAME}.jerry-core PRIVATE ${INCLUDE_LIBM})
-   target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_LIBC_INTERFACE})
-   target_include_directories(${TARGET_NAME}.jerry-core SYSTEM PRIVATE ${INCLUDE_EXTERNAL_LIBS_INTERFACE})
+# Profile
+if (NOT IS_ABSOLUTE ${FEATURE_PROFILE})
+  set(FEATURE_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/profiles/${FEATURE_PROFILE}.profile")
+endif()
 
-   if("${BUILD_MODE}" STREQUAL "UNITTESTS")
-    target_compile_definitions(${TARGET_NAME}.jerry-core INTERFACE ${DEFINES_JERRY})
-    target_include_directories(${TARGET_NAME}.jerry-core INTERFACE ${INCLUDE_CORE})
-   endif()
-  endfunction()
+if(EXISTS ${FEATURE_PROFILE})
+  file(READ "${FEATURE_PROFILE}" PROFILE_SETTINGS)
+  string(REGEX REPLACE "^#.*$" "" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  string(REGEX REPLACE "[\r|\n]" ";" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  set(DEFINES_JERRY ${DEFINES_JERRY} ${PROFILE_SETTINGS})
+else()
+  message(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
+endif()
 
-  foreach(MODIFIERS_LIST ${MODIFIERS_LISTS})
-   separate_arguments(MODIFIERS_LIST)
+if(JERRY_LIBC AND FEATURE_SYSTEM_ALLOCATOR)
+  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the system allocator.")
+endif()
 
-   declare_target_with_modifiers(${MODIFIERS_LIST})
-  endforeach()
- endfunction()
+# RegExp byte-code dumps
+if(FEATURE_REGEXP_DUMP)
+  set(DEFINES_JERRY ${DEFINES_JERRY} REGEXP_DUMP_BYTE_CODE)
+endif()
 
- declare_targets_for_build_mode(DEBUG)
- declare_targets_for_build_mode(RELEASE)
- declare_targets_for_build_mode(UNITTESTS)
+# Snapshot exec
+if(FEATURE_SNAPSHOT_EXEC)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_SNAPSHOT_EXEC)
+endif()
 
+# Snapshot save
+if(FEATURE_SNAPSHOT_SAVE)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_SNAPSHOT_SAVE)
+endif()
+
+# Enable system allocator
+if(FEATURE_SYSTEM_ALLOCATOR)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_SYSTEM_ALLOCATOR)
+endif()
+
+# Valgrind
+if(FEATURE_VALGRIND)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND)
+  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+endif()
+
+# Valgrind Freya
+if(FEATURE_VALGRIND_FREYA)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND_FREYA)
+  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+endif()
+
+# Enable VM execution stopping
+if (FEATURE_VM_EXEC_STOP)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VM_EXEC_STOP)
+endif()
+
+# Size of heap
+math(EXPR MEM_HEAP_AREA_SIZE "${MEM_HEAP_SIZE_KB} * 1024")
+set(DEFINES_JERRY ${DEFINES_JERRY} CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZE})
+
+add_library(${JERRY_CORE_NAME} STATIC ${SOURCE_CORE_FILES})
+
+target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
+target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
+
+if(JERRY_LIBM)
+  target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
+endif()
+
+if(JERRY_LIBC)
+  target_link_libraries(${JERRY_CORE_NAME} jerry-libc)
+endif()
+
+separate_arguments(EXTERNAL_LINK_LIBS)
+foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
+  target_link_libraries(${JERRY_CORE_NAME} ${EXT_LIB})
+endforeach()
+
+install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)

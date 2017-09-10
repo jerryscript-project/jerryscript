@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,30 @@
  * @{
  */
 
-extern void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t);
+#ifdef JMEM_STATS
+void jmem_heap_stats_reset_peak (void);
+void jmem_heap_stats_print (void);
+#endif /* JMEM_STATS */
+
+void jmem_heap_init (void);
+void jmem_heap_finalize (void);
+bool jmem_is_heap_pointer (const void *pointer);
+
+void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity);
 
 /**
+ * \addtogroup poolman Memory pool manager
+ * @{
+ */
+#ifdef JMEM_STATS
+void jmem_pools_stats_print (void);
+#endif /* JMEM_STATS */
+
+void jmem_pools_finalize (void);
+void jmem_pools_collect_empty (void);
+
+/**
+ * @}
  * @}
  */
 

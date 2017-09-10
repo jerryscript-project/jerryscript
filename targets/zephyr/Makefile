@@ -1,4 +1,4 @@
-# Copyright © 2016 Intel Corporation
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ $(error Missing zephyr base)
 endif
 
 # For testing without real hardware use qemu_x86 instead of arduino_101
-BOARD ?= arduino_101_factory
+BOARD ?= arduino_101
 
 O ?= $(PROJECT_BASE)/outdir
 
@@ -34,7 +34,7 @@ ZEPHYRLIB   = $(ZEPHYR_BASE)/lib
 TARGET_ZEPHYR ?= ./targets/zephyr
 SOURCE_DIR = $(TARGET_ZEPHYR)/src
 
-export JERRY_INCLUDE = $(CURDIR)/jerry-core/
+export JERRY_INCLUDE = -I$(CURDIR)/jerry-core/include -I$(CURDIR)/jerry-ext/include
 
 MDEF_FILE = $(realpath $(SOURCE_DIR)/../prj.mdef)
 CONF_FILE = $(realpath $(SOURCE_DIR)/../prj.conf)
@@ -57,7 +57,6 @@ export ALL_LIBS
 LDFLAGS_zephyr += $(USER_LIB_INCLUDE_DIR)
 export LDFLAGS_zephyr
 
-include ${ZEPHYR_BASE}/Makefile.inc 
+include ${ZEPHYR_BASE}/Makefile.inc
 
 .PHONY = showconfig
-

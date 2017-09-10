@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,12 @@
  * Object built-in description
  */
 
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
-
-#ifndef NUMBER_VALUE
-# define NUMBER_VALUE(name, number_value, prop_attributes)
-#endif /* !NUMBER_VALUE */
-
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_OBJECT)
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
-// 15.2.3
+/* ECMA-262 v5, 15.2.3 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FIXED)
@@ -47,7 +30,7 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.2.3.1
+/* ECMA-262 v5, 15.2.3.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
@@ -68,9 +51,8 @@ ROUTINE (LIT_MAGIC_STRING_CREATE, ecma_builtin_object_object_create, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTIES_UL, ecma_builtin_object_object_define_properties, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_property, 3, 3)
 
-#undef OBJECT_ID
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL, ecma_builtin_object_object_set_prototype_of, 2, 2)
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

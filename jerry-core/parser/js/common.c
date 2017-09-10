@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +15,8 @@
 
 #include "common.h"
 #include "ecma-helpers.h"
+
+#if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -38,7 +39,7 @@ util_free_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
     {
-      jmem_heap_free_block_size_stored ((void *) literal_p->u.char_p);
+      jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
     }
   }
   else if ((literal_p->type == LEXER_FUNCTION_LITERAL)
@@ -59,7 +60,7 @@ util_print_chars (const uint8_t *char_p, /**< character pointer */
 {
   while (size > 0)
   {
-    printf ("%c", *char_p++);
+    JERRY_DEBUG_MSG ("%c", *char_p++);
     size--;
   }
 } /* util_print_chars */
@@ -73,7 +74,7 @@ util_print_number (ecma_number_t num_p) /**< number to print */
   lit_utf8_byte_t str_buf[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
   lit_utf8_size_t str_size = ecma_number_to_utf8_string (num_p, str_buf, sizeof (str_buf));
   str_buf[str_size] = 0;
-  printf ("%s", str_buf);
+  JERRY_DEBUG_MSG ("%s", str_buf);
 } /* util_print_number */
 
 /**
@@ -86,22 +87,22 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
   {
     if (literal_p->status_flags & LEXER_FLAG_VAR)
     {
-      printf ("var_ident(");
+      JERRY_DEBUG_MSG ("var_ident(");
     }
     else
     {
-      printf ("ident(");
+      JERRY_DEBUG_MSG ("ident(");
     }
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_FUNCTION_LITERAL)
   {
-    printf ("function");
+    JERRY_DEBUG_MSG ("function");
     return;
   }
   else if (literal_p->type == LEXER_STRING_LITERAL)
   {
-    printf ("string(");
+    JERRY_DEBUG_MSG ("string(");
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_NUMBER_LITERAL)
@@ -110,21 +111,21 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
 
     JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
 
-    printf ("number(");
+    JERRY_DEBUG_MSG ("number(");
     util_print_number (ecma_get_number_from_value (value_p->u.lit_number));
   }
   else if (literal_p->type == LEXER_REGEXP_LITERAL)
   {
-    printf ("regexp");
+    JERRY_DEBUG_MSG ("regexp");
     return;
   }
   else
   {
-    printf ("unknown");
+    JERRY_DEBUG_MSG ("unknown");
     return;
   }
 
-  printf (")");
+  JERRY_DEBUG_MSG (")");
 } /* util_print_literal */
 
 #endif /* PARSER_DUMP_BYTE_CODE */
@@ -134,3 +135,5 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
  * @}
  * @}
  */
+
+#endif /* JERRY_JS_PARSER */

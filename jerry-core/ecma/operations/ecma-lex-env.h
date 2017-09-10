@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,32 +30,34 @@
  * @{
  */
 
-extern void ecma_init_environment (void);
-extern void ecma_finalize_environment (void);
-extern ecma_object_t *ecma_get_global_environment (void);
+void ecma_init_global_lex_env (void);
+void ecma_finalize_global_lex_env (void);
+ecma_object_t *ecma_get_global_environment (void);
 
 /**
  * @}
  */
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
-extern ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_get_value_object_base (ecma_value_t, ecma_string_t *);
-extern ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *, ecma_string_t *, bool, ecma_value_t);
+ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, ecma_string_t *var_name_string_p,
+                                             bool is_strict);
+ecma_value_t ecma_op_get_value_object_base (ecma_value_t base_value, ecma_string_t *property_name_p);
+ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, ecma_string_t *var_name_string_p,
+                                             bool is_strict, ecma_value_t value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
-extern bool ecma_op_has_binding (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_create_mutable_binding (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_set_mutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t, bool);
-extern ecma_value_t ecma_op_get_binding_value (ecma_object_t *, ecma_string_t *, bool);
-extern ecma_value_t ecma_op_delete_binding (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_implicit_this_value (ecma_object_t *);
+bool ecma_op_has_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p);
+ecma_value_t ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, bool is_deletable);
+ecma_value_t ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value,
+                                          bool is_strict);
+ecma_value_t ecma_op_get_binding_value (ecma_object_t *lex_env_p, ecma_string_t *name_p, bool is_strict);
+ecma_value_t ecma_op_delete_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p);
+ecma_value_t ecma_op_implicit_this_value (ecma_object_t *lex_env_p);
 
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
-extern void ecma_op_create_immutable_binding (ecma_object_t *, ecma_string_t *);
-extern void ecma_op_initialize_immutable_binding (ecma_object_t *, ecma_string_t *, ecma_value_t);
+void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value);
 
-extern ecma_object_t *ecma_op_create_global_environment (ecma_object_t *);
+ecma_object_t *ecma_op_create_global_environment (ecma_object_t *);
 
 /**
  * @}

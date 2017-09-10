@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,14 +78,7 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 ecma_value_t
 opfunc_logical_not (ecma_value_t left_value) /**< left value */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-
-  if (ecma_op_to_boolean (left_value))
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-  }
-
-  return ret_value;
+  return ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
 } /* opfunc_logical_not */
 
 /**
@@ -153,12 +145,14 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                      ecma_value_t accessor) /**< accessor value */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (object);
-  ecma_string_t *accessor_name_p = ecma_get_string_from_value (accessor_name);
+  JERRY_ASSERT (ecma_is_value_string (accessor_name) || ecma_is_value_number (accessor_name));
+  ecma_string_t *accessor_name_p = ecma_get_string_from_value (ecma_op_to_string (accessor_name));
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
-  if (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+  if (property_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
   {
-    ecma_delete_property (object_p, property_p);
+    ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
     property_p = NULL;
   }
 
@@ -180,14 +174,15 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                                          accessor_name_p,
                                          getter_func_p,
                                          setter_func_p,
-                                         ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE);
+                                         ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE,
+                                         NULL);
   }
   else if (is_getter)
   {
     ecma_object_t *getter_func_p = ecma_get_object_from_value (accessor);
 
     ecma_set_named_accessor_property_getter (object_p,
-                                             property_p,
+                                             ECMA_PROPERTY_VALUE_PTR (property_p),
                                              getter_func_p);
   }
   else
@@ -195,9 +190,11 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
     ecma_object_t *setter_func_p = ecma_get_object_from_value (accessor);
 
     ecma_set_named_accessor_property_setter (object_p,
-                                             property_p,
+                                             ECMA_PROPERTY_VALUE_PTR (property_p),
                                              setter_func_p);
   }
+
+  ecma_deref_ecma_string (accessor_name_p);
 } /* opfunc_set_accessor */
 
 /**

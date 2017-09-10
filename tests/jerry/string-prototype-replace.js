@@ -1,5 +1,4 @@
-// Copyright 2015 University of Szeged
-// Copyright 2015 Samsung Electronics Co., Ltd.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +30,11 @@ assert ("1234".replace(23, 32) === "1324");
 
 assert ("abcabc".replace(/bc/, ":") === "a:abc");
 assert ("axbcxx".replace(/x*/g, ":") === ":a::b:c::");
+
+assert ("".replace(/|/g,"஻") === "஻");
+assert ("஻BB8B@abXde^".replace(/a/g,"$஻Bce((/a%") === "஻BB8B@$஻Bce((/a%bXde^");
+assert ("abcab".replace(/a/g,"˙Ł$Đ") === "˙Ł$Đbc˙Ł$Đb");
+assert ("˙Ł$Đbc˙Ł$Đb".replace("Ł$","ab") === "˙abĐbc˙Ł$Đb");
 
 assert (String.prototype.replace.call (12321, /2/g, ".") === "1.3.1");
 

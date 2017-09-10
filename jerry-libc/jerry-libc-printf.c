@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -253,7 +252,7 @@ libc_printf_write_d_i (FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      assert (!"unsupported length field L");
+      assert (false && "unsupported length field L");
     }
   }
 
@@ -355,13 +354,13 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
 
     case LIBC_PRINTF_ARG_LENGTH_TYPE_HIGHL:
     {
-      assert (!"unsupported length field L");
+      assert (false && "unsupported length field L");
       return;
     }
 
     default:
     {
-      assert (!"unexpected length field");
+      assert (false && "unexpected length field");
       return;
     }
   }
@@ -422,7 +421,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
 
     default:
     {
-      assert (!"unexpected type field");
+      assert (false && "unexpected type field");
       return;
     }
   }
@@ -522,10 +521,10 @@ vfprintf (FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '*')
       {
-        assert (!"unsupported width field *");
+        assert (false && "unsupported width field *");
       }
 
-      // If there is a number, recognize it as field width
+      /* If there is a number, recognize it as field width. */
       while (*format_iter_p >= '0' && *format_iter_p <= '9')
       {
         width = width * 10u + (uint32_t) (*format_iter_p - '0');
@@ -535,7 +534,7 @@ vfprintf (FILE *stream, /**< stream pointer */
 
       if (*format_iter_p == '.')
       {
-        assert (!"unsupported precision field");
+        assert (false && "unsupported precision field");
       }
 
       switch (*format_iter_p)
@@ -628,7 +627,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         case 'a':
         case 'A':
         {
-          assert (!"unsupported double type field");
+          assert (false && "unsupported double type field");
           break;
         }
 
@@ -636,7 +635,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            assert (!"unsupported length field L");
+            assert (false && "unsupported length field L");
           }
           else
           {
@@ -659,7 +658,7 @@ vfprintf (FILE *stream, /**< stream pointer */
         {
           if (length & LIBC_PRINTF_ARG_LENGTH_TYPE_L)
           {
-            assert (!"unsupported length field L");
+            assert (false && "unsupported length field L");
           }
           else
           {
@@ -699,7 +698,7 @@ vfprintf (FILE *stream, /**< stream pointer */
 
         case 'n':
         {
-          assert (!"unsupported type field n");
+          assert (false && "unsupported type field n");
         }
       }
     }

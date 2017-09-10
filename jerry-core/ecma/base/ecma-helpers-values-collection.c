@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -319,7 +318,8 @@ bool
 ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p) /**< context of iterator */
 {
   if (iterator_p->header_p == NULL
-      || unlikely (iterator_p->header_p->unit_number == 0))
+      || unlikely (iterator_p->header_p->unit_number == 0)
+      || unlikely (iterator_p->header_p->first_chunk_cp == JMEM_CP_NULL))
   {
     return false;
   }

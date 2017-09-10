@@ -69,19 +69,19 @@ make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 qemu
 ```
 # assume you are in harmony folder
 cd jerryscript
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
 ```
 
 This will generate the following libraries:
 ```
-./build/arduino_101_factory/librelease-cp_minimal.jerry-core.a
-./build/arduino_101_factory/librelease-cp_minimal.jerry-libm.lib.a
-./build/arduino_101_factory/librelease.external-cp_minimal-entry.a
+./build/arduino_101/librelease-cp_minimal.jerry-core.a
+./build/arduino_101/librelease-cp_minimal.jerry-libm.lib.a
+./build/arduino_101/librelease.external-cp_minimal-entry.a
 ```
 
 The final Zephyr image will be located here:
 ```
-./build/arduino_101_factory/zephyr/zephyr.strip
+./build/arduino_101/zephyr/zephyr.strip
 ```
 
 #### 5. Flashing
@@ -106,7 +106,7 @@ You can follow the Zephyr instructions to flash using the dfu-util command
 or use this helper:
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory dfu-x86
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 dfu-x86
 ```
 
 Make sure you have the factory bootloader in your device to use this method or it will not flash.
@@ -118,7 +118,7 @@ There is a helper function to flash using the JTAG and Flywatter2
 ![alt tag](docs/arduino_101.jpg?raw=true "Example")
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101_factory flash
+make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101 flash
 ```
 
 <warning> Careful if you flash the BOARD arduino_101, you will lose the bootloader
@@ -132,28 +132,21 @@ Test command line in a serial terminal.
 
 You should see something similar to this:
 ```
-Jerry Compilation May 26 2016 13:37:50
+JerryScript build: Aug 12 2016 17:12:55
+JerryScript API 1.0
+Zephyr version 1.4.0
 js>
 ```
 
 
 Run the example javascript command test function
 ```
-js> test
-Script [var test=0; for (t=100; t<1000; t++) test+=t; print ('Hi JS World! '+test);]
+js> var test=0; for (t=100; t<1000; t++) test+=t; print ('Hi JS World! '+test);
 Hi JS World! 494550
 ```
 
 
-Try more complex functions:
+Try a more complex function:
 ```
-js>function hello(t){t=t*10;return t}; print("result"+hello(10.5));
+js> function hello(t) {t=t*10;return t}; print("result"+hello(10.5));
 ```
-
-
-Help will provide a list of commands
-```
-> help
-```
-
-This program, is built in top of the Zephyr command line, so there is a limit of 10 spaces.

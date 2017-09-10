@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +32,8 @@
 #define DISPATCH_ROUTINE_ROUTINE_NAME \
   PASTE (PASTE (ecma_builtin_, BUILTIN_UNDERSCORED_ID), _dispatch_routine)
 
+#ifndef BUILTIN_CUSTOM_DISPATCH
+
 #define ROUTINE_ARG(n) , ecma_value_t arg ## n
 #define ROUTINE_ARG_LIST_0 ecma_value_t this_arg
 #define ROUTINE_ARG_LIST_1 ROUTINE_ARG_LIST_0 ROUTINE_ARG(1)
@@ -42,6 +43,11 @@
   const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   static ecma_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+  static ecma_value_t c_getter_func_name (ROUTINE_ARG_LIST_0); \
+  static ecma_value_t c_setter_func_name (ROUTINE_ARG_LIST_1);
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  static ecma_value_t c_getter_func_name (ROUTINE_ARG_LIST_0);
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG_LIST_NON_FIXED
 #undef ROUTINE_ARG_LIST_3
@@ -50,19 +56,30 @@
 #undef ROUTINE_ARG_LIST_0
 #undef ROUTINE_ARG
 
+/**
+ * List of built-in routine identifiers.
+ */
 enum
 {
   PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   ECMA_ROUTINE_ ## name ## c_function_name,
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+  ECMA_ACCESSOR_ ## name ## c_getter_func_name, \
+  ECMA_ACCESSOR_ ## name ## c_setter_func_name,
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  ECMA_ACCESSOR_ ## name ## c_getter_func_name,
 #include BUILTIN_INC_HEADER_NAME
 };
+
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
 
 /**
  * Built-in property list of the built-in object.
  */
 const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
 {
+#ifndef BUILTIN_CUSTOM_DISPATCH
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   { \
     name, \
@@ -70,6 +87,15 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
+#else /* BUILTIN_CUSTOM_DISPATCH */
+#define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ROUTINE, \
+    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
+  },
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes) \
   { \
     name, \
@@ -98,6 +124,20 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     prop_attributes, \
     magic_string_id \
   },
+#define ACCESSOR_READ_WRITE(name, c_getter_name, c_setter_name, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, \
+    prop_attributes, \
+    ECMA_ACCESSOR_READ_WRITE (ECMA_ACCESSOR_ ## name ## c_getter_name, ECMA_ACCESSOR_ ## name ## c_setter_name) \
+  },
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, \
+    prop_attributes, \
+    ECMA_ACCESSOR_ ## name ## c_getter_func_name \
+  },
 #include BUILTIN_INC_HEADER_NAME
   {
     LIT_MAGIC_STRING__COUNT,
@@ -106,6 +146,8 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     0
   }
 };
+
+#ifndef BUILTIN_CUSTOM_DISPATCH
 
 /**
  * Dispatcher of the built-in's routines
@@ -124,9 +166,9 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
                                                                     arguments' list */
 {
   /* the arguments may be unused for some built-ins */
-  (void) this_arg_value;
-  (void) arguments_list;
-  (void) arguments_number;
+  JERRY_UNUSED (this_arg_value);
+  JERRY_UNUSED (arguments_list);
+  JERRY_UNUSED (arguments_number);
 
   switch (builtin_routine_id)
   {
@@ -141,6 +183,20 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
        case ECMA_ROUTINE_ ## name ## c_function_name: \
        { \
          return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
+       }
+#define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
+       case ECMA_ACCESSOR_ ## name ## c_getter_func_name: \
+       { \
+         return c_getter_func_name(this_arg_value); \
+       } \
+       case ECMA_ACCESSOR_ ## name ## c_setter_func_name: \
+       { \
+         return c_setter_func_name(this_arg_value ROUTINE_ARG_LIST_1); \
+       }
+#define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
+       case ECMA_ACCESSOR_ ## name ## c_getter_func_name: \
+       { \
+         return c_getter_func_name(this_arg_value); \
        }
 #include BUILTIN_INC_HEADER_NAME
 #undef ROUTINE_ARG
@@ -157,11 +213,14 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
   }
 } /* DISPATCH_ROUTINE_ROUTINE_NAME */
 
+#endif /* !BUILTIN_CUSTOM_DISPATCH */
+
+#undef BUILTIN_INC_HEADER_NAME
+#undef BUILTIN_CUSTOM_DISPATCH
+#undef BUILTIN_UNDERSCORED_ID
+#undef DISPATCH_ROUTINE_ROUTINE_NAME
+#undef ECMA_BUILTIN_PROPERTY_NAME_INDEX
 #undef PASTE__
 #undef PASTE_
 #undef PASTE
 #undef PROPERTY_DESCRIPTOR_LIST_NAME
-#undef DISPATCH_ROUTINE_ROUTINE_NAME
-#undef BUILTIN_UNDERSCORED_ID
-#undef BUILTIN_INC_HEADER_NAME
-#undef ECMA_BUILTIN_PROPERTY_NAME_INDEX

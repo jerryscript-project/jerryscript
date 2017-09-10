@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +55,7 @@ typedef enum
   PARSER_ERR_INVALID_REGEXP,                          /**< invalid regular expression */
   PARSER_ERR_UNKNOWN_REGEXP_FLAG,                     /**< unknown regexp flag */
   PARSER_ERR_DUPLICATED_REGEXP_FLAG,                  /**< duplicated regexp flag */
-  PARSER_ERR_UNSUPPORTED_REGEXP,                      /**< regular expression is not supported in compact profile */
+  PARSER_ERR_UNSUPPORTED_REGEXP,                      /**< regular expression is not supported */
 
   PARSER_ERR_IDENTIFIER_TOO_LONG,                     /**< too long identifier */
   PARSER_ERR_STRING_TOO_LONG,                         /**< too long string literal */
@@ -126,14 +125,13 @@ typedef struct
   parser_error_t error;                               /**< error code */
   parser_line_counter_t line;                         /**< line where the error occured */
   parser_line_counter_t column;                       /**< column where the error occured */
-} parser_error_location;
+} parser_error_location_t;
 
 /* Note: source must be a valid UTF-8 string */
-extern ecma_value_t parser_parse_script (const uint8_t *, size_t, bool, ecma_compiled_code_t **);
+ecma_value_t parser_parse_script (const uint8_t *source_p, size_t size, bool is_strict,
+                                  ecma_compiled_code_t **bytecode_data_p);
 
 const char *parser_error_to_string (parser_error_t);
-
-extern void parser_set_show_instrs (int);
 
 /**
  * @}

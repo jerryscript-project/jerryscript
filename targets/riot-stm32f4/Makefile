@@ -1,5 +1,4 @@
-# Copyright 2016 Samsung Electronics Co., Ltd.
-# Copyright 2016 University of Szeged
+# Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,13 +37,14 @@ CFLAGS += -DDEVELHELP
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
-INCLUDES += -I$(JERRYDIR)/jerry-core/
+INCLUDES += -I$(JERRYDIR)/jerry-core/include -I$(JERRYDIR)/jerry-ext/include
 
 # Add the shell and some shell commands
 USEMODULE += shell
 USEMODULE += shell_commands
 
-# Add the jerry lib
-USEMODULE += libjerrycore
+# Add the jerry libs
+USEMODULE += libjerrycore libjerryport-minimal libjerryext
+
 
 include $(RIOTBASE)/Makefile.include

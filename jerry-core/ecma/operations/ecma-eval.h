@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +25,12 @@
  * @{
  */
 
-extern ecma_value_t
-ecma_op_eval (ecma_string_t *, bool, bool);
+ecma_value_t
+ecma_op_eval (ecma_string_t *code_p, bool is_direct, bool is_called_from_strict_mode_code);
 
-extern ecma_value_t
-ecma_op_eval_chars_buffer (const lit_utf8_byte_t *, size_t, bool, bool);
+ecma_value_t
+ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, size_t code_buffer_size, bool is_direct,
+                           bool is_called_from_strict_mode_code);
 
 /**
  * @}

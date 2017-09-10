@@ -1,0 +1,9 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_next.js:15
+(jerry-debugger) next
+out: next test
+Stopped at tests/debugger/do_next.js:17
+(jerry-debugger) next
+out: var cat
+Stopped at tests/debugger/do_next.js:18
+(jerry-debugger) c

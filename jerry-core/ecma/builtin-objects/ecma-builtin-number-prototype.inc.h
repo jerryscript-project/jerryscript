@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,14 @@
  * Number.prototype built-in description
  */
 
-#ifndef OBJECT_ID
-# define OBJECT_ID(builtin_object_id)
-#endif /* !OBJECT_ID */
+#include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef OBJECT_VALUE
-# define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
-#endif /* !OBJECT_VALUE */
-
-#ifndef ROUTINE
-# define ROUTINE(name, c_function_name, args_number, length_prop_value)
-#endif /* !ROUTINE */
-
-/* Object identifier */
-OBJECT_ID (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE)
+#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
-// 15.7.4.1
+/* ECMA-262 v5, 15.7.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_NUMBER,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
@@ -49,9 +38,6 @@ ROUTINE (LIT_MAGIC_STRING_TO_FIXED_UL, ecma_builtin_number_prototype_object_to_f
 ROUTINE (LIT_MAGIC_STRING_TO_EXPONENTIAL_UL, ecma_builtin_number_prototype_object_to_exponential, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_PRECISION_UL, ecma_builtin_number_prototype_object_to_precision, 1, 1)
 
-#undef OBJECT_ID
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#undef OBJECT_VALUE
-#undef ROUTINE
+#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"

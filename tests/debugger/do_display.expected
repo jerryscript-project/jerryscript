@@ -1,0 +1,56 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_display.js:20
+(jerry-debugger) b a
+Breakpoint 1 at tests/debugger/do_display.js:15 (in a() at line:15, col:1)
+(jerry-debugger) b b
+Breakpoint 2 at tests/debugger/do_display.js:16 (in b() at line:16, col:1)
+(jerry-debugger) b c
+Breakpoint 3 at tests/debugger/do_display.js:17 (in c() at line:17, col:1)
+(jerry-debugger) b d
+Breakpoint 4 at tests/debugger/do_display.js:18 (in d() at line:18, col:1)
+(jerry-debugger) display
+Non-negative integer number expected, 0 turns off this function
+(jerry-debugger) c
+Stopped at breakpoint:1 tests/debugger/do_display.js:15 (in a() at line:15, col:1)
+(jerry-debugger) display 2
+(jerry-debugger) c
+out: hi
+Stopped at breakpoint:2 tests/debugger/do_display.js:16 (in b() at line:16, col:1)
+Source: tests/debugger/do_display.js
+  15   function a() { print("hi"); }
+  16 > function b() { print("welcome"); }
+  17   function c() { print("hello"); }
+(jerry-debugger) display 5435
+(jerry-debugger) c
+out: welcome
+Stopped at breakpoint:3 tests/debugger/do_display.js:17 (in c() at line:17, col:1)
+Source: tests/debugger/do_display.js
+   1   // Copyright JS Foundation and other contributors, http://js.foundation
+   2   //
+   3   // Licensed under the Apache License, Version 2.0 (the "License");
+   4   // you may not use this file except in compliance with the License.
+   5   // You may obtain a copy of the License at
+   6   //
+   7   //     http://www.apache.org/licenses/LICENSE-2.0
+   8   //
+   9   // Unless required by applicable law or agreed to in writing, software
+  10   // distributed under the License is distributed on an "AS IS" BASIS
+  11   // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  12   // See the License for the specific language governing permissions and
+  13   // limitations under the License.
+  14   
+  15   function a() { print("hi"); }
+  16   function b() { print("welcome"); }
+  17 > function c() { print("hello"); }
+  18   function d() { print("goodbye"); }
+  19   
+  20   a();
+  21   b();
+  22   c();
+  23   d();
+(jerry-debugger) display 0
+(jerry-debugger) c
+out: hello
+Stopped at breakpoint:4 tests/debugger/do_display.js:18 (in d() at line:18, col:1)
+(jerry-debugger) c
+out: goodbye

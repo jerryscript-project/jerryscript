@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +33,7 @@ void __attribute__ ((noreturn)) exit (int);
 void __attribute__ ((noreturn)) abort (void);
 int rand (void);
 void srand (unsigned int);
+long int strtol (const char *, char **, int);
 
 #ifdef __cplusplus
 }

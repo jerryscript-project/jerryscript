@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,97 +46,6 @@
  * \addtogroup global ECMA Global object built-in
  * @{
  */
-
-/**
- * The implementation-defined Global object's 'print' routine
- *
- * The routine converts all of its arguments to strings and outputs them using 'printf'.
- *
- * Code points, with except of NUL character, that are representable with one utf8-byte
- * are outputted as is, using "%c" format argument, and other code points are outputted as "\uhhll",
- * where hh and ll are values of code point's high and low bytes, correspondingly.
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_global_object_print (ecma_value_t this_arg, /**< this argument */
-                                  const ecma_value_t args[], /**< arguments list */
-                                  ecma_length_t args_number) /**< number of arguments */
-{
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  /* TODO: Move the 'print' routine out of engine core. */
-
-  for (ecma_length_t arg_index = 0;
-       ecma_is_value_empty (ret_value) && arg_index < args_number;
-       arg_index++)
-  {
-    ECMA_TRY_CATCH (str_value,
-                    ecma_op_to_string (args[arg_index]),
-                    ret_value);
-
-    ecma_string_t *str_p = ecma_get_string_from_value (str_value);
-
-    lit_utf8_size_t utf8_str_size = ecma_string_get_size (str_p);
-
-    JMEM_DEFINE_LOCAL_ARRAY (utf8_str_p,
-                             utf8_str_size,
-                             lit_utf8_byte_t);
-
-    ecma_string_to_utf8_bytes (str_p, utf8_str_p, utf8_str_size);
-
-    const lit_utf8_byte_t *utf8_str_curr_p = utf8_str_p;
-    const lit_utf8_byte_t *utf8_str_end_p = utf8_str_p + utf8_str_size;
-
-    while (utf8_str_curr_p < utf8_str_end_p)
-    {
-      ecma_char_t code_unit = lit_utf8_read_next (&utf8_str_curr_p);
-
-      if (code_unit == LIT_CHAR_NULL)
-      {
-        printf ("\\u0000");
-      }
-      else if (code_unit <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-      {
-        printf ("%c", (char) code_unit);
-      }
-      else
-      {
-        JERRY_STATIC_ASSERT (sizeof (code_unit) == 2,
-                             size_of_code_point_must_be_equal_to_2_bytes);
-
-        uint32_t byte_high = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_unit,
-                                                               JERRY_BITSINBYTE,
-                                                               JERRY_BITSINBYTE);
-        uint32_t byte_low = (uint32_t) JRT_EXTRACT_BIT_FIELD (ecma_char_t, code_unit,
-                                                              0,
-                                                              JERRY_BITSINBYTE);
-
-        printf ("\\u%02x%02x", byte_high, byte_low);
-      }
-    }
-
-    if (arg_index < args_number - 1)
-    {
-      printf (" ");
-    }
-
-    JMEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
-
-    ECMA_FINALIZE (str_value);
-  }
-
-  printf ("\n");
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  }
-
-  return ret_value;
-} /* ecma_builtin_global_object_print */
 
 /**
  * The Global object's 'eval' routine
@@ -346,7 +254,7 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument 
         while (string_curr_p > start_p)
         {
           ecma_char_t current_char = *(--string_curr_p);
-          ecma_number_t current_number;
+          ecma_number_t current_number = ECMA_NUMBER_MINUS_ONE;
 
           if ((current_char >= LIT_CHAR_LOWERCASE_A && current_char <= LIT_CHAR_LOWERCASE_Z))
           {
@@ -776,7 +684,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
     {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
       break;
     }
 
@@ -832,7 +740,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
 
       if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
         break;
       }
 
@@ -870,7 +778,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         }
         else
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 character."));
           break;
         }
 
@@ -902,9 +810,9 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         }
 
         if (!is_valid
-            || !lit_is_utf8_string_valid (octets, bytes_count))
+            || !lit_is_valid_utf8_string (octets, bytes_count))
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string."));
           break;
         }
 
@@ -914,7 +822,7 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
         if (lit_is_code_point_utf16_high_surrogate (cp)
             || lit_is_code_point_utf16_low_surrogate (cp))
         {
-          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+          ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 codepoint."));
           break;
         }
 
@@ -926,14 +834,14 @@ ecma_builtin_global_object_decode_uri_helper (ecma_value_t uri, /**< uri argumen
     {
       JERRY_ASSERT (output_start_p + output_size == output_char_p);
 
-      if (lit_is_cesu8_string_valid (output_start_p, output_size))
+      if (lit_is_valid_cesu8_string (output_start_p, output_size))
       {
         ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
         ret_value = ecma_make_string_value (output_string_p);
       }
       else
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid CESU8 string."));
       }
     }
 
@@ -1044,7 +952,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
 
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
       break;
     }
 
@@ -1054,7 +962,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
     {
       if (input_char_p == input_end_p)
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
         break;
       }
 
@@ -1068,7 +976,7 @@ ecma_builtin_global_object_encode_uri_helper (ecma_value_t uri, /**< uri argumen
       }
       else
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG (""));
+        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
         break;
       }
     }
@@ -1192,7 +1100,7 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg, /**< thi
   return ecma_builtin_global_object_encode_uri_helper (uri_component, unescaped_uri_component_set);
 } /* ecma_builtin_global_object_encode_uri_component */
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN
+#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
 /*
  * Maximum value of a byte.
@@ -1434,7 +1342,7 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg, /**< this argument *
   return ret_value;
 } /* ecma_builtin_global_object_unescape */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ANNEXB_BUILTIN */
+#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
 
 /**
  * @}

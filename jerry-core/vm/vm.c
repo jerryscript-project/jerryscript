@@ -1,5 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +30,10 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 #include "opcodes.h"
 #include "vm.h"
 #include "vm-stack.h"
-
-#include <alloca.h>
 
 /** \addtogroup vm Virtual machine
  * @{
@@ -43,16 +41,6 @@
  * \addtogroup vm_executor Executor
  * @{
  */
-
-/**
- * Top (current) interpreter context
- */
-static vm_frame_ctx_t *vm_top_context_p = NULL;
-
-/**
- * Direct call from eval;
- */
-static bool is_direct_eval_form_call = false;
 
 /**
  * Get the value of object[property].
@@ -73,7 +61,13 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     {
       ecma_integer_value_t int_value = ecma_get_integer_from_value (property);
 
-      if (int_value >= 0)
+#ifdef JERRY_CPOINTER_32_BIT
+      bool limit_check = (int_value >= 0);
+#else /* !JERRY_CPOINTER_32_BIT */
+      bool limit_check = (int_value >= 0 && int_value < (ecma_integer_value_t) (UINT16_MAX + 1));
+#endif
+
+      if (limit_check)
       {
         /* Statically allocated string for searching. */
         ecma_init_ecma_string_from_uint32 (&uint32_string, (uint32_t) int_value);
@@ -90,19 +84,27 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
       if (property_p != NULL &&
-          ECMA_PROPERTY_GET_TYPE (property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+          ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
-        return ecma_fast_copy_value (ecma_get_named_data_property_value (property_p));
+        return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
 
       /* There is no need to free the name. */
-      return ecma_op_get_value_object_base (object, property_name_p);
+      return ecma_op_object_get (ecma_get_object_from_value (object), property_name_p);
     }
   }
 
   if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (""));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+                                                                      "Cannot read property '%' of %",
+                                                                      property,
+                                                                      object);
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+    ecma_value_t error_value = ecma_raise_type_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+    return error_value;
   }
 
   ecma_value_t prop_to_string_result = ecma_op_to_string (property);
@@ -142,8 +144,20 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 
     if (ECMA_IS_VALUE_ERROR (to_object))
     {
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+      ecma_free_value (to_object);
+
+      ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+                                                                        "Cannot set property '%' of %",
+                                                                        property,
+                                                                        object);
+      ecma_free_value (property);
+
+      return error_value;
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
       ecma_free_value (property);
       return to_object;
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
     }
 
     object = to_object;
@@ -154,7 +168,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     ecma_value_t to_string = ecma_op_to_string (property);
     ecma_fast_free_value (property);
 
-    if (ECMA_IS_VALUE_ERROR (property))
+    if (ECMA_IS_VALUE_ERROR (to_string))
     {
       ecma_free_value (object);
       return to_string;
@@ -193,7 +207,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 /**
  * Decode table for both opcodes and extended opcodes.
  */
-static const uint16_t vm_decode_table[] =
+static const uint16_t vm_decode_table[] JERRY_CONST_DATA =
 {
   CBC_OPCODE_LIST
   CBC_EXT_OPCODE_LIST
@@ -213,18 +227,15 @@ ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
-  ecma_object_t *lex_env_p = ecma_get_global_environment ();
 
   ecma_value_t ret_value = vm_run (bytecode_p,
                                    ecma_make_object_value (glob_obj_p),
-                                   lex_env_p,
+                                   ecma_get_global_environment (),
                                    false,
                                    NULL,
                                    0);
 
   ecma_deref_object (glob_obj_p);
-  ecma_deref_object (lex_env_p);
-
   return ret_value;
 } /* vm_run_global */
 
@@ -237,17 +248,14 @@ ecma_value_t
 vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
              bool is_direct) /**< is eval called in direct mode? */
 {
-  bool is_strict = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-
   ecma_value_t this_binding;
   ecma_object_t *lex_env_p;
 
   /* ECMA-262 v5, 10.4.2 */
   if (is_direct)
   {
-    this_binding = ecma_copy_value (vm_top_context_p->this_binding);
-    lex_env_p = vm_top_context_p->lex_env_p;
-    ecma_ref_object (vm_top_context_p->lex_env_p);
+    this_binding = ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->this_binding);
+    lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
   }
   else
   {
@@ -255,7 +263,9 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     lex_env_p = ecma_get_global_environment ();
   }
 
-  if (is_strict)
+  ecma_ref_object (lex_env_p);
+
+  if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0)
   {
     ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
     ecma_deref_object (lex_env_p);
@@ -292,17 +302,14 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   if (is_function)
   {
-    bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-
     ecma_object_t *func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                                is_strict,
                                                                 bytecode_p);
 
     return ecma_make_object_value (func_obj_p);
   }
   else
   {
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     ecma_value_t ret_value;
     ret_value = ecma_op_create_regexp_object_from_bytecode ((re_compiled_code_t *) bytecode_p);
 
@@ -313,17 +320,17 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
 
     return ret_value;
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNIMPLEMENTED ("Regular Expressions are not supported in compact profile!");
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
+    JERRY_UNREACHABLE (); /* Regular Expressions are not supported in the selected profile! */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 } /* vm_construct_literal_object */
 
 /**
  * Get implicit this value
  *
- * @return true, if the implicit 'this' value is updated,
- *         false - otherwise.
+ * @return true - if the implicit 'this' value is updated,
+ *         false - otherwise
  */
 static inline bool __attr_always_inline___
 vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value */
@@ -374,7 +381,13 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   {
     this_value = stack_top_p[-3];
 
-    if (vm_get_implicit_this_value (&this_value))
+    if (this_value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_REGISTER_REF))
+    {
+      /* Lexical environment cannot be 'this' value. */
+      stack_top_p[-2] = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      this_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    }
+    else if (vm_get_implicit_this_value (&this_value))
     {
       ecma_free_value (stack_top_p[-3]);
       stack_top_p[-3] = this_value;
@@ -386,7 +399,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_op_is_callable (func_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
   }
   else
   {
@@ -398,7 +411,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                               arguments_list_len);
   }
 
-  is_direct_eval_form_call = false;
+  JERRY_CONTEXT (is_direct_eval_form_call) = false;
 
   /* Free registers. */
   for (uint32_t i = 0; i < arguments_list_len; i++)
@@ -444,7 +457,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_is_constructor (constructor_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (""));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
   }
   else
   {
@@ -496,8 +509,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
                                                               literal_start_p[literal_index]); \
         result = ecma_op_resolve_reference_value (frame_ctx_p->lex_env_p, \
-                                                  name_p, \
-                                                  is_strict); \
+                                                  name_p); \
         \
         if (ECMA_IS_VALUE_ERROR (result)) \
         { \
@@ -534,17 +546,18 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
  *
  * @return ecma value
  */
-static ecma_value_t
+static void
 vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
-  ecma_value_t result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
   jmem_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
+  jmem_cpointer_t self_reference;
+  ECMA_SET_NON_NULL_POINTER (self_reference, bytecode_header_p);
 
   /* Prepare. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
@@ -614,14 +627,8 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t value_index;
           ecma_value_t lit_value;
-          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                literal_start_p[literal_index]);
-
-          vm_var_decl (frame_ctx_p, name_p);
 
           READ_LITERAL_INDEX (value_index);
-
-          ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
 
           if (value_index < register_end)
           {
@@ -633,15 +640,36 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      literal_start_p[value_index]);
           }
 
-          /* TODO: check the return value */
-          ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                          name_p,
-                                          is_strict,
-                                          lit_value);
-
-          if (value_index >= register_end)
+          if (literal_index < register_end)
           {
-            ecma_free_value (lit_value);
+            frame_ctx_p->registers_p[literal_index] = lit_value;
+          }
+          else
+          {
+            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                  literal_start_p[literal_index]);
+
+            if (self_reference == literal_start_p[value_index])
+            {
+              ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
+            }
+            else
+            {
+              vm_var_decl (frame_ctx_p, name_p);
+
+              ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
+
+              ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+                                                                              name_p,
+                                                                              is_strict,
+                                                                              lit_value);
+              ecma_free_value (put_value_result);
+            }
+
+            if (value_index >= register_end)
+            {
+              ecma_free_value (lit_value);
+            }
           }
 
           literal_index++;
@@ -661,12 +689,10 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       default:
       {
         frame_ctx_p->byte_code_p = byte_code_p;
-        return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        return;
       }
     }
   }
-
-  return result;
 } /* vm_init_loop */
 
 /**
@@ -758,9 +784,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             case VM_OC_GET_LITERAL_LITERAL:
             {
-              uint16_t literal_index;
-              READ_LITERAL_INDEX (literal_index);
-              READ_LITERAL (literal_index, right_value);
+              uint16_t second_literal_index;
+              READ_LITERAL_INDEX (second_literal_index);
+              READ_LITERAL (second_literal_index, right_value);
               break;
             }
             case VM_OC_GET_STACK_LITERAL:
@@ -813,7 +839,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           default:
           {
-            JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2);
+            JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2
+                          || CBC_BRANCH_OFFSET_LENGTH (opcode) == 3);
 
             branch_offset <<= 8;
             branch_offset |= *(byte_code_p++);
@@ -825,6 +852,29 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         if (opcode_data & VM_OC_BACKWARD_BRANCH)
         {
+#ifdef JERRY_VM_EXEC_STOP
+          if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL
+              && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
+          {
+            result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
+
+            if (ecma_is_value_undefined (result))
+            {
+              JERRY_CONTEXT (vm_exec_stop_counter) = JERRY_CONTEXT (vm_exec_stop_frequency);
+            }
+            else
+            {
+              JERRY_CONTEXT (vm_exec_stop_counter) = 1;
+
+              if (!ECMA_IS_VALUE_ERROR (result))
+              {
+                result = ecma_make_error_value (result);
+              }
+              goto error;
+            }
+          }
+#endif /* JERRY_VM_EXEC_STOP */
+
           branch_offset = -branch_offset;
         }
       }
@@ -919,9 +969,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
           ecma_object_t *obj_p = ecma_create_object (prototype_p,
-                                                     false,
-                                                     true,
+                                                     0,
                                                      ECMA_OBJECT_TYPE_GENERAL);
+
           ecma_deref_object (prototype_p);
           *stack_top_p++ = ecma_make_object_value (obj_p);
           continue;
@@ -950,20 +1000,28 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           property_p = ecma_find_named_property (object_p, prop_name_p);
 
-          if (property_p != NULL && ECMA_PROPERTY_GET_TYPE (property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
+          if (property_p != NULL
+              && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
           {
-            ecma_delete_property (object_p, property_p);
+            ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
             property_p = NULL;
           }
 
+          ecma_property_value_t *prop_value_p;
+
           if (property_p == NULL)
           {
-            property_p = ecma_create_named_data_property (object_p,
-                                                          prop_name_p,
-                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+            prop_value_p = ecma_create_named_data_property (object_p,
+                                                            prop_name_p,
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            NULL);
+          }
+          else
+          {
+            prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
           }
 
-          ecma_named_data_property_assign_value (object_p, property_p, left_value);
+          ecma_named_data_property_assign_value (object_p, prop_value_p, left_value);
 
           if (!ecma_is_value_string (right_value))
           {
@@ -1002,23 +1060,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_APPEND_ARRAY:
         {
           ecma_object_t *array_obj_p;
-          ecma_string_t *length_str_p;
-          ecma_property_t *length_prop_p;
           uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
 
           stack_top_p -= values_length;
 
           array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
-          length_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-          length_prop_p = ecma_get_named_property (array_obj_p, length_str_p);
+          ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
 
-          JERRY_ASSERT (length_prop_p != NULL);
-
-          left_value = ecma_get_named_data_property_value (length_prop_p);
-          length_num = ecma_get_uint32_from_value (left_value);
-
-          ecma_deref_ecma_string (length_str_p);
+          length_num = ext_array_obj_p->u.array.length;
 
           for (uint32_t i = 0; i < values_length; i++)
           {
@@ -1026,14 +1076,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
-              ecma_property_t *prop_p;
-              prop_p = ecma_create_named_data_property (array_obj_p,
-                                                        index_str_p,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+              ecma_property_value_t *prop_value_p;
+              prop_value_p = ecma_create_named_data_property (array_obj_p,
+                                                              index_str_p,
+                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                              NULL);
 
-              JERRY_ASSERT (ecma_is_value_undefined (ecma_get_named_data_property_value (prop_p)));
-
-              ecma_set_named_data_property_value (prop_p, stack_top_p[i]);
+              JERRY_ASSERT (ecma_is_value_undefined (prop_value_p->value));
+              prop_value_p->value = stack_top_p[i];
 
               /* The reference is moved so no need to free stack_top_p[i] except for objects. */
               if (ecma_is_value_object (stack_top_p[i]))
@@ -1047,8 +1097,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             length_num++;
           }
 
-          ecma_value_assign_uint32 (&ECMA_PROPERTY_VALUE_PTR (length_prop_p)->value,
-                                    length_num);
+          ext_array_obj_p->u.array.length = length_num;
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:
@@ -1081,16 +1130,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                  name_p);
 
-            if (ref_base_lex_env_p != NULL)
-            {
-              result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                       name_p,
-                                                       is_strict);
-            }
-            else
-            {
-              result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
-            }
+            result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
+                                                     name_p,
+                                                     is_strict);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
@@ -1347,12 +1389,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_REFERENCE_ERROR:
         {
-          result = ecma_raise_reference_error (ECMA_ERR_MSG (""));
+          result = ecma_raise_reference_error (ECMA_ERR_MSG ("Undefined reference."));
           goto error;
         }
         case VM_OC_EVAL:
         {
-          is_direct_eval_form_call = true;
+          JERRY_CONTEXT (is_direct_eval_form_call) = true;
           JERRY_ASSERT (*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK);
           continue;
         }
@@ -1727,7 +1769,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             if (-ECMA_INTEGER_MULTIPLY_MAX <= left_integer
                 && left_integer <= ECMA_INTEGER_MULTIPLY_MAX
                 && -ECMA_INTEGER_MULTIPLY_MAX <= right_integer
-                && right_integer <= ECMA_INTEGER_MULTIPLY_MAX)
+                && right_integer <= ECMA_INTEGER_MULTIPLY_MAX
+                && left_value != 0
+                && right_value != 0)
             {
               result = ecma_make_integer_value (left_integer * right_integer);
               break;
@@ -2174,8 +2218,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             lit_utf8_byte_t *data_ptr = chunk_p->data;
             ecma_string_t *prop_name_p = ecma_get_string_from_value (*(ecma_value_t *) data_ptr);
 
-            if (ecma_op_object_get_property (ecma_get_object_from_value (stack_top_p[-3]),
-                                             prop_name_p) == NULL)
+            if (!ecma_op_object_has_property (ecma_get_object_from_value (stack_top_p[-3]),
+                                              prop_name_p))
             {
               stack_top_p[-2] = chunk_p->next_chunk_cp;
               ecma_deref_ecma_string (prop_name_p);
@@ -2310,6 +2354,68 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
         }
+        case VM_OC_BREAKPOINT_ENABLED:
+        {
+#ifdef JERRY_DEBUGGER
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
+          {
+            continue;
+          }
+
+          JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+          JERRY_ASSERT (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE));
+
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+
+          jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+#endif /* JERRY_DEBUGGER */
+          continue;
+        }
+        case VM_OC_BREAKPOINT_DISABLED:
+        {
+#ifdef JERRY_DEBUGGER
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
+          {
+            continue;
+          }
+
+          JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+          JERRY_ASSERT (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE));
+
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+
+          if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
+              && (JERRY_CONTEXT (debugger_stop_context) == NULL
+                  || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
+          {
+            jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+            continue;
+          }
+
+          if (JERRY_CONTEXT (debugger_message_delay) > 0)
+          {
+            JERRY_CONTEXT (debugger_message_delay)--;
+            continue;
+          }
+
+          JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
+
+          if (jerry_debugger_receive (NULL))
+          {
+            continue;
+          }
+
+          if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP)
+              && (JERRY_CONTEXT (debugger_stop_context) == NULL
+                  || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
+          {
+            jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+          }
+#endif /* JERRY_DEBUGGER */
+          continue;
+        }
         default:
         {
           JERRY_UNREACHABLE ();
@@ -2440,6 +2546,17 @@ error:
       }
 
       stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
+#ifdef JERRY_DEBUGGER
+      if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+          && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+          && !(JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION | JERRY_DEBUGGER_VM_IGNORE)))
+      {
+        if (jerry_debugger_send_exception_string (result))
+        {
+          jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+        }
+      }
+#endif /* JERRY_DEBUGGER */
     }
 
     JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
@@ -2513,6 +2630,33 @@ error:
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW);
           stack_top_p[-2] = result;
         }
+
+#ifdef JERRY_VM_EXEC_STOP
+        if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL
+            && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
+        {
+          result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
+
+          if (ecma_is_value_undefined (result))
+          {
+            JERRY_CONTEXT (vm_exec_stop_counter) = JERRY_CONTEXT (vm_exec_stop_frequency);
+          }
+          else
+          {
+            JERRY_CONTEXT (vm_exec_stop_counter) = 1;
+
+            left_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+            right_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+            if (!ECMA_IS_VALUE_ERROR (result))
+            {
+              result = ecma_make_error_value (result);
+            }
+            goto error;
+          }
+        }
+#endif /* JERRY_VM_EXEC_STOP */
+
         continue;
       }
     }
@@ -2537,7 +2681,6 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   ecma_value_t completion_value;
-  vm_frame_ctx_t *prev_context_p;
   uint16_t argument_end;
   uint16_t register_end;
 
@@ -2580,33 +2723,29 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
   }
 
-  is_direct_eval_form_call = false;
+  JERRY_CONTEXT (is_direct_eval_form_call) = false;
 
-  prev_context_p = vm_top_context_p;
-  vm_top_context_p = frame_ctx_p;
+  JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p;
 
-  completion_value = vm_init_loop (frame_ctx_p);
+  vm_init_loop (frame_ctx_p);
 
-  if (!ECMA_IS_VALUE_ERROR (completion_value))
+  while (true)
   {
-    while (true)
+    completion_value = vm_loop (frame_ctx_p);
+
+    if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
     {
-      completion_value = vm_loop (frame_ctx_p);
+      break;
+    }
 
-      if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
-      {
-        break;
-      }
-
-      if (frame_ctx_p->call_operation == VM_EXEC_CALL)
-      {
-        opfunc_call (frame_ctx_p);
-      }
-      else
-      {
-        JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
-        opfunc_construct (frame_ctx_p);
-      }
+    if (frame_ctx_p->call_operation == VM_EXEC_CALL)
+    {
+      opfunc_call (frame_ctx_p);
+    }
+    else
+    {
+      JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
+      opfunc_construct (frame_ctx_p);
     }
   }
 
@@ -2616,48 +2755,18 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     ecma_fast_free_value (frame_ctx_p->registers_p[i]);
   }
 
-  vm_top_context_p = prev_context_p;
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p))
+  {
+    /* The engine will stop when the next breakpoint is reached. */
+    JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP);
+    JERRY_CONTEXT (debugger_stop_context) = NULL;
+  }
+#endif /* JERRY_DEBUGGER */
+
+  JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p->prev_context_p;
   return completion_value;
 } /* vm_execute */
-
-#define INLINE_STACK_SIZE 16
-
-/**
- * Run the code with inline stack.
- *
- * @return ecma value
- */
-static ecma_value_t __attr_noinline___
-vm_run_with_inline_stack (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                          const ecma_value_t *arg_p, /**< arguments list */
-                          ecma_length_t arg_list_len) /**< length of arguments list */
-{
-  ecma_value_t inline_stack[INLINE_STACK_SIZE];
-
-  frame_ctx_p->registers_p = inline_stack;
-
-  return vm_execute (frame_ctx_p, arg_p, arg_list_len);
-} /* vm_run_with_inline_stack */
-
-/**
- * Run the code with inline stack.
- *
- * @return ecma value
- */
-static ecma_value_t __attr_noinline___
-vm_run_with_alloca (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                    const ecma_value_t *arg_p, /**< arguments list */
-                    ecma_length_t arg_list_len, /**< length of arguments list */
-                    uint32_t call_stack_size) /**< call stack size */
-{
-  size_t size = call_stack_size * sizeof (ecma_value_t);
-
-  ecma_value_t *stack = (ecma_value_t *) alloca (size);
-
-  frame_ctx_p->registers_p = stack;
-
-  return vm_execute (frame_ctx_p, arg_p, arg_list_len);
-} /* vm_run_with_alloca */
 
 /**
  * Run the code.
@@ -2701,38 +2810,31 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.byte_code_p = (uint8_t *) literal_p;
   frame_ctx.byte_code_start_p = (uint8_t *) literal_p;
   frame_ctx.lex_env_p = lex_env_p;
+  frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.context_depth = 0;
   frame_ctx.is_eval_code = is_eval_code;
   frame_ctx.call_operation = VM_NO_EXEC_OP;
 
-  if (call_stack_size <= INLINE_STACK_SIZE)
-  {
-    return vm_run_with_inline_stack (&frame_ctx,
-                                     arg_list_p,
-                                     arg_list_len);
-  }
-  else
-  {
-    return vm_run_with_alloca (&frame_ctx,
-                               arg_list_p,
-                               arg_list_len,
-                               call_stack_size);
-  }
+  /* Use JERRY_MAX() to avoid array declaration with size 0. */
+  ecma_value_t stack[JERRY_MAX (call_stack_size, 1)];
+  frame_ctx.registers_p = stack;
+
+  return vm_execute (&frame_ctx, arg_list_p, arg_list_len);
 } /* vm_run */
 
 /**
  * Check whether currently executed code is strict mode code
  *
  * @return true - current code is executed in strict mode,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 vm_is_strict_mode (void)
 {
-  JERRY_ASSERT (vm_top_context_p != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (vm_top_context_p) != NULL);
 
-  return vm_top_context_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE;
+  return JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE;
 } /* vm_is_strict_mode */
 
 /**
@@ -2745,12 +2847,12 @@ vm_is_strict_mode (void)
  *
  * @return true - currently performed call is performed through 'eval' identifier,
  *                without 'this' argument,
- *         false - otherwise.
+ *         false - otherwise
  */
-bool
+inline bool __attr_always_inline___
 vm_is_direct_eval_form_call (void)
 {
-  return is_direct_eval_form_call;
+  return JERRY_CONTEXT (is_direct_eval_form_call);
 } /* vm_is_direct_eval_form_call */
 
 /**

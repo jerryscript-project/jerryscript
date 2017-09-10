@@ -1,5 +1,4 @@
-// Copyright 2015 University of Szeged
-// Copyright 2015 Samsung Electronics Co., Ltd.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +13,8 @@
 // limitations under the License.
 
 // URI encoding
+
+// This test will not pass on FLOAT32 due to precision issues
 
 function checkEncodeURIParseError (str)
 {

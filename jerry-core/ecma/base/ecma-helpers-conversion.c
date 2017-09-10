@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -323,6 +322,8 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
 
+#define EPSILON 0.0000001
+
 /**
  * @}
  */
@@ -449,24 +450,17 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   /* Checking if significant part of parse string is equal to "Infinity" */
   const lit_utf8_byte_t *infinity_zt_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
 
-  for (const lit_utf8_byte_t *iter_p = begin_p, *iter_infinity_p = infinity_zt_str_p;
-       ;
-       iter_infinity_p++, iter_p++)
-  {
-    if (*iter_p != *iter_infinity_p)
-    {
-      break;
-    }
+  JERRY_ASSERT (strlen ((const char *) infinity_zt_str_p) == 8);
 
-    if (iter_p == end_p)
-    {
-      return ecma_number_make_infinity (sign);
-    }
+  if ((end_p - begin_p) == (8 - 1) && memcmp (infinity_zt_str_p, begin_p, 8) == 0)
+  {
+    return ecma_number_make_infinity (sign);
   }
 
   uint64_t fraction_uint64 = 0;
   uint32_t digits = 0;
   int32_t e = 0;
+  bool digit_seen = false;
 
   /* Parsing digits before dot (or before end of digits part if there is no dot in number) */
   while (begin_p <= end_p)
@@ -476,6 +470,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     if (*begin_p >= LIT_CHAR_0
         && *begin_p <= LIT_CHAR_9)
     {
+      digit_seen = true;
       digit_value = (*begin_p - LIT_CHAR_0);
     }
     else
@@ -490,9 +485,8 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
         fraction_uint64 = fraction_uint64 * 10 + (uint32_t) digit_value;
         digits++;
       }
-      else if (e <= 100000) /* Some limit to not overflow exponent value
-                               (so big exponent anyway will make number
-                               rounded to infinity) */
+      else if (e <= 100000) /* Limit the exponent, since large
+                             * exponent is rounded to infinity anyway. */
       {
         e++;
       }
@@ -506,6 +500,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   {
     begin_p++;
 
+    if (!digit_seen && begin_p > end_p)
+    {
+      return ecma_number_make_nan ();
+    }
+
     /* Parsing number's part that is placed after dot */
     while (begin_p <= end_p)
     {
@@ -514,6 +513,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       if (*begin_p >= LIT_CHAR_0
           && *begin_p <= LIT_CHAR_9)
       {
+        digit_seen = true;
         digit_value = (*begin_p - LIT_CHAR_0);
       }
       else
@@ -545,6 +545,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
           || *begin_p == LIT_CHAR_UPPERCASE_E))
   {
     begin_p++;
+
+    if (!digit_seen || begin_p > end_p)
+    {
+      return ecma_number_make_nan ();
+    }
 
     if (*begin_p == LIT_CHAR_PLUS)
     {
@@ -819,7 +824,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   const bool sign = ecma_number_is_negative (num);
   const ecma_number_t abs_num = sign ? ecma_number_negate (num) : num;
 
-  // 2 ^ 32
+  /* 2 ^ 32 */
   const uint64_t uint64_2_pow_32 = (1ull << 32);
 
   const ecma_number_t num_2_pow_32 = (float) uint64_2_pow_32;
@@ -836,7 +841,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
     num_in_uint32_range = abs_num;
   }
 
-  // Check that the floating point value can be represented with uint32_t
+  /* Check that the floating point value can be represented with uint32_t. */
   JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
   uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
@@ -870,10 +875,10 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 {
   uint32_t uint32_num = ecma_number_to_uint32 (num);
 
-  // 2 ^ 32
+  /* 2 ^ 32 */
   const int64_t int64_2_pow_32 = (1ll << 32);
 
-  // 2 ^ 31
+  /* 2 ^ 31 */
   const uint32_t uint32_2_pow_31 = (1ull << 31);
 
   int32_t ret;
@@ -928,6 +933,137 @@ ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
 } /* ecma_number_to_decimal */
 
 /**
+ * Calculate the number of digits from the given double value whithout franction part
+ *
+ * @return number of digits
+ */
+inline static int32_t __attr_always_inline___
+ecma_number_of_digits (double val) /**< ecma number */
+{
+  JERRY_ASSERT (fabs (fmod (val, 1.0)) < EPSILON);
+  int32_t exponent = 0;
+
+  while (val >= 1.0)
+  {
+    val /= 10.0;
+    exponent++;
+  }
+
+  return exponent;
+} /* ecma_number_of_digits */
+
+/**
+ * Convert double value to ASCII
+ */
+inline static void __attr_always_inline___
+ecma_double_to_ascii (double val, /**< ecma number */
+                      lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
+                      int32_t *exp_p) /**< [out] exponent */
+{
+  int32_t char_cnt = 0;
+  int32_t num_of_digits = ecma_number_of_digits (val);
+
+  double divider = 10.0;
+  double prev_residual;
+  double mod_res = fmod (val, divider);
+
+  buffer_p[num_of_digits - 1 - char_cnt++] = (lit_utf8_byte_t) ((int) mod_res + '0');
+  divider *= 10.0;
+  prev_residual = mod_res;
+
+  while (char_cnt < num_of_digits)
+  {
+    mod_res = fmod (val, divider);
+    double residual = mod_res - prev_residual;
+    buffer_p[num_of_digits - 1 - char_cnt++] = (lit_utf8_byte_t) ((int) (residual / (divider / 10.0)) + '0');
+
+    divider *= 10.0;
+    prev_residual = mod_res;
+  }
+
+  *exp_p = char_cnt;
+} /* ecma_double_to_ascii */
+
+/**
+ * Double to binary floating-point number conversion
+ *
+ * @return number of generated digits
+ */
+static inline lit_utf8_size_t __attr_always_inline___
+ecma_double_to_binary_floating_point (double val, /**< ecma number */
+                                      lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
+                                      int32_t *exp_p) /**< [out] exponent */
+{
+  int32_t i, char_cnt = 0;
+  double integer_part, fraction_part;
+
+  fraction_part = fmod (val, 1.0);
+  integer_part = floor (val);
+
+  lit_utf8_byte_t integer_part_buffer[ecma_number_of_digits (integer_part) + 1];
+
+  if (fabs (integer_part) < EPSILON)
+  {
+    buffer_p[0] = '0';
+    char_cnt++;
+  }
+  else if (integer_part < 10e16) /* Ensure that integer_part is not rounded */
+  {
+    while (integer_part > 0.0)
+    {
+      integer_part_buffer[char_cnt++] = (lit_utf8_byte_t) ((int) fmod (integer_part, 10.0) + '0');
+      integer_part = floor (integer_part / 10.0);
+    }
+
+    for (i = 0; i < char_cnt; i++)
+    {
+      buffer_p[i] = integer_part_buffer[char_cnt - i - 1];
+    }
+  }
+  else
+  {
+    ecma_double_to_ascii (val, buffer_p, &char_cnt);
+  }
+
+  *exp_p = char_cnt;
+
+  while (fraction_part > 0 && char_cnt < ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER - 1)
+  {
+    fraction_part *= 10;
+    double tmp = fraction_part;
+    fraction_part = fmod (fraction_part, 1.0);
+    integer_part = floor (tmp);
+    buffer_p[char_cnt++] = (lit_utf8_byte_t) ('0' + (int) integer_part);
+  }
+
+  buffer_p[char_cnt] = '\0';
+
+  return (lit_utf8_size_t) (char_cnt - *exp_p);
+} /* ecma_double_to_binary_floating_point */
+
+/**
+  * Perform conversion of ecma-number to equivalent binary floating-point number representation with decimal exponent
+  *
+  * Note:
+  *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
+  *         - parameter out_digits_p corresponds to s, the digits of the number;
+  *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
+  *         - return value corresponds to k, the number of digits.
+  */
+lit_utf8_size_t
+ecma_number_to_binary_floating_point_number (ecma_number_t num, /**< ecma-number */
+                                             lit_utf8_byte_t *out_digits_p, /**< [out] buffer to fill with digits */
+                                             int32_t *out_decimal_exp_p) /**< [out] decimal exponent */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (num));
+  JERRY_ASSERT (!ecma_number_is_zero (num));
+  JERRY_ASSERT (!ecma_number_is_infinity (num));
+  JERRY_ASSERT (!ecma_number_is_negative (num));
+
+  return ecma_double_to_binary_floating_point ((double) num, out_digits_p, out_decimal_exp_p);
+} /* ecma_number_to_binary_floating_point_number */
+
+/**
  * Convert ecma-number to zero-terminated string
  *
  * See also:
@@ -945,14 +1081,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (ecma_number_is_nan (num))
   {
-    // 1.
+    /* 1. */
     dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_NAN, buffer_p, buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
 
   if (ecma_number_is_zero (num))
   {
-    // 2.
+    /* 2. */
     *buffer_p = LIT_CHAR_0;
     JERRY_ASSERT (1 <= buffer_size);
     return 1;
@@ -962,14 +1098,14 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (ecma_number_is_negative (num))
   {
-    // 3.
+    /* 3. */
     *dst_p++ = LIT_CHAR_MINUS;
     num = ecma_number_negate (num);
   }
 
   if (ecma_number_is_infinity (num))
   {
-    // 4.
+    /* 4. */
     dst_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_INFINITY_UL, dst_p,
                                              (lit_utf8_size_t) (buffer_p + buffer_size - dst_p));
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
@@ -978,7 +1114,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   JERRY_ASSERT (ecma_number_get_next (ecma_number_get_prev (num)) == num);
 
-  // 5.
+  /* 5. */
   uint32_t num_uint32 = ecma_number_to_uint32 (num);
 
   if (((ecma_number_t) num_uint32) == num)
@@ -997,7 +1133,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (k <= n && n <= 21)
   {
-    // 6.
+    /* 6. */
     dst_p += k;
 
     memset (dst_p, LIT_CHAR_0, (size_t) (n - k));
@@ -1009,7 +1145,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (0 < n && n <= 21)
   {
-    // 7.
+    /* 7. */
     memmove (dst_p + n + 1, dst_p + n, (size_t) (k - n));
     *(dst_p + n) = LIT_CHAR_DOT;
     dst_p += k + 1;
@@ -1020,7 +1156,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (-6 < n && n <= 0)
   {
-    // 8.
+    /* 8. */
     memmove (dst_p + 2 - n, dst_p, (size_t) k);
     memset (dst_p + 2, LIT_CHAR_0, (size_t) -n);
     *dst_p = LIT_CHAR_0;
@@ -1033,18 +1169,18 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
 
   if (k == 1)
   {
-    // 9.
+    /* 9. */
     dst_p++;
   }
   else
   {
-    // 10.
+    /* 10. */
     memmove (dst_p + 2, dst_p + 1, (size_t) (k - 1));
     *(dst_p + 1) = LIT_CHAR_DOT;
     dst_p += k + 1;
   }
 
-  // 9., 10.
+  /* 9., 10. */
   *dst_p++ = LIT_CHAR_LOWERCASE_E;
   *dst_p++ = (n >= 1) ? LIT_CHAR_PLUS : LIT_CHAR_MINUS;
   uint32_t t = (uint32_t) (n >= 1 ? (n - 1) : -(n - 1));

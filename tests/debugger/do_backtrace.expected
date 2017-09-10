@@ -1,0 +1,34 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_backtrace.js:15
+(jerry-debugger) next
+out: backtrace-test
+Stopped at tests/debugger/do_backtrace.js:28
+(jerry-debugger) n
+Stopped at tests/debugger/do_backtrace.js:37
+(jerry-debugger) next
+Stopped at tests/debugger/do_backtrace.js:40
+(jerry-debugger) step
+Stopped at tests/debugger/do_backtrace.js:32 (in test() at line:30, col:1)
+(jerry-debugger) next
+out: function test
+Stopped at tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+(jerry-debugger) s
+Stopped at tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+(jerry-debugger) bt
+Frame 0: tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+Frame 2: tests/debugger/do_backtrace.js:40
+(jerry-debugger) n
+out: function foo
+Stopped at tests/debugger/do_backtrace.js:24 (in foo() at line:21, col:1)
+(jerry-debugger) n
+Stopped at tests/debugger/do_backtrace.js:25 (in foo() at line:21, col:1)
+(jerry-debugger) s
+Stopped at tests/debugger/do_backtrace.js:18 (in f4() at line:17, col:1)
+(jerry-debugger) backtrace
+Frame 0: tests/debugger/do_backtrace.js:18 (in f4() at line:17, col:1)
+Frame 1: tests/debugger/do_backtrace.js:25 (in foo() at line:21, col:1)
+Frame 2: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+Frame 3: tests/debugger/do_backtrace.js:40
+(jerry-debugger) c
+out: function f4

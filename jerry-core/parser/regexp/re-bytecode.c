@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 #include "ecma-globals.h"
 #include "re-bytecode.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /** \addtogroup parser Parser
  * @{
@@ -124,10 +123,11 @@ re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode conte
  *
  * @return ecma character
  */
-ecma_char_t __attr_always_inline___
+inline ecma_char_t __attr_always_inline___
 re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  ecma_char_t chr = *((ecma_char_t *) *bc_p);
+  ecma_char_t chr;
+  memcpy (&chr, *bc_p, sizeof (ecma_char_t));
   (*bc_p) += sizeof (ecma_char_t);
   return chr;
 } /* re_get_char */
@@ -137,7 +137,7 @@ re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return current RegExp opcode
  */
-re_opcode_t __attr_always_inline___
+inline re_opcode_t __attr_always_inline___
 re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
 {
   uint8_t bytecode = **bc_p;
@@ -150,10 +150,11 @@ re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return opcode parameter
  */
-uint32_t __attr_always_inline___
+inline uint32_t __attr_always_inline___
 re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  uint32_t value = *((uint32_t *) *bc_p);
+  uint32_t value;
+  memcpy (&value, *bc_p, sizeof (uint32_t));
   (*bc_p) += sizeof (uint32_t);
   return value;
 } /* re_get_value */
@@ -163,7 +164,7 @@ re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return bytecode length (unsigned integer)
  */
-uint32_t __attr_pure___ __attr_always_inline___
+inline uint32_t __attr_pure___ __attr_always_inline___
 re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   return ((uint32_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p));
@@ -232,7 +233,7 @@ re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
   re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &value, sizeof (uint32_t));
 } /* re_insert_u32 */
 
-#ifdef JERRY_ENABLE_LOG
+#ifdef REGEXP_DUMP_BYTE_CODE
 /**
  * RegExp bytecode dumper
  */
@@ -240,9 +241,9 @@ void
 re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   re_compiled_code_t *compiled_code_p = (re_compiled_code_t *) bc_ctx_p->block_start_p;
-  JERRY_DLOG ("%d ", compiled_code_p->header.status_flags);
-  JERRY_DLOG ("%d ", compiled_code_p->num_of_captures);
-  JERRY_DLOG ("%d | ", compiled_code_p->num_of_non_captures);
+  JERRY_DEBUG_MSG ("%d ", compiled_code_p->header.status_flags);
+  JERRY_DEBUG_MSG ("%d ", compiled_code_p->num_of_captures);
+  JERRY_DEBUG_MSG ("%d | ", compiled_code_p->num_of_non_captures);
 
   uint8_t *bytecode_p = (uint8_t *) (compiled_code_p + 1);
 
@@ -253,188 +254,188 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
     {
       case RE_OP_MATCH:
       {
-        JERRY_DLOG ("MATCH, ");
+        JERRY_DEBUG_MSG ("MATCH, ");
         break;
       }
       case RE_OP_CHAR:
       {
-        JERRY_DLOG ("CHAR ");
-        JERRY_DLOG ("%c, ", (char) re_get_char (&bytecode_p));
+        JERRY_DEBUG_MSG ("CHAR ");
+        JERRY_DEBUG_MSG ("%c, ", (char) re_get_char (&bytecode_p));
         break;
       }
       case RE_OP_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
       {
-        JERRY_DLOG ("N");
+        JERRY_DEBUG_MSG ("N");
         /* FALLTHRU */
       }
       case RE_OP_CAPTURE_GREEDY_ZERO_GROUP_START:
       {
-        JERRY_DLOG ("GZ_START ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("GZ_START ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_CAPTURE_GROUP_START:
       {
-        JERRY_DLOG ("START ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("START ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_CAPTURE_NON_GREEDY_GROUP_END:
       {
-        JERRY_DLOG ("N");
+        JERRY_DEBUG_MSG ("N");
         /* FALLTHRU */
       }
       case RE_OP_CAPTURE_GREEDY_GROUP_END:
       {
-        JERRY_DLOG ("G_END ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("G_END ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_NON_CAPTURE_NON_GREEDY_ZERO_GROUP_START:
       {
-        JERRY_DLOG ("N");
+        JERRY_DEBUG_MSG ("N");
         /* FALLTHRU */
       }
       case RE_OP_NON_CAPTURE_GREEDY_ZERO_GROUP_START:
       {
-        JERRY_DLOG ("GZ_NC_START ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("GZ_NC_START ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_NON_CAPTURE_GROUP_START:
       {
-        JERRY_DLOG ("NC_START ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("NC_START ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_NON_CAPTURE_NON_GREEDY_GROUP_END:
       {
-        JERRY_DLOG ("N");
+        JERRY_DEBUG_MSG ("N");
         /* FALLTHRU */
       }
       case RE_OP_NON_CAPTURE_GREEDY_GROUP_END:
       {
-        JERRY_DLOG ("G_NC_END ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("G_NC_END ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AT_START:
       {
-        JERRY_DLOG ("RE_START ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("RE_START ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_SAVE_AND_MATCH:
       {
-        JERRY_DLOG ("RE_END, ");
+        JERRY_DEBUG_MSG ("RE_END, ");
         break;
       }
       case RE_OP_GREEDY_ITERATOR:
       {
-        JERRY_DLOG ("GREEDY_ITERATOR ");
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("GREEDY_ITERATOR ");
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_NON_GREEDY_ITERATOR:
       {
-        JERRY_DLOG ("NON_GREEDY_ITERATOR ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("NON_GREEDY_ITERATOR ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_PERIOD:
       {
-        JERRY_DLOG ("PERIOD ");
+        JERRY_DEBUG_MSG ("PERIOD ");
         break;
       }
       case RE_OP_ALTERNATIVE:
       {
-        JERRY_DLOG ("ALTERNATIVE ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("ALTERNATIVE ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_ASSERT_START:
       {
-        JERRY_DLOG ("ASSERT_START ");
+        JERRY_DEBUG_MSG ("ASSERT_START ");
         break;
       }
       case RE_OP_ASSERT_END:
       {
-        JERRY_DLOG ("ASSERT_END ");
+        JERRY_DEBUG_MSG ("ASSERT_END ");
         break;
       }
       case RE_OP_ASSERT_WORD_BOUNDARY:
       {
-        JERRY_DLOG ("ASSERT_WORD_BOUNDARY ");
+        JERRY_DEBUG_MSG ("ASSERT_WORD_BOUNDARY ");
         break;
       }
       case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
       {
-        JERRY_DLOG ("ASSERT_NOT_WORD_BOUNDARY ");
+        JERRY_DEBUG_MSG ("ASSERT_NOT_WORD_BOUNDARY ");
         break;
       }
       case RE_OP_LOOKAHEAD_POS:
       {
-        JERRY_DLOG ("LOOKAHEAD_POS ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("LOOKAHEAD_POS ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_LOOKAHEAD_NEG:
       {
-        JERRY_DLOG ("LOOKAHEAD_NEG ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("LOOKAHEAD_NEG ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_BACKREFERENCE:
       {
-        JERRY_DLOG ("BACKREFERENCE ");
-        JERRY_DLOG ("%d, ", re_get_value (&bytecode_p));
+        JERRY_DEBUG_MSG ("BACKREFERENCE ");
+        JERRY_DEBUG_MSG ("%d, ", re_get_value (&bytecode_p));
         break;
       }
       case RE_OP_INV_CHAR_CLASS:
       {
-        JERRY_DLOG ("INV_");
+        JERRY_DEBUG_MSG ("INV_");
         /* FALLTHRU */
       }
       case RE_OP_CHAR_CLASS:
       {
-        JERRY_DLOG ("CHAR_CLASS ");
+        JERRY_DEBUG_MSG ("CHAR_CLASS ");
         uint32_t num_of_class = re_get_value (&bytecode_p);
-        JERRY_DLOG ("%d", num_of_class);
+        JERRY_DEBUG_MSG ("%d", num_of_class);
         while (num_of_class)
         {
-          JERRY_DLOG (" %d", re_get_char (&bytecode_p));
-          JERRY_DLOG ("-%d", re_get_char (&bytecode_p));
+          JERRY_DEBUG_MSG (" %d", re_get_char (&bytecode_p));
+          JERRY_DEBUG_MSG ("-%d", re_get_char (&bytecode_p));
           num_of_class--;
         }
-        JERRY_DLOG (", ");
+        JERRY_DEBUG_MSG (", ");
         break;
       }
       default:
       {
-        JERRY_DLOG ("UNKNOWN(%d), ", (uint32_t) op);
+        JERRY_DEBUG_MSG ("UNKNOWN(%d), ", (uint32_t) op);
         break;
       }
     }
   }
-  JERRY_DLOG ("EOF\n");
+  JERRY_DEBUG_MSG ("EOF\n");
 } /* re_dump_bytecode */
-#endif /* JERRY_ENABLE_LOG */
+#endif /* REGEXP_DUMP_BYTE_CODE */
 
 /**
  * @}
@@ -442,4 +443,4 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

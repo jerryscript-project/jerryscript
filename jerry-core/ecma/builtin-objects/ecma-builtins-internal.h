@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ typedef enum
   ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
   ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
   ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */
+  ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, /**< full accessor property */
+  ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, /**< read-only accessor property */
   ECMA_BUILTIN_PROPERTY_END, /**< last property */
 } ecma_builtin_property_type_t;
 
@@ -75,13 +77,13 @@ typedef struct
                 lowercase_name) \
 extern const ecma_builtin_property_descriptor_t \
 ecma_builtin_ ## lowercase_name ## _property_descriptor_list[]; \
-extern ecma_value_t \
+ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *, \
                                                    ecma_length_t); \
-extern ecma_value_t \
+ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *, \
                                                         ecma_length_t); \
-extern ecma_value_t \
+ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \

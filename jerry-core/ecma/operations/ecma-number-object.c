@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,28 +48,25 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
     return conv_to_num_completion;
   }
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN
+#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
-#else /* CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+#else /* CONFIG_DISABLE_NUMBER_BUILTIN */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_NUMBER_BUILTIN */
+#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
 
-  ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
-                                             false,
-                                             true,
-                                             ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+                                                sizeof (ecma_extended_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
   ecma_deref_object (prototype_obj_p);
 
-  ecma_property_t *class_prop_p = ecma_create_internal_property (obj_p, ECMA_INTERNAL_PROPERTY_CLASS);
-  ECMA_PROPERTY_VALUE_PTR (class_prop_p)->value = LIT_MAGIC_STRING_NUMBER_UL;
-
-  ecma_property_t *prim_value_prop_p = ecma_create_internal_property (obj_p,
-                                                                      ECMA_INTERNAL_PROPERTY_ECMA_VALUE);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_NUMBER_UL;
 
   /* Pass reference (no need to free conv_to_num_completion). */
-  ecma_set_internal_property_value (prim_value_prop_p, conv_to_num_completion);
+  ext_object_p->u.class_prop.u.value = conv_to_num_completion;
 
-  return ecma_make_object_value (obj_p);
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_number_object */
 
 /**

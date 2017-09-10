@@ -1,4 +1,4 @@
-/* Copyright 2015-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,9 @@
  * limitations under the License.
  */
 
+#include "jcontext.h"
 #include "lit-magic-strings.h"
-
 #include "lit-strings.h"
-
-/**
- * External magic strings data array, count and lengths
- */
-static const lit_utf8_byte_t **lit_magic_string_ex_array = NULL;
-static uint32_t lit_magic_string_ex_count = 0;
-static const lit_utf8_size_t *lit_magic_string_ex_sizes = NULL;
-
-/**
- * Initialize external magic strings
- */
-void
-lit_magic_strings_ex_init (void)
-{
-  lit_magic_string_ex_array = NULL;
-  lit_magic_string_ex_count = 0;
-  lit_magic_string_ex_sizes = NULL;
-} /* lit_magic_strings_ex_init */
 
 /**
  * Get number of external magic strings
@@ -41,10 +23,10 @@ lit_magic_strings_ex_init (void)
  * @return number of the strings, if there were registered,
  *         zero - otherwise.
  */
-uint32_t
+inline uint32_t __attr_always_inline___
 lit_get_magic_string_ex_count (void)
 {
-  return lit_magic_string_ex_count;
+  return JERRY_CONTEXT (lit_magic_string_ex_count);
 } /* lit_get_magic_string_ex_count */
 
 /**
@@ -55,17 +37,19 @@ lit_get_magic_string_ex_count (void)
 const lit_utf8_byte_t *
 lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 {
-  static const lit_utf8_byte_t * const magic_strings[] =
+  static const lit_utf8_byte_t * const lit_magic_strings[] JERRY_CONST_DATA =
   {
+#define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     (const lit_utf8_byte_t *) utf8_string,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
+#undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
   };
 
-  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+  JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
 
-  return magic_strings[id];
+  return lit_magic_strings[id];
 } /* lit_get_magic_string_utf8 */
 
 /**
@@ -76,18 +60,45 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 lit_utf8_size_t
 lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 {
-  static const lit_magic_size_t lit_magic_string_sizes[] =
+  static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
   {
+#define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     sizeof(utf8_string) - 1,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
+#undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
   };
 
-  JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
+  JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
 
   return lit_magic_string_sizes[id];
 } /* lit_get_magic_string_size */
+
+/**
+ * Get the block start element with the given size from
+ * the list of ECMA and implementation-defined magic string constants
+ *
+ * @return magic string id
+ */
+lit_magic_string_id_t
+lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string size */
+{
+  static const lit_magic_string_id_t lit_magic_string_size_block_starts[] JERRY_CONST_DATA =
+  {
+#define LIT_MAGIC_STRING_DEF(id, utf8_string)
+#define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id) \
+    id,
+#include "lit-magic-strings.inc.h"
+    LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+#undef LIT_MAGIC_STRING_DEF
+#undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+  };
+
+  JERRY_ASSERT (size <= (sizeof (lit_magic_string_size_block_starts) / sizeof (lit_magic_string_id_t)));
+
+  return lit_magic_string_size_block_starts[size];
+} /* lit_get_magic_string_size_block_start */
 
 /**
  * Get specified magic string as zero-terminated string from external table
@@ -97,9 +108,9 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 const lit_utf8_byte_t *
 lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic string id */
 {
-  if (lit_magic_string_ex_array && id < lit_magic_string_ex_count)
+  if (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count))
   {
-    return lit_magic_string_ex_array[id];
+    return JERRY_CONTEXT (lit_magic_string_ex_array)[id];
   }
 
   JERRY_UNREACHABLE ();
@@ -113,7 +124,7 @@ lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic str
 lit_utf8_size_t
 lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic string id */
 {
-  return lit_magic_string_ex_sizes[id];
+  return JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 } /* lit_get_magic_string_ex_size */
 
 /**
@@ -129,122 +140,259 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
   JERRY_ASSERT (count > 0);
   JERRY_ASSERT (ex_str_sizes != NULL);
 
-  JERRY_ASSERT (lit_magic_string_ex_array == NULL);
-  JERRY_ASSERT (lit_magic_string_ex_count == 0);
-  JERRY_ASSERT (lit_magic_string_ex_sizes == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_count) == 0);
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes) == NULL);
 
   /* Set external magic strings information */
-  lit_magic_string_ex_array = ex_str_items;
-  lit_magic_string_ex_count = count;
-  lit_magic_string_ex_sizes = ex_str_sizes;
+  JERRY_CONTEXT (lit_magic_string_ex_array) = ex_str_items;
+  JERRY_CONTEXT (lit_magic_string_ex_count) = count;
+  JERRY_CONTEXT (lit_magic_string_ex_sizes) = ex_str_sizes;
 
 #ifndef JERRY_NDEBUG
   for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < lit_magic_string_ex_count;
+       id < JERRY_CONTEXT (lit_magic_string_ex_count);
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
-    JERRY_ASSERT (lit_magic_string_ex_sizes[id] == lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id)));
-    JERRY_ASSERT (lit_magic_string_ex_sizes[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+    lit_utf8_size_t string_size = lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id));
+    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] == string_size);
+    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+
+    /**
+     * Check whether the strings are sorted by size and lexicographically,
+     * e.g., "Bb" < "aa" < "aaa" < "xyz0".
+     */
+    if (id > 0)
+    {
+      const lit_magic_string_ex_id_t prev_id = id - 1;
+      const lit_utf8_size_t prev_string_size = lit_get_magic_string_ex_size (prev_id);
+      JERRY_ASSERT (prev_string_size <= string_size);
+
+      if (prev_string_size == string_size)
+      {
+        const lit_utf8_byte_t *prev_ex_string_p = lit_get_magic_string_ex_utf8 (prev_id);
+        const lit_utf8_byte_t *curr_ex_string_p = lit_get_magic_string_ex_utf8 (id);
+        JERRY_ASSERT (memcmp (prev_ex_string_p, curr_ex_string_p, string_size) < 0);
+      }
+    }
   }
 #endif /* !JERRY_NDEBUG */
 } /* lit_magic_strings_ex_set */
 
-
 /**
- * Check if passed cesu-8 string equals to one of magic strings
- * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ * Returns the magic string id of the argument string if it is available.
  *
- * @return true - if magic string equal to passed string was found,
- *         false - otherwise.
+ * @return id - if magic string id is found,
+ *         LIT_MAGIC_STRING__COUNT - otherwise.
  */
-bool
+lit_magic_string_id_t
 lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
-                          lit_utf8_size_t string_size, /**< string size in bytes */
-                          lit_magic_string_id_t *out_id_p) /**< [out] magic string's id */
+                          lit_utf8_size_t string_size) /**< string size in bytes */
 {
-  /* TODO: Improve performance of search */
-
-  for (lit_magic_string_id_t id = (lit_magic_string_id_t) 0;
-       id < LIT_MAGIC_STRING__COUNT;
-       id = (lit_magic_string_id_t) (id + 1))
+  if (string_size > lit_get_magic_string_size (LIT_NON_INTERNAL_MAGIC_STRING__COUNT - 1))
   {
-    if (lit_compare_utf8_string_and_magic_string (string_p, string_size, id))
-    {
-      *out_id_p = id;
+    return LIT_MAGIC_STRING__COUNT;
+  }
 
-      return true;
+  /**< The string must be in this id range. */
+  lit_utf8_size_t first = lit_get_magic_string_size_block_start (string_size);
+  lit_utf8_size_t last = lit_get_magic_string_size_block_start (string_size + 1);
+
+  while (first < last)
+  {
+    lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
+    int compare = memcmp (lit_get_magic_string_utf8 (middle), string_p, string_size);
+
+    if (compare == 0)
+    {
+      return (lit_magic_string_id_t) middle;
+    }
+    else if (compare > 0)
+    {
+      last = middle;
+    }
+    else
+    {
+      first = middle + 1;
     }
   }
 
-  *out_id_p = LIT_MAGIC_STRING__COUNT;
-
-  return false;
+  return LIT_MAGIC_STRING__COUNT;
 } /* lit_is_utf8_string_magic */
 
 /**
- * Check if passed utf-8 string equals to one of external magic strings
- * and if equal magic string was found, return it's id in 'out_id_p' argument.
+ * Returns the magic string id of the argument string pair if it is available.
  *
- * @return true - if external magic string equal to passed string was found,
- *         false - otherwise.
+ * @return id - if magic string id is found,
+ *         LIT_MAGIC_STRING__COUNT - otherwise.
  */
-bool lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
-                                  lit_utf8_size_t string_size, /**< string size in bytes */
-                                  lit_magic_string_ex_id_t *out_id_p) /**< [out] magic string's id */
+lit_magic_string_id_t
+lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first utf-8 string */
+                               lit_utf8_size_t string1_size, /**< first string size in bytes */
+                               const lit_utf8_byte_t *string2_p, /**< second utf-8 string */
+                               lit_utf8_size_t string2_size) /**< second string size in bytes */
 {
-  /* TODO: Improve performance of search */
+  lit_utf8_size_t total_string_size = string1_size + string2_size;
 
-  for (lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) 0;
-       id < lit_magic_string_ex_count;
-       id = (lit_magic_string_ex_id_t) (id + 1))
+  if (total_string_size > lit_get_magic_string_size (LIT_NON_INTERNAL_MAGIC_STRING__COUNT - 1))
   {
-    if (lit_compare_utf8_string_and_magic_string_ex (string_p, string_size, id))
-    {
-      *out_id_p = id;
+    return LIT_MAGIC_STRING__COUNT;
+  }
 
-      return true;
+  /**< The string must be in this id range. */
+  lit_utf8_size_t first = lit_get_magic_string_size_block_start (total_string_size);
+  lit_utf8_size_t last = lit_get_magic_string_size_block_start (total_string_size + 1);
+
+  while (first < last)
+  {
+    lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
+    const lit_utf8_byte_t *middle_string_p = lit_get_magic_string_utf8 (middle);
+
+    int compare = memcmp (middle_string_p, string1_p, string1_size);
+
+    if (compare == 0)
+    {
+      compare = memcmp (middle_string_p + string1_size, string2_p, string2_size);
+    }
+
+    if (compare == 0)
+    {
+      return (lit_magic_string_id_t) middle;
+    }
+    else if (compare > 0)
+    {
+      last = middle;
+    }
+    else
+    {
+      first = middle + 1;
     }
   }
 
-  *out_id_p = lit_magic_string_ex_count;
+  return LIT_MAGIC_STRING__COUNT;
+} /* lit_is_utf8_string_pair_magic */
 
-  return false;
+/**
+ * Returns the ex magic string id of the argument string if it is available.
+ *
+ * @return id - if magic string id is found,
+ *         lit_get_magic_string_ex_count () - otherwise.
+ */
+lit_magic_string_ex_id_t
+lit_is_ex_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
+                             lit_utf8_size_t string_size) /**< string size in bytes */
+{
+  const uint32_t magic_string_ex_count = lit_get_magic_string_ex_count ();
+
+  if (magic_string_ex_count == 0
+      || string_size > lit_get_magic_string_ex_size (magic_string_ex_count - 1))
+  {
+    return (lit_magic_string_ex_id_t) magic_string_ex_count;
+  }
+
+  lit_magic_string_ex_id_t first = 0;
+  lit_magic_string_ex_id_t last = (lit_magic_string_ex_id_t) magic_string_ex_count;
+
+  while (first < last)
+  {
+    const lit_magic_string_ex_id_t middle = (first + last) / 2;
+    const lit_utf8_byte_t *ext_string_p = lit_get_magic_string_ex_utf8 (middle);
+    const lit_utf8_size_t ext_string_size = lit_get_magic_string_ex_size (middle);
+
+    if (string_size == ext_string_size)
+    {
+      const int string_compare = memcmp (ext_string_p, string_p, string_size);
+
+      if (string_compare == 0)
+      {
+        return middle;
+      }
+      else if (string_compare < 0)
+      {
+        first = middle + 1;
+      }
+      else
+      {
+        last = middle;
+      }
+    }
+    else if (string_size > ext_string_size)
+    {
+      first = middle + 1;
+    }
+    else
+    {
+      last = middle;
+    }
+  }
+
+  return (lit_magic_string_ex_id_t) magic_string_ex_count;
 } /* lit_is_ex_utf8_string_magic */
 
 /**
- * Compare utf-8 string and magic string for equality
+ * Returns the ex magic string id of the argument string pair if it is available.
  *
- * @return true if strings are equal
- *         false otherwise
+ * @return id - if magic string id is found,
+ *         lit_get_magic_string_ex_count () - otherwise.
  */
-bool
-lit_compare_utf8_string_and_magic_string (const lit_utf8_byte_t *string_p, /**< utf-8 string */
-                                          lit_utf8_size_t string_size, /**< string size in bytes */
-                                          lit_magic_string_id_t magic_string_id) /**< magic string's id */
+lit_magic_string_ex_id_t
+lit_is_ex_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first utf-8 string */
+                                  lit_utf8_size_t string1_size, /**< first string size in bytes */
+                                  const lit_utf8_byte_t *string2_p, /**< second utf-8 string */
+                                  lit_utf8_size_t string2_size) /**< second string size in bytes */
 {
-  return lit_compare_utf8_strings (string_p,
-                                   string_size,
-                                   lit_get_magic_string_utf8 (magic_string_id),
-                                   lit_get_magic_string_size (magic_string_id));
-} /* lit_compare_utf8_string_and_magic_string */
+  const uint32_t magic_string_ex_count = lit_get_magic_string_ex_count ();
+  const lit_utf8_size_t total_string_size = string1_size + string2_size;
 
-/**
- * Compare utf-8 string and external magic string for equality
- *
- * @return true if strings are equal
- *         false otherwise
- */
-bool
-lit_compare_utf8_string_and_magic_string_ex (const lit_utf8_byte_t *string_p, /**< utf-8 string */
-                                             lit_utf8_size_t string_size, /**< string size in bytes */
-                                             lit_magic_string_ex_id_t magic_string_ex_id) /**<  external magic string's
-                                                                                           * id */
-{
-  return lit_compare_utf8_strings (string_p,
-                                   string_size,
-                                   lit_get_magic_string_ex_utf8 (magic_string_ex_id),
-                                   lit_get_magic_string_ex_size (magic_string_ex_id));
-} /* lit_compare_utf8_string_and_magic_string_ex */
+  if (magic_string_ex_count == 0
+      || total_string_size > lit_get_magic_string_ex_size (magic_string_ex_count - 1))
+  {
+    return (lit_magic_string_ex_id_t) magic_string_ex_count;
+  }
+
+  lit_magic_string_ex_id_t first = 0;
+  lit_magic_string_ex_id_t last = (lit_magic_string_ex_id_t) magic_string_ex_count;
+
+  while (first < last)
+  {
+    const lit_magic_string_ex_id_t middle = (first + last) / 2;
+    const lit_utf8_byte_t *ext_string_p = lit_get_magic_string_ex_utf8 (middle);
+    const lit_utf8_size_t ext_string_size = lit_get_magic_string_ex_size (middle);
+
+    if (total_string_size == ext_string_size)
+    {
+      int string_compare = memcmp (ext_string_p, string1_p, string1_size);
+
+      if (string_compare == 0)
+      {
+        string_compare = memcmp (ext_string_p + string1_size, string2_p, string2_size);
+      }
+
+      if (string_compare == 0)
+      {
+        return middle;
+      }
+      else if (string_compare < 0)
+      {
+        first = middle + 1;
+      }
+      else
+      {
+        last = middle;
+      }
+    }
+    else if (total_string_size > ext_string_size)
+    {
+      first = middle + 1;
+    }
+    else
+    {
+      last = middle;
+    }
+  }
+
+  return (lit_magic_string_ex_id_t) magic_string_ex_count;
+} /* lit_is_ex_utf8_string_pair_magic */
 
 /**
  * Copy magic string to buffer
@@ -254,7 +402,7 @@ lit_compare_utf8_string_and_magic_string_ex (const lit_utf8_byte_t *string_p, /*
  *
  * @return pointer to the byte next to the last copied in the buffer
  */
-extern lit_utf8_byte_t *
+lit_utf8_byte_t *
 lit_copy_magic_string_to_buffer (lit_magic_string_id_t id, /**< magic string id */
                                  lit_utf8_byte_t *buffer_p, /**< destination buffer */
                                  lit_utf8_size_t buffer_size) /**< size of buffer */

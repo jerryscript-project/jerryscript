@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,3 +184,15 @@ log (double x)
     }
   }
 } /* log */
+
+#undef zero
+#undef ln2_hi
+#undef ln2_lo
+#undef two54
+#undef Lg1
+#undef Lg2
+#undef Lg3
+#undef Lg4
+#undef Lg5
+#undef Lg6
+#undef Lg7

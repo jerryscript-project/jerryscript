@@ -1,5 +1,4 @@
-// Copyright 2015 Samsung Electronics Co., Ltd.
-// Copyright 2015 University of Szeged.
+// Copyright JS Foundation and other contributors, http://js.foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// This test will not pass on FLOAT32 due to precision issues
 
 assert((NaN).toString() === "NaN");
 assert((-Infinity).toString() === "-Infinity");
@@ -81,7 +82,15 @@ assert((123400).toString(34) === "34pe");
 assert((123400).toString(35) === "2upp");
 assert((123400).toString(36) === "2n7s");
 
+assert ((1152921504606846600).toString([1,2,3,4].slice(1,2)) === "111111111111111111111111111111111111111111111111111010000000");
+assert ((-1152921504606846600).toString(2) === "-111111111111111111111111111111111111111111111111111010000000");
+
+assert ((0x100000000000061).toString(2) === "100000000000000000000000000000000000000000000000001100000")
+assert ((-0x100000000000061).toString(16) === "-100000000000060");
+
 assert((123400).toString(new Number(16)) === "1e208");
+
+assert(65535.9.toString(3) === "10022220020.2200220022002200220022102110122000001102212");
 
 var digit_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',

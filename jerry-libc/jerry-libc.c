@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +17,7 @@
  * Jerry libc's common functions implementation
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,7 +56,7 @@ CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
  *
  * @return @a s
  */
-void * __attr_used___ // FIXME
+void * __attr_used___
 memset (void *s,  /**< area to set values in */
         int c,    /**< value to set */
         size_t n) /**< area size */
@@ -98,7 +98,7 @@ memcmp (const void *s1, /**< first area */
 /**
  * memcpy
  */
-void *  __attr_used___ // FIXME
+void *  __attr_used___
 memcpy (void *s1, /**< destination */
         const void *s2, /**< source */
         size_t n) /**< bytes number */
@@ -137,7 +137,7 @@ memcpy (void *s1, /**< destination */
  *
  * @return the dest pointer's value
  */
-void * __attr_used___ // FIXME
+void * __attr_used___
 memmove (void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
@@ -216,7 +216,7 @@ strncmp (const char *s1, const char *s2, size_t n)
 /** Copy a string. At most n bytes of src are copied.  Warning: If there is no
      null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
      @return a pointer to the destination string dest.  */
-char * __attr_used___ // FIXME
+char * __attr_used___
 strncpy (char *dest, const char *src, size_t n)
 {
   while (n--)
@@ -267,7 +267,7 @@ rand (void)
   libc_random_gen_state[3] ^= libc_random_gen_state[3] >> 19;
   libc_random_gen_state[3] ^= intermediate;
 
-  return libc_random_gen_state[3] % (RAND_MAX + 1u);
+  return (int) (libc_random_gen_state[3] % (RAND_MAX + 1));
 } /* rand */
 
 /**
@@ -281,3 +281,76 @@ srand (unsigned int seed) /**< new seed */
   libc_random_gen_state[2] =
   libc_random_gen_state[3] = seed;
 } /* srand */
+
+/**
+ * Convert a string to a long integer.
+ *
+ * The function first discards leading whitespace characters. Then takes an
+ * optional sign followed by as many digits as possible and interprets them as a
+ * numerical value. Additional characters after those that form the number are
+ * ignored.
+ *
+ * Note:
+ *      If base is not 10, the behaviour is undefined.
+ *      If the value read is out-of-range, the behaviour is undefined.
+ *      The implementation never sets errno.
+ *
+ * @return the integer value of str.
+ */
+long int
+strtol (const char *nptr, /**< string representation of an integer number */
+        char **endptr, /**< [out] the address of the first non-number character */
+        int base) /**< numerical base or radix (MUST be 10) */
+{
+  assert (base == 10);
+  (void) base; /* Unused. */
+
+  const char *str = nptr;
+
+  /* Skip leading whitespaces. */
+  while (*str == ' ' || *str == '\t' || *str == '\r' || *str == '\n')
+  {
+    str++;
+  }
+
+  bool digits = false;
+  bool positive = true;
+  long int num = 0;
+
+  /* Process optional sign. */
+  if (*str == '-')
+  {
+    positive = false;
+    str++;
+  }
+  else if (*str == '+')
+  {
+    str++;
+  }
+
+  /* Process base-10 digits. */
+  while (*str >= '0' && *str <= '9')
+  {
+    num = num * 10 + (*str - '0');
+    digits = true;
+    str++;
+  }
+
+  /* Set endptr and return result*/
+  if (digits)
+  {
+    if (endptr)
+    {
+      *endptr = (char *) str;
+    }
+    return positive ? num : -num;
+  }
+  else
+  {
+    if (endptr)
+    {
+      *endptr = (char *) nptr;
+    }
+    return 0L;
+  }
+} /* strtol */

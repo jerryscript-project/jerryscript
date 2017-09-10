@@ -1,4 +1,4 @@
-/* Copyright 2014-2015 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,28 +49,42 @@ typedef enum
  */
 #define ECMA_GET_ROUTINE_ID(value) ((uint16_t) ((value) >> 4))
 
-/* ecma-builtins.c */
-extern void ecma_init_builtins (void);
-extern void ecma_finalize_builtins (void);
+/**
+ * Construct a fully accessor value
+ */
+#define ECMA_ACCESSOR_READ_WRITE(getter, setter) (((getter) << 8) | (setter))
 
-extern ecma_value_t
-ecma_builtin_dispatch_call (ecma_object_t *, ecma_value_t,
-                            const ecma_value_t *, ecma_length_t);
-extern ecma_value_t
-ecma_builtin_dispatch_construct (ecma_object_t *,
-                                 const ecma_value_t *, ecma_length_t);
-extern ecma_property_t *
-ecma_builtin_try_to_instantiate_property (ecma_object_t *, ecma_string_t *);
-extern void
-ecma_builtin_list_lazy_property_names (ecma_object_t *,
-                                       bool,
-                                       ecma_collection_header_t *,
-                                       ecma_collection_header_t *);
-extern bool
-ecma_builtin_is (ecma_object_t *, ecma_builtin_id_t);
-extern ecma_object_t *
-ecma_builtin_get (ecma_builtin_id_t);
-extern bool
-ecma_builtin_function_is_routine (ecma_object_t *);
+/**
+ * Get accessor setter ID
+ */
+#define ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID(value) ((uint16_t) ((value) & 0xff))
+
+/**
+ * Get accessor getter ID
+ */
+#define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint16_t) ((value) >> 8))
+
+/* ecma-builtins.c */
+void ecma_finalize_builtins (void);
+
+ecma_value_t
+ecma_builtin_dispatch_call (ecma_object_t *obj_p, ecma_value_t this_arg_value,
+                            const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+ecma_value_t
+ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
+                                 const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+ecma_property_t *
+ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *string_p);
+void
+ecma_builtin_list_lazy_property_names (ecma_object_t *object_p,
+                                       bool separate_enumerable,
+                                       ecma_collection_header_t *main_collection_p,
+                                       ecma_collection_header_t *non_enum_collection_p);
+bool
+ecma_builtin_is (ecma_object_t *obj_p, ecma_builtin_id_t builtin_id);
+ecma_object_t *
+ecma_builtin_get (ecma_builtin_id_t builtin_id);
+bool
+ecma_builtin_function_is_routine (ecma_object_t *func_obj_p);
 
 #endif /* !ECMA_BUILTINS_H */

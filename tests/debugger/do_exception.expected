@@ -1,0 +1,20 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_exception.js:15
+(jerry-debugger) c
+out: exception handler configuration test
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: TypeError
+Stopped around tests/debugger/do_exception.js:19 (in foo() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: ReferenceError
+Stopped at tests/debugger/do_exception.js:24 (in foo() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 456
+Stopped at tests/debugger/do_exception.js:29 (in foo() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: RangeError: Bad range!
+Stopped around tests/debugger/do_exception.js:34 (in foo() at line:17, col:1)
+(jerry-debugger) quit

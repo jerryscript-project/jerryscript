@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 #ifndef RE_BYTECODE_H
 #define RE_BYTECODE_H
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 #include "ecma-globals.h"
 
@@ -101,23 +100,23 @@ typedef struct
   uint8_t *current_p;          /**< current position in bytecode */
 } re_bytecode_ctx_t;
 
-re_opcode_t re_get_opcode (uint8_t **);
-ecma_char_t re_get_char (uint8_t **);
-uint32_t re_get_value (uint8_t **);
-uint32_t re_get_bytecode_length (re_bytecode_ctx_t *);
+re_opcode_t re_get_opcode (uint8_t **bc_p);
+ecma_char_t re_get_char (uint8_t **bc_p);
+uint32_t re_get_value (uint8_t **bc_p);
+uint32_t re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p) __attr_pure___;
 
-void re_append_opcode (re_bytecode_ctx_t *, re_opcode_t);
-void re_append_u32 (re_bytecode_ctx_t *, uint32_t);
-void re_append_char (re_bytecode_ctx_t *, ecma_char_t);
-void re_append_jump_offset (re_bytecode_ctx_t *, uint32_t);
+void re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, re_opcode_t opcode);
+void re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, uint32_t value);
+void re_append_char (re_bytecode_ctx_t *bc_ctx_p, ecma_char_t input_char);
+void re_append_jump_offset (re_bytecode_ctx_t *bc_ctx_p, uint32_t value);
 
-void re_insert_opcode (re_bytecode_ctx_t *, uint32_t, re_opcode_t);
-void re_insert_u32 (re_bytecode_ctx_t *, uint32_t, uint32_t);
-void re_bytecode_list_insert (re_bytecode_ctx_t *, size_t, uint8_t *, size_t);
+void re_insert_opcode (re_bytecode_ctx_t *bc_ctx_p, uint32_t offset, re_opcode_t opcode);
+void re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, uint32_t offset, uint32_t value);
+void re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, size_t offset, uint8_t *bytecode_p, size_t length);
 
-#ifdef JERRY_ENABLE_LOG
+#ifdef REGEXP_DUMP_BYTE_CODE
 void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
-#endif /* JERRY_ENABLE_LOG */
+#endif /* REGEXP_DUMP_BYTE_CODE */
 
 /**
  * @}
@@ -125,5 +124,5 @@ void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 #endif /* !RE_BYTECODE_H */

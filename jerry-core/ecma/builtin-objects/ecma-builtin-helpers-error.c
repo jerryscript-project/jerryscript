@@ -1,5 +1,4 @@
-/* Copyright 2016 Samsung Electronics Co., Ltd.
- * Copyright 2016 University of Szeged
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +25,10 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS
-
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmabuiltinhelpers
+ * \addtogroup ecmabuiltinhelpers ECMA builtin helper operations
  * @{
  */
 
@@ -78,4 +75,3 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< 
  * @}
  */
 
-#endif /* !CONFIG_ECMA_COMPACT_PROFILE_DISABLE_ERROR_BUILTINS */

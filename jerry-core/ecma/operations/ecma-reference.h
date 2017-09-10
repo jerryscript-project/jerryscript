@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@
  * @{
  */
 
-extern ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *, ecma_string_t *);
-extern ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *, ecma_string_t *, bool);
+ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
+ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
 
 /**
  * @}

@@ -1,4 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-literal-storage.h"
-#include "jmem-allocator.h"
+#include "jmem.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -35,13 +36,19 @@
 void
 ecma_init (void)
 {
-  ecma_gc_init ();
-  ecma_init_builtins ();
   ecma_lcache_init ();
-  ecma_init_lit_storage ();
-  ecma_init_environment ();
+  ecma_init_global_lex_env ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
+
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
+  JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = false;
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  ecma_job_queue_init ();
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 } /* ecma_init */
 
 /**
@@ -52,9 +59,9 @@ ecma_finalize (void)
 {
   jmem_unregister_free_unused_memory_callback (ecma_free_unused_memory);
 
-  ecma_finalize_environment ();
+  ecma_finalize_global_lex_env ();
   ecma_finalize_builtins ();
-  ecma_gc_run ();
+  ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 

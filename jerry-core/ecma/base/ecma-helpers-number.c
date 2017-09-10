@@ -1,5 +1,4 @@
-/* Copyright 2014-2016 Samsung Electronics Co., Ltd.
- * Copyright 2015-2016 University of Szeged.
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,7 +238,7 @@ ecma_number_get_sign_field (ecma_number_t num) /**< ecma-number */
                   fraction is filled with anything but not all zero bits,
  *         false - otherwise
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 {
   bool is_nan = (num != num);
@@ -292,7 +291,7 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
  * @return true - if sign bit of ecma-number is set
  *         false - otherwise
  */
-bool __attr_always_inline___
+inline bool __attr_always_inline___
 ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
@@ -330,7 +329,7 @@ ecma_number_is_zero (ecma_number_t num) /**< ecma-number */
  *
  * @return true - if biased exponent is filled with 1 bits and
  *                fraction is filled with zero bits,
- *         false - otherwise.
+ *         false - otherwise
  */
 bool
 ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */

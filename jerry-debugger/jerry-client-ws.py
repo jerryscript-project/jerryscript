@@ -167,6 +167,9 @@ class JerryFunction(object):
         self.first_breakpoint_line = lines[0]
         self.first_breakpoint_offset = offsets[0]
 
+        if len(self.source) > 1 and not self.source[-1]:
+          self.source.pop()
+
         for i in range(len(lines)):
             line = lines[i]
             offset = offsets[i]
@@ -858,10 +861,10 @@ def print_source(debugger, line_num):
 
     if line_num == 0:
         start = 0
-        end = len(last_bp.function.source) - 1
+        end = len(last_bp.function.source)
     else:
         start = max(last_bp.line - line_num, 0)
-        end = min(last_bp.line + line_num-1, len(last_bp.function.source)-1)
+        end = min(last_bp.line + line_num - 1, len(last_bp.function.source))
 
     for i in range(start, end):
         if i == last_bp.line - 1:

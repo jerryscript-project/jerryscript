@@ -60,12 +60,14 @@ DECLARE_GLOBAL_FUNCTION(clearInterval) {
 
     mbed::js::EventLoop::getInstance().getQueue().cancel(id);
 
+    jerry_value_t global_obj = jerry_get_global_object();
     jerry_value_t prop_name = jerry_create_string((const jerry_char_t*)"setInterval");
-    jerry_value_t func_obj = jerry_get_property(this_obj, prop_name);
+    jerry_value_t func_obj = jerry_get_property(global_obj, prop_name);
     jerry_release_value(prop_name);
 
     jerry_delete_property_by_index(func_obj, id);
     jerry_release_value(func_obj);
+    jerry_release_value(global_obj);
 
     return jerry_create_undefined();
 }

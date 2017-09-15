@@ -300,7 +300,7 @@ bool jerry_get_boolean_value (const jerry_value_t value);
 double jerry_get_number_value (const jerry_value_t value);
 
 /**
- * Functions for string values.
+ * Functions and macros for string values.
  */
 jerry_size_t jerry_get_string_size (const jerry_value_t value);
 jerry_size_t jerry_get_utf8_string_size (const jerry_value_t value);
@@ -320,6 +320,16 @@ jerry_size_t jerry_substring_to_utf8_char_buffer (const jerry_value_t value,
                                                   jerry_length_t end_pos,
                                                   jerry_char_t *buffer_p,
                                                   jerry_size_t buffer_size);
+
+#define DECLARE_C_STRING_FROM_JERRY_STRING(prefix, value)               \
+  jerry_size_t prefix##_size = jerry_get_string_size ((value));         \
+  jerry_char_t prefix##_string[prefix##_size];                          \
+  jerry_string_to_char_buffer ((value), prefix##_string, prefix##_size)
+
+#define DECLARE_C_STRING_FROM_UTF8_JERRY_STRING(prefix, value)               \
+  jerry_size_t prefix##_size = jerry_get_string_size ((value));              \
+  jerry_char_t prefix##_string[prefix##_size];                               \
+  jerry_string_to_utf8_char_buffer ((value), prefix##_string, prefix##_size)
 
 /**
  * Functions for array object values.

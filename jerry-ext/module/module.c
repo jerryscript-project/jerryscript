@@ -71,10 +71,18 @@ static const jerry_context_data_manager_t jerryx_module_manager =
   .bytes_needed = sizeof (jerry_value_t)
 };
 
+#if defined (JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED
 /**
  * Declare the linker section where module definitions are stored.
  */
 JERRYX_SECTION_DECLARE (jerryx_modules, jerryx_native_module_t)
+#else /* !(defined(JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED) */
+/**
+ * Declare and initialize the global variables referring to the module definitions.
+ */
+jerryx_native_module_t *__start_jerryx_modules = NULL;
+jerryx_native_module_t *__stop_jerryx_modules = NULL;
+#endif /* defined(JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED */
 
 /**
  * Attempt to retrieve a module by name from a cache, and return false if not found.
@@ -133,7 +141,6 @@ jerryx_module_add_to_cache (jerry_value_t cache, /**< cache to which to add the 
   return ret;
 } /* jerryx_module_add_to_cache */
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
 static const jerry_char_t *on_resolve_absent = (jerry_char_t *) "Module on_resolve () must not be NULL";
 
 /**
@@ -164,7 +171,6 @@ jerryx_module_native_resolver (const jerry_char_t *name, /**< name of the module
 
   return false;
 } /* jerryx_module_native_resolver */
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */
 
 /**
  * Resolve a single module using the module resolvers available in the section declared above and load it into the

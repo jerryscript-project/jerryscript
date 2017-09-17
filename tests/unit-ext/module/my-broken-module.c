@@ -20,5 +20,5 @@
 /*
  * A broken module to test that the loader complains about the absence of on_resolve ()
  */
-JERRYX_NATIVE_MODULE (my_broken_module, NULL)
+JERRYX_NATIVE_MODULE ("my_broken_module", NULL)
 #endif /* JERRYX_NATIVE_MODULES_SUPPORTED */

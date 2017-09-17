@@ -18,14 +18,17 @@
 #include "jerryscript.h"
 #include "test-common.h"
 #include "jerryscript-ext/module.h"
+#include "modules.h"
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
+/* Declare modules available in the other files. */
+jerryx_native_module_t modules[] =
+{
+  JERRYX_NATIVE_MODULE_INIT ("my_custom_module", my_custom_module_on_resolve),
+  JERRYX_NATIVE_MODULE_INIT ("my_broken_module", NULL)
+};
 
 /* Load a module. */
 const char eval_string1[] = "require ('my_custom_module');";
-
-/* Load a module using a different resolver. */
-const char eval_string2[] = "require ('differently-handled-module');";
 
 /* Load a broken module using the built-in resolver. */
 const char eval_string3[] =
@@ -41,61 +44,9 @@ const char eval_string3[] =
 "    (theError instanceof TypeError)) ? 1 : 0);"
 "}) ();";
 
-/* Load a non-existent module. */
-const char eval_string4[] =
-"(function() {"
-"  var theError;"
-"  try {"
-"    require ('some_missing_module_xyzzy');"
-"  } catch (anError) {"
-"    theError = anError;"
-"  }"
-"  return (((theError.message === 'Module not found') &&"
-"    (theError.moduleName === 'some_missing_module_xyzzy')) ? 1 : 0);"
-"}) ();";
-
-/* Make sure the result of a module load is cached. */
-const char eval_string5[] =
-"(function() {"
-"  var x = require('cache-check');"
-"  var y = require('cache-check');"
-"  return x === y ? 1 : 0;"
-"}) ();";
-
-static bool
-resolve_differently_handled_module (const jerry_char_t *name,
-                                                jerry_value_t *result)
+static const jerryx_module_resolver_t resolvers[] =
 {
-  if (!strcmp ((char *) name, "differently-handled-module"))
-  {
-    (*result) = jerry_create_number (29);
-    return true;
-  }
-  return false;
-} /* resolve_differently_handled_module */
-
-/*
- * Define module "cache-check" via its own resolver as an empty object. Since objects are accessible only via references
- * we can strictly compare the object returned on subsequent attempts at loading "cache-check" with the object returned
- * on the first attempt and establish that the two are in fact the same object - which in turn shows that caching works.
- */
-static bool
-cache_check (const jerry_char_t *name,
-             jerry_value_t *result)
-{
-  if (!strcmp ((char *) name, "cache-check"))
-  {
-    (*result) = jerry_create_object ();
-    return true;
-  }
-  return false;
-} /* cache_check */
-
-static const jerryx_module_resolver_t resolvers[3] =
-{
-  jerryx_module_native_resolver,
-  resolve_differently_handled_module,
-  cache_check
+  jerryx_module_native_resolver
 };
 
 static jerry_value_t
@@ -147,6 +98,8 @@ main (int argc, char **argv)
   (void) argv;
   jerry_value_t js_global = 0, js_function = 0, js_property_name = 0;
 
+  JERRYX_NATIVE_MODULES_INIT (modules);
+
   jerry_init (JERRY_INIT_EMPTY);
 
   js_global = jerry_get_global_object ();
@@ -155,10 +108,7 @@ main (int argc, char **argv)
   jerry_set_property (js_global, js_property_name, js_function);
 
   eval_one (eval_string1, 42);
-  eval_one (eval_string2, 29);
   eval_one (eval_string3, 1);
-  eval_one (eval_string4, 1);
-  eval_one (eval_string5, 1);
 
   jerry_release_value (js_property_name);
   jerry_release_value (js_function);
@@ -166,5 +116,3 @@ main (int argc, char **argv)
 
   jerry_cleanup ();
 } /* main */
-
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */

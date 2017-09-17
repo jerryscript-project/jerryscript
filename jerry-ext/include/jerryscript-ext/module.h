@@ -19,11 +19,10 @@
 #include "jerryscript.h"
 
 #ifdef __GNUC__
-#define JERRYX_NATIVE_MODULES_SUPPORTED
+#ifndef JERRYX_NATIVE_MODULES_SUPPORTED
+#define JERRYX_NATIVE_MODULES_SUPPORTED 1
+#endif /* !JERRYX_NATIVE_MODULES_SUPPORTED */
 #endif /* __GNUC__ */
-
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
-#include "jerryscript-ext/section.impl.h"
 
 /**
  * Declare the signature for the module initialization function.
@@ -41,24 +40,55 @@ typedef struct
 } jerryx_native_module_t;
 
 /**
+ * Declare an initializer for a structure of type jerryx_native_module_t.
+ */
+#define JERRYX_NATIVE_MODULE_INIT(module_name, on_resolve_cb) \
+{                                                             \
+  .name = ((jerry_char_t *) (module_name)),                   \
+  .on_resolve = (on_resolve_cb)                               \
+}
+
+#if defined (JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED
+
+#include "jerryscript-ext/section.impl.h"
+
+/**
  * Declare a helper macro that expands to the declaration of a variable of type jerryx_native_module_t placed into the
  * specially-named linker section "jerryx_modules" where the JerryScript module resolver
  * jerryx_module_native_resolver () will look for it.
  */
 #define JERRYX_NATIVE_MODULE(module_name, on_resolve_cb)                                 \
   static const jerryx_native_module_t _module JERRYX_SECTION_ATTRIBUTE(jerryx_modules) = \
-  {                                                                                      \
-    .name = ((jerry_char_t *) #module_name),                                             \
-    .on_resolve = (on_resolve_cb)                                                        \
-  };
+    JERRYX_NATIVE_MODULE_INIT((module_name), (on_resolve_cb));
+
+#else /* !(defined(JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED) */
+
+/**
+ * Declare the global variables the linker would normally provide.
+ */
+extern jerryx_native_module_t *__start_jerryx_modules;
+extern jerryx_native_module_t *__stop_jerryx_modules;
+
+/**
+ * Define the JERRYX_NATIVE_MODULE macro as empty.
+ */
+#define JERRYX_NATIVE_MODULE (module_name, on_resolve_cb)
+
+/**
+ * Declare a macro that will allow users to initialize the global variables from an array of jerryx_native_module_t
+ * structures.
+ */
+#define JERRYX_NATIVE_MODULES_INIT(modules)                                      \
+  __start_jerryx_modules = (modules);                                            \
+  __stop_jerryx_modules = &(modules)[sizeof ((modules)) / sizeof ((modules)[0])]
+
+#endif /* defined(JERRYX_NATIVE_MODULES_SUPPORTED) && JERRYX_NATIVE_MODULES_SUPPORTED */
 
 /**
  * Declare the JerryScript module resolver so that it may be added to an array of jerryx_module_resolver_t items and
  * thus passed to jerryx_module_resolve.
  */
 bool jerryx_module_native_resolver (const jerry_char_t *name, jerry_value_t *result);
-
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */
 
 /**
  * Declare the function pointer type for module resolvers.

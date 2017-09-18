@@ -26,7 +26,7 @@
 #define test_subiters (128)
 
 /* Max bytes in string. */
-#define max_bytes_in_string (16 * 1024)
+#define max_bytes_in_string (65 * 1024)
 #define max_code_units_in_string (max_bytes_in_string)
 
 typedef enum

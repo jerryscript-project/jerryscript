@@ -273,7 +273,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
     lit_utf8_byte_t *data_p;
 
-    if (likely (string_size <= UINT16_MAX))
+    if (likely (converted_string_size <= UINT16_MAX))
     {
       string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + converted_string_size);
 

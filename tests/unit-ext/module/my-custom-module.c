@@ -16,7 +16,7 @@
 #include "jerryscript.h"
 #include "jerryscript-ext/module.h"
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
+#define MODULE_NAME my_custom_module
 
 static jerry_value_t
 my_custom_module_on_resolve (void)
@@ -24,6 +24,4 @@ my_custom_module_on_resolve (void)
   return jerry_create_number (42);
 } /* my_custom_module_on_resolve */
 
-JERRYX_NATIVE_MODULE (my_custom_module, my_custom_module_on_resolve)
-
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */
+JERRYX_NATIVE_MODULE (MODULE_NAME, my_custom_module_on_resolve)

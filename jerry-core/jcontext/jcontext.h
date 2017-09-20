@@ -173,7 +173,7 @@ struct jerry_instance_t
 #ifndef JERRY_SYSTEM_ALLOCATOR
   jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
   uint32_t heap_size; /**< size of the heap */
-#endif
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
   uint8_t *lcache_p; /**< point to the entrance of the lcache in buffer */
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */

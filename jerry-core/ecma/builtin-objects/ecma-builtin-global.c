@@ -1316,6 +1316,12 @@ ecma_builtin_global_object_unescape (ecma_value_t this_arg, /**< this argument *
       hex_digits = (ecma_char_t) (hex_digits * 16 + (ecma_char_t) lit_char_hex_to_int (chr));
       status++;
     }
+    else
+    {
+      /* Previously found hexadecimal digit in escape sequence but it's not valid '%xy' pattern
+       * so essentially it was only a simple character. */
+      status = 0;
+    }
 
     /* 11-17. Found valid '%uwxyz' or '%xy' escape. */
     if (status == 8 || status == 3)

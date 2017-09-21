@@ -111,8 +111,10 @@ jerry_debugger_init (uint16_t port) /**< server port number */
  *              JERRY_DEBUGGER_SOURCE_END - the end of the source codes
  *              JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED - the end of the context
  */
-jerry_debugger_wait_and_run_type_t
-jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [out] parse and run return value */
+jerry_debugger_wait_for_source_status_t
+jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t callback_p, /**< callback function */
+                                       void *user_p, /**< user pointer passed to the callback */
+                                       jerry_value_t *return_value) /**< [out] parse and run return value */
 {
   *return_value = jerry_create_undefined ();
 
@@ -122,7 +124,7 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
   {
     JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
     jerry_debugger_uint8_data_t *client_source_data_p = NULL;
-    jerry_debugger_wait_and_run_type_t ret_type = JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
+    jerry_debugger_wait_for_source_status_t ret_type = JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 
     /* Notify the client about that the engine is waiting for a source. */
     jerry_debugger_send_type (JERRY_DEBUGGER_WAIT_FOR_SOURCE);
@@ -159,24 +161,17 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
         {
           JERRY_ASSERT (client_source_data_p != NULL);
 
-          jerry_char_t *string_p = (jerry_char_t *) (client_source_data_p + 1);
-          size_t name_size = strlen ((const char *) string_p);
+          jerry_char_t *resource_name_p = (jerry_char_t *) (client_source_data_p + 1);
+          size_t resource_name_size = strlen ((const char *) resource_name_p);
 
-          *return_value = jerry_parse_named_resource (string_p,
-                                                      name_size,
-                                                      (string_p + name_size + 1),
-                                                      (client_source_data_p->uint8_size - name_size - 1),
-                                                      false);
+          *return_value = callback_p (resource_name_p,
+                                      resource_name_size,
+                                      resource_name_p + resource_name_size + 1,
+                                      client_source_data_p->uint8_size - resource_name_size - 1,
+                                      user_p);
 
-          if (!jerry_value_has_error_flag (*return_value))
-          {
-            jerry_value_t func_val = *return_value;
-            *return_value = jerry_run (func_val);
-            jerry_release_value (func_val);
-
-            ret_type = JERRY_DEBUGGER_SOURCE_RECEIVED;
-            break;
-          }
+          ret_type = JERRY_DEBUGGER_SOURCE_RECEIVED;
+          break;
         }
       }
 
@@ -198,9 +193,12 @@ jerry_debugger_wait_and_run_client_source (jerry_value_t *return_value) /**< [ou
 
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 #else
+  JERRY_UNUSED (callback_p);
+  JERRY_UNUSED (user_p);
+
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 #endif /* JERRY_DEBUGGER */
-} /* jerry_debugger_wait_and_run_client_source */
+} /* jerry_debugger_wait_for_client_source */
 
 /**
  * Send the output of the program to the debugger client.

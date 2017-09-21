@@ -43,3 +43,5 @@ docs/doxygen
 # Tests
 tests/test262/
 tests/unit-doc/*.c
+emscripten-snapshot-compiler/node_modules
+jsconfig.json

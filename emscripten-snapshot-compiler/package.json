@@ -1,0 +1,13 @@
+{
+  "name": "jerryscript-snapshot-compiler",
+  "version": "1.0.0",
+  "main": "jerryscript-snapshot-compiler.js",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "ava": "^0.22.0"
+  },
+  "scripts": {
+    "build": "source $EMSDK/emsdk_env.sh && ../tools/build.py --emscripten-snapshot-compiler ON",
+    "test": "ava ./tests/*.js"
+  }
+}

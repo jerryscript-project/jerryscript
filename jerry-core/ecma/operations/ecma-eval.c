@@ -88,7 +88,9 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
 
-  ecma_value_t parse_status = parser_parse_script (code_p,
+  ecma_value_t parse_status = parser_parse_script (NULL,
+                                                   0,
+                                                   code_p,
                                                    code_buffer_size,
                                                    is_strict_call,
                                                    &bytecode_data_p);

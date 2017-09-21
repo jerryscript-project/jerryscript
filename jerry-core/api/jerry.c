@@ -348,7 +348,9 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;
 
-  parse_status = parser_parse_script (source_p,
+  parse_status = parser_parse_script (NULL,
+                                      0,
+                                      source_p,
                                       source_size,
                                       is_strict,
                                       &bytecode_data_p);
@@ -385,27 +387,99 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
  *         thrown error - otherwise
  */
 jerry_value_t
-jerry_parse_named_resource (const jerry_char_t *name_p, /**< name (usually a file name) */
-                            size_t name_length, /**< length of name */
+jerry_parse_named_resource (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
+                            size_t resource_name_length, /**< length of resource name */
                             const jerry_char_t *source_p, /**< script source */
                             size_t source_size, /**< script source size */
                             bool is_strict) /**< strict mode */
 {
-#ifdef JERRY_DEBUGGER
+#if defined JERRY_DEBUGGER && defined JERRY_JS_PARSER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
                                 JERRY_DEBUGGER_NO_SUBTYPE,
-                                name_p,
-                                name_length);
+                                resource_name_p,
+                                resource_name_length);
   }
-#else /* JERRY_DEBUGGER */
-  JERRY_UNUSED (name_p);
-  JERRY_UNUSED (name_length);
-#endif /* JERRY_DEBUGGER */
+#else /* !(JERRY_DEBUGGER && JERRY_JS_PARSER) */
+  JERRY_UNUSED (resource_name_p);
+  JERRY_UNUSED (resource_name_length);
+#endif /* JERRY_DEBUGGER && JERRY_JS_PARSER */
 
   return jerry_parse (source_p, source_size, is_strict);
 } /* jerry_parse_named_resource */
+
+/**
+ * Parse function and construct an EcmaScript function. The lexical
+ * environment is set to the global lexical environment.
+ *
+ * @return function object value - if script was parsed successfully,
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
+                      size_t resource_name_length, /**< length of resource name */
+                      const jerry_char_t *arg_list_p, /**< script source */
+                      size_t arg_list_size, /**< script source size */
+                      const jerry_char_t *source_p, /**< script source */
+                      size_t source_size, /**< script source size */
+                      bool is_strict) /**< strict mode */
+{
+#if defined JERRY_DEBUGGER && defined JERRY_JS_PARSER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                resource_name_p,
+                                resource_name_length);
+  }
+#else /* !(JERRY_DEBUGGER && JERRY_JS_PARSER) */
+  JERRY_UNUSED (resource_name_p);
+  JERRY_UNUSED (resource_name_length);
+#endif /* JERRY_DEBUGGER && JERRY_JS_PARSER */
+
+#if JERRY_JS_PARSER
+  jerry_assert_api_available ();
+
+  ecma_compiled_code_t *bytecode_data_p;
+  ecma_value_t parse_status;
+
+  if (arg_list_p == NULL)
+  {
+    /* Must not be a NULL value. */
+    arg_list_p = (const jerry_char_t *) "";
+  }
+
+  parse_status = parser_parse_script (arg_list_p,
+                                      arg_list_size,
+                                      source_p,
+                                      source_size,
+                                      is_strict,
+                                      &bytecode_data_p);
+
+  if (ECMA_IS_VALUE_ERROR (parse_status))
+  {
+    return parse_status;
+  }
+
+  ecma_free_value (parse_status);
+
+  ecma_object_t *lex_env_p = ecma_get_global_environment ();
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
+                                                              bytecode_data_p);
+  ecma_bytecode_deref (bytecode_data_p);
+
+  return ecma_make_object_value (func_obj_p);
+#else /* !JERRY_JS_PARSER */
+  JERRY_UNUSED (arg_list_p);
+  JERRY_UNUSED (arg_list_size);
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (is_strict);
+
+  return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+#endif /* JERRY_JS_PARSER */
+} /* jerry_parse_function */
 
 /**
  * Run an EcmaScript function created by jerry_parse.

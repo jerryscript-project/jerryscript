@@ -1032,6 +1032,35 @@ main (void)
   TEST_ASSERT (number_val != number_val);
   jerry_release_value (val_t);
 
+  /* Test: create function */
+  const char *func_resource = "unknown";
+  const char *func_arg_list = "a , b,c";
+  const char *func_src = "  return 5 +  a+\nb+c";
+
+  jerry_value_t func_val = jerry_parse_function ((const jerry_char_t *) func_resource,
+                                                 strlen (func_resource),
+                                                 (const jerry_char_t *) func_arg_list,
+                                                 strlen (func_arg_list),
+                                                 (const jerry_char_t *) func_src,
+                                                 strlen (func_src),
+                                                 false);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (func_val));
+
+  jerry_value_t func_args[3] =
+  {
+    jerry_create_number (4),
+    jerry_create_number (6),
+    jerry_create_number (-2)
+  };
+
+  val_t = jerry_call_function (func_val, func_args[0], func_args, 3);
+  number_val = jerry_get_number_value (val_t);
+  TEST_ASSERT (number_val == 13.0);
+
+  jerry_release_value (val_t);
+  jerry_release_value (func_val);
+
   jerry_cleanup ();
 
   TEST_ASSERT (test_api_is_free_callback_was_called);

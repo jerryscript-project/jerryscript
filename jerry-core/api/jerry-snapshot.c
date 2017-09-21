@@ -479,7 +479,9 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
                                                         JMEM_ALIGNMENT);
   globals.snapshot_error_occured = false;
 
-  parse_status = parser_parse_script (source_p,
+  parse_status = parser_parse_script (NULL,
+                                      0,
+                                      source_p,
                                       source_size,
                                       is_strict,
                                       &bytecode_data_p);
@@ -900,7 +902,9 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
   ecma_value_t parse_status;
   ecma_compiled_code_t *bytecode_data_p;
-  parse_status = parser_parse_script (source_p,
+  parse_status = parser_parse_script (NULL,
+                                      0,
+                                      source_p,
                                       source_size,
                                       is_strict,
                                       &bytecode_data_p);

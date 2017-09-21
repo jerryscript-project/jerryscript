@@ -268,6 +268,38 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
+#ifdef JERRY_DEBUGGER
+
+/**
+ * Runs the source code received by jerry_debugger_wait_for_client_source.
+ *
+ * @return result fo the source code execution
+ */
+static jerry_value_t
+wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource name */
+                          size_t resource_name_size, /**< size of resource name */
+                          const jerry_char_t *source_p, /**< source code */
+                          size_t source_size, /**< source code size */
+                          void *user_p __attribute__((unused))) /**< user pointer */
+{
+  jerry_value_t ret_val = jerry_parse_named_resource (resource_name_p,
+                                                      resource_name_size,
+                                                      source_p,
+                                                      source_size,
+                                                      false);
+
+  if (!jerry_value_has_error_flag (ret_val))
+  {
+    jerry_value_t func_val = ret_val;
+    ret_val = jerry_run (func_val);
+    jerry_release_value (func_val);
+  }
+
+  return ret_val;
+} /* wait_for_source_callback */
+
+#endif /* JERRY_DEBUGGER */
+
 /**
  * Command line option IDs
  */
@@ -723,14 +755,18 @@ main (int argc,
   {
     is_repl_mode = false;
 #ifdef JERRY_DEBUGGER
-    jerry_value_t run_result;
-    jerry_debugger_wait_and_run_type_t receive_status;
 
-    do
+    while (true)
     {
+      jerry_debugger_wait_for_source_status_t receive_status;
+
       do
       {
-        receive_status = jerry_debugger_wait_and_run_client_source (&run_result);
+        jerry_value_t run_result;
+
+        receive_status = jerry_debugger_wait_for_client_source (wait_for_source_callback,
+                                                                NULL,
+                                                                &run_result);
 
         if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
         {
@@ -747,21 +783,22 @@ main (int argc,
       }
       while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
 
-      if (receive_status == JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
+      if (receive_status != JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
       {
-        jerry_cleanup ();
-
-        jerry_init (flags);
-        jerry_debugger_init (debug_port);
-
-        register_js_function ("assert", jerryx_handler_assert);
-        register_js_function ("gc", jerryx_handler_gc);
-        register_js_function ("print", jerryx_handler_print);
-
-        ret_value = jerry_create_undefined ();
+        break;
       }
+
+      jerry_cleanup ();
+
+      jerry_init (flags);
+      jerry_debugger_init (debug_port);
+
+      register_js_function ("assert", jerryx_handler_assert);
+      register_js_function ("gc", jerryx_handler_gc);
+      register_js_function ("print", jerryx_handler_print);
+
+      ret_value = jerry_create_undefined ();
     }
-    while (receive_status == JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED);
 
 #endif /* JERRY_DEBUGGER */
   }

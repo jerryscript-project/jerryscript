@@ -72,9 +72,36 @@ static const jerry_context_data_manager_t jerryx_module_manager =
 };
 
 /**
- * Declare the linker section where module definitions are stored.
+ * Global static entry point to the linked list of available modules.
  */
-JERRYX_SECTION_DECLARE (jerryx_modules, jerryx_native_module_t)
+static jerryx_native_module_t *first_module_p = NULL;
+
+void jerryx_native_module_register (jerryx_native_module_t *module_p)
+{
+  module_p->next_p = first_module_p;
+  first_module_p = module_p;
+} /* jerryx_native_module_register */
+
+void jerryx_native_module_unregister (jerryx_native_module_t *module_p)
+{
+  jerryx_native_module_t *parent_p = NULL, *iter_p = NULL;
+
+  for (iter_p = first_module_p; iter_p != NULL; parent_p = iter_p, iter_p = iter_p->next_p)
+  {
+    if (iter_p == module_p)
+    {
+      if (parent_p)
+      {
+        parent_p->next_p = module_p->next_p;
+      }
+      else
+      {
+        first_module_p = module_p->next_p;
+      }
+      module_p->next_p = NULL;
+    }
+  }
+} /* jerryx_native_module_unregister */
 
 /**
  * Attempt to retrieve a module by name from a cache, and return false if not found.
@@ -133,7 +160,6 @@ jerryx_module_add_to_cache (jerry_value_t cache, /**< cache to which to add the 
   return ret;
 } /* jerryx_module_add_to_cache */
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
 static const jerry_char_t *on_resolve_absent = (jerry_char_t *) "Module on_resolve () must not be NULL";
 
 /**
@@ -145,15 +171,12 @@ bool
 jerryx_module_native_resolver (const jerry_char_t *name, /**< name of the module */
                                jerry_value_t *result) /**< [out] where to put the resulting module instance */
 {
-  int index;
   const jerryx_native_module_t *module_p = NULL;
 
   /* Look for the module by its name in the list of module definitions. */
-  for (index = 0, module_p = &__start_jerryx_modules[0];
-       &__start_jerryx_modules[index] < __stop_jerryx_modules;
-       index++, module_p = &__start_jerryx_modules[index])
+  for (module_p = first_module_p; module_p != NULL; module_p = module_p->next_p)
   {
-    if (module_p->name != NULL && !strcmp ((char *) module_p->name, (char *) name))
+    if (module_p->name_p != NULL && !strcmp ((char *) module_p->name_p, (char *) name))
     {
       /* If we find the module by its name we load it and cache it if it has an on_resolve () and complain otherwise. */
       (*result) = ((module_p->on_resolve) ? module_p->on_resolve ()
@@ -164,7 +187,6 @@ jerryx_module_native_resolver (const jerry_char_t *name, /**< name of the module
 
   return false;
 } /* jerryx_module_native_resolver */
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */
 
 /**
  * Resolve a single module using the module resolvers available in the section declared above and load it into the

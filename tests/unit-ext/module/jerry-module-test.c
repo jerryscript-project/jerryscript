@@ -19,8 +19,6 @@
 #include "test-common.h"
 #include "jerryscript-ext/module.h"
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
-
 /* Load a module. */
 const char eval_string1[] = "require ('my_custom_module');";
 
@@ -138,12 +136,22 @@ eval_one (const char *the_string, double expected_result)
   jerry_release_value (js_eval_result);
 } /* eval_one */
 
+#ifndef ENABLE_INIT_FINI
+extern void my_broken_module_register (void);
+extern void my_custom_module_register (void);
+#endif /* !ENABLE_INIT_FINI */
+
 int
 main (int argc, char **argv)
 {
   (void) argc;
   (void) argv;
   jerry_value_t js_global = 0, js_function = 0, js_property_name = 0;
+
+#ifndef ENABLE_INIT_FINI
+  my_broken_module_register ();
+  my_custom_module_register ();
+#endif /* !ENABLE_INIT_FINI */
 
   jerry_init (JERRY_INIT_EMPTY);
 
@@ -164,5 +172,3 @@ main (int argc, char **argv)
 
   jerry_cleanup ();
 } /* main */
-
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */

@@ -16,9 +16,9 @@
 #include "jerryscript.h"
 #include "jerryscript-ext/module.h"
 
-#ifdef JERRYX_NATIVE_MODULES_SUPPORTED
+#define MODULE_NAME my_broken_module
+
 /*
  * A broken module to test that the loader complains about the absence of on_resolve ()
  */
-JERRYX_NATIVE_MODULE (my_broken_module, NULL)
-#endif /* JERRYX_NATIVE_MODULES_SUPPORTED */
+JERRYX_NATIVE_MODULE (MODULE_NAME, NULL)

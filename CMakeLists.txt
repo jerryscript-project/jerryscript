@@ -53,6 +53,9 @@ set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STATIC_LINK ON  CACHE BOOL "Enable static linking?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
+# Optional features
+set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+
 # Option overrides
 if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
@@ -106,6 +109,7 @@ message(STATUS "JERRY_LIBC                " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
 message(STATUS "JERRY_LIBM                " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
 message(STATUS "UNITTESTS                 " ${UNITTESTS})
 message(STATUS "DOCTESTS                  " ${DOCTESTS})
+message(STATUS "FEATURE_INIT_FINI         " ${FEATURE_INIT_FINI})
 
 # Setup directories
 # Project binary dir

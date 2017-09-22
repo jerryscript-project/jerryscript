@@ -60,11 +60,18 @@ const char eval_string5[] =
 "  return x === y ? 1 : 0;"
 "}) ();";
 
+/*
+ * Define a resolver for a module named "differently-handled-module" to check that custom resolvers work.
+ */
 static bool
-resolve_differently_handled_module (const jerry_char_t *name,
-                                                jerry_value_t *result)
+resolve_differently_handled_module (const jerry_value_t name,
+                                    jerry_value_t *result)
 {
-  if (!strcmp ((char *) name, "differently-handled-module"))
+  jerry_size_t name_size = jerry_get_utf8_string_size (name);
+  jerry_char_t name_string[name_size];
+  jerry_string_to_utf8_char_buffer (name, name_string, name_size);
+
+  if (!strncmp ((char *) name_string, "differently-handled-module", name_size))
   {
     (*result) = jerry_create_number (29);
     return true;
@@ -72,16 +79,26 @@ resolve_differently_handled_module (const jerry_char_t *name,
   return false;
 } /* resolve_differently_handled_module */
 
+static jerryx_module_resolver_t differently_handled_module_resolver =
+{
+  NULL,
+  resolve_differently_handled_module
+};
+
 /*
  * Define module "cache-check" via its own resolver as an empty object. Since objects are accessible only via references
  * we can strictly compare the object returned on subsequent attempts at loading "cache-check" with the object returned
  * on the first attempt and establish that the two are in fact the same object - which in turn shows that caching works.
  */
 static bool
-cache_check (const jerry_char_t *name,
+cache_check (const jerry_value_t name,
              jerry_value_t *result)
 {
-  if (!strcmp ((char *) name, "cache-check"))
+  jerry_size_t name_size = jerry_get_utf8_string_size (name);
+  jerry_char_t name_string[name_size];
+  jerry_string_to_utf8_char_buffer (name, name_string, name_size);
+
+  if (!strncmp ((char *) name_string, "cache-check", name_size))
   {
     (*result) = jerry_create_object ();
     return true;
@@ -89,11 +106,17 @@ cache_check (const jerry_char_t *name,
   return false;
 } /* cache_check */
 
-static const jerryx_module_resolver_t resolvers[3] =
+static jerryx_module_resolver_t cache_check_resolver =
 {
-  jerryx_module_native_resolver,
-  resolve_differently_handled_module,
+  NULL,
   cache_check
+};
+
+static const jerryx_module_resolver_t *resolvers[3] =
+{
+  &jerryx_module_native_resolver,
+  &differently_handled_module_resolver,
+  &cache_check_resolver
 };
 
 static jerry_value_t
@@ -107,16 +130,9 @@ handle_require (const jerry_value_t js_function,
   (void) args_count;
 
   jerry_value_t return_value = 0;
-  jerry_char_t module_name[256] = "";
-  jerry_size_t bytes_copied = 0;
 
   TEST_ASSERT (args_count == 1);
-  bytes_copied = jerry_string_to_char_buffer (args_p[0], module_name, 256);
-  if (bytes_copied < 256)
-  {
-    module_name[bytes_copied] = 0;
-    return_value = jerryx_module_resolve (module_name, resolvers, 3);
-  }
+  return_value = jerryx_module_resolve (args_p[0], resolvers, 3);
 
   return return_value;
 } /* handle_require */

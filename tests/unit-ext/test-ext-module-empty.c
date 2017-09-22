@@ -26,12 +26,15 @@ main (int argc, char **argv)
   (void) argv;
   jerry_char_t buffer[256];
   jerry_size_t bytes_copied;
-  jerryx_module_resolver_t resolver = jerryx_module_native_resolver;
+  const jerryx_module_resolver_t *resolver = &jerryx_module_native_resolver;
+  jerry_value_t module_name;
 
   jerry_init (JERRY_INIT_EMPTY);
 
   /* Attempt to load a non-existing module. */
-  jerry_value_t module = jerryx_module_resolve ((jerry_char_t *) "some-unknown-module-name", &resolver, 1);
+  module_name = jerry_create_string ((jerry_char_t *) "some-unknown-module-name");
+  jerry_value_t module = jerryx_module_resolve (module_name, &resolver, 1);
+  jerry_release_value (module_name);
 
   TEST_ASSERT (jerry_value_has_error_flag (module));
 

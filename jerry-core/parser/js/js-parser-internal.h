@@ -35,24 +35,28 @@
  */
 
 /* General parser flags. */
-#define PARSER_IS_STRICT                      0x00001u
-#define PARSER_IS_FUNCTION                    0x00002u
-#define PARSER_IS_CLOSURE                     0x00004u
-#define PARSER_IS_PROPERTY_GETTER             0x00008u
-#define PARSER_IS_PROPERTY_SETTER             0x00010u
-#define PARSER_IS_FUNC_EXPRESSION             0x00020u
-#define PARSER_HAS_NON_STRICT_ARG             0x00040u
-#define PARSER_INSIDE_WITH                    0x00080u
-#define PARSER_RESOLVE_THIS_FOR_CALLS         0x00100u
-#define PARSER_NAMED_FUNCTION_EXP             0x00200u
-#define PARSER_HAS_INITIALIZED_VARS           0x00400u
-#define PARSER_NO_END_LABEL                   0x00800u
-#define PARSER_NO_REG_STORE                   0x01000u
-#define PARSER_ARGUMENTS_NEEDED               0x02000u
-#define PARSER_ARGUMENTS_NOT_NEEDED           0x04000u
-#define PARSER_LEXICAL_ENV_NEEDED             0x08000u
-#define PARSER_HAS_LATE_LIT_INIT              0x10000u
-#define PARSER_DEBUGGER_BREAKPOINT_APPENDED   0x20000u
+#define PARSER_IS_STRICT                      0x00000001u
+#define PARSER_IS_FUNCTION                    0x00000002u
+#define PARSER_IS_CLOSURE                     0x00000004u
+#define PARSER_IS_PROPERTY_GETTER             0x00000008u
+#define PARSER_IS_PROPERTY_SETTER             0x00000010u
+#define PARSER_IS_FUNC_EXPRESSION             0x00000020u
+#define PARSER_NAMED_FUNCTION_EXP             0x00000040u
+#define PARSER_HAS_NON_STRICT_ARG             0x00000080u
+#define PARSER_ARGUMENTS_NEEDED               0x00000100u
+#define PARSER_ARGUMENTS_NOT_NEEDED           0x00000200u
+#define PARSER_LEXICAL_ENV_NEEDED             0x00000400u
+#define PARSER_INSIDE_WITH                    0x00000800u
+#define PARSER_RESOLVE_THIS_FOR_CALLS         0x00001000u
+#define PARSER_HAS_INITIALIZED_VARS           0x00002000u
+#define PARSER_HAS_LATE_LIT_INIT              0x00004000u
+#define PARSER_NO_END_LABEL                   0x00008000u
+#define PARSER_NO_REG_STORE                   0x00010000u
+#define PARSER_DEBUGGER_BREAKPOINT_APPENDED   0x00020000u
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+#define PARSER_IS_ARROW_FUNCTION              0x00040000u
+#define PARSER_ARROW_PARSE_ARGS               0x00080000u
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /* Expression parsing flags. */
 #define PARSE_EXPR                            0x00
@@ -392,6 +396,10 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
 /* Lexer functions */
 
 void lexer_next_token (parser_context_t *context_p);
+bool lexer_check_colon (parser_context_t *context_p);
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+lexer_token_type_t lexer_check_arrow (parser_context_t *context_p);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, bool propety_name);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
@@ -441,6 +449,9 @@ void parser_free_jumps (parser_stack_iterator_t iterator);
  */
 
 ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /* Error management. */
 

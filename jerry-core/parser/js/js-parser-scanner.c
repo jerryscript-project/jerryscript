@@ -34,8 +34,11 @@ typedef enum
 {
   SCAN_MODE_PRIMARY_EXPRESSION,            /**< scanning primary expression */
   SCAN_MODE_PRIMARY_EXPRESSION_AFTER_NEW,  /**< scanning primary expression after new */
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  SCAN_MODE_ARROW_FUNCTION,                /**< arrow function might follows */
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
   SCAN_MODE_POST_PRIMARY_EXPRESSION,       /**< scanning post primary expression */
-  SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning prymary expression end */
+  SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
   SCAN_MODE_STATEMENT,                     /**< scanning statement */
   SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
   SCAN_MODE_PROPERTY_NAME,                 /**< scanning property name */
@@ -54,7 +57,7 @@ typedef enum
   SCAN_STACK_SQUARE_BRACKETED_EXPRESSION,  /**< square bracketed expression group */
   SCAN_STACK_OBJECT_LITERAL,               /**< object literal group */
   SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
-  SCAN_STACK_BLOCK_EXPRESSION,             /**< block expression group*/
+  SCAN_STACK_BLOCK_EXPRESSION,             /**< block expression group */
   SCAN_STACK_BLOCK_PROPERTY,               /**< block property group */
 } scan_stack_modes_t;
 
@@ -108,6 +111,15 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
       return true;
     }
     case LEXER_LITERAL:
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    {
+      bool is_ident = (context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+      *mode = (is_ident ? SCAN_MODE_ARROW_FUNCTION
+                        : SCAN_MODE_POST_PRIMARY_EXPRESSION);
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
     case LEXER_KEYW_THIS:
     case LEXER_LIT_TRUE:
     case LEXER_LIT_FALSE:
@@ -137,7 +149,12 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
     }
     case LEXER_RIGHT_PAREN:
     {
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+      *mode = SCAN_MODE_ARROW_FUNCTION;
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
       *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
       if (stack_top == SCAN_STACK_PAREN_STATEMENT)
       {
         *mode = SCAN_MODE_STATEMENT;
@@ -200,7 +217,7 @@ parser_scan_post_primary_expression (parser_context_t *context_p, /**< context *
     case LEXER_INCREASE:
     case LEXER_DECREASE:
     {
-      if (!context_p->token.was_newline)
+      if (!(context_p->token.flags & LEXER_WAS_NEWLINE))
       {
         *mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
         return true;
@@ -283,6 +300,12 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
   {
     parser_stack_pop_uint8 (context_p);
     *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    if (type == LEXER_RIGHT_PAREN)
+    {
+      *mode = SCAN_MODE_ARROW_FUNCTION;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
     return false;
   }
 
@@ -302,7 +325,7 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
   }
 
   if (type == LEXER_RIGHT_BRACE
-      || context_p->token.was_newline)
+      || (context_p->token.flags & LEXER_WAS_NEWLINE))
   {
     return true;
   }
@@ -380,7 +403,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_RETURN:
     {
       lexer_next_token (context_p);
-      if (!context_p->token.was_newline
+      if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
           && context_p->token.type != LEXER_SEMICOLON)
       {
         *mode = SCAN_MODE_PRIMARY_EXPRESSION;
@@ -391,7 +414,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_CONTINUE:
     {
       lexer_next_token (context_p);
-      if (!context_p->token.was_newline
+      if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
           && context_p->token.type == LEXER_LITERAL
           && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
       {
@@ -469,7 +492,11 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
       *mode = SCAN_MODE_STATEMENT;
       return false;
     }
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    *mode = SCAN_MODE_ARROW_FUNCTION;
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
     *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
   }
 
   return true;
@@ -552,6 +579,30 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         }
         break;
       }
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+      case SCAN_MODE_ARROW_FUNCTION:
+      {
+        if (type == LEXER_ARROW)
+        {
+          lexer_next_token (context_p);
+
+          if (context_p->token.type == LEXER_LEFT_BRACE)
+          {
+            parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+            mode = SCAN_MODE_STATEMENT;
+          }
+          else
+          {
+            mode = SCAN_MODE_PRIMARY_EXPRESSION;
+            range_p->source_end_p = context_p->source_p;
+            continue;
+          }
+          break;
+        }
+        mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+        /* FALLTHRU */
+      }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
       case SCAN_MODE_POST_PRIMARY_EXPRESSION:
       {
         if (parser_scan_post_primary_expression (context_p, type, &mode))

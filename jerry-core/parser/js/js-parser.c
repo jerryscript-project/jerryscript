@@ -2117,6 +2117,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     context.status_flags |= PARSER_IS_STRICT;
   }
 
+  context.token.flags = 0;
   context.line = 1;
   context.column = 1;
 
@@ -2243,17 +2244,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 } /* parser_parse_source */
 
 /**
- * Parse function code
- *
- * @return compiled code
+ * Save parser context before function parsing.
  */
-ecma_compiled_code_t *
-parser_parse_function (parser_context_t *context_p, /**< context */
-                       uint32_t status_flags) /**< extra status flags */
+static void
+parser_save_context (parser_context_t *context_p, /**< context */
+                     parser_saved_context_t *saved_context_p) /**< target for saving the context */
 {
-  parser_saved_context_t saved_context;
-  ecma_compiled_code_t *compiled_code_p;
-
   JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
 
 #ifdef JERRY_DEBUGGER
@@ -2267,33 +2263,30 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 
   /* Save private part of the context. */
 
-  saved_context.status_flags = context_p->status_flags;
-  saved_context.stack_depth = context_p->stack_depth;
-  saved_context.stack_limit = context_p->stack_limit;
-  saved_context.prev_context_p = context_p->last_context_p;
-  saved_context.last_statement = context_p->last_statement;
+  saved_context_p->status_flags = context_p->status_flags;
+  saved_context_p->stack_depth = context_p->stack_depth;
+  saved_context_p->stack_limit = context_p->stack_limit;
+  saved_context_p->prev_context_p = context_p->last_context_p;
+  saved_context_p->last_statement = context_p->last_statement;
 
-  saved_context.argument_count = context_p->argument_count;
-  saved_context.register_count = context_p->register_count;
-  saved_context.literal_count = context_p->literal_count;
+  saved_context_p->argument_count = context_p->argument_count;
+  saved_context_p->register_count = context_p->register_count;
+  saved_context_p->literal_count = context_p->literal_count;
 
-  saved_context.byte_code = context_p->byte_code;
-  saved_context.byte_code_size = context_p->byte_code_size;
-  saved_context.literal_pool_data = context_p->literal_pool.data;
+  saved_context_p->byte_code = context_p->byte_code;
+  saved_context_p->byte_code_size = context_p->byte_code_size;
+  saved_context_p->literal_pool_data = context_p->literal_pool.data;
 
 #ifndef JERRY_NDEBUG
-  saved_context.context_stack_depth = context_p->context_stack_depth;
+  saved_context_p->context_stack_depth = context_p->context_stack_depth;
 #endif /* !JERRY_NDEBUG */
 
   /* Reset private part of the context. */
 
-  JERRY_ASSERT (status_flags & PARSER_IS_FUNCTION);
-
   context_p->status_flags &= PARSER_IS_STRICT;
-  context_p->status_flags |= status_flags;
   context_p->stack_depth = 0;
   context_p->stack_limit = 0;
-  context_p->last_context_p = &saved_context;
+  context_p->last_context_p = saved_context_p;
   context_p->last_statement.current_p = NULL;
 
   context_p->argument_count = 0;
@@ -2307,6 +2300,55 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = 0;
 #endif /* !JERRY_NDEBUG */
+} /* parser_save_context */
+
+/**
+ * Restore parser context after function parsing.
+ */
+static void
+parser_restore_context (parser_context_t *context_p, /**< context */
+                        parser_saved_context_t *saved_context_p) /**< target for saving the context */
+{
+  parser_list_free (&context_p->literal_pool);
+
+  /* Restore private part of the context. */
+
+  JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
+
+  context_p->status_flags = saved_context_p->status_flags;
+  context_p->stack_depth = saved_context_p->stack_depth;
+  context_p->stack_limit = saved_context_p->stack_limit;
+  context_p->last_context_p = saved_context_p->prev_context_p;
+  context_p->last_statement = saved_context_p->last_statement;
+
+  context_p->argument_count = saved_context_p->argument_count;
+  context_p->register_count = saved_context_p->register_count;
+  context_p->literal_count = saved_context_p->literal_count;
+
+  context_p->byte_code = saved_context_p->byte_code;
+  context_p->byte_code_size = saved_context_p->byte_code_size;
+  context_p->literal_pool.data = saved_context_p->literal_pool_data;
+
+#ifndef JERRY_NDEBUG
+  context_p->context_stack_depth = saved_context_p->context_stack_depth;
+#endif /* !JERRY_NDEBUG */
+} /* parser_restore_context */
+
+/**
+ * Parse function code
+ *
+ * @return compiled code
+ */
+ecma_compiled_code_t *
+parser_parse_function (parser_context_t *context_p, /**< context */
+                       uint32_t status_flags) /**< extra status flags */
+{
+  parser_saved_context_t saved_context;
+  ecma_compiled_code_t *compiled_code_p;
+
+  JERRY_ASSERT (status_flags & PARSER_IS_FUNCTION);
+  parser_save_context (context_p, &saved_context);
+  context_p->status_flags |= status_flags;
 
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
@@ -2413,32 +2455,127 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
-  parser_list_free (&context_p->literal_pool);
-
-  /* Restore private part of the context. */
-
-  JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
-
-  context_p->status_flags = saved_context.status_flags;
-  context_p->stack_depth = saved_context.stack_depth;
-  context_p->stack_limit = saved_context.stack_limit;
-  context_p->last_context_p = saved_context.prev_context_p;
-  context_p->last_statement = saved_context.last_statement;
-
-  context_p->argument_count = saved_context.argument_count;
-  context_p->register_count = saved_context.register_count;
-  context_p->literal_count = saved_context.literal_count;
-
-  context_p->byte_code = saved_context.byte_code;
-  context_p->byte_code_size = saved_context.byte_code_size;
-  context_p->literal_pool.data = saved_context.literal_pool_data;
-
-#ifndef JERRY_NDEBUG
-  context_p->context_stack_depth = saved_context.context_stack_depth;
-#endif /* !JERRY_NDEBUG */
+  parser_restore_context (context_p, &saved_context);
 
   return compiled_code_p;
 } /* parser_parse_function */
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+
+/**
+ * Parse arrow function code
+ *
+ * @return compiled code
+ */
+ecma_compiled_code_t *
+parser_parse_arrow_function (parser_context_t *context_p, /**< context */
+                             uint32_t status_flags) /**< extra status flags */
+{
+  parser_saved_context_t saved_context;
+  ecma_compiled_code_t *compiled_code_p;
+
+  JERRY_ASSERT ((status_flags & PARSER_IS_FUNCTION)
+                 && (status_flags & PARSER_IS_ARROW_FUNCTION));
+  parser_save_context (context_p, &saved_context);
+  context_p->status_flags |= status_flags | PARSER_ARGUMENTS_NOT_NEEDED;
+
+#ifdef PARSER_DUMP_BYTE_CODE
+  if (context_p->is_show_opcodes)
+  {
+    JERRY_DEBUG_MSG ("\n--- Arrow function parsing start ---\n\n");
+  }
+#endif /* PARSER_DUMP_BYTE_CODE */
+
+#ifdef JERRY_DEBUGGER
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      && jerry_debugger_send_parse_function (context_p->token.line, context_p->token.column))
+  {
+    /* This option has a high memory and performance costs,
+     * but it is necessary for executing eval operations by the debugger. */
+    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
+  }
+#endif /* JERRY_DEBUGGER */
+
+  if (status_flags & PARSER_ARROW_PARSE_ARGS)
+  {
+    parser_parse_function_arguments (context_p, LEXER_RIGHT_PAREN);
+  }
+  else
+  {
+    JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                  && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+    lexer_construct_literal_object (context_p,
+                                    &context_p->token.lit_location,
+                                    LEXER_IDENT_LITERAL);
+
+    JERRY_ASSERT (context_p->argument_count == 0 && context_p->literal_count == 1);
+
+    if (context_p->token.literal_is_reserved
+        || context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
+    {
+      context_p->status_flags |= PARSER_HAS_NON_STRICT_ARG;
+    }
+
+    uint8_t lexer_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_ARGUMENT;
+    context_p->lit_object.literal_p->status_flags |= lexer_flags;
+
+    context_p->argument_count = 1;
+    context_p->register_count = 1;
+  }
+
+  lexer_next_token (context_p);
+  JERRY_ASSERT (context_p->token.type == LEXER_ARROW);
+
+  lexer_next_token (context_p);
+
+  if (context_p->token.type == LEXER_LEFT_BRACE)
+  {
+    lexer_next_token (context_p);
+
+    context_p->status_flags |= PARSER_IS_CLOSURE;
+    parser_parse_statements (context_p);
+
+    /* Unlike normal function, arrow functions consume their close brace. */
+    JERRY_ASSERT (context_p->token.type == LEXER_RIGHT_BRACE);
+    lexer_next_token (context_p);
+  }
+  else
+  {
+    if (context_p->status_flags & PARSER_IS_STRICT
+        && context_p->status_flags & PARSER_HAS_NON_STRICT_ARG)
+    {
+      parser_raise_error (context_p, PARSER_ERR_NON_STRICT_ARG_DEFINITION);
+    }
+
+    parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+    if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+    {
+      context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
+    }
+    else
+    {
+      parser_emit_cbc (context_p, CBC_RETURN);
+    }
+    parser_flush_cbc (context_p);
+  }
+
+  compiled_code_p = parser_post_processing (context_p);
+
+#ifdef PARSER_DUMP_BYTE_CODE
+  if (context_p->is_show_opcodes)
+  {
+    JERRY_DEBUG_MSG ("\n--- Arrow function parsing end ---\n\n");
+  }
+#endif /* PARSER_DUMP_BYTE_CODE */
+
+  parser_restore_context (context_p, &saved_context);
+
+  return compiled_code_p;
+} /* parser_parse_arrow_function */
+
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /**
  * Raise a parse error

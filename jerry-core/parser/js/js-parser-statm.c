@@ -1368,7 +1368,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
   lexer_next_token (context_p);
   parser_stack_iterator_init (context_p, &iterator);
 
-  if (!context_p->token.was_newline
+  if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
       && context_p->token.type == LEXER_LITERAL
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
@@ -1463,7 +1463,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
   lexer_next_token (context_p);
   parser_stack_iterator_init (context_p, &iterator);
 
-  if (!context_p->token.was_newline
+  if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
       && context_p->token.type == LEXER_LITERAL
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
@@ -1575,8 +1575,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
  * Parse label statement.
  */
 static void
-parser_parse_label (parser_context_t *context_p, /**< context */
-                    lexer_lit_location_t *label_literal_p) /**< saved literal */
+parser_parse_label (parser_context_t *context_p) /**< context */
 {
   parser_stack_iterator_t iterator;
   parser_label_statement_t label_statement;
@@ -1608,7 +1607,7 @@ parser_parse_label (parser_context_t *context_p, /**< context */
     }
   }
 
-  label_statement.label_ident = *label_literal_p;
+  label_statement.label_ident = context_p->token.lit_location;
   label_statement.break_list_p = NULL;
   parser_stack_push (context_p, &label_statement, sizeof (parser_label_statement_t));
   parser_stack_push_uint8 (context_p, PARSER_STATEMENT_LABEL);
@@ -1664,7 +1663,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     if (context_p->token.type != LEXER_SEMICOLON
         && context_p->token.type != LEXER_RIGHT_BRACE)
     {
-      if (!context_p->token.was_newline
+      if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
           || LEXER_IS_BINARY_OP_TOKEN (context_p->token.type)
           || context_p->token.type == LEXER_LEFT_PAREN
           || context_p->token.type == LEXER_LEFT_SQUARE
@@ -1901,7 +1900,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       case LEXER_KEYW_THROW:
       {
         lexer_next_token (context_p);
-        if (context_p->token.was_newline)
+        if (context_p->token.flags & LEXER_WAS_NEWLINE)
         {
           parser_raise_error (context_p, PARSER_ERR_EXPRESSION_EXPECTED);
         }
@@ -1918,7 +1917,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         }
 
         lexer_next_token (context_p);
-        if (context_p->token.was_newline
+        if ((context_p->token.flags & LEXER_WAS_NEWLINE)
             || context_p->token.type == LEXER_SEMICOLON
             || context_p->token.type == LEXER_RIGHT_BRACE)
         {
@@ -1947,24 +1946,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_LITERAL:
       {
-        if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+        if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+            && lexer_check_colon (context_p))
         {
-          lexer_lit_location_t lit_location = context_p->token.lit_location;
-
+          parser_parse_label (context_p);
           lexer_next_token (context_p);
-
-          if (context_p->token.type == LEXER_COLON)
-          {
-            parser_parse_label (context_p, &lit_location);
-            lexer_next_token (context_p);
-            continue;
-          }
-
-          lexer_construct_literal_object (context_p, &lit_location, LEXER_IDENT_LITERAL);
-          parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-          /* The extra_value is used for saving the token. */
-          context_p->token.extra_value = context_p->token.type;
-          context_p->token.type = LEXER_EXPRESSION_START;
+          JERRY_ASSERT (context_p->token.type == LEXER_COLON);
+          lexer_next_token (context_p);
+          continue;
         }
         /* FALLTHRU */
       }
@@ -2048,7 +2037,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       lexer_next_token (context_p);
     }
     else if (context_p->token.type != LEXER_EOS
-             && !context_p->token.was_newline)
+             && !(context_p->token.flags & LEXER_WAS_NEWLINE))
     {
       parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
     }

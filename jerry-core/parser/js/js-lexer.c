@@ -100,12 +100,18 @@ typedef enum
  * Skip spaces.
  */
 static void
-skip_spaces (parser_context_t *context_p) /**< context */
+lexer_skip_spaces (parser_context_t *context_p) /**< context */
 {
   skip_mode_t mode = LEXER_SKIP_SPACES;
   const uint8_t *source_end_p = context_p->source_end_p;
 
-  context_p->token.was_newline = 0;
+  if (context_p->token.flags & LEXER_NO_SKIP_SPACES)
+  {
+    context_p->token.flags = (uint8_t) (context_p->token.flags & ~LEXER_NO_SKIP_SPACES);
+    return;
+  }
+
+  context_p->token.flags = 0;
 
   while (true)
   {
@@ -134,7 +140,7 @@ skip_spaces (parser_context_t *context_p) /**< context */
       {
         context_p->line++;
         context_p->column = 0;
-        context_p->token.was_newline = 1;
+        context_p->token.flags = LEXER_WAS_NEWLINE;
 
         if (mode == LEXER_SKIP_SINGLE_LINE_COMMENT)
         {
@@ -221,7 +227,7 @@ skip_spaces (parser_context_t *context_p) /**< context */
           context_p->source_p += 3;
           context_p->line++;
           context_p->column = 1;
-          context_p->token.was_newline = 1;
+          context_p->token.flags = LEXER_WAS_NEWLINE;
 
           if (mode == LEXER_SKIP_SINGLE_LINE_COMMENT)
           {
@@ -265,7 +271,7 @@ skip_spaces (parser_context_t *context_p) /**< context */
       context_p->column++;
     }
   }
-} /* skip_spaces */
+} /* lexer_skip_spaces */
 
 /**
  * Keyword data.
@@ -953,28 +959,6 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     break; \
   }
 
-#define LEXER_TYPE_D_TOKEN(char1, type1, char2, type2, char3, type3) \
-  case (uint8_t) (char1) : \
-  { \
-    if (length >= 2 && context_p->source_p[1] == (uint8_t) (char2)) \
-    { \
-      if (length >= 3 && context_p->source_p[2] == (uint8_t) (char3)) \
-      { \
-        context_p->token.type = (type3); \
-        length = 3; \
-        break; \
-      } \
-      \
-      context_p->token.type = (type2); \
-      length = 2; \
-      break; \
-    } \
-    \
-    context_p->token.type = (type1); \
-    length = 1; \
-    break; \
-  }
-
 /**
  * Get next token.
  */
@@ -983,7 +967,7 @@ lexer_next_token (parser_context_t *context_p) /**< context */
 {
   size_t length;
 
-  skip_spaces (context_p);
+  lexer_skip_spaces (context_p);
 
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
@@ -1019,7 +1003,7 @@ lexer_next_token (parser_context_t *context_p) /**< context */
     LEXER_TYPE_A_TOKEN (LIT_CHAR_SEMICOLON, LEXER_SEMICOLON);
     LEXER_TYPE_A_TOKEN (LIT_CHAR_COMMA, LEXER_COMMA);
 
-    case (uint8_t) LIT_CHAR_DOT :
+    case (uint8_t) LIT_CHAR_DOT:
     {
       if (length >= 2
           && (context_p->source_p[1] >= LIT_CHAR_0 && context_p->source_p[1] <= LIT_CHAR_9))
@@ -1064,7 +1048,7 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       break;
     }
 
-    case LIT_CHAR_GREATER_THAN:
+    case (uint8_t) LIT_CHAR_GREATER_THAN:
     {
       if (length >= 2)
       {
@@ -1112,10 +1096,59 @@ lexer_next_token (parser_context_t *context_p) /**< context */
       break;
     }
 
-    LEXER_TYPE_D_TOKEN (LIT_CHAR_EQUALS, LEXER_ASSIGN, LIT_CHAR_EQUALS,
-                        LEXER_EQUAL, LIT_CHAR_EQUALS, LEXER_STRICT_EQUAL)
-    LEXER_TYPE_D_TOKEN (LIT_CHAR_EXCLAMATION, LEXER_LOGICAL_NOT, LIT_CHAR_EQUALS,
-                        LEXER_NOT_EQUAL, LIT_CHAR_EQUALS, LEXER_STRICT_NOT_EQUAL)
+    case (uint8_t) LIT_CHAR_EQUALS:
+    {
+      if (length >= 2)
+      {
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_EQUALS)
+        {
+          if (length >= 3 && context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
+          {
+            context_p->token.type = LEXER_STRICT_EQUAL;
+            length = 3;
+            break;
+          }
+
+          context_p->token.type = LEXER_EQUAL;
+          length = 2;
+          break;
+        }
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN)
+        {
+          context_p->token.type = LEXER_ARROW;
+          length = 2;
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+      }
+
+      context_p->token.type = LEXER_ASSIGN;
+      length = 1;
+      break;
+    }
+
+    case (uint8_t) LIT_CHAR_EXCLAMATION:
+    {
+      if (length >= 2 && context_p->source_p[1] == (uint8_t) LIT_CHAR_EQUALS)
+      {
+        if (length >= 3 && context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
+        {
+          context_p->token.type = LEXER_STRICT_NOT_EQUAL;
+          length = 3;
+          break;
+        }
+
+        context_p->token.type = LEXER_NOT_EQUAL;
+        length = 2;
+        break;
+      }
+
+      context_p->token.type = LEXER_LOGICAL_NOT;
+      length = 1;
+      break;
+    }
 
     LEXER_TYPE_C_TOKEN (LIT_CHAR_PLUS, LEXER_ADD, LIT_CHAR_EQUALS,
                         LEXER_ASSIGN_ADD, LIT_CHAR_PLUS, LEXER_INCREASE)
@@ -1162,6 +1195,71 @@ lexer_next_token (parser_context_t *context_p) /**< context */
 #undef LEXER_TYPE_B_TOKEN
 #undef LEXER_TYPE_C_TOKEN
 #undef LEXER_TYPE_D_TOKEN
+
+/**
+ * Checks whether the next token is a colon.
+ *
+ * @return true - if the next token is a colon
+ *         false - otherwise
+ */
+bool
+lexer_check_colon (parser_context_t *context_p) /**< context */
+{
+  lexer_skip_spaces (context_p);
+
+  context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+
+  return (context_p->source_p < context_p->source_end_p
+          && context_p->source_p[0] == (uint8_t) LIT_CHAR_COLON);
+} /* lexer_check_colon */
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+
+/**
+ * Checks whether the next token is a type used for detecting arrow functions.
+ *
+ * @return identified token type
+ */
+lexer_token_type_t
+lexer_check_arrow (parser_context_t *context_p) /**< context */
+{
+  lexer_skip_spaces (context_p);
+
+  context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+
+  if (context_p->source_p < context_p->source_end_p)
+  {
+    switch (context_p->source_p[0])
+    {
+      case LIT_CHAR_COMMA:
+      {
+        return LEXER_COMMA;
+      }
+      case LIT_CHAR_RIGHT_PAREN:
+      {
+        return LEXER_RIGHT_PAREN;
+      }
+      case LIT_CHAR_EQUALS:
+      {
+        if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
+            && context_p->source_p + 1 < context_p->source_end_p
+            && context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN)
+        {
+          return LEXER_ARROW;
+        }
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+  }
+
+  return LEXER_EOS;
+} /* lexer_check_arrow */
+
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /**
  * Search or append the string to the literal pool.
@@ -1655,7 +1753,18 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
   result_index = context_p->literal_count;
   context_p->literal_count++;
 
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (!(extra_status_flags & PARSER_IS_ARROW_FUNCTION))
+  {
+    compiled_code_p = parser_parse_function (context_p, extra_status_flags);
+  }
+  else
+  {
+    compiled_code_p = parser_parse_arrow_function (context_p, extra_status_flags);
+  }
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
   compiled_code_p = parser_parse_function (context_p, extra_status_flags);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
   literal_p->u.bytecode_p = compiled_code_p;
   literal_p->type = LEXER_FUNCTION_LITERAL;
@@ -1884,7 +1993,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (literal_type == LEXER_STRING_LITERAL
                 || literal_type == LEXER_IDENT_LITERAL);
 
-  skip_spaces (context_p);
+  lexer_skip_spaces (context_p);
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
 
@@ -1943,7 +2052,7 @@ void
 lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
                                 bool must_be_identifier) /**< only identifiers are accepted */
 {
-  skip_spaces (context_p);
+  lexer_skip_spaces (context_p);
 
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
@@ -1959,7 +2068,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       if (!must_be_identifier
           && context_p->token.lit_location.length == 3)
       {
-        skip_spaces (context_p);
+        lexer_skip_spaces (context_p);
 
         if (context_p->source_p < context_p->source_end_p
             && context_p->source_p[0] != LIT_CHAR_COLON)
@@ -2030,7 +2139,7 @@ void
 lexer_scan_identifier (parser_context_t *context_p, /**< context */
                        bool propety_name) /**< property name */
 {
-  skip_spaces (context_p);
+  lexer_skip_spaces (context_p);
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
 
@@ -2041,7 +2150,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
 
     if (propety_name && context_p->token.lit_location.length == 3)
     {
-      skip_spaces (context_p);
+      lexer_skip_spaces (context_p);
 
       if (context_p->source_p < context_p->source_end_p
           && context_p->source_p[0] != LIT_CHAR_COLON)

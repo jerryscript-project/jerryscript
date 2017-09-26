@@ -115,6 +115,9 @@ typedef enum
   LEXER_SEMICOLON,               /**< ";" */
   LEXER_COLON,                   /**< ":" */
   LEXER_COMMA,                   /**< "," */
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  LEXER_ARROW,                   /**< "=>" */
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
   LEXER_KEYW_BREAK,              /**< break */
   LEXER_KEYW_DO,                 /**< do */
@@ -193,6 +196,15 @@ typedef enum
    ((cbc_opcode_t) ((((token_type) - LEXER_ASSIGN_ADD) * 2) + CBC_ASSIGN_ADD))
 
 /**
+ * Lexer newline flags.
+ */
+typedef enum
+{
+  LEXER_WAS_NEWLINE = (1u << 0),             /**< newline was seen */
+  LEXER_NO_SKIP_SPACES = (1u << 1)           /**< ignore skip spaces */
+} lexer_newline_flags_t;
+
+/**
  * Lexer literal object types.
  */
 typedef enum
@@ -243,7 +255,7 @@ typedef struct
   uint8_t literal_is_reserved;               /**< future reserved keyword
                                               *   (when char_literal.type is LEXER_IDENT_LITERAL) */
   uint8_t extra_value;                       /**< helper value for different purposes */
-  uint8_t was_newline;                       /**< newline occured before this token */
+  uint8_t flags;                             /**< flag bits for the current token */
   parser_line_counter_t line;                /**< token start line */
   parser_line_counter_t column;              /**< token start column */
   lexer_lit_location_t lit_location;         /**< extra data for character literals */

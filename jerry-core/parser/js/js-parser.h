@@ -84,6 +84,9 @@ typedef enum
   PARSER_ERR_LEFT_BRACE_EXPECTED,                     /**< left brace expected */
   PARSER_ERR_RIGHT_PAREN_EXPECTED,                    /**< right paren expected */
   PARSER_ERR_RIGHT_SQUARE_EXPECTED,                   /**< right square expected */
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+  PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
   PARSER_ERR_COLON_EXPECTED,                          /**< colon expected */
   PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED,          /**< colon expected for conditional expression */
   PARSER_ERR_SEMICOLON_EXPECTED,                      /**< semicolon expected */

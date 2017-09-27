@@ -39,6 +39,9 @@ typedef enum
   LEXER_LIT_TRUE,                /**< true (not a keyword!) */
   LEXER_LIT_FALSE,               /**< false (not a keyword!) */
   LEXER_LIT_NULL,                /**< null (not a keyword!) */
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+  LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and

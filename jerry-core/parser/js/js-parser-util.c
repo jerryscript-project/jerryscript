@@ -577,7 +577,7 @@ parser_set_branch_to_current_position (parser_context_t *context_p, /**< context
     parser_flush_cbc (context_p);
   }
 
-  context_p->status_flags &= ~PARSER_NO_END_LABEL;
+  context_p->status_flags &= (uint32_t) ~PARSER_NO_END_LABEL;
 
   JERRY_ASSERT (context_p->byte_code_size > (branch_p->offset >> 8));
 
@@ -824,6 +824,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expected ']' token.";
     }
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+    case PARSER_ERR_RIGHT_BRACE_EXPECTED:
+    {
+      return "Expected '}' token.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
     case PARSER_ERR_COLON_EXPECTED:
     {
       return "Expected ':' token.";

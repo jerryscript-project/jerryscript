@@ -15,6 +15,10 @@
 
 #include "js-parser-internal.h"
 
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+#include "lit-char-helpers.h"
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
+
 #if JERRY_JS_PARSER
 
 /** \addtogroup parser Parser
@@ -59,6 +63,9 @@ typedef enum
   SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
   SCAN_STACK_BLOCK_EXPRESSION,             /**< block expression group */
   SCAN_STACK_BLOCK_PROPERTY,               /**< block property group */
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+  SCAN_STACK_TEMPLATE_STRING,              /**< template string */
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 } scan_stack_modes_t;
 
 /**
@@ -110,6 +117,20 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
       *mode = SCAN_MODE_PROPERTY_NAME;
       return true;
     }
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+    case LEXER_TEMPLATE_LITERAL:
+    {
+      if (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
+      {
+        parser_stack_push_uint8 (context_p, SCAN_STACK_TEMPLATE_STRING);
+        *mode = SCAN_MODE_PRIMARY_EXPRESSION;
+        break;
+      }
+
+      /* The string is a normal string literal. */
+      /* FALLTHRU */
+    }
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
     case LEXER_LITERAL:
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
     {
@@ -308,6 +329,26 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
     return false;
   }
+
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+  if (type == LEXER_RIGHT_BRACE && stack_top == SCAN_STACK_TEMPLATE_STRING)
+  {
+    context_p->source_p--;
+    context_p->column--;
+    lexer_parse_string (context_p);
+
+    if (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
+    {
+      *mode = SCAN_MODE_PRIMARY_EXPRESSION;
+    }
+    else
+    {
+      parser_stack_pop_uint8 (context_p);
+      *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+    }
+    return false;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 
   *mode = SCAN_MODE_STATEMENT;
   if (type == LEXER_RIGHT_PAREN && stack_top == SCAN_STACK_PAREN_STATEMENT)

@@ -588,7 +588,7 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 
     if (type == PARSER_STATEMENT_START)
     {
-      context_p->status_flags &= ~PARSER_INSIDE_WITH;
+      context_p->status_flags &= (uint32_t) ~PARSER_INSIDE_WITH;
       return;
     }
 

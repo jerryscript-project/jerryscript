@@ -154,7 +154,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
   if (status_flags & PARSER_ARGUMENTS_NOT_NEEDED)
   {
-    status_flags &= ~PARSER_ARGUMENTS_NEEDED;
+    status_flags &= (uint32_t) ~PARSER_ARGUMENTS_NEEDED;
     context_p->status_flags = status_flags;
   }
 
@@ -1587,7 +1587,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   if (!(context_p->status_flags & PARSER_NO_END_LABEL)
       || !(PARSER_OPCODE_IS_RETURN (last_opcode)))
   {
-    context_p->status_flags &= ~PARSER_NO_END_LABEL;
+    context_p->status_flags &= (uint32_t) ~PARSER_NO_END_LABEL;
     length++;
   }
 
@@ -2006,7 +2006,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       context_p->lit_object.literal_p->status_flags = literal_status_flags;
 
       context_p->status_flags |= PARSER_ARGUMENTS_NOT_NEEDED;
-      context_p->status_flags &= ~(PARSER_LEXICAL_ENV_NEEDED | PARSER_ARGUMENTS_NEEDED);
+      context_p->status_flags &= (uint32_t) ~(PARSER_LEXICAL_ENV_NEEDED | PARSER_ARGUMENTS_NEEDED);
     }
 
     if (context_p->literal_count == literal_count)

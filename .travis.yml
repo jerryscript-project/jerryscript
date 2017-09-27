@@ -13,6 +13,7 @@ env:
     - OPTS="--buildoption-test"
     - OPTS="--jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
     - OPTS="--unittests"
+    - OPTS="--unittests --buildoptions=--cmake-param=-DFEATURE_INIT_FINI=ON"
     - OPTS="--test262"
     - OPTS="--check-pylint"
   global:

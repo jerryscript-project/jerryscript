@@ -583,6 +583,8 @@ typedef enum
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
 
+  /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
+
   ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_PSEUDO_ARRAY /**< maximum value */
 } ecma_object_type_t;
 
@@ -603,14 +605,11 @@ typedef enum
  */
 typedef enum
 {
-  /* ECMA_OBJECT_TYPE_GENERAL (0) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_CLASS (1) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_FUNCTION (2) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION (3) with built-in flag. */
-  /* ECMA_OBJECT_TYPE_ARRAY (4) with built-in flag. */
-  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 5, /**< declarative lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 6, /**< object-bound lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 7, /**< object-bound lexical environment
+  /* Types between 0 - 12 are ecma_object_type_t which can have a built-in flag. */
+
+  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 14, /**< object-bound lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment
                                                    *   with provideThis flag */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
@@ -621,19 +620,14 @@ typedef enum
 /**
  * Ecma object type mask for getting the object type.
  */
-#define ECMA_OBJECT_TYPE_MASK 0x07u
+#define ECMA_OBJECT_TYPE_MASK 0x0fu
 
 /**
- * Ecma object is built-in or lexical environment.
+ * Ecma object is built-in or lexical environment. When this flag is set, the object is a
  *   - built-in, if object type is less than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
  *   - lexical environment, if object type is greater or equal than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
  */
-#define ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV 0x08
-
-/**
- * This object is visited by the garbage collector.
- */
-#define ECMA_OBJECT_FLAG_GC_VISITED 0x10
+#define ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV 0x10
 
 /**
  * Extensible object.
@@ -656,10 +650,9 @@ typedef enum
  */
 typedef struct
 {
-  /** type : 3 bit : ecma_object_type_t or ecma_lexical_environment_type_t
+  /** type : 4 bit : ecma_object_type_t or ecma_lexical_environment_type_t
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
-      flags : 3 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
-                      ECMA_OBJECT_FLAG_GC_VISITED,
+      flags : 2 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
                       ECMA_OBJECT_FLAG_EXTENSIBLE
       refs : 10 bit (max 1023) */
   uint16_t type_flags_refs;
@@ -1142,21 +1135,6 @@ typedef struct
                                       *    If function, the other flags must be CBC_CODE_FLAGS...
                                       *    If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;
-
-/**
- * An object's GC color
- *
- * Tri-color marking:
- *   WHITE_GRAY, unvisited -> WHITE: not referenced by a live object or the reference not found yet
- *   WHITE_GRAY, visited   -> GRAY: referenced by some live object
- *   BLACK                 -> BLACK: all referenced objects are gray or black
- */
-typedef enum
-{
-  ECMA_GC_COLOR_WHITE_GRAY, /**< white or gray */
-  ECMA_GC_COLOR_BLACK, /**< black */
-  ECMA_GC_COLOR__COUNT /**< number of colors */
-} ecma_gc_color_t;
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
 

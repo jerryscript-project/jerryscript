@@ -47,19 +47,11 @@
  * @{
  */
 
-/**
- * Current state of an object's visited flag that
- * indicates whether the object is in visited state:
- *
- *  visited_field | visited_flip_flag | real_value
- *         false  |            false  |     false
- *         false  |             true  |      true
- *          true  |            false  |      true
- *          true  |             true  |     false
+/*
+ * The garbage collector uses the reference counter
+ * of object: it increases the counter by one when
+ * the object is marked at the first time.
  */
-
-static void ecma_gc_mark (ecma_object_t *object_p);
-static void ecma_gc_sweep (ecma_object_t *object_p);
 
 /**
  * Get next object in list of objects with same generation.
@@ -92,27 +84,19 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
 
-  bool flag_value = (object_p->type_flags_refs & ECMA_OBJECT_FLAG_GC_VISITED) != 0;
-
-  return flag_value != JERRY_CONTEXT (ecma_gc_visited_flip_flag);
+  return (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
 } /* ecma_gc_is_object_visited */
 
 /**
  * Set visited flag of the object.
  */
 static inline void
-ecma_gc_set_object_visited (ecma_object_t *object_p, /**< object */
-                            bool is_visited) /**< flag value */
+ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
 {
-  JERRY_ASSERT (object_p != NULL);
-
-  if (is_visited != JERRY_CONTEXT (ecma_gc_visited_flip_flag))
+  /* Set reference counter to one if it is zero. */
+  if (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE)
   {
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_GC_VISITED);
-  }
-  else
-  {
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ~ECMA_OBJECT_FLAG_GC_VISITED);
+    object_p->type_flags_refs |= ECMA_OBJECT_REF_ONE;
   }
 } /* ecma_gc_set_object_visited */
 
@@ -130,11 +114,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
   object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
 
-  ecma_gc_set_object_next (object_p, JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY]);
-  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = object_p;
-
-  /* Should be set to false at the beginning of garbage collection */
-  ecma_gc_set_object_visited (object_p, false);
+  ecma_gc_set_object_next (object_p, JERRY_CONTEXT (ecma_gc_objects_p));
+  JERRY_CONTEXT (ecma_gc_objects_p) = object_p;
 } /* ecma_init_gc_info */
 
 /**
@@ -156,7 +137,7 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 /**
  * Decrease reference counter of an object
  */
-void
+inline void __attr_always_inline___
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
@@ -188,7 +169,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
       {
         ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
 
-        ecma_gc_set_object_visited (value_obj_p, true);
+        ecma_gc_set_object_visited (value_obj_p);
       }
       break;
     }
@@ -200,12 +181,12 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
 
       if (getter_obj_p != NULL)
       {
-        ecma_gc_set_object_visited (getter_obj_p, true);
+        ecma_gc_set_object_visited (getter_obj_p);
       }
 
       if (setter_obj_p != NULL)
       {
-        ecma_gc_set_object_visited (setter_obj_p, true);
+        ecma_gc_set_object_visited (setter_obj_p);
       }
       break;
     }
@@ -226,7 +207,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
 /**
  * Mark objects as visited starting from specified object as root
  */
-void
+static void
 ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -239,13 +220,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
     ecma_object_t *lex_env_p = ecma_get_lex_env_outer_reference (object_p);
     if (lex_env_p != NULL)
     {
-      ecma_gc_set_object_visited (lex_env_p, true);
+      ecma_gc_set_object_visited (lex_env_p);
     }
 
     if (ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
     {
       ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
-      ecma_gc_set_object_visited (binding_object_p, true);
+      ecma_gc_set_object_visited (binding_object_p);
 
       traverse_properties = false;
     }
@@ -255,7 +236,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
     ecma_object_t *proto_p = ecma_get_object_prototype (object_p);
     if (proto_p != NULL)
     {
-      ecma_gc_set_object_visited (proto_p, true);
+      ecma_gc_set_object_visited (proto_p);
     }
 
     switch (ecma_get_object_type (object_p))
@@ -272,7 +253,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
           if (ecma_is_value_object (result))
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (result), true);
+            ecma_gc_set_object_visited (ecma_get_object_from_value (result));
           }
 
           /* Mark all reactions. */
@@ -281,14 +262,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
           while (ecma_collection_iterator_next (&iter))
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p), true);
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p));
           }
 
           ecma_collection_iterator_init (&iter, ((ecma_promise_object_t *) ext_object_p)->reject_reactions);
 
           while (ecma_collection_iterator_next (&iter))
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p), true);
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p));
           }
         }
 
@@ -306,14 +287,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                                         ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-            ecma_gc_set_object_visited (lex_env_p, true);
+            ecma_gc_set_object_visited (lex_env_p);
             break;
           }
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
           {
-            ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p), true);
+            ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p));
             break;
           }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
@@ -334,7 +315,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                              ext_function_p->u.bound_function.target_function);
 
-        ecma_gc_set_object_visited (target_func_obj_p, true);
+        ecma_gc_set_object_visited (target_func_obj_p);
 
         ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
 
@@ -342,7 +323,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         {
           if (ecma_is_value_object (args_len_or_this))
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (args_len_or_this), true);
+            ecma_gc_set_object_visited (ecma_get_object_from_value (args_len_or_this));
           }
           break;
         }
@@ -356,7 +337,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         {
           if (ecma_is_value_object (args_p[i]))
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (args_p[i]), true);
+            ecma_gc_set_object_visited (ecma_get_object_from_value (args_p[i]));
           }
         }
         break;
@@ -370,7 +351,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                                     ext_func_p->u.function.scope_cp);
 
-          ecma_gc_set_object_visited (scope_p, true);
+          ecma_gc_set_object_visited (scope_p);
         }
         break;
       }
@@ -441,8 +422,8 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
 /**
  * Free specified object.
  */
-void
-ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
+static void
+ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 {
   JERRY_ASSERT (object_p != NULL
                 && !ecma_gc_is_object_visited (object_p)
@@ -695,7 +676,7 @@ ecma_gc_sweep (ecma_object_t *object_p) /**< object to free */
   }
 
   ecma_dealloc_object (object_p);
-} /* ecma_gc_sweep */
+} /* ecma_gc_free_object */
 
 /**
  * Run garbage collection
@@ -705,50 +686,84 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 {
   JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] == NULL);
+  ecma_object_t *white_gray_objects_p = JERRY_CONTEXT (ecma_gc_objects_p);
+  ecma_object_t *black_objects_p = NULL;
 
-  /* if some object is referenced from stack or globals (i.e. it is root), mark it */
-  for (ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
-       obj_iter_p != NULL;
-       obj_iter_p = ecma_gc_get_object_next (obj_iter_p))
+  ecma_object_t *obj_iter_p = white_gray_objects_p;
+  ecma_object_t *obj_prev_p = NULL;
+
+  /* Move root objects (i.e. they have global or stack references) to the black list. */
+  while (obj_iter_p != NULL)
   {
-    JERRY_ASSERT (!ecma_gc_is_object_visited (obj_iter_p));
+    ecma_object_t *obj_next_p = ecma_gc_get_object_next (obj_iter_p);
 
-    if (obj_iter_p->type_flags_refs >= ECMA_OBJECT_REF_ONE)
+    JERRY_ASSERT (obj_prev_p == NULL
+                  || ecma_gc_get_object_next (obj_prev_p) == obj_iter_p);
+
+    if (ecma_gc_is_object_visited (obj_iter_p))
     {
-      ecma_gc_set_object_visited (obj_iter_p, true);
+      /* Moving the object to list of marked objects. */
+      if (likely (obj_prev_p != NULL))
+      {
+        obj_prev_p->gc_next_cp = obj_iter_p->gc_next_cp;
+      }
+      else
+      {
+        white_gray_objects_p = obj_next_p;
+      }
+
+      ecma_gc_set_object_next (obj_iter_p, black_objects_p);
+      black_objects_p = obj_iter_p;
     }
+    else
+    {
+      obj_prev_p = obj_iter_p;
+    }
+
+    obj_iter_p = obj_next_p;
   }
 
-  bool marked_anything_during_current_iteration = false;
+  /* Mark root objects. */
+  obj_iter_p = black_objects_p;
+  while (obj_iter_p != NULL)
+  {
+    ecma_gc_mark (obj_iter_p);
+    obj_iter_p = ecma_gc_get_object_next (obj_iter_p);
+  }
+
+  ecma_object_t *first_root_object_p = black_objects_p;
+
+  /* Mark non-root objects. */
+  bool marked_anything_during_current_iteration;
 
   do
   {
     marked_anything_during_current_iteration = false;
 
-    ecma_object_t *obj_prev_p = NULL;
-    ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
+    obj_prev_p = NULL;
+    obj_iter_p = white_gray_objects_p;
 
     while (obj_iter_p != NULL)
     {
       ecma_object_t *obj_next_p = ecma_gc_get_object_next (obj_iter_p);
 
+      JERRY_ASSERT (obj_prev_p == NULL
+                    || ecma_gc_get_object_next (obj_prev_p) == obj_iter_p);
+
       if (ecma_gc_is_object_visited (obj_iter_p))
       {
         /* Moving the object to list of marked objects */
-        ecma_gc_set_object_next (obj_iter_p, JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK]);
-        JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = obj_iter_p;
-
         if (likely (obj_prev_p != NULL))
         {
-          JERRY_ASSERT (ecma_gc_get_object_next (obj_prev_p) == obj_iter_p);
-
-          ecma_gc_set_object_next (obj_prev_p, obj_next_p);
+          obj_prev_p->gc_next_cp = obj_iter_p->gc_next_cp;
         }
         else
         {
-          JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY] = obj_next_p;
+          white_gray_objects_p = obj_next_p;
         }
+
+        ecma_gc_set_object_next (obj_iter_p, black_objects_p);
+        black_objects_p = obj_iter_p;
 
         ecma_gc_mark (obj_iter_p);
         marked_anything_during_current_iteration = true;
@@ -763,8 +778,8 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
   }
   while (marked_anything_during_current_iteration);
 
-  /* Sweeping objects that are currently unmarked */
-  ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_WHITE_GRAY];
+  /* Sweep objects that are currently unmarked. */
+  obj_iter_p = white_gray_objects_p;
 
   while (obj_iter_p != NULL)
   {
@@ -772,19 +787,28 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 
     JERRY_ASSERT (!ecma_gc_is_object_visited (obj_iter_p));
 
-    ecma_gc_sweep (obj_iter_p);
+    ecma_gc_free_object (obj_iter_p);
     obj_iter_p = obj_next_p;
+  }
+
+  /* Reset the reference counter of non-root black objects. */
+  obj_iter_p = black_objects_p;
+
+  while (obj_iter_p != first_root_object_p)
+  {
+    /* The reference counter must be 1. */
+    ecma_deref_object (obj_iter_p);
+    JERRY_ASSERT (obj_iter_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
+
+    obj_iter_p = ecma_gc_get_object_next (obj_iter_p);
   }
 
   if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH)
   {
-    /* Remove the property hashmap of BLACK objects */
-    obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK];
+    obj_iter_p = black_objects_p;
 
     while (obj_iter_p != NULL)
     {
-      JERRY_ASSERT (ecma_gc_is_object_visited (obj_iter_p));
-
       if (!ecma_is_lexical_environment (obj_iter_p)
           || ecma_get_lex_env_type (obj_iter_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
       {
@@ -800,12 +824,7 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
     }
   }
 
-  /* Unmarking all objects */
-  ecma_object_t *black_objects = JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK];
-  JERRY_CONTEXT (ecma_gc_objects_lists)[ECMA_GC_COLOR_WHITE_GRAY] = black_objects;
-  JERRY_CONTEXT (ecma_gc_objects_lists) [ECMA_GC_COLOR_BLACK] = NULL;
-
-  JERRY_CONTEXT (ecma_gc_visited_flip_flag) = !JERRY_CONTEXT (ecma_gc_visited_flip_flag);
+  JERRY_CONTEXT (ecma_gc_objects_p) = black_objects_p;
 
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   /* Free RegExp bytecodes stored in cache */

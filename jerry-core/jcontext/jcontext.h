@@ -62,8 +62,7 @@ typedef struct
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
-  ecma_object_t *ecma_gc_objects_lists[ECMA_GC_COLOR__COUNT]; /**< List of marked (visited during
-                                                               *   current GC session) and umarked objects */
+  ecma_object_t *ecma_gc_objects_p; /**< List of currently alive objects. */
   jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
   jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
 #ifdef JERRY_CPOINTER_32_BIT
@@ -84,7 +83,6 @@ typedef struct
                            *   causes call of "try give memory back" callbacks */
   uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   uint32_t jerry_init_flags; /**< run-time configuration flags */
-  uint8_t ecma_gc_visited_flip_flag; /**< current state of an object's visited flag */
   uint8_t is_direct_eval_form_call; /**< direct call from eval */
   uint8_t jerry_api_available; /**< API availability flag */
 

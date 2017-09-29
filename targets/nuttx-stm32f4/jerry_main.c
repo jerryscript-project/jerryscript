@@ -494,6 +494,15 @@ int jerry_main (int argc, char *argv[])
   }
 
   jerry_release_value (ret_value);
+
+  ret_value = jerry_run_all_enqueued_jobs ();
+
+  if (jerry_value_has_error_flag (ret_value))
+  {
+    ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  jerry_release_value (ret_value);
   jerry_cleanup ();
 
   return ret_code;

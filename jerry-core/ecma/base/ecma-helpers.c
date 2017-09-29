@@ -61,16 +61,10 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK + 1 == ECMA_OBJECT_FLAG_BUILT_IN_OR_L
                      ecma_built_in_flag_must_follow_the_object_type);
 
 /**
- * The ecma gc visited flag must follow the built in flag.
- */
-JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_GC_VISITED == (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV << 1),
-                     ecma_gc_visited_flag_must_follow_the_built_in_flag);
-
-/**
  * The ecma extensible flag must follow the gc visited flag.
  */
-JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_EXTENSIBLE == (ECMA_OBJECT_FLAG_GC_VISITED << 1),
-                     ecma_extensible_flag_must_follow_the_gc_visited_flag);
+JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_EXTENSIBLE == (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV << 1),
+                     ecma_extensible_flag_must_follow_the_built_in_flag);
 
 /**
  * The ecma object ref one must follow the extensible flag.

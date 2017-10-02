@@ -26,11 +26,19 @@
  * @{
  */
 
+bool ecma_is_normal_or_arrow_function (ecma_object_type_t type);
+
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_is_constructor (ecma_value_t value);
 
 ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+ecma_object_t *
+ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p,
+                                      ecma_value_t this_binding);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_handler_t handler_cb);

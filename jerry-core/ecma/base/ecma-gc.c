@@ -348,13 +348,26 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         {
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-          ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                    ext_func_p->u.function.scope_cp);
-
-          ecma_gc_set_object_visited (scope_p);
+          ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                       ext_func_p->u.function.scope_cp));
         }
         break;
       }
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+      case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
+      {
+        ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
+
+        ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                               arrow_func_p->scope_cp));
+
+        if (ecma_is_value_object (arrow_func_p->this_binding))
+        {
+          ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
+        }
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
       default:
       {
         break;
@@ -554,7 +567,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         {
           ecma_length_t arraybuffer_length = ext_object_p->u.class_prop.u.length;
           size_t size = sizeof (ecma_extended_object_t) + arraybuffer_length;
-          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, size);
+          ecma_dealloc_extended_object (object_p, size);
           return;
         }
 
@@ -565,7 +578,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ecma_free_value_if_not_object (ext_object_p->u.class_prop.u.value);
           ecma_free_values_collection (((ecma_promise_object_t *) object_p)->fulfill_reactions, false);
           ecma_free_values_collection (((ecma_promise_object_t *) object_p)->reject_reactions, false);
-          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, sizeof (ecma_promise_object_t));
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_promise_object_t));
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
@@ -576,7 +589,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         }
       }
 
-      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, ext_object_size);
+      ecma_dealloc_extended_object (object_p, ext_object_size);
       return;
     }
 
@@ -584,7 +597,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         || object_type == ECMA_OBJECT_TYPE_ARRAY
         || object_type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
     {
-      ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p, ext_object_size);
+      ecma_dealloc_extended_object (object_p, ext_object_size);
       return;
     }
 
@@ -596,9 +609,24 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                             ext_func_p->u.function.bytecode_cp));
 
-      ecma_dealloc_extended_object (ext_func_p, sizeof (ecma_extended_object_t));
+      ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
       return;
     }
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    if (object_type == ECMA_OBJECT_TYPE_ARROW_FUNCTION)
+    {
+      ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
+
+      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
+                                                      arrow_func_p->bytecode_cp));
+
+      ecma_free_value_if_not_object (arrow_func_p->this_binding);
+
+      ecma_dealloc_extended_object (object_p, sizeof (ecma_arrow_function_t));
+      return;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
     if (object_type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
     {
@@ -621,20 +649,18 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           }
 
           size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
-          ecma_dealloc_extended_object (ext_object_p, sizeof (ecma_extended_object_t) + formal_params_size);
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t) + formal_params_size);
           return;
         }
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         {
-          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p,
-                                        sizeof (ecma_extended_object_t));
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
           return;
         }
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
         {
-          ecma_dealloc_extended_object ((ecma_extended_object_t *) object_p,
-                                        sizeof (ecma_extended_typedarray_object_t));
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_typedarray_object_t));
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
@@ -657,7 +683,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       if (!ecma_is_value_integer_number (args_len_or_this))
       {
         ecma_free_value_if_not_object (args_len_or_this);
-        ecma_dealloc_extended_object (ext_function_p, sizeof (ecma_extended_object_t));
+        ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
         return;
       }
 
@@ -670,7 +696,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       }
 
       size_t args_size = ((size_t) args_length) * sizeof (ecma_value_t);
-      ecma_dealloc_extended_object (ext_function_p, sizeof (ecma_extended_object_t) + args_size);
+      ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t) + args_size);
       return;
     }
   }

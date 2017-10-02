@@ -302,8 +302,24 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   if (is_function)
   {
-    ecma_object_t *func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                                bytecode_p);
+    ecma_object_t *func_obj_p;
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
+    {
+      func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
+                                                   bytecode_p);
+    }
+    else
+    {
+      func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
+                                                         bytecode_p,
+                                                         frame_ctx_p->this_binding);
+    }
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+    func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
+                                                 bytecode_p);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
     return ecma_make_object_value (func_obj_p);
   }

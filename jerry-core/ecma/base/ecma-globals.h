@@ -574,18 +574,20 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not String (15.5),
-                                 *   Function (15.3), Arguments (10.6), Array (15.4) objects */
+  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not belongs to the sub-types below. */
   ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
   ECMA_OBJECT_TYPE_FUNCTION = 2, /**< Function objects (15.3), created through 13.2 routine */
   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 3, /**< External (host) function object */
   ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  ECMA_OBJECT_TYPE_ARROW_FUNCTION = 7, /**< arrow function objects */
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
 
-  ECMA_OBJECT_TYPE__MAX = ECMA_OBJECT_TYPE_PSEUDO_ARRAY /**< maximum value */
+  ECMA_OBJECT_TYPE__MAX /**< maximum value */
 } ecma_object_type_t;
 
 /**
@@ -776,6 +778,21 @@ typedef struct
   ecma_extended_object_t extended_object; /**< extended object part */
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+
+/**
+ * Description of arrow function objects.
+ */
+typedef struct
+{
+  ecma_object_t object; /**< object header */
+  ecma_value_t this_binding; /**< value of 'this' binding */
+  jmem_cpointer_t scope_cp; /**< function scope */
+  jmem_cpointer_t bytecode_cp; /**< function byte code */
+} ecma_arrow_function_t;
+
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /**
  * Description of ECMA property descriptor

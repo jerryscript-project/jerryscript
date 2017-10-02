@@ -47,7 +47,7 @@ ecma_extended_object_t *ecma_alloc_extended_object (size_t size);
 /**
  * Dealloc memory of an extended object
  */
-void ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p, size_t size);
+void ecma_dealloc_extended_object (ecma_object_t *object_p, size_t size);
 
 /**
  * Allocate memory for ecma-number

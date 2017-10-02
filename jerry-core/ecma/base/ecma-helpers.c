@@ -45,7 +45,7 @@ JERRY_STATIC_ASSERT (ECMA_PROPERTY_TYPE_MASK >= ECMA_PROPERTY_TYPE__MAX,
 /**
  * The ecma object types must be lower than the container mask.
  */
-JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK >= ECMA_OBJECT_TYPE__MAX,
+JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK >= ECMA_OBJECT_TYPE__MAX - 1,
                      ecma_object_types_must_be_lower_than_the_container_mask);
 
 /**

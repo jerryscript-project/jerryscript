@@ -35,6 +35,22 @@
  */
 
 /**
+ * Checks whether the type is a normal or arrow function.
+ *
+ * @return true - if the type is a normal or arrow function;
+ *         false - otherwise
+ */
+inline bool __attr_always_inline___
+ecma_is_normal_or_arrow_function (ecma_object_type_t type)
+{
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  return (type == ECMA_OBJECT_TYPE_FUNCTION || type == ECMA_OBJECT_TYPE_ARROW_FUNCTION);
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+  return (type == ECMA_OBJECT_TYPE_FUNCTION);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+} /* ecma_is_normal_or_arrow_function */
+
+/**
  * IsCallable operation.
  *
  * See also: ECMA-262 v5, 9.11
@@ -55,13 +71,18 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
-  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  ecma_object_type_t type = ecma_get_object_type (obj_p);
+
+  return (type == ECMA_OBJECT_TYPE_FUNCTION
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+          || type == ECMA_OBJECT_TYPE_ARROW_FUNCTION
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+          || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
+          || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 } /* ecma_op_is_callable */
 
 /**
- * Check whether the value is Object that implements [[Construct]].
+ * Checks whether the value is Object that implements [[Construct]].
  *
  * @return true - if value is constructor object;
  *         false - otherwise
@@ -142,6 +163,42 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   return func_p;
 } /* ecma_op_create_function_object */
 
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+
+/**
+ * Arrow function object creation operation.
+ *
+ * See also: ES2015, 9.2.12
+ *
+ * @return pointer to newly created Function object
+ */
+ecma_object_t *
+ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                      const ecma_compiled_code_t *bytecode_data_p, /**< byte-code array */
+                                      ecma_value_t this_binding) /**< value of 'this' binding */
+{
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+
+  ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
+                                              sizeof (ecma_arrow_function_t),
+                                              ECMA_OBJECT_TYPE_ARROW_FUNCTION);
+
+  ecma_deref_object (prototype_obj_p);
+
+
+  ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_p;
+
+  ECMA_SET_NON_NULL_POINTER (arrow_func_p->scope_cp, scope_p);
+
+  ECMA_SET_NON_NULL_POINTER (arrow_func_p->bytecode_cp, bytecode_data_p);
+  ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
+
+  arrow_func_p->this_binding = ecma_copy_value_if_not_object (this_binding);
+  return func_p;
+} /* ecma_op_create_arrow_function_object */
+
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
 /**
  * External function object creation operation.
  *
@@ -192,57 +249,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-      || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
-  {
-    if (!ecma_is_value_object (value))
-    {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-    }
-
-    ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
-
-    ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-
-    ECMA_TRY_CATCH (prototype_obj_value,
-                    ecma_op_object_get (func_obj_p, prototype_magic_string_p),
-                    ret_value);
-
-    if (!ecma_is_value_object (prototype_obj_value))
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Object expected."));
-    }
-    else
-    {
-      ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
-      JERRY_ASSERT (prototype_obj_p != NULL);
-
-      do
-      {
-        v_obj_p = ecma_get_object_prototype (v_obj_p);
-
-        if (v_obj_p == NULL)
-        {
-          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
-
-          break;
-        }
-        else if (v_obj_p == prototype_obj_p)
-        {
-          ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
-
-          break;
-        }
-      } while (true);
-    }
-
-    ECMA_FINALIZE (prototype_obj_value);
-
-    ecma_deref_ecma_string (prototype_magic_string_p);
-  }
-  else
+  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
@@ -254,10 +261,57 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
                                                          ext_function_p->u.bound_function.target_function);
 
     /* 3. */
-    ret_value = ecma_op_object_has_instance (target_func_obj_p, value);
+    return ecma_op_object_has_instance (target_func_obj_p, value);
   }
 
-  return ret_value;
+  JERRY_ASSERT (ecma_is_normal_or_arrow_function (ecma_get_object_type (func_obj_p))
+                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  if (!ecma_is_value_object (value))
+  {
+    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  }
+
+  ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
+
+  ecma_string_t prototype_magic_string;
+  ecma_init_ecma_magic_string (&prototype_magic_string, LIT_MAGIC_STRING_PROTOTYPE);
+
+  ecma_value_t prototype_obj_value = ecma_op_object_get (func_obj_p, &prototype_magic_string);
+
+  if (ECMA_IS_VALUE_ERROR (prototype_obj_value))
+  {
+    return prototype_obj_value;
+  }
+
+  if (!ecma_is_value_object (prototype_obj_value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Object expected."));
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
+  JERRY_ASSERT (prototype_obj_p != NULL);
+
+  bool result = false;
+
+  while (true)
+  {
+    v_obj_p = ecma_get_object_prototype (v_obj_p);
+
+    if (v_obj_p == NULL)
+    {
+      break;
+    }
+
+    if (v_obj_p == prototype_obj_p)
+    {
+      result = true;
+      break;
+    }
+  }
+
+  ecma_deref_object (prototype_obj_p);
+  return ecma_make_boolean_value (result);
 } /* ecma_op_function_has_instance */
 
 /**
@@ -364,6 +418,48 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_free_value (this_binding);
     }
   }
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_ARROW_FUNCTION)
+  {
+    /* Entering Function Code (ES2015, 9.2.1) */
+    ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
+
+    ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                        arrow_func_p->scope_cp);
+
+    bool is_no_lex_env;
+
+    const ecma_compiled_code_t *bytecode_data_p;
+    bytecode_data_p = ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
+                                                 arrow_func_p->bytecode_cp);
+
+    is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
+
+    ecma_object_t *local_env_p;
+    if (is_no_lex_env)
+    {
+      local_env_p = scope_p;
+    }
+    else
+    {
+      local_env_p = ecma_create_decl_lex_env (scope_p);
+
+      JERRY_ASSERT (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED));
+    }
+
+    ret_value = vm_run (bytecode_data_p,
+                        arrow_func_p->this_binding,
+                        local_env_p,
+                        false,
+                        arguments_list_p,
+                        arguments_list_len);
+
+    if (!is_no_lex_env)
+    {
+      ecma_deref_object (local_env_p);
+    }
+  }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
   else if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
     ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;

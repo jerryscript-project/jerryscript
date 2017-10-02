@@ -1190,6 +1190,13 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     JERRY_DEBUG_MSG (",no_lexical_env");
   }
 
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+  {
+    JERRY_DEBUG_MSG (",arrow");
+  }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
   JERRY_DEBUG_MSG ("]\n");
 
   JERRY_DEBUG_MSG ("  Argument range end: %d\n", (int) argument_end);
@@ -1665,6 +1672,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED;
   }
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
+  {
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_ARROW_FUNCTION;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
   literal_pool_p = (jmem_cpointer_t *) byte_code_p;
   byte_code_p += context_p->literal_count * sizeof (jmem_cpointer_t);

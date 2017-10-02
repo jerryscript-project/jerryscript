@@ -131,14 +131,14 @@ ecma_alloc_extended_object (size_t size) /**< size of object */
  * Dealloc memory of an extended object
  */
 inline void __attr_always_inline___
-ecma_dealloc_extended_object (ecma_extended_object_t *ext_object_p, /**< property pair to be freed */
+ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
                               size_t size) /**< size of object */
 {
 #ifdef JMEM_STATS
   jmem_stats_free_object_bytes (size);
 #endif /* JMEM_STATS */
 
-  jmem_heap_free_block (ext_object_p, size);
+  jmem_heap_free_block (object_p, size);
 } /* ecma_dealloc_extended_object */
 
 /**

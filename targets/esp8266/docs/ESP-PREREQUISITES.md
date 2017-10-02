@@ -18,22 +18,24 @@ I've slightly changed the step to use SDK from Espressif official SDK
 
 ##### Toolchain:
 
-dependencies for x86
+dependencies
 ```
 sudo apt-get install git autoconf build-essential gperf \
-   bison flex texinfo libtool libncurses5-dev wget \
-    gawk libc6-dev-i386 python-serial libexpat-dev
+    bison flex texinfo libtool libtool-bin libncurses5-dev wget \
+    gawk python-serial libexpat-dev
 sudo mkdir /opt/Espressif
 sudo chown $USER /opt/Espressif/
+
 ```
 
-dependencies for x64
+dependency specific to x86:
 ```
-sudo apt-get install git autoconf build-essential gperf \
-    bison flex texinfo libtool libncurses5-dev wget \
-    gawk libc6-dev-amd64 python-serial libexpat-dev
-sudo mkdir /opt/Espressif
-sudo chown $USER /opt/Espressif/
+sudo apt-get install libc6-dev-i386
+```
+
+dependency specific to x64:
+```
+sudo apt-get install libc6-dev-amd64
 ```
 
 crosstool-NG
@@ -56,14 +58,10 @@ PATH=$PWD/builds/xtensa-lx106-elf/bin:$PATH
 cd /opt/Esprissif
 git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ESP8266_RTOS_SDK.git
 ln -s ESP8266_RTOS_SDK.git ESP8266_SDK
-cd ESP8266_SDK
-git checkout -b jerry a2b413ad2996450fe2f173b6afab243f6e1249aa
+git checkout -b jerry 2fab9e23d779cdd6e5900b8ba2b588e30d9b08c4
 ```
 
-We use SDK 1.2.0 version which has stdlib.h and others. Latest 1.3.0 version,
-as of writing this document, doesn't have it.
-(If anyone knows how to use latest version, please add an issue or send a PR.)
-
+This verison is tested and works properly.
 
 set two environment variables such as in .profile
 ```
@@ -126,7 +124,7 @@ make BOOT=new APP=0 SPI_SPEED=80 SPI_MODE=QIO SPI_SIZE_MAP=2
 ```
 sudo /opt/Espressif/esptool-py/esptool.py \
   --port /dev/ttyUSB0 write_flash \
-  0x00000 $SDK_PATH/bin/"boot_v1.4(b1).bin" \
+  0x00000 $SDK_PATH/bin/"boot_v1.7.bin" \
   0x01000 $BIN_PATH/upgrade/user1.2048.new.5.bin \
   0x101000 $BIN_PATH/upgrade/user2.2048.new.5.bin \
   0x3FE000 $SDK_PATH/bin/blank.bin \
@@ -146,5 +144,3 @@ sudo /opt/Espressif/esptool-py/esptool.py \
 * disconnect GPIO0 so that it is floating
 * connect GPIO2 with serial of 470 Ohm + LED and to GND
 * power On
-
-LED should blink on and off every second

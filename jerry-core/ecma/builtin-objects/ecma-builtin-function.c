@@ -159,7 +159,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
-  ecma_compiled_code_t *bytecode_data_p;
+  ecma_compiled_code_t *bytecode_data_p = NULL;
 
   ecma_value_t ret_value = parser_parse_script (arguments_buffer_p,
                                                 arguments_buffer_size,

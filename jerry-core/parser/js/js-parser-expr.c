@@ -19,7 +19,7 @@
 #include "lit-char-helpers.h"
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -1774,4 +1774,4 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
  * @}
  */
 
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */

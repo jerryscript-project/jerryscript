@@ -3,6 +3,5 @@
         "NRF52_DK": {
             "target.uart_hwfc": 0
         }
-    },
-    "macros": ["JERRY_JS_PARSER 1"]
+    }
 }

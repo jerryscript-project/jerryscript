@@ -55,11 +55,9 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
 
-#ifndef JERRY_JS_PARSER
-#error JERRY_JS_PARSER must be defined with 0 (disabled) or 1 (enabled)
-#elif !JERRY_JS_PARSER && !defined (JERRY_ENABLE_SNAPSHOT_EXEC)
-#error JERRY_JS_PARSER or JERRY_ENABLE_SNAPSHOT_EXEC must be defined!
-#endif /* !JERRY_JS_PARSER */
+#if defined JERRY_DISABLE_JS_PARSER && !defined JERRY_ENABLE_SNAPSHOT_EXEC
+#error JERRY_ENABLE_SNAPSHOT_EXEC must be defined if JERRY_DISABLE_JS_PARSER is defined!
+#endif /* JERRY_DISABLE_JS_PARSER && !JERRY_ENABLE_SNAPSHOT_EXEC */
 
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
 
@@ -342,7 +340,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
              bool is_strict) /**< strict mode */
 {
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
   jerry_assert_api_available ();
 
   ecma_compiled_code_t *bytecode_data_p;
@@ -368,13 +366,13 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);
-#else /* !JERRY_JS_PARSER */
+#else /* JERRY_DISABLE_JS_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (is_strict);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */
 } /* jerry_parse */
 
 /**
@@ -393,7 +391,7 @@ jerry_parse_named_resource (const jerry_char_t *resource_name_p, /**< resource n
                             size_t source_size, /**< script source size */
                             bool is_strict) /**< strict mode */
 {
-#if defined JERRY_DEBUGGER && defined JERRY_JS_PARSER
+#if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -401,10 +399,10 @@ jerry_parse_named_resource (const jerry_char_t *resource_name_p, /**< resource n
                                 resource_name_p,
                                 resource_name_length);
   }
-#else /* !(JERRY_DEBUGGER && JERRY_JS_PARSER) */
+#else /* !(JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && JERRY_JS_PARSER */
+#endif /* JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER */
 
   return jerry_parse (source_p, source_size, is_strict);
 } /* jerry_parse_named_resource */
@@ -425,7 +423,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                       size_t source_size, /**< script source size */
                       bool is_strict) /**< strict mode */
 {
-#if defined JERRY_DEBUGGER && defined JERRY_JS_PARSER
+#if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -433,12 +431,12 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                                 resource_name_p,
                                 resource_name_length);
   }
-#else /* !(JERRY_DEBUGGER && JERRY_JS_PARSER) */
+#else /* !(JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && JERRY_JS_PARSER */
+#endif /* JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER */
 
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
   jerry_assert_api_available ();
 
   ecma_compiled_code_t *bytecode_data_p;
@@ -470,7 +468,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);
-#else /* !JERRY_JS_PARSER */
+#else /* JERRY_DISABLE_JS_PARSER */
   JERRY_UNUSED (arg_list_p);
   JERRY_UNUSED (arg_list_size);
   JERRY_UNUSED (source_p);
@@ -478,7 +476,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   JERRY_UNUSED (is_strict);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */
 } /* jerry_parse_function */
 
 /**
@@ -745,9 +743,9 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
           || feature == JERRY_FEATURE_ERROR_MESSAGES
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
           || feature == JERRY_FEATURE_JS_PARSER
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */
 #ifdef JMEM_STATS
           || feature == JERRY_FEATURE_MEM_STATS
 #endif /* JMEM_STATS */

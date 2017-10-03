@@ -85,7 +85,6 @@ def build_jerry_data(jerry_path):
     jerry_cflags = [
         '-DCONFIG_MEM_HEAP_AREA_SIZE=10*1024',
         '-DJERRY_NDEBUG',
-        '-DJERRY_JS_PARSER',
         '-DJERRY_DISABLE_HEAVY_DEBUG',
         '-DCONFIG_DISABLE_NUMBER_BUILTIN',
         '-DCONFIG_DISABLE_STRING_BUILTIN',

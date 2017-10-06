@@ -38,7 +38,7 @@ done
 cppcheck -j$CPPCHECK_JOBS --force \
  --language=c --std=c99 \
  --enable=warning,style,performance,portability,information \
- --quiet --template="{file}:{line}: {severity}({id}): {message}" \
+ --template="{file}:{line}: {severity}({id}): {message}" \
  --error-exitcode=1 \
  --exitcode-suppressions=tools/cppcheck/suppressions-list \
  --suppressions-list=tools/cppcheck/suppressions-list \

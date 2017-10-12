@@ -33,6 +33,10 @@ extern "C"
 size_t jerry_parse_and_save_snapshot (const jerry_char_t *source_p, size_t source_size, bool is_for_global,
                                       bool is_strict, uint32_t *buffer_p, size_t buffer_size);
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode);
+jerry_value_t jerry_exec_snapshot_at (const uint32_t *snapshot_p, size_t snapshot_size,
+                                      size_t func_index, bool copy_bytecode);
+size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
+                              uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);
 size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
                                       uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
 

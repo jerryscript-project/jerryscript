@@ -38,14 +38,15 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Optional components
-set(JERRY_CMDLINE         ON  CACHE BOOL "Build jerry command line tool?")
-set(JERRY_CMDLINE_MINIMAL OFF CACHE BOOL "Build jerry minimal command line tool?")
-set(JERRY_PORT_DEFAULT    ON  CACHE BOOL "Build default jerry port implementation?")
-set(JERRY_EXT             ON  CACHE BOOL "Build jerry-ext?")
-set(JERRY_LIBC            ON  CACHE BOOL "Build and use jerry-libc?")
-set(JERRY_LIBM            ON  CACHE BOOL "Build and use jerry-libm?")
-set(UNITTESTS             OFF CACHE BOOL "Build unit tests?")
-set(DOCTESTS              OFF CACHE BOOL "Build doc tests?")
+set(JERRY_CMDLINE           ON  CACHE BOOL "Build jerry command line tool?")
+set(JERRY_CMDLINE_MINIMAL   OFF CACHE BOOL "Build jerry minimal command line tool?")
+set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
+set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
+set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
+set(JERRY_LIBC              ON  CACHE BOOL "Build and use jerry-libc?")
+set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
+set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
+set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
 
 # Optional build settings
 set(ENABLE_ALL_IN_ONE  OFF CACHE BOOL "Enable all-in-one build?")
@@ -57,7 +58,7 @@ set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release
 set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
 
 # Option overrides
-if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL OR UNITTESTS OR DOCTESTS)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL OR JERRY_CMDLINE_SNAPSHOT OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
 
   set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR TESTS)")
@@ -103,6 +104,7 @@ message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} ${ENABLE_STATI
 message(STATUS "ENABLE_STRIP              " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
 message(STATUS "JERRY_CMDLINE             " ${JERRY_CMDLINE})
 message(STATUS "JERRY_CMDLINE_MINIMAL     " ${JERRY_CMDLINE_MINIMAL})
+message(STATUS "JERRY_CMDLINE_SNAPSHOT    " ${JERRY_CMDLINE_SNAPSHOT})
 message(STATUS "JERRY_PORT_DEFAULT        " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_EXT                 " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_LIBC                " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
@@ -268,7 +270,7 @@ if(JERRY_EXT)
 endif()
 
 # Jerry command line tool
-if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_MINIMAL OR JERRY_CMDLINE_SNAPSHOT)
   add_subdirectory(jerry-main)
 endif()
 

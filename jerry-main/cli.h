@@ -66,10 +66,11 @@ typedef struct
  * Functions for CLI.
  */
 
-cli_state_t cli_init (const cli_opt_t *options, int argc, char **argv);
-int cli_consume_option (cli_state_t *state);
-const char * cli_consume_string (cli_state_t *state);
-int cli_consume_int (cli_state_t *state);
-void cli_help (const char *progname, const cli_opt_t *options);
+cli_state_t cli_init (const cli_opt_t *options_p, int argc, char **argv);
+void cli_change_opts (cli_state_t *state_p, const cli_opt_t *options_p);
+int cli_consume_option (cli_state_t *state_p);
+const char * cli_consume_string (cli_state_t *state_p);
+int cli_consume_int (cli_state_t *state_p);
+void cli_help (const char *prog_name_p, const char *command_name_p, const cli_opt_t *options_p);
 
 #endif /* CLI_H */

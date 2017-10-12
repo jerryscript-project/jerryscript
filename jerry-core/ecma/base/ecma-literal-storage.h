@@ -43,15 +43,17 @@ jmem_cpointer_t ecma_find_or_create_literal_number (ecma_number_t number_arg);
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 bool
-ecma_save_literals_for_snapshot (uint32_t *, size_t, size_t *,
-                                 lit_mem_to_snapshot_id_map_entry_t **, uint32_t *, uint32_t *);
+ecma_save_literals_for_snapshot (uint32_t *buffer_p, size_t buffer_size, size_t *in_out_buffer_offset_p,
+                                 lit_mem_to_snapshot_id_map_entry_t **out_map_p, uint32_t *out_map_len_p);
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
-bool
-ecma_load_literals_from_snapshot (const uint32_t *, uint32_t,
-                                  lit_mem_to_snapshot_id_map_entry_t **, uint32_t *);
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#if defined JERRY_ENABLE_SNAPSHOT_EXEC || defined JERRY_ENABLE_SNAPSHOT_SAVE
+const uint8_t *
+ecma_snapshot_get_literals_base (uint32_t *buffer_p, const uint8_t **number_base_p);
+jmem_cpointer_t
+ecma_snapshot_get_literal (const uint8_t *literal_base_p, const uint8_t *number_base_p,
+                           jmem_cpointer_t offset);
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC || JERRY_ENABLE_SNAPSHOT_SAVE */
 
 /**
  * @}

@@ -319,6 +319,7 @@ typedef enum
   OPT_SAVE_LIT_LIST,
   OPT_SAVE_LIT_C,
   OPT_EXEC_SNAP,
+  OPT_EXEC_SNAP_FUNC,
   OPT_LOG_LEVEL,
   OPT_ABORT_ON_FAIL,
   OPT_NO_PROMPT
@@ -357,6 +358,8 @@ static const cli_opt_t main_opts[] =
                .help = "export literals found in parsed JS input (in C source format)"),
   CLI_OPT_DEF (.id = OPT_EXEC_SNAP, .longopt = "exec-snapshot", .meta = "FILE",
                .help = "execute input snapshot file(s)"),
+  CLI_OPT_DEF (.id = OPT_EXEC_SNAP_FUNC, .longopt = "exec-snapshot-func", .meta = "FILE NUM",
+               .help = "execute specific function from input snapshot file(s)"),
   CLI_OPT_DEF (.id = OPT_LOG_LEVEL, .longopt = "log-level", .meta = "NUM",
                .help = "set log level (0-3)"),
   CLI_OPT_DEF (.id = OPT_ABORT_ON_FAIL, .longopt = "abort-on-fail",
@@ -427,6 +430,7 @@ main (int argc,
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
   const char *exec_snapshot_file_names[argc];
+  uint32_t exec_snapshot_file_indices[argc];
   int exec_snapshots_count = 0;
 
   bool is_parse_only = false;
@@ -452,7 +456,7 @@ main (int argc,
     {
       case OPT_HELP:
       {
-        cli_help (argv[0], main_opts);
+        cli_help (argv[0], NULL, main_opts);
         return JERRY_STANDALONE_EXIT_CODE_OK;
       }
       case OPT_VERSION:
@@ -544,7 +548,21 @@ main (int argc,
       {
         if (check_feature (JERRY_FEATURE_SNAPSHOT_EXEC, cli_state.arg))
         {
-          exec_snapshot_file_names[exec_snapshots_count++] = cli_consume_string (&cli_state);
+          exec_snapshot_file_names[exec_snapshots_count] = cli_consume_string (&cli_state);
+          exec_snapshot_file_indices[exec_snapshots_count++] = 0;
+        }
+        else
+        {
+          cli_consume_string (&cli_state);
+        }
+        break;
+      }
+      case OPT_EXEC_SNAP_FUNC:
+      {
+        if (check_feature (JERRY_FEATURE_SNAPSHOT_EXEC, cli_state.arg))
+        {
+          exec_snapshot_file_names[exec_snapshots_count] = cli_consume_string (&cli_state);
+          exec_snapshot_file_indices[exec_snapshots_count++] = (uint32_t) cli_consume_int (&cli_state);
         }
         else
         {
@@ -650,9 +668,10 @@ main (int argc,
       }
       else
       {
-        ret_value = jerry_exec_snapshot (snapshot_p,
-                                         snapshot_size,
-                                         true);
+        ret_value = jerry_exec_snapshot_at (snapshot_p,
+                                            snapshot_size,
+                                            exec_snapshot_file_indices[i],
+                                            true);
       }
 
       if (jerry_value_has_error_flag (ret_value))

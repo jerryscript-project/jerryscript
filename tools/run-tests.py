@@ -128,6 +128,8 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
     Options('buildoption_test-external_context',
             ['--jerry-libc=off', '--external-context=on']),
+    Options('buildoption_test-snapshot_tool',
+            ['--jerry-cmdline-snapshot=on']),
 ]
 
 def get_arguments():

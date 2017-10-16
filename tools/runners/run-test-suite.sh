@@ -49,7 +49,14 @@ then
     TEST_FILES="$TEST_FILES.snapshot"
     TEST_FAILED="$TEST_FAILED.snapshot"
     TEST_PASSED="$TEST_PASSED.snapshot"
-    IS_SNAPSHOT=true;
+    IS_SNAPSHOT=true
+
+    SNAPSHOT_TOOL=${ENGINE}-snapshot
+    if [ ! -x $SNAPSHOT_TOOL ]
+    then
+        echo "$0: $SNAPSHOT_TOOL: not an executable"
+        exit 1
+    fi
     shift
 fi
 
@@ -134,8 +141,8 @@ do
         # Testing snapshot
         SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).snapshot.XXXXXXXXXX`
 
-        cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
-        $TIMEOUT_CMD $TIMEOUT $ENGINE $ENGINE_ARGS --save-snapshot-for-global $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP
+        cmd_line="${SNAPSHOT_TOOL#$ROOT_DIR} generate --context global -o $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
+        $TIMEOUT_CMD $TIMEOUT $SNAPSHOT_TOOL generate --context global -o $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP
         status_code=$?
 
         if [ $status_code -eq 0 ]

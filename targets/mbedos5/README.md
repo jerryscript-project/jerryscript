@@ -11,6 +11,7 @@ so far:
 - [Nordic Semiconductor NRF52 Development Kit](https://developer.mbed.org/platforms/Nordic-nRF52-DK/)
 - [NXP Freedom K64F](https://developer.mbed.org/platforms/FRDM-K64F/)
 - [STM NUCLEO F401RE](https://developer.mbed.org/platforms/ST-Nucleo-F401RE/)
+- [STM NUCLEO F411RE](https://developer.mbed.org/platforms/ST-Nucleo-F411RE/)
 - [Silicon Labs EFM32 Giant Gecko](https://developer.mbed.org/platforms/EFM32-Giant-Gecko/)
 
 ## Features

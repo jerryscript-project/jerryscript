@@ -20,7 +20,7 @@
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
 
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
 
 /** \addtogroup parser Parser
  * @{
@@ -2355,4 +2355,4 @@ lexer_compare_identifier_to_current (parser_context_t *context_p,        /**< co
  * @}
  */
 
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */

@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#if JERRY_JS_PARSER
+#ifndef JERRY_DISABLE_JS_PARSER
 
 #ifdef JERRY_DEBUGGER
 #include "jcontext.h"
@@ -2245,4 +2245,4 @@ parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
  * @}
  */
 
-#endif /* JERRY_JS_PARSER */
+#endif /* !JERRY_DISABLE_JS_PARSER */

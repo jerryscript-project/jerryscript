@@ -531,7 +531,7 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
   {
-    ecma_free_value (parse_status);
+    ecma_free_value (JERRY_CONTEXT (error_value));
     return 0;
   }
 
@@ -684,6 +684,11 @@ jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
   {
     ret_val = vm_run_global (bytecode_p);
     ecma_bytecode_deref (bytecode_p);
+  }
+
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    return ecma_create_error_reference (JERRY_CONTEXT (error_value));
   }
 
   return ret_val;
@@ -1244,13 +1249,13 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
                                       is_strict,
                                       &bytecode_data_p);
 
-  const bool error = ECMA_IS_VALUE_ERROR (parse_status);
-  ecma_free_value (parse_status);
-
-  if (error)
+  if (ECMA_IS_VALUE_ERROR (parse_status))
   {
+    ecma_free_value (JERRY_CONTEXT (error_value));
     return 0;
   }
+
+  ecma_free_value (parse_status);
 
   ecma_bytecode_deref (bytecode_data_p);
 

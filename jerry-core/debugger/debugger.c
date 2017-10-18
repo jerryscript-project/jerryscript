@@ -164,6 +164,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   if (ECMA_IS_VALUE_ERROR (result))
   {
     type = JERRY_DEBUGGER_EVAL_ERROR;
+    result = JERRY_CONTEXT (error_value);
 
     if (ecma_is_value_object (result))
     {
@@ -980,18 +981,19 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
  *         false - otherwise
  */
 bool
-jerry_debugger_send_exception_string (ecma_value_t exception_value) /**< error value */
+jerry_debugger_send_exception_string (void)
 {
   ecma_string_t *string_p = NULL;
 
+  ecma_value_t exception_value = JERRY_CONTEXT (error_value);
+
   if (ecma_is_value_object (exception_value))
   {
-    ecma_value_t object_value = ecma_get_value_from_error_value (exception_value);
+    string_p = jerry_debugger_exception_object_to_string (exception_value);
 
-    string_p = jerry_debugger_exception_object_to_string (object_value);
     if (string_p == NULL)
     {
-      string_p = ecma_get_string_from_value (ecma_builtin_helper_object_to_string (object_value));
+      string_p = ecma_get_string_from_value (ecma_builtin_helper_object_to_string (exception_value));
     }
   }
   else if (ecma_is_value_string (exception_value))

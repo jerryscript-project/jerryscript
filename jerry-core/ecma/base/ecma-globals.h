@@ -69,11 +69,12 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_TYPE_DIRECT, /**< directly encoded value, a 28 bit signed integer or a simple value */
-  ECMA_TYPE_FLOAT, /**< pointer to a 64 or 32 bit floating point number */
-  ECMA_TYPE_STRING, /**< pointer to description of a string */
-  ECMA_TYPE_OBJECT, /**< pointer to description of an object */
-  ECMA_TYPE___MAX = ECMA_TYPE_OBJECT /** highest value for ecma types */
+  ECMA_TYPE_DIRECT = 0, /**< directly encoded value, a 28 bit signed integer or a simple value */
+  ECMA_TYPE_FLOAT = 1, /**< pointer to a 64 or 32 bit floating point number */
+  ECMA_TYPE_STRING = 2, /**< pointer to description of a string */
+  ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
+  ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference */
+  ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
 /**
@@ -88,11 +89,12 @@ typedef enum
    *   - special register or stack values for vm
    */
   ECMA_SIMPLE_VALUE_EMPTY, /**< uninitialized value */
-  ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
+  ECMA_SIMPLE_VALUE_ERROR, /**< an error is currently thrown */
   ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
   ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
   ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
   ECMA_SIMPLE_VALUE_NULL, /**< null value */
+  ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
   ECMA_SIMPLE_VALUE_NOT_FOUND, /**< a special value returned by ecma_op_object_find */
   ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
   ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma values */
@@ -122,12 +124,7 @@ typedef int32_t ecma_integer_value_t;
 /**
  * Mask for ecma types in ecma_type_t
  */
-#define ECMA_VALUE_TYPE_MASK 0x3u
-
-/**
- * Error flag in ecma_type_t
- */
-#define ECMA_VALUE_ERROR_FLAG 0x4u
+#define ECMA_VALUE_TYPE_MASK 0x7u
 
 /**
  * Shift for value part in ecma_type_t
@@ -199,7 +196,7 @@ typedef int32_t ecma_integer_value_t;
  * Checks whether the error flag is set.
  */
 #define ECMA_IS_VALUE_ERROR(value) \
-  (unlikely ((value & ECMA_VALUE_ERROR_FLAG) != 0))
+  (unlikely ((value) == ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR)))
 
 /**
  * Representation for native external pointer
@@ -1138,6 +1135,15 @@ typedef struct
   ecma_string_t header; /**< string header */
   lit_utf8_size_t long_utf8_string_length; /**< length of this long utf-8 string in bytes */
 } ecma_long_string_t;
+
+/**
+ * Representation of a thrown value on API level.
+ */
+typedef struct
+{
+  uint32_t refs; /**< reference counter */
+  ecma_value_t value; /**< referenced value */
+} ecma_error_reference_t;
 
 /**
  * Compiled byte code data.

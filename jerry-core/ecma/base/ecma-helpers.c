@@ -1321,6 +1321,103 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 } /* ecma_free_property_descriptor */
 
 /**
+ * The size of error reference must be 8 bytes to use jmem_pools_alloc().
+ */
+JERRY_STATIC_ASSERT (sizeof (ecma_error_reference_t) == 8,
+                     ecma_error_reference_size_must_be_8_bytes);
+
+/**
+ * Create an error reference from a given value.
+ *
+ * Note:
+ *   Reference of the value is taken.
+ *
+ * @return error reference value
+ */
+ecma_value_t
+ecma_create_error_reference (ecma_value_t value) /**< referenced value */
+{
+  ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
+
+  error_ref_p->refs = 1;
+  error_ref_p->value = value;
+  return ecma_make_error_reference_value (error_ref_p);
+} /* ecma_create_error_reference */
+
+/**
+ * Create an error reference from a given object.
+ *
+ * Note:
+ *   Reference of the value is taken.
+ *
+ * @return error reference value
+ */
+inline ecma_value_t __attr_always_inline___
+ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
+{
+  return ecma_create_error_reference (ecma_make_object_value (object_p));
+} /* ecma_create_error_object_reference */
+
+/**
+ * Increase ref count of an error reference.
+ */
+void
+ecma_ref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
+{
+  if (likely (error_ref_p->refs < UINT32_MAX))
+  {
+    error_ref_p->refs++;
+  }
+  else
+  {
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
+} /* ecma_ref_error_reference */
+
+/**
+ * Decrease ref count of an error reference.
+ */
+void
+ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
+{
+  JERRY_ASSERT (error_ref_p->refs > 0);
+
+  error_ref_p->refs--;
+
+  if (error_ref_p->refs == 0)
+  {
+    ecma_free_value (error_ref_p->value);
+    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+  }
+} /* ecma_deref_error_reference */
+
+/**
+ * Clears error reference, and returns with the value.
+ *
+ * @return value referenced by the error
+ */
+ecma_value_t
+ecma_clear_error_reference (ecma_value_t value)
+{
+  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
+
+  JERRY_ASSERT (error_ref_p->refs > 0);
+
+  ecma_value_t referenced_value = error_ref_p->value;
+
+  if (error_ref_p->refs > 1)
+  {
+    error_ref_p->refs--;
+  }
+  else
+  {
+    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+  }
+
+  return referenced_value;
+} /* ecma_clear_error_reference */
+
+/**
  * Increase reference counter of Compact
  * Byte Code or regexp byte code.
  */

@@ -679,7 +679,15 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                                               name_p,
                                                                               is_strict,
                                                                               lit_value);
-              ecma_free_value (put_value_result);
+
+              JERRY_ASSERT (ecma_is_value_boolean (put_value_result)
+                            || ecma_is_value_empty (put_value_result)
+                            || ECMA_IS_VALUE_ERROR (put_value_result));
+
+              if (ECMA_IS_VALUE_ERROR (put_value_result))
+              {
+                ecma_free_value (JERRY_CONTEXT (error_value));
+              }
             }
 
             if (value_index >= register_end)
@@ -882,10 +890,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               JERRY_CONTEXT (vm_exec_stop_counter) = 1;
 
-              if (!ECMA_IS_VALUE_ERROR (result))
+              if (!ecma_is_value_error_reference (result))
               {
-                result = ecma_make_error_value (result);
+                JERRY_CONTEXT (error_value) = result;
               }
+              else
+              {
+                JERRY_CONTEXT (error_value) = ecma_clear_error_reference (result);
+              }
+              result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
               goto error;
             }
           }
@@ -1399,7 +1412,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW:
         {
-          result = ecma_make_error_value (left_value);
+          JERRY_CONTEXT (error_value) = left_value;
+          result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
           left_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
           goto error;
         }
@@ -2322,11 +2336,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
             case VM_CONTEXT_FINALLY_THROW:
             {
-              result = stack_top_p[-2];
+              JERRY_CONTEXT (error_value) = stack_top_p[-2];
 
               VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth,
                                   PARSER_TRY_CONTEXT_STACK_ALLOCATION);
               stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+              result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
               goto error;
             }
             case VM_CONTEXT_FINALLY_RETURN:
@@ -2567,7 +2582,7 @@ error:
           && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
           && !(JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION | JERRY_DEBUGGER_VM_IGNORE)))
       {
-        if (jerry_debugger_send_exception_string (result))
+        if (jerry_debugger_send_exception_string ())
         {
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
         }
@@ -2621,7 +2636,7 @@ error:
           ecma_object_t *catch_env_p;
           ecma_string_t *catch_name_p;
 
-          *stack_top_p++ = ecma_get_value_from_error_value (result);
+          *stack_top_p++ = JERRY_CONTEXT (error_value);
 
           JERRY_ASSERT (byte_code_p[0] == CBC_ASSIGN_SET_IDENT);
 
@@ -2644,7 +2659,7 @@ error:
         else
         {
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW);
-          stack_top_p[-2] = result;
+          stack_top_p[-2] = JERRY_CONTEXT (error_value);
         }
 
 #ifdef JERRY_VM_EXEC_STOP
@@ -2664,10 +2679,15 @@ error:
             left_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
             right_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 
-            if (!ECMA_IS_VALUE_ERROR (result))
+            if (!ecma_is_value_error_reference (result))
             {
-              result = ecma_make_error_value (result);
+              JERRY_CONTEXT (error_value) = result;
             }
+            else
+            {
+              JERRY_CONTEXT (error_value) = ecma_clear_error_reference (result);
+            }
+            result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
             goto error;
           }
         }

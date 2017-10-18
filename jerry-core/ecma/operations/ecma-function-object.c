@@ -468,6 +468,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                        this_arg_value,
                                                        arguments_list_p,
                                                        arguments_list_len);
+
+    if (unlikely (ecma_is_value_error_reference (ret_value)))
+    {
+      JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value);
+      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
+    }
   }
   else
   {

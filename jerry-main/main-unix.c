@@ -133,9 +133,8 @@ jerry_value_is_syntax_error (jerry_value_t error_value) /**< error value */
 static void
 print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
-  assert (jerry_value_has_error_flag (error_value));
+  assert (!jerry_value_has_error_flag (error_value));
 
-  jerry_value_clear_error_flag (&error_value);
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
   jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
   jerry_char_t err_str_buf[256];
@@ -262,6 +261,7 @@ register_js_function (const char *name_p, /**< name of the function */
   if (jerry_value_has_error_flag (result_val))
   {
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
+    jerry_value_clear_error_flag (&result_val);
     print_unhandled_exception (result_val);
   }
 
@@ -870,11 +870,13 @@ main (int argc,
 
           if (jerry_value_has_error_flag (ret_val_eval))
           {
+            jerry_value_clear_error_flag (&ret_val_eval);
             print_unhandled_exception (ret_val_eval);
           }
         }
         else
         {
+          jerry_value_clear_error_flag (&ret_val_eval);
           print_unhandled_exception (ret_val_eval);
         }
 
@@ -887,6 +889,7 @@ main (int argc,
 
   if (jerry_value_has_error_flag (ret_value))
   {
+    jerry_value_clear_error_flag (&ret_value);
     print_unhandled_exception (ret_value);
 
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
@@ -898,6 +901,7 @@ main (int argc,
 
   if (jerry_value_has_error_flag (ret_value))
   {
+    jerry_value_clear_error_flag (&ret_value);
     print_unhandled_exception (ret_value);
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }

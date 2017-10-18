@@ -2721,7 +2721,8 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     {
       /* It is unlikely that memory can be allocated in an out-of-memory
        * situation. However, a simple value can still be thrown. */
-      return ecma_make_error_value (ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL));
+      JERRY_CONTEXT (error_value) = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
     }
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
     const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);

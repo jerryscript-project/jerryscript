@@ -38,6 +38,46 @@ static const jerry_object_native_info_t native_obj_type_info = {
 };
 
 /**
+ * Serial#attach (native JavaScript method)
+ * 
+ * Attaches a function to the serialport interrupt
+ *
+ * @param integer byte value
+ * @returns undefined
+ */
+
+
+DECLARE_CLASS_FUNCTION(Serial, attach) {
+    CHECK_ARGUMENT_COUNT(Serial, attach, (args_count == 1));
+    CHECK_ARGUMENT_TYPE_ALWAYS(Serial, attach, 0, function);
+
+    void *void_ptr;
+    const jerry_object_native_info_t *type_ptr;
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+
+    if (!has_ptr || type_ptr != &native_obj_type_info) {
+        return jerry_create_error(JERRY_ERROR_TYPE,
+                                  (const jerry_char_t *) "Failed to get native Serial pointer");
+    }
+
+    Serial *native_ptr = static_cast<Serial*>(void_ptr);
+
+    jerry_value_t f = args[0];
+
+    // Pass the function to EventLoop.
+    mbed::Callback<void()> cb = mbed::js::EventLoop::getInstance().wrapFunction(f);
+    native_ptr->attach(cb, Serial::RxIrq);
+
+    // Keep track of our callback internally.
+    jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_attach");
+    jerry_set_property(this_obj, property_name, f);
+    jerry_release_value(property_name);
+
+    return jerry_create_undefined();
+}
+
+
+/**
  * Serial#baud (native JavaScript method)
  * 
  * Sets the baud rate
@@ -222,7 +262,7 @@ DECLARE_CLASS_CONSTRUCTOR(Serial) {
     jerry_value_t js_object = jerry_create_object();
     jerry_set_object_native_pointer(js_object, native_ptr, &native_obj_type_info);
 
-    //ATTACH_CLASS_FUNCTION(js_object, Serial, attach); //DISABLED, NON FUNCTIONAL
+    ATTACH_CLASS_FUNCTION(js_object, Serial, attach); 
     ATTACH_CLASS_FUNCTION(js_object, Serial, baud);
     ATTACH_CLASS_FUNCTION(js_object, Serial, putc);
     ATTACH_CLASS_FUNCTION(js_object, Serial, getc);

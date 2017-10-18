@@ -23,6 +23,62 @@
  */
 #define SNAPSHOT_BUFFER_SIZE (256)
 
+static void test_function_snapshot (void)
+{
+  /* function to snapshot */
+  if (!jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
+      || !jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  {
+    return;
+  }
+
+  const jerry_init_flag_t flags = JERRY_INIT_EMPTY;
+  static uint32_t function_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+
+  const char *args_p = "a, b";
+  const char *code_to_snapshot_p = "return a + b";
+
+  jerry_init (flags);
+  size_t function_snapshot_size = jerry_parse_and_save_function_snapshot ((jerry_char_t *) code_to_snapshot_p,
+                                                                          strlen (code_to_snapshot_p),
+                                                                          (jerry_char_t *) args_p,
+                                                                          strlen (args_p),
+                                                                          false,
+                                                                          function_snapshot_buffer,
+                                                                          SNAPSHOT_BUFFER_SIZE);
+  TEST_ASSERT (function_snapshot_size != 0);
+  jerry_cleanup ();
+
+  jerry_init (flags);
+
+  jerry_value_t function_obj = jerry_load_function_snapshot_at (function_snapshot_buffer,
+                                                                function_snapshot_size,
+                                                                0,
+                                                                false);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (function_obj));
+  TEST_ASSERT (jerry_value_is_function (function_obj));
+
+  jerry_value_t this_val = jerry_create_undefined ();
+  jerry_value_t args[2];
+  args[0] = jerry_create_number (1.0);
+  args[1] = jerry_create_number (2.0);
+
+  jerry_value_t res = jerry_call_function (function_obj, this_val, args, 2);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (jerry_value_is_number (res));
+  double num = jerry_get_number_value (res);
+  TEST_ASSERT (num == 3);
+
+  jerry_release_value (args[0]);
+  jerry_release_value (args[1]);
+  jerry_release_value (res);
+  jerry_release_value (function_obj);
+
+  jerry_cleanup ();
+} /* test_function_snapshot */
+
 int
 main (void)
 {
@@ -211,6 +267,8 @@ main (void)
 
     jerry_cleanup ();
   }
+
+  test_function_snapshot ();
 
   return 0;
 } /* main */

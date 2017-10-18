@@ -21,6 +21,7 @@
 #include "jerryscript.h"
 #include "jerry-snapshot.h"
 #include "js-parser.h"
+#include "ecma-lex-env.h"
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
 
@@ -494,24 +495,26 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 /**
- * Generate snapshot from specified source
+ * Generate snapshot from specified source and arguments
  *
  * @return size of snapshot, if it was generated succesfully
  *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
  *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
  *         0 - otherwise.
  */
-size_t
-jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source */
-                               size_t source_size, /**< script source size */
-                               bool is_for_global, /**< snapshot would be executed as global (true)
-                                                    *   or eval (false) */
-                               bool is_strict, /**< strict mode */
-                               uint32_t *buffer_p, /**< buffer to save snapshot to */
-                               size_t buffer_size) /**< the buffer's size */
+static size_t
+jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< script source */
+                                         size_t source_size, /**< script source size */
+                                         const jerry_char_t *args_p, /**< arguments string */
+                                         size_t args_size, /**< arguments string size */
+                                         bool is_for_global, /**< snapshot would be executed as global (true)
+                                                              *   or eval (false) */
+                                         bool is_strict, /**< strict mode */
+                                         uint32_t *buffer_p, /**< buffer to save snapshot to */
+                                         size_t buffer_size) /**< the buffer's size */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
   snapshot_globals_t globals;
   ecma_value_t parse_status;
   ecma_compiled_code_t *bytecode_data_p;
@@ -522,8 +525,8 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
   globals.snapshot_error_occured = false;
   globals.regex_found = false;
 
-  parse_status = parser_parse_script (NULL,
-                                      0,
+  parse_status = parser_parse_script (args_p,
+                                      args_size,
                                       source_p,
                                       source_size,
                                       is_strict,
@@ -588,6 +591,35 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
   ecma_bytecode_deref (bytecode_data_p);
 
   return globals.snapshot_buffer_write_offset;
+} /* jerry_parse_and_save_snapshot_with_args */
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+
+/**
+ * Generate snapshot from specified source
+ *
+ * @return size of snapshot, if it was generated succesfully
+ *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
+ *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *         0 - otherwise.
+ */
+size_t
+jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source */
+                               size_t source_size, /**< script source size */
+                               bool is_for_global, /**< snapshot would be executed as global (true)
+                                                    *   or eval (false) */
+                               bool is_strict, /**< strict mode */
+                               uint32_t *buffer_p, /**< buffer to save snapshot to */
+                               size_t buffer_size) /**< the buffer's size */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  return jerry_parse_and_save_snapshot_with_args (source_p,
+                                                  source_size,
+                                                  NULL,
+                                                  0,
+                                                  is_for_global,
+                                                  is_strict,
+                                                  buffer_p,
+                                                  buffer_size);
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
@@ -600,8 +632,9 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_snapshot */
 
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
 /**
- * Execute snapshot from specified buffer
+ * Execute/load snapshot from specified buffer
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -609,19 +642,19 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
  * @return result of bytecode - if run was successful
  *         thrown error - otherwise
  */
-jerry_value_t
-jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
-                        size_t snapshot_size, /**< size of snapshot */
-                        size_t func_index, /**< index of primary function */
-                        bool copy_bytecode) /**< flag, indicating whether the passed snapshot
-                                             *   buffer should be copied to the engine's memory.
-                                             *   If set the engine should not reference the buffer
-                                             *   after the function returns (in this case, the passed
-                                             *   buffer could be freed after the call).
-                                             *   Otherwise (if the flag is not set) - the buffer could only be
-                                             *   freed after the engine stops (i.e. after call to jerry_cleanup). */
+static jerry_value_t
+jerry_snapshot_result_at (const uint32_t *snapshot_p, /**< snapshot */
+                          size_t snapshot_size, /**< size of snapshot */
+                          size_t func_index, /**< index of primary function */
+                          bool copy_bytecode, /**< flag, indicating whether the passed snapshot
+                                               *   buffer should be copied to the engine's memory.
+                                               *   If set the engine should not reference the buffer
+                                               *   after the function returns (in this case, the passed
+                                               *   buffer could be freed after the call).
+                                               *   Otherwise (if the flag is not set) - the buffer could only be
+                                               *   freed after the engine stops (i.e. after call to jerry_cleanup). */
+                          bool as_function) /** < specify if the loaded snapshot should be returned as a function */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   JERRY_ASSERT (snapshot_p != NULL);
 
   static const char * const invalid_version_error_p = "Invalid snapshot version or unsupported features present";
@@ -676,7 +709,16 @@ jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
 
   ecma_value_t ret_val;
 
-  if (header_p->func_offsets[func_index] & JERRY_SNAPSHOT_EVAL_CONTEXT)
+  if (as_function)
+  {
+    ecma_object_t *lex_env_p = ecma_get_global_environment ();
+    ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
+                                                                bytecode_p);
+    ecma_bytecode_deref (bytecode_p);
+
+    ret_val = ecma_make_object_value (func_obj_p);
+  }
+  else if (header_p->func_offsets[func_index] & JERRY_SNAPSHOT_EVAL_CONTEXT)
   {
     ret_val = vm_run_eval (bytecode_p, false);
   }
@@ -687,6 +729,32 @@ jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
   }
 
   return ret_val;
+} /* jerry_snapshot_result_at */
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+
+/**
+ * Execute snapshot from specified buffer
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of bytecode - if run was successful
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
+                        size_t snapshot_size, /**< size of snapshot */
+                        size_t func_index, /**< index of primary function */
+                        bool copy_bytecode) /**< flag, indicating whether the passed snapshot
+                                             *   buffer should be copied to the engine's memory.
+                                             *   If set the engine should not reference the buffer
+                                             *   after the function returns (in this case, the passed
+                                             *   buffer could be freed after the call).
+                                             *   Otherwise (if the flag is not set) - the buffer could only be
+                                             *   freed after the engine stops (i.e. after call to jerry_cleanup). */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+  return jerry_snapshot_result_at (snapshot_p, snapshot_size, func_index, copy_bytecode, false);
 #else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   JERRY_UNUSED (snapshot_p);
   JERRY_UNUSED (snapshot_size);
@@ -1411,3 +1479,58 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
   return 0;
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_literals */
+
+size_t jerry_parse_and_save_function_snapshot (const jerry_char_t *source_p, /**< function body source */
+                                               size_t source_size, /**< function body size */
+                                               const jerry_char_t *args_p, /**< arguments string */
+                                               size_t args_size, /**< arguments string size */
+                                               bool is_strict, /**< strict mode */
+                                               uint32_t *buffer_p, /**< buffer to save snapshot to */
+                                               size_t buffer_size) /**< the buffer's size */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  return jerry_parse_and_save_snapshot_with_args (source_p,
+                                                  source_size,
+                                                  args_p,
+                                                  args_size,
+                                                  true,
+                                                  is_strict,
+                                                  buffer_p,
+                                                  buffer_size);
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (args_p);
+  JERRY_UNUSED (args_size);
+  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+
+  return 0;
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+} /* jerry_parse_and_save_function_snapshot */
+
+jerry_value_t jerry_load_function_snapshot_at (const uint32_t *function_snapshot_p, /**< snapshot of the function(s) */
+                                               const size_t function_snapshot_size, /**< size of the snapshot */
+                                               size_t func_index, /**< index of the function to load */
+                                               bool copy_bytecode) /**< flag, indicating whether the passed snapshot
+                                                                    *   buffer should be copied to the engine's memory.
+                                                                    *   If set the engine should not reference
+                                                                    *   the buffer after the function returns
+                                                                    *   (in this case, the passed buffer could be freed
+                                                                    *   after the call).
+                                                                    *   Otherwise (if the flag is not set) - the buffer
+                                                                    *   could only be freed after the engine stops
+                                                                    *   (i.e. after call to jerry_cleanup). */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+  return jerry_snapshot_result_at (function_snapshot_p, function_snapshot_size, func_index, copy_bytecode, true);
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+  JERRY_UNUSED (function_snapshot_p);
+  JERRY_UNUSED (function_snapshot_size);
+  JERRY_UNUSED (func_index);
+  JERRY_UNUSED (copy_bytecode);
+
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+} /* jerry_load_function_snapshot_at */

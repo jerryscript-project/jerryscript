@@ -179,7 +179,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   {
     if (ECMA_IS_VALUE_ERROR (handler_result))
     {
-      handler_result = ecma_get_value_from_error_value (handler_result);
+      handler_result = JERRY_CONTEXT (error_value);
     }
 
     /* 7. */

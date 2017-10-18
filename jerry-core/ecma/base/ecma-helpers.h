@@ -128,6 +128,7 @@ bool ecma_is_value_float_number (ecma_value_t value) __attr_const___;
 bool ecma_is_value_number (ecma_value_t value) __attr_const___;
 bool ecma_is_value_string (ecma_value_t value) __attr_const___;
 bool ecma_is_value_object (ecma_value_t value) __attr_const___;
+bool ecma_is_value_error_reference (ecma_value_t value) __attr_const___;
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
@@ -140,14 +141,13 @@ ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
 ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p) __attr_pure___;
 ecma_value_t ecma_make_object_value (const ecma_object_t *object_p) __attr_pure___;
-ecma_value_t ecma_make_error_value (ecma_value_t value) __attr_const___;
-ecma_value_t ecma_make_error_obj_value (const ecma_object_t *object_p) __attr_pure___;
+ecma_value_t ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) __attr_pure___;
 ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t value) __attr_const___;
 ecma_number_t ecma_get_float_from_value (ecma_value_t value) __attr_pure___;
 ecma_number_t ecma_get_number_from_value (ecma_value_t value) __attr_pure___;
 ecma_string_t *ecma_get_string_from_value (ecma_value_t value) __attr_pure___;
 ecma_object_t *ecma_get_object_from_value (ecma_value_t value) __attr_pure___;
-ecma_value_t ecma_get_value_from_error_value (ecma_value_t value) __attr_const___;
+ecma_error_reference_t *ecma_get_error_reference_from_value (ecma_value_t value) __attr_pure___;
 ecma_value_t ecma_invert_boolean_value (ecma_value_t value) __attr_const___;
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
@@ -339,7 +339,11 @@ void ecma_set_property_lcached (ecma_property_t *property_p, bool is_lcached);
 ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
-ecma_property_t *ecma_get_next_property_pair (ecma_property_pair_t *);
+ecma_value_t ecma_create_error_reference (ecma_value_t value);
+ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
+void ecma_ref_error_reference (ecma_error_reference_t *error_ref_p);
+void ecma_deref_error_reference (ecma_error_reference_t *error_ref_p);
+ecma_value_t ecma_clear_error_reference (ecma_value_t value);
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);

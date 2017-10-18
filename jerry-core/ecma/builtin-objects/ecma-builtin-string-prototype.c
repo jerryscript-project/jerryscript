@@ -26,6 +26,7 @@
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
@@ -1593,6 +1594,11 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           match_result = ecma_regexp_exec_helper (regexp_value, ecma_make_string_value (substr_str_p), true);
           should_return = !ecma_is_value_null (match_result);
 
+          if (ECMA_IS_VALUE_ERROR (match_result))
+          {
+            match_result = JERRY_CONTEXT (error_value);
+          }
+
           ecma_deref_ecma_string (substr_str_p);
           ecma_free_value (match_result);
 #else
@@ -1684,6 +1690,10 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           if (ecma_is_value_null (match_result) || ECMA_IS_VALUE_ERROR (match_result))
           {
             curr_pos++;
+            if (ECMA_IS_VALUE_ERROR (match_result))
+            {
+              ecma_free_value (JERRY_CONTEXT (error_value));
+            }
           }
           else
           {

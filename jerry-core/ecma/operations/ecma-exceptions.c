@@ -21,6 +21,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "jcontext.h"
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA
@@ -155,7 +156,8 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
     error_obj_p = ecma_new_standard_error (error_type);
   }
 
-  return ecma_make_error_obj_value (error_obj_p);
+  JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
 } /* ecma_raise_standard_error */
 
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
@@ -242,7 +244,9 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 
   ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
   ecma_deref_ecma_string (error_msg_p);
-  return ecma_make_error_obj_value (error_obj_p);
+
+  JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
 } /* ecma_raise_standard_error_with_format */
 
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */

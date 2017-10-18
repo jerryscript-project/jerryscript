@@ -20,6 +20,7 @@
 #include "ecma-globals.h"
 #include "ecma-number-object.h"
 #include "ecma-promise-object.h"
+#include "jcontext.h"
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 
@@ -124,10 +125,9 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
  *         Returned value must be freed with ecma_free_value.
  */
 inline static ecma_value_t
-ecma_builtin_promise_reject_abrupt (ecma_value_t abrupt_value,
-                                    ecma_value_t capability)
+ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject description */
 {
-  ecma_value_t reason = ecma_get_value_from_error_value (abrupt_value);
+  ecma_value_t reason = JERRY_CONTEXT (error_value);
   ecma_string_t *str_reject = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
   ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), str_reject);
   ecma_deref_ecma_string (str_reject);
@@ -590,9 +590,9 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   if (!ecma_is_value_object (array)
       || ecma_get_object_type (ecma_get_object_from_value (array)) != ECMA_OBJECT_TYPE_ARRAY)
   {
-    ecma_value_t error = ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
-    ret = ecma_builtin_promise_reject_abrupt (error, capability);
-    ecma_free_value (error);
+    ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
+    ret = ecma_builtin_promise_reject_abrupt (capability);
+    ecma_free_value (JERRY_CONTEXT (error_value));
     ecma_free_value (capability);
 
     return ret;
@@ -609,7 +609,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (ECMA_IS_VALUE_ERROR (ret))
   {
-    ret = ecma_get_value_from_error_value (ret);
+    ret = JERRY_CONTEXT (error_value);
   }
 
   ecma_free_value (capability);

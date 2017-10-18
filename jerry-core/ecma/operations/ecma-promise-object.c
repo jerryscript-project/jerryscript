@@ -24,6 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-promise-object.h"
+#include "jcontext.h"
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 
@@ -547,7 +548,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   if (ECMA_IS_VALUE_ERROR (completion))
   {
     /* 10.a. */
-    completion = ecma_get_value_from_error_value (completion);
+    completion = JERRY_CONTEXT (error_value);
     status = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                                     &completion,

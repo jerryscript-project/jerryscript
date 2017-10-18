@@ -81,6 +81,7 @@ typedef struct
   size_t jmem_heap_allocated_size; /**< size of allocated regions */
   size_t jmem_heap_limit; /**< current limit of heap usage, that is upon being reached,
                            *   causes call of "try give memory back" callbacks */
+  ecma_value_t error_value; /**< currently thrown error value */
   uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   uint32_t jerry_init_flags; /**< run-time configuration flags */
   uint8_t is_direct_eval_form_call; /**< direct call from eval */

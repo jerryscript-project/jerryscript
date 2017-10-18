@@ -24,6 +24,7 @@
 #include "jerryscript-mbed-drivers/I2C-js.h"
 #include "jerryscript-mbed-drivers/AnalogIn-js.h"
 #include "jerryscript-mbed-drivers/PwmOut-js.h"
+#include "jerryscript-mbed-drivers/Serial-js.h"
 
 DECLARE_JS_WRAPPER_REGISTRATION (base) {
     REGISTER_GLOBAL_FUNCTION_WITH_HANDLER(assert, jerryx_handler_assert);
@@ -38,7 +39,7 @@ DECLARE_JS_WRAPPER_REGISTRATION (base) {
     //REGISTER_CLASS_CONSTRUCTOR(BusInOut);
     //REGISTER_CLASS_CONSTRUCTOR(BusOut);
     //REGISTER_CLASS_CONSTRUCTOR(CAN);
-    REGISTER_CLASS_CONSTRUCTOR(DigitalIn);          //test
+    REGISTER_CLASS_CONSTRUCTOR(DigitalIn);          //test     
     //REGISTER_CLASS_CONSTRUCTOR(DigitalInOut);
     REGISTER_CLASS_CONSTRUCTOR(DigitalOut);
     //REGISTER_CLASS_CONSTRUCTOR(Ethernet);
@@ -57,7 +58,7 @@ DECLARE_JS_WRAPPER_REGISTRATION (base) {
     REGISTER_CLASS_CONSTRUCTOR(PwmOut);
     //REGISTER_CLASS_CONSTRUCTOR(RawSerial);
     //REGISTER_CLASS_CONSTRUCTOR(SerialBase);
-    //REGISTER_CLASS_CONSTRUCTOR(Serial);
+    REGISTER_CLASS_CONSTRUCTOR(Serial);             //test
     //REGISTER_CLASS_CONSTRUCTOR(SPI);
     //REGISTER_CLASS_CONSTRUCTOR(SPISlave);
     //REGISTER_CLASS_CONSTRUCTOR(Ticker);

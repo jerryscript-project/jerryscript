@@ -324,6 +324,20 @@
 
 #define EPSILON 0.0000001
 
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+/**
+ * Number.MAX_VALUE and Number.MIN_VALUE exponent parts while using 64 bit float representation
+ */
+# define NUMBER_MAX_DECIMAL_EXPONENT 308
+# define NUMBER_MIN_DECIMAL_EXPONENT -324
+#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+/**
+ * Number.MAX_VALUE and Number.MIN_VALUE exponent parts while using 32 bit float representation
+ */
+# define NUMBER_MAX_DECIMAL_EXPONENT 38
+# define NUMBER_MIN_DECIMAL_EXPONENT -45
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+
 /**
  * @}
  */
@@ -485,8 +499,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
         fraction_uint64 = fraction_uint64 * 10 + (uint32_t) digit_value;
         digits++;
       }
-      else if (e <= 100000) /* Limit the exponent, since large
-                             * exponent is rounded to infinity anyway. */
+      else
       {
         e++;
       }
@@ -581,6 +594,16 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       }
 
       e_in_lit = e_in_lit * 10 + digit_value;
+      int32_t e_check = e + (int32_t) digits - 1  + (e_in_lit_sign ? -e_in_lit : e_in_lit);
+
+      if (e_check > NUMBER_MAX_DECIMAL_EXPONENT)
+      {
+        return ecma_number_make_infinity (sign);
+      }
+      else if (e_check < NUMBER_MIN_DECIMAL_EXPONENT)
+      {
+        return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
+      }
 
       begin_p++;
     }

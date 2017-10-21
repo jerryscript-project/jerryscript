@@ -356,4 +356,4 @@ bool jerry_debugger_send_exception_string (ecma_value_t exception_value);
 
 #endif /* JERRY_DEBUGGER */
 
-#endif /* DEBUGGER_H */
+#endif /* !DEBUGGER_H */

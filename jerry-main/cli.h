@@ -73,4 +73,4 @@ const char * cli_consume_string (cli_state_t *state_p);
 int cli_consume_int (cli_state_t *state_p);
 void cli_help (const char *prog_name_p, const char *command_name_p, const cli_opt_t *options_p);
 
-#endif /* CLI_H */
+#endif /* !CLI_H */

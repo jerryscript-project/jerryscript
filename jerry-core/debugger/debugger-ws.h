@@ -110,4 +110,4 @@ void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
 
 #endif /* JERRY_DEBUGGER */
 
-#endif /* DEBUGGER_WS_H */
+#endif /* !DEBUGGER_WS_H */

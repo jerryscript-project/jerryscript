@@ -18,6 +18,8 @@
 
 #include "jerryscript-port.h"
 
+#define ARRAY_SIZE(array) ((unsigned long) (sizeof (array) / sizeof ((array)[0])))
+
 #define TEST_ASSERT(x) \
   do \
   { \

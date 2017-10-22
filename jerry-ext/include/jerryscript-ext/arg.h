@@ -54,6 +54,15 @@ typedef struct
 } jerryx_arg_object_props_t;
 
 /**
+ * The structure used in jerryx_arg_array
+ */
+typedef struct
+{
+  const jerryx_arg_t *c_arg_p; /**< points to the array of transformation steps */
+  jerry_length_t c_arg_cnt; /**< the count of the `c_arg_p` array */
+} jerryx_arg_array_items_t;
+
+/**
  * The structure defining a single validation & transformation step.
  */
 struct jerryx_arg_t
@@ -79,6 +88,9 @@ jerry_value_t jerryx_arg_transform_object_properties (const jerry_value_t obj_va
                                                       const jerry_length_t name_cnt,
                                                       const jerryx_arg_t *c_arg_p,
                                                       jerry_length_t c_arg_cnt);
+jerry_value_t jerryx_arg_transform_array (const jerry_value_t array_val,
+                                          const jerryx_arg_t *c_arg_p,
+                                          jerry_length_t c_arg_cnt);
 
 /**
  * Indicates whether an argument is allowed to be coerced into the expected JS type.
@@ -162,6 +174,8 @@ static inline jerryx_arg_t
 jerryx_arg_custom (void *dest, uintptr_t extra_info, jerryx_arg_transform_func_t func);
 static inline jerryx_arg_t
 jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props_p, jerryx_arg_optional_t opt_flag);
+static inline jerryx_arg_t
+jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p, jerryx_arg_optional_t opt_flag);
 
 jerry_value_t
 jerryx_arg_transform_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,

@@ -143,3 +143,46 @@ jerryx_arg_transform_object_properties (const jerry_value_t obj_val,/**< the JS 
 
   return ret;
 } /* jerryx_arg_transform_object_properties */
+
+/**
+ * Validate the items in the JS array and assign them to the native arguments.
+ *
+ * @return jerry undefined: all validators passed,
+ *         jerry error: a validator failed.
+ */
+jerry_value_t
+jerryx_arg_transform_array (const jerry_value_t array_val, /**< points to the JS array */
+                            const jerryx_arg_t *c_arg_p, /**< points to the array of validation/transformation steps */
+                            jerry_length_t c_arg_cnt) /**< the count of the `c_arg_p` array */
+{
+  if (!jerry_value_is_array (array_val))
+  {
+    return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "Not an array.");
+  }
+
+  jerry_value_t arr[c_arg_cnt];
+
+  for (jerry_length_t i = 0; i < c_arg_cnt; i++)
+  {
+    arr[i] = jerry_get_property_by_index (array_val, i);
+
+    if (jerry_value_has_error_flag (arr[i]))
+    {
+      for (jerry_length_t j = 0; j < i; j++)
+      {
+        jerry_release_value (arr[j]);
+      }
+
+      return arr[i];
+    }
+  }
+
+  const jerry_value_t ret = jerryx_arg_transform_args (arr, c_arg_cnt, c_arg_p, c_arg_cnt);
+
+  for (jerry_length_t i = 0; i < c_arg_cnt; i++)
+  {
+    jerry_release_value (arr[i]);
+  }
+
+  return ret;
+} /* jerryx_arg_transform_array */

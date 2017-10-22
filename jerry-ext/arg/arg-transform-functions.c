@@ -405,6 +405,25 @@ jerryx_arg_transform_object_props (jerryx_arg_js_iterator_t *js_arg_iter_p, /**<
 } /* jerryx_arg_transform_object_props */
 
 /**
+ * Check whether the JS array's items have expected types, and transform them into native args.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_array_items (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                  const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
+
+  const jerryx_arg_array_items_t *array_items_p = (const jerryx_arg_array_items_t *) c_arg_p->extra_info;
+
+  return jerryx_arg_transform_array (js_arg,
+                                     array_items_p->c_arg_p,
+                                     array_items_p->c_arg_cnt);
+} /* jerryx_arg_transform_array_items */
+
+/**
  * Define transformer for optional argument.
  */
 #define JERRYX_ARG_TRANSFORM_OPTIONAL(type) \
@@ -424,6 +443,7 @@ JERRYX_ARG_TRANSFORM_OPTIONAL (string_strict)
 JERRYX_ARG_TRANSFORM_OPTIONAL (function)
 JERRYX_ARG_TRANSFORM_OPTIONAL (native_pointer)
 JERRYX_ARG_TRANSFORM_OPTIONAL (object_props)
+JERRYX_ARG_TRANSFORM_OPTIONAL (array_items)
 
 JERRYX_ARG_TRANSFORM_OPTIONAL (uint8)
 JERRYX_ARG_TRANSFORM_OPTIONAL (uint16)

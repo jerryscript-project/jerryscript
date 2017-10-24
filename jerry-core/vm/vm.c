@@ -1062,7 +1062,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SET_GETTER:
         case VM_OC_SET_SETTER:
         {
-          opfunc_set_accessor (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_SET_GETTER ? true : false,
+          opfunc_set_accessor (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_SET_GETTER,
                                stack_top_p[-1],
                                left_value,
                                right_value);

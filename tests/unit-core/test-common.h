@@ -47,25 +47,7 @@
 #define TEST_INIT() \
 do \
 { \
-  FILE *f_rnd = fopen ("/dev/urandom", "r"); \
- \
-  if (f_rnd == NULL) \
-  { \
-    return 1; \
-  } \
- \
-  uint32_t seed; \
- \
-  size_t bytes_read = fread (&seed, 1, sizeof (seed), f_rnd); \
- \
- fclose (f_rnd); \
- \
-  if (bytes_read != sizeof (seed)) \
-  { \
-    return 1; \
-  } \
- \
-  srand (seed); \
+  srand ((unsigned) jerry_port_get_current_time ()); \
 } while (0)
 
 #endif /* !TEST_COMMON_H */

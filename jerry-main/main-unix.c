@@ -424,6 +424,7 @@ int
 main (int argc,
       char **argv)
 {
+  srand ((unsigned) jerry_port_get_current_time ());
   const char *file_names[argc];
   int files_counter = 0;
 

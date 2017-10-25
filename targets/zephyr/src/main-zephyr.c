@@ -79,6 +79,7 @@ static int shell_cmd_handler (char *source_buffer)
 
 void main (void)
 {
+  srand ((unsigned) jerry_port_get_current_time ());
   uint32_t zephyr_ver = sys_kernel_version_get ();
   printf ("JerryScript build: " __DATE__ " " __TIME__ "\n");
   printf ("JerryScript API %d.%d\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);

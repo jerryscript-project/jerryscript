@@ -738,6 +738,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   uint16_t ident_end;
   uint16_t const_literal_end;
   int32_t branch_offset = 0;
+  uint8_t branch_offset_length = 0;
   ecma_value_t left_value;
   ecma_value_t right_value;
   ecma_value_t result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
@@ -847,30 +848,20 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       }
       else if (operands == VM_OC_GET_BRANCH)
       {
-        branch_offset = 0;
+        branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (opcode);
+        JERRY_ASSERT (branch_offset_length >= 1 && branch_offset_length <= 3);
 
-        switch (CBC_BRANCH_OFFSET_LENGTH (opcode))
+        branch_offset = *(byte_code_p++);
+
+        if (unlikely (branch_offset_length != 1))
         {
-          case 1:
-          {
-            branch_offset = *(byte_code_p++);
-            break;
-          }
-          case 3:
-          {
-            branch_offset = *(byte_code_p++);
-            /* FALLTHRU */
-          }
-          default:
-          {
-            JERRY_ASSERT (CBC_BRANCH_OFFSET_LENGTH (opcode) == 2
-                          || CBC_BRANCH_OFFSET_LENGTH (opcode) == 3);
+          branch_offset <<= 8;
+          branch_offset |= *(byte_code_p++);
 
+          if (unlikely (branch_offset_length == 3))
+          {
             branch_offset <<= 8;
             branch_offset |= *(byte_code_p++);
-            branch_offset <<= 8;
-            branch_offset |= *(byte_code_p++);
-            break;
           }
         }
 
@@ -2010,10 +2001,43 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
-            ecma_integer_value_t left_integer = (ecma_integer_value_t) left_value;
-            ecma_integer_value_t right_integer = (ecma_integer_value_t) right_value;
+            bool is_less = (ecma_integer_value_t) left_value < (ecma_integer_value_t) right_value;
 
-            *stack_top_p++ = ecma_make_boolean_value (left_integer < right_integer);
+            /* This is a lookahead to the next opcode to improve performance.
+             * If it is CBC_BRANCH_IF_TRUE_BACKWARD, execute it. */
+            if (*byte_code_p <= CBC_BRANCH_IF_TRUE_BACKWARD_3 && *byte_code_p >= CBC_BRANCH_IF_TRUE_BACKWARD)
+            {
+              byte_code_start_p = byte_code_p++;
+              branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (*byte_code_start_p);
+              JERRY_ASSERT (branch_offset_length >= 1 && branch_offset_length <= 3);
+
+              if (is_less)
+              {
+                branch_offset = *(byte_code_p++);
+
+                if (unlikely (branch_offset_length != 1))
+                {
+                  branch_offset <<= 8;
+                  branch_offset |= *(byte_code_p++);
+                  if (unlikely (branch_offset_length == 3))
+                  {
+                    branch_offset <<= 8;
+                    branch_offset |= *(byte_code_p++);
+                  }
+                }
+
+                /* Note: The opcode is a backward branch. */
+                byte_code_p = byte_code_start_p - branch_offset;
+              }
+              else
+              {
+                byte_code_p += branch_offset_length;
+              }
+
+              continue;
+            }
+
+            *stack_top_p++ = ecma_make_boolean_value (is_less);
             continue;
           }
 

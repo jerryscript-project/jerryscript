@@ -276,10 +276,14 @@ rand (void)
 void
 srand (unsigned int seed) /**< new seed */
 {
-  libc_random_gen_state[0] =
-  libc_random_gen_state[1] =
-  libc_random_gen_state[2] =
-  libc_random_gen_state[3] = seed;
+  libc_random_gen_state[0] = (uint32_t) ((seed * 14316555781)
+                                         + (seed * 1183186591)
+                                         + (seed * 622729787)
+                                         + (seed * 338294347));
+
+  libc_random_gen_state[1] = 842502087;
+  libc_random_gen_state[2] = 3579807591;
+  libc_random_gen_state[3] = 273326509;
 } /* srand */
 
 /**

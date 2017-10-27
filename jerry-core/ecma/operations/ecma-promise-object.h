@@ -97,6 +97,9 @@ ecma_value_t
 ecma_promise_then (ecma_value_t promise,
                    ecma_value_t on_fulfilled,
                    ecma_value_t on_rejected);
+ecma_promise_resolving_functions_t *
+ecma_promise_create_resolving_functions (ecma_object_t *object_p);
+void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);
 
 /**
  * @}

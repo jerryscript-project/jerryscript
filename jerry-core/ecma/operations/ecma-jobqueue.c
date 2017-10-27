@@ -232,14 +232,20 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
 {
   ecma_job_promise_resolve_thenable_t *job_p = (ecma_job_promise_resolve_thenable_t *) obj_p;
   ecma_object_t *promise_p = ecma_get_object_from_value (job_p->promise);
+  ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (promise_p);
   ecma_string_t str_resolve, str_reject;
   ecma_init_ecma_magic_string (&str_resolve, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
   ecma_init_ecma_magic_string (&str_reject, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  ecma_op_object_put (promise_p,
+                      &str_resolve,
+                      funcs->resolve,
+                      false);
+  ecma_op_object_put (promise_p,
+                      &str_reject,
+                      funcs->reject,
+                      false);
 
-  ecma_value_t resolve = ecma_op_object_get (promise_p, &str_resolve);
-  ecma_value_t reject = ecma_op_object_get (promise_p, &str_reject);
-
-  ecma_value_t argv[] = { resolve, reject };
+  ecma_value_t argv[] = { funcs->resolve, funcs->reject };
   ecma_value_t ret;
   ecma_value_t then_call_result = ecma_op_function_call (ecma_get_object_from_value (job_p->then),
                                                          job_p->thenable,
@@ -250,7 +256,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
 
   if (ECMA_IS_VALUE_ERROR (then_call_result))
   {
-    ret = ecma_op_function_call (ecma_get_object_from_value (reject),
+    ret = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
                                  ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                                  &then_call_result,
                                  1);
@@ -258,8 +264,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
     ecma_free_value (then_call_result);
   }
 
-  ecma_free_value (resolve);
-  ecma_free_value (reject);
+  ecma_promise_free_resolving_functions (funcs);
   ecma_free_promise_resolve_thenable_job (job_p);
 
   return ret;

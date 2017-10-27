@@ -412,7 +412,7 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
  *
  * @return pointer to the resolving functions
  */
-static ecma_promise_resolving_functions_t *
+ecma_promise_resolving_functions_t *
 ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promise object */
 {
   /* 1. */
@@ -463,7 +463,7 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
 /**
  * Free the heap and the member of the resolving functions.
  */
-static void
+void
 ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs) /**< points to the functions */
 {
   ecma_free_value (funcs->resolve);

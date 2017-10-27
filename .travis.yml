@@ -65,7 +65,7 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$INSTALL_QEMU_ARM" == "yes" ]]; then tools/apt-get-install-qemu-arm.sh; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then tools/brew-install-deps.sh; fi
   - if [[ "$OPTS" == "--test262" ]]; then sudo timedatectl set-timezone America/Los_Angeles; fi
-  - if [[ "$OPTS" == *"--check-pylint"* ]]; then pip install pylint==1.6.5; fi
+  - if [[ "$OPTS" == *"--check-pylint"* ]]; then pip install --user pylint==1.6.5; fi
 
 install:
 

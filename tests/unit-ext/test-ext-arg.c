@@ -55,6 +55,10 @@ const char *test_source = (
                            "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
                            "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
                            "test_validator_int3(NaN);"
+                           "var arr = [1, 2];"
+                           "test_validator_array1(arr);"
+                           "test_validator_array1();"
+                           "test_validator_array2(arr);"
                            );
 
 static const jerry_object_native_info_t thing_a_info =
@@ -83,8 +87,8 @@ static my_type_b_t my_thing_b;
 static int validator1_count = 0;
 static int validator2_count = 0;
 static int validator_int_count = 0;
-
 static int validator_prop_count = 0;
+static int validator_array_count = 0;
 
 /**
  * The handler should have following arguments:
@@ -125,7 +129,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
                                                             args_p,
                                                             args_cnt,
                                                             mapping,
-                                                            5);
+                                                            ARRAY_SIZE (mapping));
 
   if (validator1_count == 0)
   {
@@ -218,7 +222,7 @@ test_validator2_handler (const jerry_value_t func_obj_val __attribute__((unused)
                                                             args_p,
                                                             args_cnt,
                                                             mapping,
-                                                            2);
+                                                            ARRAY_SIZE (mapping));
 
   if (validator2_count == 0)
   {
@@ -261,9 +265,9 @@ test_validator_prop1_handler (const jerry_value_t func_obj_val __attribute__((un
 
   jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
                                                                 (const jerry_char_t **) name_p,
-                                                                3,
+                                                                ARRAY_SIZE (name_p),
                                                                 mapping,
-                                                                3);
+                                                                ARRAY_SIZE (mapping));
 
   TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
   TEST_ASSERT (native1);
@@ -283,7 +287,7 @@ static jerry_value_t
 test_validator_prop2_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
                               const jerry_value_t this_val __attribute__((unused)), /**< this value */
                               const jerry_value_t args_p[], /**< arguments list */
-                              const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+                              const jerry_length_t args_cnt) /**< arguments length */
 {
   bool native1 = false;
   double native2 = 0;
@@ -310,7 +314,7 @@ test_validator_prop2_handler (const jerry_value_t func_obj_val __attribute__((un
     jerryx_arg_object_properties (&prop_info, JERRYX_ARG_OPTIONAL),
   };
 
-  jerry_value_t is_ok = jerryx_arg_transform_args (args_p, 1, mapping, 1);
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
 
   TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
@@ -346,9 +350,9 @@ test_validator_prop3_handler (const jerry_value_t func_obj_val __attribute__((un
 
   jerry_value_t is_ok = jerryx_arg_transform_object_properties (args_p[0],
                                                                 (const jerry_char_t **) name_p,
-                                                                2,
+                                                                ARRAY_SIZE (name_p),
                                                                 mapping,
-                                                                2);
+                                                                ARRAY_SIZE (mapping));
 
   TEST_ASSERT (jerry_value_has_error_flag (is_ok));
   TEST_ASSERT (!native1);
@@ -393,7 +397,7 @@ test_validator_int1_handler (const jerry_value_t func_obj_val __attribute__((unu
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
                                                    args_cnt,
                                                    mapping,
-                                                   12);
+                                                   ARRAY_SIZE (mapping));
 
   TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
   TEST_ASSERT (num0 == 0);
@@ -442,7 +446,7 @@ test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unu
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
                                                    args_cnt,
                                                    mapping,
-                                                   10);
+                                                   ARRAY_SIZE (mapping));
 
   TEST_ASSERT (jerry_value_has_error_flag (is_ok));
   TEST_ASSERT (num0 == -2);
@@ -478,7 +482,7 @@ test_validator_int3_handler (const jerry_value_t func_obj_val __attribute__((unu
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p,
                                                    args_cnt,
                                                    mapping,
-                                                   1);
+                                                   ARRAY_SIZE (mapping));
 
   TEST_ASSERT (jerry_value_has_error_flag (is_ok));
 
@@ -487,6 +491,77 @@ test_validator_int3_handler (const jerry_value_t func_obj_val __attribute__((unu
 
   return jerry_create_undefined ();
 } /* test_validator_int3_handler */
+
+static jerry_value_t
+test_validator_array1_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                               const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                               const jerry_value_t args_p[], /**< arguments list */
+                               const jerry_length_t args_cnt) /**< arguments length */
+{
+  double native1 = 0;
+  double native2 = 0;
+  double native3 = 0;
+
+  jerryx_arg_array_items_t arr_info;
+
+  jerryx_arg_t item_mapping[] =
+  {
+    jerryx_arg_number (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native2, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&native3, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL)
+  };
+
+  arr_info.c_arg_p = item_mapping;
+  arr_info.c_arg_cnt = 3;
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_array (&arr_info, JERRYX_ARG_OPTIONAL),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
+
+
+  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+
+  if (validator_array_count == 0)
+  {
+    TEST_ASSERT (native1 == 1);
+    TEST_ASSERT (native2 == 2);
+    TEST_ASSERT (native3 == 0);
+  }
+
+  validator_array_count++;
+
+  return jerry_create_undefined ();
+} /* test_validator_array1_handler */
+
+static jerry_value_t
+test_validator_array2_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                               const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                               const jerry_value_t args_p[], /**< arguments list */
+                               const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+{
+  double native1 = 0;
+  bool native2 = false;
+
+  jerryx_arg_t item_mapping[] =
+  {
+    jerryx_arg_number (&native1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_boolean (&native2, JERRYX_ARG_NO_COERCE, JERRYX_ARG_REQUIRED)
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_array (args_p[0], item_mapping, ARRAY_SIZE (item_mapping));
+
+  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (native1 == 1);
+  TEST_ASSERT (!native2);
+
+  validator_array_count++;
+  jerry_release_value (is_ok);
+
+  return jerry_create_undefined ();
+} /* test_validator_array2_handler */
 
 static jerry_value_t
 create_object_a_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
@@ -555,6 +630,8 @@ main (void)
   register_js_function ("test_validator_prop1", test_validator_prop1_handler);
   register_js_function ("test_validator_prop2", test_validator_prop2_handler);
   register_js_function ("test_validator_prop3", test_validator_prop3_handler);
+  register_js_function ("test_validator_array1", test_validator_array1_handler);
+  register_js_function ("test_validator_array2", test_validator_array2_handler);
 
   jerry_value_t parsed_code_val = jerry_parse ((jerry_char_t *) test_source, strlen (test_source), false);
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
@@ -565,6 +642,7 @@ main (void)
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);
   TEST_ASSERT (validator_int_count == 3);
+  TEST_ASSERT (validator_array_count == 3);
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);

@@ -41,6 +41,7 @@ JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (boolean)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (function)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (native_pointer)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (object_props)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (array_items)
 
 jerry_value_t jerryx_arg_transform_ignore (jerryx_arg_js_iterator_t *js_arg_iter_p,
                                            const jerryx_arg_t *c_arg_p);
@@ -360,5 +361,33 @@ jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props, /**
     .extra_info = (uintptr_t) object_props
   };
 } /* jerryx_arg_object_properties */
+
+/**
+ * Create a jerryx_arg_t instance for array.
+ *
+ * @return a jerryx_arg_t instance.
+ */
+static inline jerryx_arg_t
+jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p, /**< pointer to array items mapping */
+                  jerryx_arg_optional_t opt_flag) /**< whether the argument is optional */
+{
+  jerryx_arg_transform_func_t func;
+
+  if (opt_flag == JERRYX_ARG_OPTIONAL)
+  {
+    func = jerryx_arg_transform_array_items_optional;
+  }
+  else
+  {
+    func = jerryx_arg_transform_array_items;
+  }
+
+  return (jerryx_arg_t)
+  {
+    .func = func,
+    .dest = NULL,
+    .extra_info = (uintptr_t) array_items_p
+  };
+} /* jerryx_arg_array */
 
 #endif /* !JERRYX_ARG_IMPL_H */

@@ -19,6 +19,7 @@
 #include "ecma-literal-storage.h"
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
+#include "jcontext.h"
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
@@ -2038,6 +2039,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
 
   if (is_throw)
   {
+    ecma_free_value (JERRY_CONTEXT (error_value));
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
   }
 

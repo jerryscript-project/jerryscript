@@ -42,54 +42,8 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
                          ecma_value_t left_value, /**< left value */
                          ecma_value_t right_value) /**< right value */
 {
-  JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_INTEGER_VALUE == 0,
-                       ecma_direct_type_integer_value_must_be_zero_for_bitwise_logic);
-  JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
-                       direct_type_mask_must_fill_all_bits_before_the_value_starts);
-
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
-
-  if (ecma_are_values_integer_numbers (left_value, right_value))
-  {
-    switch (op)
-    {
-      case NUMBER_BITWISE_LOGIC_AND:
-      {
-        return left_value & right_value;
-      }
-      case NUMBER_BITWISE_LOGIC_OR:
-      {
-        return left_value | right_value;
-      }
-      case NUMBER_BITWISE_LOGIC_XOR:
-      {
-        return (left_value ^ right_value) & (ecma_value_t) (~((1 << ECMA_DIRECT_SHIFT) - 1));
-      }
-      case NUMBER_BITWISE_SHIFT_LEFT:
-      {
-        ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-        return ecma_make_int32_value ((int32_t) (left_integer << (right_integer & 0x1f)));
-      }
-      case NUMBER_BITWISE_SHIFT_RIGHT:
-      {
-        ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-        return ecma_make_integer_value (left_integer >> (right_integer & 0x1f));
-      }
-      case NUMBER_BITWISE_SHIFT_URIGHT:
-      {
-        uint32_t left_uint32 = (uint32_t) ecma_get_integer_from_value (left_value);
-        ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-        return ecma_make_uint32_value (left_uint32 >> (right_integer & 0x1f));
-      }
-      case NUMBER_BITWISE_NOT:
-      {
-        return (~right_value) & (ecma_value_t) (~((1 << ECMA_DIRECT_SHIFT) - 1));
-      }
-    }
-  }
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 

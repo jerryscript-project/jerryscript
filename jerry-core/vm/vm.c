@@ -1604,6 +1604,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_BIT_NOT:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_is_value_integer_number (left_value))
+          {
+            *stack_top_p++ = (~left_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
+            goto free_left_value;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_NOT,
                                             left_value,
                                             left_value);
@@ -1917,6 +1926,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_BIT_OR:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            result = left_value | right_value;
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_OR,
                                             left_value,
                                             right_value);
@@ -1929,6 +1947,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_BIT_XOR:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            result = (left_value ^ right_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_XOR,
                                             left_value,
                                             right_value);
@@ -1941,6 +1968,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_BIT_AND:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            result = left_value & right_value;
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_AND,
                                             left_value,
                                             right_value);
@@ -1953,6 +1989,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_LEFT_SHIFT:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
+            ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
+            result = ecma_make_int32_value ((int32_t) (left_integer << (right_integer & 0x1f)));
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_LEFT,
                                             left_value,
                                             right_value);
@@ -1965,6 +2012,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_RIGHT_SHIFT:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
+            ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
+            result = ecma_make_integer_value (left_integer >> (right_integer & 0x1f));
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_RIGHT,
                                             left_value,
                                             right_value);
@@ -1977,6 +2035,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_UNS_RIGHT_SHIFT:
         {
+          JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_MASK == ((1 << ECMA_DIRECT_SHIFT) - 1),
+                               direct_type_mask_must_fill_all_bits_before_the_value_starts);
+
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            uint32_t left_uint32 = (uint32_t) ecma_get_integer_from_value (left_value);
+            ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
+            result = ecma_make_uint32_value (left_uint32 >> (right_integer & 0x1f));
+            break;
+          }
+
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_URIGHT,
                                             left_value,
                                             right_value);

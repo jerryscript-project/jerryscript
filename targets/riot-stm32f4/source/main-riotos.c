@@ -14,10 +14,12 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "shell.h"
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
+#include "jerryscript-port.h"
 
 /**
  * Standalone Jerry exit codes

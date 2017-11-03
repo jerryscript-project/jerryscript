@@ -24,6 +24,7 @@ static Serial pc (USBTX, USBRX); //tx, rx
 
 static int jerry_task_init (void)
 {
+  srand ((unsigned) jerry_port_get_current_time ());
   int retcode;
 
   DECLARE_JS_CODES;

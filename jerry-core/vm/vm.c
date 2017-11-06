@@ -146,6 +146,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     {
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
       ecma_free_value (to_object);
+      ecma_free_value (JERRY_CONTEXT (error_value));
 
       ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
                                                                         "Cannot set property '%' of %",

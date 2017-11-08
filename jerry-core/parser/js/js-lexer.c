@@ -716,6 +716,16 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
     }
+#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+    else if (str_end_character == LIT_CHAR_GRAVE_ACCENT &&
+             source_p[0] == LIT_CHAR_DOLLAR_SIGN &&
+             source_p + 1 < source_end_p &&
+             source_p[1] == LIT_CHAR_LEFT_BRACE)
+    {
+      source_p++;
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 
     if (*source_p >= LEXER_UTF8_4BYTE_START)
     {
@@ -737,14 +747,6 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
     else if (str_end_character == LIT_CHAR_GRAVE_ACCENT)
     {
-      if (source_p[0] == LIT_CHAR_LEFT_BRACE
-          && source_p[-1] == LIT_CHAR_DOLLAR_SIGN
-          && source_p[-2] != LIT_CHAR_BACKSLASH)
-      {
-        length--;
-        break;
-      }
-
       /* Newline (without backslash) is part of the string. */
       if (*source_p == LIT_CHAR_CR)
       {

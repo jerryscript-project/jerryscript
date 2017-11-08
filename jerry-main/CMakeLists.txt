@@ -64,9 +64,9 @@ if(JERRY_CMDLINE)
   target_link_libraries("jerry" jerry-ext jerry-port-default)
 endif()
 
-if(JERRY_CMDLINE_MINIMAL)
-  jerry_create_executable("jerry-minimal" "main-unix-minimal.c")
-  target_link_libraries("jerry-minimal" jerry-port-default-minimal)
+if(JERRY_CMDLINE_TEST)
+  jerry_create_executable("jerry-test" "main-unix-test.c" "benchmarking.c")
+  target_link_libraries("jerry-test" jerry-port-default-minimal)
 endif()
 
 if(JERRY_CMDLINE_SNAPSHOT)

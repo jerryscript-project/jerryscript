@@ -48,7 +48,7 @@ long int syscall_3 (long int syscall_no, long int arg1, long int arg2, long int 
 /**
  * Exit - cause normal process termination with specified status code
  */
-void __attr_noreturn___ __attr_used___
+void __attr_weak___ __attr_noreturn___ __attr_used___
 exit (int status) /**< status code */
 {
 #ifdef ENABLE_INIT_FINI
@@ -71,7 +71,7 @@ exit (int status) /**< status code */
  * Abort current process, producing an abnormal program termination.
  * The function raises the SIGABRT signal.
  */
-void __attr_noreturn___ __attr_used___
+void __attr_weak___ __attr_noreturn___ __attr_used___
 abort (void)
 {
   syscall_1 (SYSCALL_NO (close), (long int) stdin);
@@ -92,7 +92,7 @@ abort (void)
  * @return 0 - upon successful completion,
  *         non-zero value - otherwise.
  */
-int __attr_used___
+int __attr_weak___ __attr_used___
 raise (int sig) /**< signal number */
 {
   return (int) syscall_2 (SYSCALL_NO (kill), syscall_0 (SYSCALL_NO (getpid)), sig);
@@ -104,7 +104,7 @@ raise (int sig) /**< signal number */
  * @return FILE pointer - upon successful completion,
  *         NULL - otherwise.
  */
-FILE *
+FILE * __attr_weak___
 fopen (const char *path, /**< file path */
        const char *mode) /**< file open mode */
 {
@@ -193,7 +193,7 @@ fopen (const char *path, /**< file path */
  * @return 0 - upon successful completion,
  *         non-zero value - otherwise.
  */
-int
+int __attr_weak___
 fclose (FILE *fp) /**< stream pointer */
 {
   syscall_2 (SYSCALL_NO (close), (long int) fp, 0);
@@ -206,7 +206,7 @@ fclose (FILE *fp) /**< stream pointer */
  *
  * @return number of elements read
  */
-size_t
+size_t __attr_weak___
 fread (void *ptr, /**< address of buffer to read to */
        size_t size, /**< size of elements to read */
        size_t nmemb, /**< number of elements to read */
@@ -239,7 +239,7 @@ fread (void *ptr, /**< address of buffer to read to */
  *
  * @return number of elements written
  */
-size_t
+size_t __attr_weak___
 fwrite (const void *ptr, /**< data to write */
         size_t size, /**< size of elements to write */
         size_t nmemb, /**< number of elements */
@@ -271,7 +271,7 @@ fwrite (const void *ptr, /**< data to write */
  *
  * @return 0 if success, -1 otherwise
  */
-int
+int __attr_weak___
 gettimeofday (void *tp,  /**< struct timeval */
               void *tzp) /**< struct timezone */
 {

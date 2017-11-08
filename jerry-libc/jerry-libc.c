@@ -56,7 +56,7 @@ CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
  *
  * @return @a s
  */
-void * __attr_used___
+void * __attr_weak___ __attr_used___
 memset (void *s, /**< area to set values in */
         int c, /**< value to set */
         size_t n) /**< area size */
@@ -77,7 +77,7 @@ memset (void *s, /**< area to set values in */
  *         <0, if first area's content is lexicographically less, than second area's content;
  *         >0, otherwise
  */
-int
+int __attr_weak___
 memcmp (const void *s1, /**< first area */
         const void *s2, /**< second area */
         size_t n) /**< area size */
@@ -100,7 +100,7 @@ memcmp (const void *s1, /**< first area */
  *
  * @return the dest pointer's value
  */
-void *  __attr_used___
+void * __attr_weak___ __attr_used___
 memcpy (void *s1, /**< destination */
         const void *s2, /**< source */
         size_t n) /**< bytes number */
@@ -139,7 +139,7 @@ memcpy (void *s1, /**< destination */
  *
  * @return the dest pointer's value
  */
-void * __attr_used___
+void * __attr_weak___ __attr_used___
 memmove (void *s1, /**< destination */
          const void *s2, /**< source */
          size_t n) /**< bytes number */
@@ -182,7 +182,7 @@ CALL_PRAGMA (GCC diagnostic pop)
  * @return an integer less than, equal to, or greater than zero if s1 is found, respectively,
  *         to be less than, to match, or be greater than s2.
  */
-int
+int __attr_weak___
 strcmp (const char *s1, /**< first string */
         const char *s2) /**< second string */
 {
@@ -205,7 +205,7 @@ strcmp (const char *s1, /**< first string */
  * @return an integer less than, equal to, or greater than zero if the first n character of s1 is found, respectively,
  *         to be less than, to match, or be greater than the first n character of s2.
  */
-int
+int __attr_weak___
 strncmp (const char *s1, /**< first string */
          const char *s2, /**< second string */
          size_t n) /**< maximum number of characters to compare */
@@ -234,7 +234,7 @@ strncmp (const char *s1, /**< first string */
  *
  * @return a pointer to the destination string dest.
  */
-char * __attr_used___
+char * __attr_weak___ __attr_used___
 strncpy (char *dest, /**< destination string */
          const char *src, /**< source string */
          size_t n) /**< maximum number of characters to copy */
@@ -258,7 +258,7 @@ strncpy (char *dest, /**< destination string */
  *
  * @return the length.
  */
-size_t
+size_t __attr_weak___
 strlen (const char *s) /**< string */
 {
   size_t i = 0;
@@ -278,7 +278,7 @@ strlen (const char *s) /**< string */
  *
  * @return integer in range [0; RAND_MAX]
  */
-int
+int __attr_weak___
 rand (void)
 {
   uint32_t intermediate = libc_random_gen_state[0] ^ (libc_random_gen_state[0] << 11);
@@ -297,7 +297,7 @@ rand (void)
 /**
  * Initialize pseudo-random number generator with the specified seed value
  */
-void
+void __attr_weak___
 srand (unsigned int seed) /**< new seed */
 {
   libc_random_gen_state[0] = (uint32_t) ((seed * 14316555781)
@@ -325,7 +325,7 @@ srand (unsigned int seed) /**< new seed */
  *
  * @return the integer value of str.
  */
-long int
+long int __attr_weak___
 strtol (const char *nptr, /**< string representation of an integer number */
         char **endptr, /**< [out] the address of the first non-number character */
         int base) /**< numerical base or radix (MUST be 10) */

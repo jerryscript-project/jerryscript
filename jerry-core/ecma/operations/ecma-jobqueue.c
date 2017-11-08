@@ -179,7 +179,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   {
     if (ECMA_IS_VALUE_ERROR (handler_result))
     {
-      handler_result = JERRY_CONTEXT (error_value);
+      handler_result = ecma_copy_value (JERRY_CONTEXT (error_value));
     }
 
     /* 7. */
@@ -324,12 +324,17 @@ ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to
  * jobqueue becomes empty.
  *
  * @return result of the last processed job - if the jobqueue was non-empty,
+ *         reference to JERRY_CONTEXT (error_value) - if it was set during processing jobs and
+ *                                                    there is no previously set error_value,
  *         undefined - otherwise.
  */
 ecma_value_t
 ecma_process_all_enqueued_jobs (void)
 {
   ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+
+  /* Check for previously set error_value */
+  jerry_value_t current_error = JERRY_CONTEXT (error_value);
 
   while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
   {
@@ -342,6 +347,13 @@ ecma_process_all_enqueued_jobs (void)
 
     ecma_free_value (ret);
     ret = handler (job_p);
+  }
+
+  /* Check for error_value until processing jobs */
+  if (current_error != JERRY_CONTEXT (error_value))
+  {
+    ecma_free_value (ret);
+    return ecma_create_error_reference (JERRY_CONTEXT (error_value));
   }
 
   return ret;

@@ -179,7 +179,9 @@ jerryx_resolve_native_module (const jerry_value_t canonical_name, /**< canonical
   /* Look for the module by its name in the list of module definitions. */
   for (module_p = first_module_p; module_p != NULL; module_p = module_p->next_p)
   {
-    if (module_p->name_p != NULL && !strncmp ((char *) module_p->name_p, (char *) name_string, name_size))
+    if (module_p->name_p != NULL
+        && strlen ((char *) module_p->name_p) == name_size
+        && !strncmp ((char *) module_p->name_p, (char *) name_string, name_size))
     {
       /* If we find the module by its name we load it and cache it if it has an on_resolve () and complain otherwise. */
       (*result) = ((module_p->on_resolve_p) ? module_p->on_resolve_p ()

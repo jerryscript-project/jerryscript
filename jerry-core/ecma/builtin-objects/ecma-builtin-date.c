@@ -263,40 +263,44 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
           hours = ECMA_NUMBER_ZERO;
         }
 
-        /* eat up ':' */
-        date_str_curr_p++;
-
-        minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-        if (minutes < 0 || minutes > 59)
-        {
-          minutes = ecma_number_make_nan ();
-        }
-
-        /* 4.2 read seconds if any */
         if (date_str_curr_p < date_str_end_p
             && *date_str_curr_p == ':')
         {
           /* eat up ':' */
           date_str_curr_p++;
-          seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
 
-          if (seconds < 0 || seconds > 59)
+          minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
+
+          if (minutes < 0 || minutes > 59)
           {
-            seconds = ecma_number_make_nan ();
+            minutes = ecma_number_make_nan ();
           }
 
-          /* 4.3 read milliseconds if any */
+          /* 4.2 read seconds if any */
           if (date_str_curr_p < date_str_end_p
-              && *date_str_curr_p == '.')
+              && *date_str_curr_p == ':')
           {
-            /* eat up '.' */
+            /* eat up ':' */
             date_str_curr_p++;
-            milliseconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 3);
+            seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
 
-            if (milliseconds < 0)
+            if (seconds < 0 || seconds > 59)
             {
-              milliseconds = ecma_number_make_nan ();
+              seconds = ecma_number_make_nan ();
+            }
+
+            /* 4.3 read milliseconds if any */
+            if (date_str_curr_p < date_str_end_p
+                && *date_str_curr_p == '.')
+            {
+              /* eat up '.' */
+              date_str_curr_p++;
+              milliseconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 3);
+
+              if (milliseconds < 0)
+              {
+                milliseconds = ecma_number_make_nan ();
+              }
             }
           }
         }

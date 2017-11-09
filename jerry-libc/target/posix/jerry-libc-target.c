@@ -88,9 +88,12 @@ abort (void)
 
 /**
  * Send a signal to the current process.
+ *
+ * @return 0 - upon successful completion,
+ *         non-zero value - otherwise.
  */
 int __attr_used___
-raise (int sig)
+raise (int sig) /**< signal number */
 {
   return (int) syscall_2 (SYSCALL_NO (kill), syscall_0 (SYSCALL_NO (getpid)), sig);
 } /* raise */
@@ -99,7 +102,7 @@ raise (int sig)
  * fopen
  *
  * @return FILE pointer - upon successful completion,
- *         NULL - otherwise
+ *         NULL - otherwise.
  */
 FILE *
 fopen (const char *path, /**< file path */
@@ -274,46 +277,3 @@ gettimeofday (void *tp,  /**< struct timeval */
 {
   return (int) syscall_2 (SYSCALL_NO (gettimeofday), (long int) tp, (long int) tzp);
 } /* gettimeofday */
-
-/* FIXME */
-#if 0
-/**
- * Setup new memory limits
- */
-void
-jrt_set_mem_limits (size_t data_size, /**< limit for data + bss + brk heap */
-                    size_t stack_size) /**< limit for stack */
-{
-  struct
-  {
-    unsigned long long rlim_cur;
-    unsigned long long rlim_max;
-  } data_limit = { data_size, data_size };
-
-  struct
-  {
-    unsigned long long rlim_cur;
-    unsigned long long rlim_max;
-  } stack_limit = { stack_size, stack_size };
-
-  long int ret;
-
-#if defined (__TARGET_HOST_x64)
-  ret = syscall_2 (SYSCALL_NO (setrlimit), RLIMIT_DATA, (intptr_t) &data_limit);
-  assert (ret == 0);
-
-  ret = syscall_2 (SYSCALL_NO (setrlimit), RLIMIT_STACK, (intptr_t) &stack_limit);
-  assert (ret == 0);
-#elif defined (__TARGET_HOST_ARMv7)
-  ret = syscall_3 (SYSCALL_NO (prlimit64), 0, RLIMIT_DATA, (intptr_t) &data_limit);
-  assert (ret == 0);
-
-  ret = syscall_3 (SYSCALL_NO (prlimit64), 0, RLIMIT_STACK, (intptr_t) &stack_limit);
-  assert (ret == 0);
-#elif defined (__TARGET_HOST_x86)
-# error "__TARGET_HOST_x86 case is not implemented"
-#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86 */
-# error "!__TARGET_HOST_x64 && !__TARGET_HOST_ARMv7 && !__TARGET_HOST_x86"
-#endif /* __TARGET_HOST_x64 */
-} /* jrt_set_mem_limits */
-#endif /* 0 */

@@ -46,7 +46,7 @@ extern void _fini (void);
 /**
  * No-op default _init.
  */
-void  __attr_weak___
+void __attr_weak___
 _init (void)
 {
 } /* _init */
@@ -54,7 +54,7 @@ _init (void)
 /**
  * No-op default _fini.
  */
-void  __attr_weak___
+void __attr_weak___
 _fini (void)
 {
 } /* _fini */

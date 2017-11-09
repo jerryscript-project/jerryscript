@@ -1578,20 +1578,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
         case VM_OC_PLUS:
-        {
-          result = opfunc_unary_plus (left_value);
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          *stack_top_p++ = result;
-          goto free_left_value;
-        }
         case VM_OC_MINUS:
         {
-          result = opfunc_unary_minus (left_value);
+          result = opfunc_unary_operation (left_value, VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_PLUS);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -1886,7 +1875,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_EQUAL:
         {
-          result = opfunc_equal_value (left_value, right_value);
+          result = opfunc_equality (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -1898,14 +1887,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_NOT_EQUAL:
         {
-          result = opfunc_not_equal_value (left_value, right_value);
+          result = opfunc_equality (left_value, right_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
             goto error;
           }
 
-          *stack_top_p++ = result;
+          *stack_top_p++ = ecma_invert_boolean_value (result);
           goto free_both_values;
         }
         case VM_OC_STRICT_EQUAL:
@@ -2051,7 +2040,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto free_both_values;
           }
 
-          result = opfunc_less_than (left_value, right_value);
+          result = opfunc_relation (left_value, right_value, true, false);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2081,7 +2070,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto free_both_values;
           }
 
-          result = opfunc_greater_than (left_value, right_value);
+          result = opfunc_relation (left_value, right_value, false, false);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2111,7 +2100,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto free_both_values;
           }
 
-          result = opfunc_less_or_equal_than (left_value, right_value);
+          result = opfunc_relation (left_value, right_value, false, true);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2141,7 +2130,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto free_both_values;
           }
 
-          result = opfunc_greater_or_equal_than (left_value, right_value);
+          result = opfunc_relation (left_value, right_value, true, true);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {

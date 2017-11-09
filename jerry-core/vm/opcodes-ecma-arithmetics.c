@@ -170,15 +170,16 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 } /* opfunc_addition */
 
 /**
- * 'Unary "+"' opcode handler.
+ * Unary operation opcode handler.
  *
- * See also: ECMA-262 v5, 11.4, 11.4.6
+ * See also: ECMA-262 v5, 11.4, 11.4.6, 11.4.7
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-opfunc_unary_plus (ecma_value_t left_value) /**< left value */
+opfunc_unary_operation (ecma_value_t left_value, /**< left value */
+                        bool is_plus) /**< unary plus flag */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
@@ -186,36 +187,13 @@ opfunc_unary_plus (ecma_value_t left_value) /**< left value */
                                left_value,
                                ret_value);
 
-  ret_value = ecma_make_number_value (num_var_value);
+  ret_value = ecma_make_number_value (is_plus ? num_var_value
+                                               : ecma_number_negate (num_var_value));
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 
   return ret_value;
-} /* opfunc_unary_plus */
-
-/**
- * 'Unary "-"' opcode handler.
- *
- * See also: ECMA-262 v5, 11.4, 11.4.7
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-opfunc_unary_minus (ecma_value_t left_value) /**< left value */
-{
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
-                               left_value,
-                               ret_value);
-
-  ret_value = ecma_make_number_value (ecma_number_negate (num_var_value));
-
-  ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
-
-  return ret_value;
-} /* opfunc_unary_minus */
+} /* opfunc_unary_operation */
 
 /**
  * @}

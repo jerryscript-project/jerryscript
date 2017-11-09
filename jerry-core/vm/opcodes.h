@@ -55,19 +55,13 @@ ecma_value_t
 vm_var_decl (vm_frame_ctx_t *frame_ctx_p, ecma_string_t *var_name_str_p);
 
 ecma_value_t
-opfunc_equal_value (ecma_value_t left_value, ecma_value_t right_value);
-
-ecma_value_t
-opfunc_not_equal_value (ecma_value_t left_value, ecma_value_t right_value);
+opfunc_equality (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
 do_number_arithmetic (number_arithmetic_op op, ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_unary_plus (ecma_value_t left_value);
-
-ecma_value_t
-opfunc_unary_minus (ecma_value_t left_value);
+opfunc_unary_operation (ecma_value_t left_value, bool is_plus);
 
 ecma_value_t
 do_number_bitwise_logic (number_bitwise_logic_op op, ecma_value_t left_value, ecma_value_t right_value);
@@ -76,16 +70,7 @@ ecma_value_t
 opfunc_addition (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_less_than (ecma_value_t left_value, ecma_value_t right_value);
-
-ecma_value_t
-opfunc_greater_than (ecma_value_t left_value, ecma_value_t right_value);
-
-ecma_value_t
-opfunc_less_or_equal_than (ecma_value_t left_value, ecma_value_t right_value);
-
-ecma_value_t
-opfunc_greater_or_equal_than (ecma_value_t left_value, ecma_value_t right_value);
+opfunc_relation (ecma_value_t left_value, ecma_value_t right_value, bool left_first, bool is_invert);
 
 ecma_value_t
 opfunc_in (ecma_value_t left_value, ecma_value_t right_value);

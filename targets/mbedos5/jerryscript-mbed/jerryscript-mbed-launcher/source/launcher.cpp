@@ -16,6 +16,7 @@
 #include "rtos.h"
 
 #include "jerry-core/include/jerryscript.h"
+#include "jerry-core/include/jerryscript-port.h"
 
 #include "jerryscript-mbed-event-loop/EventLoop.h"
 

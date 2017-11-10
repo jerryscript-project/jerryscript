@@ -57,8 +57,8 @@ CALL_PRAGMA (GCC optimize ("-fno-tree-loop-distribute-patterns"))
  * @return @a s
  */
 void * __attr_used___
-memset (void *s,  /**< area to set values in */
-        int c,    /**< value to set */
+memset (void *s, /**< area to set values in */
+        int c, /**< value to set */
         size_t n) /**< area size */
 {
   uint8_t *area_p = (uint8_t *) s;
@@ -97,6 +97,8 @@ memcmp (const void *s1, /**< first area */
 
 /**
  * memcpy
+ *
+ * @return the dest pointer's value
  */
 void *  __attr_used___
 memcpy (void *s1, /**< destination */
@@ -174,10 +176,15 @@ CALL_PRAGMA (GCC pop_options)
 CALL_PRAGMA (GCC diagnostic pop)
 #endif /* __GNUC__ */
 
-/** Compare two strings. return an integer less than, equal to, or greater than zero
-     if s1 is found, respectively, to be less than, to match, or be greater than s2.  */
+/**
+ * Compare two strings.
+ *
+ * @return an integer less than, equal to, or greater than zero if s1 is found, respectively,
+ *         to be less than, to match, or be greater than s2.
+ */
 int
-strcmp (const char *s1, const char *s2)
+strcmp (const char *s1, /**< first string */
+        const char *s2) /**< second string */
 {
   while (1)
   {
@@ -192,11 +199,16 @@ strcmp (const char *s1, const char *s2)
   }
 } /* strcmp */
 
-/** Compare two strings. return an integer less than, equal to, or greater than zero
-     if the first n character of s1 is found, respectively, to be less than, to match,
-     or be greater than the first n character of s2.  */
+/**
+ * Compare two strings.
+ *
+ * @return an integer less than, equal to, or greater than zero if the first n character of s1 is found, respectively,
+ *         to be less than, to match, or be greater than the first n character of s2.
+ */
 int
-strncmp (const char *s1, const char *s2, size_t n)
+strncmp (const char *s1, /**< first string */
+         const char *s2, /**< second string */
+         size_t n) /**< maximum number of characters to compare */
 {
   while (n--)
   {
@@ -213,11 +225,19 @@ strncmp (const char *s1, const char *s2, size_t n)
   return 0;
 } /* strncmp */
 
-/** Copy a string. At most n bytes of src are copied.  Warning: If there is no
-     null byte among the first n bytes of src, the string placed in dest will not be null-terminated.
-     @return a pointer to the destination string dest.  */
+/**
+ * Copy a string. At most n bytes of src are copied.
+ *
+ * Note:
+ *      If there is no null byte among the first n bytes of src, the string
+ *      placed in dest will not be null-terminated.
+ *
+ * @return a pointer to the destination string dest.
+ */
 char * __attr_used___
-strncpy (char *dest, const char *src, size_t n)
+strncpy (char *dest, /**< destination string */
+         const char *src, /**< source string */
+         size_t n) /**< maximum number of characters to copy */
 {
   while (n--)
   {
@@ -233,9 +253,13 @@ strncpy (char *dest, const char *src, size_t n)
   return dest;
 } /* strncpy */
 
-/** Calculate the length of a string.  */
+/**
+ * Calculate the length of a string.
+ *
+ * @return the length.
+ */
 size_t
-strlen (const char *s)
+strlen (const char *s) /**< string */
 {
   size_t i = 0;
   while (s[i])

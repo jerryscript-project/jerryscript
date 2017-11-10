@@ -22,7 +22,7 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - env: OPTS="--check-signed-off-travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings"
+    - env: OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings"
     - env: OPTS="--jerry-debugger"
     - env: OPTS="--jerry-tests --jerry-test-suite"
     - env: OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300

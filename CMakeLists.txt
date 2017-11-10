@@ -32,6 +32,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "TI")
   set(USING_TI 1)
 endif()
 
+# Try to determine compiler version if not automatically set by CMake
+if(USING_GCC AND NOT CMAKE_C_COMPILER_VERSION)
+  EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE CMAKE_C_COMPILER_VERSION)
+endif()
+
 # Determining build type
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "MinSizeRel")

@@ -1,0 +1,46 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the Tizen RT JerryScript target.
+
+# Fetch Tizen RT repository.
+install:
+	git clone https://github.com/Samsung/TizenRT.git ../TizenRT -b 1.1_Public_Release
+
+
+## Targets for building Tizen RT with JerryScript.
+
+# Link in files from the Tizen RT JerryScript target directory under the Tizen RT tree.
+script-add-jerryscript:
+	cp -R targets/tizenrt-artik053/apps/jerryscript/ ../TizenRT/apps/system/
+	cp -R targets/tizenrt-artik053/configs/jerryscript/ ../TizenRT/build/configs/artik053/
+	cp -R targets/tizenrt-artik053/romfs-1.1.patch ../TizenRT/
+
+# Build the JerryScript library.
+script-libjerry:
+	$(MAKE) -f targets/tizenrt-artik053/Makefile.tizenrt
+
+# Configure and build the firmware (Tizen RT with JerryScript).
+script: script-add-jerryscript script-libjerry
+	cd ../TizenRT/os/tools && ./configure.sh artik053/jerryscript
+	cd ../TizenRT && patch -p1 <romfs-1.1.patch
+	mkdir -p ../TizenRT/build/output/res
+	$(MAKE) -C ../TizenRT/os

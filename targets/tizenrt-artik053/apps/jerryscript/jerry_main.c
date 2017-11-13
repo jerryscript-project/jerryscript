@@ -380,7 +380,8 @@ jerry_cmd_main (int argc, char *argv[])
     {
       if (++i < argc)
       {
-        debug_port = str_to_uint (argv[i]);
+        char *endptr;
+        debug_port = (uint16_t) strtol (argv[i], &endptr, 10);
       }
       else
       {

@@ -1,0 +1,63 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the NuttX JerryScript target.
+
+# Install cross-compiler and tools via apt.
+install-apt-get-deps:
+	sudo apt-get install -q -y gcc-arm-none-eabi gperf
+
+# Fetch and build kconfig-frontends (kconfig-conf) from nuttx/tools.
+LOCAL_INSTALL:=$(CURDIR)/../local/
+
+install-kconfig:
+	git clone https://bitbucket.org/nuttx/tools.git ../tools
+	mkdir -p $(LOCAL_INSTALL)
+	cd ../tools/kconfig-frontends && ./configure --disable-mconf --disable-nconf --disable-gconf --disable-qconf --disable-utils --disable-shared --enable-static --prefix=$(LOCAL_INSTALL)
+	$(MAKE) -C ../tools/kconfig-frontends
+	$(MAKE) -C ../tools/kconfig-frontends install
+
+# Fetch nuttx/{apps,nuttx} repositories.
+install-clone-nuttx:
+	git clone https://bitbucket.org/nuttx/apps.git ../apps -b nuttx-7.22
+	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.22
+
+# Perform all the necessary (JerryScript-independent) installation steps.
+install: install-apt-get-deps install-kconfig install-clone-nuttx
+
+
+## Targets for building NuttX with JerryScript.
+
+# Link in the NuttX JerryScript target directory under the NuttX apps tree.
+script-add-jerryscript-app:
+	ln -s ../../jerryscript/targets/nuttx-stm32f4 ../apps/interpreters/jerryscript
+
+# Configure USB shell.
+script-configure-usbnsh:
+	cd ../nuttx/tools && PATH=$(LOCAL_INSTALL)/bin:$$PATH ./configure.sh stm32f4discovery/usbnsh
+
+# Configure and build the firmware (NuttX with JerryScript).
+script: script-add-jerryscript-app script-configure-usbnsh
+	echo 'CONFIG_HOST_LINUX=y' >> ../nuttx/.config
+	echo 'CONFIG_ARCH_FPU=y' >> ../nuttx/.config
+	echo 'CONFIG_JERRYSCRIPT=y'>> ../nuttx/.config
+	PATH=$(LOCAL_INSTALL)/bin:$$PATH $(MAKE) -C ../nuttx olddefconfig
+	PATH=$(LOCAL_INSTALL)/bin:$$PATH $(MAKE) -C ../nuttx

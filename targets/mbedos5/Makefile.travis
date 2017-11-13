@@ -1,0 +1,39 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the Mbed OS 5 JerryScript target.
+
+# Deploy Mbed and install Mbed Python dependencies.
+install:
+	pip install --user mbed-cli
+	cd targets/mbedos5 && mbed deploy
+	pip install --user -r targets/mbedos5/mbed-os/requirements.txt
+
+
+## Targets for building Mbed OS 5 with JerryScript.
+
+# Build the firmware (Mbed OS 5 with JerryScript).
+script:
+	pip install --user -r targets/mbedos5/tools/requirements.txt
+	# HACK: `EXTRA_SRC[_MOD]` are abused to pass `--library` to `mbed compile` in the `all` make target that builds an app
+	# HACK: this is needed because the Mbed OS 5 target code does not contain any `main` function, so the `all` make target does not link
+	# HACK: but the `library` make target does not build either because the launcher sources require `jerry-targetjs.h` that are explicitly not generated for libraries
+	$(MAKE) -C targets/mbedos5 BOARD=K64F EXTRA_SRC=dummy EXTRA_SRC_MOD=--library

@@ -25,16 +25,10 @@ import settings
 OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
 class Options(object):
-    def __init__(self, name='', build_args=None, test_args=None):
-        if build_args is None:
-            build_args = []
-
-        if test_args is None:
-            test_args = []
-
-        self.build_args = build_args
+    def __init__(self, name, build_args=None, test_args=None):
         self.name = name
-        self.test_args = test_args
+        self.build_args = build_args or []
+        self.test_args = test_args or []
 
 def get_binary_path(bin_dir_path):
     return os.path.join(bin_dir_path, 'jerry')
@@ -64,9 +58,9 @@ JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-debug-snapshot',
             ['--debug', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
             ['--snapshot']),
-    Options('jerry_tests-es2015-subset-debug',
+    Options('jerry_tests-es2015_subset-debug',
             ['--debug', '--profile=es2015-subset']),
-    Options('jerry_tests-debug-external-context',
+    Options('jerry_tests-debug-external_context',
             ['--debug', '--jerry-libc=off', '--external-context=on'])
 ]
 
@@ -83,12 +77,12 @@ JERRY_TEST_SUITE_OPTIONS.extend([
     Options('jerry_test_suite-minimal-debug-snapshot',
             ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
             ['--snapshot']),
-    Options('jerry_test_suite-es2015-subset',
+    Options('jerry_test_suite-es2015_subset',
             ['--profile=es2015-subset']),
-    Options('jerry_test_suite-es2015-subset-snapshot',
+    Options('jerry_test_suite-es2015_subset-snapshot',
             ['--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
             ['--snapshot']),
-    Options('jerry_test_suite-es2015-subset-debug-snapshot',
+    Options('jerry_test_suite-es2015_subset-debug-snapshot',
             ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
             ['--snapshot'])
 ])
@@ -130,7 +124,7 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-libc=off', '--external-context=on']),
     Options('buildoption_test-cmdline_minimal',
             ['--jerry-cmdline-minimal=on']),
-    Options('buildoption_test-snapshot_tool',
+    Options('buildoption_test-cmdline_snapshot',
             ['--jerry-cmdline-snapshot=on']),
 ]
 

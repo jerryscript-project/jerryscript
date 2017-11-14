@@ -850,6 +850,20 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
 } /* jerry_value_set_error_flag */
 
 /**
+ * If the input value is an error value, then return a new reference to its referenced value.
+ * Otherwise, return a new reference to the value itself.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return the real value of the jerry_value
+ */
+jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value) /**< api value */
+{
+  return jerry_acquire_value (jerry_get_arg_value (value));
+} /* jerry_get_value_without_error_flag */
+
+/**
  * Get boolean from the specified value.
  *
  * @return true or false.

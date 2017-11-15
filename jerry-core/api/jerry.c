@@ -580,26 +580,6 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
 } /* jerry_eval */
 
 /**
- * Run enqueued Promise jobs until the first thrown error or until all get executed.
- *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return result of last executed job, may be error value.
- */
-jerry_value_t
-jerry_run_all_enqueued_jobs (void)
-{
-  jerry_assert_api_available ();
-
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-  return ecma_process_all_enqueued_jobs ();
-#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-} /* jerry_run_all_enqueued_jobs */
-
-/**
  * Get global object
  *
  * Note:
@@ -2490,6 +2470,42 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 } /* jerry_resolve_or_reject_promise */
+
+/**
+ * Check whether job queue is empty.
+ *
+ * @return true - if there is no enqueued job
+ *         false - otherwise
+ */
+inline bool __attr_always_inline___
+jerry_job_queue_is_empty (void)
+{
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  return JERRY_CONTEXT (job_queue_head_p) == NULL;
+#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+  return true;
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+} /* jerry_job_queue_is_empty */
+
+/**
+ * Run enqueued Promise jobs until the first thrown error or until all get executed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of last executed job, may be error value.
+ */
+jerry_value_t
+jerry_run_all_enqueued_jobs (void)
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  return ecma_process_all_enqueued_jobs ();
+#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+} /* jerry_run_all_enqueued_jobs */
 
 /**
  * Validate UTF-8 string

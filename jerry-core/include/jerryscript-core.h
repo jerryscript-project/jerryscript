@@ -263,8 +263,6 @@ jerry_value_t jerry_parse_function (const jerry_char_t *resource_name_p, size_t 
 jerry_value_t jerry_run (const jerry_value_t func_val);
 jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, bool is_strict);
 
-jerry_value_t jerry_run_all_enqueued_jobs (void);
-
 /**
  * Get the global context.
  */
@@ -420,9 +418,11 @@ bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_pr
                                     void *user_data_p);
 
 /**
- * Promise resolve/reject functions.
+ * Functions for Promise object values.
  */
 jerry_value_t jerry_resolve_or_reject_promise (jerry_value_t promise, jerry_value_t argument, bool is_resolve);
+bool jerry_job_queue_is_empty (void);
+jerry_value_t jerry_run_all_enqueued_jobs (void);
 
 /**
  * Input validator functions.

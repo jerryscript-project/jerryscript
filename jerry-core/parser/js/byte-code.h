@@ -654,9 +654,7 @@ typedef enum
   CBC_CODE_FLAGS_ARGUMENTS_NEEDED = (1u << 4), /**< arguments object must be constructed */
   CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
   CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
-  CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 6), /**< this function is an arrow function */
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+  CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 7), /**< this function is an arrow function */
 } cbc_code_flags;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,

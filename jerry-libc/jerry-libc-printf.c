@@ -469,7 +469,7 @@ libc_printf_write_u_o_x_X (FILE *stream, /**< stream pointer */
  *
  * @return number of characters printed
  */
-int
+int __attr_weak___
 vfprintf (FILE *stream, /**< stream pointer */
           const char *format, /**< format string */
           va_list args) /**< arguments */
@@ -719,7 +719,7 @@ vfprintf (FILE *stream, /**< stream pointer */
  *
  * @return number of characters printed
  */
-int
+int __attr_weak___
 fprintf (FILE *stream, /**< stream pointer */
          const char *format, /**< format string */
          ...) /**< parameters' values */
@@ -740,7 +740,7 @@ fprintf (FILE *stream, /**< stream pointer */
  *
  * @return number of characters printed
  */
-int
+int __attr_weak___
 printf (const char *format, /**< format string */
         ...) /**< parameters' values */
 {

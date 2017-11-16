@@ -72,8 +72,6 @@ def get_arguments():
                         help='Allowed N build jobs at once (default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='build jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-cmdline-minimal', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='build minimal version of the jerry command line tool (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-cmdline-snapshot', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='build snapshot command line tool (%(choices)s; default: %(default)s)')
     parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -118,6 +116,9 @@ def get_arguments():
                         help='enable VM execution stopping (%(choices)s; default: %(default)s)')
 
     devgroup = parser.add_argument_group('developer options')
+    devgroup.add_argument('--jerry-cmdline-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('build test version of the jerry command line tool '
+                                       '(%(choices)s; default: %(default)s)'))
     devgroup.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                           help=devhelp('enable the generation of a link map file for jerry command line tool '
                                        '(%(choices)s; default: %(default)s)'))
@@ -151,7 +152,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_CPOINTER_32_BIT=%s' % arguments.cpointer_32bit)
     build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
-    build_options.append('-DJERRY_CMDLINE_MINIMAL=%s' % arguments.jerry_cmdline_minimal)
+    build_options.append('-DJERRY_CMDLINE_TEST=%s' % arguments.jerry_cmdline_test)
     build_options.append('-DJERRY_CMDLINE_SNAPSHOT=%s' % arguments.jerry_cmdline_snapshot)
     build_options.append('-DJERRY_PORT_DEFAULT=%s' % arguments.jerry_port_default)
     build_options.append('-DJERRY_EXT=%s' % arguments.jerry_ext)

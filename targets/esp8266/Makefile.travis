@@ -1,0 +1,51 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the ESP8266 JerryScript target.
+
+# Install tools via apt.
+install-apt-get-deps:
+	sudo apt-get install -q -y gperf texinfo wget
+
+# Fetch and build crosstool-NG with support for Xtensa.
+install-xtensa-kx106-gcc:
+	git clone https://github.com/jcmvbkbc/crosstool-NG.git ../crosstool-NG -b lx106-g++-1.21.0
+	cd ../crosstool-NG && ./bootstrap
+	cd ../crosstool-NG && ./configure --enable-local
+	$(MAKE) -C ../crosstool-NG --no-print-directory -Rr # HACK: without the command line arguments, make bails out with recursion error
+	cd ../crosstool-NG && ./ct-ng xtensa-lx106-elf
+	cd ../crosstool-NG && ./ct-ng build
+
+# Fetch Espressif SDK and Xtensa libraries.
+install-espressif-sdk:
+	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ../ESP8266_SDK
+	cd ../ESP8266_SDK && git checkout 2fab9e23d779cdd6e5900b8ba2b588e30d9b08c4
+	wget https://github.com/esp8266/esp8266-wiki/raw/master/libs/libhal.a -O ../ESP8266_SDK/lib/libhal.a
+
+# Perform all the necessary (JerryScript-independent) installation steps.
+install: install-apt-get-deps install-xtensa-kx106-gcc install-espressif-sdk
+
+
+## Targets for building ESP8266 with JerryScript.
+
+# Build the firmware (ESP8266 with JerryScript).
+script:
+	PATH=$(CURDIR)/../crosstool-NG/builds/xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/esp8266/Makefile.esp8266 BIN_PATH=build/obj-esp8266 SDK_PATH=$(CURDIR)/../ESP8266_SDK

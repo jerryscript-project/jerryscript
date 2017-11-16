@@ -70,6 +70,47 @@ matrix:
             - gcc-5
             - gcc-5-multilib
       env: OPTS="--jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
+
+    - env: JOBNAME="ESP8266 Build Test"
+      cache: ccache
+      install: make -f ./targets/esp8266/Makefile.travis install
+      script: make -f ./targets/esp8266/Makefile.travis script
+    - env: JOBNAME="Mbed/K64F Build Test"
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:team-gcc-arm-embedded/ppa
+          packages:
+            - gcc-arm-embedded
+      install: make -f ./targets/mbed/Makefile.travis install
+      script: make -f ./targets/mbed/Makefile.travis script
+    - env: JOBNAME="Mbed OS 5/K64F Build Test"
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:team-gcc-arm-embedded/ppa
+          packages:
+            - gcc-arm-embedded
+      install: make -f ./targets/mbedos5/Makefile.travis install
+      script: make -f ./targets/mbedos5/Makefile.travis script
+    - env: JOBNAME="NuttX/STM32F4 Build Test"
+      install: make -f targets/nuttx-stm32f4/Makefile.travis install
+      script: make -f targets/nuttx-stm32f4/Makefile.travis script
+    - env: JOBNAME="RIOT/STM32F4 Build Test"
+      install: make -f ./targets/riot-stm32f4/Makefile.travis install
+      script: make -f ./targets/riot-stm32f4/Makefile.travis script
+    - env: JOBNAME="Tizen RT/Artik053 Build Test"
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:team-gcc-arm-embedded/ppa
+          packages:
+            - gcc-arm-embedded
+      install: make -f ./targets/tizenrt-artik053/Makefile.travis install
+      script: make -f ./targets/tizenrt-artik053/Makefile.travis script
+    - env: JOBNAME="Zephyr/Arduino 101 Build Test"
+      install: make -f ./targets/zephyr/Makefile.travis install
+      script: make -f ./targets/zephyr/Makefile.travis script
   allow_failures:
     - env: OPTS="--check-pylint"
   fast_finish: true

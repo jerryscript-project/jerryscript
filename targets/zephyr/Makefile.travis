@@ -1,0 +1,51 @@
+# Copyright JS Foundation and other contributors, http://js.foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+# Default target for running the build test outside the Travis CI environment.
+all:
+	$(MAKE) install
+	$(MAKE) script
+
+
+## Targets for installing build dependencies of the Zephyr JerryScript target.
+
+# Install tools via apt.
+install-apt-get-deps:
+	sudo apt-get install -q -y gperf dfu-util device-tree-compiler python3-ply python3-pip
+
+# Install Zephyr SDK.
+install-zephyr-sdk:
+	wget https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/0.9.1/zephyr-sdk-0.9.1-setup.run -O ../zephyr-sdk-0.9.1-setup.run
+	sh ../zephyr-sdk-0.9.1-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.9.1
+
+# Fetch Zephyr Project repository and install python dependencies.
+install-zephyr: install-apt-get-deps
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b zephyr-v1.9.1
+	pip3 install --user -r ../zephyr/scripts/requirements.txt
+
+# Perform all the necessary (JerryScript-independent) installation steps.
+install: install-zephyr-sdk install-zephyr
+
+
+## Targets for building Zephyr with JerryScript.
+
+# Build the firmware (Zephyr with JerryScript).
+SHELL=bash
+script:
+	export ZEPHYR_GCC_VARIANT=zephyr && \
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.9.1 && \
+	source ../zephyr/zephyr-env.sh && \
+	CC=$(CURDIR)/../zephyr-sdk-0.9.1/sysroots/x86_64-pokysdk-linux/usr/bin/i586-zephyr-elfiamcu/i586-zephyr-elfiamcu-gcc \
+	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101

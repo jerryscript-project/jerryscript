@@ -417,65 +417,67 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
 
   if (ECMA_IS_VALUE_ERROR (new_typedarray))
   {
-    ret_value = ecma_copy_value (new_typedarray);
-  }
-
-  ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
-
-  /* 17 */
-  ecma_value_t current_index;
-
-  for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
-  {
-    /* 17.a */
-    ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
-
-    /* 17.b */
-    ECMA_TRY_CATCH (current_value, ecma_op_object_find (arraylike_object_p, index_str_p), ret_value);
-
-    if (ecma_is_value_found (current_value))
-    {
-      if (func_object_p != NULL)
-      {
-        /* 17.d 17.f */
-        current_index = ecma_make_uint32_value (index);
-        ecma_value_t call_args[] = { current_value, current_index};
-
-        ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, this_val, call_args, 2), ret_value);
-
-        bool set_status = ecma_op_typedarray_set_index_prop (new_typedarray_p, index, mapped_value);
-
-        if (!set_status)
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));;
-        }
-
-        ECMA_FINALIZE (mapped_value);
-      }
-      else
-      {
-        /* 17.e 17.f */
-        bool set_status = ecma_op_typedarray_set_index_prop (new_typedarray_p, index, current_value);
-
-        if (!set_status)
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));;
-        }
-      }
-    }
-
-    ECMA_FINALIZE (current_value);
-
-    ecma_deref_ecma_string (index_str_p);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_object_value (new_typedarray_p);
+    ret_value = new_typedarray;
   }
   else
   {
-    ecma_deref_object (new_typedarray_p);
+    ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
+
+    /* 17 */
+    ecma_value_t current_index;
+
+    for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
+    {
+      /* 17.a */
+      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+
+      /* 17.b */
+      ECMA_TRY_CATCH (current_value, ecma_op_object_find (arraylike_object_p, index_str_p), ret_value);
+
+      if (ecma_is_value_found (current_value))
+      {
+        if (func_object_p != NULL)
+        {
+          /* 17.d 17.f */
+          current_index = ecma_make_uint32_value (index);
+          ecma_value_t call_args[] = { current_value, current_index};
+
+          ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, this_val, call_args, 2), ret_value);
+
+          bool set_status = ecma_op_typedarray_set_index_prop (new_typedarray_p, index, mapped_value);
+
+          if (!set_status)
+          {
+            ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));;
+          }
+
+          ECMA_FINALIZE (mapped_value);
+        }
+        else
+        {
+          /* 17.e 17.f */
+          bool set_status = ecma_op_typedarray_set_index_prop (new_typedarray_p, index, current_value);
+
+          if (!set_status)
+          {
+            ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));;
+          }
+        }
+      }
+
+      ECMA_FINALIZE (current_value);
+
+      ecma_deref_ecma_string (index_str_p);
+    }
+
+    if (ecma_is_value_empty (ret_value))
+    {
+      ret_value = ecma_make_object_value (new_typedarray_p);
+    }
+    else
+    {
+      ecma_deref_object (new_typedarray_p);
+    }
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);

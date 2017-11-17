@@ -128,7 +128,6 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< 
 static inline lit_utf8_size_t __attr_always_inline___
 ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< number as string
                                                                            * in binary-floating point number */
-                                               lit_utf8_size_t num_digits, /**< length of the string representation */
                                                int32_t exponent, /**< decimal exponent */
                                                lit_utf8_byte_t *to_digits_p, /**< [out] buffer to write */
                                                lit_utf8_size_t to_num_digits) /**< requested number of digits */
@@ -149,10 +148,10 @@ ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< n
 
   if (to_num_digits > 0)
   {
-    /* Add significant digits of the fraction part. */
+    /* Add significant digits of the fraction part and fill the remaining digits with zero */
     while (to_num_digits > 0)
     {
-      *p++ = num_digits == 1 ? '0' : *digits_p++;
+      *p++ = (*digits_p == 0 ? '0' : *digits_p++);
       to_num_digits--;
     }
   }
@@ -680,7 +679,6 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
           lit_utf8_size_t to_num_digits = ((exponent > 0) ? (lit_utf8_size_t) (exponent + frac_digits)
                                                           : (lit_utf8_size_t) (frac_digits + 1));
           p += ecma_builtin_binary_floating_number_to_string (digits,
-                                                              num_digits,
                                                               exponent,
                                                               p,
                                                               to_num_digits);

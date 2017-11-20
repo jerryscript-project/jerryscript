@@ -317,6 +317,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   if (ECMA_IS_VALUE_ERROR (then))
   {
     /* 9. */
+    then = JERRY_CONTEXT (error_value);
     ecma_reject_promise (promise, then);
   }
   else if (!ecma_op_is_callable (then))

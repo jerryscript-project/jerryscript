@@ -256,6 +256,8 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
 
   if (ECMA_IS_VALUE_ERROR (then_call_result))
   {
+    then_call_result = JERRY_CONTEXT (error_value);
+
     ret = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
                                  ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
                                  &then_call_result,

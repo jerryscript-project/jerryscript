@@ -715,8 +715,6 @@ jerry_value_is_object (const jerry_value_t value) /**< api value */
   return ecma_is_value_object (jerry_get_arg_value (value));
 } /* jerry_value_is_object */
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-
 /**
  * Check if the specified value is promise.
  *
@@ -727,13 +725,15 @@ bool
 jerry_value_is_promise (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_available ();
-
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
   jerry_value_t promise = jerry_get_arg_value (value);
   return (ecma_is_value_object (promise)
           && ecma_is_promise (ecma_get_object_from_value (promise)));
-} /* jerry_value_is_promise */
-
+#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+  JERRY_UNUSED (value);
+  return false;
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+} /* jerry_value_is_promise */
 
 /**
  * Check if the specified value is string.

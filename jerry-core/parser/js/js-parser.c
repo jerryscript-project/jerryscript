@@ -2117,6 +2117,14 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   else
   {
     context.status_flags = PARSER_IS_FUNCTION;
+#ifdef JERRY_DEBUGGER
+    if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+    {
+      /* This option has a high memory and performance costs,
+       * but it is necessary for executing eval operations by the debugger. */
+      context.status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
+    }
+#endif /* JERRY_DEBUGGER */
     context.source_p = arg_list_p;
     context.source_end_p = arg_list_p + arg_list_size;
   }

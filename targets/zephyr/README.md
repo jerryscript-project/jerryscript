@@ -55,13 +55,13 @@ The easiest way is to build and run on a QEMU emulator:
 For x86 architecture:
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_x86 qemu
+make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_x86 run
 ```
 
 For ARM (Cortex-M) architecture:
 
 ```
-make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 qemu
+make -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_cortex_m3 run
 ```
 
 #### 4. Build for Arduino 101

@@ -146,6 +146,11 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
     ecma_value_t completion;
+    if (!ecma_get_object_extensible (binding_obj_p))
+    {
+      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    }
+
     completion = ecma_builtin_helper_def_prop (binding_obj_p,
                                                name_p,
                                                ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),

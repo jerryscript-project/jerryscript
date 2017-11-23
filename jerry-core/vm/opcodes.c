@@ -62,7 +62,7 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
      * and CreateMutableBinding sets the created binding's value to undefined */
     JERRY_ASSERT (ecma_is_value_undefined (ecma_op_get_binding_value (frame_ctx_p->lex_env_p,
                                                                       var_name_str_p,
-                                                                      true)));
+                                                                      vm_is_strict_mode ())));
   }
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 } /* vm_var_decl */

@@ -730,7 +730,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_construct */
 
 /**
- * Lazy instantation of non-builtin ecma function object's properties
+ * Lazy instantiation of non-builtin ecma function object's properties
  *
  * Warning:
  *         Only non-configurable properties could be instantiated lazily in this function,
@@ -783,11 +783,23 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
       || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
   {
-    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
     const ecma_compiled_code_t *bytecode_data_p;
-    bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                       ext_func_p->u.function.bytecode_cp);
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARROW_FUNCTION)
+    {
+      ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
+      bytecode_data_p = ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
+                                                   arrow_func_p->bytecode_cp);
+    }
+    else
+    {
+#endif /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+      bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
+                                                         ext_func_p->u.function.bytecode_cp);
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+    }
+#endif /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
     {

@@ -23,6 +23,7 @@
 #include "jerryscript-mbed-drivers/I2C-js.h"
 #include "jerryscript-mbed-drivers/AnalogIn-js.h"
 #include "jerryscript-mbed-drivers/PwmOut-js.h"
+#include "jerryscript-mbed-drivers/Serial-js.h"
 
 DECLARE_JS_WRAPPER_REGISTRATION (base) {
     REGISTER_GLOBAL_FUNCTION_WITH_HANDLER(assert, jerryx_handler_assert);
@@ -37,6 +38,7 @@ DECLARE_JS_WRAPPER_REGISTRATION (base) {
     REGISTER_CLASS_CONSTRUCTOR(InterruptIn);
     REGISTER_CLASS_CONSTRUCTOR(AnalogIn);
     REGISTER_CLASS_CONSTRUCTOR(PwmOut);
+    REGISTER_CLASS_CONSTRUCTOR(Serial);
 }
 
 #endif  // _JERRYSCRIPT_MBED_DRIVERS_LIB_DRIVERS_H

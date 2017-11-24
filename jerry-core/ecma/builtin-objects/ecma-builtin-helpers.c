@@ -277,7 +277,7 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
     {
       if (ecma_number_is_negative (index))
       {
-        ecma_number_t index_neg = ecma_number_negate (index);
+        ecma_number_t index_neg = -index;
 
         if (index_neg > length)
         {

@@ -520,7 +520,7 @@ ecma_number_get_prev (ecma_number_t num) /**< ecma-number */
 
   if (ecma_number_is_negative (num))
   {
-    return ecma_number_negate (ecma_number_get_next (num));
+    return -ecma_number_get_next (num);
   }
 
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
@@ -555,7 +555,7 @@ ecma_number_get_next (ecma_number_t num) /**< ecma-number */
 
   if (ecma_number_is_negative (num))
   {
-    return ecma_number_negate (ecma_number_get_prev (num));
+    return -ecma_number_get_prev (num);
   }
 
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
@@ -580,35 +580,6 @@ ecma_number_get_next (ecma_number_t num) /**< ecma-number */
                            biased_exp,
                            fraction);
 } /* ecma_number_get_next */
-
-/**
- * Negate ecma-number
- *
- * @return negated number
- */
-ecma_number_t
-ecma_number_negate (ecma_number_t num) /**< ecma-number */
-{
-  ecma_number_t negated = -num;
-
-#ifndef JERRY_NDEBUG
-  bool sign;
-  uint32_t biased_exp;
-  uint64_t fraction;
-
-  ecma_number_unpack (num, &sign, &biased_exp, &fraction);
-
-  sign = !sign;
-
-  ecma_number_t negated_ieee754 = ecma_number_pack (sign, biased_exp, fraction);
-
-  JERRY_ASSERT (negated == negated_ieee754
-                || (ecma_number_is_nan (negated)
-                    && ecma_number_is_nan (negated_ieee754)));
-#endif /* !JERRY_NDEBUG */
-
-  return negated;
-} /* ecma_number_negate */
 
 /**
  * Truncate fractional part of the number
@@ -637,7 +608,7 @@ ecma_number_trunc (ecma_number_t num) /**< ecma-number */
                                                                                      exponent);
     if (sign)
     {
-      return ecma_number_negate (tmp);
+      return -tmp;
     }
     else
     {
@@ -670,65 +641,17 @@ ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
                 && !ecma_number_is_zero (right_num)
                 && !ecma_number_is_infinity (right_num));
 
-  const ecma_number_t q = ecma_number_trunc (ecma_number_divide (left_num, right_num));
-  ecma_number_t r = ecma_number_substract (left_num, ecma_number_multiply (right_num, q));
+  const ecma_number_t q = ecma_number_trunc (left_num / right_num);
+  ecma_number_t r = left_num - right_num * q;
 
   if (ecma_number_is_zero (r)
       && ecma_number_is_negative (left_num))
   {
-    r = ecma_number_negate (r);
+    r = -r;
   }
 
   return r;
 } /* ecma_number_calc_remainder */
-
-/**
- * ECMA-number addition.
- *
- * @return number - result of addition.
- */
-ecma_number_t
-ecma_number_add (ecma_number_t left_num, /**< left operand */
-                 ecma_number_t right_num) /**< right operand */
-{
-  return left_num + right_num;
-} /* ecma_number_add */
-
-/**
- * ECMA-number substraction.
- *
- * @return number - result of substraction.
- */
-ecma_number_t
-ecma_number_substract (ecma_number_t left_num, /**< left operand */
-                       ecma_number_t right_num) /**< right operand */
-{
-  return ecma_number_add (left_num, ecma_number_negate (right_num));
-} /* ecma_number_substract */
-
-/**
- * ECMA-number multiplication.
- *
- * @return number - result of multiplication.
- */
-ecma_number_t
-ecma_number_multiply (ecma_number_t left_num, /**< left operand */
-                      ecma_number_t right_num) /**< right operand */
-{
-  return left_num * right_num;
-} /* ecma_number_multiply */
-
-/**
- * ECMA-number division.
- *
- * @return number - result of division.
- */
-ecma_number_t
-ecma_number_divide (ecma_number_t left_num, /**< left operand */
-                    ecma_number_t right_num) /**< right operand */
-{
-  return left_num / right_num;
-} /* ecma_number_divide */
 
 /**
  * @}

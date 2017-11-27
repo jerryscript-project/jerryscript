@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
@@ -566,6 +567,15 @@ jerry_port_get_current_time (void)
 {
   return 0;
 } /* jerry_port_get_current_time */
+
+/**
+ * Delay for the specified number of milliseconds.
+ */
+void
+jerry_port_sleep_ms (uint32_t msecs)
+{
+  usleep (msecs * 1000);
+} /* jerry_port_sleep_ms */
 
 /**
  * Provide the implementation of jerryx_port_handler_print_char.

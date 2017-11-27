@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define _XOPEN_SOURCE 500 /* Required macro for sleep functions */
-
 #include "byte-code.h"
 #include "debugger.h"
 #include "ecma-builtin-helpers.h"
@@ -25,12 +23,6 @@
 #include "lit-char-helpers.h"
 
 #ifdef JERRY_DEBUGGER
-
-#ifdef HAVE_TIME_H
-#include <time.h>
-#elif defined (HAVE_UNISTD_H)
-#include <unistd.h>
-#endif /* HAVE_TIME_H */
 
 /**
  * Type cast the debugger send buffer into a specific type.
@@ -209,24 +201,6 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
   return success;
 } /* jerry_debugger_send_eval */
-
-/**
- * Suspend execution for a given time.
- * Note: If the platform does not have nanosleep or usleep, this function does not sleep at all.
- */
-void
-jerry_debugger_sleep (void)
-{
-#ifdef HAVE_TIME_H
-  nanosleep (&(const struct timespec)
-  {
-    JERRY_DEBUGGER_TIMEOUT / 1000, (JERRY_DEBUGGER_TIMEOUT % 1000) * 1000000L /* Seconds, nanoseconds */
-  }
-  , NULL);
-#elif defined (HAVE_UNISTD_H)
-  usleep ((useconds_t) JERRY_DEBUGGER_TIMEOUT * 1000);
-#endif /* HAVE_TIME_H */
-} /* jerry_debugger_sleep */
 
 /**
  * Check received packet size.
@@ -651,7 +625,7 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 
   while (!jerry_debugger_receive (&uint8_data))
   {
-    jerry_debugger_sleep ();
+    jerry_port_sleep_ms (JERRY_DEBUGGER_TIMEOUT);
   }
 
   if (uint8_data != NULL)

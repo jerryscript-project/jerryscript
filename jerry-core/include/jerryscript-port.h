@@ -139,6 +139,15 @@ double jerry_port_get_current_time (void);
 struct jerry_instance_t *jerry_port_get_current_instance (void);
 
 /**
+ * Delay for the specified number of milliseconds.
+ *
+ *Note:
+ *   This port function us currently used only when the debugger framework is enabled.
+ *   Otherwise this function is not used.
+ */
+void jerry_port_sleep_ms (uint32_t msec);
+
+/**
  * @}
  */
 

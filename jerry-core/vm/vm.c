@@ -1793,7 +1793,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                 && left_value != 0
                 && right_value != 0)
             {
-              result = ecma_make_integer_value (left_integer * right_integer);
+              result = ecma_integer_multiply (left_integer, right_integer);
               break;
             }
 

@@ -719,6 +719,31 @@ ecma_number_multiply (ecma_number_t left_num, /**< left operand */
 } /* ecma_number_multiply */
 
 /**
+ * ECMA-integer number multiplication.
+ *
+ * @return number - result of multiplication.
+ */
+inline ecma_value_t __attr_always_inline___
+ecma_integer_multiply (ecma_integer_value_t left_integer, /**< left operand */
+                       ecma_integer_value_t right_integer) /**< right operand */
+{
+#if defined (__GNUC__) || defined (__clang__)
+  /* Check if left_integer is power of 2 */
+  if (unlikely ((left_integer & (left_integer - 1)) == 0))
+  {
+    /* Right shift right_integer with log2 (left_integer) */
+    return ecma_make_integer_value (right_integer << (__builtin_ctz ((unsigned int) left_integer)));
+  }
+  else if (unlikely ((right_integer & (right_integer - 1)) == 0))
+  {
+    /* Right shift left_integer with log2 (right_integer) */
+    return ecma_make_integer_value (left_integer << (__builtin_ctz ((unsigned int) right_integer)));
+  }
+#endif /* defined (__GNUC__) || defined (__clang__) */
+  return ecma_make_integer_value (left_integer * right_integer);
+} /* ecma_integer_multiply */
+
+/**
  * ECMA-number division.
  *
  * @return number - result of division.

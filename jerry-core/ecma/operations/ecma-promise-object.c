@@ -754,6 +754,7 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
 {
   if (!ecma_is_value_object (promise))
   {
+    ecma_free_value (JERRY_CONTEXT (error_value));
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
   }
 
@@ -761,6 +762,7 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
 
   if (!ecma_is_promise (obj))
   {
+    ecma_free_value (JERRY_CONTEXT (error_value));
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a Promise."));
   }
 

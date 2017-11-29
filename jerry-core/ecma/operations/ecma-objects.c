@@ -390,7 +390,7 @@ ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
  * Note: search includes prototypes
  *
  * @return ecma value if property is found
- *         ECMA_SIMPLE_VALUE_NOT_FOUND if property is not found
+ *         ECMA_VALUE_NOT_FOUND if property is not found
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -496,7 +496,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         {
           ecma_deref_ecma_string (num_to_str);
 
-          return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+          return ECMA_VALUE_UNDEFINED;
         }
 
         ecma_deref_ecma_string (num_to_str);
@@ -574,7 +574,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
     if (property_p == NULL)
     {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+      return ECMA_VALUE_NOT_FOUND;
     }
   }
 
@@ -591,7 +591,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
   if (getter_p == NULL)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return ECMA_VALUE_UNDEFINED;
   }
 
   return ecma_op_function_call (getter_p, base_value, NULL, 0);
@@ -603,7 +603,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
  * Note: search includes prototypes
  *
  * @return ecma value if property is found
- *         ECMA_SIMPLE_VALUE_NOT_FOUND if property is not found
+ *         ECMA_VALUE_NOT_FOUND if property is not found
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
@@ -632,7 +632,7 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
   }
   while (object_p != NULL);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+  return ECMA_VALUE_NOT_FOUND;
 } /* ecma_op_object_find */
 
 /**
@@ -705,7 +705,7 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
   }
   while (object_p != NULL);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_object_get */
 
 /**
@@ -751,7 +751,7 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
   }
   while (object_p != NULL);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_object_get_by_magic_id */
 
 /**
@@ -765,9 +765,9 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         The returned value must be freed with ecma_free_value.
  *
- *         Returns with ECMA_SIMPLE_VALUE_TRUE if the operation is
+ *         Returns with ECMA_VALUE_TRUE if the operation is
  *         successful. Otherwise it returns with an error object
- *         or ECMA_SIMPLE_VALUE_FALSE.
+ *         or ECMA_VALUE_FALSE.
  *
  *         Note: even if is_throw is false, the setter can throw an
  *         error, and this function returns with that error.
@@ -828,7 +828,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                             && ecma_is_lexical_environment (lex_env_p));
 
               ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
-              return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+              return ECMA_VALUE_TRUE;
             }
           }
         }
@@ -843,7 +843,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
           if (set_status)
           {
-            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+            return ECMA_VALUE_TRUE;
           }
 
           return ecma_reject (is_throw);
@@ -930,7 +930,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
         ecma_named_data_property_assign_value (object_p,
                                                ECMA_PROPERTY_VALUE_PTR (property_p),
                                                value);
-        return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+        return ECMA_VALUE_TRUE;
       }
     }
     else
@@ -1016,7 +1016,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
       JERRY_ASSERT (ecma_is_value_undefined (new_prop_value_p->value));
       new_prop_value_p->value = ecma_copy_value_if_not_object (value);
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+      return ECMA_VALUE_TRUE;
     }
   }
 
@@ -1033,7 +1033,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     ecma_fast_free_value (ret_value);
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ECMA_VALUE_TRUE;
   }
 
   return ret_value;
@@ -1187,7 +1187,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
           if (define_status)
           {
-            return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+            return ECMA_VALUE_TRUE;
           }
 
           return ecma_reject (is_throw);
@@ -1888,7 +1888,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
  * Get value of an object if the class matches
  *
  * @return value of the object if the class matches
- *         ECMA_SIMPLE_VALUE_NOT_FOUND otherwise
+ *         ECMA_VALUE_NOT_FOUND otherwise
  */
 inline bool __attr_always_inline___
 ecma_object_class_is (ecma_object_t *object_p, /**< object */

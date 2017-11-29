@@ -157,7 +157,7 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
   }
 
   JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
+  return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error */
 
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
@@ -246,7 +246,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
   ecma_deref_ecma_string (error_msg_p);
 
   JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
+  return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error_with_format */
 
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */

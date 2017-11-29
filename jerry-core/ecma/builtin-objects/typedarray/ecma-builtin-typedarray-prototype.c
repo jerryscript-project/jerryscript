@@ -178,7 +178,7 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   uint32_t len = ecma_typedarray_get_length (obj_p);
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
   {
@@ -195,14 +195,14 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
     {
       if (!ecma_op_to_boolean (call_value))
       {
-        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+        ret_value = ECMA_VALUE_FALSE;
       }
     }
     else if (mode == TYPEDARRAY_ROUTINE_SOME)
     {
       if (ecma_op_to_boolean (call_value))
       {
-        ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+        ret_value = ECMA_VALUE_TRUE;
       }
     }
 
@@ -216,15 +216,15 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
   {
     if (mode == TYPEDARRAY_ROUTINE_EVERY)
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+      ret_value = ECMA_VALUE_TRUE;
     }
     else if (mode == TYPEDARRAY_ROUTINE_SOME)
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      ret_value = ECMA_VALUE_FALSE;
     }
     else
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ECMA_VALUE_UNDEFINED;
     }
   }
 
@@ -318,7 +318,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   uint32_t len = ecma_typedarray_get_length (obj_p);
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (obj_p, len);
 
@@ -400,7 +400,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
 
   JERRY_ASSERT (len > 0);
 
-  ecma_value_t accumulator = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t accumulator = ECMA_VALUE_UNDEFINED;
   uint32_t index = is_right ? (len - 1) : 0;
 
   if (ecma_is_value_undefined (initial_val))
@@ -444,7 +444,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
     JERRY_ASSERT (ecma_is_value_number (get_value));
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p,
-                                                     ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                     ECMA_VALUE_UNDEFINED,
                                                      call_args,
                                                      4);
 
@@ -552,7 +552,7 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   uint8_t shift = ecma_typedarray_get_element_size_shift (obj_p);
   uint8_t element_size = (uint8_t) (1 << shift);
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   JMEM_DEFINE_LOCAL_ARRAY (pass_value_list_p, len * element_size, lit_utf8_byte_t);
 
@@ -674,7 +674,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   }
 
   /* 6.~ 8. targetOffset */
-  ecma_value_t ret_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_val = ECMA_VALUE_EMPTY;
   ECMA_OP_TO_NUMBER_TRY_CATCH (target_offset_num, offset_val, ret_val);
   if (ecma_number_is_nan (target_offset_num))
   {
@@ -761,7 +761,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
   if (ecma_is_value_empty (ret_val))
   {
-    ret_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_val = ECMA_VALUE_UNDEFINED;
   }
   return ret_val;
 } /* ecma_builtin_typedarray_prototype_set */

@@ -74,7 +74,7 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-  JERRY_ASSERT (ext_object_p->u.class_prop.u.value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+  JERRY_ASSERT (ext_object_p->u.class_prop.u.value == ECMA_VALUE_UNDEFINED);
 
   ext_object_p->u.class_prop.u.value = result;
 } /* ecma_promise_set_result */
@@ -237,18 +237,18 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
   {
     ecma_free_value (promise);
     ecma_free_value (already_resolved);
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return ECMA_VALUE_UNDEFINED;
   }
 
   /* 5. */
   ecma_set_already_resolved_value (already_resolved, true);
 
   /* 6. */
-  ecma_value_t reject_value = (argc == 0) ? ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED) : argv[0];
+  ecma_value_t reject_value = (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0];
   ecma_reject_promise (promise, reject_value);
   ecma_free_value (promise);
   ecma_free_value (already_resolved);
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_reject_handler */
 
 /**
@@ -290,7 +290,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   /* If the argc is 0, then fulfill the `undefined`. */
   if (argc == 0)
   {
-    ecma_fulfill_promise (promise, ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+    ecma_fulfill_promise (promise, ECMA_VALUE_UNDEFINED);
     goto end_of_resolve_function;
   }
 
@@ -336,7 +336,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 end_of_resolve_function:
   ecma_free_value (promise);
   ecma_free_value (already_resolved);
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_resolve_handler */
 
 /**
@@ -361,7 +361,7 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
   /* 3. */
   ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), str_resolve);
 
-  if (resolve != ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED))
+  if (resolve != ECMA_VALUE_UNDEFINED)
   {
     ecma_free_value (resolve);
     ecma_free_value (capability);
@@ -375,7 +375,7 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
   /* 4. */
   ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), str_reject);
 
-  if (reject != ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED))
+  if (reject != ECMA_VALUE_UNDEFINED)
   {
     ecma_free_value (reject);
     ecma_free_value (capability);
@@ -402,7 +402,7 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
   ecma_deref_ecma_string (str_resolve);
   ecma_deref_ecma_string (str_reject);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_call_builtin_executor */
 
 /**
@@ -491,7 +491,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   ecma_deref_object (prototype_obj_p);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_PROMISE_UL;
-  ext_object_p->u.class_prop.u.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ext_object_p->u.class_prop.u.value = ECMA_VALUE_UNDEFINED;
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) object_p;
   promise_object_p->fulfill_reactions = NULL;
   promise_object_p->reject_reactions = NULL;
@@ -517,7 +517,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
                       false);
 
   /* 9. */
-  ecma_value_t completion = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t completion = ECMA_VALUE_UNDEFINED;
 
   if (type == ECMA_PROMISE_EXECUTOR_FUNCTION)
   {
@@ -525,7 +525,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
 
     ecma_value_t argv[] = { funcs->resolve, funcs->reject };
     completion = ecma_op_function_call (ecma_get_object_from_value (executor),
-                                        ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                        ECMA_VALUE_UNDEFINED,
                                         argv,
                                         2);
   }
@@ -543,14 +543,14 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
     JERRY_UNUSED (executor);
   }
 
-  ecma_value_t status = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t status = ECMA_VALUE_EMPTY;
 
   if (ECMA_IS_VALUE_ERROR (completion))
   {
     /* 10.a. */
     completion = JERRY_CONTEXT (error_value);
     status = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
-                                    ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                    ECMA_VALUE_UNDEFINED,
                                     &completion,
                                     1);
   }

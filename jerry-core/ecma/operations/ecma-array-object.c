@@ -202,7 +202,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
         return ecma_reject (is_throw);
       }
     }
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
   else if (!ecma_is_property_writable (ext_object_p->u.array.length_prop))
   {
@@ -227,7 +227,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 
   if (current_len_uint32 == new_len_uint32)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
   return ecma_reject (is_throw);
 } /* ecma_op_array_object_set_length */
@@ -326,7 +326,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
     ext_object_p->u.array.length = index + 1;
   }
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_array_object_define_own_property */
 
 /**

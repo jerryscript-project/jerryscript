@@ -595,7 +595,7 @@ jerry_run_all_enqueued_jobs (void)
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
   return ecma_process_all_enqueued_jobs ();
 #else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 #endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
 } /* jerry_run_all_enqueued_jobs */
 
@@ -1205,7 +1205,7 @@ jerry_create_undefined (void)
 {
   jerry_assert_api_available ();
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* jerry_create_undefined */
 
 /**
@@ -1218,7 +1218,7 @@ jerry_create_null (void)
 {
   jerry_assert_api_available ();
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+  return ECMA_VALUE_NULL;
 } /* jerry_create_null */
 
 /**
@@ -1252,7 +1252,7 @@ jerry_create_promise (void)
   jerry_assert_api_available ();
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-  return ecma_op_create_promise_object (ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY), ECMA_PROMISE_EXECUTOR_EMPTY);
+  return ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
 #else /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
 #endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
@@ -1829,7 +1829,7 @@ void
 jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p) /**< [out] property descriptor */
 {
   prop_desc_p->is_value_defined = false;
-  prop_desc_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc_p->value = ECMA_VALUE_UNDEFINED;
   prop_desc_p->is_writable_defined = false;
   prop_desc_p->is_writable = false;
   prop_desc_p->is_enumerable_defined = false;
@@ -1837,9 +1837,9 @@ jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p)
   prop_desc_p->is_configurable_defined = false;
   prop_desc_p->is_configurable = false;
   prop_desc_p->is_get_defined = false;
-  prop_desc_p->getter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
   prop_desc_p->is_set_defined = false;
-  prop_desc_p->setter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc_p->setter = ECMA_VALUE_UNDEFINED;
 } /* jerry_init_property_descriptor_fields */
 
 /**
@@ -1987,9 +1987,9 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
   prop_desc_p->is_get_defined = prop_desc.is_get_defined;
   prop_desc_p->is_set_defined = prop_desc.is_set_defined;
 
-  prop_desc_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  prop_desc_p->getter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  prop_desc_p->setter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc_p->value = ECMA_VALUE_UNDEFINED;
+  prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
+  prop_desc_p->setter = ECMA_VALUE_UNDEFINED;
 
   if (prop_desc.is_value_defined)
   {
@@ -2004,7 +2004,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     }
     else
     {
-      prop_desc_p->getter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+      prop_desc_p->getter = ECMA_VALUE_NULL;
     }
   }
 
@@ -2016,7 +2016,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     }
     else
     {
-      prop_desc_p->setter = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+      prop_desc_p->setter = ECMA_VALUE_NULL;
     }
   }
 
@@ -2143,7 +2143,7 @@ jerry_construct_object (const jerry_value_t func_obj_val, /**< function object t
 
   if (jerry_value_is_constructor (func_obj_val))
   {
-    ecma_value_t this_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ecma_value_t this_val = ECMA_VALUE_UNDEFINED;
     return jerry_invoke_function (true, func_obj_val, this_val, args_p, args_count);
   }
 
@@ -2196,7 +2196,7 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
 
   if (proto_obj_p == NULL)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+    return ECMA_VALUE_NULL;
   }
 
   return ecma_make_object_value (proto_obj_p);
@@ -2233,7 +2233,7 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
                       ecma_get_object_from_value (proto_obj_val));
   }
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  return ECMA_VALUE_TRUE;
 } /* jerry_set_prototype */
 
 /**
@@ -2408,7 +2408,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, false, true, true);
   ecma_collection_iterator_init (&names_iter, names_p);
 
-  ecma_value_t property_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t property_value = ECMA_VALUE_EMPTY;
 
   bool continuous = true;
 
@@ -2463,7 +2463,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   ecma_value_t function = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (promise), prop_name);
 
   ecma_value_t ret = ecma_op_function_call (ecma_get_object_from_value (function),
-                                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                            ECMA_VALUE_UNDEFINED,
                                             &argument,
                                             1);
 

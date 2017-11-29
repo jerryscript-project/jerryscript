@@ -94,7 +94,7 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
   ecma_deref_ecma_string (str);
 
   ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (func),
-                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                 ECMA_VALUE_UNDEFINED,
                                                  &argument,
                                                  1);
 
@@ -133,7 +133,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject descrip
   ecma_deref_ecma_string (str_reject);
 
   ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (reject),
-                                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                 ECMA_VALUE_UNDEFINED,
                                                  &reason,
                                                  1);
   ecma_free_value (reject);
@@ -204,7 +204,7 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
   JERRY_ASSERT (ecma_get_object_builtin_id (ecma_get_object_from_value (ctor)) == ECMA_BUILTIN_ID_PROMISE);
   JERRY_ASSERT (ecma_get_object_type (ecma_get_object_from_value (array)) == ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
   ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
   ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
@@ -320,7 +320,7 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   JERRY_UNUSED (this);
   JERRY_UNUSED (argc);
 
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t ret = ECMA_VALUE_UNDEFINED;
   /* 1. */
   ecma_object_t *function_p = ecma_get_object_from_value (function);
   ecma_string_t *str_already_called = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_ALREADY_CALLED);
@@ -373,7 +373,7 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
                                                str_resolve);
     ecma_deref_ecma_string (str_resolve);
     ret = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                 ECMA_VALUE_UNDEFINED,
                                  &value_array,
                                  1);
     ecma_free_value (resolve);
@@ -413,7 +413,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
   JERRY_ASSERT (ecma_get_object_builtin_id (ecma_get_object_from_value (ctor)) == ECMA_BUILTIN_ID_PROMISE);
   JERRY_ASSERT (ecma_get_object_type (ecma_get_object_from_value (array)) == ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
   ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
   ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
@@ -428,7 +428,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
   ecma_string_t *str_capability = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
   ecma_string_t *str_remaining = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REMAINING_ELEMENT);
 
-  ecma_value_t undefined_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t undefined_val = ECMA_VALUE_UNDEFINED;
   /* String '1' indicates [[Resolve]] and '2' indicates [[Reject]]. */
   ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability),
                                              str_resolve);
@@ -455,7 +455,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
       {
         /* iii. */
         ecma_value_t resolve_ret = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                                          ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                                          ECMA_VALUE_UNDEFINED,
                                                           &value_array,
                                                           1);
 
@@ -581,7 +581,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_value_t capability = ecma_promise_new_capability ();
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret = ECMA_VALUE_EMPTY;
 
   if (!ecma_is_value_object (array)
       || ecma_get_object_type (ecma_get_object_from_value (array)) != ECMA_OBJECT_TYPE_ARRAY)

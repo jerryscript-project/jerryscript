@@ -58,7 +58,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
                                     ecma_value_t arg) /**< first argument */
 {
   JERRY_UNUSED (this_arg);
-  ecma_simple_value_t is_array = ECMA_SIMPLE_VALUE_FALSE;
+  ecma_value_t is_array = ECMA_VALUE_FALSE;
 
   if (ecma_is_value_object (arg))
   {
@@ -66,11 +66,11 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
 
     if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_ARRAY_UL)
     {
-      is_array = ECMA_SIMPLE_VALUE_TRUE;
+      is_array = ECMA_VALUE_TRUE;
     }
   }
 
-  return ecma_make_simple_value (is_array);
+  return is_array;
 } /* ecma_builtin_array_object_is_array */
 
 /**

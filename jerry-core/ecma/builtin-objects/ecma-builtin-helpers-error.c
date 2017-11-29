@@ -47,7 +47,7 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< 
   if (arguments_list_len != 0
       && !ecma_is_value_undefined (arguments_list_p[0]))
   {
-    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
     ECMA_TRY_CATCH (msg_str_value,
                     ecma_op_to_string (arguments_list_p[0]),

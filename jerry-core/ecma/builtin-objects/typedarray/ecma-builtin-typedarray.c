@@ -64,8 +64,8 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_value_t source;
-  ecma_value_t map_fn = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  ecma_value_t this_in_fn = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t map_fn = ECMA_VALUE_UNDEFINED;
+  ecma_value_t this_in_fn = ECMA_VALUE_UNDEFINED;
 
   if (arguments_list_len == 0)
   {
@@ -200,7 +200,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
 
   /* TODO: implement 'of' */
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_typedarray_of */
 
 /**

@@ -126,7 +126,7 @@ enum
 static ecma_value_t
 ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1. */
   ECMA_TRY_CATCH (obj,
@@ -145,7 +145,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
 
     if (ecma_number_is_nan (num_value) || ecma_number_is_infinity (num_value))
     {
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+      ret_value = ECMA_VALUE_NULL;
     }
   }
 
@@ -577,9 +577,9 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_TIME)
   {
     ecma_value_t time = (arguments_number >= 1 ? arguments_list[0]
-                                               : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+                                               : ECMA_VALUE_UNDEFINED);
 
-    ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
     /* 1. */
     ECMA_OP_TO_NUMBER_TRY_CATCH (time_num, time, ret_value);

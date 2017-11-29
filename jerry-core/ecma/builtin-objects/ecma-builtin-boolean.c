@@ -59,15 +59,14 @@ ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
 
   if (arguments_list_len == 0)
   {
-    arg_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    arg_value = ECMA_VALUE_UNDEFINED;
   }
   else
   {
     arg_value = arguments_list_p[0];
   }
 
-  return ecma_make_simple_value (ecma_op_to_boolean (arg_value) ? ECMA_SIMPLE_VALUE_TRUE
-                                                                : ECMA_SIMPLE_VALUE_FALSE);
+  return ecma_op_to_boolean (arg_value) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
 } /* ecma_builtin_boolean_dispatch_call */
 
 /**
@@ -83,7 +82,7 @@ ecma_builtin_boolean_dispatch_construct (const ecma_value_t *arguments_list_p, /
 
   if (arguments_list_len == 0)
   {
-    return ecma_op_create_boolean_object (ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE));
+    return ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
   }
   else
   {

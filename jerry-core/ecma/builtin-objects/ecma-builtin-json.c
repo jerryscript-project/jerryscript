@@ -561,15 +561,15 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
     }
     case null_token:
     {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_NULL);
+      return ECMA_VALUE_NULL;
     }
     case true_token:
     {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+      return ECMA_VALUE_TRUE;
     }
     case false_token:
     {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      return ECMA_VALUE_FALSE;
     }
     case left_brace_token:
     {
@@ -629,7 +629,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
        * Parse error occured.
        */
       ecma_deref_object (object_p);
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ECMA_VALUE_UNDEFINED;
     }
     case left_square_token:
     {
@@ -689,11 +689,11 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
        * Parse error occured.
        */
       ecma_deref_object (array_p);
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ECMA_VALUE_UNDEFINED;
     }
     default:
     {
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ECMA_VALUE_UNDEFINED;
     }
   }
 } /* ecma_builtin_json_parse_value */
@@ -716,7 +716,7 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
   JERRY_ASSERT (holder_p);
   JERRY_ASSERT (name_p);
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_TRY_CATCH (value_get,
                   ecma_op_object_get (holder_p, name_p),
@@ -806,7 +806,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
                          ecma_value_t arg2) /**< reviver argument */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_TRY_CATCH (string,
                   ecma_op_to_string (arg1),
@@ -829,7 +829,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
     if (token.type != end_token)
     {
       ecma_free_value (final_result);
-      final_result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      final_result = ECMA_VALUE_UNDEFINED;
     }
   }
 
@@ -896,7 +896,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
                              ecma_value_t arg3)  /**< space */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ecma_json_stringify_context_t context;
 
@@ -944,7 +944,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
                         ret_value);
 
         /* 4.b.ii.1 */
-        ecma_value_t item = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+        ecma_value_t item = ECMA_VALUE_UNDEFINED;
 
         /* 4.b.ii.2 */
         if (ecma_is_value_string (value))
@@ -1311,7 +1311,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
                        ecma_object_t *holder_p, /**< the object*/
                        ecma_json_stringify_context_t *context_p) /**< context*/
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1. */
   ECMA_TRY_CATCH (value,
@@ -1475,7 +1475,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
     else
     {
       /* 11. */
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ECMA_VALUE_UNDEFINED;
     }
   }
 
@@ -1506,7 +1506,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 2. */
   ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);
@@ -1706,7 +1706,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 2. */
   ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);

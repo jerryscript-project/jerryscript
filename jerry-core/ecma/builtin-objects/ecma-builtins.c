@@ -249,7 +249,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
-      ext_object_p->u.class_prop.u.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      ext_object_p->u.class_prop.u.value = ECMA_VALUE_FALSE;
       break;
     }
 #endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
@@ -541,7 +541,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   *bitset_p |= bit_for_index;
 
-  ecma_value_t value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t value = ECMA_VALUE_EMPTY;
   bool is_accessor = false;
   ecma_object_t *getter_p = NULL;
   ecma_object_t *setter_p = NULL;
@@ -550,7 +550,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
   {
     case ECMA_BUILTIN_PROPERTY_SIMPLE:
     {
-      value = ecma_make_simple_value (curr_property_p->value);
+      value = curr_property_p->value;
       break;
     }
     case ECMA_BUILTIN_PROPERTY_NUMBER:
@@ -836,7 +836,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
   if (ecma_builtin_function_is_routine (obj_p))
@@ -898,7 +898,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 

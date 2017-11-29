@@ -766,7 +766,7 @@ jerry_exec_snapshot_at (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (copy_bytecode);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  return ECMA_VALUE_FALSE;
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot_at */
 
@@ -797,7 +797,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (snapshot_size);
   JERRY_UNUSED (copy_bytecode);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  return ECMA_VALUE_FALSE;
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_exec_snapshot */
 
@@ -1536,6 +1536,6 @@ jerry_value_t jerry_load_function_snapshot_at (const uint32_t *function_snapshot
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (copy_bytecode);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  return ECMA_VALUE_FALSE;
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 } /* jerry_load_function_snapshot_at */

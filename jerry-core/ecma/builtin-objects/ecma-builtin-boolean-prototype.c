@@ -56,7 +56,7 @@
 static ecma_value_t
 ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_TRY_CATCH (value_of_ret,
                   ecma_builtin_boolean_prototype_object_value_of (this_arg),

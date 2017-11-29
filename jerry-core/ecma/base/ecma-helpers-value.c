@@ -52,8 +52,8 @@ JERRY_STATIC_ASSERT (sizeof (uintptr_t) > sizeof (ecma_value_t),
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
-JERRY_STATIC_ASSERT ((ECMA_SIMPLE_VALUE_FALSE | 0x1) == ECMA_SIMPLE_VALUE_TRUE
-                     && ECMA_SIMPLE_VALUE_FALSE != ECMA_SIMPLE_VALUE_TRUE,
+JERRY_STATIC_ASSERT ((ECMA_VALUE_FALSE | (1 << ECMA_DIRECT_SHIFT)) == ECMA_VALUE_TRUE
+                     && ECMA_VALUE_FALSE != ECMA_VALUE_TRUE,
                      only_the_lowest_bit_must_be_different_for_simple_value_true_and_false);
 
 /**
@@ -138,9 +138,9 @@ ecma_is_value_simple (ecma_value_t value) /**< ecma value */
  */
 static inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_equal_to_simple_value (ecma_value_t value, /**< ecma value */
-                                     ecma_simple_value_t simple_value) /**< simple value */
+                                     ecma_value_t simple_value) /**< simple value */
 {
-  return value == ecma_make_simple_value (simple_value);
+  return value == simple_value;
 } /* ecma_is_value_equal_to_simple_value */
 
 /**
@@ -152,7 +152,7 @@ ecma_is_value_equal_to_simple_value (ecma_value_t value, /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_empty (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_EMPTY);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_EMPTY);
 } /* ecma_is_value_empty */
 
 /**
@@ -164,7 +164,7 @@ ecma_is_value_empty (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_UNDEFINED);
 } /* ecma_is_value_undefined */
 
 /**
@@ -176,7 +176,7 @@ ecma_is_value_undefined (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_null (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_NULL);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_NULL);
 } /* ecma_is_value_null */
 
 /**
@@ -200,7 +200,7 @@ ecma_is_value_boolean (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_true (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_TRUE);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_TRUE);
 } /* ecma_is_value_true */
 
 /**
@@ -212,7 +212,7 @@ ecma_is_value_true (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_false (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_FALSE);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_FALSE);
 } /* ecma_is_value_false */
 
 /**
@@ -224,7 +224,7 @@ ecma_is_value_false (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_found (ecma_value_t value) /**< ecma value */
 {
-  return value != ecma_make_simple_value (ECMA_SIMPLE_VALUE_NOT_FOUND);
+  return value != ECMA_VALUE_NOT_FOUND;
 } /* ecma_is_value_found */
 
 /**
@@ -236,7 +236,7 @@ ecma_is_value_found (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_array_hole (ecma_value_t value) /**< ecma value */
 {
-  return ecma_is_value_equal_to_simple_value (value, ECMA_SIMPLE_VALUE_ARRAY_HOLE);
+  return ecma_is_value_equal_to_simple_value (value, ECMA_VALUE_ARRAY_HOLE);
 } /* ecma_is_value_array_hole */
 
 /**
@@ -344,15 +344,6 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 } /* ecma_check_value_type_is_spec_defined */
 
 /**
- * Simple value constructor
- */
-inline ecma_value_t __attr_const___ __attr_always_inline___
-ecma_make_simple_value (const ecma_simple_value_t simple_value) /**< simple value */
-{
-  return (((ecma_value_t) (simple_value)) << ECMA_DIRECT_SHIFT) | ECMA_DIRECT_TYPE_SIMPLE_VALUE;
-} /* ecma_make_simple_value */
-
-/**
  * Creates an ecma value from the given raw boolean.
  *
  * @return boolean ecma_value
@@ -360,8 +351,7 @@ ecma_make_simple_value (const ecma_simple_value_t simple_value) /**< simple valu
 inline ecma_value_t __attr_const___ __attr_always_inline___
 ecma_make_boolean_value (bool boolean_value) /**< raw bool value from which the ecma value will be created */
 {
-  return ecma_make_simple_value (boolean_value ? ECMA_SIMPLE_VALUE_TRUE
-                                               : ECMA_SIMPLE_VALUE_FALSE);
+  return boolean_value ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
 } /* ecma_make_boolean_value */
 
 /**
@@ -644,7 +634,7 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
     default:
     {
       JERRY_UNREACHABLE ();
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      return ECMA_VALUE_UNDEFINED;
     }
   }
 } /* ecma_copy_value */

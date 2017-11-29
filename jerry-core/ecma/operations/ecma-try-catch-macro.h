@@ -30,7 +30,7 @@
  *      statement with same argument as corresponding ECMA_TRY_CATCH's first argument.
  */
 #define ECMA_TRY_CATCH(var, op, return_value) \
-  JERRY_ASSERT (return_value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY)); \
+  JERRY_ASSERT (return_value == ECMA_VALUE_EMPTY); \
   ecma_value_t var ## _completion = op; \
   if (ECMA_IS_VALUE_ERROR (var ## _completion)) \
   { \
@@ -65,7 +65,7 @@
  *      statement with same argument as corresponding ECMA_OP_TO_NUMBER_TRY_CATCH's first argument.
  */
 #define ECMA_OP_TO_NUMBER_TRY_CATCH(num_var, value, return_value) \
-  JERRY_ASSERT (return_value == ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY)); \
+  JERRY_ASSERT (return_value == ECMA_VALUE_EMPTY); \
   ecma_number_t num_var = ecma_number_make_nan (); \
   if (ecma_is_value_number (value)) \
   { \

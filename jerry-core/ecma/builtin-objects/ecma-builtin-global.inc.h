@@ -24,7 +24,7 @@
 
 /* ECMA-262 v5, 15.1.1.3 */
 SIMPLE_VALUE (LIT_MAGIC_STRING_UNDEFINED,
-              ECMA_SIMPLE_VALUE_UNDEFINED,
+              ECMA_VALUE_UNDEFINED,
               ECMA_PROPERTY_FIXED)
 
 /* Number properties:

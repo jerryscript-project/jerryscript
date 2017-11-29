@@ -132,7 +132,6 @@ bool ecma_is_value_error_reference (ecma_value_t value) __attr_const___;
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
-ecma_value_t ecma_make_simple_value (const ecma_simple_value_t value) __attr_const___;
 ecma_value_t ecma_make_boolean_value (bool boolean_value) __attr_const___;
 ecma_value_t ecma_make_integer_value (ecma_integer_value_t integer_value) __attr_const___;
 ecma_value_t ecma_make_nan_value (void);

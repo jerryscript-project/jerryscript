@@ -548,7 +548,7 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
   uint8_t type_and_flags = ECMA_PROPERTY_TYPE_NAMEDDATA | prop_attributes;
 
   ecma_property_value_t value;
-  value.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  value.value = ECMA_VALUE_UNDEFINED;
 
   return ecma_create_property (object_p, name_p, type_and_flags, value, out_prop_p);
 } /* ecma_create_named_data_property */
@@ -1278,7 +1278,7 @@ ecma_make_empty_property_descriptor (void)
   ecma_property_descriptor_t prop_desc;
 
   prop_desc.is_value_defined = false;
-  prop_desc.value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  prop_desc.value = ECMA_VALUE_UNDEFINED;
   prop_desc.is_writable_defined = false;
   prop_desc.is_writable = false;
   prop_desc.is_enumerable_defined = false;

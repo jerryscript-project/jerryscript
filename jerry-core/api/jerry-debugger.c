@@ -175,7 +175,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         }
       }
 
-      jerry_debugger_sleep ();
+      jerry_port_sleep_ms (JERRY_DEBUGGER_TIMEOUT);
     }
 
     JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE)

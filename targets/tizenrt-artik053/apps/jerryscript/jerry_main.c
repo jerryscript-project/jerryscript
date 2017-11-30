@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <tinyara/fs/fs_utils.h>
+#include <unistd.h>
 
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
@@ -522,6 +523,15 @@ jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
 
   return true;
 } /* jerry_port_get_time_zone */
+
+/**
+ * Delay for the specified number of milliseconds.
+ */
+void
+jerry_port_sleep_ms (uint32_t msecs)
+{
+  usleep (msecs * 1000);
+} /* jerry_port_sleep_ms */
 
 /**
  * Dummy function to get the current time.

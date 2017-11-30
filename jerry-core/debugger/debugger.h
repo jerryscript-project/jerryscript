@@ -338,8 +338,6 @@ typedef struct
 
 void jerry_debugger_free_unreferenced_byte_code (void);
 
-void jerry_debugger_sleep (void);
-
 bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
                                      bool *resume_exec_p, uint8_t *expected_message_p,
                                      jerry_debugger_uint8_data_t **message_data_p);

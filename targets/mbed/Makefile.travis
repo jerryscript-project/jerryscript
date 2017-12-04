@@ -27,6 +27,8 @@ install-apt-get-deps:
 
 # Install yotta
 install-yotta:
+	pyenv global 2.7.13 # force the python version to a newer one
+	pip install --user "pyOpenSSL<17.5" # fix for failures with pyOpenSSL 17.5
 	pip install --user yotta
 
 # Perform all the necessary (JerryScript-independent) installation steps.

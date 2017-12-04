@@ -165,6 +165,8 @@ jerryx_arg_boolean (bool *dest, jerryx_arg_coerce_t coerce_flag, jerryx_arg_opti
 static inline jerryx_arg_t
 jerryx_arg_string (char *dest, uint32_t size, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
+jerryx_arg_utf8_string (char *dest, uint32_t size, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
+static inline jerryx_arg_t
 jerryx_arg_function (jerry_value_t *dest, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
 jerryx_arg_native_pointer (void **dest, const jerry_object_native_info_t *info_p, jerryx_arg_optional_t opt_flag);

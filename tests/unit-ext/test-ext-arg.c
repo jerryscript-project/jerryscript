@@ -563,6 +563,31 @@ test_validator_array2_handler (const jerry_value_t func_obj_val __attribute__((u
   return jerry_create_undefined ();
 } /* test_validator_array2_handler */
 
+static void
+test_utf8_string (void)
+{
+  /* test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
+  jerry_value_t str = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
+  char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
+  size_t buf_len = strlen (expect_utf8_buf);
+  char buf[buf_len+1];
+
+  jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_utf8_string (buf, (uint32_t) buf_len + 1, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (&str,
+                                                   1,
+                                                   mapping,
+                                                   ARRAY_SIZE (mapping));
+
+  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!strcmp (buf, expect_utf8_buf));
+
+  jerry_release_value (str);
+} /* test_utf8_string */
+
 static jerry_value_t
 create_object_a_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
                          const jerry_value_t this_val, /**< this value */
@@ -619,6 +644,8 @@ int
 main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
+
+  test_utf8_string ();
 
   register_js_function ("test_validator1", test_validator1_handler);
   register_js_function ("test_validator2", test_validator2_handler);

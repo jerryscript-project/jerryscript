@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define _XOPEN_SOURCE 500 /* Required macro for sleep functions */
-
 #include "byte-code.h"
 #include "debugger.h"
 #include "ecma-builtin-helpers.h"

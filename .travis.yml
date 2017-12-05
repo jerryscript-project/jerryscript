@@ -112,6 +112,7 @@ matrix:
       install: make -f ./targets/zephyr/Makefile.travis install
       script: make -f ./targets/zephyr/Makefile.travis script
   allow_failures:
+    - env: JOBNAME="Mbed/K64F Build Test"
     - env: OPTS="--check-pylint"
   fast_finish: true
 

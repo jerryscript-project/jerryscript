@@ -398,11 +398,8 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   ecma_object_t *arraylike_object_p = ecma_get_object_from_value (arraylike_object_val);
 
   /* 12 */
-  ecma_string_t magic_string_length;
-  ecma_init_ecma_length_string (&magic_string_length);
-
   ECMA_TRY_CATCH (len_value,
-                  ecma_op_object_get (arraylike_object_p, &magic_string_length),
+                  ecma_op_object_get_by_magic_id (arraylike_object_p, LIT_MAGIC_STRING_LENGTH),
                   ret_value);
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);

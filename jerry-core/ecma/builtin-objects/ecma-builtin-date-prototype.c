@@ -151,12 +151,11 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
 
   if (ecma_is_value_empty (ret_value))
   {
-    ecma_string_t *to_iso_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_TO_ISO_STRING_UL);
     ecma_object_t *value_obj_p = ecma_get_object_from_value (obj);
 
     /* 4. */
     ECMA_TRY_CATCH (to_iso,
-                    ecma_op_object_get (value_obj_p, to_iso_str_p),
+                    ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_ISO_STRING_UL),
                     ret_value);
 
     /* 5. */
@@ -172,8 +171,6 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
     }
 
     ECMA_FINALIZE (to_iso);
-
-    ecma_deref_ecma_string (to_iso_str_p);
   }
 
   ECMA_FINALIZE (tv);

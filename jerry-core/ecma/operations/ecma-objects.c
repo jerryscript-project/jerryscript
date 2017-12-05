@@ -666,7 +666,12 @@ ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_own_data_prop */
 
 /**
- * [[Get]] ecma object's operation
+ * [[Get]] operation of ecma object
+ *
+ * This function returns the value of a named property, or undefined
+ * if the property is not found in the prototype chain. If the property
+ * is an accessor, it calls the "get" callback function and returns
+ * with its result (including error throws).
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
@@ -702,6 +707,52 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
 
   return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
 } /* ecma_op_object_get */
+
+/**
+ * [[Get]] operation of ecma object where the property name is a magic string
+ *
+ * This function returns the value of a named property, or undefined
+ * if the property is not found in the prototype chain. If the property
+ * is an accessor, it calls the "get" callback function and returns
+ * with its result (including error throws).
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
+                                lit_magic_string_id_t property_id) /**< property magic string id */
+{
+  /* Circular reference is possible in JavaScript and testing it is complicated. */
+  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
+
+  ecma_string_t property_name;
+  ecma_init_ecma_magic_string (&property_name, property_id);
+
+  ecma_value_t base_value = ecma_make_object_value (object_p);
+  do
+  {
+    ecma_value_t value = ecma_op_object_find_own (base_value, object_p, &property_name);
+
+    if (ecma_is_value_found (value))
+    {
+      return value;
+    }
+
+    if (--max_depth == 0)
+    {
+      break;
+    }
+
+    object_p = ecma_get_object_prototype (object_p);
+  }
+  while (object_p != NULL);
+
+  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+} /* ecma_op_object_get_by_magic_id */
 
 /**
  * [[Put]] ecma general object's operation

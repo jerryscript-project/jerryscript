@@ -109,11 +109,10 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
       else
       {
         ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
-        ecma_string_t *length_magic_string_p = ecma_new_ecma_length_string ();
 
         /* 4. */
         ECMA_TRY_CATCH (length_value,
-                        ecma_op_object_get (obj_p, length_magic_string_p),
+                        ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH),
                         ret_value);
 
         ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
@@ -163,7 +162,6 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
 
         ECMA_OP_TO_NUMBER_FINALIZE (length_number);
         ECMA_FINALIZE (length_value);
-        ecma_deref_ecma_string (length_magic_string_p);
       }
     }
   }

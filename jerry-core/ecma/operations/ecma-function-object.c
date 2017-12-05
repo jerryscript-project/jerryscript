@@ -274,10 +274,8 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
 
-  ecma_string_t prototype_magic_string;
-  ecma_init_ecma_magic_string (&prototype_magic_string, LIT_MAGIC_STRING_PROTOTYPE);
-
-  ecma_value_t prototype_obj_value = ecma_op_object_get (func_obj_p, &prototype_magic_string);
+  ecma_value_t prototype_obj_value = ecma_op_object_get_by_magic_id (func_obj_p,
+                                                                     LIT_MAGIC_STRING_PROTOTYPE);
 
   if (ECMA_IS_VALUE_ERROR (prototype_obj_value))
   {
@@ -558,12 +556,10 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
 
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-  ecma_string_t *prototype_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-
   /* 5. */
   ECMA_TRY_CATCH (func_obj_prototype_prop_value,
-                  ecma_op_object_get (func_obj_p,
-                                      prototype_magic_string_p),
+                  ecma_op_object_get_by_magic_id (func_obj_p,
+                                                  LIT_MAGIC_STRING_PROTOTYPE),
                   ret_value);
 
   /* 1., 2., 4. */
@@ -619,8 +615,6 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   ecma_deref_object (obj_p);
 
   ECMA_FINALIZE (func_obj_prototype_prop_value);
-
-  ecma_deref_ecma_string (prototype_magic_string_p);
 
   return ret_value;
 } /* ecma_op_function_construct_simple_or_external */

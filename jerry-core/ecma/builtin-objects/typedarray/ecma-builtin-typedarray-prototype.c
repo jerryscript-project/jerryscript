@@ -704,18 +704,21 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   ECMA_TRY_CATCH (source_obj, ecma_op_to_object (arr_val), ret_val);
 
   /* 18.~ 19. */
-  ecma_string_t length_str;
-  ecma_init_ecma_length_string (&length_str);
   ecma_object_t *source_obj_p = ecma_get_object_from_value (source_obj);
+
   ECMA_TRY_CATCH (source_length,
-                  ecma_op_object_get (source_obj_p, &length_str),
+                  ecma_op_object_get_by_magic_id (source_obj_p, LIT_MAGIC_STRING_LENGTH),
                   ret_val);
+
   ECMA_OP_TO_NUMBER_TRY_CATCH (source_length_num, source_length, ret_val);
+
   if (ecma_number_is_nan (source_length_num) || source_length_num <= 0)
   {
     source_length_num = 0;
   }
+
   uint32_t source_length_uint32 = ecma_number_to_uint32 (source_length_num);
+
   if ((ecma_number_t) source_length_uint32 != source_length_num)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid source length"));
@@ -730,17 +733,23 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   /* 21.~ 25. */
   uint32_t target_byte_index = target_offset_uint32 * element_size;
   uint32_t k = 0;
+
   while (k < source_length_uint32 && ecma_is_value_empty (ret_val))
   {
     ecma_string_t k_str;
     ecma_init_ecma_string_from_uint32 (&k_str, k);
+
     ECMA_TRY_CATCH (elem,
                     ecma_op_object_get (source_obj_p, &k_str),
                     ret_val);
+
     ECMA_OP_TO_NUMBER_TRY_CATCH (elem_num, elem, ret_val);
+
     ecma_set_typedarray_element (target_buffer_p + target_byte_index, elem_num, target_class_id);
+
     ECMA_OP_TO_NUMBER_FINALIZE (elem_num);
     ECMA_FINALIZE (elem);
+
     k++;
     target_byte_index += element_size;
   }

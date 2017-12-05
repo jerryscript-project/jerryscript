@@ -372,15 +372,6 @@ ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, /**< ecma-string */
 } /* ecma_init_ecma_magic_string */
 
 /**
- * Initialize a length ecma-string
- */
-inline void __attr_always_inline___
-ecma_init_ecma_length_string (ecma_string_t *string_desc_p) /**< ecma-string */
-{
-  ecma_init_ecma_magic_string (string_desc_p, LIT_MAGIC_STRING_LENGTH);
-} /* ecma_init_ecma_length_string */
-
-/**
  * Allocate new ecma-string and fill it with ecma-number
  *
  * @return pointer to ecma-string descriptor
@@ -483,7 +474,7 @@ ecma_string_t *
 ecma_new_ecma_length_string (void)
 {
   ecma_string_t *string_desc_p = ecma_alloc_string ();
-  ecma_init_ecma_length_string (string_desc_p);
+  ecma_init_ecma_magic_string (string_desc_p, LIT_MAGIC_STRING_LENGTH);
 
   return string_desc_p;
 } /* ecma_new_ecma_length_string */

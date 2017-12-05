@@ -214,34 +214,30 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
   for (uint32_t i = 1; i <= 2; i++)
   {
-    lit_magic_string_id_t function_name_magic_string_id;
+    lit_magic_string_id_t function_name_id;
 
     if ((i == 1 && hint == ECMA_PREFERRED_TYPE_STRING)
         || (i == 2 && hint == ECMA_PREFERRED_TYPE_NUMBER))
     {
-      function_name_magic_string_id = LIT_MAGIC_STRING_TO_STRING_UL;
+      function_name_id = LIT_MAGIC_STRING_TO_STRING_UL;
     }
     else
     {
-      function_name_magic_string_id = LIT_MAGIC_STRING_VALUE_OF_UL;
+      function_name_id = LIT_MAGIC_STRING_VALUE_OF_UL;
     }
 
-    ecma_string_t *function_name_p = ecma_get_magic_string (function_name_magic_string_id);
+    ecma_value_t function_value = ecma_op_object_get_by_magic_id (obj_p, function_name_id);
 
-    ecma_value_t function_value_get_completion = ecma_op_object_get (obj_p, function_name_p);
-
-    ecma_deref_ecma_string (function_name_p);
-
-    if (ECMA_IS_VALUE_ERROR (function_value_get_completion))
+    if (ECMA_IS_VALUE_ERROR (function_value))
     {
-      return function_value_get_completion;
+      return function_value;
     }
 
     ecma_value_t call_completion = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
 
-    if (ecma_op_is_callable (function_value_get_completion))
+    if (ecma_op_is_callable (function_value))
     {
-      ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value_get_completion);
+      ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value);
 
       call_completion = ecma_op_function_call (func_obj_p,
                                                ecma_make_object_value (obj_p),
@@ -249,7 +245,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
                                                0);
     }
 
-    ecma_free_value (function_value_get_completion);
+    ecma_free_value (function_value);
 
     if (ECMA_IS_VALUE_ERROR (call_completion)
         || (!ecma_is_value_empty (call_completion)

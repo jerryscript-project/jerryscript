@@ -1345,14 +1345,10 @@ jerry_get_array_length (const jerry_value_t value)
     return 0;
   }
 
-  jerry_length_t length = 0;
-  ecma_string_t magic_string_length;
-  ecma_init_ecma_length_string (&magic_string_length);
+  ecma_value_t len_value = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (array),
+                                                           LIT_MAGIC_STRING_LENGTH);
 
-  ecma_value_t len_value = ecma_op_object_get (ecma_get_object_from_value (array),
-                                               &magic_string_length);
-
-  length = ecma_number_to_uint32 (ecma_get_number_from_value (len_value));
+  jerry_length_t length = ecma_number_to_uint32 (ecma_get_number_from_value (len_value));
   ecma_free_value (len_value);
 
   return length;
@@ -2461,18 +2457,10 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_string_t str;
+  lit_magic_string_id_t prop_name = (is_resolve ? LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION
+                                                : LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
 
-  if (is_resolve)
-  {
-    ecma_init_ecma_magic_string (&str, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
-  }
-  else
-  {
-    ecma_init_ecma_magic_string (&str, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
-  }
-
-  ecma_value_t function = ecma_op_object_get (ecma_get_object_from_value (promise), &str);
+  ecma_value_t function = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (promise), prop_name);
 
   ecma_value_t ret = ecma_op_function_call (ecma_get_object_from_value (function),
                                             ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),

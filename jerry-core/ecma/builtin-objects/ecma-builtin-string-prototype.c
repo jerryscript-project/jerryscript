@@ -430,11 +430,10 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
   {
     JERRY_ASSERT (!ecma_is_value_empty (regexp_value));
     ecma_object_t *regexp_obj_p = ecma_get_object_from_value (regexp_value);
-    ecma_string_t *global_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
 
     /* 5. */
     ECMA_TRY_CATCH (global_value,
-                    ecma_op_object_get (regexp_obj_p, global_string_p),
+                    ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_GLOBAL),
                     ret_value);
 
     JERRY_ASSERT (ecma_is_value_boolean (global_value));
@@ -489,7 +488,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
         {
           /* 8.f.iii. */
           ECMA_TRY_CATCH (this_index_value,
-                          ecma_op_object_get (regexp_obj_p, last_index_string_p),
+                          ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_LASTINDEX_UL),
                           ret_value);
 
           ECMA_TRY_CATCH (this_index_number,
@@ -582,8 +581,6 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
     }
 
     ECMA_FINALIZE (global_value);
-
-    ecma_deref_ecma_string (global_string_p);
 
     ecma_free_value (regexp_value);
   }
@@ -691,11 +688,10 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
       JERRY_ASSERT (ecma_is_value_object (match_value));
 
       ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
-      ecma_string_t *index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
       ecma_string_t *zero_string_p = ecma_new_ecma_string_from_uint32 (0);
 
       ECMA_TRY_CATCH (index_value,
-                      ecma_op_object_get (match_object_p, index_string_p),
+                      ecma_op_object_get_by_magic_id (match_object_p, LIT_MAGIC_STRING_INDEX),
                       ret_value);
 
       ECMA_TRY_CATCH (result_string_value,
@@ -722,7 +718,7 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
 
       ECMA_FINALIZE (result_string_value);
       ECMA_FINALIZE (index_value);
-      ecma_deref_ecma_string (index_string_p);
+
       ecma_deref_ecma_string (zero_string_p);
     }
     else
@@ -775,11 +771,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                                                          ecma_value_t match_value) /**< returned match value */
 {
   ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_string_t *length_string_p = ecma_new_ecma_length_string ();
   ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
 
   ECMA_TRY_CATCH (match_length_value,
-                  ecma_op_object_get (match_object_p, length_string_p),
+                  ecma_op_object_get_by_magic_id (match_object_p, LIT_MAGIC_STRING_LENGTH),
                   ret_value);
 
   JERRY_ASSERT (ecma_is_value_number (match_length_value));
@@ -1049,7 +1044,6 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
   }
 
   ECMA_FINALIZE (match_length_value);
-  ecma_deref_ecma_string (length_string_p);
 
   return ret_value;
 } /* ecma_builtin_string_prototype_object_replace_get_string */
@@ -1260,10 +1254,9 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
       && ecma_object_class_is (ecma_get_object_from_value (search_value), LIT_MAGIC_STRING_REGEXP_UL))
   {
     ecma_object_t *regexp_obj_p = ecma_get_object_from_value (search_value);
-    ecma_string_t *global_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
 
     ECMA_TRY_CATCH (global_value,
-                    ecma_op_object_get (regexp_obj_p, global_string_p),
+                    ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_GLOBAL),
                     ret_value);
 
     JERRY_ASSERT (ecma_is_value_boolean (global_value));
@@ -1295,7 +1288,6 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
     }
 
     ECMA_FINALIZE (global_value);
-    ecma_deref_ecma_string (global_string_p);
   }
   else
   {
@@ -1381,10 +1373,9 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
       JERRY_ASSERT (ecma_is_value_object (match_result));
 
       ecma_object_t *match_object_p = ecma_get_object_from_value (match_result);
-      ecma_string_t *index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
 
       ECMA_TRY_CATCH (index_value,
-                      ecma_op_object_get (match_object_p, index_string_p),
+                      ecma_op_object_get_by_magic_id (match_object_p, LIT_MAGIC_STRING_INDEX),
                       ret_value);
 
       JERRY_ASSERT (ecma_is_value_number (index_value));
@@ -1392,7 +1383,6 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
       offset = ecma_get_number_from_value (index_value);
 
       ECMA_FINALIZE (index_value);
-      ecma_deref_ecma_string (index_string_p);
     }
 
     if (ecma_is_value_empty (ret_value))
@@ -1698,7 +1688,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           else
           {
             ecma_object_t *match_obj_p = ecma_get_object_from_value (match_result);
-            ecma_string_t *zero_str_p = ecma_new_ecma_string_from_number (ECMA_NUMBER_ZERO);
+            ecma_string_t *zero_str_p = ecma_new_ecma_string_from_uint32 (0);
             ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
             ecma_property_value_t *index_prop_value_p;
 
@@ -1786,10 +1776,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
 
             /* 13.c.iii.5 */
             start_pos = end_pos + match_str_length;
-            ecma_string_t *magic_length_str_p = ecma_new_ecma_length_string ();
 
             ECMA_TRY_CATCH (array_length_val,
-                            ecma_op_object_get (match_obj_p, magic_length_str_p),
+                            ecma_op_object_get_by_magic_id (match_obj_p, LIT_MAGIC_STRING_LENGTH),
                             ret_value);
 
             ECMA_OP_TO_NUMBER_TRY_CATCH (array_length_num, array_length_val, ret_value);
@@ -1842,7 +1831,6 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
 
             ECMA_OP_TO_NUMBER_FINALIZE (array_length_num);
             ECMA_FINALIZE (array_length_val);
-            ecma_deref_ecma_string (magic_length_str_p);
             ecma_deref_ecma_string (array_length_str_p);
             ecma_deref_ecma_string (substr_str_p);
           }

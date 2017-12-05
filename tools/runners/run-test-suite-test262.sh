@@ -56,9 +56,16 @@ rm -f "${PATH_TO_TEST262}/test/suite/ch15/15.9/15.9.3/S15.9.3.1_A5_T6.js"
 
 echo "Starting test262 testing for ${ENGINE}. Running test262 may take a several minutes."
 
-"${PATH_TO_TEST262}"/tools/packaging/test262.py --command "${TIMEOUT_CMD} ${TIMEOUT} ${ENGINE}" \
-                                                --tests="${PATH_TO_TEST262}" --summary \
-                                                &> "${REPORT_PATH}"
+python2 "${PATH_TO_TEST262}"/tools/packaging/test262.py --command "${TIMEOUT_CMD} ${TIMEOUT} ${ENGINE}" \
+                                                        --tests="${PATH_TO_TEST262}" --summary \
+                                                        &> "${REPORT_PATH}"
+TEST262_EXIT_CODE=$?
+if [ $TEST262_EXIT_CODE -ne 0 ]
+then
+  echo -e "\nFailed to run test2626\n"
+  echo "$0: see ${REPORT_PATH} for details about failures"
+  exit $TEST262_EXIT_CODE
+fi
 
 grep -A3 "=== Summary ===" "${REPORT_PATH}"
 

@@ -1403,17 +1403,14 @@ ecma_clear_error_reference (ecma_value_t value)
 
   JERRY_ASSERT (error_ref_p->refs > 0);
 
-  ecma_value_t referenced_value = error_ref_p->value;
-
   if (error_ref_p->refs > 1)
   {
     error_ref_p->refs--;
-  }
-  else
-  {
-    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+    return ecma_copy_value (error_ref_p->value);
   }
 
+  ecma_value_t referenced_value = error_ref_p->value;
+  jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
   return referenced_value;
 } /* ecma_clear_error_reference */
 

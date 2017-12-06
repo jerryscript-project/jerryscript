@@ -79,7 +79,7 @@ static ecma_value_t
 ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
                             ecma_length_t args_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_number_t prim_value = ecma_number_make_nan ();
 
   ECMA_TRY_CATCH (year_value, ecma_op_to_number (args[0]), ret_value);
@@ -181,7 +181,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
                          ecma_value_t arg) /**< string */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_number_t date_num = ecma_number_make_nan ();
 
   /* Date Time String fromat (ECMA-262 v5, 15.9.1.15) */
@@ -403,7 +403,7 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
                        ecma_length_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (args_number < 2)
   {
@@ -454,10 +454,10 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< argu
 {
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_TRY_CATCH (now_val,
-                  ecma_builtin_date_now (ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED)),
+                  ecma_builtin_date_now (ECMA_VALUE_UNDEFINED),
                   ret_value);
 
   ret_value = ecma_date_value_to_string (ecma_get_number_from_value (now_val));
@@ -479,7 +479,7 @@ ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);

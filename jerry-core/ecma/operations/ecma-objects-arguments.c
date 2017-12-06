@@ -358,7 +358,7 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
       }
     }
 
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    ret_value = ECMA_VALUE_TRUE;
   }
 
   return ret_value;

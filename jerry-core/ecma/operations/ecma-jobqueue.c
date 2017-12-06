@@ -168,7 +168,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   {
     /* 6. */
     handler_result = ecma_op_function_call (ecma_get_object_from_value (handler),
-                                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                            ECMA_VALUE_UNDEFINED,
                                             &(job_p->argument),
                                             1);
   }
@@ -188,7 +188,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
     JERRY_ASSERT (ecma_op_is_callable (reject));
 
     status = ecma_op_function_call (ecma_get_object_from_value (reject),
-                                    ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                    ECMA_VALUE_UNDEFINED,
                                     &handler_result,
                                     1);
     ecma_free_value (reject);
@@ -201,7 +201,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
     JERRY_ASSERT (ecma_op_is_callable (resolve));
 
     status = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                    ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                    ECMA_VALUE_UNDEFINED,
                                     &handler_result,
                                     1);
     ecma_free_value (resolve);
@@ -259,7 +259,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
     then_call_result = JERRY_CONTEXT (error_value);
 
     ret = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
-                                 ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                 ECMA_VALUE_UNDEFINED,
                                  &then_call_result,
                                  1);
 
@@ -331,7 +331,7 @@ ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to
 ecma_value_t
 ecma_process_all_enqueued_jobs (void)
 {
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t ret = ECMA_VALUE_UNDEFINED;
 
   while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
   {

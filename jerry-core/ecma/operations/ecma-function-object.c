@@ -269,7 +269,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   if (!ecma_is_value_object (value))
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ECMA_VALUE_FALSE;
   }
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
@@ -332,7 +332,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                 && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT (ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -470,7 +470,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     if (unlikely (ecma_is_value_error_reference (ret_value)))
     {
       JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value);
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR);
+      ret_value = ECMA_VALUE_ERROR;
     }
   }
   else
@@ -554,7 +554,7 @@ ecma_op_function_construct_simple_or_external (ecma_object_t *func_obj_p, /**< F
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 5. */
   ECMA_TRY_CATCH (func_obj_prototype_prop_value,
@@ -637,7 +637,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                 && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT (ecma_is_constructor (ecma_make_object_value (func_obj_p)));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -828,7 +828,7 @@ ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *objec
                                                               ECMA_PROPERTY_FLAG_WRITABLE,
                                                               &prototype_prop_p);
 
-    prototype_prop_value_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    prototype_prop_value_p->value = ECMA_VALUE_UNDEFINED;
     return prototype_prop_p;
   }
 

@@ -64,7 +64,7 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
                                                                       var_name_str_p,
                                                                       vm_is_strict_mode ())));
   }
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  return ECMA_VALUE_EMPTY;
 } /* vm_var_decl */
 
 /**
@@ -92,7 +92,7 @@ opfunc_logical_not (ecma_value_t left_value) /**< left value */
 ecma_value_t
 opfunc_typeof (ecma_value_t left_value) /**< left value */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ecma_string_t *type_str_p = NULL;
 
@@ -208,15 +208,15 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
                    ecma_value_t property, /**< property name */
                    bool is_strict) /**< strict mode */
 {
-  ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t completion_value = ECMA_VALUE_EMPTY;
 
   if (ecma_is_value_undefined (object))
   {
-    completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    completion_value = ECMA_VALUE_TRUE;
   }
   else
   {
-    completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    completion_value = ECMA_VALUE_EMPTY;
 
     ECMA_TRY_CATCH (check_coercible_ret,
                     ecma_op_check_object_coercible (object),
@@ -259,7 +259,7 @@ ecma_value_t
 vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
                   ecma_object_t *lex_env_p) /**< lexical environment */
 {
-  ecma_value_t completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t completion_value = ECMA_VALUE_EMPTY;
 
   ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, name_literal);
 
@@ -267,7 +267,7 @@ vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
 
   if (ref_base_lex_env_p == NULL)
   {
-    completion_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    completion_value = ECMA_VALUE_TRUE;
   }
   else
   {
@@ -292,7 +292,7 @@ ecma_collection_header_t *
 opfunc_for_in (ecma_value_t left_value, /**< left value */
                ecma_value_t *result_obj_p) /**< expression object */
 {
-  ecma_value_t compl_val = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t compl_val = ECMA_VALUE_EMPTY;
   ecma_collection_header_t *prop_names_p = NULL;
 
   /* 3. */

@@ -55,7 +55,7 @@
 static ecma_value_t
 ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (!ecma_op_is_callable (this_arg))
   {
@@ -83,7 +83,7 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
                                               ecma_value_t arg1, /**< first argument */
                                               ecma_value_t arg2) /**< second argument */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1. */
   if (!ecma_op_is_callable (this_arg))
@@ -195,7 +195,7 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this ar
     {
       /* Even a 'this' argument is missing. */
       return ecma_op_function_call (func_obj_p,
-                                    ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                                    ECMA_VALUE_UNDEFINED,
                                     NULL,
                                     0);
     }
@@ -223,7 +223,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
                                              const ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 2. */
   if (!ecma_op_is_callable (this_arg))
@@ -254,7 +254,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       ECMA_SET_INTERNAL_VALUE_POINTER (ext_function_p->u.bound_function.target_function,
                                        this_arg_obj_p);
 
-      ext_function_p->u.bound_function.args_len_or_this = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ext_function_p->u.bound_function.args_len_or_this = ECMA_VALUE_UNDEFINED;
 
       if (arguments_number != 0)
       {
@@ -279,7 +279,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
 
       /* NOTE: This solution provides temporary false data about the object's size
          but prevents GC from freeing it until it's not fully initialized. */
-      ext_function_p->u.bound_function.args_len_or_this = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ext_function_p->u.bound_function.args_len_or_this = ECMA_VALUE_UNDEFINED;
       ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
 
       for (ecma_length_t i = 0; i < arguments_number; i++)
@@ -317,7 +317,7 @@ ecma_builtin_function_prototype_dispatch_call (const ecma_value_t *arguments_lis
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_function_prototype_dispatch_call */
 
 /**

@@ -78,29 +78,6 @@ typedef enum
 } ecma_type_t;
 
 /**
- * Simple ecma values
- */
-typedef enum
-{
-  /**
-   * Empty value is implementation defined value, used for representing:
-   *   - empty (uninitialized) values
-   *   - immutable binding values
-   *   - special register or stack values for vm
-   */
-  ECMA_SIMPLE_VALUE_EMPTY, /**< uninitialized value */
-  ECMA_SIMPLE_VALUE_ERROR, /**< an error is currently thrown */
-  ECMA_SIMPLE_VALUE_FALSE, /**< boolean false */
-  ECMA_SIMPLE_VALUE_TRUE, /**< boolean true */
-  ECMA_SIMPLE_VALUE_UNDEFINED, /**< undefined value */
-  ECMA_SIMPLE_VALUE_NULL, /**< null value */
-  ECMA_SIMPLE_VALUE_ARRAY_HOLE, /**< array hole, used for initialization of an array literal */
-  ECMA_SIMPLE_VALUE_NOT_FOUND, /**< a special value returned by ecma_op_object_find */
-  ECMA_SIMPLE_VALUE_REGISTER_REF, /**< register reference, a special "base" value for vm */
-  ECMA_SIMPLE_VALUE__COUNT /** count of simple ecma values */
-} ecma_simple_value_t;
-
-/**
  * Description of an ecma value
  *
  * Bit-field structure: type (2) | error (1) | value (29)
@@ -151,6 +128,35 @@ typedef int32_t ecma_integer_value_t;
  */
 #define ECMA_DIRECT_SHIFT 4
 
+/* ECMA make simple value */
+#define ECMA_MAKE_VALUE(value) \
+  ((((ecma_value_t) (value)) << ECMA_DIRECT_SHIFT) | ECMA_DIRECT_TYPE_SIMPLE_VALUE)
+
+/**
+ * Simple ecma values
+ */
+enum
+{
+  /**
+   * Empty value is implementation defined value, used for representing:
+   *   - empty (uninitialized) values
+   *   - immutable binding values
+   *   - special register or stack values for vm
+   */
+  ECMA_VALUE_EMPTY = ECMA_MAKE_VALUE (0), /**< uninitialized value */
+  ECMA_VALUE_ERROR = ECMA_MAKE_VALUE (1), /**< an error is currently thrown */
+  ECMA_VALUE_FALSE = ECMA_MAKE_VALUE (2), /**< boolean false */
+  ECMA_VALUE_TRUE = ECMA_MAKE_VALUE (3), /**< boolean true */
+  ECMA_VALUE_UNDEFINED = ECMA_MAKE_VALUE (4), /**< undefined value */
+  ECMA_VALUE_NULL = ECMA_MAKE_VALUE (5), /**< null value */
+  ECMA_VALUE_ARRAY_HOLE = ECMA_MAKE_VALUE (6), /**< array hole, used for
+                                                              *   initialization of an array literal */
+  ECMA_VALUE_NOT_FOUND = ECMA_MAKE_VALUE (7), /**< a special value returned by
+                                                             *   ecma_op_object_find */
+  ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (8), /**< register reference,
+                                                                *   a special "base" value for vm */
+};
+
 /**
  * Maximum integer number for an ecma value
  */
@@ -196,7 +202,7 @@ typedef int32_t ecma_integer_value_t;
  * Checks whether the error flag is set.
  */
 #define ECMA_IS_VALUE_ERROR(value) \
-  (unlikely ((value) == ecma_make_simple_value (ECMA_SIMPLE_VALUE_ERROR)))
+  (unlikely ((value) == ECMA_VALUE_ERROR))
 
 /**
  * Representation for native external pointer

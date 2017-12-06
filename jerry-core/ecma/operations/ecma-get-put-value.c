@@ -98,7 +98,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
                 || ecma_is_value_number (base_value)
                 || ecma_is_value_string (base_value));
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_TRY_CATCH (object_base, ecma_op_to_object (base_value), ret_value);
 
@@ -106,7 +106,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
 
-  ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ret_value = ECMA_VALUE_UNDEFINED;
 
   /* Circular reference is possible in JavaScript and testing it is complicated. */
   int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
@@ -181,7 +181,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
 
       JERRY_ASSERT (ecma_is_value_boolean (completion));
 
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+      return ECMA_VALUE_EMPTY;
     }
   }
 

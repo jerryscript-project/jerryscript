@@ -64,9 +64,9 @@ ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
-  ecma_value_t pattern_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
-  ecma_value_t flags_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
+  ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
 
   if (arguments_list_len > 0)
   {

@@ -49,7 +49,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
   lit_utf8_size_t chars_num = ecma_string_get_size (code_p);
   if (chars_num == 0)
   {
-    ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    ret_value = ECMA_VALUE_UNDEFINED;
   }
   else
   {

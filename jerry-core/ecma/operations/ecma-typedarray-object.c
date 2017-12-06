@@ -379,7 +379,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
                          uint8_t element_size_shift, /**< the size shift of the element length */
                          lit_magic_string_id_t class_id) /**< class name of the typedarray */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 3 */
   JERRY_ASSERT (ecma_op_is_callable (map_fn_val) || ecma_is_value_undefined (map_fn_val));
@@ -596,7 +596,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_value_t ret = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret = ECMA_VALUE_EMPTY;
 
   if (arguments_list_len == 0)
   {
@@ -645,10 +645,10 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       /* 22.2.1.5 */
       ecma_object_t *arraybuffer_p = ecma_get_object_from_value (arguments_list_p[0]);
       ecma_value_t arg2 = ((arguments_list_len > 1) ? arguments_list_p[1]
-                                                    : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+                                                    : ECMA_VALUE_UNDEFINED);
 
       ecma_value_t arg3 = ((arguments_list_len > 2) ? arguments_list_p[2]
-                                                    : ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED));
+                                                    : ECMA_VALUE_UNDEFINED);
 
       ECMA_OP_TO_NUMBER_TRY_CATCH (num2, arg2, ret);
 
@@ -718,7 +718,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
     else
     {
       /* 22.2.1.4 */
-      ecma_value_t undef = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ecma_value_t undef = ECMA_VALUE_UNDEFINED;
       ret = ecma_op_typedarray_from (arguments_list_p[0],
                                      undef,
                                      undef,
@@ -800,7 +800,7 @@ ecma_op_typedarray_get_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
 
   if (index >= array_length)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+    return ECMA_VALUE_UNDEFINED;
   }
 
   ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
@@ -878,7 +878,7 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
     return false;
   }
 
-  ecma_value_t error = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t error = ECMA_VALUE_EMPTY;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (value_num, value, error);
 

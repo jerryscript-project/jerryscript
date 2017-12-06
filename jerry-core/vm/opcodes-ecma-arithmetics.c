@@ -45,7 +45,7 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /**< right value */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
@@ -127,7 +127,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
     }
   }
 
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (ecma_is_value_string (left_value)
       || ecma_is_value_string (right_value))
@@ -181,7 +181,7 @@ ecma_value_t
 opfunc_unary_operation (ecma_value_t left_value, /**< left value */
                         bool is_plus) /**< unary plus flag */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
                                left_value,

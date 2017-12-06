@@ -40,13 +40,13 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 {
   if (x == y)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
 
   if (ecma_are_values_integer_numbers (x, y))
   {
     /* Note: the (x == y) comparison captures the true case. */
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ECMA_VALUE_FALSE;
   }
 
   if (ecma_is_value_number (x))
@@ -131,7 +131,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     {
       /* 1., e. */
       /* Note: the (x == y) comparison captures the true case. */
-      return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+      return ECMA_VALUE_FALSE;
     }
 
     /* 7. */
@@ -159,7 +159,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
     /* 1., f. */
     /* Note: the (x == y) comparison captures the true case. */
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ECMA_VALUE_FALSE;
   }
 
   if (ecma_is_value_boolean (x))
@@ -178,7 +178,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     return ecma_make_boolean_value (is_equal);
   }
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+  return ECMA_VALUE_FALSE;
 } /* ecma_op_abstract_equality_compare */
 
 /**
@@ -283,7 +283,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
                                      ecma_value_t y, /**< second operand */
                                      bool left_first) /**< 'LeftFirst' flag */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1., 2. */
   ECMA_TRY_CATCH (prim_first_converted_value,
@@ -312,7 +312,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
         || ecma_number_is_nan (ny))
     {
       /* c., d. */
-      ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      ret_value = ECMA_VALUE_UNDEFINED;
     }
     else
     {

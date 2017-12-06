@@ -113,7 +113,7 @@ static ecma_value_t
 re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                    re_token_t *re_token_p) /**< [out] output token */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   re_token_p->qmin = 1;
   re_token_p->qmax = 1;
@@ -561,7 +561,7 @@ ecma_value_t
 re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
                      re_token_t *out_token_p) /**< [out] output token */
 {
-  ecma_value_t ret_value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
   {

@@ -66,7 +66,7 @@ ecma_builtin_promise_prototype_catch (ecma_value_t this_arg, /**< this argument 
                                       ecma_value_t on_rejected) /**< on_rejected function */
 {
   return ecma_promise_then (this_arg,
-                            ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED),
+                            ECMA_VALUE_UNDEFINED,
                             on_rejected);
 } /* ecma_builtin_promise_prototype_catch */
 

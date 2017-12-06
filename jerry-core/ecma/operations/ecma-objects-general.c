@@ -45,7 +45,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
   }
   else
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ECMA_VALUE_FALSE;
   }
 } /* ecma_reject */
 
@@ -157,7 +157,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   /* 2. */
   if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
 
   /* 3. */
@@ -167,7 +167,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
     ecma_delete_property (obj_p, property_ref.value_p);
 
     /* b. */
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
   else if (is_throw)
   {
@@ -177,7 +177,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   else
   {
     /* 5. */
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_FALSE);
+    return ECMA_VALUE_FALSE;
   }
 
   JERRY_UNREACHABLE ();
@@ -233,7 +233,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
       return function_value;
     }
 
-    ecma_value_t call_completion = ecma_make_simple_value (ECMA_SIMPLE_VALUE_EMPTY);
+    ecma_value_t call_completion = ECMA_VALUE_EMPTY;
 
     if (ecma_op_is_callable (function_value))
     {
@@ -383,7 +383,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                            NULL);
     }
 
-    return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    return ECMA_VALUE_TRUE;
   }
 
   /* 6. */
@@ -411,7 +411,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   {
     JERRY_ASSERT (!is_current_configurable && !ecma_is_property_writable (current_prop));
 
-    ecma_value_t result = ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+    ecma_value_t result = ECMA_VALUE_TRUE;
 
     if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
         || property_desc_p->is_writable
@@ -502,7 +502,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                                value_p->getter_setter_pair_cp);
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* JERRY_CPOINTER_32_BIT */
-      value_p->value = ecma_make_simple_value (ECMA_SIMPLE_VALUE_UNDEFINED);
+      value_p->value = ECMA_VALUE_UNDEFINED;
     }
 
     /* Update flags */
@@ -558,7 +558,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     ecma_set_property_configurable_attr (ext_property_ref.property_p, property_desc_p->is_configurable);
   }
 
-  return ecma_make_simple_value (ECMA_SIMPLE_VALUE_TRUE);
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_general_object_define_own_property */
 
 #undef ECMA_PROPERTY_TYPE_GENERIC

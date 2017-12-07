@@ -56,17 +56,17 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
   {
     case NUMBER_ARITHMETIC_SUBSTRACTION:
     {
-      result = ecma_number_substract (num_left, num_right);
+      result = num_left - num_right;
       break;
     }
     case NUMBER_ARITHMETIC_MULTIPLICATION:
     {
-      result = ecma_number_multiply (num_left, num_right);
+      result = num_left * num_right;
       break;
     }
     case NUMBER_ARITHMETIC_DIVISION:
     {
-      result = ecma_number_divide (num_left, num_right);
+      result = num_left / num_right;
       break;
     }
     case NUMBER_ARITHMETIC_REMAINDER:
@@ -150,7 +150,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
     ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
     ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
 
-    ret_value = ecma_make_number_value (ecma_number_add (num_left, num_right));
+    ret_value = ecma_make_number_value (num_left + num_right);
 
     ECMA_OP_TO_NUMBER_FINALIZE (num_right);
     ECMA_OP_TO_NUMBER_FINALIZE (num_left);
@@ -187,8 +187,7 @@ opfunc_unary_operation (ecma_value_t left_value, /**< left value */
                                left_value,
                                ret_value);
 
-  ret_value = ecma_make_number_value (is_plus ? num_var_value
-                                               : ecma_number_negate (num_var_value));
+  ret_value = ecma_make_number_value (is_plus ? num_var_value : -num_var_value);
 
   ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
 

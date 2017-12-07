@@ -1696,8 +1696,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (left_value)
               && ecma_is_value_number (right_value))
           {
-            ecma_number_t new_value = ecma_number_add (ecma_get_float_from_value (left_value),
-                                                       ecma_get_number_from_value (right_value));
+            ecma_number_t new_value = (ecma_get_float_from_value (left_value) +
+                                       ecma_get_number_from_value (right_value));
 
             result = ecma_update_float_number (left_value, new_value);
             left_value = ECMA_VALUE_UNDEFINED;
@@ -1707,8 +1707,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (right_value)
               && ecma_is_value_integer_number (left_value))
           {
-            ecma_number_t new_value = ecma_number_add ((ecma_number_t) ecma_get_integer_from_value (left_value),
-                                                       ecma_get_float_from_value (right_value));
+            ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) +
+                                       ecma_get_float_from_value (right_value));
 
             result = ecma_update_float_number (right_value, new_value);
             right_value = ECMA_VALUE_UNDEFINED;
@@ -1743,8 +1743,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (left_value)
               && ecma_is_value_number (right_value))
           {
-            ecma_number_t new_value = ecma_number_substract (ecma_get_float_from_value (left_value),
-                                                             ecma_get_number_from_value (right_value));
+            ecma_number_t new_value = (ecma_get_float_from_value (left_value) -
+                                       ecma_get_number_from_value (right_value));
 
             result = ecma_update_float_number (left_value, new_value);
             left_value = ECMA_VALUE_UNDEFINED;
@@ -1754,8 +1754,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (right_value)
               && ecma_is_value_integer_number (left_value))
           {
-            ecma_number_t new_value = ecma_number_substract ((ecma_number_t) ecma_get_integer_from_value (left_value),
-                                                             ecma_get_float_from_value (right_value));
+            ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) -
+                                       ecma_get_float_from_value (right_value));
 
             result = ecma_update_float_number (right_value, new_value);
             right_value = ECMA_VALUE_UNDEFINED;
@@ -1797,8 +1797,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               break;
             }
 
-            ecma_number_t multiply = ecma_number_multiply ((ecma_number_t) left_integer,
-                                                           (ecma_number_t) right_integer);
+            ecma_number_t multiply = (ecma_number_t) left_integer * (ecma_number_t) right_integer;
             result = ecma_make_number_value (multiply);
             break;
           }
@@ -1806,8 +1805,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (left_value)
               && ecma_is_value_number (right_value))
           {
-            ecma_number_t new_value = ecma_number_multiply (ecma_get_float_from_value (left_value),
-                                                            ecma_get_number_from_value (right_value));
+            ecma_number_t new_value = (ecma_get_float_from_value (left_value) *
+                                       ecma_get_number_from_value (right_value));
 
             result = ecma_update_float_number (left_value, new_value);
             left_value = ECMA_VALUE_UNDEFINED;
@@ -1817,8 +1816,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (ecma_is_value_float_number (right_value)
               && ecma_is_value_integer_number (left_value))
           {
-            ecma_number_t new_value = ecma_number_multiply ((ecma_number_t) ecma_get_integer_from_value (left_value),
-                                                            ecma_get_float_from_value (right_value));
+            ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) *
+                                       ecma_get_float_from_value (right_value));
 
             result = ecma_update_float_number (right_value, new_value);
             right_value = ECMA_VALUE_UNDEFINED;

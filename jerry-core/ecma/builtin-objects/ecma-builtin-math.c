@@ -295,7 +295,7 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
         else if (ecma_number_is_negative (x)
                  && x >= -ECMA_NUMBER_HALF)
         {
-          x = ecma_number_negate (ECMA_NUMBER_ZERO);
+          x = -ECMA_NUMBER_ZERO;
         }
         else
         {

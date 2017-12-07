@@ -1988,7 +1988,7 @@ ecma_get_string_magic (const ecma_string_t *string_p) /**< ecma-string */
  *
  * @return calculated hash
  */
-lit_string_hash_t
+inline lit_string_hash_t __attr_always_inline___
 ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate hash for */
 {
   return (string_p->hash);

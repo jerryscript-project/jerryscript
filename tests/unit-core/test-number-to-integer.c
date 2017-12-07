@@ -43,7 +43,6 @@ main (void)
 #define TEST_CASE(num, uint32) { num, uint32 }
     TEST_CASE (1.0, 1),
     TEST_CASE (0.0, 0),
-    TEST_CASE (ecma_number_negate (0.0), 0),
     TEST_CASE (NAN, 0),
     TEST_CASE (-NAN, 0),
     TEST_CASE (INFINITY, 0),
@@ -73,7 +72,6 @@ main (void)
 #define TEST_CASE(num, int32) { num, int32 }
     TEST_CASE (1.0, 1),
     TEST_CASE (0.0, 0),
-    TEST_CASE (ecma_number_negate (0.0), 0),
     TEST_CASE (NAN, 0),
     TEST_CASE (-NAN, 0),
     TEST_CASE (INFINITY, 0),

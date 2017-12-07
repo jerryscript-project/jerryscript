@@ -845,7 +845,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   }
 
   const bool sign = ecma_number_is_negative (num);
-  const ecma_number_t abs_num = sign ? ecma_number_negate (num) : num;
+  const ecma_number_t abs_num = sign ? -num : num;
 
   /* 2 ^ 32 */
   const uint64_t uint64_2_pow_32 = (1ull << 32);
@@ -1126,7 +1126,7 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
   {
     /* 3. */
     *dst_p++ = LIT_CHAR_MINUS;
-    num = ecma_number_negate (num);
+    num = -num;
   }
 
   if (ecma_number_is_infinity (num))

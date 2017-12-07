@@ -17,6 +17,7 @@
 from __future__ import print_function
 
 import argparse
+import collections
 import os
 import subprocess
 import sys
@@ -130,33 +131,43 @@ JERRY_BUILDOPTIONS = [
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--toolchain', action='store', default='', help='Add toolchain file')
-    parser.add_argument('--buildoptions', action='store', default='',
+    parser.add_argument('--toolchain', metavar='FILE',
+                        help='Add toolchain file')
+    parser.add_argument('--buildoptions', metavar='LIST',
                         help='Add a comma separated list of extra build options to each test')
-    parser.add_argument('--skip-list', action='store', default='',
+    parser.add_argument('--skip-list', metavar='LIST',
                         help='Add a comma separated list of patterns of the excluded JS-tests')
-    parser.add_argument('--outdir', action='store', default=OUTPUT_DIR,
+    parser.add_argument('--outdir', metavar='DIR', default=OUTPUT_DIR,
                         help='Specify output directory (default: %(default)s)')
-    parser.add_argument('--check-signed-off', action='store_true', default=False,
-                        help='Run signed-off check')
-    parser.add_argument('--check-signed-off-tolerant', action='store_true', default=False,
-                        help='Run signed-off check in tolerant mode')
-    parser.add_argument('--check-signed-off-travis', action='store_true', default=False,
-                        help='Run signed-off check in tolerant mode if on Travis CI and not checking a pull request')
-    parser.add_argument('--check-cppcheck', action='store_true', default=False, help='Run cppcheck')
-    parser.add_argument('--check-doxygen', action='store_true', default=False, help='Run doxygen')
-    parser.add_argument('--check-pylint', action='store_true', default=False, help='Run pylint')
-    parser.add_argument('--check-vera', action='store_true', default=False, help='Run vera check')
-    parser.add_argument('--check-license', action='store_true', default=False, help='Run license check')
-    parser.add_argument('--check-magic-strings', action='store_true', default=False,
+    parser.add_argument('--check-signed-off', metavar='TYPE', nargs='?',
+                        choices=['strict', 'tolerant', 'travis'], const='strict',
+                        help='Run signed-off check (%(choices)s; default type if not given: %(const)s)')
+    parser.add_argument('--check-cppcheck', action='store_true',
+                        help='Run cppcheck')
+    parser.add_argument('--check-doxygen', action='store_true',
+                        help='Run doxygen')
+    parser.add_argument('--check-pylint', action='store_true',
+                        help='Run pylint')
+    parser.add_argument('--check-vera', action='store_true',
+                        help='Run vera check')
+    parser.add_argument('--check-license', action='store_true',
+                        help='Run license check')
+    parser.add_argument('--check-magic-strings', action='store_true',
                         help='Run "magic string source code generator should be executed" check')
-    parser.add_argument('--buildoption-test', action='store_true', default=False, help='Run buildoption-test')
-    parser.add_argument('--jerry-debugger', action='store_true', default=False, help='Run jerry-debugger tests')
-    parser.add_argument('--jerry-tests', action='store_true', default=False, help='Run jerry-tests')
-    parser.add_argument('--jerry-test-suite', action='store_true', default=False, help='Run jerry-test-suite')
-    parser.add_argument('--unittests', action='store_true', default=False, help='Run unittests (including doctests)')
-    parser.add_argument('--precommit', action='store_true', default=False, dest='all', help='Run all test')
-    parser.add_argument('--test262', action='store_true', default=False, help='Run test262')
+    parser.add_argument('--jerry-debugger', action='store_true',
+                        help='Run jerry-debugger tests')
+    parser.add_argument('--jerry-tests', action='store_true',
+                        help='Run jerry-tests')
+    parser.add_argument('--jerry-test-suite', action='store_true',
+                        help='Run jerry-test-suite')
+    parser.add_argument('--test262', action='store_true',
+                        help='Run test262')
+    parser.add_argument('--unittests', action='store_true',
+                        help='Run unittests (including doctests)')
+    parser.add_argument('--buildoption-test', action='store_true',
+                        help='Run buildoption-test')
+    parser.add_argument('--all', '--precommit', action='store_true',
+                        help='Run all tests')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -332,55 +343,30 @@ def run_buildoption_test(options):
     return ret
 
 def main(options):
-    ret = 0
+    Check = collections.namedtuple('Check', ['enabled', 'runner', 'arg'])
 
-    if options.check_signed_off_tolerant:
-        ret = run_check([settings.SIGNED_OFF_SCRIPT, '--tolerant'])
+    checks = [
+        Check(options.check_signed_off, run_check, [settings.SIGNED_OFF_SCRIPT]
+              + {'tolerant': ['--tolerant'], 'travis': ['--travis']}.get(options.check_signed_off, [])),
+        Check(options.check_cppcheck, run_check, [settings.CPPCHECK_SCRIPT]),
+        Check(options.check_doxygen, run_check, [settings.DOXYGEN_SCRIPT]),
+        Check(options.check_pylint, run_check, [settings.PYLINT_SCRIPT]),
+        Check(options.check_vera, run_check, [settings.VERA_SCRIPT]),
+        Check(options.check_license, run_check, [settings.LICENSE_SCRIPT]),
+        Check(options.check_magic_strings, run_check, [settings.MAGIC_STRINGS_SCRIPT]),
+        Check(options.jerry_debugger, run_jerry_debugger_tests, options),
+        Check(options.jerry_tests, run_jerry_tests, options),
+        Check(options.jerry_test_suite, run_jerry_test_suite, options),
+        Check(options.test262, run_test262_test_suite, options),
+        Check(options.unittests, run_unittests, options),
+        Check(options.buildoption_test, run_buildoption_test, options),
+    ]
 
-    if not ret and options.check_signed_off_travis:
-        ret = run_check([settings.SIGNED_OFF_SCRIPT, '--travis'])
-
-    if not ret and (options.all or options.check_signed_off):
-        ret = run_check([settings.SIGNED_OFF_SCRIPT])
-
-    if not ret and (options.all or options.check_cppcheck):
-        ret = run_check([settings.CPPCHECK_SCRIPT])
-
-    if not ret and (options.all or options.check_doxygen):
-        ret = run_check([settings.DOXYGEN_SCRIPT])
-
-    if not ret and (options.all or options.check_pylint):
-        ret = run_check([settings.PYLINT_SCRIPT])
-
-    if not ret and (options.all or options.check_vera):
-        ret = run_check([settings.VERA_SCRIPT])
-
-    if not ret and (options.all or options.check_license):
-        ret = run_check([settings.LICENSE_SCRIPT])
-
-    if not ret and (options.all or options.check_magic_strings):
-        ret = run_check([settings.MAGIC_STRINGS_SCRIPT])
-
-    if not ret and (options.all or options.jerry_debugger):
-        ret = run_jerry_debugger_tests(options)
-
-    if not ret and (options.all or options.jerry_tests):
-        ret = run_jerry_tests(options)
-
-    if not ret and (options.all or options.jerry_test_suite):
-        ret = run_jerry_test_suite(options)
-
-    if not ret and (options.all or options.test262):
-        ret = run_test262_test_suite(options)
-
-    if not ret and (options.all or options.unittests):
-        ret = run_unittests(options)
-
-    if not ret and (options.all or options.buildoption_test):
-        ret = run_buildoption_test(options)
-
-    sys.exit(ret)
-
+    for check in checks:
+        if check.enabled or options.all:
+            ret = check.runner(check.arg)
+            if ret:
+                sys.exit(ret)
 
 if __name__ == "__main__":
     main(get_arguments())

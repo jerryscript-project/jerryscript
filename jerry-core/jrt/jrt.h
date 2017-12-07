@@ -16,6 +16,9 @@
 #ifndef JRT_H
 #define JRT_H
 
+/* Required macro for sleep functions (nanosleep or usleep) */
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h>
 #include <string.h>
 

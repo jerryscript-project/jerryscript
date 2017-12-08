@@ -14,6 +14,7 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"

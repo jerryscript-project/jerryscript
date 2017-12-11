@@ -18,7 +18,6 @@
 #include "jerryscript-port-default.h"
 #include "test-common.h"
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 
 const char *test_source = (
                            "var p1 = create_promise1();"
@@ -114,10 +113,36 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
+/**
+ * Checks whether global object has promise.
+ */
+static bool
+promise_is_available (void)
+{
+  jerry_value_t global_obj_val = jerry_get_global_object ();
+  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "Promise");
+
+  jerry_value_t prop_value = jerry_has_property (global_obj_val, prop_name);
+  bool has_prop = jerry_get_boolean_value (prop_value);
+
+  jerry_release_value (global_obj_val);
+  jerry_release_value (prop_name);
+  jerry_release_value (prop_value);
+
+  return has_prop;
+} /* promise_is_available */
+
 int
 main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
+
+  if (!promise_is_available ())
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
+    jerry_cleanup ();
+    return 0;
+  }
 
   register_js_function ("create_promise1", create_promise1_handler);
   register_js_function ("create_promise2", create_promise2_handler);
@@ -162,13 +187,3 @@ main (void)
 
   jerry_cleanup ();
 } /* main */
-
-#else /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
-
-int
-main (void)
-{
-  return 0;
-} /* main */
-
-#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */

@@ -26,6 +26,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "jcontext.h"
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
@@ -892,12 +893,14 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
 
   ECMA_OP_TO_NUMBER_FINALIZE (value_num);
 
-  if (ecma_is_value_empty (error))
+  if (ECMA_IS_VALUE_ERROR (error))
   {
-    return true;
+    ecma_free_value (JERRY_CONTEXT (error_value));
+    return false;
   }
 
-  return false;
+  JERRY_ASSERT (ecma_is_value_empty (error));
+  return true;
 } /* ecma_op_typedarray_set_index_prop */
 
 /**

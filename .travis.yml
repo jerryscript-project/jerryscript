@@ -113,6 +113,7 @@ matrix:
       script: make -f ./targets/zephyr/Makefile.travis script
   allow_failures:
     - env: OPTS="--check-pylint"
+    - env: JOBNAME="Mbed/K64F Build Test"
   fast_finish: true
 
 # The channel name "chat.freenode.net#jerryscript"

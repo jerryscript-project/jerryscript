@@ -151,8 +151,6 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
 
   uint32_t length = ecma_number_to_uint32 (length_number);
 
-  /* 4. Implementation-defined: set the separator to a single comma character */
-  ecma_string_t *separator_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
 
   /* 5. */
   if (length == 0)
@@ -173,21 +171,18 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
     /* 9-10. */
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
-      ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+      /* 4. Implementation-defined: set the separator to a single comma character. */
+      return_string_p = ecma_append_magic_string_to_string (return_string_p,
+                                                            LIT_MAGIC_STRING_COMMA_CHAR);
 
       ECMA_TRY_CATCH (next_string_value,
                       ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k),
                       ret_value);
 
       ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-
-      ecma_deref_ecma_string (return_string_p);
-
-      return_string_p = ecma_concat_ecma_strings (part_string_p, next_string_p);
+      return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
 
       ECMA_FINALIZE (next_string_value);
-
-      ecma_deref_ecma_string (part_string_p);
     }
 
     if (ecma_is_value_empty (ret_value))
@@ -201,8 +196,6 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
 
     ECMA_FINALIZE (first_value);
   }
-
-  ecma_deref_ecma_string (separator_string_p);
 
   ECMA_OP_TO_NUMBER_FINALIZE (length_number);
 
@@ -397,23 +390,18 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
       /* 10.a */
-      ecma_string_t *part_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+      return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
 
       /* 10.b, 10.c */
       ECMA_TRY_CATCH (next_string_value,
                       ecma_op_array_get_to_string_at_index (obj_p, k),
                       ret_value);
 
-      ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-
-      ecma_deref_ecma_string (return_string_p);
-
       /* 10.d */
-      return_string_p = ecma_concat_ecma_strings (part_string_p, next_string_p);
+      ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
+      return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
 
       ECMA_FINALIZE (next_string_value);
-
-      ecma_deref_ecma_string (part_string_p);
     }
 
     if (ecma_is_value_empty (ret_value))

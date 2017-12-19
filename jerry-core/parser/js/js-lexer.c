@@ -2035,7 +2035,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
                                           current_flags);
   ecma_deref_ecma_string (pattern_str_p);
 
-  bool is_throw = ECMA_IS_VALUE_ERROR (completion_value);
+  bool is_throw = ECMA_IS_VALUE_ERROR (completion_value) ? true : false;
 
   ecma_free_value (completion_value);
 

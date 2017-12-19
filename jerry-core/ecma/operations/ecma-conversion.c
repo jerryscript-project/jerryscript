@@ -588,7 +588,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
     if (ecma_is_value_found (enumerable_prop_value))
     {
       prop_desc.is_enumerable_defined = true;
-      prop_desc.is_enumerable = ecma_op_to_boolean (enumerable_prop_value);
+      prop_desc.is_enumerable = ECMA_BOOL_TO_BITFIELD (ecma_op_to_boolean (enumerable_prop_value));
     }
 
     ECMA_FINALIZE (enumerable_prop_value);
@@ -609,7 +609,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       if (ecma_is_value_found (configurable_prop_value))
       {
         prop_desc.is_configurable_defined = true;
-        prop_desc.is_configurable = ecma_op_to_boolean (configurable_prop_value);
+        prop_desc.is_configurable = ECMA_BOOL_TO_BITFIELD (ecma_op_to_boolean (configurable_prop_value));
       }
 
       ECMA_FINALIZE (configurable_prop_value);
@@ -653,7 +653,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       if (ecma_is_value_found (writable_prop_value))
       {
         prop_desc.is_writable_defined = true;
-        prop_desc.is_writable = ecma_op_to_boolean (writable_prop_value);
+        prop_desc.is_writable = ECMA_BOOL_TO_BITFIELD (ecma_op_to_boolean (writable_prop_value));
       }
 
       ECMA_FINALIZE (writable_prop_value);

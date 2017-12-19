@@ -110,6 +110,11 @@
     jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
   }
 
+/**
+ * Convert boolean to bitfield value.
+ */
+#define ECMA_BOOL_TO_BITFIELD(x) ((x) ? 1 : 0)
+
 /* ecma-helpers-value.c */
 bool ecma_is_value_direct (ecma_value_t value) __attr_const___;
 bool ecma_is_value_simple (ecma_value_t value) __attr_const___;

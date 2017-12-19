@@ -671,13 +671,13 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
   prop_desc.value = value;
 
   prop_desc.is_writable_defined = true;
-  prop_desc.is_writable = writable;
+  prop_desc.is_writable = ECMA_BOOL_TO_BITFIELD (writable);
 
   prop_desc.is_enumerable_defined = true;
-  prop_desc.is_enumerable = enumerable;
+  prop_desc.is_enumerable = ECMA_BOOL_TO_BITFIELD (enumerable);
 
   prop_desc.is_configurable_defined = true;
-  prop_desc.is_configurable = configurable;
+  prop_desc.is_configurable = ECMA_BOOL_TO_BITFIELD (configurable);
 
   return ecma_op_object_define_own_property (obj_p,
                                              index_p,

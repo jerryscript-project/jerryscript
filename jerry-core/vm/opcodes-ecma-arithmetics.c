@@ -132,18 +132,29 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
   if (ecma_is_value_string (left_value)
       || ecma_is_value_string (right_value))
   {
-    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value), ret_value);
-    ECMA_TRY_CATCH (str_right_value, ecma_op_to_string (right_value), ret_value);
+    ecma_value_t str_left_value = ecma_op_to_string (left_value);
+
+    if (ECMA_IS_VALUE_ERROR (str_left_value))
+    {
+      return str_left_value;
+    }
 
     ecma_string_t *string1_p = ecma_get_string_from_value (str_left_value);
+
+    ecma_value_t str_right_value = ecma_op_to_string (right_value);
+
+    if (ECMA_IS_VALUE_ERROR (str_right_value))
+    {
+      ecma_deref_ecma_string (string1_p);
+      return str_right_value;
+    }
+
     ecma_string_t *string2_p = ecma_get_string_from_value (str_right_value);
 
-    ecma_string_t *concat_str_p = ecma_concat_ecma_strings (string1_p, string2_p);
+    string1_p = ecma_concat_ecma_strings (string1_p, string2_p);
+    ret_value = ecma_make_string_value (string1_p);
 
-    ret_value = ecma_make_string_value (concat_str_p);
-
-    ECMA_FINALIZE (str_right_value);
-    ECMA_FINALIZE (str_left_value);
+    ecma_deref_ecma_string (string2_p);
   }
   else
   {

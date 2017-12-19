@@ -284,6 +284,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   if (!ecma_is_value_object (prototype_obj_value))
   {
+    ecma_free_value (prototype_obj_value);
     return ecma_raise_type_error (ECMA_ERR_MSG ("Object expected."));
   }
 

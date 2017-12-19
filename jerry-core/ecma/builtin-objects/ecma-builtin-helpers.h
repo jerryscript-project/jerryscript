@@ -147,15 +147,13 @@ bool ecma_has_object_value_in_collection (ecma_collection_header_t *collection_p
 bool ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t string_value);
 
 ecma_string_t *
-ecma_builtin_helper_json_create_hex_digit_ecma_string (uint8_t value);
-ecma_string_t *
 ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *partial_p, ecma_string_t *separator_p);
 ecma_value_t
-ecma_builtin_helper_json_create_formatted_json (ecma_string_t *left_bracket_p, ecma_string_t *right_bracket_p,
+ecma_builtin_helper_json_create_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
                                                 ecma_string_t *stepback_p, ecma_collection_header_t *partial_p,
                                                 ecma_json_stringify_context_t *context_p);
 ecma_value_t
-ecma_builtin_helper_json_create_non_formatted_json (ecma_string_t *left_bracket_p, ecma_string_t *right_bracket_p,
+ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
                                                     ecma_collection_header_t *partial_p);
 
 /* ecma-builtin-helper-error.c */

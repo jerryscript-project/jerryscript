@@ -1156,10 +1156,7 @@ static ecma_value_t
 ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quoted*/
 {
   /* 1. */
-  ecma_string_t *quote_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
-  ecma_ref_ecma_string (quote_str_p);
-  ecma_string_t *product_str_p = quote_str_p;
-  ecma_string_t *tmp_str_p;
+  ecma_string_t *product_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
 
   ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);
 
@@ -1170,42 +1167,16 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
   {
     ecma_char_t current_char = lit_utf8_read_next (&str_p);
 
-    /* 2.a */
-    if (current_char == LIT_CHAR_BACKSLASH || current_char == LIT_CHAR_DOUBLE_QUOTE)
+    /* 2.a, b */
+    if (current_char == LIT_CHAR_BACKSLASH
+        || current_char == LIT_CHAR_DOUBLE_QUOTE
+        || current_char == LIT_CHAR_BS
+        || current_char == LIT_CHAR_FF
+        || current_char == LIT_CHAR_LF
+        || current_char == LIT_CHAR_CR
+        || current_char == LIT_CHAR_TAB)
     {
-      ecma_string_t *backslash_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BACKSLASH_CHAR);
-
-      /* 2.a.i */
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, backslash_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (backslash_str_p);
-      product_str_p = tmp_str_p;
-
-      /* 2.a.ii */
-      ecma_string_t *current_char_str_p = ecma_new_ecma_string_from_code_unit (current_char);
-
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, current_char_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (current_char_str_p);
-      product_str_p = tmp_str_p;
-    }
-    /* 2.b */
-    else if (current_char == LIT_CHAR_BS
-             || current_char == LIT_CHAR_FF
-             || current_char == LIT_CHAR_LF
-             || current_char == LIT_CHAR_CR
-             || current_char == LIT_CHAR_TAB)
-    {
-      ecma_string_t *backslash_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BACKSLASH_CHAR);
-
-      /* 2.b.i */
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, backslash_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (backslash_str_p);
-      product_str_p = tmp_str_p;
-
-      /* 2.b.ii */
-      lit_utf8_byte_t abbrev = LIT_CHAR_SP;
+      lit_utf8_byte_t abbrev = (lit_utf8_byte_t) current_char;
 
       switch (current_char)
       {
@@ -1234,64 +1205,54 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
           abbrev = LIT_CHAR_LOWERCASE_T;
           break;
         }
+        default:
+        {
+          JERRY_ASSERT (current_char == LIT_CHAR_BACKSLASH || current_char == LIT_CHAR_DOUBLE_QUOTE);
+          break;
+        }
       }
 
-      /* 2.b.iii */
-      ecma_string_t *abbrev_str_p = ecma_new_ecma_string_from_utf8 (&abbrev, 1);
+      lit_utf8_byte_t chars[2] = { LIT_CHAR_BACKSLASH, abbrev };
 
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, abbrev_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (abbrev_str_p);
-      product_str_p = tmp_str_p;
+      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 2, 2);
     }
     /* 2.c */
     else if (current_char < LIT_CHAR_SP)
     {
-      ecma_string_t *backslash_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BACKSLASH_CHAR);
+      lit_utf8_byte_t chars[6] = { LIT_CHAR_BACKSLASH, LIT_CHAR_LOWERCASE_U, LIT_CHAR_0, LIT_CHAR_0 };
 
-      /* 2.c.i */
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, backslash_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (backslash_str_p);
-      product_str_p = tmp_str_p;
+      JERRY_ASSERT (current_char < 0x9f);
 
-      /* 2.c.ii */
-      lit_utf8_byte_t u_ch = LIT_CHAR_LOWERCASE_U;
-      ecma_string_t *u_ch_str_p = ecma_new_ecma_string_from_utf8 (&u_ch, 1);
+      chars[4] = (lit_utf8_byte_t) (LIT_CHAR_0 + (current_char >> 4));
 
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, u_ch_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (u_ch_str_p);
-      product_str_p = tmp_str_p;
+      int last_char = current_char & 0xf;
+      last_char += (last_char <= 9) ? LIT_CHAR_0 : (LIT_CHAR_LOWERCASE_A - 10);
 
-      /* 2.c.iii */
-      ecma_string_t *hex_str_p = ecma_builtin_helper_json_create_hex_digit_ecma_string ((uint8_t) current_char);
+      chars[5] = (lit_utf8_byte_t) last_char;
 
-      /* 2.c.iv */
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, hex_str_p);
-      ecma_deref_ecma_string (product_str_p);
-      ecma_deref_ecma_string (hex_str_p);
-      product_str_p = tmp_str_p;
+      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 6, 6);
     }
     /* 2.d */
+    else if (current_char < LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      /* Fast case for ascii characters. */
+      lit_utf8_byte_t chars[1] = { (lit_utf8_byte_t) current_char };
+
+      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 1, 1);
+    }
     else
     {
       ecma_string_t *current_char_str_p = ecma_new_ecma_string_from_code_unit (current_char);
 
-      tmp_str_p = ecma_concat_ecma_strings (product_str_p, current_char_str_p);
-      ecma_deref_ecma_string (product_str_p);
+      product_str_p = ecma_concat_ecma_strings (product_str_p, current_char_str_p);
       ecma_deref_ecma_string (current_char_str_p);
-      product_str_p = tmp_str_p;
     }
   }
 
   ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
 
   /* 3. */
-  tmp_str_p = ecma_concat_ecma_strings (product_str_p, quote_str_p);
-  ecma_deref_ecma_string (product_str_p);
-  ecma_deref_ecma_string (quote_str_p);
-  product_str_p = tmp_str_p;
+  product_str_p = ecma_append_magic_string_to_string (product_str_p, LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
 
   /* 4. */
   return ecma_make_string_value (product_str_p);
@@ -1515,7 +1476,8 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_string_t *stepback_p = context_p->indent_str_p;
 
   /* 4. */
-  context_p->indent_str_p = ecma_concat_ecma_strings (context_p->indent_str_p, context_p->gap_str_p);
+  ecma_ref_ecma_string (stepback_p);
+  context_p->indent_str_p = ecma_concat_ecma_strings (stepback_p, context_p->gap_str_p);
 
   ecma_collection_header_t *property_keys_p;
 
@@ -1574,9 +1536,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     /* 8.b */
     if (!ecma_is_value_undefined (str_val))
     {
-      ecma_string_t *colon_p = ecma_get_magic_string (LIT_MAGIC_STRING_COLON_CHAR);
       ecma_string_t *value_str_p = ecma_get_string_from_value (str_val);
-      ecma_string_t *tmp_str_p;
 
       /* 8.b.i */
       ecma_value_t str_comp_val = ecma_builtin_json_quote (key_p);
@@ -1585,26 +1545,16 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
       ecma_string_t *member_str_p = ecma_get_string_from_value (str_comp_val);
 
       /* 8.b.ii */
-      tmp_str_p = ecma_concat_ecma_strings (member_str_p, colon_p);
-      ecma_free_value (str_comp_val);
-      ecma_deref_ecma_string (colon_p);
-      member_str_p = tmp_str_p;
+      member_str_p = ecma_append_magic_string_to_string (member_str_p, LIT_MAGIC_STRING_COLON_CHAR);
 
       /* 8.b.iii */
       if (!ecma_string_is_empty (context_p->gap_str_p))
       {
-        ecma_string_t *space_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SPACE_CHAR);
-
-        tmp_str_p = ecma_concat_ecma_strings (member_str_p, space_str_p);
-        ecma_deref_ecma_string (member_str_p);
-        ecma_deref_ecma_string (space_str_p);
-        member_str_p = tmp_str_p;
+        member_str_p = ecma_append_magic_string_to_string (member_str_p, LIT_MAGIC_STRING_SPACE_CHAR);
       }
 
       /* 8.b.iv */
-      tmp_str_p = ecma_concat_ecma_strings (member_str_p, value_str_p);
-      ecma_deref_ecma_string (member_str_p);
-      member_str_p = tmp_str_p;
+      member_str_p = ecma_concat_ecma_strings (member_str_p, value_str_p);
 
       /* 8.b.v */
       ecma_value_t member_value = ecma_make_string_value (member_str_p);
@@ -1630,14 +1580,10 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   /* 9. */
   if (partial_p->unit_number == 0)
   {
-    ecma_string_t *left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
-    ecma_string_t *right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
+    lit_utf8_byte_t chars[2] = { LIT_CHAR_LEFT_BRACE, LIT_CHAR_RIGHT_BRACE };
 
-    ecma_string_t *final_str_p = ecma_concat_ecma_strings (left_brace_str_p, right_brace_str_p);
+    ecma_string_t *final_str_p = ecma_new_ecma_string_from_utf8 (chars, 2);
     ret_value = ecma_make_string_value (final_str_p);
-
-    ecma_deref_ecma_string (left_brace_str_p);
-    ecma_deref_ecma_string (right_brace_str_p);
   }
   /* 10. */
   else
@@ -1645,30 +1591,18 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     /* 10.a */
     if (ecma_string_is_empty (context_p->gap_str_p))
     {
-      ecma_string_t *left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
-      ecma_string_t *right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
-
-      ret_value = ecma_builtin_helper_json_create_non_formatted_json (left_brace_str_p,
-                                                                      right_brace_str_p,
+      ret_value = ecma_builtin_helper_json_create_non_formatted_json (LIT_CHAR_LEFT_BRACE,
+                                                                      LIT_CHAR_RIGHT_BRACE,
                                                                       partial_p);
-
-      ecma_deref_ecma_string (left_brace_str_p);
-      ecma_deref_ecma_string (right_brace_str_p);
     }
     /* 10.b */
     else
     {
-      ecma_string_t *left_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_BRACE_CHAR);
-      ecma_string_t *right_brace_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_BRACE_CHAR);
-
-      ret_value = ecma_builtin_helper_json_create_formatted_json (left_brace_str_p,
-                                                                  right_brace_str_p,
+      ret_value = ecma_builtin_helper_json_create_formatted_json (LIT_CHAR_LEFT_BRACE,
+                                                                  LIT_CHAR_RIGHT_BRACE,
                                                                   stepback_p,
                                                                   partial_p,
                                                                   context_p);
-
-      ecma_deref_ecma_string (left_brace_str_p);
-      ecma_deref_ecma_string (right_brace_str_p);
     }
   }
 
@@ -1715,7 +1649,8 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ecma_string_t *stepback_p = context_p->indent_str_p;
 
   /* 4. */
-  context_p->indent_str_p = ecma_concat_ecma_strings (context_p->indent_str_p, context_p->gap_str_p);
+  ecma_ref_ecma_string (stepback_p);
+  context_p->indent_str_p = ecma_concat_ecma_strings (stepback_p, context_p->gap_str_p);
 
   /* 5. */
   ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
@@ -1764,14 +1699,10 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
     /* 9. */
     if (partial_p->unit_number == 0)
     {
-      ecma_string_t *left_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
-      ecma_string_t *right_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
+      lit_utf8_byte_t chars[2] = { LIT_CHAR_LEFT_SQUARE, LIT_CHAR_RIGHT_SQUARE };
 
-      ecma_string_t *final_str_p = ecma_concat_ecma_strings (left_square_str_p, right_square_str_p);
+      ecma_string_t *final_str_p = ecma_new_ecma_string_from_utf8 (chars, 2);
       ret_value = ecma_make_string_value (final_str_p);
-
-      ecma_deref_ecma_string (left_square_str_p);
-      ecma_deref_ecma_string (right_square_str_p);
     }
     /* 10. */
     else
@@ -1779,30 +1710,18 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
       /* 10.a */
       if (ecma_string_is_empty (context_p->gap_str_p))
       {
-        ecma_string_t *left_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
-        ecma_string_t *right_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
-
-        ret_value = ecma_builtin_helper_json_create_non_formatted_json (left_square_str_p,
-                                                                        right_square_str_p,
+        ret_value = ecma_builtin_helper_json_create_non_formatted_json (LIT_CHAR_LEFT_SQUARE,
+                                                                        LIT_CHAR_RIGHT_SQUARE,
                                                                         partial_p);
-
-        ecma_deref_ecma_string (left_square_str_p);
-        ecma_deref_ecma_string (right_square_str_p);
       }
       /* 10.b */
       else
       {
-        ecma_string_t *left_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LEFT_SQUARE_CHAR);
-        ecma_string_t *right_square_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR);
-
-        ret_value = ecma_builtin_helper_json_create_formatted_json (left_square_str_p,
-                                                                    right_square_str_p,
+        ret_value = ecma_builtin_helper_json_create_formatted_json (LIT_CHAR_LEFT_SQUARE,
+                                                                    LIT_CHAR_RIGHT_SQUARE,
                                                                     stepback_p,
                                                                     partial_p,
                                                                     context_p);
-
-        ecma_deref_ecma_string (left_square_str_p);
-        ecma_deref_ecma_string (right_square_str_p);
       }
     }
   }

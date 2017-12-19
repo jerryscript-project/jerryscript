@@ -173,7 +173,12 @@ ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id);
 ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id);
 ecma_string_t *ecma_new_ecma_length_string (void);
+ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
+                                            const lit_utf8_byte_t *cesu8_string2_p,
+                                            lit_utf8_size_t cesu8_string2_size,
+                                            lit_utf8_size_t cesu8_string2_length);
 ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
+ecma_string_t *ecma_append_magic_string_to_string (ecma_string_t *string1_p, lit_magic_string_id_t string2_id);
 void ecma_ref_ecma_string (ecma_string_t *string_p);
 void ecma_deref_ecma_string (ecma_string_t *string_p);
 ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);

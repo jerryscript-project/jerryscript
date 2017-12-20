@@ -20,7 +20,6 @@
 #include "jerryscript.h"
 #include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
-#include "jmem.h"
 #include "setjmp.h"
 
 /**
@@ -94,7 +93,7 @@ read_file (const char *file_name, /**< source code */
 
   rewind (file);
 
-  uint8_t *buffer = jmem_heap_alloc_block_null_on_error (script_len);
+  uint8_t *buffer = (uint8_t *) malloc (script_len);
 
   if (buffer == NULL)
   {
@@ -108,7 +107,7 @@ read_file (const char *file_name, /**< source code */
   if (!bytes_read || bytes_read != script_len)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name);
-    jmem_heap_free_block ((void*) buffer, script_len);
+    free ((void*) buffer);
 
     fclose (file);
     return NULL;
@@ -482,12 +481,12 @@ int jerry_main (int argc, char *argv[])
       if (jerry_value_has_error_flag (ret_value))
       {
         print_unhandled_exception (ret_value, source_p);
-        jmem_heap_free_block ((void*) source_p, source_size);
+        free ((void*) source_p);
 
         break;
       }
 
-      jmem_heap_free_block ((void*) source_p, source_size);
+      free ((void*) source_p);
 
       jerry_release_value (ret_value);
       ret_value = jerry_create_undefined ();

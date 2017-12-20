@@ -5,20 +5,21 @@ This folder contains files to run JerryScript on
 
 ### How to build
 
-#### 1. Setting up the build environment for STM32F4-Discovery board
+#### 1. Setup the build environment for STM32F4-Discovery board
 
-Clone JerryScript and NuttX into jerry-nuttx directory
+Clone the necessary projects into a `jerry-nuttx` directory. The last tested working version of NuttX is 7.22.
 
-```
-mkdir jerry-nuttx
-cd jerry-nuttx
+```sh
+# Create a base folder for all the projects.
+mkdir jerry-nuttx && cd jerry-nuttx
+
 git clone https://github.com/jerryscript-project/jerryscript.git
-git clone https://bitbucket.org/nuttx/nuttx.git
-git clone https://bitbucket.org/nuttx/apps.git
+git clone https://bitbucket.org/nuttx/nuttx.git -b nuttx-7.22
+git clone https://bitbucket.org/nuttx/apps.git -b nuttx-7.22
 git clone https://github.com/texane/stlink.git
 ```
 
-The following directory structure is created after these commands
+The following directory structure is created after these commands:
 
 ```
 jerry-nuttx
@@ -30,66 +31,123 @@ jerry-nuttx
   + stlink
 ```
 
-#### 2. Adding JerryScript as an interpreter for NuttX
+#### 2. Build JerryScript for NuttX
 
-```
-cd apps/interpreters
-mkdir jerryscript
-cp ../../jerryscript/targets/nuttx-stm32f4/* ./jerryscript/
+Build JerryScript as a static library using the NuttX folder as sysroot. The created static libraries will be used later by NuttX.
+
+```sh
+# Assuming you are in jerry-nuttx folder.
+jerryscript/tools/build.py \
+    --clean \
+    --lto=OFF \
+    --jerry-cmdline=OFF \
+    --jerry-libc=OFF \
+    --jerry-libm=ON \
+    --all-in-one=ON \
+    --mem-heap=70 \
+    --profile=es2015-subset \
+    --compile-flag="--sysroot=${PWD}/nuttx" \
+    --toolchain=${PWD}/jerryscript/cmake/toolchain_mcu_stm32f4.cmake
 ```
 
-#### 3. Configure NuttX
+#### 3. Copy JerryScript's application files to NuttX
 
+After creating the static libs (see previous step), it is needed to move the JerryScript application files to the NuttX's interpreter path.
+
+```sh
+# Assuming you are in jerry-nuttx folder.
+mkdir -p apps/interpreters/jerryscript
+cp jerryscript/targets/nuttx-stm32f4/* apps/interpreters/jerryscript/
+
+# Or more simply:
+# ln -s jerryscript/targets/nuttx-stm32f4 apps/interpreters/jerryscript
 ```
-# assuming you are in jerry-nuttx folder
+
+#### 4. Configure NuttX
+
+NuttX requires configuration first. The configuration creates a `.config` file in the root folder of NuttX that has all the necessary options for the build.
+
+```sh
+# Assuming you are in jerry-nuttx folder.
 cd nuttx/tools
 
-# configure NuttX USB console shell
+# Configure NuttX to use USB console shell.
 ./configure.sh stm32f4discovery/usbnsh
-
-cd ..
-# might require to run "make menuconfig" twice
-make menuconfig
 ```
 
-We must set the following options:
+By default, JerryScript is not enabled, so it is needed to modify the configuration file.
 
-* Change `Build Setup -> Build Host Platform` from _Windows_ to _Linux_
-* Enable `System Type -> FPU support`
-* Enable `Application Configuration -> Interpreters -> JerryScript`
+##### 4.1 Enable JerryScript without user interaction
 
-If you get `kconfig-mconf: not found` error when you run `make menuconfig` you may have to install kconfig-frontends:
+```sh
+# Assuming you are in jerry-nuttx folder.
+sed --in-place "s/CONFIG_HOST_WINDOWS/# CONFIG_HOST_WINDOWS/g" nuttx/.config
+sed --in-place "s/CONFIG_WINDOWS_CYGWIN/# CONFIG_WINDOWS_CYGWIN/g" nuttx/.config
+sed --in-place "s/CONFIG_TOOLCHAIN_WINDOWS/# CONFIG_TOOLCHAIN_WINDOWS/g" nuttx/.config
 
+cat >> nuttx/.config << EOL
+CONFIG_HOST_LINUX=y
+CONFIG_ARCH_FPU=y
+CONFIG_JERRYSCRIPT=y
+CONFIG_JERRYSCRIPT_PRIORITY=100
+CONFIG_JERRYSCRIPT_STACKSIZE=16384
+EOL
 ```
-# assume you are in jerry-nuttx folder
-sudo apt-get install gperf flex bison libncurses-dev
-git clone https://github.com/jameswalmsley/kconfig-frontends.git
-cd kconfig-frontends
-./bootstrap
-./configure --enable-mconf
+
+##### 4.2 Enable JerryScript using kconfig-frontend
+
+`kconfig-frontend` could be useful if there are another options that should be enabled or disabled in NuttX.
+
+###### 4.2.1 Install kconfig-frontend
+
+```sh
+# Assuming you are in jerry-nuttx folder.
+git clone https://bitbucket.org/nuttx/tools.git nuttx-tools
+cd nuttx-tools/kconfig-frontends
+
+./configure \
+    --disable-nconf \
+    --disable-gconf \
+    --disable-qconf \
+    --disable-utils \
+    --disable-shared \
+    --enable-static \
+    --prefix=${PWD}/install
+
 make
 sudo make install
-sudo ldconfig
+
+# Add the install folder to PATH
+PATH=$PATH:${PWD}/install/bin
 ```
 
-#### 4. Build JerryScript for NuttX
-
+###### 4.2.2 Enable JerryScript
+```sh
+# Assuming you are in jerry-nuttx folder.
+# Might be required to run `make menuconfig` twice.
+make -C nuttx menuconfig
 ```
-# assuming you are in jerry-nuttx folder
-cd nuttx/
-make
+
+* Change `Build Setup -> Build Host Platform` to Linux
+* Enable `System Type -> FPU support`
+* Enable JerryScript `Application Configuration -> Interpreters -> JerryScript`
+
+#### 5. Build NuttX
+
+```sh
+# Assuming you are in jerry-nuttx folder.
+make -C nuttx
 ```
 
-#### 5. Flashing
+#### 6. Flash the device
 
 Connect Mini-USB for power supply and connect Micro-USB for `NSH` console.
 
-To configure `stlink` utility for flashing, follow the instructions in the official [Stlink repository](https://github.com/texane/stlink).
+```sh
+# Assuming you are in jerry-nuttx folder.
+make -C stlink release
 
-To flash,
-```
-# assuming you are in nuttx folder
-sudo ../stlink/build/Release/st-flash write nuttx.bin 0x8000000
+sudo stlink/build/Release/st-flash write nuttx/nuttx.bin 0x8000000
 ```
 
 ### Running JerryScript
@@ -97,7 +155,7 @@ sudo ../stlink/build/Release/st-flash write nuttx.bin 0x8000000
 You can use `minicom` for terminal program, or any other you may like, but set
 baud rate to `115200`.
 
-```
+```sh
 sudo minicom --device=/dev/ttyACM0 --baud=115200
 ```
 

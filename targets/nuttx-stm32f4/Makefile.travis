@@ -46,6 +46,10 @@ install: install-apt-get-deps install-kconfig install-clone-nuttx
 
 ## Targets for building NuttX with JerryScript.
 
+# Build JerryScript.
+script-build-jerryscript:
+	tools/build.py --clean --toolchain cmake/toolchain_mcu_stm32f4.cmake --profile=es2015-subset --jerry-cmdline OFF --jerry-libc OFF --lto OFF --jerry-libm ON --all-in-one ON --mem-heap 70 --compile-flag='--sysroot=../nuttx'
+
 # Link in the NuttX JerryScript target directory under the NuttX apps tree.
 script-add-jerryscript-app:
 	ln -s ../../jerryscript/targets/nuttx-stm32f4 ../apps/interpreters/jerryscript
@@ -55,7 +59,7 @@ script-configure-usbnsh:
 	cd ../nuttx/tools && PATH=$(LOCAL_INSTALL)/bin:$$PATH ./configure.sh stm32f4discovery/usbnsh
 
 # Configure and build the firmware (NuttX with JerryScript).
-script: script-add-jerryscript-app script-configure-usbnsh
+script: script-build-jerryscript script-add-jerryscript-app script-configure-usbnsh
 	echo 'CONFIG_HOST_LINUX=y' >> ../nuttx/.config
 	echo 'CONFIG_ARCH_FPU=y' >> ../nuttx/.config
 	echo 'CONFIG_JERRYSCRIPT=y'>> ../nuttx/.config

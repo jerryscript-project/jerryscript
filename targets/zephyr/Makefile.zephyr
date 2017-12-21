@@ -18,7 +18,8 @@ ifeq ($(.DEFAULT_GOAL),)
   $(warning no default goal is set)
 endif
 
-BOARD ?= arduino_101
+BOARD ?= qemu_x86
+CONF_FILE = prj.conf
 export BOARD
 
 TARGET_ZEPHYR ?= ./targets/zephyr
@@ -41,7 +42,7 @@ ifndef ZEPHYR_BASE
 $(error Missing Zephyr base, did you source zephyr-env.sh? )
 endif
 
-INTERM     = build/$(BOARD)/obj-$(BOARD)
+INTERM     = build/$(BOARD)/obj
 OUTPUT     = build/$(BOARD)/zephyr
 
 include $(OUTPUT)/Makefile.export
@@ -94,25 +95,24 @@ endif
 
 	make -C $(INTERM) $(COMPONENTS) V=1
 
-$(OUTPUT)/Makefile.export: $(OUTPUT)/include/config/auto.conf
-	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) outputexports
+$(OUTPUT)/Makefile.export: $(OUTPUT)/Makefile
+	make --no-print-directory -C $(OUTPUT) outputexports CMAKE_COMMAND=: >$@
 
-$(OUTPUT)/include/config/auto.conf:
-	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) initconfig
+$(OUTPUT)/Makefile:
+	mkdir -p $(OUTPUT) && cmake -DBOARD=$(BOARD) -DCONF_FILE=$(CONF_FILE) -B$(OUTPUT) -Htargets/zephyr/
 
 zephyr: jerry
 ifdef V
 	@echo "- ZEPHYR -------------------------------------------------------"
 endif
-	+make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG)
+	+make -C $(OUTPUT)
 	@echo "Finished"
-	@file $(OUTPUT)/zephyr.strip
-	@size $(OUTPUT)/zephyr.strip
+	@size $(OUTPUT)/zephyr/zephyr.elf
 
 jerry: $(EXTERNAL_LIB)
 	@touch $(EXTERNAL_LIB)
 
-GENERIC_TARGETS = qemu qemugdb flash debug debugserver
+GENERIC_TARGETS = run qemugdb flash debug debugserver
 KCONFIG_TARGETS = \
 	initconfig config nconfig menuconfig xconfig gconfig \
 	oldconfig silentoldconfig defconfig savedefconfig \
@@ -127,7 +127,7 @@ $(GENERIC_TARGETS) $(KCONFIG_TARGETS) $(CLEAN_TARGETS):
 ifdef V
 	@echo "- ZEPHYR -------------------------------------------------------"
 endif
-	make -f $(TARGET_ZEPHYR)/Makefile $(BUILD_CONFIG) $@
+	make -C $(OUTPUT) $@
 
 dfu-x86: all
 	@- dfu-util -a x86_app -D build/$(BOARD)/zephyr/zephyr.bin; \

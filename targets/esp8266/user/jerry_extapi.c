@@ -73,9 +73,20 @@ DELCARE_HANDLER(print) {
         printf("%s ", buffer);
         free (buffer);
       }
-      else
+      else if (jerry_value_is_number (args_p[cc]))
       {
-        printf ("(%d) ", args_p[cc]);
+        double number = jerry_get_number_value (args_p[cc]);
+        if ((int) number == number)
+        {
+          printf ("%d", (int) number);
+        }
+        else
+        {
+          char buff[50];
+          sprintf(buff, "%.10f", number);
+          printf("%s", buff);
+        }
+
       }
     }
     printf ("\r\n");

@@ -56,14 +56,8 @@ jerry_port_fatal (jerry_fatal_code_t code)
 double
 jerry_port_get_current_time (void)
 {
-  struct timeval tv;
-
-  if (gettimeofday (&tv, NULL) != 0)
-  {
-    return 0;
-  }
-
-  return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
+  uint32_t rtc_time = system_rtc_clock_cali_proc();
+  return (double) rtc_time;
 } /* jerry_port_get_current_time */
 
 /**

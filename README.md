@@ -22,11 +22,11 @@ Memory usage and Binary footprint are measured at [here](https://jerryscript-pro
 
 The following table shows the latest results on the devices:
 
-|  STM32F4-Discovery  | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/stm32f4dis.svg)](https://jerryscript-project.github.io/jerryscript-test-results/) |
+|  STM32F4-Discovery  | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/stm32f4dis.svg)](https://jerryscript-project.github.io/jerryscript-test-results/?view=stm32) |
 |        :---:        |                                             :---:                                                                                         |
-|  **Raspberry Pi 2** | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/rpi2.svg)](https://jerryscript-project.github.io/jerryscript-test-results/)       |
+|  **Raspberry Pi 2** | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/rpi2.svg)](https://jerryscript-project.github.io/jerryscript-test-results/?view=rpi2)       |
 
-IRC channel: #jerryscript on [freenode](https://freenode.net)  
+IRC channel: #jerryscript on [freenode](https://freenode.net)
 Mailing list: jerryscript-dev@groups.io, you can subscribe [here](https://groups.io/g/jerryscript-dev) and access the mailing list archive [here](https://groups.io/g/jerryscript-dev/topics).
 
 ## Quick Start

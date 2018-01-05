@@ -442,6 +442,21 @@ jerry_instance_t *jerry_create_instance (uint32_t heap_size, jerry_instance_allo
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
 
 /**
+ * Array buffer components.
+ */
+bool jerry_value_is_arraybuffer (const jerry_value_t value);
+jerry_value_t jerry_create_arraybuffer (const jerry_length_t size);
+jerry_length_t jerry_arraybuffer_write (const jerry_value_t value,
+                                        jerry_length_t offset,
+                                        const uint8_t *buf_p,
+                                        jerry_length_t buf_size);
+jerry_length_t jerry_arraybuffer_read (const jerry_value_t value,
+                                       jerry_length_t offset,
+                                       uint8_t *buf_p,
+                                       jerry_length_t buf_size);
+jerry_length_t jerry_get_arraybuffer_byte_length (const jerry_value_t value);
+
+/**
  * @}
  */
 

@@ -18,6 +18,7 @@
 #include "debugger.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -2623,6 +2624,178 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
   JERRY_UNUSED (frequency);
 #endif /* JERRY_VM_EXEC_STOP */
 } /* jerry_set_vm_exec_stop_callback */
+
+
+/**
+ * Check if the given value is an ArrayBuffer object.
+ *
+ * @return true - if it is an ArrayBuffer object
+ *         false - otherwise
+ */
+bool
+jerry_value_is_arraybuffer (const jerry_value_t value) /**< value to check if it is an ArrayBuffer */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t buffer = jerry_get_arg_value (value);
+  return ecma_is_arraybuffer (buffer);
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_value_is_arraybuffer */
+
+/**
+ * Creates an ArrayBuffer object with the given length (size).
+ *
+ * Notes:
+ *      * the length is specified in bytes.
+ *      * returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      * if the typed arrays are disabled this will return a TypeError.
+ *
+ * @return value of the constructed ArrayBuffer object
+ */
+jerry_value_t
+jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffer to create */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  return jerry_return (ecma_make_object_value (ecma_arraybuffer_new_object (size)));
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (size);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer not supported.")));
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_create_arraybuffer */
+
+/**
+ * Copy bytes into the ArrayBuffer from a buffer.
+ *
+ * Note:
+ *     * if the object passed is not an ArrayBuffer will return 0.
+ *
+ * @return number of bytes copied into the ArrayBuffer.
+ */
+jerry_length_t
+jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer */
+                         jerry_length_t offset, /**< start offset of the ArrayBuffer */
+                         const uint8_t *buf_p, /**< buffer to copy from */
+                         jerry_length_t buf_size) /**< number of bytes to copy from the buffer */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  if (!ecma_is_arraybuffer (buffer))
+  {
+    return 0;
+  }
+
+  ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
+  jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
+
+  if (offset >= length)
+  {
+    return 0;
+  }
+
+  jerry_length_t copy_count = JERRY_MIN (length - offset, buf_size);
+
+  if (copy_count > 0)
+  {
+    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+
+    memcpy ((void *) (mem_buffer_p + offset), (void *) buf_p, copy_count);
+  }
+
+  return copy_count;
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (offset);
+  JERRY_UNUSED (buf_p);
+  JERRY_UNUSED (buf_size);
+  return 0;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_arraybuffer_write */
+
+/**
+ * Copy bytes from a buffer into an ArrayBuffer.
+ *
+ * Note:
+ *     * if the object passed is not an ArrayBuffer will return 0.
+ *
+ * @return number of bytes read from the ArrayBuffer.
+ */
+jerry_length_t
+jerry_arraybuffer_read (const jerry_value_t value, /**< ArrayBuffer to read from */
+                        jerry_length_t offset, /**< start offset of the ArrayBuffer */
+                        uint8_t *buf_p, /**< destination buffer to copy to */
+                        jerry_length_t buf_size) /**< number of bytes to copy into the buffer */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  if (!ecma_is_arraybuffer (buffer))
+  {
+    return 0;
+  }
+
+  ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
+  jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
+
+  if (offset >= length)
+  {
+    return 0;
+  }
+
+  jerry_length_t copy_count = JERRY_MIN (length - offset, buf_size);
+
+  if (copy_count > 0)
+  {
+    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+
+    memcpy ((void *) buf_p, (void *) (mem_buffer_p + offset), copy_count);
+  }
+
+  return copy_count;
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (offset);
+  JERRY_UNUSED (buf_p);
+  JERRY_UNUSED (buf_size);
+  return 0;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_arraybuffer_read */
+
+/**
+ * Get the length (size) of the ArrayBuffer in bytes.
+ *
+ * Note:
+ *     This is the 'byteLength' property of an ArrayBuffer.
+ *
+ * @return the length of the ArrayBuffer in bytes.
+ */
+jerry_length_t
+jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t buffer = jerry_get_arg_value (value);
+  if (ecma_is_arraybuffer (buffer))
+  {
+    ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
+    return ecma_arraybuffer_get_length (buffer_p);
+  }
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  return 0;
+} /* jerry_get_arraybuffer_byte_length */
 
 /**
  * @}

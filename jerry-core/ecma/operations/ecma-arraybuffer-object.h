@@ -34,6 +34,10 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *, ecma_length_t);
  */
 ecma_object_t *
 ecma_arraybuffer_new_object (ecma_length_t lengh);
+ecma_object_t *
+ecma_arraybuffer_new_object_external (ecma_length_t length,
+                                      void *buffer_p,
+                                      ecma_object_native_free_callback_t free_cb);
 lit_utf8_byte_t *
 ecma_arraybuffer_get_buffer (ecma_object_t *obj_p) __attr_pure___;
 ecma_length_t

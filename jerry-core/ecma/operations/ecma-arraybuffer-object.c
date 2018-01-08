@@ -51,6 +51,7 @@ ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffe
                                                 ECMA_OBJECT_TYPE_CLASS);
   ecma_deref_object (prototype_obj_p);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.extra_info = ECMA_ARRAYBUFFER_INTERNAL_MEMORY;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_ARRAY_BUFFER_UL;
   ext_object_p->u.class_prop.u.length = length;
 
@@ -59,6 +60,38 @@ ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffe
 
   return object_p;
 } /* ecma_arraybuffer_new_object */
+
+/**
+ * Helper function: create arraybuffer object with external buffer backing.
+ *
+ * The struct of external arraybuffer object:
+ *   ecma_object_t
+ *   extend_part
+ *   arraybuffer external info part
+ *
+ * @return ecma_object_t *, pointer to the created ArrayBuffer object
+ */
+ecma_object_t *
+ecma_arraybuffer_new_object_external (ecma_length_t length, /**< length of the buffer_p to use */
+                                      void *buffer_p, /**< pointer for ArrayBuffer's buffer backing */
+                                      ecma_object_native_free_callback_t free_cb) /**< buffer free callback */
+{
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+                                                sizeof (ecma_arraybuffer_external_info),
+                                                ECMA_OBJECT_TYPE_CLASS);
+  ecma_deref_object (prototype_obj_p);
+  ecma_arraybuffer_external_info *array_object_p = (ecma_arraybuffer_external_info *) object_p;
+  array_object_p->extended_object.u.class_prop.extra_info = ECMA_ARRAYBUFFER_EXTERNAL_MEMORY;
+  array_object_p->extended_object.u.class_prop.class_id = LIT_MAGIC_STRING_ARRAY_BUFFER_UL;
+  array_object_p->extended_object.u.class_prop.u.length = length;
+
+  array_object_p->buffer_p = buffer_p;
+  array_object_p->free_cb = free_cb;
+
+  return object_p;
+} /* ecma_arraybuffer_new_object_external */
+
 
 /**
  * ArrayBuffer object creation operation.
@@ -158,7 +191,16 @@ ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayB
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  return (lit_utf8_byte_t *) (ext_object_p + 1);
+
+  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+  {
+    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
+    return (lit_utf8_byte_t *) array_p->buffer_p;
+  }
+  else
+  {
+    return (lit_utf8_byte_t *) (ext_object_p + 1);
+  }
 } /* ecma_arraybuffer_get_buffer */
 
 /**

@@ -570,11 +570,29 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case LIT_MAGIC_STRING_ARRAY_BUFFER_UL:
         {
           ecma_length_t arraybuffer_length = ext_object_p->u.class_prop.u.length;
-          size_t size = sizeof (ecma_extended_object_t) + arraybuffer_length;
+          size_t size;
+
+          if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+          {
+            size = sizeof (ecma_arraybuffer_external_info);
+
+            /* Call external free callback if any. */
+            ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
+            JERRY_ASSERT (array_p != NULL);
+
+            if (array_p->free_cb != NULL)
+            {
+              (array_p->free_cb) (array_p->buffer_p);
+            }
+          }
+          else
+          {
+            size = sizeof (ecma_extended_object_t) + arraybuffer_length;
+          }
+
           ecma_dealloc_extended_object (object_p, size);
           return;
         }
-
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
         case LIT_MAGIC_STRING_PROMISE_UL:

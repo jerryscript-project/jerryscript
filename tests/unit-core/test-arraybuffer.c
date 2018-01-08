@@ -129,7 +129,6 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
     jerry_value_t offset_val = jerry_create_number (offset);
     register_js_value ("offset", offset_val);
     jerry_release_value (offset_val);
-
   }
 
   const char *eval_arraybuffer_src_p = "var array = new Uint8Array (15); array.buffer";
@@ -145,7 +144,7 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
 
   for (uint8_t i = 0; i < 20; i++)
   {
-    buffer[i] = (uint8_t)(i * 3);
+    buffer[i] = (uint8_t) (i * 3);
   }
 
   /* Intentionally copy more than the allowed space. */
@@ -169,6 +168,14 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
   jerry_release_value (res);
   jerry_release_value (arraybuffer);
 } /* test_write_with_offset */
+
+static bool callback_called = false;
+
+static void test_free_cb (void *buffer) /**< buffer to free (if needed) */
+{
+  (void) buffer;
+  callback_called = true;
+} /* test_free_cb */
 
 int
 main (void)
@@ -259,5 +266,128 @@ main (void)
     jerry_release_value (arraybuffer);
   }
 
+  /* Test ArrayBuffer with buffer allocated externally */
+  {
+    const uint32_t buffer_size = 15;
+    const uint8_t base_value = 51;
+
+    uint8_t buffer_p[buffer_size];
+    memset (buffer_p, base_value, buffer_size);
+
+    jerry_value_t arrayb = jerry_create_arraybuffer_external (buffer_size, buffer_p, test_free_cb);
+    uint8_t new_value = 123;
+    jerry_length_t copied = jerry_arraybuffer_write (arrayb, 0, &new_value, 1);
+    TEST_ASSERT (copied == 1);
+    TEST_ASSERT (buffer_p[0] == new_value);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arrayb) == buffer_size);
+
+    for (uint32_t i = 1; i < buffer_size; i++)
+    {
+      TEST_ASSERT (buffer_p[i] == base_value);
+    }
+
+    uint8_t test_buffer[buffer_size];
+    jerry_length_t read = jerry_arraybuffer_read (arrayb, 0, test_buffer, buffer_size);
+    TEST_ASSERT (read == buffer_size);
+    TEST_ASSERT (test_buffer[0] == new_value);
+
+    for (uint32_t i = 1; i < buffer_size; i++)
+    {
+      TEST_ASSERT (test_buffer[i] == base_value);
+    }
+
+    TEST_ASSERT (jerry_value_is_arraybuffer (arrayb));
+    jerry_release_value (arrayb);
+  }
+
+  /* Test ArrayBuffer external memory map/unmap */
+  {
+    const uint32_t buffer_size = 20;
+    uint8_t buffer_p[buffer_size];
+    {
+      jerry_value_t input_buffer = jerry_create_arraybuffer_external (buffer_size, buffer_p, NULL);
+      register_js_value ("input_buffer", input_buffer);
+      jerry_release_value (input_buffer);
+    }
+
+    const char *eval_arraybuffer_src_p = (
+      "var array = new Uint8Array(input_buffer);"
+      "for (var i = 0; i < array.length; i++)"
+      "{"
+      "  array[i] = i * 2;"
+      "};"
+      "array.buffer");
+    jerry_value_t buffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
+                                        strlen (eval_arraybuffer_src_p),
+                                        true);
+
+    TEST_ASSERT (!jerry_value_has_error_flag (buffer));
+    TEST_ASSERT (jerry_value_is_arraybuffer (buffer));
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (buffer) == 20);
+
+    uint8_t *const data = jerry_get_arraybuffer_pointer (buffer);
+
+    /* test memory read */
+    for (int i = 0; i < 20; i++)
+    {
+      TEST_ASSERT (data[i] == (uint8_t) (i * 2));
+    }
+
+    /* "upload" new data */
+    double sum = 0;
+    for (int i = 0; i < 20; i++)
+    {
+      data[i] = (uint8_t)(i * 3);
+      sum += data[i];
+    }
+
+    jerry_release_value (buffer);
+
+    const char *eval_test_arraybuffer_p = (
+      "var sum = 0;"
+      "for (var i = 0; i < array.length; i++)"
+      "{"
+      "  var expected = i * 3;"
+      "  assert(array[i] == expected, 'Array at index ' + i + ' was: ' + array[i] + ' should be: ' + expected);"
+      "  sum += array[i]"
+      "};"
+      "sum");
+    jerry_value_t res = jerry_eval ((jerry_char_t *) eval_test_arraybuffer_p,
+                                    strlen (eval_test_arraybuffer_p),
+                                    true);
+    TEST_ASSERT (jerry_value_is_number (res));
+    TEST_ASSERT (jerry_get_number_value (res) == sum);
+    jerry_release_value (res);
+
+    jerry_release_value (buffer);
+  }
+
+  /* Test ArrayBuffer external with invalid arguments */
+  {
+    jerry_value_t input_buffer = jerry_create_arraybuffer_external (0, NULL, NULL);
+    TEST_ASSERT (jerry_value_has_error_flag (input_buffer));
+    jerry_value_clear_error_flag (&input_buffer);
+
+    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES))
+    {
+      jerry_char_t error_str[15];
+      jerry_char_t expected_error_str[15] = "RangeError";
+
+      jerry_char_t *name_str_p = (jerry_char_t *) "name";
+      jerry_value_t name_key = jerry_create_string (name_str_p);
+      jerry_value_t name_value = jerry_get_property (input_buffer, name_key);
+
+      jerry_size_t name_size = jerry_string_to_char_buffer (name_value, error_str, sizeof (error_str));
+      TEST_ASSERT (name_size == strlen ((char *) expected_error_str));
+      TEST_ASSERT (strncmp ((char *) error_str, (char *) expected_error_str, name_size) == 0);
+
+      jerry_release_value (name_value);
+      jerry_release_value (name_key);
+    }
+    jerry_release_value (input_buffer);
+  }
+
   jerry_cleanup ();
+
+  TEST_ASSERT (callback_called == true);
 } /* main */

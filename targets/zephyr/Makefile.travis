@@ -27,12 +27,15 @@ install-apt-get-deps:
 
 # Install Zephyr SDK.
 install-zephyr-sdk:
-	wget https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/0.9.1/zephyr-sdk-0.9.1-setup.run -O ../zephyr-sdk-0.9.1-setup.run
-	sh ../zephyr-sdk-0.9.1-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.9.1
+	wget https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/0.9.2/zephyr-sdk-0.9.2-setup.run -O ../zephyr-sdk-0.9.2-setup.run
+	sh ../zephyr-sdk-0.9.2-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.9.2
+	wget https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.sh
+	sudo sh cmake-3.8.2-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir
+	cmake --version
 
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr: install-apt-get-deps
-	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b zephyr-v1.9.1
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.10.0
 	pip3 install --user -r ../zephyr/scripts/requirements.txt
 
 # Perform all the necessary (JerryScript-independent) installation steps.
@@ -45,7 +48,6 @@ install: install-zephyr-sdk install-zephyr
 SHELL=bash
 script:
 	export ZEPHYR_GCC_VARIANT=zephyr && \
-	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.9.1 && \
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.9.2 && \
 	source ../zephyr/zephyr-env.sh && \
-	CC=$(CURDIR)/../zephyr-sdk-0.9.1/sysroots/x86_64-pokysdk-linux/usr/bin/i586-zephyr-elfiamcu/i586-zephyr-elfiamcu-gcc \
 	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101

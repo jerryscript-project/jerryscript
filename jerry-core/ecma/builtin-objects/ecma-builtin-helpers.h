@@ -123,6 +123,15 @@ ecma_value_t ecma_date_value_to_time_string (ecma_number_t datetime_number);
 /* ecma-builtin-helper-json.c */
 
 /**
+ * Occurence stack item of JSON.stringify()
+ */
+typedef struct struct_ecma_json_occurence_stack_item_t
+{
+  struct struct_ecma_json_occurence_stack_item_t *next_p; /**< next stack item */
+  ecma_object_t *object_p; /**< current object */
+} ecma_json_occurence_stack_item_t;
+
+/**
  * Context for JSON.stringify()
  */
 typedef struct
@@ -131,7 +140,7 @@ typedef struct
   ecma_collection_header_t *property_list_p;
 
   /** Collection for traversing objects. */
-  ecma_collection_header_t *occurence_stack_p;
+  ecma_json_occurence_stack_item_t *occurence_stack_last_p;
 
   /** The actual indentation text. */
   ecma_string_t *indent_str_p;
@@ -143,7 +152,7 @@ typedef struct
   ecma_object_t *replacer_function_p;
 } ecma_json_stringify_context_t;
 
-bool ecma_has_object_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t object_value);
+bool ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, ecma_object_t *object_p);
 bool ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t string_value);
 
 ecma_string_t *

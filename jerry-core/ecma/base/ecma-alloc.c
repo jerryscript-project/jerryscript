@@ -81,8 +81,6 @@ JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <=
   DEALLOC (ecma_type)
 
 DECLARE_ROUTINES_FOR (number)
-DECLARE_ROUTINES_FOR (collection_header)
-DECLARE_ROUTINES_FOR (collection_chunk)
 
 /**
  * Allocate memory for ecma-object

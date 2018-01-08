@@ -285,15 +285,14 @@ vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
  * See also:
  *          ECMA-262 v5, 12.6.4
  *
- * @return completion value
- *         Returned value must be freed with ecma_free_value
+ * @return chain list of property names
  */
-ecma_collection_header_t *
+ecma_collection_chunk_t *
 opfunc_for_in (ecma_value_t left_value, /**< left value */
                ecma_value_t *result_obj_p) /**< expression object */
 {
   ecma_value_t compl_val = ECMA_VALUE_EMPTY;
-  ecma_collection_header_t *prop_names_p = NULL;
+  ecma_collection_chunk_t *prop_names_p = NULL;
 
   /* 3. */
   if (!ecma_is_value_undefined (left_value)
@@ -305,18 +304,18 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
                     compl_val);
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-    prop_names_p = ecma_op_object_get_property_names (obj_p, false, true, true);
+    ecma_collection_header_t *prop_names_coll_p = ecma_op_object_get_property_names (obj_p, false, true, true);
 
-    if (prop_names_p->unit_number != 0)
+    if (prop_names_coll_p->item_count != 0)
     {
+      prop_names_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                       prop_names_coll_p->first_chunk_cp);
+
       ecma_ref_object (obj_p);
       *result_obj_p = ecma_make_object_value (obj_p);
     }
-    else
-    {
-      ecma_dealloc_collection_header (prop_names_p);
-      prop_names_p = NULL;
-    }
+
+    jmem_heap_free_block (prop_names_coll_p, sizeof (ecma_collection_header_t));
 
     ECMA_FINALIZE (obj_expr_value);
   }

@@ -1381,8 +1381,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
-  ecma_collection_header_t *ret_p = ecma_new_strings_collection (NULL, 0);
-  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_strings_collection (NULL, 0);
+  ecma_collection_header_t *ret_p = ecma_new_values_collection (NULL, 0, false);
+  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_values_collection (NULL, 0, false);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
@@ -1400,7 +1400,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
 
-    ecma_collection_header_t *prop_names_p = ecma_new_strings_collection (NULL, 0);
+    ecma_collection_header_t *prop_names_p = ecma_new_values_collection (NULL, 0, false);
 
     if (obj_is_builtin)
     {
@@ -1482,15 +1482,15 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, prop_names_p);
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
     uint32_t own_names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
     memset (own_names_hashes_bitmap, 0, sizeof (own_names_hashes_bitmap));
 
-    while (ecma_collection_iterator_next (&iter))
+    while (ecma_value_p != NULL)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint8_t hash = (uint8_t) name_p->hash;
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
@@ -1543,13 +1543,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
             if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
             {
-              ecma_collection_iterator_init (&iter, prop_names_p);
+              ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
-              while (ecma_collection_iterator_next (&iter))
+              while (ecma_value_p != NULL)
               {
-                ecma_string_t *name2_p = ecma_get_string_from_value (*iter.current_value_p);
+                ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+                ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
-                if (ecma_compare_ecma_strings (name_p, name2_p))
+                if (ecma_compare_ecma_strings (name_p, current_name_p))
                 {
                   is_add = false;
                   break;
@@ -1583,10 +1584,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                       prop_iter_p->next_property_cp);
     }
 
-    ecma_collection_iterator_init (&iter, prop_names_p);
-    while (ecma_collection_iterator_next (&iter))
+    ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+
+    while (ecma_value_p != NULL)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint32_t index = ecma_string_get_array_index (name_p);
 
@@ -1610,10 +1613,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     uint32_t name_pos = array_index_named_properties_count + string_named_properties_count;
     uint32_t array_index_name_pos = 0;
 
-    ecma_collection_iterator_init (&iter, prop_names_p);
-    while (ecma_collection_iterator_next (&iter))
+    ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+
+    while (ecma_value_p != NULL)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint32_t index = ecma_string_get_array_index (name_p);
 
@@ -1698,13 +1703,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       else
       {
         /* Name with same hash has already occured. */
-        ecma_collection_iterator_init (&iter, ret_p);
+        ecma_value_p = ecma_collection_iterator_init (ret_p);
 
-        while (ecma_collection_iterator_next (&iter))
+        while (ecma_value_p != NULL)
         {
-          ecma_string_t *iter_name_p = ecma_get_string_from_value (*iter.current_value_p);
+          ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+          ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
-          if (ecma_compare_ecma_strings (name_p, iter_name_p))
+          if (ecma_compare_ecma_strings (name_p, current_name_p))
           {
             is_append = false;
             break;
@@ -1714,12 +1720,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       if (is_append)
       {
-        ecma_collection_iterator_init (&iter, skipped_non_enumerable_p);
-        while (ecma_collection_iterator_next (&iter))
-        {
-          ecma_string_t *iter_name_p = ecma_get_string_from_value (*iter.current_value_p);
+        ecma_value_p = ecma_collection_iterator_init (skipped_non_enumerable_p);
 
-          if (ecma_compare_ecma_strings (name_p, iter_name_p))
+        while (ecma_value_p != NULL)
+        {
+          ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+          ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+
+          if (ecma_compare_ecma_strings (name_p, current_name_p))
           {
             is_append = false;
             break;

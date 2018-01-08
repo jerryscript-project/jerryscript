@@ -2671,6 +2671,42 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
 } /* jerry_create_arraybuffer */
 
 /**
+ * Creates an ArrayBuffer object with user specified buffer.
+ *
+ * Notes:
+ *     * the size is specified in bytes.
+ *     * the buffer passed should be at least the specified bytes big.
+ *     * if the typed arrays are disabled this will return a TypeError.
+ *     * if the size is zero or the buffer_p is a null pointer this will return a RangeError.
+ *
+ * @return value of the construced ArrayBuffer object
+ */
+jerry_value_t
+jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
+                                   uint8_t *buffer_p, /**< buffer to use as the ArrayBuffer's backing */
+                                   jerry_object_native_free_callback_t free_cb) /**< buffer free callback */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  if (size == 0 || buffer_p == NULL)
+  {
+    return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("invalid buffer size or storage reference")));
+  }
+
+  ecma_object_t *arraybuffer = ecma_arraybuffer_new_object_external (size,
+                                                                     buffer_p,
+                                                                     (ecma_object_native_free_callback_t) free_cb);
+  return jerry_return (ecma_make_object_value (arraybuffer));
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (size);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (free_cb);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer not supported.")));
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_create_arraybuffer_external */
+
+/**
  * Copy bytes into the ArrayBuffer from a buffer.
  *
  * Note:
@@ -2797,6 +2833,45 @@ jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer *
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
   return 0;
 } /* jerry_get_arraybuffer_byte_length */
+
+/**
+ * Get a pointer for the start of the ArrayBuffer.
+ *
+ * Note:
+ *    * Only valid for ArrayBuffers created with jerry_create_arraybuffer_external.
+ *    * This is a high-risk operation as the bounds are not checked
+ *      when accessing the pointer elements.
+ *    * jerry_release_value must be called on the ArrayBuffer when the pointer is no longer needed.
+ *
+ * @return pointer to the back-buffer of the ArrayBuffer.
+ *         pointer is NULL if the parameter is not an ArrayBuffer with external memory
+             or it is not an ArrayBuffer at all.
+ */
+uint8_t *
+jerry_get_arraybuffer_pointer (const jerry_value_t value) /**< Array Buffer to use */
+{
+  jerry_assert_api_available ();
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  if (!ecma_is_arraybuffer (buffer))
+  {
+    return NULL;
+  }
+
+  ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
+  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (buffer_p))
+  {
+    jerry_acquire_value (value);
+    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+    return (uint8_t *const) mem_buffer_p;
+  }
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+  return NULL;
+} /* jerry_get_arraybuffer_pointer */
 
 /**
  * @}

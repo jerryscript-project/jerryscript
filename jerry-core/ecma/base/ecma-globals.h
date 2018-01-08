@@ -712,6 +712,8 @@ typedef struct
     struct
     {
       uint16_t class_id; /**< class id of the object */
+      uint16_t extra_info; /**< extra information for the object
+                                e.g. array buffer type info (external/internal) */
 
       /*
        * Description of extra fields. These extra fields depends on the class_id.
@@ -1242,6 +1244,33 @@ typedef struct
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+
+/**
+ * Extra information for ArrayBuffers.
+ */
+typedef enum
+{
+  ECMA_ARRAYBUFFER_INTERNAL_MEMORY = 0u,        /* ArrayBuffer memory is handled internally. */
+  ECMA_ARRAYBUFFER_EXTERNAL_MEMORY = (1u << 0), /* ArrayBuffer created via jerry_create_arraybuffer_external. */
+} ecma_arraybuffer_extra_flag_t;
+
+#define ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY(object_p) \
+    ((((ecma_extended_object_t *) object_p)->u.class_prop.extra_info & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
+
+/**
+ * Struct to store information for ArrayBuffers with external memory.
+ *
+ * The following elements are stored in Jerry memory.
+ *
+ *  buffer_p - pointer to the external memory.
+ *  free_cb - pointer to a callback function which is called when the ArrayBuffer is freed.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  void *buffer_p; /**< external buffer pointer */
+  ecma_object_native_free_callback_t free_cb; /**<  the free callback for the above buffer pointer */
+} ecma_arraybuffer_external_info;
 
 /**
  * Some internal properties of TypedArray object.

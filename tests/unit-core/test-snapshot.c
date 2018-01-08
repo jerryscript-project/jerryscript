@@ -79,6 +79,28 @@ static void test_function_snapshot (void)
   jerry_cleanup ();
 } /* test_function_snapshot */
 
+static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode)
+{
+  char string_data[32];
+
+  jerry_init (JERRY_INIT_EMPTY);
+
+  jerry_value_t res = jerry_exec_snapshot (snapshot_p,
+                                           snapshot_size,
+                                           copy_bytecode);
+
+  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (jerry_value_is_string (res));
+  jerry_size_t sz = jerry_get_string_size (res);
+  TEST_ASSERT (sz == 20);
+  sz = jerry_string_to_char_buffer (res, (jerry_char_t *) string_data, sz);
+  TEST_ASSERT (sz == 20);
+  jerry_release_value (res);
+  TEST_ASSERT (!strncmp (string_data, "string from snapshot", (size_t) sz));
+
+  jerry_cleanup ();
+} /* test_exec_snapshot */
+
 int
 main (void)
 {
@@ -90,7 +112,6 @@ main (void)
   {
     static uint32_t global_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
     static uint32_t eval_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-    char string_data[32];
 
     const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
 
@@ -114,35 +135,21 @@ main (void)
     TEST_ASSERT (eval_mode_snapshot_size != 0);
     jerry_cleanup ();
 
-    jerry_init (JERRY_INIT_EMPTY);
+    test_exec_snapshot (global_mode_snapshot_buffer,
+                        global_mode_snapshot_size,
+                        false);
 
-    jerry_value_t res = jerry_exec_snapshot (global_mode_snapshot_buffer,
-                                             global_mode_snapshot_size,
-                                             false);
+    test_exec_snapshot (global_mode_snapshot_buffer,
+                        global_mode_snapshot_size,
+                        true);
 
-    TEST_ASSERT (!jerry_value_has_error_flag (res));
-    TEST_ASSERT (jerry_value_is_string (res));
-    jerry_size_t sz = jerry_get_string_size (res);
-    TEST_ASSERT (sz == 20);
-    sz = jerry_string_to_char_buffer (res, (jerry_char_t *) string_data, sz);
-    TEST_ASSERT (sz == 20);
-    jerry_release_value (res);
-    TEST_ASSERT (!strncmp (string_data, "string from snapshot", (size_t) sz));
+    test_exec_snapshot (eval_mode_snapshot_buffer,
+                        eval_mode_snapshot_size,
+                        false);
 
-    res = jerry_exec_snapshot (eval_mode_snapshot_buffer,
-                               eval_mode_snapshot_size,
-                               false);
-
-    TEST_ASSERT (!jerry_value_has_error_flag (res));
-    TEST_ASSERT (jerry_value_is_string (res));
-    sz = jerry_get_string_size (res);
-    TEST_ASSERT (sz == 20);
-    sz = jerry_string_to_char_buffer (res, (jerry_char_t *) string_data, sz);
-    TEST_ASSERT (sz == 20);
-    jerry_release_value (res);
-    TEST_ASSERT (!strncmp (string_data, "string from snapshot", (size_t) sz));
-
-    jerry_cleanup ();
+    test_exec_snapshot (eval_mode_snapshot_buffer,
+                        eval_mode_snapshot_size,
+                        true);
   }
 
   /* Merge snapshot */

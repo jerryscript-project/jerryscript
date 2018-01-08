@@ -107,7 +107,7 @@ jerryx_arg_transform_number_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
 } /* jerryx_arg_transform_number_strict */
 
 /**
- * Tranform a JS argument to a double. Type coercion is allowed.
+ * Transform a JS argument to a double. Type coercion is allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
@@ -206,7 +206,7 @@ JERRYX_ARG_TRANSFORM_FUNC_FOR_INT (int32, INT32_MIN, INT32_MAX)
 #undef JERRYX_ARG_TRANSFORM_FUNC_FOR_INT_TEMPLATE
 #undef JERRYX_ARG_TRANSFORM_FUNC_FOR_INT
 /**
- * Tranform a JS argument to a boolean. Type coercion is not allowed.
+ * Transform a JS argument to a boolean. Type coercion is not allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
@@ -230,7 +230,7 @@ jerryx_arg_transform_boolean_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /*
 } /* jerryx_arg_transform_boolean_strict */
 
 /**
- * Tranform a JS argument to a boolean. Type coercion is allowed.
+ * Transform a JS argument to a boolean. Type coercion is allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
@@ -251,21 +251,37 @@ jerryx_arg_transform_boolean (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< avai
 
 /**
  * The common routine for string transformer.
+ * It works for both CESU-8 and UTF-8 string.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
  */
 static jerry_value_t
-jerryx_arg_string_common_routine (jerry_value_t js_arg, /**< JS arg */
-                                  const jerryx_arg_t *c_arg_p) /**< native arg */
+jerryx_arg_string_to_buffer_common_routine (jerry_value_t js_arg, /**< JS arg */
+                                            const jerryx_arg_t *c_arg_p, /**< native arg */
+                                            bool is_utf8) /**< whether it is UTF-8 string */
 {
   jerry_char_t *target_p = (jerry_char_t *) c_arg_p->dest;
   jerry_size_t target_buf_size = (jerry_size_t) c_arg_p->extra_info;
-  jerry_size_t size = jerry_string_to_char_buffer (js_arg,
-                                                   target_p,
-                                                   target_buf_size);
+  jerry_size_t size;
+  jerry_length_t len;
 
-  if ((size == target_buf_size) || (size == 0 && jerry_get_string_length (js_arg) != 0))
+  if (!is_utf8)
+  {
+    size = jerry_string_to_char_buffer (js_arg,
+                                        target_p,
+                                        target_buf_size);
+    len = jerry_get_string_length (js_arg);
+  }
+  else
+  {
+    size = jerry_string_to_utf8_char_buffer (js_arg,
+                                             target_p,
+                                             target_buf_size);
+    len = jerry_get_utf8_string_length (js_arg);
+  }
+
+  if ((size == target_buf_size) || (size == 0 && len != 0))
   {
     return jerry_create_error (JERRY_ERROR_TYPE,
                                (jerry_char_t *) "Buffer size is not large enough.");
@@ -274,17 +290,18 @@ jerryx_arg_string_common_routine (jerry_value_t js_arg, /**< JS arg */
   target_p[size] = '\0';
 
   return jerry_create_undefined ();
-} /* jerryx_arg_string_common_routine */
+} /* jerryx_arg_string_to_buffer_common_routine */
 
 /**
- * Tranform a JS argument to a char array. Type coercion is not allowed.
+ * Transform a JS argument to a UTF-8/CESU-8 char array. Type coercion is not allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
  */
-jerry_value_t
-jerryx_arg_transform_string_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
-                                    const jerryx_arg_t *c_arg_p) /**< the native arg */
+static jerry_value_t
+jerryx_arg_transform_string_strict_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                           const jerryx_arg_t *c_arg_p, /**< the native arg */
+                                           bool is_utf8) /**< whether it is a UTF-8 string */
 {
   jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
 
@@ -294,18 +311,19 @@ jerryx_arg_transform_string_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
                                (jerry_char_t *) "It is not a string.");
   }
 
-  return jerryx_arg_string_common_routine (js_arg, c_arg_p);
-} /* jerryx_arg_transform_string_strict */
+  return jerryx_arg_string_to_buffer_common_routine (js_arg, c_arg_p, is_utf8);
+} /* jerryx_arg_transform_string_strict_common */
 
 /**
- * Tranform a JS argument to a char array. Type coercion is allowed.
+ * Transform a JS argument to a UTF-8/CESU-8 char array. Type coercion is allowed.
  *
  * @return jerry undefined: the transformer passes,
  *         jerry error: the transformer fails.
  */
-jerry_value_t
-jerryx_arg_transform_string (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
-                             const jerryx_arg_t *c_arg_p) /**< the native arg */
+static jerry_value_t
+jerryx_arg_transform_string_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                    const jerryx_arg_t *c_arg_p, /**< the native arg */
+                                    bool is_utf8) /**< whether it is a UTF-8 string */
 {
   jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
 
@@ -319,11 +337,75 @@ jerryx_arg_transform_string (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< avail
                                (jerry_char_t *) "It can not be converted to a string.");
   }
 
-  jerry_value_t ret = jerryx_arg_string_common_routine (to_string, c_arg_p);
+  jerry_value_t ret = jerryx_arg_string_to_buffer_common_routine (to_string, c_arg_p, is_utf8);
   jerry_release_value (to_string);
 
   return ret;
+} /* jerryx_arg_transform_string_common */
+
+/**
+ * Transform a JS argument to a cesu8 char array. Type coercion is not allowed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_string_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                    const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  return jerryx_arg_transform_string_strict_common (js_arg_iter_p, c_arg_p, false);
+} /* jerryx_arg_transform_string_strict */
+
+/**
+ * Transform a JS argument to a utf8 char array. Type coercion is not allowed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_utf8_string_strict (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                         const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  return jerryx_arg_transform_string_strict_common (js_arg_iter_p, c_arg_p, true);
+} /* jerryx_arg_transform_utf8_string_strict */
+
+/**
+ * Transform a JS argument to a cesu8 char array. Type coercion is allowed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_string (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                             const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  return jerryx_arg_transform_string_common (js_arg_iter_p, c_arg_p, false);
 } /* jerryx_arg_transform_string */
+
+/**
+ * Transform a JS argument to a utf8 char array. Type coercion is allowed.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry undefined: the transformer passes,
+ *         jerry error: the transformer fails.
+ */
+jerry_value_t
+jerryx_arg_transform_utf8_string (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS args */
+                                  const jerryx_arg_t *c_arg_p) /**< the native arg */
+{
+  return jerryx_arg_transform_string_common (js_arg_iter_p, c_arg_p, true);
+} /* jerryx_arg_transform_utf8_string */
 
 /**
  * Check whether the JS argument is jerry function, if so, assign to the native argument.
@@ -440,6 +522,8 @@ JERRYX_ARG_TRANSFORM_OPTIONAL (boolean)
 JERRYX_ARG_TRANSFORM_OPTIONAL (boolean_strict)
 JERRYX_ARG_TRANSFORM_OPTIONAL (string)
 JERRYX_ARG_TRANSFORM_OPTIONAL (string_strict)
+JERRYX_ARG_TRANSFORM_OPTIONAL (utf8_string)
+JERRYX_ARG_TRANSFORM_OPTIONAL (utf8_string_strict)
 JERRYX_ARG_TRANSFORM_OPTIONAL (function)
 JERRYX_ARG_TRANSFORM_OPTIONAL (native_pointer)
 JERRYX_ARG_TRANSFORM_OPTIONAL (object_props)

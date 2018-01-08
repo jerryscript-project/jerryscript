@@ -36,6 +36,7 @@ JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (uint32)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (int32)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (number)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (string)
+JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (utf8_string)
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL_AND_STRICT (boolean)
 
 JERRYX_ARG_TRANSFORM_FUNC_WITH_OPTIONAL (function)
@@ -241,6 +242,51 @@ jerryx_arg_string (char *dest, /**< pointer to the native char array where the r
     .extra_info = (uintptr_t) size
   };
 } /* jerryx_arg_string */
+
+/**
+ * Create a validation/transformation step (`jerryx_arg_t`) that expects to
+ * consume one `string` JS argument and stores it into a C utf8 `char` array.
+ *
+ * @return a jerryx_arg_t instance.
+ */
+static inline jerryx_arg_t
+jerryx_arg_utf8_string (char *dest, /**< [out] pointer to the native char array where the result should be stored */
+                        uint32_t size, /**< the size of native char array */
+                        jerryx_arg_coerce_t coerce_flag, /**< whether type coercion is allowed */
+                        jerryx_arg_optional_t opt_flag) /**< whether the argument is optional */
+{
+  jerryx_arg_transform_func_t func;
+
+  if (coerce_flag == JERRYX_ARG_NO_COERCE)
+  {
+    if (opt_flag == JERRYX_ARG_OPTIONAL)
+    {
+      func = jerryx_arg_transform_utf8_string_strict_optional;
+    }
+    else
+    {
+      func = jerryx_arg_transform_utf8_string_strict;
+    }
+  }
+  else
+  {
+    if (opt_flag == JERRYX_ARG_OPTIONAL)
+    {
+      func = jerryx_arg_transform_utf8_string_optional;
+    }
+    else
+    {
+      func = jerryx_arg_transform_utf8_string;
+    }
+  }
+
+  return (jerryx_arg_t)
+  {
+    .func = func,
+    .dest = (void *) dest,
+    .extra_info = (uintptr_t) size
+  };
+} /* jerryx_arg_utf8_string */
 
 /**
  * Create a validation/transformation step (`jerryx_arg_t`) that expects to

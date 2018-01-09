@@ -14,58 +14,48 @@
 
 -include $(TOPDIR)/Make.defs
 
-# Jerryscript built-in application info
-
+# Jerryscript built-in application information.
 CONFIG_JERRYSCRIPT_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)
 CONFIG_JERRYSCRIPT_STACKSIZE ?= 16384
-CONFIG_JERRYSCRIPT_HEAPSIZE ?= 107520
 
-APPNAME = jerry
-# path to the project dir, "jerry-nuttx" by default
-ROOT_DIR = ../../..
+PROGNAME = $(CONFIG_JERRYSCRIPT_PROGNAME)
 PRIORITY = $(CONFIG_JERRYSCRIPT_PRIORITY)
 STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)
-CFLAGS += -std=c99 -DJERRY_NDEBUG '-DCONFIG_MEM_HEAP_AREA_SIZE=$(CONFIG_JERRYSCRIPT_HEAPSIZE)'
-CFLAGS += -I$(ROOT_DIR)/ $(shell find $(ROOT_DIR)/jerryscript/jerry-core -type d | sed -r -e 's/^/-I/g')
-CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-libm/include
-CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-ext/include
 
-# Fill error messages for builtin error objects
-ifeq ($(CONFIG_JERRYSCRIPT_ERROR_MESSAGES),y)
-	CFLAGS += -DJERRY_ENABLE_ERROR_MESSAGES
-endif
+# Path to the JerryScript project. If not specified, it is supposed
+# that JerryScript is located next to the nuttx-apps folder.
+JERRYSCRIPT_ROOT_DIR ?= ../../../jerryscript
 
-ifeq ($(CONFIG_JERRYSCRIPT_MEM_STATS),y)
-	CFLAGS += -DJMEM_STATS
-endif
+CFLAGS += -std=c99
+CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-core/include
+CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-ext/include
+CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-libm/include
 
-ifeq ($(CONFIG_JERRYSCRIPT_SHOW_OPCODES),y)
-	CFLAGS += -DPARSER_DUMP_BYTE_CODE
-endif
+# These libs should be copied from the JerryScript project.
+LIBS = libjerry-core.a libjerry-ext.a libjerry-port-default.a libjerry-port-default-minimal.a libjerry-libm.a
 
-ifeq ($(CONFIG_JERRYSCRIPT_DEBUGGER),y)
-	CFLAGS += -DJERRY_DEBUGGER
-endif
-
-# Jerryscript
-
-.PHONY: jerry_core_allin.c
-jerry_core_allin.c:
-	find $(ROOT_DIR)/jerryscript/jerry-core -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_core_allin.c
-
-.PHONY: jerry_libm_allin.c
-jerry_libm_allin.c:
-	find $(ROOT_DIR)/jerryscript/jerry-libm -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_libm_allin.c
-
-.PHONY: jerry_ext_allin.c
-jerry_ext_allin.c:
-	find $(ROOT_DIR)/jerryscript/jerry-ext/handler -name "*.c" | sed -r -e 's/(\.\.\/)*(.+)/#include "\2"/g' > jerry_ext_allin.c
-
+APPNAME = jerry
 ASRCS = setjmp.S
-CSRCS = jerry_core_allin.c jerry_libm_allin.c jerry_ext_allin.c
 MAINSRC = jerry_main.c
 
-CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)
-PROGNAME = $(CONFIG_JERRYSCRIPT_PROGNAME)
+.PHONY: copylibs
+copylibs:
+	cp $(JERRYSCRIPT_ROOT_DIR)/build/lib/lib*.a .
+
+$(LIBS): copylibs
+	$(firstword $(AR)) x $@
+
+.PHONY: updateobjs
+updateobjs:
+	$(eval OBJS += $(shell find . -name "*.obj"))
+
+.PHONY: cleanlibs
+cleanlibs: updateobjs
+	rm -f $(OBJS)
+
+clean: cleanlibs
+
+.built: $(LIBS) updateobjs
 
 include $(APPDIR)/Application.mk

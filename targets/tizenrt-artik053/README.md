@@ -83,6 +83,22 @@ $ mkdir res
 
 ```
 # assuming you are in jerry-tizenrt folder
+jerryscript/tools/build.py \
+    --clean \
+    --lto=OFF \
+    --jerry-cmdline=OFF \
+    --jerry-libc=OFF \
+    --all-in-one=OFF \
+    --mem-heap=70 \
+    --profile=es2015-subset \
+    --compile-flag="--sysroot=${PWD}/TizenRT/os" \
+    --toolchain=${PWD}/jerryscript/cmake/toolchain_mcu_artik053.cmake
+```
+
+**Note**: there is a Makefile in the `targets/tizenrt-artik053/` folder that also helps to build JerryScript for TizenRT.
+
+```
+# assuming you are in jerry-tizenrt folder
 $ cd jerryscript
 $ make -f targets/tizenrt-artik053/Makefile.tizenrt
 ```

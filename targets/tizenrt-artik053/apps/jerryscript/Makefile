@@ -67,40 +67,28 @@
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-# Jerryscript built-in application info
-
+# JerryScript built-in application information.
 CONFIG_JERRYSCRIPT_PRIORITY ?= SCHED_PRIORITY_DEFAULT
+CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)
 CONFIG_JERRYSCRIPT_STACKSIZE ?= 32768
-CONFIG_JERRYSCRIPT_HEAPSIZE ?= 64000
 
-APPNAME = jerry
-# path to the project dir, "tizenrt-artik053" by default
-ROOT_DIR = ../../../..
 PRIORITY = $(CONFIG_JERRYSCRIPT_PRIORITY)
+PROGNAME = $(CONFIG_JERRYSCRIPT_PROGNAME)
 STACKSIZE = $(CONFIG_JERRYSCRIPT_STACKSIZE)
-CFLAGS += -std=c99 -DJERRY_NDEBUG '-DCONFIG_MEM_HEAP_AREA_SIZE=$(CONFIG_JERRYSCRIPT_HEAPSIZE)'
-CFLAGS += -I$(ROOT_DIR)/ $(shell find $(ROOT_DIR)/jerryscript/jerry-core -type d | sed -r -e 's/^/-I/g')
-CFLAGS += -I$(ROOT_DIR)/jerryscript/jerry-ext/include
 
-ifeq ($(CONFIG_JERRYSCRIPT_MEM_STATS),y)
-	CFLAGS += -DJMEM_STATS
-endif
+# Path to the JerryScript project. If not specified, it is supposed
+# that JerryScript is located next to the TizenRT folder.
+JERRYSCRIPT_ROOT_DIR ?= ../../../../jerryscript
 
-ifeq ($(CONFIG_JERRYSCRIPT_SHOW_OPCODES),y)
-	CFLAGS += -DPARSER_DUMP_BYTE_CODE
-endif
-
-ifeq ($(CONFIG_JERRYSCRIPT_DEBUGGER),y)
-	CFLAGS += -DJERRY_DEBUGGER
-endif
-
+CFLAGS += -std=c99
+CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-core/include
+CFLAGS += -I$(JERRYSCRIPT_ROOT_DIR)/jerry-ext/include
 
 EXTRA_LIBS += libjerry-core.a libjerry-libm.a
 LINKLIBS=$(EXTRA_LIBS)
 
-
+APPNAME = jerry
 ASRCS = setjmp.S
-CSRCS =
 MAINSRC = jerry_main.c
 
 AOBJS = $(ASRCS:.S=$(OBJEXT))
@@ -130,8 +118,6 @@ else
   INSTALL_DIR = $(BIN_DIR)
 endif
 
-CONFIG_JERRYSCRIPT_PROGNAME ?= jerry$(EXEEXT)
-PROGNAME = $(CONFIG_JERRYSCRIPT_PROGNAME)
 
 ROOTDEPPATH	= --dep-path .
 
@@ -139,8 +125,9 @@ ROOTDEPPATH	= --dep-path .
 
 VPATH		=
 
-all:	.built
-.PHONY: context depend clean distclean
+
+all:	copylibs .built
+.PHONY: copylibs context depend clean distclean
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -151,6 +138,9 @@ $(COBJS) $(MAINOBJ): %$(OBJEXT): %.c
 .built: $(OBJS)
 	$(call ARCHIVE, $(BIN), $(OBJS))
 	$(Q) touch .built
+
+copylibs:
+	cp $(JERRYSCRIPT_ROOT_DIR)/build/lib/lib*.a $(TOPDIR)/../build/output/libraries/
 
 install:
 

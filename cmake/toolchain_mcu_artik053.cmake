@@ -12,27 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-JERRYHEAP	?= 16
-BUILD_DIR	?= build
+set(CMAKE_SYSTEM_NAME TizenRT)
+set(CMAKE_SYSTEM_PROCESSOR armv7l)
+set(CMAKE_SYSTEM_VERSION ARTIK053)
 
-EXT_CFLAGS += -I. -isystem ../TizenRT/os/include
+set(FLAGS_COMMON_ARCH -mcpu=cortex-r4 -mfpu=vfpv3 -fno-builtin -fno-strict-aliasing -fomit-frame-pointer -fno-strength-reduce -Wall -Werror -Wshadow -Wno-error=conversion)
 
-.PHONY: libjerry clean
-
-all: libjerry
-
-libjerry:
-	cmake -B$(BUILD_DIR) -H./ \
-	 -DENABLE_LTO=OFF \
-	 -DENABLE_ALL_IN_ONE=OFF \
-	 -DJERRY_LIBC=OFF \
-	 -DJERRY_CMDLINE=OFF \
-	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
-	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP) \
-	 -DCMAKE_BUILD_TYPE=Release \
-	 -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_mcu_artik053.cmake
-
-	make -C$(BUILD_DIR) jerry-core jerry-libm jerry-ext
-
-clean:
-	rm -rf $(BUILD_DIR)
+set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+set(CMAKE_C_COMPILER_WORKS TRUE)

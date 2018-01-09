@@ -27,23 +27,4 @@ config JERRYSCRIPT_STACKSIZE
 	int "Jerryscript stack size"
 	default 16384
 
-config JERRYSCRIPT_HEAPSIZE
-	int "Jerryscript heap size"
-	default 107520
-
-config JERRYSCRIPT_ERROR_MESSAGES
-	bool "Enable error messages for builtin error objects"
-	default n
-
-config JERRYSCRIPT_MEM_STATS
-	bool "Enable memory statistics"
-	default n
-
-config JERRYSCRIPT_SHOW_OPCODES
-	bool "Enable parser byte-code dumps"
-	default n
-
-config JERRYSCRIPT_DEBUGGER
-	bool "Jerryscript debugger"
-	default n
-endif
+endif # JERRYSCRIPT

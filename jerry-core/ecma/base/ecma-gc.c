@@ -257,19 +257,21 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           }
 
           /* Mark all reactions. */
-          ecma_collection_iterator_t iter;
-          ecma_collection_iterator_init (&iter, ((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
+          ecma_value_t *ecma_value_p;
+          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
 
-          while (ecma_collection_iterator_next (&iter))
+          while (ecma_value_p != NULL)
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p));
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
           }
 
-          ecma_collection_iterator_init (&iter, ((ecma_promise_object_t *) ext_object_p)->reject_reactions);
+          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
 
-          while (ecma_collection_iterator_next (&iter))
+          while (ecma_value_p != NULL)
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*iter.current_value_p));
+            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
           }
         }
 
@@ -554,8 +556,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
         case LIT_MAGIC_STRING_REGEXP_UL:
         {
-          ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                                              ext_object_p->u.class_prop.u.value);
+          ecma_compiled_code_t *bytecode_p;
+          bytecode_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_compiled_code_t,
+                                                            ext_object_p->u.class_prop.u.value);
+
           if (bytecode_p != NULL)
           {
             ecma_bytecode_deref (bytecode_p);

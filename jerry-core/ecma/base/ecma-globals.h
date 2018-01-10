@@ -74,6 +74,7 @@ typedef enum
   ECMA_TYPE_STRING = 2, /**< pointer to description of a string */
   ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
   ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference */
+  ECMA_TYPE_COLLECTION_CHUNK = ECMA_TYPE_ERROR, /**< pointer to description of a collection chunk */
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
@@ -1018,31 +1019,47 @@ typedef double ecma_number_t;
  */
 #define ECMA_STRING_NOT_ARRAY_INDEX UINT32_MAX
 
+/*
+ * Ecma-collection: a growable list of ecma-values. Currently the list is
+ * a chain list, where appending new items at the end is cheap operation.
+ *
+ * Enumerating elements is also cheap, since each page is terminated by a
+ * special ecma-value: collection-type. This type has a pointer to the next
+ * chunk. The last chunk is terminated by a NULL pointer. There when the
+ * next value is requested from the iterator it simply checks the next
+ * memory location. If it is not a collection-type value, it returns with
+ * the value. Otherwise it gets the start address of the next chunk, and
+ * return the value there.
+ *
+ * The collection-type value is always the last item of a collection chunk,
+ * even if the chunk is not completely filled with values (this is only true
+ * for the last chunk). Each chunk must have at least one non collection-type
+ * value as well.
+ */
+
 /**
  * Description of a collection's header.
  */
 typedef struct
 {
-  /** Number of elements in the collection */
-  ecma_length_t unit_number;
-
-  /** Compressed pointer to first chunk with collection's data */
-  jmem_cpointer_t first_chunk_cp;
-
-  /** Compressed pointer to last chunk with collection's data */
-  jmem_cpointer_t last_chunk_cp;
+  jmem_cpointer_t first_chunk_cp; /**< compressed pointer to first chunk with collection's data */
+  jmem_cpointer_t last_chunk_cp; /**< compressed pointer to last chunk with collection's data */
+  ecma_length_t item_count; /**< number of items in the collection */
 } ecma_collection_header_t;
 
 /**
- * Description of non-first chunk in a collection's chain of chunks
+ * Maximum number of items stored by a collection chunk (excluding the last collection-type value).
+ */
+#define ECMA_COLLECTION_CHUNK_ITEMS 5
+
+/**
+ * Collection chunk item.
  */
 typedef struct
 {
-  /** Characters */
-  lit_utf8_byte_t data[ sizeof (uint64_t) - sizeof (jmem_cpointer_t) ];
-
-  /** Compressed pointer to next chunk */
-  jmem_cpointer_t next_chunk_cp;
+  ecma_value_t items[ECMA_COLLECTION_CHUNK_ITEMS + 1]; /**< ecma-value list, where the last value is a special
+                                                        *   collection-type value which points to the next chunk,
+                                                        *   so the chunk area is enlarged by one for this value */
 } ecma_collection_chunk_t;
 
 /**

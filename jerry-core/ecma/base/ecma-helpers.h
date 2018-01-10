@@ -71,30 +71,53 @@
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
 /**
- * Set an internal property value of pointer
+ * Set an internal property value from pointer.
  */
 #define ECMA_SET_INTERNAL_VALUE_POINTER(field, pointer) \
   (field) = ((ecma_value_t) pointer)
 
 /**
- * Get an internal property value of pointer
+ * Set an internal property value from pointer. Pointer can be NULL.
+ */
+#define ECMA_SET_INTERNAL_VALUE_ANY_POINTER(field, pointer) \
+  (field) = ((ecma_value_t) pointer)
+
+/**
+ * Convert an internal property value to pointer.
  */
 #define ECMA_GET_INTERNAL_VALUE_POINTER(type, field) \
+  ((type *) field)
+
+/**
+ * Convert an internal property value to pointer. Result can be NULL.
+ */
+#define ECMA_GET_INTERNAL_VALUE_ANY_POINTER(type, field) \
   ((type *) field)
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
 /**
- * Set an internal property value of non-null pointer so that it will correspond
- * to specified non_compressed_pointer.
+ * Set an internal property value from pointer.
  */
-#define ECMA_SET_INTERNAL_VALUE_POINTER(field, non_compressed_pointer) \
-  ECMA_SET_NON_NULL_POINTER (field, non_compressed_pointer)
+#define ECMA_SET_INTERNAL_VALUE_POINTER(field, pointer) \
+  ECMA_SET_NON_NULL_POINTER (field, pointer)
 
 /**
- * Get an internal property value of pointer from specified compressed pointer.
+ * Set an internal property value from pointer. Pointer can be NULL.
+ */
+#define ECMA_SET_INTERNAL_VALUE_ANY_POINTER(field, pointer) \
+  ECMA_SET_POINTER (field, pointer)
+
+/**
+ * Convert an internal property value to pointer.
  */
 #define ECMA_GET_INTERNAL_VALUE_POINTER(type, field) \
+  ECMA_GET_NON_NULL_POINTER (type, field)
+
+/**
+ * Convert an internal property value to pointer. Result can be NULL.
+ */
+#define ECMA_GET_INTERNAL_VALUE_ANY_POINTER(type, field) \
   ECMA_GET_POINTER (type, field)
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
@@ -134,6 +157,7 @@ bool ecma_is_value_number (ecma_value_t value) __attr_const___;
 bool ecma_is_value_string (ecma_value_t value) __attr_const___;
 bool ecma_is_value_object (ecma_value_t value) __attr_const___;
 bool ecma_is_value_error_reference (ecma_value_t value) __attr_const___;
+bool ecma_is_value_collection_chunk (ecma_value_t value) __attr_const___;
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
@@ -146,12 +170,14 @@ ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
 ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p) __attr_pure___;
 ecma_value_t ecma_make_object_value (const ecma_object_t *object_p) __attr_pure___;
 ecma_value_t ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) __attr_pure___;
+ecma_value_t ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p) __attr_pure___;
 ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t value) __attr_const___;
 ecma_number_t ecma_get_float_from_value (ecma_value_t value) __attr_pure___;
 ecma_number_t ecma_get_number_from_value (ecma_value_t value) __attr_pure___;
 ecma_string_t *ecma_get_string_from_value (ecma_value_t value) __attr_pure___;
 ecma_object_t *ecma_get_object_from_value (ecma_value_t value) __attr_pure___;
 ecma_error_reference_t *ecma_get_error_reference_from_value (ecma_value_t value) __attr_pure___;
+ecma_collection_chunk_t *ecma_get_collection_chunk_from_value (ecma_value_t value) __attr_pure___;
 ecma_value_t ecma_invert_boolean_value (ecma_value_t value) __attr_const___;
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
@@ -264,27 +290,11 @@ ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t values_
                                                       bool do_ref_if_object);
 void ecma_free_values_collection (ecma_collection_header_t *header_p, bool do_deref_if_object);
 void ecma_append_to_values_collection (ecma_collection_header_t *header_p, ecma_value_t v, bool do_ref_if_object);
-void ecma_remove_last_value_from_values_collection (ecma_collection_header_t *header_p);
-ecma_collection_header_t *ecma_new_strings_collection (ecma_string_t *string_ptrs_buffer[],
-                                                       ecma_length_t strings_number);
 
-/**
- * Context of ecma values' collection iterator
- */
-typedef struct
-{
-  ecma_collection_header_t *header_p; /**< collection header */
-  jmem_cpointer_t next_chunk_cp; /**< compressed pointer to next chunk */
-  ecma_length_t current_index; /**< index of current element */
-  const ecma_value_t *current_value_p; /**< pointer to current element */
-  const ecma_value_t *current_chunk_beg_p; /**< pointer to beginning of current chunk's data */
-  const ecma_value_t *current_chunk_end_p; /**< pointer to place right after the end of current chunk's data */
-} ecma_collection_iterator_t;
-
-void
-ecma_collection_iterator_init (ecma_collection_iterator_t *iterator_p, ecma_collection_header_t *collection_p);
-bool
-ecma_collection_iterator_next (ecma_collection_iterator_t *iterator_p);
+ecma_value_t *
+ecma_collection_iterator_init (ecma_collection_header_t *header_p);
+ecma_value_t *
+ecma_collection_iterator_next (ecma_value_t *iterator_p);
 
 /* ecma-helpers.c */
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);

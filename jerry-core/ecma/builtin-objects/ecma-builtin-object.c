@@ -315,13 +315,12 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg, /**< 'this' argument */
 
     ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, props_p);
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-    while (ecma_collection_iterator_next (&iter)
-           && ecma_is_value_empty (ret_value))
+    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       /* 2.a */
       ecma_property_descriptor_t prop_desc;
@@ -389,14 +388,12 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument *
 
     ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, props_p);
-
-    while (ecma_collection_iterator_next (&iter)
-           && ecma_is_value_empty (ret_value))
+    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       /* 2.a */
       ecma_property_descriptor_t prop_desc;
@@ -513,12 +510,12 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
       /* 2. */
       ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
-      ecma_collection_iterator_t iter;
-      ecma_collection_iterator_init (&iter, props_p);
+      ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-      while (ecma_collection_iterator_next (&iter))
+      while (ecma_value_p != NULL)
       {
-        ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+        ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+        ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
         /* 2.a */
         ecma_property_t property = ecma_op_object_get_own_property (obj_p,
@@ -583,12 +580,12 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argumen
       /* 2. */
       ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
 
-      ecma_collection_iterator_t iter;
-      ecma_collection_iterator_init (&iter, props_p);
+      ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-      while (ecma_collection_iterator_next (&iter))
+      while (ecma_value_p != NULL)
       {
-        ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+        ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+        ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
         /* 2.a */
         ecma_property_t property = ecma_op_object_get_own_property (obj_p,
@@ -829,22 +826,20 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this'
     ecma_object_t *props_p = ecma_get_object_from_value (props);
     /* 3. */
     ecma_collection_header_t *prop_names_p = ecma_op_object_get_property_names (props_p, false, true, false);
-    uint32_t property_number = prop_names_p->unit_number;
+    uint32_t property_number = prop_names_p->item_count;
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, prop_names_p);
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
     /* 4. */
     JMEM_DEFINE_LOCAL_ARRAY (property_descriptors, property_number, ecma_property_descriptor_t);
 
     uint32_t property_descriptor_number = 0;
 
-    while (ecma_collection_iterator_next (&iter)
-           && ecma_is_value_empty (ret_value))
+    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
     {
       /* 5.a */
       ECMA_TRY_CATCH (desc_obj,
-                      ecma_op_object_get (props_p, ecma_get_string_from_value (*iter.current_value_p)),
+                      ecma_op_object_get (props_p, ecma_get_string_from_value (*ecma_value_p)),
                       ret_value);
 
       /* 5.b */
@@ -857,25 +852,27 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this'
 
       ECMA_FINALIZE (conv_result);
       ECMA_FINALIZE (desc_obj);
+
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
     }
 
     /* 6. */
-    ecma_collection_iterator_init (&iter, prop_names_p);
+    ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+
     for (uint32_t index = 0;
          index < property_number && ecma_is_value_empty (ret_value);
          index++)
     {
-      bool is_next = ecma_collection_iterator_next (&iter);
-      JERRY_ASSERT (is_next);
-
       ECMA_TRY_CATCH (define_own_prop_ret,
                       ecma_op_object_define_own_property (obj_p,
-                                                          ecma_get_string_from_value (*iter.current_value_p),
+                                                          ecma_get_string_from_value (*ecma_value_p),
                                                           &property_descriptors[index],
                                                           true),
                       ret_value);
 
       ECMA_FINALIZE (define_own_prop_ret);
+
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
     }
 
     /* Clean up. */

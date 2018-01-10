@@ -67,21 +67,30 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
     case VM_CONTEXT_FOR_IN:
     {
-      jmem_cpointer_t current = (jmem_cpointer_t) vm_stack_top_p[-2];
+      ecma_collection_chunk_t *chunk_p;
+      chunk_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_collection_chunk_t, vm_stack_top_p[-2]);
+      uint32_t index = vm_stack_top_p[-3];
 
-      while (current != JMEM_CP_NULL)
+      while (chunk_p != NULL)
       {
-        ecma_collection_chunk_t *chunk_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
-                                                                         current);
+        ecma_value_t value = chunk_p->items[index];
 
-        lit_utf8_byte_t *data_ptr = chunk_p->data;
-        ecma_free_value (*(ecma_value_t *) data_ptr);
+        if (unlikely (ecma_is_value_collection_chunk (value)))
+        {
+          ecma_collection_chunk_t *next_chunk_p = ecma_get_collection_chunk_from_value (value);
+          jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));
 
-        current = chunk_p->next_chunk_cp;
-        ecma_dealloc_collection_chunk (chunk_p);
+          chunk_p = next_chunk_p;
+          index = 0;
+        }
+        else
+        {
+          ecma_free_value (value);
+          index++;
+        }
       }
 
-      ecma_free_value (vm_stack_top_p[-3]);
+      ecma_free_value (vm_stack_top_p[-4]);
 
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;

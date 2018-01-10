@@ -1180,14 +1180,13 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   uint32_t defined_prop_count = 0;
   uint32_t copied_num = 0;
 
-  ecma_collection_iterator_t iter;
-  ecma_collection_iterator_init (&iter, array_index_props_p);
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
 
   /* Count properties with name that is array index less than len */
-  while (ecma_collection_iterator_next (&iter)
-         && ecma_is_value_empty (ret_value))
+  while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
@@ -1200,13 +1199,13 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
 
-  ecma_collection_iterator_init (&iter, array_index_props_p);
+  ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
 
   /* Copy unsorted array into a native c array. */
-  while (ecma_collection_iterator_next (&iter)
-         && ecma_is_value_empty (ret_value))
+  while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
@@ -1260,12 +1259,12 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   /* Undefined properties should be in the back of the array. */
 
-  ecma_collection_iterator_init (&iter, array_index_props_p);
+  ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
 
-  while (ecma_collection_iterator_next (&iter)
-         && ecma_is_value_empty (ret_value))
+  while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);

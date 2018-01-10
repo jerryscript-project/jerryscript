@@ -26,38 +26,31 @@
  */
 
 /**
- * Check the object value existance in the collection.
+ * Check whether the object is pushed onto the occurence stack
  *
  * Used by:
  *         - ecma_builtin_json_object step 1
  *         - ecma_builtin_json_array step 1
  *
- * @return true, if the object is already in the collection.
+ * @return true - if the object is pushed onto the occurence stack
+ *         false - otherwise
  */
 bool
-ecma_has_object_value_in_collection (ecma_collection_header_t *collection_p, /**< collection */
-                                     ecma_value_t object_value) /**< object value */
+ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, /**< stack */
+                               ecma_object_t *object_p) /**< object */
 {
-  JERRY_ASSERT (ecma_is_value_object (object_value));
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (object_value);
-
-  ecma_collection_iterator_t iterator;
-  ecma_collection_iterator_init (&iterator, collection_p);
-
-  while (ecma_collection_iterator_next (&iterator))
+  while (stack_p != NULL)
   {
-    ecma_value_t value = *iterator.current_value_p;
-    ecma_object_t *current_p = ecma_get_object_from_value (value);
-
-    if (current_p == obj_p)
+    if (stack_p->object_p == object_p)
     {
       return true;
     }
+
+    stack_p = stack_p->next_p;
   }
 
   return false;
-} /* ecma_has_object_value_in_collection */
+} /* ecma_json_has_object_in_stack */
 
 /**
  * Check the string value existance in the collection.
@@ -75,18 +68,18 @@ ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, /**
 
   ecma_string_t *string_p = ecma_get_string_from_value (string_value);
 
-  ecma_collection_iterator_t iterator;
-  ecma_collection_iterator_init (&iterator, collection_p);
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (collection_p);
 
-  while (ecma_collection_iterator_next (&iterator))
+  while (ecma_value_p != NULL)
   {
-    ecma_value_t value = *iterator.current_value_p;
-    ecma_string_t *current_p = ecma_get_string_from_value (value);
+    ecma_string_t *current_p = ecma_get_string_from_value (*ecma_value_p);
 
     if (ecma_compare_ecma_strings (current_p, string_p))
     {
       return true;
     }
+
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
   return false;
@@ -111,15 +104,14 @@ ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *
 {
   ecma_string_t *properties_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-  ecma_collection_iterator_t iterator;
-  ecma_collection_iterator_init (&iterator, partial_p);
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (partial_p);
 
   bool first = true;
 
-  while (ecma_collection_iterator_next (&iterator))
+  while (ecma_value_p != NULL)
   {
-    ecma_value_t name_value = *iterator.current_value_p;
-    ecma_string_t *current_p = ecma_get_string_from_value (name_value);
+    ecma_string_t *current_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     if (likely (!first))
     {

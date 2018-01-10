@@ -1241,8 +1241,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   JERRY_ASSERT (ecma_object_class_is (regexp_object_p, LIT_MAGIC_STRING_REGEXP_UL));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                              ext_object_p->u.class_prop.u.value);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                  ext_object_p->u.class_prop.u.value);
 
   if (bc_p == NULL)
   {

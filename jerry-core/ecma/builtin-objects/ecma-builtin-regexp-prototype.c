@@ -141,7 +141,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         ecma_deref_ecma_string (pattern_string_p);
 
-        re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, *bc_prop_p);
+        re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t, *bc_prop_p);
 
         if (old_bc_p != NULL)
         {
@@ -213,7 +213,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                         re_compile_bytecode (&new_bc_p, pattern_string_p, flags),
                         ret_value);
 
-        re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, *bc_prop_p);
+        re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t, *bc_prop_p);
 
         if (old_bc_p != NULL)
         {
@@ -275,7 +275,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
     ecma_value_t *bytecode_prop_p = &(((ecma_extended_object_t *) obj_p)->u.class_prop.u.value);
 
-    void *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (void, *bytecode_prop_p);
+    void *bytecode_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (void, *bytecode_prop_p);
 
     if (bytecode_p == NULL)
     {

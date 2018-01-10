@@ -203,16 +203,15 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
                                                                          only_enumerable_properties,
                                                                          false);
 
-  ecma_collection_iterator_t iter;
-  ecma_collection_iterator_init (&iter, props_p);
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-  while (ecma_collection_iterator_next (&iter))
+  while (ecma_value_p != NULL)
   {
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
 
     ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
                                                             index_string_p,
-                                                            *iter.current_value_p,
+                                                            *ecma_value_p,
                                                             true, /* Writable */
                                                             true, /* Enumerable */
                                                             true, /* Configurable */
@@ -221,6 +220,8 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
     JERRY_ASSERT (ecma_is_value_true (completion));
 
     ecma_deref_ecma_string (index_string_p);
+
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     index++;
   }

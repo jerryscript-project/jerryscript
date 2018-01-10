@@ -728,13 +728,12 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
 
     ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, false, true, false);
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, props_p);
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-    while (ecma_collection_iterator_next (&iter)
-           && ecma_is_value_empty (ret_value))
+    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       ECMA_TRY_CATCH (value_walk,
                       ecma_builtin_json_walk (reviver_p,
@@ -901,7 +900,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
   ecma_json_stringify_context_t context;
 
   /* 1. */
-  context.occurence_stack_p = ecma_new_values_collection (NULL, 0, false);
+  context.occurence_stack_last_p = NULL;
 
   /* 2. */
   context.indent_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
@@ -1138,7 +1137,6 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
   ecma_deref_ecma_string (context.indent_str_p);
 
   ecma_free_values_collection (context.property_list_p, true);
-  ecma_free_values_collection (context.occurence_stack_p, true);
 
   return ret_value;
 } /* ecma_builtin_json_stringify */
@@ -1459,10 +1457,8 @@ static ecma_value_t
 ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
                           ecma_json_stringify_context_t *context_p) /**< context*/
 {
-  ecma_value_t obj_value = ecma_make_object_value (obj_p);
-
   /* 1. */
-  if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
+  if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
@@ -1470,7 +1466,10 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 2. */
-  ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);
+  ecma_json_occurence_stack_item_t stack_item;
+  stack_item.next_p = context_p->occurence_stack_last_p;
+  stack_item.object_p = obj_p;
+  context_p->occurence_stack_last_p = &stack_item;
 
   /* 3. */
   ecma_string_t *stepback_p = context_p->indent_str_p;
@@ -1482,7 +1481,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_collection_header_t *property_keys_p;
 
   /* 5. */
-  if (context_p->property_list_p->unit_number > 0)
+  if (context_p->property_list_p->item_count > 0)
   {
     property_keys_p = context_p->property_list_p;
   }
@@ -1493,12 +1492,11 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
     ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, true, false);
 
-    ecma_collection_iterator_t iter;
-    ecma_collection_iterator_init (&iter, props_p);
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
-    while (ecma_collection_iterator_next (&iter))
+    while (ecma_value_p != NULL)
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (*iter.current_value_p);
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
 
       ecma_property_t property = ecma_op_object_get_own_property (obj_p,
                                                                   property_name_p,
@@ -1509,8 +1507,10 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
       if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
-        ecma_append_to_values_collection (property_keys_p, *iter.current_value_p, true);
+        ecma_append_to_values_collection (property_keys_p, *ecma_value_p, true);
       }
+
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
     }
 
     ecma_free_values_collection (props_p, true);
@@ -1520,13 +1520,12 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_collection_header_t *partial_p = ecma_new_values_collection (NULL, 0, true);
 
   /* 8. */
-  ecma_collection_iterator_t iterator;
-  ecma_collection_iterator_init (&iterator, property_keys_p);
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (property_keys_p);
 
-  while (ecma_collection_iterator_next (&iterator) && ecma_is_value_empty (ret_value))
+  while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
   {
-    ecma_value_t value = *iterator.current_value_p;
-    ecma_string_t *key_p = ecma_get_string_from_value (value);
+    ecma_string_t *key_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
     /* 8.a */
     ECMA_TRY_CATCH (str_val,
@@ -1565,7 +1564,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
     ECMA_FINALIZE (str_val);
   }
 
-  if (context_p->property_list_p->unit_number == 0)
+  if (context_p->property_list_p->item_count == 0)
   {
     ecma_free_values_collection (property_keys_p, true);
   }
@@ -1578,7 +1577,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   }
 
   /* 9. */
-  if (partial_p->unit_number == 0)
+  if (partial_p->item_count == 0)
   {
     lit_utf8_byte_t chars[2] = { LIT_CHAR_LEFT_BRACE, LIT_CHAR_RIGHT_BRACE };
 
@@ -1609,7 +1608,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   ecma_free_values_collection (partial_p, true);
 
   /* 11. */
-  ecma_remove_last_value_from_values_collection (context_p->occurence_stack_p);
+  context_p->occurence_stack_last_p = stack_item.next_p;
 
   /* 12. */
   ecma_deref_ecma_string (context_p->indent_str_p);
@@ -1632,10 +1631,8 @@ static ecma_value_t
 ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
                          ecma_json_stringify_context_t *context_p) /**< context*/
 {
-  ecma_value_t obj_value = ecma_make_object_value (obj_p);
-
   /* 1. */
-  if (ecma_has_object_value_in_collection (context_p->occurence_stack_p, obj_value))
+  if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
   }
@@ -1643,7 +1640,10 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 2. */
-  ecma_append_to_values_collection (context_p->occurence_stack_p, obj_value, true);
+  ecma_json_occurence_stack_item_t stack_item;
+  stack_item.next_p = context_p->occurence_stack_last_p;
+  stack_item.object_p = obj_p;
+  context_p->occurence_stack_last_p = &stack_item;
 
   /* 3. */
   ecma_string_t *stepback_p = context_p->indent_str_p;
@@ -1697,7 +1697,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   if (ecma_is_value_empty (ret_value))
   {
     /* 9. */
-    if (partial_p->unit_number == 0)
+    if (partial_p->item_count == 0)
     {
       lit_utf8_byte_t chars[2] = { LIT_CHAR_LEFT_SQUARE, LIT_CHAR_RIGHT_SQUARE };
 
@@ -1732,7 +1732,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
   ecma_free_values_collection (partial_p, true);
 
   /* 11. */
-  ecma_remove_last_value_from_values_collection (context_p->occurence_stack_p);
+  context_p->occurence_stack_last_p = stack_item.next_p;
 
   /* 12. */
   ecma_deref_ecma_string (context_p->indent_str_p);

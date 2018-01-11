@@ -462,6 +462,43 @@ jerry_length_t jerry_arraybuffer_read (const jerry_value_t value,
 jerry_length_t jerry_get_arraybuffer_byte_length (const jerry_value_t value);
 uint8_t *jerry_get_arraybuffer_pointer (const jerry_value_t value);
 
+
+/**
+ * TypedArray functions.
+ */
+
+/**
+ * TypedArray types.
+ */
+typedef enum
+{
+  JERRY_TYPEDARRAY_INVALID = 0,
+  JERRY_TYPEDARRAY_UINT8,
+  JERRY_TYPEDARRAY_UINT8CLAMPED,
+  JERRY_TYPEDARRAY_INT8,
+  JERRY_TYPEDARRAY_UINT16,
+  JERRY_TYPEDARRAY_INT16,
+  JERRY_TYPEDARRAY_UINT32,
+  JERRY_TYPEDARRAY_INT32,
+  JERRY_TYPEDARRAY_FLOAT32,
+  JERRY_TYPEDARRAY_FLOAT64,
+} jerry_typedarray_type_t;
+
+
+bool jerry_value_is_typedarray (jerry_value_t value);
+jerry_value_t jerry_create_typedarray (jerry_typedarray_type_t type_name, jerry_length_t length);
+jerry_value_t jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name,
+                                                          const jerry_value_t arraybuffer,
+                                                          jerry_length_t byte_offset,
+                                                          jerry_length_t length);
+jerry_value_t jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name,
+                                                       const jerry_value_t arraybuffer);
+jerry_typedarray_type_t jerry_get_typedarray_type (jerry_value_t value);
+jerry_length_t jerry_get_typedarray_length (jerry_value_t value);
+jerry_value_t jerry_get_typedarray_buffer (jerry_value_t value,
+                                           jerry_length_t *byte_offset,
+                                           jerry_length_t *byte_length);
+
 /**
  * @}
  */

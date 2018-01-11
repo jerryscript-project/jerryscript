@@ -226,7 +226,7 @@ ecma_set_typedarray_element (lit_utf8_byte_t *dst_p, /**< the location in the in
  * @return ecma value of the new typedarray object
  *         Returned value must be freed with ecma_free_value
  */
-static ecma_value_t
+ecma_value_t
 ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< length of the typedarray */
                                            ecma_object_t *proto_p, /**< prototype object */
                                            uint8_t element_size_shift, /**< the size shift of the element length */

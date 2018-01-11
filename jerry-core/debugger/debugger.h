@@ -98,6 +98,7 @@ typedef enum
   JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 7, /**< debugger waiting for client code */
   JERRY_DEBUGGER_CLIENT_NO_SOURCE = 1u << 8, /**< debugger leaving the client source loop */
   JERRY_DEBUGGER_CONTEXT_RESET_MODE = 1u << 9, /**< debugger and engine reinitialization mode */
+  JERRY_DEBUGGER_THROW_ERROR_FLAG = 1u << 10, /**< debugger client sent an error throw */
 } jerry_debugger_flags_t;
 
 /**
@@ -186,6 +187,8 @@ typedef enum
   JERRY_DEBUGGER_EVAL_PART = 18, /**< next message of evaluating a string */
 
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
+  JERRY_DEBUGGER_THROW = 19, /**< first message of the throw string */
+  JERRY_DEBUGGER_THROW_PART = 20, /**< next part of the throw message */
 } jerry_debugger_header_type_t;
 
 /**

@@ -89,6 +89,8 @@ JERRY_DEBUGGER_FINISH = 15
 JERRY_DEBUGGER_GET_BACKTRACE = 16
 JERRY_DEBUGGER_EVAL = 17
 JERRY_DEBUGGER_EVAL_PART = 18
+JERRY_DEBUGGER_THROW = 19
+JERRY_DEBUGGER_THROW_PART = 20
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -449,6 +451,8 @@ class DebuggerPrompt(Cmd):
 
         if message_type == JERRY_DEBUGGER_EVAL:
             message_type = JERRY_DEBUGGER_EVAL_PART
+        elif message_type == JERRY_DEBUGGER_THROW:
+            message_type = JERRY_DEBUGGER_THROW_PART
         else:
             message_type = JERRY_DEBUGGER_CLIENT_SOURCE_PART
 
@@ -476,6 +480,10 @@ class DebuggerPrompt(Cmd):
         self._send_string(args, JERRY_DEBUGGER_EVAL)
 
     do_e = do_eval
+
+    def do_throw(self, args):
+        """ Throw an exception """
+        self._send_string(args, JERRY_DEBUGGER_THROW)
 
     def do_exception(self, args):
         """ Config the exception handler module """

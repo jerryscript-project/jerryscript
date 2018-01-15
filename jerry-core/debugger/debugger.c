@@ -31,6 +31,15 @@
 #endif /* HAVE_TIME_H */
 
 /**
+ * The number of message types in the debugger should reflect the
+ * debugger versioning.
+ */
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 26
+                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 16
+                     && JERRY_DEBUGGER_VERSION == 1,
+                     debugger_version_correlates_to_message_type_count);
+
+/**
  * Type cast the debugger send buffer into a specific type.
  */
 #define JERRY_DEBUGGER_SEND_BUFFER_AS(type, name_p) \
@@ -707,6 +716,7 @@ jerry_debugger_send_configuration (uint8_t max_message_size) /**< maximum messag
   configuration_p->max_message_size = max_message_size;
   configuration_p->cpointer_size = sizeof (jmem_cpointer_t);
   configuration_p->little_endian = (endian_data.uint8_value[0] == 1);
+  configuration_p->version = JERRY_DEBUGGER_VERSION;
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_configuration_t));
 } /* jerry_debugger_send_configuration */

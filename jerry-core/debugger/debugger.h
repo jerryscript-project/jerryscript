@@ -24,6 +24,11 @@
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
 
 /**
+ * JerryScript debugger protocol version.
+ */
+#define JERRY_DEBUGGER_VERSION (1)
+
+/**
  * Frequency of calling jerry_debugger_receive() by the VM.
  */
 #define JERRY_DEBUGGER_MESSAGE_FREQUENCY 5
@@ -125,6 +130,8 @@ typedef enum
   JERRY_DEBUGGER_OUTPUT_RESULT = 24, /**< output sent by the program to the debugger */
   JERRY_DEBUGGER_OUTPUT_RESULT_END = 25, /**< last output result data */
 
+  JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT, /**< number of different type of output messages by the debugger */
+
   /* Messages sent by the client to server. */
 
   /* The following messages are accepted in both run and breakpoint modes. */
@@ -147,6 +154,8 @@ typedef enum
   JERRY_DEBUGGER_GET_BACKTRACE = 13, /**< get backtrace */
   JERRY_DEBUGGER_EVAL = 14, /**< first message of evaluating a string */
   JERRY_DEBUGGER_EVAL_PART = 15, /**< next message of evaluating a string */
+
+  JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
 } jerry_debugger_header_type_t;
 
 /**
@@ -189,6 +198,7 @@ typedef struct
   uint8_t max_message_size; /**< maximum incoming message size */
   uint8_t cpointer_size; /**< size of compressed pointers */
   uint8_t little_endian; /**< little endian machine */
+  uint8_t version; /**< debugger version */
 } jerry_debugger_send_configuration_t;
 
 /**

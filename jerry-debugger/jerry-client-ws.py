@@ -25,6 +25,9 @@ import socket
 import struct
 import sys
 
+# Expected debugger protocol version.
+JERRY_DEBUGGER_VERSION = 1
+
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
 JERRY_DEBUGGER_PARSE_ERROR = 2
@@ -563,13 +566,14 @@ class JerryDebugger(object):
         else:
             result = b""
 
-        len_expected = 6
+        len_expected = 7
         # Network configurations, which has the following struct:
         # header [2] - opcode[1], size[1]
         # type [1]
         # max_message_size [1]
         # cpointer_size [1]
         # little_endian [1]
+        # version [1]
 
         while len(result) < len_expected:
             result += self.client_socket.recv(1024)
@@ -578,7 +582,7 @@ class JerryDebugger(object):
 
         expected = struct.pack("BBB",
                                WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                               4,
+                               5,
                                JERRY_DEBUGGER_CONFIGURATION)
 
         if result[0:3] != expected:
@@ -587,6 +591,12 @@ class JerryDebugger(object):
         self.max_message_size = ord(result[3])
         self.cp_size = ord(result[4])
         self.little_endian = ord(result[5])
+        self.version = ord(result[6])
+
+        if self.version != JERRY_DEBUGGER_VERSION:
+            raise Exception("Incorrect debugger version from target: %d expected: %d" %
+                            (self.version, JERRY_DEBUGGER_VERSION))
+
 
         if self.little_endian:
             self.byte_order = "<"

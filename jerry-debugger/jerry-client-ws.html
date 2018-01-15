@@ -35,6 +35,9 @@ textarea {
   <div>
 </div>
 <script>
+// Expected JerryScript debugger protocol version
+var JERRY_DEBUGGER_VERSION = 1;
+
 // Messages sent by the server to client.
 var JERRY_DEBUGGER_CONFIGURATION = 1;
 var JERRY_DEBUGGER_PARSE_ERROR = 2;
@@ -136,6 +139,7 @@ function DebuggerClient(address)
   var outputResult = null;
   var exceptionData = null;
   var display = 0;
+  var version = 0;
 
   function assert(expr)
   {
@@ -783,7 +787,7 @@ function DebuggerClient(address)
     if (cpointerSize == 0)
     {
       if (message[0] != JERRY_DEBUGGER_CONFIGURATION
-          || message.byteLength != 4)
+          || message.byteLength != 5)
       {
         abortConnection("the first message must be configuration.");
       }
@@ -792,9 +796,17 @@ function DebuggerClient(address)
       cpointerSize = message[2]
       littleEndian = (message[3] != 0);
 
+      version = message[4];
+
       if (cpointerSize != 2 && cpointerSize != 4)
       {
         abortConnection("compressed pointer must be 2 or 4 byte long.");
+      }
+
+      if (version != JERRY_DEBUGGER_VERSION)
+      {
+        abortConnection("incorrect target debugger version detected: "
+                        + version + " expected: " + JERRY_DEBUGGER_VERSION);
       }
 
       config = false;

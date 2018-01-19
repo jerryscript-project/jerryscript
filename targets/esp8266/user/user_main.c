@@ -43,14 +43,21 @@ static int jerry_task_init(void) {
 
   js_entry();
 
-  /* run js files */
+  /* run rest of the js files first */
   show_free_mem(2);
-  for (int src = 0; js_codes[src].source; src++) {
+  for (int src = 1; js_codes[src].source; src++) {
     int retcode = js_eval(js_codes[src].source, js_codes[src].length);
     if (retcode != 0) {
       printf("js_eval failed code(%d) [%s]\r\n", retcode, js_codes[src].name);
-      return -2;
+      return -1;
     }
+  }
+
+  /* run main.js */
+  int retcode = js_eval(js_codes[0].source, js_codes[0].length);
+  if (retcode != 0) {
+    printf("js_eval failed code(%d) [%s]\r\n", retcode, js_codes[0].name);
+    return -2;
   }
   show_free_mem(3);
   return 0;

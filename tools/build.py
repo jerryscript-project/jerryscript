@@ -126,6 +126,8 @@ def get_arguments():
                           help=devhelp('enable memory statistics (%(choices)s; default: %(default)s)'))
     devgroup.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                           help=devhelp('enable mem-stress test (%(choices)s; default: %(default)s)'))
+    devgroup.add_argument('--regexp-strict-mode', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                          help=devhelp('enable regexp strict mode (%(choices)s; default: %(default)s)'))
     devgroup.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                           help=devhelp('enable parser byte-code dumps (%(choices)s; default: %(default)s)'))
     devgroup.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
@@ -186,6 +188,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_MEM_STATS=%s' % arguments.mem_stats)
     build_options.append('-DFEATURE_MEM_STRESS_TEST=%s' % arguments.mem_stress_test)
     build_options.append('-DFEATURE_PARSER_DUMP=%s' % arguments.show_opcodes)
+    build_options.append('-DFEATURE_REGEXP_STRICT_MODE=%s' % arguments.regexp_strict_mode)
     build_options.append('-DFEATURE_REGEXP_DUMP=%s' % arguments.show_regexp_opcodes)
     build_options.append('-DFEATURE_VALGRIND=%s' % arguments.valgrind)
     build_options.append('-DFEATURE_VALGRIND_FREYA=%s' % arguments.valgrind_freya)

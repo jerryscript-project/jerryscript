@@ -483,6 +483,21 @@ jerry_cmd_main (int argc, char *argv[])
 } /* jerry_cmd_main */
 
 /**
+ * Run JerryScript and print its return value.
+ */
+static int
+jerry(int argc, char *argv[])
+{
+  int ret_code = jerry_cmd_main(argc, argv);
+
+#ifdef CONFIG_DEBUG_VERBOSE
+  jerry_port_log(JERRY_LOG_LEVEL_DEBUG, "JerryScript result: %d\n", ret_code);
+#endif
+
+  return ret_code;
+} /* jerry */
+
+/**
  * Aborts the program.
  */
 void jerry_port_fatal (jerry_fatal_code_t code)
@@ -554,6 +569,6 @@ int main (int argc, FAR char *argv[])
 int jerry_main (int argc, char *argv[])
 #endif
 {
-  tash_cmd_install("jerry", jerry_cmd_main, TASH_EXECMD_SYNC);
+  tash_cmd_install("jerry", jerry, TASH_EXECMD_SYNC);
   return 0;
 } /* main */

@@ -2275,7 +2275,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
@@ -2756,6 +2756,28 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     return ecma_raise_syntax_error ("");
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
+
+#ifdef JERRY_DEBUGGER
+  if ((JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))
+      == (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))
+  {
+    JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_PARSER_WAIT_MODE);
+    jerry_debugger_send_type (JERRY_DEBUGGER_WAITING_AFTER_PARSE);
+
+    while (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_PARSER_WAIT_MODE)
+    {
+      jerry_debugger_receive (NULL);
+
+      if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+      {
+        break;
+      }
+
+      jerry_debugger_sleep ();
+    }
+  }
+#endif /* JERRY_DEBUGGER */
+
   return ECMA_VALUE_TRUE;
 #else /* JERRY_DISABLE_JS_PARSER */
   JERRY_UNUSED (arg_list_p);

@@ -43,7 +43,7 @@ jerry_debugger_stop (void)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
-    JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
+    JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
 #endif /* JERRY_DEBUGGER */
@@ -59,7 +59,7 @@ jerry_debugger_continue (void)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
-    JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_VM_STOP);
+    JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
 #endif /* JERRY_DEBUGGER */
@@ -77,11 +77,11 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
   {
     if (enable_stop_at_breakpoint)
     {
-      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_IGNORE);
+      JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
     }
     else
     {
-      JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) & ~JERRY_DEBUGGER_VM_IGNORE);
+      JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
     }
   }
 #else /* !JERRY_DEBUGGER */
@@ -122,7 +122,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
-    JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
+    JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
     jerry_debugger_uint8_data_t *client_source_data_p = NULL;
     jerry_debugger_wait_for_source_status_t ret_type = JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
 
@@ -142,8 +142,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONTEXT_RESET_MODE))
         {
           ret_type = JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED;
-          JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags)
-                                           & ~JERRY_DEBUGGER_CONTEXT_RESET_MODE);
+          JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_CONTEXT_RESET_MODE);
           break;
         }
 
@@ -151,8 +150,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_NO_SOURCE))
         {
           ret_type = JERRY_DEBUGGER_SOURCE_END;
-          JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags)
-                                           & ~JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
+          JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_CLIENT_SOURCE_MODE);
           break;
         }
 

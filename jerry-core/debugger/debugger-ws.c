@@ -69,7 +69,7 @@ jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-  JERRY_CONTEXT (debugger_flags) = (uint8_t) JERRY_DEBUGGER_VM_IGNORE;
+  JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
 
   if (log_error)
   {
@@ -360,7 +360,7 @@ jerry_debugger_accept_connection (void)
 
   close (server_socket);
 
-  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_CONNECTED);
+  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_CONNECTED);
 
   bool is_handshake_ok = false;
 
@@ -399,7 +399,7 @@ jerry_debugger_accept_connection (void)
 
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
-  JERRY_CONTEXT (debugger_flags) = (uint8_t) (JERRY_CONTEXT (debugger_flags) | JERRY_DEBUGGER_VM_STOP);
+  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
   JERRY_CONTEXT (debugger_stop_context) = NULL;
 
   return true;
@@ -444,7 +444,7 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-  JERRY_ASSERT (message_data_p != NULL ? (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
+  JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
                                        : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
 
   JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;

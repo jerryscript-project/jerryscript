@@ -116,11 +116,11 @@ typedef struct
   vm_frame_ctx_t *debugger_stop_context; /**< stop only if the current context is equal to this context */
   jmem_cpointer_t debugger_byte_code_free_head; /**< head of byte code free linked list */
   jmem_cpointer_t debugger_byte_code_free_tail; /**< tail of byte code free linked list */
-  uint8_t debugger_flags; /**< debugger flags */
-  uint8_t debugger_message_delay; /**< call receive message when reaches zero */
+  uint32_t debugger_flags; /**< debugger flags */
   uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
-  int debugger_connection; /**< holds the file descriptor of the socket communication */
   uint16_t debugger_port; /**< debugger socket communication port */
+  uint8_t debugger_message_delay; /**< call receive message when reaches zero */
+  int debugger_connection; /**< holds the file descriptor of the socket communication */
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JMEM_STATS

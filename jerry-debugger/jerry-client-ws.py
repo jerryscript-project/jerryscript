@@ -41,19 +41,20 @@ JERRY_DEBUGGER_SOURCE_CODE_NAME = 9
 JERRY_DEBUGGER_SOURCE_CODE_NAME_END = 10
 JERRY_DEBUGGER_FUNCTION_NAME = 11
 JERRY_DEBUGGER_FUNCTION_NAME_END = 12
-JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 13
-JERRY_DEBUGGER_MEMSTATS_RECEIVE = 14
-JERRY_DEBUGGER_BREAKPOINT_HIT = 15
-JERRY_DEBUGGER_EXCEPTION_HIT = 16
-JERRY_DEBUGGER_EXCEPTION_STR = 17
-JERRY_DEBUGGER_EXCEPTION_STR_END = 18
-JERRY_DEBUGGER_BACKTRACE = 19
-JERRY_DEBUGGER_BACKTRACE_END = 20
-JERRY_DEBUGGER_EVAL_RESULT = 21
-JERRY_DEBUGGER_EVAL_RESULT_END = 22
-JERRY_DEBUGGER_WAIT_FOR_SOURCE = 23
-JERRY_DEBUGGER_OUTPUT_RESULT = 24
-JERRY_DEBUGGER_OUTPUT_RESULT_END = 25
+JERRY_DEBUGGER_WAITING_AFTER_PARSE = 13
+JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP = 14
+JERRY_DEBUGGER_MEMSTATS_RECEIVE = 15
+JERRY_DEBUGGER_BREAKPOINT_HIT = 16
+JERRY_DEBUGGER_EXCEPTION_HIT = 17
+JERRY_DEBUGGER_EXCEPTION_STR = 18
+JERRY_DEBUGGER_EXCEPTION_STR_END = 19
+JERRY_DEBUGGER_BACKTRACE = 20
+JERRY_DEBUGGER_BACKTRACE_END = 21
+JERRY_DEBUGGER_EVAL_RESULT = 22
+JERRY_DEBUGGER_EVAL_RESULT_END = 23
+JERRY_DEBUGGER_WAIT_FOR_SOURCE = 24
+JERRY_DEBUGGER_OUTPUT_RESULT = 25
+JERRY_DEBUGGER_OUTPUT_RESULT_END = 26
 
 # Subtypes of eval
 JERRY_DEBUGGER_EVAL_OK = 1
@@ -71,18 +72,20 @@ JERRY_DEBUGGER_OUTPUT_TRACE = 5
 JERRY_DEBUGGER_FREE_BYTE_CODE_CP = 1
 JERRY_DEBUGGER_UPDATE_BREAKPOINT = 2
 JERRY_DEBUGGER_EXCEPTION_CONFIG = 3
-JERRY_DEBUGGER_MEMSTATS = 4
-JERRY_DEBUGGER_STOP = 5
-JERRY_DEBUGGER_CLIENT_SOURCE = 6
-JERRY_DEBUGGER_CLIENT_SOURCE_PART = 7
-JERRY_DEBUGGER_NO_MORE_SOURCES = 8
-JERRY_DEBUGGER_CONTEXT_RESET = 9
-JERRY_DEBUGGER_CONTINUE = 10
-JERRY_DEBUGGER_STEP = 11
-JERRY_DEBUGGER_NEXT = 12
-JERRY_DEBUGGER_GET_BACKTRACE = 13
-JERRY_DEBUGGER_EVAL = 14
-JERRY_DEBUGGER_EVAL_PART = 15
+JERRY_DEBUGGER_PARSER_CONFIG = 4
+JERRY_DEBUGGER_MEMSTATS = 5
+JERRY_DEBUGGER_STOP = 6
+JERRY_DEBUGGER_PARSER_RESUME = 7
+JERRY_DEBUGGER_CLIENT_SOURCE = 8
+JERRY_DEBUGGER_CLIENT_SOURCE_PART = 9
+JERRY_DEBUGGER_NO_MORE_SOURCES = 10
+JERRY_DEBUGGER_CONTEXT_RESET = 11
+JERRY_DEBUGGER_CONTINUE = 12
+JERRY_DEBUGGER_STEP = 13
+JERRY_DEBUGGER_NEXT = 14
+JERRY_DEBUGGER_GET_BACKTRACE = 15
+JERRY_DEBUGGER_EVAL = 16
+JERRY_DEBUGGER_EVAL_PART = 17
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -315,6 +318,8 @@ class DebuggerPrompt(Cmd):
                 self.debugger.send_breakpoint(breakpoint)
             elif breakpoint_index in self.debugger.pending_breakpoint_list:
                 del self.debugger.pending_breakpoint_list[breakpoint_index]
+                if not self.debugger.pending_breakpoint_list:
+                    self.debugger.send_parser_config(0)
             else:
                 print("Error: Breakpoint %d not found" % (breakpoint_index))
 
@@ -636,7 +641,9 @@ class JerryDebugger(object):
             self.send_breakpoint(breakpoint)
 
     def delete_pending(self):
-        self.pending_breakpoint_list.clear()
+        if self.pending_breakpoint_list:
+            self.pending_breakpoint_list.clear()
+            self.send_parser_config(0)
 
     def breakpoint_pending_exists(self, breakpoint):
         for existing_bp in self.pending_breakpoint_list.values():
@@ -684,13 +691,22 @@ class JerryDebugger(object):
                               enable)
         self.send_message(message)
 
+    def send_parser_config(self, enable):
+        message = struct.pack(self.byte_order + "BBIBB",
+                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                              WEBSOCKET_FIN_BIT + 1 + 1,
+                              0,
+                              JERRY_DEBUGGER_PARSER_CONFIG,
+                              enable)
+        self.send_message(message)
+
     def set_colors(self):
-        self.green = '\033[92m'
         self.nocolor = '\033[0m'
+        self.green = '\033[92m'
         self.red = '\033[31m'
         self.yellow = '\033[93m'
-        self.green_bg = '\033[42m'
-        self.yellow_bg = '\033[43m'
+        self.green_bg = '\033[42m\033[30m'
+        self.yellow_bg = '\033[43m\033[30m'
         self.blue = '\033[94m'
 
     def get_message(self, blocking):
@@ -843,29 +859,29 @@ def parse_source(debugger, data):
             debugger.line_list.insert(line, breakpoint)
 
     # Try to set the pending breakpoints
-    if len(debugger.pending_breakpoint_list) != 0:
+    if debugger.pending_breakpoint_list:
         logging.debug("Pending breakpoints list: %s", debugger.pending_breakpoint_list)
         bp_list = debugger.pending_breakpoint_list
 
-        for breakpoint in bp_list:
+        for breakpoint_index, breakpoint in bp_list.items():
             for src in debugger.function_list.values():
-                if src.source_name == bp_list[breakpoint].source_name:
+                if src.source_name == breakpoint.source_name:
                     source_lines = len(src.source)
                 else:
                     source_lines = 0
 
-            if bp_list[breakpoint].line:
-                if bp_list[breakpoint].line <= source_lines:
-                    tmp_bp = breakpoint
-                    breakpoint = bp_list[breakpoint].source_name + ":" + str(bp_list[breakpoint].line)
-                    if set_breakpoint(debugger, breakpoint, True):
-                        del tmp_bp
-            elif bp_list[breakpoint].function:
-                tmp_bp = breakpoint
-                breakpoint = bp_list[breakpoint].function
-                if set_breakpoint(debugger, breakpoint, True):
-                    del tmp_bp
+            if breakpoint.line:
+                if breakpoint.line <= source_lines:
+                    command = breakpoint.source_name + ":" + str(breakpoint.line)
+                    if set_breakpoint(debugger, command, True):
+                        del bp_list[breakpoint_index]
+            elif breakpoint.function:
+                command = breakpoint.function
+                if set_breakpoint(debugger, command, True):
+                    del bp_list[breakpoint_index]
 
+        if not bp_list:
+            debugger.send_parser_config(0)
 
     else:
         logging.debug("No pending breakpoints")
@@ -971,14 +987,19 @@ def set_breakpoint(debugger, string, pending):
 
     if not found and not pending:
         print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \
-             (debugger.yellow, debugger.nocolor))
+              (debugger.yellow, debugger.nocolor))
+
         ans = sys.stdin.readline()
         if ans in ['yes\n', 'y\n']:
+            if not debugger.pending_breakpoint_list:
+                debugger.send_parser_config(1)
+
             if line:
                 breakpoint = JerryPendingBreakpoint(int(line.group(2)), line.group(1))
             else:
                 breakpoint = JerryPendingBreakpoint(function=string)
             enable_breakpoint(debugger, breakpoint)
+
     elif not found and pending:
         return False
 
@@ -1061,6 +1082,9 @@ def main():
                            JERRY_DEBUGGER_FUNCTION_NAME,
                            JERRY_DEBUGGER_FUNCTION_NAME_END]:
             parse_source(debugger, data)
+
+        elif buffer_type == JERRY_DEBUGGER_WAITING_AFTER_PARSE:
+            debugger.send_command(JERRY_DEBUGGER_PARSER_RESUME)
 
         elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
             release_function(debugger, data)

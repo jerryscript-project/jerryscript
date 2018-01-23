@@ -14,7 +14,7 @@
 
 print("pending-breakpoints");
 
-eval("function f(){ return 5 }");
+eval("1;\nfunction f()\n{ return 5 }");
 
 var bird = "colibri";
 f();

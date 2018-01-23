@@ -57,9 +57,8 @@
                                    utf8_ptr, /**< [out] output buffer pointer */ \
                                    utf8_str_size) /**< [out] output buffer size */ \
   lit_utf8_size_t utf8_str_size; \
-  bool utf8_ptr ## must_be_freed; \
-  const lit_utf8_byte_t *utf8_ptr = ecma_string_raw_chars (ecma_str_ptr, &utf8_str_size, &utf8_ptr ## must_be_freed); \
-  utf8_ptr ## must_be_freed = false; /* it was used as 'is_ascii' in  'ecma_string_raw_chars', so we must reset it */ \
+  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, &utf8_str_size, NULL); \
+  bool utf8_ptr ## must_be_freed = false; \
   \
   if (utf8_ptr == NULL) \
   { \
@@ -232,7 +231,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
                                     lit_utf8_size_t buffer_size);
 void ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p,
                                 lit_utf8_size_t buffer_size);
-const lit_utf8_byte_t *ecma_string_raw_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, bool *is_ascii_p);
+const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, bool *is_ascii_p);
 void ecma_init_ecma_string_from_uint32 (ecma_string_t *string_desc_p, uint32_t uint32_number);
 void ecma_init_ecma_magic_string (ecma_string_t *string_desc_p, lit_magic_string_id_t id);
 bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);

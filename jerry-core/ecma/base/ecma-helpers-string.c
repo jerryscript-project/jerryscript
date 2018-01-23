@@ -1271,28 +1271,6 @@ ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string 
 } /* ecma_string_to_utf8_bytes */
 
 /**
- * Lengths for numeric string values
- */
-static const uint32_t nums_with_ascending_length[] =
-{
-  1u,
-  10u,
-  100u,
-  1000u,
-  10000u,
-  100000u,
-  1000000u,
-  10000000u,
-  100000000u,
-  1000000000u
-};
-
-/**
- * Maximum length of numeric strings
- */
-static const uint32_t max_uint32_len = (uint32_t) (sizeof (nums_with_ascending_length) / sizeof (uint32_t));
-
-/**
  * Get size of the number stored locally in the string's descriptor
  *
  * Note: the represented number size and length are equal
@@ -1302,12 +1280,24 @@ static const uint32_t max_uint32_len = (uint32_t) (sizeof (nums_with_ascending_l
 static inline ecma_length_t __attr_always_inline___
 ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number in the string-descriptor */
 {
+  uint32_t prev_number = 1;
+  uint32_t next_number = 100;
   ecma_length_t size = 1;
 
-  while (size < max_uint32_len && uint32_number >= nums_with_ascending_length[size])
+  const uint32_t max_size = 9;
+
+  while (size < max_size && uint32_number >= next_number)
+  {
+    prev_number = next_number;
+    next_number *= 100;
+    size += 2;
+  }
+
+  if (uint32_number >= prev_number * 10)
   {
     size++;
   }
+
   return size;
 } /* ecma_string_get_number_in_desc_size */
 
@@ -1317,13 +1307,17 @@ ecma_string_get_number_in_desc_size (const uint32_t uint32_number) /**< number i
 #define ECMA_STRING_IS_ASCII(char_p, size) ((size) == lit_utf8_string_length ((char_p), (size)))
 
 /**
- * Returns with the raw byte array of the string, if it is available.
+ * Returns with the cesu8 character array of a string.
  *
- * @return byte array start - if the byte array of a string is available
- *         NULL - otherwise
+ * Note:
+ *   This function returns with NULL for uint32 strings.
+ *   The buffer size is rounded up to 8 in this case.
+ *
+ * @return NULL - for uint32 strings
+ *         start of cesu8 characters - otherwise
  */
 const lit_utf8_byte_t *
-ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
+ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
                        lit_utf8_size_t *size_p, /**< [out] size of the ecma string */
                        bool *is_ascii_p) /**< [out] true, if the string is an ascii
                                           *               character sequence (size == length)
@@ -1377,8 +1371,13 @@ ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX);
 
       size = lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
-      length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
-                                       lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+      length = 0;
+
+      if (is_ascii_p != NULL)
+      {
+        length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
+                                         lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+      }
 
       result_p = lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id);
       break;
@@ -1386,9 +1385,13 @@ ecma_string_raw_chars (const ecma_string_t *string_p, /**< ecma-string */
   }
 
   *size_p = size;
-  *is_ascii_p = (length == size);
+
+  if (is_ascii_p != NULL)
+  {
+    *is_ascii_p = (length == size);
+  }
   return result_p;
-} /* ecma_string_raw_chars */
+} /* ecma_string_get_chars */
 
 /**
  * Checks whether the string equals to the magic string id.
@@ -1977,7 +1980,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   lit_utf8_size_t buffer_size;
   bool is_ascii;
-  const lit_utf8_byte_t *chars_p = ecma_string_raw_chars (string_p, &buffer_size, &is_ascii);
+  const lit_utf8_byte_t *chars_p = ecma_string_get_chars (string_p, &buffer_size, &is_ascii);
 
   if (chars_p != NULL)
   {
@@ -1996,7 +1999,7 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
   ecma_string_to_utf8_bytes (string_p, utf8_str_p, buffer_size);
 
   JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC);
-  /* Both above must be ascii strings. */
+  /* Uint32 must be an ascii string. */
   JERRY_ASSERT (is_ascii);
 
   ch = utf8_str_p[index];

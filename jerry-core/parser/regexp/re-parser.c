@@ -881,9 +881,35 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     case LIT_CHAR_QUESTION:
     case LIT_CHAR_ASTERISK:
     case LIT_CHAR_PLUS:
-    case LIT_CHAR_LEFT_BRACE:
     {
       return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
+    }
+    case LIT_CHAR_LEFT_BRACE:
+    {
+#ifdef ENABLE_REGEXP_STRICT_MODE
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
+#else /* !ENABLE_REGEXP_STRICT_MODE */
+      const lit_utf8_byte_t *input_curr_p = parser_ctx_p->input_curr_p;
+
+      lit_utf8_decr (&parser_ctx_p->input_curr_p);
+      if (ecma_is_value_empty (re_parse_iterator (parser_ctx_p, out_token_p)))
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
+      }
+
+      parser_ctx_p->input_curr_p = input_curr_p;
+
+      out_token_p->type = RE_TOK_CHAR;
+      out_token_p->value = ch;
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
+
+      if (!ecma_is_value_empty (ret_value))
+      {
+        parser_ctx_p->input_curr_p = input_curr_p;
+        ret_value = ECMA_VALUE_EMPTY;
+      }
+#endif /* ENABLE_REGEXP_STRICT_MODE */
+      break;
     }
     case LIT_CHAR_NULL:
     {

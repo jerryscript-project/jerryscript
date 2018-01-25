@@ -30,9 +30,35 @@
  * \addtogroup exceptions Exceptions
  * @{
  */
+typedef struct
+{
+  ecma_standard_error_t error_type;
+  ecma_builtin_id_t error_prototype_id;
+} ecma_error_mapping_t;
+
+const ecma_error_mapping_t ecma_error_mappings[] =
+{
+#define ERROR_ELEMENT(TYPE, ID) { TYPE, ID }
+  ERROR_ELEMENT (ECMA_ERROR_COMMON,      ECMA_BUILTIN_ID_ERROR_PROTOTYPE),
+
+#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+  ERROR_ELEMENT (ECMA_ERROR_EVAL,        ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE),
+  ERROR_ELEMENT (ECMA_ERROR_RANGE,       ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE),
+  ERROR_ELEMENT (ECMA_ERROR_REFERENCE,   ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE),
+  ERROR_ELEMENT (ECMA_ERROR_TYPE,        ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
+  ERROR_ELEMENT (ECMA_ERROR_URI,         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE),
+  ERROR_ELEMENT (ECMA_ERROR_SYNTAX,      ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE),
+#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+
+#undef ERROR_ELEMENT
+};
 
 /**
  * Standard ecma-error object constructor.
+ *
+ * Note:
+ *    calling with ECMA_ERROR_NONE does not make sense thus it will
+ *    cause a fault in the system.
  *
  * @return pointer to ecma-object representing specified error
  *         with reference counter set to one.
@@ -86,6 +112,12 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
       prototype_id = ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE;
       break;
     }
+
+    case ECMA_ERROR_NONE:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
   }
 #else
   JERRY_UNUSED (error_type);
@@ -104,6 +136,32 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */
+
+/**
+ * Return the error type for an Error object.
+ *
+ * @return one of the ecma_standard_error_t value
+ *         if it is not an Error object then ECMA_ERROR_NONE will be returned
+ */
+ecma_standard_error_t
+ecma_get_error_type (ecma_object_t *error_object) /**< possible error object */
+{
+  ecma_object_t *prototype_p = ecma_get_object_prototype (error_object);
+  if (prototype_p != NULL)
+  {
+    uint8_t builtin_id = ecma_get_object_builtin_id (prototype_p);
+
+    for (uint8_t idx = 0; idx < sizeof (ecma_error_mappings) / sizeof (ecma_error_mappings[0]); idx++)
+    {
+      if (ecma_error_mappings[idx].error_prototype_id == builtin_id)
+      {
+        return ecma_error_mappings[idx].error_type;
+      }
+    }
+  }
+
+  return ECMA_ERROR_NONE;
+} /* ecma_get_error_type */
 
 /**
  * Standard ecma-error object constructor.

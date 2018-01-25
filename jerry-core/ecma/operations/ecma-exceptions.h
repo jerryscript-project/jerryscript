@@ -39,6 +39,8 @@
  */
 typedef enum
 {
+  ECMA_ERROR_NONE,      /**< Not an Error */
+
   ECMA_ERROR_COMMON,    /**< Error */
   ECMA_ERROR_EVAL,      /**< EvalError */
   ECMA_ERROR_RANGE,     /**< RangeError */
@@ -48,6 +50,7 @@ typedef enum
   ECMA_ERROR_URI        /**< URIError */
 } ecma_standard_error_t;
 
+ecma_standard_error_t ecma_get_error_type (ecma_object_t *error_object);
 ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type);
 ecma_object_t *ecma_new_standard_error_with_message (ecma_standard_error_t error_type, ecma_string_t *message_string_p);
 ecma_value_t ecma_raise_standard_error (ecma_standard_error_t error_type, const lit_utf8_byte_t *msg_p);

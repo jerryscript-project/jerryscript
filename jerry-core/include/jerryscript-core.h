@@ -64,6 +64,8 @@ typedef enum
  */
 typedef enum
 {
+  JERRY_ERROR_NONE = 0,  /**< No Error */
+
   JERRY_ERROR_COMMON,    /**< Error */
   JERRY_ERROR_EVAL,      /**< EvalError */
   JERRY_ERROR_RANGE,     /**< RangeError */
@@ -298,6 +300,11 @@ void jerry_value_clear_error_flag (jerry_value_t *value_p);
 void jerry_value_set_error_flag (jerry_value_t *value_p);
 void jerry_value_set_abort_flag (jerry_value_t *value_p);
 jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value);
+
+/**
+ * Error object function(s).
+ */
+jerry_error_t jerry_get_error_type (const jerry_value_t value);
 
 /**
  * Getter functions of 'jerry_value_t'.

@@ -82,10 +82,10 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
  * Assert that it is correct to call API in current state.
  *
  * Note:
- *         By convention, there can be some states when API could not be invoked.
+ *         By convention, there are some states when API could not be invoked.
  *
- *         While, API can be invoked jerry_api_available flag is set,
- *         and while it is incorrect to invoke API - it is not set.
+ *         The API can be and only be invoked when the ECMA_STATUS_API_AVAILABLE
+ *         flag is set.
  *
  *         This procedure checks whether the API is available, and terminates
  *         the engine if it is unavailable. Otherwise it is a no-op.
@@ -98,7 +98,7 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
 static inline void __attr_always_inline___
 jerry_assert_api_available (void)
 {
-  if (unlikely (!JERRY_CONTEXT (jerry_api_available)))
+  if (unlikely (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE)))
   {
     /* Terminates the execution. */
     JERRY_UNREACHABLE ();
@@ -111,7 +111,7 @@ jerry_assert_api_available (void)
 static inline void __attr_always_inline___
 jerry_make_api_available (void)
 {
-  JERRY_CONTEXT (jerry_api_available) = true;
+  JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE;
 } /* jerry_make_api_available */
 
 /**
@@ -120,7 +120,7 @@ jerry_make_api_available (void)
 static inline void __attr_always_inline___
 jerry_make_api_unavailable (void)
 {
-  JERRY_CONTEXT (jerry_api_available) = false;
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_API_AVAILABLE;
 } /* jerry_make_api_unavailable */
 
 /**
@@ -152,7 +152,7 @@ jerry_return (jerry_value_t value) /**< return value */
 {
   if (ECMA_IS_VALUE_ERROR (value))
   {
-    value = ecma_create_error_reference (JERRY_CONTEXT (error_value));
+    value = ecma_create_error_reference_from_context ();
   }
 
   return value;
@@ -167,7 +167,7 @@ static inline jerry_value_t __attr_always_inline___
 jerry_throw (jerry_value_t value) /**< return value */
 {
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (value));
-  return ecma_create_error_reference (JERRY_CONTEXT (error_value));
+  return ecma_create_error_reference_from_context ();
 } /* jerry_throw */
 
 /**
@@ -176,7 +176,7 @@ jerry_throw (jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
-  if (unlikely (JERRY_CONTEXT (jerry_api_available)))
+  if (unlikely (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE))
   {
     /* This function cannot be called twice unless jerry_cleanup is called. */
     JERRY_UNREACHABLE ();
@@ -391,7 +391,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
   {
-    return ecma_create_error_reference (JERRY_CONTEXT (error_value));
+    return ecma_create_error_reference_from_context ();
   }
 
   ecma_free_value (parse_status);
@@ -493,7 +493,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
   {
-    return ecma_create_error_reference (JERRY_CONTEXT (error_value));
+    return ecma_create_error_reference_from_context ();
   }
 
   ecma_free_value (parse_status);
@@ -809,7 +809,7 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 } /* jerry_is_feature_enabled */
 
 /**
- * Check if the specified value is an error value.
+ * Check if the specified value is an error or abort value.
  *
  * @return true  - if the error flag of the specified value is true,
  *         false - otherwise
@@ -823,6 +823,27 @@ jerry_value_has_error_flag (const jerry_value_t value) /**< api value */
 } /* jerry_value_has_error_flag */
 
 /**
+ * Check if the specified value is an abort value.
+ *
+ * @return true  - if both the error and abort flags of the specified value are true,
+ *         false - otherwise
+ */
+bool
+jerry_value_has_abort_flag (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_error_reference (value))
+  {
+    return false;
+  }
+
+  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
+
+  return (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT) != 0;
+} /* jerry_value_has_abort_flag */
+
+/**
  * Clear the error flag
  */
 void
@@ -832,23 +853,55 @@ jerry_value_clear_error_flag (jerry_value_t *value_p)
 
   if (ecma_is_value_error_reference (*value_p))
   {
-    *value_p = ecma_clear_error_reference (*value_p);
+    *value_p = ecma_clear_error_reference (*value_p, false);
   }
 } /* jerry_value_clear_error_flag */
 
 /**
- * Set the error flag.
+ * Set the error flag if the value is not an error reference.
  */
 void
 jerry_value_set_error_flag (jerry_value_t *value_p)
 {
   jerry_assert_api_available ();
 
-  if (!ecma_is_value_error_reference (*value_p))
+  if (unlikely (ecma_is_value_error_reference (*value_p)))
   {
-    *value_p = ecma_create_error_reference (*value_p);
+    /* This is a rare case so it is optimized for
+     * binary size rather than performance. */
+    if (!jerry_value_has_abort_flag (*value_p))
+    {
+      return;
+    }
+
+    jerry_value_clear_error_flag (value_p);
   }
+
+  *value_p = ecma_create_error_reference (*value_p, true);
 } /* jerry_value_set_error_flag */
+
+/**
+ * Set both the abort and error flags if the value is not an error reference.
+ */
+void
+jerry_value_set_abort_flag (jerry_value_t *value_p)
+{
+  jerry_assert_api_available ();
+
+  if (unlikely (ecma_is_value_error_reference (*value_p)))
+  {
+    /* This is a rare case so it is optimized for
+     * binary size rather than performance. */
+    if (jerry_value_has_abort_flag (*value_p))
+    {
+      return;
+    }
+
+    jerry_value_clear_error_flag (value_p);
+  }
+
+  *value_p = ecma_create_error_reference (*value_p, false);
+} /* jerry_value_set_abort_flag */
 
 /**
  * If the input value is an error value, then return a new reference to its referenced value.

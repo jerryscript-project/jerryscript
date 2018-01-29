@@ -730,7 +730,7 @@ jerry_snapshot_result_at (const uint32_t *snapshot_p, /**< snapshot */
 
   if (ECMA_IS_VALUE_ERROR (ret_val))
   {
-    return ecma_create_error_reference (JERRY_CONTEXT (error_value));
+    return ecma_create_error_reference_from_context ();
   }
 
   return ret_val;

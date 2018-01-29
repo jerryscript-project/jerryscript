@@ -902,7 +902,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
     {
       --JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
     }
-    JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = false;
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
     /*
@@ -921,14 +921,14 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
     JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
-    if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc))
+    if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_HIGH_SEV_GC)
     {
       JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_MAX;
     }
     else if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) < ECMA_PROP_HASHMAP_ALLOC_MAX)
     {
       ++JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
-      JERRY_CONTEXT (ecma_prop_hashmap_alloc_last_is_hs_gc) = true;
+      JERRY_CONTEXT (status_flags) |= ECMA_STATUS_HIGH_SEV_GC;
     }
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 

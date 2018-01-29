@@ -428,7 +428,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                               arguments_list_len);
   }
 
-  JERRY_CONTEXT (is_direct_eval_form_call) = false;
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
   /* Free registers. */
   for (uint32_t i = 0; i < arguments_list_len; i++)
@@ -888,8 +888,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               }
               else
               {
-                JERRY_CONTEXT (error_value) = ecma_clear_error_reference (result);
+                JERRY_CONTEXT (error_value) = ecma_clear_error_reference (result, false);
               }
+
+              JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
               result = ECMA_VALUE_ERROR;
               goto error;
             }
@@ -1405,6 +1407,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_THROW:
         {
           JERRY_CONTEXT (error_value) = left_value;
+          JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+
           result = ECMA_VALUE_ERROR;
           left_value = ECMA_VALUE_UNDEFINED;
           goto error;
@@ -1416,7 +1420,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_EVAL:
         {
-          JERRY_CONTEXT (is_direct_eval_form_call) = true;
+          JERRY_CONTEXT (status_flags) |= ECMA_STATUS_DIRECT_EVAL;
           JERRY_ASSERT (*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK);
           continue;
         }
@@ -2449,6 +2453,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             case VM_CONTEXT_FINALLY_THROW:
             {
               JERRY_CONTEXT (error_value) = stack_top_p[-2];
+              JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
 
               VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth,
                                   PARSER_TRY_CONTEXT_STACK_ALLOCATION);
@@ -2714,10 +2719,6 @@ error:
 
     if (!ECMA_IS_VALUE_ERROR (result))
     {
-      JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
-
-      stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
-
       if (vm_stack_find_finally (frame_ctx_p,
                                  &stack_top_p,
                                  VM_CONTEXT_FINALLY_RETURN,
@@ -2731,7 +2732,7 @@ error:
         continue;
       }
     }
-    else
+    else if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION)
     {
       if (vm_stack_find_finally (frame_ctx_p,
                                  &stack_top_p,
@@ -2774,39 +2775,18 @@ error:
           stack_top_p[-2] = JERRY_CONTEXT (error_value);
         }
 
-#ifdef JERRY_VM_EXEC_STOP
-        if (JERRY_CONTEXT (vm_exec_stop_cb) != NULL
-            && --JERRY_CONTEXT (vm_exec_stop_counter) == 0)
-        {
-          result = JERRY_CONTEXT (vm_exec_stop_cb) (JERRY_CONTEXT (vm_exec_stop_user_p));
-
-          if (ecma_is_value_undefined (result))
-          {
-            JERRY_CONTEXT (vm_exec_stop_counter) = JERRY_CONTEXT (vm_exec_stop_frequency);
-          }
-          else
-          {
-            JERRY_CONTEXT (vm_exec_stop_counter) = 1;
-
-            left_value = ECMA_VALUE_UNDEFINED;
-            right_value = ECMA_VALUE_UNDEFINED;
-
-            if (!ecma_is_value_error_reference (result))
-            {
-              JERRY_CONTEXT (error_value) = result;
-            }
-            else
-            {
-              JERRY_CONTEXT (error_value) = ecma_clear_error_reference (result);
-            }
-            result = ECMA_VALUE_ERROR;
-            goto error;
-          }
-        }
-#endif /* JERRY_VM_EXEC_STOP */
-
         continue;
       }
+    }
+    else
+    {
+      do
+      {
+        JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
+
+        stack_top_p = vm_stack_context_abort (frame_ctx_p, stack_top_p);
+      }
+      while (frame_ctx_p->context_depth > 0);
     }
 
     ecma_free_value (block_result);
@@ -2871,7 +2851,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
   }
 
-  JERRY_CONTEXT (is_direct_eval_form_call) = false;
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
   JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p;
 
@@ -3000,7 +2980,7 @@ vm_is_strict_mode (void)
 inline bool __attr_always_inline___
 vm_is_direct_eval_form_call (void)
 {
-  return JERRY_CONTEXT (is_direct_eval_form_call);
+  return (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0;
 } /* vm_is_direct_eval_form_call */
 
 /**

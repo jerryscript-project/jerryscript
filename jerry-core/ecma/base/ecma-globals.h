@@ -65,6 +65,19 @@ typedef enum
 } ecma_init_flag_t;
 
 /**
+ * JerryScript status flags.
+ */
+typedef enum
+{
+  ECMA_STATUS_API_AVAILABLE     = (1u << 0), /**< api available */
+  ECMA_STATUS_DIRECT_EVAL       = (1u << 1), /**< eval is called directly */
+#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  ECMA_STATUS_HIGH_SEV_GC       = (1u << 2), /**< last gc run was a high severity run */
+#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+  ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
+} ecma_status_flag_t;
+
+/**
  * Type of ecma value
  */
 typedef enum
@@ -1162,11 +1175,26 @@ typedef struct
 } ecma_long_string_t;
 
 /**
+ * Abort flag for error reference.
+ */
+#define ECMA_ERROR_REF_ABORT 0x1
+
+/**
+ * Value for increasing or decreasing the reference counter.
+ */
+#define ECMA_ERROR_REF_ONE (1u << 1)
+
+/**
+ * Maximum value of the reference counter.
+ */
+#define ECMA_ERROR_MAX_REF (UINT32_MAX - 1u)
+
+/**
  * Representation of a thrown value on API level.
  */
 typedef struct
 {
-  uint32_t refs; /**< reference counter */
+  uint32_t refs_and_flags; /**< reference counter */
   ecma_value_t value; /**< referenced value */
 } ecma_error_reference_t;
 

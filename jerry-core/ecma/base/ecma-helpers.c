@@ -19,6 +19,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lcache.h"
 #include "ecma-property-hashmap.h"
+#include "jcontext.h"
 #include "jrt-bit-fields.h"
 #include "byte-code.h"
 #include "re-compiler.h"
@@ -26,7 +27,6 @@
 
 #ifdef JERRY_DEBUGGER
 #include "debugger.h"
-#include "jcontext.h"
 #endif /* JERRY_DEBUGGER */
 
 /** \addtogroup ecma ECMA
@@ -1335,14 +1335,27 @@ JERRY_STATIC_ASSERT (sizeof (ecma_error_reference_t) == 8,
  * @return error reference value
  */
 ecma_value_t
-ecma_create_error_reference (ecma_value_t value) /**< referenced value */
+ecma_create_error_reference (ecma_value_t value, /**< referenced value */
+                             bool is_exception) /**< error reference is an exception */
 {
   ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
 
-  error_ref_p->refs = 1;
+  error_ref_p->refs_and_flags = ECMA_ERROR_REF_ONE | (is_exception ? 0 : ECMA_ERROR_REF_ABORT);
   error_ref_p->value = value;
   return ecma_make_error_reference_value (error_ref_p);
 } /* ecma_create_error_reference */
+
+/**
+ * Create an error reference from the currently thrown error value.
+ *
+ * @return error reference value
+ */
+ecma_value_t
+ecma_create_error_reference_from_context (void)
+{
+  return ecma_create_error_reference (JERRY_CONTEXT (error_value),
+                                      (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION) != 0);
+} /* ecma_create_error_reference_from_context */
 
 /**
  * Create an error reference from a given object.
@@ -1355,7 +1368,7 @@ ecma_create_error_reference (ecma_value_t value) /**< referenced value */
 inline ecma_value_t __attr_always_inline___
 ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
 {
-  return ecma_create_error_reference (ecma_make_object_value (object_p));
+  return ecma_create_error_reference (ecma_make_object_value (object_p), true);
 } /* ecma_create_error_object_reference */
 
 /**
@@ -1364,9 +1377,9 @@ ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced obj
 void
 ecma_ref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
 {
-  if (likely (error_ref_p->refs < UINT32_MAX))
+  if (likely (error_ref_p->refs_and_flags < ECMA_ERROR_MAX_REF))
   {
-    error_ref_p->refs++;
+    error_ref_p->refs_and_flags += ECMA_ERROR_REF_ONE;
   }
   else
   {
@@ -1380,11 +1393,11 @@ ecma_ref_error_reference (ecma_error_reference_t *error_ref_p) /**< error refere
 void
 ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
 {
-  JERRY_ASSERT (error_ref_p->refs > 0);
+  JERRY_ASSERT (error_ref_p->refs_and_flags >= ECMA_ERROR_REF_ONE);
 
-  error_ref_p->refs--;
+  error_ref_p->refs_and_flags -= ECMA_ERROR_REF_ONE;
 
-  if (error_ref_p->refs == 0)
+  if (error_ref_p->refs_and_flags < ECMA_ERROR_REF_ONE)
   {
     ecma_free_value (error_ref_p->value);
     jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
@@ -1397,15 +1410,28 @@ ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error refe
  * @return value referenced by the error
  */
 ecma_value_t
-ecma_clear_error_reference (ecma_value_t value)
+ecma_clear_error_reference (ecma_value_t value, /**< error reference */
+                            bool set_abort_flag) /**< set abort flag */
 {
   ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
 
-  JERRY_ASSERT (error_ref_p->refs > 0);
-
-  if (error_ref_p->refs > 1)
+  if (set_abort_flag)
   {
-    error_ref_p->refs--;
+    if (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT)
+    {
+      JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+    }
+    else
+    {
+      JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+    }
+  }
+
+  JERRY_ASSERT (error_ref_p->refs_and_flags >= ECMA_ERROR_REF_ONE);
+
+  if (error_ref_p->refs_and_flags >= 2 * ECMA_ERROR_REF_ONE)
+  {
+    error_ref_p->refs_and_flags -= ECMA_ERROR_REF_ONE;
     return ecma_copy_value (error_ref_p->value);
   }
 

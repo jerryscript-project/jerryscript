@@ -470,14 +470,14 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
     if (unlikely (ecma_is_value_error_reference (ret_value)))
     {
-      JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value);
+      JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value, true);
       ret_value = ECMA_VALUE_ERROR;
     }
   }
   else
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
-    JERRY_CONTEXT (is_direct_eval_form_call) = false;
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
     /* 2-3. */
     ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;

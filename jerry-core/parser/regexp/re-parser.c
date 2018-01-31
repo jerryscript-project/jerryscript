@@ -318,7 +318,8 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
   bool is_range = false;
   parser_ctx_p->num_of_classes = 0;
 
-  if (lit_utf8_peek_prev (parser_ctx_p->input_curr_p) != LIT_CHAR_LEFT_SQUARE)
+  const ecma_char_t prev_char = lit_utf8_peek_prev (parser_ctx_p->input_curr_p);
+  if (prev_char != LIT_CHAR_LEFT_SQUARE && prev_char != LIT_CHAR_CIRCUMFLEX)
   {
     lit_utf8_decr (&parser_ctx_p->input_curr_p);
     lit_utf8_decr (&parser_ctx_p->input_curr_p);

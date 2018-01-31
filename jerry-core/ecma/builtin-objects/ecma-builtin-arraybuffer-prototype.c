@@ -121,6 +121,11 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
 
   ECMA_OP_TO_NUMBER_FINALIZE (start_num);
 
+  if (ret_value != ECMA_VALUE_EMPTY)
+  {
+    return ret_value;
+  }
+
   JERRY_ASSERT (start <= len && end <= len);
   ecma_length_t new_len = (end >= start) ? (end - start) : 0;
   ecma_object_t *new_arraybuffer_p = ecma_arraybuffer_new_object (new_len);

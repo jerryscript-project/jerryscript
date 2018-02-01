@@ -247,58 +247,116 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
   {
     return value;
   }
-  else if (ecma_is_value_float_number (value))
+
+  if (ecma_is_value_float_number (value))
   {
     return ecma_copy_value (value);
   }
-  else if (ecma_is_value_string (value))
+
+  if (ecma_is_value_string (value))
   {
     ecma_string_t *str_p = ecma_get_string_from_value (value);
     return ecma_make_number_value (ecma_string_to_number (str_p));
   }
-  else if (ecma_is_value_object (value))
+
+  if (ecma_is_value_object (value))
   {
-    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+    ecma_value_t primitive_value = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER);
 
-    ECMA_TRY_CATCH (primitive_value,
-                    ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER),
-                    ret_value);
+    if (ECMA_IS_VALUE_ERROR (primitive_value))
+    {
+      return primitive_value;
+    }
 
-    ret_value = ecma_op_to_number (primitive_value);
-
-    ECMA_FINALIZE (primitive_value);
-
+    ecma_value_t ret_value = ecma_op_to_number (primitive_value);
+    ecma_fast_free_value (primitive_value);
     return ret_value;
+  }
+
+  if (ecma_is_value_undefined (value))
+  {
+    return ecma_make_nan_value ();
+  }
+
+  ecma_integer_value_t num = 0;
+
+  if (ecma_is_value_null (value))
+  {
+    num = 0;
   }
   else
   {
-    int16_t num = 0;
+    JERRY_ASSERT (ecma_is_value_boolean (value));
 
-    if (ecma_is_value_undefined (value))
-    {
-      return ecma_make_nan_value ();
-    }
-    else if (ecma_is_value_null (value))
-    {
-      num = 0;
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_boolean (value));
-
-      if (ecma_is_value_true (value))
-      {
-        num = 1;
-      }
-      else
-      {
-        num = 0;
-      }
-    }
-
-    return ecma_make_integer_value (num);
+    num = ecma_is_value_true (value) ? 1 : 0;
   }
+
+  return ecma_make_integer_value (num);
 } /* ecma_op_to_number */
+
+/**
+ * Helper to get the number contained in an ecma value.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.3
+ *
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_get_number (ecma_value_t value, ecma_number_t *number_p)
+{
+  if (ecma_is_value_integer_number (value))
+  {
+    *number_p = ecma_get_integer_from_value (value);
+    return ECMA_VALUE_EMPTY;
+  }
+
+  if (ecma_is_value_float_number (value))
+  {
+    *number_p = ecma_get_float_from_value (value);
+    return ECMA_VALUE_EMPTY;
+  }
+
+  if (ecma_is_value_string (value))
+  {
+    ecma_string_t *str_p = ecma_get_string_from_value (value);
+    *number_p = ecma_string_to_number (str_p);
+    return ECMA_VALUE_EMPTY;
+  }
+
+  if (ecma_is_value_object (value))
+  {
+    ecma_value_t primitive_value = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_NUMBER);
+
+    if (ECMA_IS_VALUE_ERROR (primitive_value))
+    {
+      return primitive_value;
+    }
+
+    ecma_value_t ret_value = ecma_get_number (primitive_value, number_p);
+    ecma_fast_free_value (primitive_value);
+    return ret_value;
+  }
+
+  if (ecma_is_value_undefined (value))
+  {
+    *number_p = ecma_number_make_nan ();
+    return ECMA_VALUE_EMPTY;
+  }
+
+  if (ecma_is_value_null (value))
+  {
+    *number_p = 0;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  JERRY_ASSERT (ecma_is_value_boolean (value));
+
+  *number_p = ecma_is_value_true (value) ? 1 : 0;
+  return ECMA_VALUE_EMPTY;
+} /* ecma_get_number */
 
 /**
  * ToString operation.

@@ -161,6 +161,12 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
       current_p++;
       has_escape_sequence = true;
 
+      /* If there is an escape sequence but there's no escapable character just return */
+      if (current_p >= end_p)
+      {
+        return;
+      }
+
       switch (*current_p)
       {
         case LIT_CHAR_DOUBLE_QUOTE:
@@ -177,8 +183,7 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         case LIT_CHAR_LOWERCASE_U:
         {
           ecma_char_t code_unit;
-
-          if (!(lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit)))
+          if ((end_p - current_p >= 2) && !(lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit)))
           {
             return;
           }

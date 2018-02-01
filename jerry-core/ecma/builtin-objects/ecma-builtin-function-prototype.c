@@ -44,6 +44,11 @@
  */
 
 /**
+ * Maximum number of arguments for an apply function.
+ */
+#define ECMA_FUNCTION_APPLY_ARGUMENT_COUNT_LIMIT 65535
+
+/**
  * The Function.prototype object's 'toString' routine
  *
  * See also:
@@ -122,43 +127,50 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
         /* 5. */
         const uint32_t length = ecma_number_to_uint32 (length_number);
 
-        /* 6. */
-        JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
-        uint32_t last_index = 0;
-
-        /* 7. */
-        for (uint32_t index = 0;
-             index < length && ecma_is_value_empty (ret_value);
-             index++)
+        if (length >= ECMA_FUNCTION_APPLY_ARGUMENT_COUNT_LIMIT)
         {
-          ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
-
-          ECMA_TRY_CATCH (get_value,
-                          ecma_op_object_get (obj_p, curr_idx_str_p),
-                          ret_value);
-
-          arguments_list_p[index] = ecma_copy_value (get_value);
-          last_index = index + 1;
-
-          ECMA_FINALIZE (get_value);
-          ecma_deref_ecma_string (curr_idx_str_p);
+          ret_value = ecma_raise_range_error (ECMA_ERR_MSG ("Too many arguments declared for Function.apply()."));
         }
-
-        if (ecma_is_value_empty (ret_value))
+        else
         {
-          JERRY_ASSERT (last_index == length);
-          ret_value = ecma_op_function_call (func_obj_p,
-                                             arg1,
-                                             arguments_list_p,
-                                             length);
-        }
+          /* 6. */
+          JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
+          uint32_t last_index = 0;
 
-        for (uint32_t index = 0; index < last_index; index++)
-        {
-          ecma_free_value (arguments_list_p[index]);
-        }
+          /* 7. */
+          for (uint32_t index = 0;
+               index < length && ecma_is_value_empty (ret_value);
+               index++)
+          {
+            ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
 
-        JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
+            ECMA_TRY_CATCH (get_value,
+                            ecma_op_object_get (obj_p, curr_idx_str_p),
+                            ret_value);
+
+            arguments_list_p[index] = ecma_copy_value (get_value);
+            last_index = index + 1;
+
+            ECMA_FINALIZE (get_value);
+            ecma_deref_ecma_string (curr_idx_str_p);
+          }
+
+          if (ecma_is_value_empty (ret_value))
+          {
+            JERRY_ASSERT (last_index == length);
+            ret_value = ecma_op_function_call (func_obj_p,
+                                               arg1,
+                                               arguments_list_p,
+                                               length);
+          }
+
+          for (uint32_t index = 0; index < last_index; index++)
+          {
+            ecma_free_value (arguments_list_p[index]);
+          }
+
+          JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
+        }
 
         ECMA_OP_TO_NUMBER_FINALIZE (length_number);
         ECMA_FINALIZE (length_value);

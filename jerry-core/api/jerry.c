@@ -1521,6 +1521,11 @@ jerry_get_utf8_string_length (const jerry_value_t value) /**< input string */
  *      Returns 0, if the value parameter is not a string or
  *      the buffer is not large enough for the whole string.
  *
+ * Note:
+ *      If the size of the string in jerry value is larger than the size of the
+ *      target buffer, the copy will fail.
+ *      To copy substring use jerry_substring_to_char_buffer() instead.
+ *
  * @return number of bytes, actually copied to the buffer.
  */
 jerry_size_t
@@ -1556,6 +1561,11 @@ jerry_string_to_char_buffer (const jerry_value_t value, /**< input string value 
  *      The '\0' character could occur anywhere in the returned string
  *      Returns 0, if the value parameter is not a string or the buffer
  *      is not large enough for the whole string.
+ *
+ * Note:
+ *      If the size of the string in jerry value is larger than the size of the
+ *      target buffer, the copy will fail.
+ *      To copy a substring use jerry_substring_to_utf8_char_buffer() instead.
  *
  * @return number of bytes copied to the buffer.
  */

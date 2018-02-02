@@ -92,47 +92,8 @@ opfunc_logical_not (ecma_value_t left_value) /**< left value */
 ecma_value_t
 opfunc_typeof (ecma_value_t left_value) /**< left value */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  ecma_string_t *type_str_p = NULL;
-
-  if (ecma_is_value_undefined (left_value))
-  {
-    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_UNDEFINED);
-  }
-  else if (ecma_is_value_null (left_value))
-  {
-    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_OBJECT);
-  }
-  else if (ecma_is_value_boolean (left_value))
-  {
-    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_BOOLEAN);
-  }
-  else if (ecma_is_value_number (left_value))
-  {
-    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NUMBER);
-  }
-  else if (ecma_is_value_string (left_value))
-  {
-    type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STRING);
-  }
-  else
-  {
-    JERRY_ASSERT (ecma_is_value_object (left_value));
-
-    if (ecma_op_is_callable (left_value))
-    {
-      type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_FUNCTION);
-    }
-    else
-    {
-      type_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_OBJECT);
-    }
-  }
-
-  ret_value = ecma_make_string_value (type_str_p);
-
-  return ret_value;
+  ecma_string_t *type_str_p = ecma_get_magic_string (ecma_get_typeof_lit_id (left_value));
+  return ecma_make_string_value (type_str_p);
 } /* opfunc_typeof */
 
 /**

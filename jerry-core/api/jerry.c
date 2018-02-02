@@ -767,6 +767,60 @@ jerry_value_is_undefined (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_undefined */
 
 /**
+ * Perform the base type of the JavaScript value.
+ *
+ * @return jerry_type_t value
+ */
+jerry_type_t
+jerry_value_get_type (const jerry_value_t value) /**< input value to check */
+{
+  jerry_assert_api_available ();
+
+  jerry_value_t argument = jerry_get_arg_value (value);
+  lit_magic_string_id_t lit_id = ecma_get_typeof_lit_id (argument);
+
+  JERRY_ASSERT (lit_id != LIT_MAGIC_STRING__EMPTY);
+
+  switch (lit_id)
+  {
+    case LIT_MAGIC_STRING_UNDEFINED:
+    {
+      return JERRY_TYPE_UNDEFINED;
+    }
+    case LIT_MAGIC_STRING_BOOLEAN:
+    {
+      return JERRY_TYPE_BOOLEAN;
+    }
+    case LIT_MAGIC_STRING_NUMBER:
+    {
+      return JERRY_TYPE_NUMBER;
+    }
+    case LIT_MAGIC_STRING_STRING:
+    {
+      return JERRY_TYPE_STRING;
+    }
+    case LIT_MAGIC_STRING_FUNCTION:
+    {
+      return JERRY_TYPE_FUNCTION;
+    }
+    case LIT_MAGIC_STRING_OBJECT:
+    {
+      /* Based on the ECMA 262 5.1 standard the 'null' value is an object.
+       * Thus we'll do an extra check for 'null' here.
+       */
+      return ecma_is_value_null (argument) ? JERRY_TYPE_NULL : JERRY_TYPE_OBJECT;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+      break;
+    }
+  }
+
+  return JERRY_TYPE_NONE;
+} /* jerry_value_get_type */
+
+/**
  * Check if the specified feature is enabled.
  *
  * @return true  - if the specified feature is enabled,

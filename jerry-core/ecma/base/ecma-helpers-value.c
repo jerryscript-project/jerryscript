@@ -21,6 +21,8 @@
 #include "jrt-bit-fields.h"
 #include "vm-defines.h"
 
+#include "ecma-function-object.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -916,6 +918,55 @@ ecma_free_value_if_not_object (ecma_value_t value) /**< value description */
     ecma_free_value (value);
   }
 } /* ecma_free_value_if_not_object */
+
+/**
+ * Get the literal id associated with the given ecma_value type.
+ * This operation is equivalent to the JavaScript 'typeof' operator.
+ *
+ * @returns one of the following value:
+ *          - LIT_MAGIC_STRING_UNDEFINED
+ *          - LIT_MAGIC_STRING_OBJECT
+ *          - LIT_MAGIC_STRING_BOOLEAN
+ *          - LIT_MAGIC_STRING_NUMBER
+ *          - LIT_MAGIC_STRING_STRING
+ *          - LIT_MAGIC_STRING_FUNCTION
+ */
+lit_magic_string_id_t
+ecma_get_typeof_lit_id (ecma_value_t value) /**< input ecma value */
+{
+  lit_magic_string_id_t ret_value = LIT_MAGIC_STRING__EMPTY;
+
+  if (ecma_is_value_undefined (value))
+  {
+    ret_value = LIT_MAGIC_STRING_UNDEFINED;
+  }
+  else if (ecma_is_value_null (value))
+  {
+    ret_value = LIT_MAGIC_STRING_OBJECT;
+  }
+  else if (ecma_is_value_boolean (value))
+  {
+    ret_value = LIT_MAGIC_STRING_BOOLEAN;
+  }
+  else if (ecma_is_value_number (value))
+  {
+    ret_value = LIT_MAGIC_STRING_NUMBER;
+  }
+  else if (ecma_is_value_string (value))
+  {
+    ret_value = LIT_MAGIC_STRING_STRING;
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_value_object (value));
+
+    ret_value = ecma_op_is_callable (value) ? LIT_MAGIC_STRING_FUNCTION : LIT_MAGIC_STRING_OBJECT;
+  }
+
+  JERRY_ASSERT (ret_value != LIT_MAGIC_STRING__EMPTY);
+
+  return ret_value;
+} /* ecma_get_typeof_lit_id */
 
 /**
  * @}

@@ -32,6 +32,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-promise-object.h"
+#include "ecma-typedarray-object.h"
 #include "jcontext.h"
 #include "jerryscript.h"
 #include "jmem.h"
@@ -2935,6 +2936,321 @@ jerry_get_arraybuffer_pointer (const jerry_value_t value) /**< Array Buffer to u
 
   return NULL;
 } /* jerry_get_arraybuffer_pointer */
+
+
+/**
+ * TypedArray related functions
+ */
+
+/**
+ * Check if the given value is a TypedArray object.
+ *
+ * @return true - if it is a TypedArray object
+ *         false - otherwise
+ */
+bool
+jerry_value_is_typedarray (jerry_value_t value) /**< value to check if it is a TypedArray */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t array = jerry_get_arg_value (value);
+  return ecma_is_typedarray (array);
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_value_is_typedarray */
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+typedef struct
+{
+  jerry_typedarray_type_t api_type;
+  ecma_builtin_id_t prototype_id;
+  lit_magic_string_id_t lit_id;
+  uint8_t element_size_shift;
+} jerry_typedarray_mapping_t;
+
+static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
+{
+#define TYPEDARRAY_ENTRY(NAME, LIT_NAME, SIZE_SHIFT) \
+  { JERRY_TYPEDARRAY_ ## NAME, ECMA_BUILTIN_ID_ ## NAME ## ARRAY_PROTOTYPE, \
+    LIT_MAGIC_STRING_ ## LIT_NAME ## _ARRAY_UL, SIZE_SHIFT }
+
+  TYPEDARRAY_ENTRY (UINT8, UINT8, 0),
+  TYPEDARRAY_ENTRY (UINT8CLAMPED, UINT8_CLAMPED, 0),
+  TYPEDARRAY_ENTRY (INT8, INT8, 0),
+  TYPEDARRAY_ENTRY (UINT16, UINT16, 1),
+  TYPEDARRAY_ENTRY (INT16, INT16, 1),
+  TYPEDARRAY_ENTRY (UINT32, UINT32, 2),
+  TYPEDARRAY_ENTRY (INT32, INT32, 2),
+  TYPEDARRAY_ENTRY (FLOAT32, FLOAT32, 2),
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+  TYPEDARRAY_ENTRY (FLOAT64, FLOAT64, 3),
+#endif
+
+#undef TYPEDARRAY_ENTRY
+};
+
+/**
+ * Helper function to get the TypedArray prototype, literal id, and element size shift
+ * information.
+ *
+ * @return true - if the TypedArray information was found
+ *         false - if there is no such TypedArray type
+ */
+static bool
+jerry_typedarray_find_by_type (jerry_typedarray_type_t type_name, /**< type of the TypedArray */
+                               ecma_builtin_id_t *prototype_id, /**< [out] found prototype object id */
+                               lit_magic_string_id_t *lit_id, /**< [out] found literal id */
+                               uint8_t *element_size_shift) /**< [out] found element size shift value */
+{
+  JERRY_ASSERT (prototype_id != NULL);
+  JERRY_ASSERT (lit_id != NULL);
+  JERRY_ASSERT (element_size_shift != NULL);
+
+  for (uint32_t i = 0; i < sizeof (jerry_typedarray_mappings) / sizeof (jerry_typedarray_mappings[0]); i++)
+  {
+    if (type_name == jerry_typedarray_mappings[i].api_type)
+    {
+      *prototype_id = jerry_typedarray_mappings[i].prototype_id;
+      *lit_id = jerry_typedarray_mappings[i].lit_id;
+      *element_size_shift = jerry_typedarray_mappings[i].element_size_shift;
+      return true;
+    }
+  }
+
+  return false;
+} /* jerry_typedarray_find_by_type */
+
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+/**
+ * Create a TypedArray object with a given type and length.
+ *
+ * Notes:
+ *      * returns TypeError if an incorrect type (type_name) is specified.
+ *      * byteOffset property will be set to 0.
+ *      * byteLength property will be a multiple of the length parameter (based on the type).
+ *
+ * @return - new TypedArray object
+ */
+jerry_value_t
+jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                         jerry_length_t length) /**< element count of the new TypedArray */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  ecma_builtin_id_t prototype_id = 0;
+  lit_magic_string_id_t lit_id = 0;
+  uint8_t element_size_shift = 0;
+
+  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &lit_id, &element_size_shift))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
+
+  ecma_value_t array_value = ecma_typedarray_create_object_with_length (length,
+                                                                        prototype_obj_p,
+                                                                        element_size_shift,
+                                                                        lit_id);
+  ecma_deref_object (prototype_obj_p);
+
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_value));
+
+  return array_value;
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (type_name);
+  JERRY_UNUSED (length);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_create_typedarray */
+
+/**
+ * Create a TypedArray object using the given arraybuffer and size information.
+ *
+ * Notes:
+ *      * returns TypeError if an incorrect type (type_name) is specified.
+ *      * this is the 'new %TypedArray%(arraybuffer, byteOffset, length)' equivalent call.
+ *
+ * @return - new TypedArray object
+ */
+jerry_value_t
+jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                                            const jerry_value_t arraybuffer, /**< ArrayBuffer to use */
+                                            jerry_length_t byte_offset, /**< offset for the ArrayBuffer */
+                                            jerry_length_t length) /**< number of elements to use from ArrayBuffer */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  ecma_builtin_id_t prototype_id = 0;
+  lit_magic_string_id_t lit_id = 0;
+  uint8_t element_size_shift = 0;
+
+  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &lit_id, &element_size_shift))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
+  }
+
+  jerry_value_t buffer = jerry_get_arg_value (arraybuffer);
+  if (!ecma_is_arraybuffer (buffer))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an ArrayBuffer")));
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
+  ecma_value_t arguments_p[3] =
+  {
+    arraybuffer,
+    ecma_make_uint32_value (byte_offset),
+    ecma_make_uint32_value (length)
+  };
+
+  ecma_value_t array_value = ecma_op_create_typedarray (arguments_p, 3, prototype_obj_p, element_size_shift, lit_id);
+  ecma_free_value (arguments_p[1]);
+  ecma_free_value (arguments_p[2]);
+  ecma_deref_object (prototype_obj_p);
+
+  return jerry_return (array_value);
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (type_name);
+  JERRY_UNUSED (arraybuffer);
+  JERRY_UNUSED (byte_offset);
+  JERRY_UNUSED (length);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_create_typedarray_for_arraybuffer_sz */
+
+/**
+ * Create a TypedArray object using the given arraybuffer and size information.
+ *
+ * Notes:
+ *      * returns TypeError if an incorrect type (type_name) is specified.
+ *      * this is the 'new %TypedArray%(arraybuffer)' equivalent call.
+ *
+ * @return - new TypedArray object
+ */
+jerry_value_t
+jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                                         const jerry_value_t arraybuffer) /**< ArrayBuffer to use */
+{
+  jerry_assert_api_available ();
+  jerry_length_t byteLength = jerry_get_arraybuffer_byte_length (arraybuffer);
+  return jerry_create_typedarray_for_arraybuffer_sz (type_name, arraybuffer, 0, byteLength);
+} /* jerry_create_typedarray_for_arraybuffer */
+
+/**
+ * Get the type of the TypedArray.
+ *
+ * @return - type of the TypedArray
+ *         - JERRY_TYPEDARRAY_INVALID if the argument is not a TypedArray
+ */
+jerry_typedarray_type_t
+jerry_get_typedarray_type (jerry_value_t value) /**< object to get the TypedArray type */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t array = jerry_get_arg_value (value);
+  if (!ecma_is_typedarray (array))
+  {
+    return JERRY_TYPEDARRAY_INVALID;
+  }
+
+  ecma_object_t *array_p = ecma_get_object_from_value (array);
+
+  lit_magic_string_id_t class_name_id = ecma_object_get_class_name (array_p);
+  for (uint32_t i = 0; i < sizeof (jerry_typedarray_mappings) / sizeof (jerry_typedarray_mappings[0]); i++)
+  {
+    if (class_name_id == jerry_typedarray_mappings[i].lit_id)
+    {
+      return jerry_typedarray_mappings[i].api_type;
+    }
+  }
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+  return JERRY_TYPEDARRAY_INVALID;
+} /* jerry_get_typedarray_type */
+
+/**
+ * Get the element count of the TypedArray.
+ *
+ * @return length of the TypedArray.
+ */
+jerry_length_t
+jerry_get_typedarray_length (jerry_value_t value) /**< TypedArray to query */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t array = jerry_get_arg_value (value);
+  if (ecma_is_typedarray (array))
+  {
+    ecma_object_t *array_p = ecma_get_object_from_value (array);
+    return ecma_typedarray_get_length (array_p);
+  }
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+  return 0;
+} /* jerry_get_typedarray_length */
+
+/**
+ * Get the underlying ArrayBuffer from a TypedArray.
+ *
+ * Additionally the byteLength and byteOffset properties are also returned
+ * which were specified when the TypedArray was created.
+ *
+ * Note:
+ *     the returned value must be freed with a jerry_release_value call
+ *
+ * @return ArrayBuffer of a TypedArray
+ *         TypeError if the object is not a TypedArray.
+ */
+jerry_value_t
+jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arraybuffer from */
+                             jerry_length_t *byte_offset, /**< [out] byteOffset property */
+                             jerry_length_t *byte_length) /**< [out] byteLength property */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+  jerry_value_t array = jerry_get_arg_value (value);
+  if (!ecma_is_typedarray (array))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Object is not a TypedArray.")));
+  }
+
+  ecma_object_t *array_p = ecma_get_object_from_value (array);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (array_p);
+
+  if (byte_length != NULL)
+  {
+    *byte_length = (jerry_length_t) (ecma_typedarray_get_length (array_p) << shift);
+  }
+
+  if (byte_offset != NULL)
+  {
+    *byte_offset = (jerry_length_t) ecma_typedarray_get_offset (array_p);
+  }
+
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (array_p);
+  ecma_ref_object (arraybuffer_p);
+  return jerry_return (ecma_make_object_value (arraybuffer_p));
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (byte_length);
+  JERRY_UNUSED (byte_offset);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray is not supported.")));
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+} /* jerry_get_typedarray_buffer */
 
 /**
  * @}

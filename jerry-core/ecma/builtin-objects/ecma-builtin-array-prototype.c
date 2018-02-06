@@ -1276,7 +1276,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     }
   }
 
-  ecma_free_values_collection (array_index_props_p, true);
+  ecma_free_values_collection (array_index_props_p, 0);
 
   if (ecma_is_value_empty (ret_value))
   {

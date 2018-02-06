@@ -598,8 +598,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case LIT_MAGIC_STRING_PROMISE_UL:
         {
           ecma_free_value_if_not_object (ext_object_p->u.class_prop.u.value);
-          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->fulfill_reactions, false);
-          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->reject_reactions, false);
+          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->fulfill_reactions,
+                                       ECMA_COLLECTION_NO_REF_OBJECTS);
+          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->reject_reactions,
+                                       ECMA_COLLECTION_NO_REF_OBJECTS);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_promise_object_t));
           return;
         }

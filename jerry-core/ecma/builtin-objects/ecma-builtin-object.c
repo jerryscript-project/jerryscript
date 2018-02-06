@@ -345,7 +345,7 @@ ecma_builtin_object_object_seal (ecma_value_t this_arg, /**< 'this' argument */
       ecma_free_property_descriptor (&prop_desc);
     }
 
-    ecma_free_values_collection (props_p, true);
+    ecma_free_values_collection (props_p, 0);
 
     if (ecma_is_value_empty (ret_value))
     {
@@ -424,7 +424,7 @@ ecma_builtin_object_object_freeze (ecma_value_t this_arg, /**< 'this' argument *
       ecma_free_property_descriptor (&prop_desc);
     }
 
-    ecma_free_values_collection (props_p, true);
+    ecma_free_values_collection (props_p, 0);
 
     if (ecma_is_value_empty (ret_value))
     {
@@ -531,7 +531,7 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
         }
       }
 
-      ecma_free_values_collection (props_p, true);
+      ecma_free_values_collection (props_p, 0);
     }
 
     /* 4. */
@@ -609,7 +609,7 @@ ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argumen
         }
       }
 
-      ecma_free_values_collection (props_p, true);
+      ecma_free_values_collection (props_p, 0);
     }
 
     /* 4 */
@@ -885,7 +885,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this'
 
     JMEM_FINALIZE_LOCAL_ARRAY (property_descriptors);
 
-    ecma_free_values_collection (prop_names_p, true);
+    ecma_free_values_collection (prop_names_p, 0);
 
     /* 7. */
     if (ecma_is_value_empty (ret_value))

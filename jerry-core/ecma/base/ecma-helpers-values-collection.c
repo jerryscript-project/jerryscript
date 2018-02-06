@@ -37,63 +37,15 @@ JERRY_STATIC_ASSERT (ECMA_TYPE_ERROR == ECMA_TYPE_COLLECTION_CHUNK,
  * @return pointer to the collection's header
  */
 ecma_collection_header_t *
-ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma values */
-                            ecma_length_t values_number, /**< number of ecma values */
-                            bool do_ref_if_object) /**< if the value is object value,
-                                                        increase reference counter of the object */
+ecma_new_values_collection (void)
 {
-  JERRY_ASSERT (values_buffer != NULL || values_number == 0);
-
   ecma_collection_header_t *header_p;
   header_p = (ecma_collection_header_t *) jmem_pools_alloc (sizeof (ecma_collection_header_t));
 
-  header_p->item_count = values_number;
+  header_p->item_count = 0;
   header_p->first_chunk_cp = ECMA_NULL_POINTER;
   header_p->last_chunk_cp = ECMA_NULL_POINTER;
 
-  if (values_number == 0)
-  {
-    return header_p;
-  }
-
-  ecma_collection_chunk_t *current_chunk_p = NULL;
-  int current_chunk_index = ECMA_COLLECTION_CHUNK_ITEMS;
-
-  for (ecma_length_t value_index = 0;
-       value_index < values_number;
-       value_index++)
-  {
-    if (unlikely (current_chunk_index >= ECMA_COLLECTION_CHUNK_ITEMS))
-    {
-      ecma_collection_chunk_t *next_chunk_p;
-      next_chunk_p = (ecma_collection_chunk_t *) jmem_pools_alloc (sizeof (ecma_collection_chunk_t));
-
-      if (header_p->last_chunk_cp == ECMA_NULL_POINTER)
-      {
-        ECMA_SET_POINTER (header_p->first_chunk_cp, next_chunk_p);
-        header_p->last_chunk_cp = header_p->first_chunk_cp;
-      }
-      else
-      {
-        current_chunk_p->items[ECMA_COLLECTION_CHUNK_ITEMS] = ecma_make_collection_chunk_value (next_chunk_p);
-        ECMA_SET_POINTER (header_p->last_chunk_cp, next_chunk_p);
-      }
-
-      current_chunk_p = next_chunk_p;
-      current_chunk_index = 0;
-    }
-
-    ecma_value_t value = values_buffer[value_index];
-
-    if (do_ref_if_object || !ecma_is_value_object (value))
-    {
-      value = ecma_copy_value (value);
-    }
-
-    current_chunk_p->items[current_chunk_index++] = value;
-  }
-
-  current_chunk_p->items[current_chunk_index] = ecma_make_collection_chunk_value (NULL);
   return header_p;
 } /* ecma_new_values_collection */
 
@@ -102,8 +54,7 @@ ecma_new_values_collection (const ecma_value_t values_buffer[], /**< ecma values
  */
 void
 ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
-                             bool do_deref_if_object) /**< if the value is object value,
-                                                           decrement reference counter of the object */
+                             uint32_t flags) /**< combination of ecma_collection_flag_t flags */
 {
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
                                                        header_p->first_chunk_cp);
@@ -123,13 +74,10 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
 
     do
     {
-      if (do_deref_if_object)
+      if (!ecma_is_value_object (*item_p)
+          || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS))
       {
         ecma_free_value (*item_p);
-      }
-      else
-      {
-        ecma_free_value_if_not_object (*item_p);
       }
 
       item_p++;
@@ -151,8 +99,7 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
 void
 ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
                                   ecma_value_t value, /**< ecma value to append */
-                                  bool do_ref_if_object) /**< if the value is object value,
-                                                              increase reference counter of the object */
+                                  uint32_t flags) /**< combination of ecma_collection_flag_t flags */
 {
   ecma_length_t item_index;
   ecma_collection_chunk_t *chunk_p;
@@ -192,7 +139,8 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
     }
   }
 
-  if (do_ref_if_object || !ecma_is_value_object (value))
+  if (!ecma_is_value_object (value)
+      || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS))
   {
     value = ecma_copy_value (value);
   }

@@ -126,13 +126,13 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 
     /* the properties are enumerable (ECMA-262 v5, 15.5.5.2.9) */
-    ecma_append_to_values_collection (for_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_append_to_values_collection (for_enumerable_p, ecma_make_string_value (name_p), 0);
 
     ecma_deref_ecma_string (name_p);
   }
 
   ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), 0);
   ecma_deref_ecma_string (length_str_p);
 } /* ecma_op_string_list_lazy_property_names */
 

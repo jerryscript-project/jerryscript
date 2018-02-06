@@ -1381,8 +1381,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
-  ecma_collection_header_t *ret_p = ecma_new_values_collection (NULL, 0, false);
-  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_values_collection (NULL, 0, false);
+  ecma_collection_header_t *ret_p = ecma_new_values_collection ();
+  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_values_collection ();
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
@@ -1400,7 +1400,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
 
-    ecma_collection_header_t *prop_names_p = ecma_new_values_collection (NULL, 0, false);
+    ecma_collection_header_t *prop_names_p = ecma_new_values_collection ();
 
     if (obj_is_builtin)
     {
@@ -1564,7 +1564,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
               ecma_append_to_values_collection (prop_names_p,
                                                 ecma_make_string_value (name_p),
-                                                true);
+                                                0);
             }
           }
           else
@@ -1573,7 +1573,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
             ecma_append_to_values_collection (skipped_non_enumerable_p,
                                               ecma_make_string_value (name_p),
-                                              true);
+                                              0);
           }
 
           ecma_deref_ecma_string (name_p);
@@ -1679,7 +1679,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     JMEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
 
-    ecma_free_values_collection (prop_names_p, true);
+    ecma_free_values_collection (prop_names_p, 0);
 
     /* Third pass:
      *   embedding own property names of current object of prototype chain to aggregate property names collection */
@@ -1739,7 +1739,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       {
         JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0);
 
-        ecma_append_to_values_collection (ret_p, ecma_make_string_value (names_p[i]), true);
+        ecma_append_to_values_collection (ret_p, ecma_make_string_value (names_p[i]), 0);
       }
 
       ecma_deref_ecma_string (name_p);
@@ -1748,7 +1748,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     JMEM_FINALIZE_LOCAL_ARRAY (names_p);
   }
 
-  ecma_free_values_collection (skipped_non_enumerable_p, true);
+  ecma_free_values_collection (skipped_non_enumerable_p, 0);
 
   return ret_p;
 } /* ecma_op_object_get_property_names */

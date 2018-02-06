@@ -226,7 +226,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
     index++;
   }
 
-  ecma_free_values_collection (props_p, true);
+  ecma_free_values_collection (props_p, 0);
 
   return new_array;
 } /* ecma_builtin_helper_object_get_properties */

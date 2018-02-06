@@ -1053,6 +1053,14 @@ typedef double ecma_number_t;
  */
 
 /**
+ * Collection flags.
+ */
+typedef enum
+{
+  ECMA_COLLECTION_NO_REF_OBJECTS = (1u << 0), /**< do not increase the refcount of objects */
+} ecma_collection_flag_t;
+
+/**
  * Description of a collection's header.
  */
 typedef struct

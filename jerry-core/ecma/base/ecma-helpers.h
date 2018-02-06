@@ -285,10 +285,9 @@ lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,
                                                              int32_t *out_decimal_exp_p);
 
 /* ecma-helpers-values-collection.c */
-ecma_collection_header_t *ecma_new_values_collection (const ecma_value_t values_buffer[], ecma_length_t values_number,
-                                                      bool do_ref_if_object);
-void ecma_free_values_collection (ecma_collection_header_t *header_p, bool do_deref_if_object);
-void ecma_append_to_values_collection (ecma_collection_header_t *header_p, ecma_value_t v, bool do_ref_if_object);
+ecma_collection_header_t *ecma_new_values_collection (void);
+void ecma_free_values_collection (ecma_collection_header_t *header_p, uint32_t flags);
+void ecma_append_to_values_collection (ecma_collection_header_t *header_p, ecma_value_t v, uint32_t flags);
 
 ecma_value_t *
 ecma_collection_iterator_init (ecma_collection_header_t *header_p);

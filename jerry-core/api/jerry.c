@@ -42,7 +42,8 @@
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
-JERRY_STATIC_ASSERT ((int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
+JERRY_STATIC_ASSERT ((int) ECMA_ERROR_NONE == (int) JERRY_ERROR_NONE
+                     && (int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_EVAL == (int) JERRY_ERROR_EVAL
                      && (int) ECMA_ERROR_RANGE == (int) JERRY_ERROR_RANGE
                      && (int) ECMA_ERROR_REFERENCE == (int) JERRY_ERROR_REFERENCE
@@ -917,6 +918,28 @@ jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value) /**< api 
 {
   return jerry_acquire_value (jerry_get_arg_value (value));
 } /* jerry_get_value_without_error_flag */
+
+/**
+ * Return the type of the Error object if possible.
+ *
+ * @return one of the jerry_error_t value as the type of the Error object
+ *         JERRY_ERROR_NONE - if the input value is not an Error object
+ */
+jerry_error_t
+jerry_get_error_type (const jerry_value_t value) /**< api value */
+{
+  jerry_value_t object = jerry_get_arg_value (value);
+
+  if (!ecma_is_value_object (object))
+  {
+    return JERRY_ERROR_NONE;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (object);
+  ecma_standard_error_t error_type = ecma_get_error_type (object_p);
+
+  return error_type;
+} /* jerry_get_error_type */
 
 /**
  * Get boolean from the specified value.

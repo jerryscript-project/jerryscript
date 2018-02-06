@@ -366,24 +366,7 @@ main (void)
   {
     jerry_value_t input_buffer = jerry_create_arraybuffer_external (0, NULL, NULL);
     TEST_ASSERT (jerry_value_has_error_flag (input_buffer));
-    jerry_value_clear_error_flag (&input_buffer);
-
-    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES))
-    {
-      jerry_char_t error_str[15];
-      jerry_char_t expected_error_str[15] = "RangeError";
-
-      jerry_char_t *name_str_p = (jerry_char_t *) "name";
-      jerry_value_t name_key = jerry_create_string (name_str_p);
-      jerry_value_t name_value = jerry_get_property (input_buffer, name_key);
-
-      jerry_size_t name_size = jerry_string_to_char_buffer (name_value, error_str, sizeof (error_str));
-      TEST_ASSERT (name_size == strlen ((char *) expected_error_str));
-      TEST_ASSERT (strncmp ((char *) error_str, (char *) expected_error_str, name_size) == 0);
-
-      jerry_release_value (name_value);
-      jerry_release_value (name_key);
-    }
+    TEST_ASSERT (jerry_get_error_type (input_buffer) == JERRY_ERROR_RANGE);
     jerry_release_value (input_buffer);
   }
 

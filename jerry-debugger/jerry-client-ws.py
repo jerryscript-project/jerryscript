@@ -24,6 +24,7 @@ import select
 import socket
 import struct
 import sys
+import math
 
 # Expected debugger protocol version.
 JERRY_DEBUGGER_VERSION = 1
@@ -356,13 +357,36 @@ class DebuggerPrompt(Cmd):
         if args:
             line_num = src_check_args(args)
             if line_num >= 0:
-                print_source(self.debugger, line_num)
+                print_source(self.debugger, line_num, 0)
             elif line_num == 0:
-                print_source(self.debugger, self.debugger.default_viewrange)
+                print_source(self.debugger, self.debugger.default_viewrange, 0)
             else:
                 return
 
     do_source = do_src
+
+    def scroll_direction(self, args):
+        """ Helper function for do_scroll """
+        self.debugger.src_offset_diff = int(max(math.floor(self.debugger.display / 3), 1))
+        if args in "up":
+            self.debugger.src_offset -= self.debugger.src_offset_diff
+            print_source(self.debugger, self.debugger.display, self.debugger.src_offset)
+        else:
+            self.debugger.src_offset += self.debugger.src_offset_diff
+            print_source(self.debugger, self.debugger.display, self.debugger.src_offset)
+
+    def do_scroll(self, args):
+        """ Scroll the source up or down """
+        while True:
+            key = sys.stdin.readline()
+            if key == 'w\n':
+                self.scroll_direction("up")
+            elif key == 's\n':
+                self.scroll_direction("down")
+            elif key == 'q\n':
+                break;
+            else:
+                print("Invalid key")
 
     def do_display(self, args):
         """ Toggle source code display after breakpoints """
@@ -543,6 +567,8 @@ class JerryDebugger(object):
         self.yellow_bg = ''
         self.blue = ''
         self.nocolor = ''
+        self.src_offset = 0
+        self.src_offset_diff = 0
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
 
@@ -900,7 +926,7 @@ def src_check_args(args):
         return -1
 
 
-def print_source(debugger, line_num):
+def print_source(debugger, line_num, offset):
     last_bp = debugger.last_breakpoint_hit
     if not last_bp:
         return
@@ -915,6 +941,16 @@ def print_source(debugger, line_num):
     else:
         start = max(last_bp.line - line_num, 0)
         end = min(last_bp.line + line_num - 1, len(last_bp.function.source))
+        if offset:
+            if start + offset < 0:
+                debugger.src_offset += debugger.src_offset_diff
+                offset += debugger.src_offset_diff
+            elif end + offset > len(last_bp.function.source):
+                debugger.src_offset -= debugger.src_offset_diff
+                offset -= debugger.src_offset_diff
+
+            start = max(start + offset, 0)
+            end = min(end + offset, len(last_bp.function.source))
 
     for i in range(start, end):
         if i == last_bp.line - 1:
@@ -1111,7 +1147,7 @@ def main():
 
             print("Stopped %s %s" % (breakpoint_info, breakpoint[0]))
             if debugger.display:
-                print_source(prompt.debugger, debugger.display)
+                print_source(prompt.debugger, debugger.display, 0)
 
             prompt.cmdloop()
             if prompt.quit:

@@ -954,12 +954,12 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_string_t *name_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 
   /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
   name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
@@ -972,12 +972,12 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   {
     /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
     name_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
-    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
     ecma_deref_ecma_string (name_p);
 
     /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
     name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
     ecma_deref_ecma_string (name_p);
   }
 } /* ecma_op_function_list_lazy_property_names */
@@ -1009,7 +1009,7 @@ ecma_op_external_function_list_lazy_property_names (bool separate_enumerable, /*
 
   /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
   ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE);
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 } /* ecma_op_external_function_list_lazy_property_names */
 
@@ -1041,17 +1041,17 @@ ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable, /**< 
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_string_t *name_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 
   /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   name_p = ecma_get_magic_string (LIT_MAGIC_STRING_CALLER);
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 
   /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
   ecma_deref_ecma_string (name_p);
 } /* ecma_op_bound_function_list_lazy_property_names */
 

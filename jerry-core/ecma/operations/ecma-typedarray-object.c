@@ -777,7 +777,7 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
   {
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 
-    ecma_append_to_values_collection (main_collection_p, ecma_make_string_value (name_p), true);
+    ecma_append_to_values_collection (main_collection_p, ecma_make_string_value (name_p), 0);
 
     ecma_deref_ecma_string (name_p);
   }

@@ -719,7 +719,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
     /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
     ecma_string_t *name_p = ecma_new_ecma_length_string ();
-    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), true);
+    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
     ecma_deref_ecma_string (name_p);
   }
   else
@@ -765,7 +765,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
       {
         ecma_append_to_values_collection (for_non_enumerable_p,
                                           ecma_make_string_value (name_p),
-                                          true);
+                                          0);
       }
 
       ecma_deref_ecma_string (name_p);

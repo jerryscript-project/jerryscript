@@ -2532,7 +2532,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
-  ecma_free_values_collection (names_p, true);
+  ecma_free_values_collection (names_p, 0);
 
   if (!ECMA_IS_VALUE_ERROR (property_value))
   {

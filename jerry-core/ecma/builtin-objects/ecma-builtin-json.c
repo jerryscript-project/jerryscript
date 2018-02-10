@@ -40,6 +40,11 @@
 #define BUILTIN_UNDERSCORED_ID json
 #include "ecma-builtin-internal-routines-template.inc.h"
 
+/**
+ * The number of expected hexidecimal characters in a hex escape sequence
+ */
+#define ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH (4)
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -182,13 +187,18 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         }
         case LIT_CHAR_LOWERCASE_U:
         {
-          ecma_char_t code_unit;
-          if ((end_p - current_p >= 2) && !(lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit)))
+          if ((end_p - current_p <= ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH))
           {
             return;
           }
 
-          current_p += 5;
+          ecma_char_t code_unit;
+          if (!(lit_read_code_unit_from_hex (current_p + 1, ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH, &code_unit)))
+          {
+            return;
+          }
+
+          current_p += ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH + 1;
 
           lit_utf8_byte_t char_buffer[LIT_UTF8_MAX_BYTES_IN_CODE_UNIT];
           buffer_size += lit_code_unit_to_utf8 (code_unit, char_buffer);
@@ -258,9 +268,9 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         {
           ecma_char_t code_unit;
 
-          lit_read_code_unit_from_hex (current_p + 1, 4, &code_unit);
+          lit_read_code_unit_from_hex (current_p + 1, ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH, &code_unit);
 
-          current_p += 5;
+          current_p += ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH + 1;
           write_p += lit_code_unit_to_utf8 (code_unit, write_p);
           continue;
         }

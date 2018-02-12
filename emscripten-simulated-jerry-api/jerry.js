@@ -28,7 +28,7 @@
         internalProps.nativeHandleFreeCb, internalProps.nativeHandle]);
   };
 
-  var canHaveInternalProps = function (value) {
+  var isValueNonPrimitive = function (value) {
     if (value === null) {
       return false;
     }
@@ -37,7 +37,7 @@
   };
 
   var hasInternalProps = function (value) {
-    return (canHaveInternalProps(value) && __jerry._jerryInternalPropsWeakMap.has(value));
+    return (isValueNonPrimitive(value) && __jerry._jerryInternalPropsWeakMap.has(value));
   };
 
   global.__jerry = {
@@ -51,37 +51,18 @@
     // internal reference to, and avoid them from being garbage collected.
     _jerryToHostValueMap: {},
 
+    // _hostPrimitiveValueToEntryMap maps primitives (anything that's not an object/function)
+    // to an entry object. Because primitives are always leaked (the 'weak' module does not
+    // support registering a garbage collection callback for these types), entries in this
+    // map are never deleted. The information in this map is redundant to _jerryToHostValueMap.
+    // This map is kept to make the lookup of primitives be O(1).
+    _hostPrimitiveValueToEntryMap: new Map(),
+
     // Counter for the next jerry_value_t value.
     _nextObjectRef: 1,
 
     // the jobqueue list for Promise
     _jobQueue: [],
-
-    // Note that it only works for the primitive type value.
-    _findEntryByHostValue: function (value) {
-      if (Number.isNaN(value)) {
-        // Special case to find NaN
-        for (var jerry_val in this._jerryToHostValueMap) {
-          var entry = this._jerryToHostValueMap[jerry_val];
-          if (Number.isNaN(entry.value)) {
-            return entry;
-          }
-        }
-      } else {
-        for (var jerry_val in this._jerryToHostValueMap) {
-          var entry = this._jerryToHostValueMap[jerry_val];
-          if (entry.value === value) {
-            return entry;
-          }
-        }
-      }
-      return undefined;
-    },
-
-    _findJerryValueByHostValue: function (value) {
-      var entry = _findEntryByHostValue(value);
-      return entry ? entry.jerry_value : 0;
-    },
 
     _getEntry: function (jerry_value) {
       var entry = this._jerryToHostValueMap[jerry_value];
@@ -108,7 +89,8 @@
       // We can only do it for object/function values and not for primitives.
       // Primitives will always be kept in _jerryToHostValueMap (and leaked)
       // as a work-around, see this.release()
-      if (canHaveInternalProps(value)) {
+      var nonPrimitive = isValueNonPrimitive(value);
+      if (nonPrimitive) {
         if (this._jerryInternalPropsWeakMap.has(value)) {
           // Use pre-existing internalProps:
           internalProps = this._jerryInternalPropsWeakMap.get(value);
@@ -126,6 +108,9 @@
       // Install garbage collection callback:
       entry.weak = this.weak(value, _jerryhandleGarbageCollected.bind(this, internalProps));
       this._jerryToHostValueMap[jerry_value] = entry;
+      if (!nonPrimitive) {
+        this._hostPrimitiveValueToEntryMap.set(value, entry);
+      }
       // console.log('created entry ' + jerry_value + ' for ' + value + ' at ' + stackTrace());
       return jerry_value;
     },
@@ -150,6 +135,7 @@
 
     reset: function () {
       this._jerryToHostValueMap = {};
+      this._hostPrimitiveValueToEntryMap = new Map();
       this._nextObjectRef = 1;
       this._jerryInternalPropsWeakMap = new WeakMap();
       this._jobQueue = [];
@@ -193,7 +179,7 @@
       var jerry_value;
       var entry;
       // Fast path for already known/marked objects:
-      if (canHaveInternalProps(value)) {
+      if (isValueNonPrimitive(value)) {
         if (this._jerryInternalPropsWeakMap.has(value)) {
           jerry_value = this._jerryInternalPropsWeakMap.get(value).jerry_value;
           // Note: It's possible there is no entry in the map because the native
@@ -202,7 +188,7 @@
         }
       } else {
         // For primitive type
-        entry = this._findEntryByHostValue(value);
+        entry = this._hostPrimitiveValueToEntryMap.get(value);
       }
 
       if (entry) {

@@ -187,6 +187,7 @@ void ecma_value_assign_number (ecma_value_t *value_p, ecma_number_t ecma_number)
 void ecma_free_value (ecma_value_t value);
 void ecma_fast_free_value (ecma_value_t value);
 void ecma_free_value_if_not_object (ecma_value_t value);
+lit_magic_string_id_t ecma_get_typeof_lit_id (ecma_value_t value);
 
 /* ecma-helpers-string.c */
 ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size);

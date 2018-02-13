@@ -287,6 +287,23 @@ bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
 
 /**
+ * JerryScript API value type information.
+ */
+typedef enum
+{
+  JERRY_TYPE_NONE = 0u, /**< no type information */
+  JERRY_TYPE_UNDEFINED, /**< undefined type */
+  JERRY_TYPE_NULL,      /**< null type */
+  JERRY_TYPE_BOOLEAN,   /**< boolean type */
+  JERRY_TYPE_NUMBER,    /**< number type */
+  JERRY_TYPE_STRING,    /**< string type */
+  JERRY_TYPE_OBJECT,    /**< object type */
+  JERRY_TYPE_FUNCTION,  /**< function type */
+} jerry_type_t;
+
+jerry_type_t jerry_value_get_type (const jerry_value_t value);
+
+/**
  * Checker function of whether the specified compile feature is enabled.
  */
 bool jerry_is_feature_enabled (const jerry_feature_t feature);

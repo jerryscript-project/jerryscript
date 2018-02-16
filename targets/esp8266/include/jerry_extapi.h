@@ -13,23 +13,46 @@
  * limitations under the License.
  */
 
-#ifndef __JERRY_EXTAPI_H__
-#define __JERRY_EXTAPI_H__
+#ifndef JERRY_EXTAPI_H
+#define JERRY_EXTAPI_H
 
-#define JERRY_STANDALONE_EXIT_CODE_OK   (0)
-#define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <espressif/esp_common.h>
+#include "FreeRTOS.h"
+#include "task.h"
 
+#include "jerryscript-core.h"
+#ifdef JERRY_DEBUGGER
+#include "jerryscript-debugger.h"
+#endif /* JERRY_DEBUGGER */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "esp_modules.h"
 
+#define DELCARE_HANDLER(NAME) \
+static jerry_value_t \
+NAME ## _handler (const jerry_value_t function_obj_val __attribute__((unused)), \
+                  const jerry_value_t this_val __attribute__((unused)), \
+                  const jerry_value_t args_p[], \
+                  const jerry_length_t args_cnt)
 
-void js_register_functions (void);
+#define TYPE_OBJECT "object"
+#define TYPE_NUMBER "number"
+#define TYPE_STRING "string"
+#define TYPE_TYPEDARRAY "typedArray"
+#define TYPE_BOOLEAN "boolean"
+#define TYPE_ARRAY "array"
+#define JERRY_STANDALONE_EXIT_CODE_OK 0
+#define JERRY_STANDALONE_EXIT_CODE_FAIL 1
 
+void register_js_value_to_object (char *name_p, jerry_value_t value, jerry_value_t object);
+void register_number_to_object (char *name_p, double number, jerry_value_t object);
+void register_string_to_object (char *name_p, char *string, jerry_value_t object);
+void register_boolean_to_object (char *name_p, bool boolean, jerry_value_t object);
+bool register_native_function (char *name, jerry_external_handler_t handler, jerry_value_t object);
+jerry_value_t raise_argument_count_error (char *object, char *property, int expected_argument_count);
+jerry_value_t raise_argument_type_error (int arg_count, char *type);
+void register_js_entries (void);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* JERRY_EXTAPI_H */

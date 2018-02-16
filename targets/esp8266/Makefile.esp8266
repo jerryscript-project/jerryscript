@@ -12,76 +12,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CURDIR     = `pwd`
-ESP_LIB    = $(SDK_PATH)/lib
-BUILD_DIR  = build/obj-esp8266
-COPYTARGET = targets/esp8266/libs
+CUR_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+BUILD_DIRECTORY  = build/obj-esp8266
+ESP_TARGET = targets/esp8266
+COPYTARGET = $(ESP_TARGET)/libs
 USBDEVICE  ?= /dev/ttyUSB0
-JERRYHEAP  ?= 20
-ESPTOOL    ?= /opt/Espressif/esptool-py/esptool.py
+JERRY_DEBUGGER  ?= OFF
+JERRY_HEAP  ?= 16
 
-# compile flags
-ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
+# REDIRECT_STDOUT=ON - The stdout is available at UART0 and GPIO2 is available (default)
+# REDIRECT_STDOUT=OFF - The stdout is available at UART1 but GPIO2 cannot be used for
+# REDIRECT_STDOUT=DISCARD - The stdout is discarded and GPIO2 is available
+REDIRECT_STDOUT ?= OFF
 
-MFORCE32 = $(shell xtensa-lx106-elf-gcc --help=target | grep mforce-l32)
-
-ifneq ($(MFORCE32),)
-    # Your compiler supports the -mforce-l32 flag which means that
-    # constants can be placed in ROM to free additional RAM
-    ESP_CFLAGS += -DJERRY_CONST_DATA="__attribute__((aligned(4))) __attribute__((section(\".irom.text\")))"
-    ESP_CFLAGS += -mforce-l32
-endif
-
+ESP_CFLAGS := -DJERRY_CONST_DATA='__attribute__((section(\".irom0.literal\")))'
 ESP_CFLAGS += -Wl,-EL -fno-inline-functions
 ESP_CFLAGS += -ffunction-sections -fdata-sections
 ESP_CFLAGS += -mlongcalls -mtext-section-literals -mno-serialize-volatile
+
+ifeq ($(JERRY_DEBUGGER), ON)
+	LWIP_INLCUDE := -I$(CUR_DIR)/include
+	LWIP_INLCUDE += -I$(RTOS_PATH)/core/include
+	LWIP_INLCUDE += -I$(RTOS_PATH)/lwip/include
+	LWIP_INLCUDE += -I$(RTOS_PATH)/lwip/lwip/src/include
+endif
 
 .PHONY: jerry js2c mkbin check-env flash clean
 
 all: check-env jerry js2c mkbin
 
 jerry:
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIRECTORY)
 	mkdir -p $(COPYTARGET)
-	cmake -B$(BUILD_DIR) -H./ \
+	cmake -B$(BUILD_DIRECTORY) -H./ \
 	 -DCMAKE_SYSTEM_NAME=MCU \
 	 -DCMAKE_SYSTEM_PROCESSOR=xtensia-lx106 \
 	 -DCMAKE_C_COMPILER=xtensa-lx106-elf-gcc \
 	 -DCMAKE_C_COMPILER_WORKS=TRUE \
 	 -DENABLE_LTO=OFF \
 	 -DENABLE_ALL_IN_ONE=ON \
+	 -DFEATURE_ERROR_MESSAGES=OFF	\
 	 -DJERRY_LIBC=OFF \
+	 -DFEATURE_DEBUGGER=$(JERRY_DEBUGGER) \
+	 -DFEATURE_PROFILE="es2015-subset" \
 	 -DJERRY_CMDLINE=OFF \
-	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
-	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP)
+	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS) $(LWIP_INLCUDE)" \
+	 -DMEM_HEAP_SIZE_KB=$(JERRY_HEAP)
 
-	make -C$(BUILD_DIR) jerry-core jerry-libm
-	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/
-	cp $(BUILD_DIR)/lib/libjerry-libm.a $(COPYTARGET)/
+	make -C$(BUILD_DIRECTORY) jerry-core jerry-libm
+	cp $(BUILD_DIRECTORY)/lib/libjerry-core.a $(COPYTARGET)/
+	cp $(BUILD_DIRECTORY)/lib/libjerry-libm.a $(COPYTARGET)/
 
 js2c:
-	tools/js2c.py --dest targets/esp8266/include --js-source targets/esp8266/js
+	tools/js2c.py --dest $(ESP_TARGET)/include --js-source $(ESP_TARGET)/js
 
 mkbin:
-	make -Ctargets/esp8266 clean
-	make -Ctargets/esp8266 BOOT=new APP=0 SPI_SPEED=40 SPI_MODE=DIO SPI_SIZE_MAP=4
-
-check-env:
-ifndef SDK_PATH
-	$(error SDK_PATH is undefined for ESP8266)
-endif
-ifndef BIN_PATH
-	$(error BIN_PATH is undefined for ESP8266)
-endif
+	make -j4 -C$(ESP_TARGET)
 
 flash:
-	$(ESPTOOL) --port $(USBDEVICE) write_flash \
-	0x00000 $(BIN_PATH)/eagle.flash.bin \
-	0x20000 $(BIN_PATH)/eagle.irom0text.bin \
-	0x3FC000 $(SDK_PATH)/bin/esp_init_data_default.bin
+	make flash -C$(ESP_TARGET) ESPPORT=$(USBDEVICE)
 
 erase_flash:
-	$(ESPTOOL) --port $(USBDEVICE) erase_flash
+	make erase_flash -C$(ESP_TARGET) ESPPORT=$(USBDEVICE)
+
+check-env:
+ifndef RTOS_PATH
+	$(error RTOS_PATH is undefined for ESP8266)
+endif
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIRECTORY)
+	rm -rf $(ESP_TARGET)/build
+	rm -rf $(ESP_TARGET)/firmware

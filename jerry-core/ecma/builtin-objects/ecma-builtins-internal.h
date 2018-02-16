@@ -75,7 +75,7 @@ typedef struct
                         is_extensible, \
                         lowercase_name) \
 extern const ecma_builtin_property_descriptor_t \
-ecma_builtin_ ## lowercase_name ## _property_descriptor_list[]; \
+ecma_builtin_ ## lowercase_name ## _property_descriptor_list[] JERRY_CONST_DATA; \
 ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_call (const ecma_value_t *, \
                                                    ecma_length_t); \

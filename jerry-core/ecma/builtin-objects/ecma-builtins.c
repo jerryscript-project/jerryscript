@@ -46,7 +46,7 @@ typedef ecma_value_t (*ecma_builtin_dispatch_routine_t)(uint16_t builtin_routine
 typedef ecma_value_t (*ecma_builtin_dispatch_call_t)(const ecma_value_t arguments_list[],
                                                      ecma_length_t arguments_number);
 
-static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
+static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] JERRY_CONST_DATA =
 {
   #define BUILTIN(a, b, c, d, e)
   #define BUILTIN_ROUTINE(builtin_id, \
@@ -70,7 +70,7 @@ static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
   #undef BUILTIN_ROUTINE
 };
 
-static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
+static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] JERRY_CONST_DATA =
 {
   #define BUILTIN(a, b, c, d, e)
   #define BUILTIN_ROUTINE(builtin_id, \
@@ -84,7 +84,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
   #undef BUILTIN
 };
 
-static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
+static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] JERRY_CONST_DATA =
 {
   #define BUILTIN(a, b, c, d, e)
   #define BUILTIN_ROUTINE(builtin_id, \
@@ -101,7 +101,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
 /**
  * Property descriptor lists for all built-ins.
  */
-static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_references[] =
+static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_references[] JERRY_CONST_DATA =
 {
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
@@ -648,7 +648,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       }
       else if (curr_property_p->value < ECMA_BUILTIN_NUMBER_NAN)
       {
-        static const ecma_number_t builtin_number_list[] =
+        static const ecma_number_t builtin_number_list[] JERRY_CONST_DATA =
         {
           ECMA_NUMBER_MAX_VALUE,
           ECMA_NUMBER_MIN_VALUE,

@@ -1,11 +1,3 @@
-### About
-
-Files in this folder (targets/esp8266) are copied from
-`examples/project_template` of `esp_iot_rtos_sdk` and modified for JerryScript.
-You can view online from
-[this](https://github.com/espressif/esp_iot_rtos_sdk/tree/master/examples/project_template) page.
-
-
 ### How to build JerryScript for ESP8266
 
 #### 1. SDK
@@ -20,8 +12,6 @@ Follow [this](./docs/ESP-PREREQUISITES.md) page to setup build environment
 make -f ./targets/esp8266/Makefile.esp8266
 ```
 
-Output files should be placed at $BIN_PATH
-
 #### 3. Flashing for ESP8266 12E
 Follow
 [this](http://www.kloppenborg.net/images/blog/esp8266/esp8266-esp12e-specs.pdf) page to get details about this board.
@@ -30,10 +20,16 @@ Follow
 make -f ./targets/esp8266/Makefile.esp8266 flash
 ```
 
-Default USB device is `/dev/ttyUSB0`. If you have different one, give with `USBDEVICE`, like;
+Default USB device is `/dev/ttyUSB0`. If you have different one, give with `USBDEVICE`, like:
 
 ```
 USBDEVICE=/dev/ttyUSB1 make -f ./targets/esp8266/Makefile.esp8266 flash
+```
+
+Jerry-debugger is disabled by default. To enable is use the following command:
+
+```
+JERRY_DEBUGGER=ON make -f ./targets/esp8266/Makefile.esp8266 flash
 ```
 
 ### 4. Running
@@ -58,31 +54,37 @@ make -f ./targets/esp8266/Makefile.esp8266 erase_flash
 ```
 
 
-### 6. Optimizing initial RAM usage (ESP8266 specific)
-The existing open source gcc compiler with Xtensa support stores const(ants) in
-the same limited RAM where our code needs to run.
+### 6. Standard output
 
-It is possible to force the compiler to store a constant into ROM and also read it from there thus saving RAM.
-The only requirement is to add `JERRY_CONST_DATA` attribute to your constant.
-
-For example:
-
-```C
-static const lit_magic_size_t lit_magic_string_sizes[] =
+While the program is running the output can be read by the following command:
+```
+minicom --D /dev/ttyUSB0 --b 115200
 ```
 
-can be modified to
+The output can also be accessible using the SDK's own tool. Not only does this tool show the output but in case of an exception (stack overflow, invalid memory accessing, etc.) dumps the content of the stack and uses `xtensa-lx106-elf-addr2line` to find out which function caused it.
 
-```C
-static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
+```
+python $RTOS_PATH/utils/filteroutput.py -b 115200 -e targets/esp8266/build/USER.out -p /dev/ttyUSB0
+
 ```
 
-That is already done to some constants in jerry-core. E.g.:
+### 7. Standard output redirection
 
-- vm_decode_table
-- ecma_property_hashmap_steps
-- lit_magic_string_sizes
-- unicode_letter_interv_sps
-- unicode_letter_interv_len
-- unicode_non_letter_ident_
-- unicode_letter_chars
+The `stdout` is available at UART0 by default that is connected to the board `RX`-`TX` pin. This prevents connecting sensors to the board which use UART interface for communication.
+
+To overcome this limitation `GPIO2` pin can be used as a TX pin which is ideal for sending (debug) output. In this case connect a USB-TTL to e.g. `/dev/ttyUSB1` and connect `GPIO2` to the TTL `RX` pin.
+
+The following options can be used for redirection and in both cases `RX`-`TX` can be used as a serial communication interface:
+
+  * In this case GPIO2 cannot be used as a general GPIO pin, but `stdout` can be accessible at `/dev/ttyUSB1`
+
+```
+STDOUT_REDIRECT=ON make -f ./targets/esp8266/Makefile.esp8266 flash
+
+```
+
+  * If the output is unrelevant `stdout` can be redirected to void and GPIO2 can be used as a general GPIO pin as well
+
+```
+STDOUT_REDIRECT=DISCARD make -f ./targets/esp8266/Makefile.esp8266 flash
+```

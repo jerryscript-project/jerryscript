@@ -179,7 +179,7 @@ ecma_date_in_leap_year (ecma_number_t year) /**< time value */
 /**
  * End day for the first 11 months.
  */
-static const int16_t ecma_date_month_end_day[10] =
+static const int16_t ecma_date_month_end_day[10] JERRY_CONST_DATA =
 {
   58, 89, 119, 150, 180, 211, 242, 272, 303, 333
 };

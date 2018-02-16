@@ -47,7 +47,7 @@ const uint8_t cbc_flags[] JERRY_CONST_DATA =
 /**
  * Flags of the extended opcodes.
  */
-const uint8_t cbc_ext_flags[] =
+const uint8_t cbc_ext_flags[] JERRY_CONST_DATA  =
 {
   CBC_EXT_OPCODE_LIST
 };

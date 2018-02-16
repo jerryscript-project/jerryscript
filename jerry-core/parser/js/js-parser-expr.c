@@ -37,7 +37,7 @@
  * See also:
  *    lexer_token_type_t
  */
-static const uint8_t parser_binary_precedence_table[36] =
+static const uint8_t parser_binary_precedence_table[36] JERRY_CONST_DATA =
 {
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
   4, 5, 6, 7, 8, 9, 10, 10, 10, 10,

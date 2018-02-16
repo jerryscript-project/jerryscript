@@ -64,7 +64,7 @@
  *      - ESP8266
  */
 #ifndef JERRY_CONST_DATA
-# define JERRY_CONST_DATA
+#define JERRY_CONST_DATA
 #endif /* JERRY_CONST_DATA */
 
 /*

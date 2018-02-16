@@ -13,24 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef __JERRY_RUN_H__
-#define __JERRY_RUN_H__
+#ifndef JERRY_RUN_H
+#define JERRY_RUN_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define STDOUT_REDIRECT_OFF 0
+#define STDOUT_REDIRECT_ON 1
+#define STDOUT_REDIRECT_DISCARD 2
 
+#if REDIRECT_STDOUT >= STDOUT_REDIRECT_ON
+#include <sys/reent.h>
+#include <semphr.h>
+#include <stdout_redirect.h>
+#if REDIRECT_STDOUT == STDOUT_REDIRECT_ON
+#include <espressif/esp8266/gpio_register.h>
+#include <espressif/esp8266/pin_mux_register.h>
+#endif /* REDIRECT_STDOUT == STDOUT_REDIRECT_ON */
+#endif /* REDIRECT_STDOUT >= STDOUT_REDIRECT_ON */
 
-void js_entry (void);
-int js_eval (const char *source_p, const size_t source_size);
-int js_loop (uint32_t ticknow);
-void js_exit (void);
+#if REDIRECT_STDOUT >= STDOUT_REDIRECT_ON
+#define STDOUT_UART_NUM 1
+#else
+#define STDOUT_UART_NUM 0
+#endif /* REDIRECT_STDOUT >= STDOUT_REDIRECT_ON */
 
+bool jerry_task_init (void);
+bool js_loop (void);
+void jerry_task_exit (void);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* JERRY_RUN_H */

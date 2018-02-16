@@ -241,7 +241,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
   }
   else
   {
-    static const lit_utf8_byte_t digit_chars[36] =
+    static const lit_utf8_byte_t digit_chars[36] JERRY_CONST_DATA =
     {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',

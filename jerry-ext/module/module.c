@@ -173,7 +173,9 @@ jerryx_resolve_native_module (const jerry_value_t canonical_name, /**< canonical
   const jerryx_native_module_t *module_p = NULL;
 
   jerry_size_t name_size = jerry_get_utf8_string_size (canonical_name);
-  jerry_char_t name_string[name_size];
+  //TODO: VS2017 15.5.6 bug
+  //jerry_char_t name_string[name_size];
+  jerry_char_t name_string[256];
   jerry_string_to_utf8_char_buffer (canonical_name, name_string, name_size);
 
   /* Look for the module by its name in the list of module definitions. */
@@ -223,7 +225,9 @@ jerryx_module_resolve (const jerry_value_t name, /**< name of the module to load
   size_t canonical_names_used = 0;
   jerry_value_t ret;
   jerry_value_t instances;
-  jerry_value_t canonical_names[resolver_count];
+  //TODO: VS2017 15.5.6 bug
+  //jerry_value_t canonical_names[resolver_count];
+  jerry_value_t canonical_names[32];
   jerry_value_t (*get_canonical_name_p) (const jerry_value_t name);
   bool (*resolve_p) (const jerry_value_t canonical_name,
                      jerry_value_t *result);

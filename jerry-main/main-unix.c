@@ -368,13 +368,19 @@ main (int argc,
       char **argv)
 {
   srand ((unsigned) jerry_port_get_current_time ());
-  const char *file_names[argc];
+  //TODO: VS2017 15.5.6 bug
+  //const char *file_names[argc];
+  const char *file_names[16];
   int files_counter = 0;
 
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
-  const char *exec_snapshot_file_names[argc];
-  uint32_t exec_snapshot_file_indices[argc];
+  //TODO: VS2017 15.5.6 bug
+  //const char *exec_snapshot_file_names[argc];
+  const char *exec_snapshot_file_names[16];
+  //TODO: VS2017 15.5.6 bug
+  //uint32_t exec_snapshot_file_indices[argc];
+  uint32_t exec_snapshot_file_indices[16];
   int exec_snapshots_count = 0;
 
   bool is_parse_only = false;

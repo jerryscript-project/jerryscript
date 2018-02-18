@@ -38,7 +38,13 @@ jerry_context_t jerry_global_context;
 /**
  * Global heap.
  */
-jmem_heap_t jerry_global_heap __attribute__ ((aligned (JMEM_ALIGNMENT))) JERRY_GLOBAL_HEAP_SECTION;
+#ifdef _MSC_VER
+#define _memory_alignment
+#else
+#define _memory_alignment __attribute__((aligned(JMEM_ALIGNMENT)))
+#endif
+
+jmem_heap_t jerry_global_heap _memory_alignment JERRY_GLOBAL_HEAP_SECTION;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE

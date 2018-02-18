@@ -32,6 +32,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "TI")
   set(USING_TI 1)
 endif()
 
+if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+  set(USING_MSVC 1)
+endif()
+
 # Determining build type
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "MinSizeRel")
@@ -94,10 +98,17 @@ if(USING_TI)
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
+if(USING_MSVC)
+	set(ENABLE_ALL_IN_ONE ON)
+
+	set(ENABLE_ALL_IN_ONE_MESSAGE  " (FORCED BY PLATFORM)")
+endif()
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE          " ${CMAKE_BUILD_TYPE})
 message(STATUS "CMAKE_SYSTEM_NAME         " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR    " ${CMAKE_SYSTEM_PROCESSOR})
+message(STATUS "CMAKE_C_COMPILER_ID       " ${CMAKE_C_COMPILER_ID})
 message(STATUS "ENABLE_ALL_IN_ONE         " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN_ONE_MESSAGE})
 message(STATUS "ENABLE_LTO                " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STATIC_LINK        " ${ENABLE_STATIC_LINK} ${ENABLE_STATIC_LINK_MESSAGE})
@@ -143,7 +154,11 @@ endmacro()
 
 macro(jerry_add_compile_warnings)
   foreach(_warning ${ARGV})
-    jerry_add_compile_flags(-W${_warning})
+	if(USING_MSVC)
+		jerry_add_compile_flags(/W${_warning})
+	else()
+		jerry_add_compile_flags(-W${_warning})
+	endif()
     if(USING_GCC)
       jerry_add_compile_flags(-Werror=${_warning})
     endif()
@@ -191,12 +206,22 @@ if(("${PLATFORM}" STREQUAL "DARWIN"))
   set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
 else()
-  jerry_add_link_flags(-Wl,-z,noexecstack)
+	if(NOT USING_MSVC)
+		jerry_add_link_flags(-Wl,-z,noexecstack)
+	endif()
 endif()
 
 # Turn off linking to compiler's default libc, in case jerry-libc is used
-if(JERRY_LIBC)
-  jerry_add_link_flags(-nostdlib)
+if(NOT USING_MSVC)
+	if(JERRY_LIBC)
+	  jerry_add_link_flags(-nostdlib)
+	endif()
+endif()
+
+if(USING_MSVC)
+	jerry_add_link_flags(/OPT:NOREF)
+	# Cannot compile builtins now so disable them
+	jerry_add_compile_flags(-DCONFIG_DISABLE_BUILTINS)
 endif()
 
 # Turn off stack protector
@@ -216,7 +241,11 @@ elseif(USING_CLANG)
 endif()
 
 if(JERRY_LIBC)
-  jerry_add_compile_flags(-Werror)
+  if(USING_MSVC)
+	# jerry_add_compile_flags(/Werror)
+  else()
+	jerry_add_compile_flags(/Werror)
+  endif()
 endif()
 
 # C
@@ -227,8 +256,10 @@ elseif(USING_TI)
 endif()
 
 # Strip binary
+if(NOT USING_MSVC)
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   jerry_add_link_flags(-s)
+endif()
 endif()
 
 # TODO: Remove workaround for gcc 7 bug if the

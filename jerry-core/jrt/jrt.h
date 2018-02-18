@@ -28,6 +28,21 @@
 /*
  * Attributes
  */
+#ifdef _MSC_VER
+#define __noreturn __declspec(noreturn)
+#define __attr_noinline___ __declspec(noinline)
+#define __attr_return_value_should_be_checked___
+#define __attr_hot___
+#ifndef __attr_always_inline___
+#define __attr_always_inline___
+#endif /* !__attr_always_inline___ */
+#ifndef __attr_const___
+#define __attr_const___
+#endif /* !__attr_const___ */
+#ifndef __attr_pure___
+#define __attr_pure___
+#endif /* !__attr_pure___ */
+#else
 #define __noreturn __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
 #define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
@@ -41,6 +56,7 @@
 #ifndef __attr_pure___
 #define __attr_pure___ __attribute__((pure))
 #endif /* !__attr_pure___ */
+#endif
 
 /*
  * Conditions' likeliness, unlikeliness.

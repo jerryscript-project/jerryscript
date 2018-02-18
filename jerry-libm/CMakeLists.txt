@@ -18,11 +18,17 @@ project (${JERRY_LIBM_NAME} C)
 
 # Compiler / linker flags
 # TODO: Reduce the below list of warning/error disablings as much as possible
+if(USING_MSVC)
+set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} /wd4146")
+set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} /wd4018")
+set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} /wd4293")
+else()
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=sign-compare")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-error=sign-conversion")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-sign-conversion")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-sign-compare")
 set(COMPILE_FLAGS_LIBM "${COMPILE_FLAGS_LIBM} -Wno-strict-aliasing")
+endif()
 
 # Include directories
 set(INCLUDE_LIBM "${CMAKE_CURRENT_SOURCE_DIR}/include")

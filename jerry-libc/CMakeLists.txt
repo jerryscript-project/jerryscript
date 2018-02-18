@@ -23,7 +23,9 @@ if(FEATURE_INIT_FINI)
 endif()
 
 # Architecture-specific configuration
-if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+  set(DEFINES_LIBC ${DEFINES_LIBC} __TARGET_HOST_x64)
+elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
   set(DEFINES_LIBC ${DEFINES_LIBC} __TARGET_HOST_x64)
 elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
   set(DEFINES_LIBC ${DEFINES_LIBC} __TARGET_HOST_ARMv7 __TARGET_HOST_ARMv7_HARD_FLOAT)
@@ -52,7 +54,10 @@ add_library(${JERRY_LIBC_NAME} STATIC ${SOURCE_LIBC} ${TARGET_SPECIFIC_LIBC_SOUR
 target_compile_definitions(${JERRY_LIBC_NAME} PRIVATE ${DEFINES_LIBC})
 target_include_directories(${JERRY_LIBC_NAME} PRIVATE ${INCLUDE_LIBC})
 target_include_directories(${JERRY_LIBC_NAME} SYSTEM PUBLIC "${CMAKE_SOURCE_DIR}/jerry-libc/include")
-target_link_libraries(${JERRY_LIBC_NAME} -lgcc)
+
+if(NOT USING_MSVC)
+	target_link_libraries(${JERRY_LIBC_NAME} -lgcc)
+endif()
 
 install(TARGETS ${JERRY_LIBC_NAME} DESTINATION lib)
 install(DIRECTORY ${INCLUDE_LIBC}/include/ DESTINATION include/jerry-libc)

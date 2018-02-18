@@ -27,6 +27,8 @@
 
 #include "jerry-libm-internal.h"
 
+#include "math.h"
+
 /* log(x)
  * Return the logrithm of x
  *
@@ -105,11 +107,11 @@ log (double x)
   {
     if (((hx & 0x7fffffff) | lx) == 0) /* log(+-0) = -inf */
     {
-      return -two54 / zero;
+      return -INFINITY;
     }
     if (hx < 0) /* log(-#) = NaN */
     {
-      return (x - x) / zero;
+      return NAN;
     }
     k -= 54;
     x *= two54; /* subnormal number, scale up x */

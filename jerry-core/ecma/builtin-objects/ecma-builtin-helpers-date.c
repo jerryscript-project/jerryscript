@@ -624,6 +624,7 @@ ecma_date_timezone_offset (ecma_number_t time) /**< time value */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
+#define date_buffer_length 34
 static ecma_value_t
 ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
                             const char *format_p) /**< format buffer */
@@ -638,7 +639,8 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   };
 
-  const uint32_t date_buffer_length = 34;
+  //VS2017 15.5.6 bug
+  //const uint32_t date_buffer_length = 34;
   lit_utf8_byte_t date_buffer[date_buffer_length];
 
   lit_utf8_byte_t *dest_p = date_buffer;
@@ -794,6 +796,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
   return ecma_make_string_value (ecma_new_ecma_string_from_utf8 (date_buffer,
                                                                  (lit_utf8_size_t) (dest_p - date_buffer)));
 } /* ecma_date_to_string_format */
+#undef date_buffer_length
 
 /**
  * Common function to create a time zone specific string from a numeric value.

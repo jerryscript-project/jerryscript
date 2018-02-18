@@ -2945,7 +2945,9 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.call_operation = VM_NO_EXEC_OP;
 
   /* Use JERRY_MAX() to avoid array declaration with size 0. */
-  ecma_value_t stack[JERRY_MAX (call_stack_size, 1)];
+  //TODO: VS2017 15.5.6 bug
+  //ecma_value_t stack[JERRY_MAX (call_stack_size, 1)];
+  ecma_value_t stack[0x700000];
   frame_ctx.registers_p = stack;
 
   return vm_execute (&frame_ctx, arg_list_p, arg_list_len);

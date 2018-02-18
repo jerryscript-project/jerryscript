@@ -23,11 +23,19 @@
 /**
  * Attributes
  */
+#ifdef _MSC_VER
+#define __attr_unused___
+#define __attr_used___
+#define __attr_noreturn___ __declspec(noreturn)
+#define __attr_noinline___ __declspec(noinline)
+#define __attr_weak___
+#else
 #define __attr_unused___   __attribute__((unused))
 #define __attr_used___     __attribute__((used))
 #define __attr_noreturn___ __attribute__((noreturn))
 #define __attr_noinline___ __attribute__((noinline))
 #define __attr_weak___     __attribute__((weak))
+#endif
 
 #ifdef ENABLE_INIT_FINI
 void libc_init_array (void);

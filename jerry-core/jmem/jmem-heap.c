@@ -537,7 +537,6 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_free_block */
 
-#ifndef JERRY_NDEBUG
 /**
  * Check whether the pointer points to the heap
  *
@@ -558,7 +557,6 @@ jmem_is_heap_pointer (const void *pointer) /**< pointer */
   return true;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_is_heap_pointer */
-#endif /* !JERRY_NDEBUG */
 
 #ifdef JMEM_STATS
 /**

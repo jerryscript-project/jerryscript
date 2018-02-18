@@ -43,3 +43,5 @@ docs/doxygen
 # Tests
 tests/test262/
 tests/unit-doc/*.c
+
+.vs

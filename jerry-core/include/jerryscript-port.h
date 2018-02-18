@@ -20,6 +20,18 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#ifndef __noreturn
+#define __noreturn __declspec(noreturn)
+#endif
+#define __format_type
+#else
+#ifndef __noreturn
+#define __noreturn __attribute__((noreturn))
+#endif
+#define __format_type __attribute__((format(printf, 2, 3)))
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -62,7 +74,7 @@ typedef enum
  *
  * Example: a libc-based port may implement this with exit() or abort(), or both.
  */
-void jerry_port_fatal (jerry_fatal_code_t code) __attribute__((noreturn));
+void jerry_port_fatal (jerry_fatal_code_t code);
 
 /*
  *  I/O Port API
@@ -96,7 +108,7 @@ typedef enum
  * Example: a libc-based port may implement this with vfprintf(stderr) or
  * vfprintf(logfile), or both, depending on log level.
  */
-void jerry_port_log (jerry_log_level_t level, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+void jerry_port_log (jerry_log_level_t level, const char *format, ...) __format_type;
 
 /*
  * Date Port API

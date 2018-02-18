@@ -1370,6 +1370,8 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
  *
  * @return collection of strings - property names
  */
+
+#define bitmap_row_size (sizeof(uint32_t) * JERRY_BITSINBYTE)
 ecma_collection_header_t *
 ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                    bool is_array_indices_only, /**< true - exclude properties with names
@@ -1387,7 +1389,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
 
-  const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
+  //TODO: VS2017 15.5.6 bug
+  //const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
   uint32_t names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
 
   memset (names_hashes_bitmap, 0, sizeof (names_hashes_bitmap));

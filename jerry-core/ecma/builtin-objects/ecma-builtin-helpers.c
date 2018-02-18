@@ -46,7 +46,7 @@
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-
+#define buffer_size 27
 ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this argument */
 {
@@ -83,7 +83,8 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
   /* Building string "[object #type#]" where type is 'Undefined',
      'Null' or one of possible object's classes.
      The string with null character is maximum 27 characters long. */
-  const lit_utf8_size_t buffer_size = 27;
+  //TODO: VS2017 15.5.6 bug
+  //const lit_utf8_size_t buffer_size = 27;
   lit_utf8_byte_t str_buffer[buffer_size];
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
@@ -108,6 +109,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_helper_object_to_string */
+#undef buffer_size
 
 /**
  * The Array.prototype's 'toLocaleString' single element operation routine

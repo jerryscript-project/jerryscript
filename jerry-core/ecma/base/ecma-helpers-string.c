@@ -1106,12 +1106,12 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_p, /**< ecma-string
     }
   }
 
-  bool is_ascii;
-  const lit_utf8_byte_t *chars_p = ecma_string_get_chars (string_p, &size, &is_ascii);
+  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
+  const lit_utf8_byte_t *chars_p = ecma_string_get_chars (string_p, &size, &flags);
 
   JERRY_ASSERT (chars_p != NULL);
 
-  if (is_ascii)
+  if (flags & ECMA_STRING_FLAG_IS_ASCII)
   {
     JERRY_ASSERT (size <= buffer_size);
     memcpy (buffer_p, chars_p, size);
@@ -1122,6 +1122,11 @@ ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_p, /**< ecma-string
                                                   size,
                                                   buffer_p,
                                                   buffer_size);
+
+  if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+  {
+    jmem_heap_free_block ((void *) chars_p, size);
+  }
 
   JERRY_ASSERT (size <= buffer_size);
   return size;
@@ -1392,18 +1397,19 @@ ecma_string_get_uint32_size (const uint32_t uint32_number) /**< number in the st
  * Returns with the cesu8 character array of a string.
  *
  * Note:
- *   This function returns with NULL for uint32 strings.
- *   The buffer size is rounded up to 8 in this case.
+ *   - This function returns with a newly allocated buffer for uint32 strings,
+ *     which must be freed.
+ *   - The ASCII check only happens if the flags parameter gets
+ *     'ECMA_STRING_FLAG_IS_ASCII' as an input.
  *
- * @return NULL - for uint32 strings
- *         start of cesu8 characters - otherwise
+ * @return start of cesu8 characters
  */
 const lit_utf8_byte_t *
 ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
                        lit_utf8_size_t *size_p, /**< [out] size of the ecma string */
-                       bool *is_ascii_p) /**< [out] true, if the string is an ascii
-                                          *               character sequence (size == length)
-                                          *         false, otherwise */
+                       uint8_t *flags_p) /**< [in,out] flags: ECMA_STRING_FLAG_EMPTY,
+                                                              ECMA_STRING_FLAG_IS_ASCII,
+                                                              ECMA_STRING_FLAG_MUST_BE_FREED */
 {
   ecma_length_t length;
   lit_utf8_size_t size;
@@ -1431,11 +1437,10 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         uint32_t uint32_number = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
         size = (lit_utf8_size_t) ecma_string_get_uint32_size (uint32_number);
 
-        /* All numbers must be ascii strings. */
-        JERRY_ASSERT (ecma_string_get_length (string_p) == size);
-
-        length = size;
-        result_p = NULL;
+        result_p = (const lit_utf8_byte_t *) jmem_heap_alloc_block (size);
+        length = ecma_uint32_to_utf8_string (uint32_number, (lit_utf8_byte_t *) result_p, size);
+        JERRY_ASSERT (length == size);
+        *flags_p |= ECMA_STRING_FLAG_MUST_BE_FREED;
         break;
       }
       default:
@@ -1447,10 +1452,9 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         size = lit_get_magic_string_ex_size (id);
         length = 0;
 
-        if (unlikely (is_ascii_p != NULL))
+        if (unlikely (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
         {
-          length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
-                                           lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+          length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id), size);
         }
 
         result_p = lit_get_magic_string_ex_utf8 (id);
@@ -1483,12 +1487,12 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
       {
         size = (lit_utf8_size_t) ecma_string_get_uint32_size (string_p->u.uint32_number);
 
-        /* All numbers must be ascii strings. */
-        JERRY_ASSERT (ecma_string_get_length (string_p) == size);
-
-        length = size;
-        result_p = NULL;
+        result_p = (const lit_utf8_byte_t *) jmem_heap_alloc_block (size);
+        length = ecma_uint32_to_utf8_string (string_p->u.uint32_number, (lit_utf8_byte_t *) result_p, size);
+        JERRY_ASSERT (length == size);
+        *flags_p |= ECMA_STRING_FLAG_MUST_BE_FREED;
         break;
+
       }
       default:
       {
@@ -1497,10 +1501,9 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         size = lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
         length = 0;
 
-        if (unlikely (is_ascii_p != NULL))
+        if (unlikely (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
         {
-          length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id),
-                                           lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id));
+          length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id), size);
         }
 
         result_p = lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id);
@@ -1510,11 +1513,14 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
   }
 
   *size_p = size;
-
-  if (is_ascii_p != NULL)
+  if (*flags_p & ECMA_STRING_FLAG_IS_ASCII)
   {
-    *is_ascii_p = (length == size);
+    if (length != size)
+    {
+      *flags_p = (uint8_t) (*flags_p & ~ECMA_STRING_FLAG_IS_ASCII);
+    }
   }
+
   return result_p;
 } /* ecma_string_get_chars */
 
@@ -2126,31 +2132,23 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
   JERRY_ASSERT (index < ecma_string_get_length (string_p));
 
   lit_utf8_size_t buffer_size;
-  bool is_ascii;
-  const lit_utf8_byte_t *chars_p = ecma_string_get_chars (string_p, &buffer_size, &is_ascii);
-
-  if (chars_p != NULL)
-  {
-    if (is_ascii)
-    {
-      return chars_p[index];
-    }
-
-    return lit_utf8_string_code_unit_at (chars_p, buffer_size, index);
-  }
+  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
+  const lit_utf8_byte_t *chars_p = ecma_string_get_chars (string_p, &buffer_size, &flags);
 
   ecma_char_t ch;
+  if (flags & ECMA_STRING_FLAG_IS_ASCII)
+  {
+    ch = chars_p[index];
+  }
+  else
+  {
+    ch = lit_utf8_string_code_unit_at (chars_p, buffer_size, index);
+  }
 
-  JMEM_DEFINE_LOCAL_ARRAY (utf8_str_p, buffer_size, lit_utf8_byte_t);
-
-  ecma_string_to_utf8_bytes (string_p, utf8_str_p, buffer_size);
-
-  /* Uint32 must be an ascii string. */
-  JERRY_ASSERT (is_ascii);
-
-  ch = utf8_str_p[index];
-
-  JMEM_FINALIZE_LOCAL_ARRAY (utf8_str_p);
+  if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+  {
+    jmem_heap_free_block ((void *) chars_p, buffer_size);
+  }
 
   return ch;
 } /* ecma_string_get_char_at_pos */

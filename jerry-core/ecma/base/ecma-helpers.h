@@ -50,6 +50,13 @@
  */
 #define ECMA_SET_POINTER(field, non_compressed_pointer) JMEM_CP_SET_POINTER (field, non_compressed_pointer)
 
+typedef enum
+{
+  ECMA_STRING_FLAG_EMPTY = 0,
+  ECMA_STRING_FLAG_IS_ASCII,
+  ECMA_STRING_FLAG_MUST_BE_FREED
+} ecma_string_flag_t;
+
 /**
  * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
  */
@@ -57,14 +64,18 @@
                                    utf8_ptr, /**< [out] output buffer pointer */ \
                                    utf8_str_size) /**< [out] output buffer size */ \
   lit_utf8_size_t utf8_str_size; \
-  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, &utf8_str_size, NULL); \
-  bool utf8_ptr ## must_be_freed = false; \
-  \
-  if (utf8_ptr == NULL) \
+  uint8_t utf8_ptr ## flags = ECMA_STRING_FLAG_EMPTY; \
+  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, &utf8_str_size, &utf8_ptr ## flags);
+
+/**
+ * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
+ */
+#define ECMA_FINALIZE_UTF8_STRING(utf8_ptr, /**< pointer to character buffer */ \
+                                  utf8_str_size) /**< buffer size */ \
+  if (utf8_ptr ## flags & ECMA_STRING_FLAG_MUST_BE_FREED) \
   { \
-    utf8_ptr = (const lit_utf8_byte_t *) jmem_heap_alloc_block (utf8_str_size); \
-    ecma_string_to_utf8_bytes (ecma_str_ptr, (lit_utf8_byte_t *) utf8_ptr, utf8_str_size); \
-    utf8_ptr ## must_be_freed = true; \
+    JERRY_ASSERT (utf8_ptr != NULL); \
+    jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
   }
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
@@ -120,17 +131,6 @@
   ECMA_GET_POINTER (type, field)
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-
-/**
- * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
- */
-#define ECMA_FINALIZE_UTF8_STRING(utf8_ptr, /**< pointer to character buffer */ \
-                                  utf8_str_size) /**< buffer size */ \
-  if (utf8_ptr ## must_be_freed) \
-  { \
-    JERRY_ASSERT (utf8_ptr != NULL); \
-    jmem_heap_free_block ((void *) utf8_ptr, utf8_str_size); \
-  }
 
 /**
  * Convert boolean to bitfield value.
@@ -232,7 +232,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
                                     lit_utf8_size_t buffer_size);
 void ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p,
                                 lit_utf8_size_t buffer_size);
-const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, bool *is_ascii_p);
+const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, uint8_t *flags_p);
 bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);
 bool ecma_string_is_empty (const ecma_string_t *string_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);

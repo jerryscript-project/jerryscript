@@ -16,6 +16,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
@@ -241,11 +242,6 @@ re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
   }
 
   JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-  if (re_token_p->qmin > re_token_p->qmax)
-  {
-    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: qmin > qmax."));
-  }
 
   return ret_value;
 } /* re_parse_iterator */
@@ -893,10 +889,14 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       const lit_utf8_byte_t *input_curr_p = parser_ctx_p->input_curr_p;
 
       lit_utf8_decr (&parser_ctx_p->input_curr_p);
-      if (ecma_is_value_empty (re_parse_iterator (parser_ctx_p, out_token_p)))
+      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
+      if (ecma_is_value_empty (ret_value))
       {
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
       }
+
+      JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
+      ecma_free_value (JERRY_CONTEXT (error_value));
 
       parser_ctx_p->input_curr_p = input_curr_p;
 

@@ -33,7 +33,8 @@ int main (void)
   jerry_value_t res = jerry_run (parsed_code_val);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
 
-  jerry_heap_stats_t stats = {0};
+  jerry_heap_stats_t stats;
+  memset (&stats, 0, sizeof (stats));
   bool get_stats_ret = jerry_get_memory_stats (&stats);
   TEST_ASSERT (get_stats_ret);
   TEST_ASSERT (stats.version == 1);

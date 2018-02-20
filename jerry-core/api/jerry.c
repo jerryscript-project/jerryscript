@@ -313,7 +313,8 @@ jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p) /**< [out] heap memory 
     return false;
   }
 
-  jmem_heap_stats_t jmem_heap_stats = {0};
+  jmem_heap_stats_t jmem_heap_stats;
+  memset (&jmem_heap_stats, 0, sizeof (jmem_heap_stats));
   jmem_heap_get_stats (&jmem_heap_stats);
 
   *out_stats_p = (jerry_heap_stats_t)
@@ -992,7 +993,7 @@ jerry_get_error_type (const jerry_value_t value) /**< api value */
   ecma_object_t *object_p = ecma_get_object_from_value (object);
   ecma_standard_error_t error_type = ecma_get_error_type (object_p);
 
-  return error_type;
+  return (jerry_error_t) error_type;
 } /* jerry_get_error_type */
 
 /**

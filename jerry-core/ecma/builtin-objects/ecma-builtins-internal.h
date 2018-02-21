@@ -73,7 +73,6 @@ typedef struct
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
 extern const ecma_builtin_property_descriptor_t \
 ecma_builtin_ ## lowercase_name ## _property_descriptor_list[]; \

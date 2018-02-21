@@ -21,14 +21,12 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID__COUNT /* no prototype */,
          true,
-         true,
          object_prototype)
 
 /* The Object object (15.2.1) */
 BUILTIN (ECMA_BUILTIN_ID_OBJECT,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          object)
 
@@ -38,14 +36,12 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_ARRAY,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          array_prototype)
 
 /* The Array object (15.4.1) */
 BUILTIN (ECMA_BUILTIN_ID_ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          array)
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN*/
@@ -56,14 +52,12 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
          ECMA_OBJECT_TYPE_CLASS,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          string_prototype)
 
 /* The String object (15.5.1) */
 BUILTIN (ECMA_BUILTIN_ID_STRING,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          string)
 #endif /* !CONFIG_DISABLE_STRING_BUILTIN */
@@ -74,14 +68,12 @@ BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
          ECMA_OBJECT_TYPE_CLASS,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          boolean_prototype)
 
 /* The Boolean object (15.6.1) */
 BUILTIN (ECMA_BUILTIN_ID_BOOLEAN,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          boolean)
 #endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
@@ -92,14 +84,12 @@ BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
          ECMA_OBJECT_TYPE_CLASS,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          number_prototype)
 
 /* The Number object (15.7.1) */
 BUILTIN (ECMA_BUILTIN_ID_NUMBER,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          number)
 #endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
@@ -109,14 +99,12 @@ BUILTIN (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          function_prototype)
 
 /* The Function object (15.3.1) */
 BUILTIN (ECMA_BUILTIN_ID_FUNCTION,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          function)
 
@@ -125,7 +113,6 @@ BUILTIN (ECMA_BUILTIN_ID_FUNCTION,
 BUILTIN (ECMA_BUILTIN_ID_MATH,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
          true,
          math)
 #endif /* !CONFIG_DISABLE_MATH_BUILTIN */
@@ -136,7 +123,6 @@ BUILTIN (ECMA_BUILTIN_ID_JSON,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          json)
 #endif /* !CONFIG_DISABLE_JSON_BUILTIN */
 
@@ -146,14 +132,12 @@ BUILTIN (ECMA_BUILTIN_ID_DATE_PROTOTYPE,
          ECMA_OBJECT_TYPE_CLASS,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          date_prototype)
 
 /* The Date object (15.9.3) */
 BUILTIN (ECMA_BUILTIN_ID_DATE,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          date)
 #endif /* !CONFIG_DISABLE_DATE_BUILTIN */
@@ -164,14 +148,12 @@ BUILTIN (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
          ECMA_OBJECT_TYPE_CLASS,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          regexp_prototype)
 
 /* The RegExp object (15.10) */
 BUILTIN (ECMA_BUILTIN_ID_REGEXP,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          regexp)
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
@@ -181,14 +163,12 @@ BUILTIN (ECMA_BUILTIN_ID_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
-         true,
          error)
 
 /* The Error.prototype object (15.11.4) */
 BUILTIN (ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
          true,
          error_prototype)
 
@@ -198,14 +178,12 @@ BUILTIN (ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          eval_error_prototype)
 
 /* The EvalError object (15.11.6.1) */
 BUILTIN (ECMA_BUILTIN_ID_EVAL_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          eval_error)
 
@@ -214,14 +192,12 @@ BUILTIN (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          range_error_prototype)
 
 /* The RangeError object (15.11.6.2) */
 BUILTIN (ECMA_BUILTIN_ID_RANGE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          range_error)
 
@@ -230,14 +206,12 @@ BUILTIN (ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          reference_error_prototype)
 
 /* The ReferenceError object (15.11.6.3) */
 BUILTIN (ECMA_BUILTIN_ID_REFERENCE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          reference_error)
 
@@ -246,14 +220,12 @@ BUILTIN (ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          syntax_error_prototype)
 
 /* The SyntaxError object (15.11.6.4) */
 BUILTIN (ECMA_BUILTIN_ID_SYNTAX_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          syntax_error)
 
@@ -262,14 +234,12 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          type_error_prototype)
 
 /* The TypeError object (15.11.6.5) */
 BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          type_error)
 
@@ -278,14 +248,12 @@ BUILTIN (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
          true,
-         true,
          uri_error_prototype)
 
 /* The URIError object (15.11.6.6) */
 BUILTIN (ECMA_BUILTIN_ID_URI_ERROR,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          uri_error)
 #endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
@@ -295,7 +263,6 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          false,
-         true,
          type_error_thrower)
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
@@ -305,14 +272,12 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          arraybuffer_prototype)
 
 /* The ArrayBuffer object (ES2015 24.1.2) */
 BUILTIN (ECMA_BUILTIN_ID_ARRAYBUFFER,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          arraybuffer)
 
@@ -321,7 +286,6 @@ BUILTIN (ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          typedarray_prototype)
 
 /* The %TypedArray% intrinsic object (ES2015 22.2.1) */
@@ -329,13 +293,11 @@ BUILTIN (ECMA_BUILTIN_ID_TYPEDARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
          true,
-         true,
          typedarray)
 
 BUILTIN (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          int8array_prototype)
 
@@ -343,13 +305,11 @@ BUILTIN (ECMA_BUILTIN_ID_INT8ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          int8array)
 
 BUILTIN (ECMA_BUILTIN_ID_UINT8ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          uint8array_prototype)
 
@@ -357,13 +317,11 @@ BUILTIN (ECMA_BUILTIN_ID_UINT8ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          uint8array)
 
 BUILTIN (ECMA_BUILTIN_ID_INT16ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          int16array_prototype)
 
@@ -371,13 +329,11 @@ BUILTIN (ECMA_BUILTIN_ID_INT16ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          int16array)
 
 BUILTIN (ECMA_BUILTIN_ID_UINT16ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          uint16array_prototype)
 
@@ -385,13 +341,11 @@ BUILTIN (ECMA_BUILTIN_ID_UINT16ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          uint16array)
 
 BUILTIN (ECMA_BUILTIN_ID_INT32ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          int32array_prototype)
 
@@ -399,13 +353,11 @@ BUILTIN (ECMA_BUILTIN_ID_INT32ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          int32array)
 
 BUILTIN (ECMA_BUILTIN_ID_UINT32ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
-         true,
          true,
          uint32array_prototype)
 
@@ -413,20 +365,17 @@ BUILTIN (ECMA_BUILTIN_ID_UINT32ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
          true,
-         true,
          uint32array)
 
 BUILTIN (ECMA_BUILTIN_ID_FLOAT32ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
          true,
-         true,
          float32array_prototype)
 
 BUILTIN (ECMA_BUILTIN_ID_FLOAT32ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
-         true,
          true,
          float32array)
 
@@ -435,13 +384,11 @@ BUILTIN (ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
          true,
-         true,
          float64array_prototype)
 
 BUILTIN (ECMA_BUILTIN_ID_FLOAT64ARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
-         true,
          true,
          float64array)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
@@ -450,13 +397,11 @@ BUILTIN (ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
          true,
-         true,
          uint8clampedarray_prototype)
 
 BUILTIN (ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_TYPEDARRAY,
-         true,
          true,
          uint8clampedarray)
 
@@ -468,13 +413,11 @@ BUILTIN (ECMA_BUILTIN_ID_PROMISE_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
          true,
-         true,
          promise_prototype)
 
 BUILTIN (ECMA_BUILTIN_ID_PROMISE,
          ECMA_OBJECT_TYPE_FUNCTION,
          ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-         true,
          true,
          promise)
 
@@ -484,7 +427,6 @@ BUILTIN (ECMA_BUILTIN_ID_PROMISE,
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, /* Implementation-dependent */
-         true,
          true,
          global)
 

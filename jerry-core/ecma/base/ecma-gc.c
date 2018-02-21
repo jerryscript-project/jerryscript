@@ -157,7 +157,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_STRING_CONTAINER_MAGIC_STRING
+      if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
           && property_pair_p->names_cp[index] >= LIT_NEED_MARK_MAGIC_STRING__COUNT)
       {
         break;
@@ -473,7 +473,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
 
         /* Call the native's free callback. */
-        if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING
+        if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
             && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
         {
@@ -661,18 +661,18 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case ECMA_PSEUDO_ARRAY_ARGUMENTS:
         {
           ecma_length_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
-          jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
 
           for (ecma_length_t i = 0; i < formal_params_number; i++)
           {
-            if (arg_Literal_p[i] != JMEM_CP_NULL)
+            if (arg_Literal_p[i] != ECMA_VALUE_EMPTY)
             {
-              ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[i]);
+              ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[i]);
               ecma_deref_ecma_string (name_p);
             }
           }
 
-          size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
+          size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t) + formal_params_size);
           return;
         }

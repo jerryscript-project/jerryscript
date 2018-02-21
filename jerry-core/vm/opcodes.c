@@ -217,12 +217,12 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-vm_op_delete_var (jmem_cpointer_t name_literal, /**< name literal */
+vm_op_delete_var (ecma_value_t name_literal, /**< name literal */
                   ecma_object_t *lex_env_p) /**< lexical environment */
 {
   ecma_value_t completion_value = ECMA_VALUE_EMPTY;
 
-  ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, name_literal);
+  ecma_string_t *var_name_str_p = ecma_get_string_from_value (name_literal);
 
   ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, var_name_str_p);
 

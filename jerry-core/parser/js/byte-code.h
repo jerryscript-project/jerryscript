@@ -637,9 +637,7 @@ typedef struct
   uint16_t ident_end;               /**< end position of the identifier group */
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
-#ifdef JERRY_CPOINTER_32_BIT
   uint16_t padding;                 /**< an unused value */
-#endif
 } cbc_uint16_arguments_t;
 
 /**
@@ -652,9 +650,10 @@ typedef enum
   CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 2), /**< compiled code data is cbc_uint16_arguments_t */
   CBC_CODE_FLAGS_STRICT_MODE = (1u << 3), /**< strict mode is enabled */
   CBC_CODE_FLAGS_ARGUMENTS_NEEDED = (1u << 4), /**< arguments object must be constructed */
-  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED = (1u << 5), /**< non-strict arguments object must be constructed */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 6), /**< no need to create a lexical environment */
   CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 7), /**< this function is an arrow function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 8), /**< this function should be ignored by debugger */
 } cbc_code_flags;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,

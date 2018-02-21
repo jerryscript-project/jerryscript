@@ -978,12 +978,11 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
   lit_utf8_byte_t data[16];
   memcpy (data, lit_get_magic_string_utf8 (string_id), size);
 
-  ecma_string_t message_string;
-  ecma_init_ecma_magic_string (&message_string, LIT_MAGIC_STRING_MESSAGE);
+  ecma_string_t *message_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
 
   ecma_property_t *property_p;
   property_p = ecma_find_named_property (ecma_get_object_from_value (exception_obj_value),
-                                         &message_string);
+                                         message_string_p);
 
   if (property_p == NULL
       || ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)

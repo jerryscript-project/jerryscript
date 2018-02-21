@@ -749,12 +749,11 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
     ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
 
     /* 17. */
-    ecma_string_t magic_string_constructor;
-    ecma_init_ecma_magic_string (&magic_string_constructor, LIT_MAGIC_STRING_CONSTRUCTOR);
+    ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
 
     ecma_property_value_t *constructor_prop_value_p;
     constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
-                                                                &magic_string_constructor,
+                                                                magic_string_constructor_p,
                                                                 ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                                 NULL);
 

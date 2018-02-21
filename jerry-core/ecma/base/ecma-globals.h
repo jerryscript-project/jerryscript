@@ -83,18 +83,20 @@ typedef enum
 typedef enum
 {
   ECMA_TYPE_DIRECT = 0, /**< directly encoded value, a 28 bit signed integer or a simple value */
-  ECMA_TYPE_FLOAT = 1, /**< pointer to a 64 or 32 bit floating point number */
-  ECMA_TYPE_STRING = 2, /**< pointer to description of a string */
+  ECMA_TYPE_STRING = 1, /**< pointer to description of a string */
+  ECMA_TYPE_FLOAT = 2, /**< pointer to a 64 or 32 bit floating point number */
   ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
+  ECMA_TYPE_DIRECT_STRING = 5, /**< directly encoded string values */
   ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference */
   ECMA_TYPE_COLLECTION_CHUNK = ECMA_TYPE_ERROR, /**< pointer to description of a collection chunk */
+  ECMA_TYPE_SNAPSHOT_OFFSET = ECMA_TYPE_ERROR, /**< offset to a snapshot number/string */
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
 /**
  * Description of an ecma value
  *
- * Bit-field structure: type (2) | error (1) | value (29)
+ * Bit-field structure: type (3) | value (29)
  */
 typedef uint32_t ecma_value_t;
 
@@ -113,12 +115,12 @@ typedef int32_t ecma_integer_value_t;
 #endif /* UINTPTR_MAX <= UINT32_MAX */
 
 /**
- * Mask for ecma types in ecma_type_t
+ * Mask for ecma types in ecma_value_t
  */
 #define ECMA_VALUE_TYPE_MASK 0x7u
 
 /**
- * Shift for value part in ecma_type_t
+ * Shift for value part in ecma_value_t
  */
 #define ECMA_VALUE_SHIFT 3
 
@@ -419,11 +421,6 @@ typedef enum
  * Shift for property name part.
  */
 #define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
-
-/**
- * Property name is a generic string.
- */
-#define ECMA_PROPERTY_NAME_TYPE_STRING 3
 
 /**
  * Abstract property representation.
@@ -1058,6 +1055,7 @@ typedef double ecma_number_t;
 typedef enum
 {
   ECMA_COLLECTION_NO_REF_OBJECTS = (1u << 0), /**< do not increase the refcount of objects */
+  ECMA_COLLECTION_NO_COPY = (1u << 1), /**< do not copy values */
 } ecma_collection_flag_t;
 
 /**
@@ -1086,18 +1084,89 @@ typedef struct
 } ecma_collection_chunk_t;
 
 /**
+ * Direct string types (2 bit).
+ */
+typedef enum
+{
+  ECMA_DIRECT_STRING_PTR = 0, /**< string is a string pointer, only used by property names */
+  ECMA_DIRECT_STRING_MAGIC = 1, /**< string is a magic string */
+  ECMA_DIRECT_STRING_UINT = 2, /**< string is an unsigned int */
+  ECMA_DIRECT_STRING_MAGIC_EX = 3, /**< string is an extended magic string */
+} ecma_direct_string_type_t;
+
+/**
+ * Maximum value of the immediate part of a direct magic string.
+ * Must be compatible with the immediate property name.
+ */
+#ifdef JERRY_CPOINTER_32_BIT
+#define ECMA_DIRECT_STRING_MAX_IMM 0x07ffffff
+#else /* !JERRY_CPOINTER_32_BIT */
+#define ECMA_DIRECT_STRING_MAX_IMM 0x0000ffff
+#endif /* JERRY_CPOINTER_32_BIT */
+
+/**
+ * Shift for direct string value part in ecma_value_t.
+ */
+#define ECMA_DIRECT_STRING_SHIFT (ECMA_VALUE_SHIFT + 2)
+
+/**
+ * Full mask for direct strings.
+ */
+#define ECMA_DIRECT_STRING_MASK ((uintptr_t) (ECMA_DIRECT_TYPE_MASK | (0x3u << ECMA_VALUE_SHIFT)))
+
+/**
+ * Create an ecma direct string.
+ */
+#define ECMA_CREATE_DIRECT_STRING(type, value) \
+  ((uintptr_t) (ECMA_TYPE_DIRECT_STRING | ((type) << ECMA_VALUE_SHIFT) | (value) << ECMA_DIRECT_STRING_SHIFT))
+
+/**
+ * Checks whether the string is direct.
+ */
+#define ECMA_IS_DIRECT_STRING(string_p) \
+  ((((uintptr_t) (string_p)) & 0x1) != 0)
+
+/**
+ * Checks whether the string is direct.
+ */
+#define ECMA_IS_DIRECT_STRING_WITH_TYPE(string_p, type) \
+  ((((uintptr_t) (string_p)) & ECMA_DIRECT_STRING_MASK) == ECMA_CREATE_DIRECT_STRING (type, 0))
+
+/**
+ * Returns the type of a direct string.
+ */
+#define ECMA_GET_DIRECT_STRING_TYPE(string_p) \
+  ((((uintptr_t) (string_p)) >> ECMA_VALUE_SHIFT) & 0x3)
+
+/**
+ * Shift applied to type conversions.
+ */
+#define ECMA_STRING_TYPE_CONVERSION_SHIFT (ECMA_PROPERTY_NAME_TYPE_SHIFT - ECMA_VALUE_SHIFT)
+
+/**
+ * Converts direct string type to property name type.
+ */
+#define ECMA_DIRECT_STRING_TYPE_TO_PROP_NAME_TYPE(string_p) \
+  ((((uintptr_t) (string_p)) & (0x3 << ECMA_VALUE_SHIFT)) << ECMA_STRING_TYPE_CONVERSION_SHIFT)
+
+/**
+ * Returns the value of a direct string.
+ */
+#define ECMA_GET_DIRECT_STRING_VALUE(string_p) \
+  (((uintptr_t) (string_p)) >> ECMA_DIRECT_STRING_SHIFT)
+
+/**
  * Identifier for ecma-string's actual data container
  */
 typedef enum
 {
-  ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
-                                             stored locally in the string's descriptor */
-  ECMA_STRING_CONTAINER_MAGIC_STRING, /**< the ecma-string is equal to one of ECMA magic strings */
-  ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
   ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
                                            *   maximum size is 2^16. */
   ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
                                                 *   maximum size is 2^32. */
+  ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
+                                             stored locally in the string's descriptor */
+  ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
 
   ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
                                *   so no string processing function supports this type except
@@ -1166,9 +1235,8 @@ typedef struct
 
     lit_utf8_size_t long_utf8_string_size; /**< size of this long utf-8 string in bytes */
     uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
-    uint32_t magic_string_id; /**< identifier of a magic string (lit_magic_string_id_t) */
     uint32_t magic_string_ex_id; /**< identifier of an external magic string (lit_magic_string_ex_id_t) */
-    ecma_value_t lit_number; /**< literal number (note: not a regular string type) */
+    ecma_value_t lit_number; /**< number (see ECMA_STRING_LITERAL_NUMBER) */
     uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
   } u;
 } ecma_string_t;

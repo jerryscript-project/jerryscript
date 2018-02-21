@@ -55,23 +55,15 @@ vm_op_get_value (ecma_value_t object, /**< base object */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (object);
     ecma_string_t *property_name_p = NULL;
-    ecma_string_t uint32_string;
 
     if (ecma_is_value_integer_number (property))
     {
       ecma_integer_value_t int_value = ecma_get_integer_from_value (property);
 
-#ifdef JERRY_CPOINTER_32_BIT
-      bool limit_check = (int_value >= 0);
-#else /* !JERRY_CPOINTER_32_BIT */
-      bool limit_check = (int_value >= 0 && int_value < (ecma_integer_value_t) (UINT16_MAX + 1));
-#endif
-
-      if (limit_check)
+      if (int_value >= 0 && int_value <= ECMA_DIRECT_STRING_MAX_IMM)
       {
-        /* Statically allocated string for searching. */
-        ecma_init_ecma_string_from_uint32 (&uint32_string, (uint32_t) int_value);
-        property_name_p = &uint32_string;
+        property_name_p = (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT,
+                                                                       (uintptr_t) int_value);
       }
     }
     else if (ecma_is_value_string (property))
@@ -295,10 +287,10 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
  */
 static ecma_value_t
 vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
-                             jmem_cpointer_t lit_cp) /**< literal */
+                             ecma_value_t lit_value) /**< literal */
 {
-  ecma_compiled_code_t *bytecode_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                                lit_cp);
+  ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                      lit_value);
   bool is_function = ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION) != 0);
 
   if (is_function)
@@ -523,8 +515,8 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       } \
       else \
       { \
-        ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
-                                                              literal_start_p[literal_index]); \
+        ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]); \
+        \
         result = ecma_op_resolve_reference_value (frame_ctx_p->lex_env_p, \
                                                   name_p); \
         \
@@ -537,23 +529,13 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     } \
     else if (literal_index < const_literal_end) \
     { \
-      ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, \
-                                                             literal_start_p[literal_index]); \
-      \
-      if (unlikely (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER)) \
-      { \
-        (target_value) = ecma_fast_copy_value (value_p->u.lit_number); \
-      } \
-      else \
-      { \
-        ecma_ref_ecma_string (value_p); \
-        (target_value) = ecma_make_string_value (value_p); \
-      } \
+      (target_value) = ecma_fast_copy_value (literal_start_p[literal_index]); \
     } \
     else \
     { \
       /* Object construction. */ \
-      (target_value) = vm_construct_literal_object (frame_ctx_p, literal_start_p[literal_index]); \
+      (target_value) = vm_construct_literal_object (frame_ctx_p, \
+                                                    literal_start_p[literal_index]); \
     } \
   } \
   while (0)
@@ -571,10 +553,10 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
-  jmem_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
+  ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-  jmem_cpointer_t self_reference;
-  ECMA_SET_NON_NULL_POINTER (self_reference, bytecode_header_p);
+  ecma_value_t self_reference;
+  ECMA_SET_INTERNAL_VALUE_POINTER (self_reference, bytecode_header_p);
 
   /* Prepare. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
@@ -613,8 +595,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         while (literal_index <= literal_index_end)
         {
-          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                literal_start_p[literal_index]);
+          ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           vm_var_decl (frame_ctx_p, name_p);
           literal_index++;
         }
@@ -663,14 +644,9 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  literal_start_p[literal_index]);
+            ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-            if (self_reference == literal_start_p[value_index])
-            {
-              ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
-            }
-            else
+            if (likely (value_index < register_end || self_reference != literal_start_p[value_index]))
             {
               vm_var_decl (frame_ctx_p, name_p);
 
@@ -689,6 +665,10 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               {
                 ecma_free_value (JERRY_CONTEXT (error_value));
               }
+            }
+            else
+            {
+              ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
             }
 
             if (value_index >= register_end)
@@ -730,7 +710,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
-  jmem_cpointer_t *literal_start_p = frame_ctx_p->literal_start_p;
+  ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
 
   ecma_value_t *stack_top_p;
   uint16_t encoding_limit;
@@ -1146,10 +1126,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  literal_start_p[literal_index]);
-            ecma_object_t *ref_base_lex_env_p;
+            ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
+            ecma_object_t *ref_base_lex_env_p;
             ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                  name_p);
 
@@ -1648,8 +1627,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                  literal_start_p[literal_index]);
+            ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
             ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                                 name_p);
@@ -2592,8 +2570,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         else
         {
-          ecma_string_t *var_name_str_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                                        literal_start_p[literal_index]);
+          ecma_string_t *var_name_str_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+
           ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
                                                                               var_name_str_p);
 
@@ -2745,25 +2723,20 @@ error:
 
         if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_CATCH)
         {
-          uint32_t literal_index;
-          ecma_object_t *catch_env_p;
-          ecma_string_t *catch_name_p;
-
           *stack_top_p++ = JERRY_CONTEXT (error_value);
 
           JERRY_ASSERT (byte_code_p[0] == CBC_ASSIGN_SET_IDENT);
 
-          literal_index = byte_code_p[1];
+          uint32_t literal_index = byte_code_p[1];
+
           if (literal_index >= encoding_limit)
           {
             literal_index = ((literal_index << 8) | byte_code_p[2]) - encoding_delta;
           }
 
-          catch_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
+          ecma_object_t *catch_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
 
-          catch_name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                       literal_start_p[literal_index]);
-
+          ecma_string_t *catch_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_op_create_mutable_binding (catch_env_p, catch_name_p, false);
 
           stack_top_p[-2 - 1] = ecma_make_object_value (frame_ctx_p->lex_env_p);
@@ -2909,29 +2882,29 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         const ecma_value_t *arg_list_p, /**< arguments list */
         ecma_length_t arg_list_len) /**< length of arguments list */
 {
-  jmem_cpointer_t *literal_p;
+  ecma_value_t *literal_p;
   vm_frame_ctx_t frame_ctx;
   uint32_t call_stack_size;
 
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
 
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
+    literal_p = (ecma_value_t *) ((uint8_t *) bytecode_header_p + sizeof (cbc_uint16_arguments_t));
+    literal_p -= args_p->register_end;
     frame_ctx.literal_start_p = literal_p;
     literal_p += args_p->literal_end;
-    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
   }
   else
   {
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
 
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
+    literal_p = (ecma_value_t *) ((uint8_t *) bytecode_header_p + sizeof (cbc_uint8_arguments_t));
+    literal_p -= args_p->register_end;
     frame_ctx.literal_start_p = literal_p;
     literal_p += args_p->literal_end;
-    call_stack_size = (uint32_t) (args_p->register_end + args_p->stack_limit);
   }
 
   frame_ctx.bytecode_header_p = bytecode_header_p;

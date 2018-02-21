@@ -723,7 +723,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_STRING_CONTAINER_MAGIC_STRING)
+      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC)
       {
         if (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
             || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER)
@@ -758,7 +758,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     ecma_lcache_invalidate (object_p, name_cp, property_p);
   }
 
-  if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_PROPERTY_NAME_TYPE_STRING)
+  if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_PTR)
   {
     ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, name_cp);
     ecma_deref_ecma_string (prop_name_p);
@@ -1475,34 +1475,33 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
   if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
   {
-    jmem_cpointer_t *literal_start_p = NULL;
+    ecma_value_t *literal_start_p = NULL;
     uint32_t literal_end;
     uint32_t const_literal_end;
 
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
-      uint8_t *byte_p = (uint8_t *) bytecode_p;
-      literal_start_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
-
       cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_p;
       literal_end = args_p->literal_end;
       const_literal_end = args_p->const_literal_end;
+
+      literal_start_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint16_arguments_t));
+      literal_start_p -= args_p->register_end;
     }
     else
     {
-      uint8_t *byte_p = (uint8_t *) bytecode_p;
-      literal_start_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
-
       cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_p;
       literal_end = args_p->literal_end;
       const_literal_end = args_p->const_literal_end;
+
+      literal_start_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint8_arguments_t));
+      literal_start_p -= args_p->register_end;
     }
 
     for (uint32_t i = const_literal_end; i < literal_end; i++)
     {
-      jmem_cpointer_t bytecode_cpointer = literal_start_p[i];
-      ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                                            bytecode_cpointer);
+      ecma_compiled_code_t *bytecode_literal_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                                  literal_start_p[i]);
 
       /* Self references are ignored. */
       if (bytecode_literal_p != bytecode_p)
@@ -1554,7 +1553,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     re_compiled_code_t *re_bytecode_p = (re_compiled_code_t *) bytecode_p;
 
-    ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t, re_bytecode_p->pattern_cp));
+    ecma_deref_ecma_string (ecma_get_string_from_value (re_bytecode_p->pattern));
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
 

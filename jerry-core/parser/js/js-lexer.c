@@ -1759,13 +1759,13 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     num = -num;
   }
 
-  jmem_cpointer_t lit_cp = ecma_find_or_create_literal_number (num);
+  ecma_value_t lit_value = ecma_find_or_create_literal_number (num);
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
 
   while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
     if (literal_p->type == LEXER_NUMBER_LITERAL
-        && literal_p->u.value == lit_cp)
+        && literal_p->u.value == lit_value)
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;
@@ -1790,7 +1790,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 
   context_p->literal_count++;
 
-  literal_p->u.value = lit_cp;
+  literal_p->u.value = lit_value;
   literal_p->type = LEXER_NUMBER_LITERAL;
 
   context_p->lit_object.literal_p = literal_p;

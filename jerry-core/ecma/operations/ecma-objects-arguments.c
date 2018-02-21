@@ -51,23 +51,18 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
 
   ecma_length_t formal_params_number;
-  jmem_cpointer_t *literal_p;
 
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
 
     formal_params_number = args_p->argument_end;
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint16_arguments_t));
   }
   else
   {
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
-    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
 
     formal_params_number = args_p->argument_end;
-    literal_p = (jmem_cpointer_t *) (byte_p + sizeof (cbc_uint8_arguments_t));
   }
 
   ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
@@ -76,7 +71,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   if (!is_strict && arguments_number > 0 && formal_params_number > 0)
   {
-    size_t formal_params_size = formal_params_number * sizeof (jmem_cpointer_t);
+    size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
 
     obj_p = ecma_create_object (prototype_p,
                                 sizeof (ecma_extended_object_t) + formal_params_size,
@@ -90,15 +85,19 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
     ext_object_p->u.pseudo_array.u1.length = (uint16_t) formal_params_number;
 
-    jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+    ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-    memcpy (arg_Literal_p, literal_p, formal_params_size);
+    uint8_t *byte_p = (uint8_t *) bytecode_data_p;
+    byte_p += ((size_t) bytecode_data_p->size) << JMEM_ALIGNMENT_LOG;
+    byte_p -= formal_params_size;
+
+    memcpy (arg_Literal_p, byte_p, formal_params_size);
 
     for (ecma_length_t i = 0; i < formal_params_number; i++)
     {
-      if (arg_Literal_p[i] != JMEM_CP_NULL)
+      if (arg_Literal_p[i] != ECMA_VALUE_EMPTY)
       {
-        ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[i]);
+        ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[i]);
         ecma_ref_ecma_string (name_p);
       }
     }
@@ -270,20 +269,20 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
     return ret_value;
   }
 
-  jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+  ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-  if (arg_Literal_p[index] == JMEM_CP_NULL)
+  if (arg_Literal_p[index] == ECMA_VALUE_EMPTY)
   {
     return ret_value;
   }
 
-  ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[index]);
+  ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
   if (property_desc_p->is_get_defined
       || property_desc_p->is_set_defined)
   {
     ecma_deref_ecma_string (name_p);
-    arg_Literal_p[index] = JMEM_CP_NULL;
+    arg_Literal_p[index] = ECMA_VALUE_EMPTY;
   }
   else
   {
@@ -305,7 +304,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
         && !property_desc_p->is_writable)
     {
       ecma_deref_ecma_string (name_p);
-      arg_Literal_p[index] = JMEM_CP_NULL;
+      arg_Literal_p[index] = ECMA_VALUE_EMPTY;
     }
   }
 
@@ -347,13 +346,13 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
 
       if (index < ext_object_p->u.pseudo_array.u1.length)
       {
-        jmem_cpointer_t *arg_Literal_p = (jmem_cpointer_t *) (ext_object_p + 1);
+        ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-        if (arg_Literal_p[index] != JMEM_CP_NULL)
+        if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
         {
-          ecma_string_t *name_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t, arg_Literal_p[index]);
+          ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[index]);
           ecma_deref_ecma_string (name_p);
-          arg_Literal_p[index] = JMEM_CP_NULL;
+          arg_Literal_p[index] = ECMA_VALUE_EMPTY;
         }
       }
     }

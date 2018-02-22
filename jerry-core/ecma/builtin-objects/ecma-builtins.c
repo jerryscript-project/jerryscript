@@ -48,7 +48,6 @@ static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_r
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
   ecma_builtin_ ## lowercase_name ## _property_descriptor_list,
 #include "ecma-builtins.inc.h"
@@ -302,7 +301,6 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
     case builtin_id: \
     { \
@@ -797,7 +795,6 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
     case builtin_id: \
       { \
@@ -855,7 +852,6 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
       case builtin_id: \
       { \
@@ -908,7 +904,6 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                 object_type, \
                 object_prototype_builtin_id, \
                 is_extensible, \
-                is_static, \
                 lowercase_name) \
     case builtin_id: \
       { \

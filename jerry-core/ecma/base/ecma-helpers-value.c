@@ -296,6 +296,9 @@ ecma_is_value_number (ecma_value_t value) /**< ecma value */
           || ecma_is_value_float_number (value));
 } /* ecma_is_value_number */
 
+JERRY_STATIC_ASSERT ((ECMA_TYPE_STRING | 0x4) == ECMA_TYPE_DIRECT_STRING,
+                     ecma_type_string_and_direct_string_must_have_one_bit_difference);
+
 /**
  * Check if the value is ecma-string.
  *
@@ -305,7 +308,7 @@ ecma_is_value_number (ecma_value_t value) /**< ecma value */
 inline bool __attr_const___ __attr_always_inline___
 ecma_is_value_string (ecma_value_t value) /**< ecma value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
+  return ((value & (ECMA_VALUE_TYPE_MASK - 0x4)) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
 
 /**
@@ -503,6 +506,11 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
 {
   JERRY_ASSERT (ecma_string_p != NULL);
 
+  if ((((uintptr_t) ecma_string_p) & ECMA_VALUE_TYPE_MASK) != 0)
+  {
+    return (ecma_value_t) (uintptr_t) ecma_string_p;
+  }
+
   return ecma_pointer_to_ecma_value (ecma_string_p) | ECMA_TYPE_STRING;
 } /* ecma_make_string_value */
 
@@ -594,7 +602,12 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
 inline ecma_string_t *__attr_pure___ __attr_always_inline___
 ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
+  JERRY_ASSERT (ecma_is_value_string (value));
+
+  if ((value & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_DIRECT_STRING)
+  {
+    return (ecma_string_t *) (uintptr_t) value;
+  }
 
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_string_from_value */
@@ -607,7 +620,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
 inline ecma_object_t *__attr_pure___ __attr_always_inline___
 ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_OBJECT);
+  JERRY_ASSERT (ecma_is_value_object (value));
 
   return (ecma_object_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_object_from_value */
@@ -666,6 +679,7 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
   switch (ecma_get_value_type_field (value))
   {
     case ECMA_TYPE_DIRECT:
+    case ECMA_TYPE_DIRECT_STRING:
     {
       return value;
     }
@@ -856,6 +870,7 @@ ecma_free_value (ecma_value_t value) /**< value description */
   switch (ecma_get_value_type_field (value))
   {
     case ECMA_TYPE_DIRECT:
+    case ECMA_TYPE_DIRECT_STRING:
     {
       /* no memory is allocated */
       break;

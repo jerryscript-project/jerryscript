@@ -74,8 +74,9 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
 
     do
     {
-      if (!ecma_is_value_object (*item_p)
-          || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS))
+      if (!(flags & ECMA_COLLECTION_NO_COPY)
+          && (!ecma_is_value_object (*item_p)
+              || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS)))
       {
         ecma_free_value (*item_p);
       }
@@ -139,8 +140,9 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
     }
   }
 
-  if (!ecma_is_value_object (value)
-      || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS))
+  if (!(flags & ECMA_COLLECTION_NO_COPY)
+      && (!ecma_is_value_object (value)
+          || !(flags & ECMA_COLLECTION_NO_REF_OBJECTS)))
   {
     value = ecma_copy_value (value);
   }

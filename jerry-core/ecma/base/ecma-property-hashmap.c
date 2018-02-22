@@ -275,7 +275,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
 
   JERRY_ASSERT (property_index < ECMA_PROPERTY_PAIR_ITEM_COUNT);
 
-  uint32_t entry_index = name_p->hash;
+  uint32_t entry_index = ecma_string_hash (name_p);
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
 
@@ -471,7 +471,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
   }
 #endif /* !JERRY_NDEBUG */
 
-  uint32_t entry_index = name_p->hash;
+  uint32_t entry_index = ecma_string_hash (name_p);
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);

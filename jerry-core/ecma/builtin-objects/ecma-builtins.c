@@ -761,9 +761,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       if (!(*bitset_p & bit_for_index) || ecma_op_object_has_own_property (object_p, name_p))
       {
-        ecma_append_to_values_collection (for_non_enumerable_p,
-                                          ecma_make_string_value (name_p),
-                                          0);
+        ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
       }
 
       ecma_deref_ecma_string (name_p);

@@ -232,17 +232,16 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
 {
   JERRY_UNUSED (this);
 
-  ecma_string_t str_promise;
-  ecma_string_t str_already_resolved;
-  ecma_init_ecma_magic_string (&str_promise, LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_init_ecma_magic_string (&str_already_resolved, LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+
   ecma_object_t *function_p = ecma_get_object_from_value (function);
   /* 2. */
-  ecma_value_t promise = ecma_op_object_get (function_p, &str_promise);
+  ecma_value_t promise = ecma_op_object_get (function_p, str_promise_p);
   /* 1. */
   JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
   /* 3. */
-  ecma_value_t already_resolved = ecma_op_object_get (function_p, &str_already_resolved);
+  ecma_value_t already_resolved = ecma_op_object_get (function_p, str_already_resolved_p);
 
   /* 4. */
   if (ecma_get_already_resolved_bool_value (already_resolved))
@@ -278,17 +277,16 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 {
   JERRY_UNUSED (this);
 
-  ecma_string_t str_promise;
-  ecma_string_t str_already_resolved;
-  ecma_init_ecma_magic_string (&str_promise, LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_init_ecma_magic_string (&str_already_resolved, LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+
   ecma_object_t *function_p = ecma_get_object_from_value (function);
   /* 2. */
-  ecma_value_t promise = ecma_op_object_get (function_p, &str_promise);
+  ecma_value_t promise = ecma_op_object_get (function_p, str_promise_p);
   /* 1. */
   JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
   /* 3. */
-  ecma_value_t already_resolved = ecma_op_object_get (function_p, &str_already_resolved);
+  ecma_value_t already_resolved = ecma_op_object_get (function_p, str_already_resolved_p);
 
   /* 4. */
   if (ecma_get_already_resolved_bool_value (already_resolved))
@@ -430,22 +428,21 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
   /* 1. */
   ecma_value_t already_resolved = ecma_op_create_boolean_object (ecma_make_boolean_value (false));
 
-  ecma_string_t str_promise;
-  ecma_string_t str_already_resolved;
-  ecma_init_ecma_magic_string (&str_promise, LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_init_ecma_magic_string (&str_already_resolved, LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+
   /* 2. */
   ecma_object_t *resolve_p;
   resolve_p = ecma_op_create_external_function_object (ecma_promise_resolve_handler);
 
   /* 3. */
   ecma_op_object_put (resolve_p,
-                      &str_promise,
+                      str_promise_p,
                       ecma_make_object_value (object_p),
                       false);
   /* 4. */
   ecma_op_object_put (resolve_p,
-                      &str_already_resolved,
+                      str_already_resolved_p,
                       already_resolved,
                       false);
   /* 5. */
@@ -453,12 +450,12 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
   reject_p = ecma_op_create_external_function_object (ecma_promise_reject_handler);
   /* 6. */
   ecma_op_object_put (reject_p,
-                      &str_promise,
+                      str_promise_p,
                       ecma_make_object_value (object_p),
                       false);
   /* 7. */
   ecma_op_object_put (reject_p,
-                      &str_already_resolved,
+                      str_already_resolved_p,
                       already_resolved,
                       false);
 
@@ -516,15 +513,15 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   /* 8. */
   ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (object_p);
 
-  ecma_string_t str_resolve, str_reject;
-  ecma_init_ecma_magic_string (&str_resolve, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
-  ecma_init_ecma_magic_string (&str_reject, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
+  ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+
   ecma_op_object_put (object_p,
-                      &str_resolve,
+                      str_resolve_p,
                       funcs->resolve,
                       false);
   ecma_op_object_put (object_p,
-                      &str_reject,
+                      str_reject_p,
                       funcs->reject,
                       false);
 

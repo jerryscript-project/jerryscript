@@ -736,11 +736,10 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
   while (k < source_length_uint32 && ecma_is_value_empty (ret_val))
   {
-    ecma_string_t k_str;
-    ecma_init_ecma_string_from_uint32 (&k_str, k);
+    ecma_string_t *k_str_p = ecma_new_ecma_string_from_uint32 (k);
 
     ECMA_TRY_CATCH (elem,
-                    ecma_op_object_get (source_obj_p, &k_str),
+                    ecma_op_object_get (source_obj_p, k_str_p),
                     ret_val);
 
     ECMA_OP_TO_NUMBER_TRY_CATCH (elem_num, elem, ret_val);
@@ -749,6 +748,8 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
     ECMA_OP_TO_NUMBER_FINALIZE (elem_num);
     ECMA_FINALIZE (elem);
+
+    ecma_deref_ecma_string (k_str_p);
 
     k++;
     target_byte_index += element_size;

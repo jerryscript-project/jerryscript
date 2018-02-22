@@ -468,8 +468,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
 
     if (cached_bytecode_p != NULL)
     {
-      ecma_string_t *cached_pattern_str_p;
-      cached_pattern_str_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, cached_bytecode_p->pattern_cp);
+      ecma_string_t *cached_pattern_str_p = ecma_get_string_from_value (cached_bytecode_p->pattern);
 
       if ((cached_bytecode_p->header.status_flags & RE_FLAGS_MASK) == flags
           && ecma_compare_ecma_strings (cached_pattern_str_p, pattern_str_p))
@@ -580,7 +579,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
     re_compiled_code.header.refs = 1;
     re_compiled_code.header.status_flags = re_ctx.flags;
     ecma_ref_ecma_string (pattern_str_p);
-    ECMA_SET_NON_NULL_POINTER (re_compiled_code.pattern_cp, pattern_str_p);
+    re_compiled_code.pattern = ecma_make_string_value (pattern_str_p);
     re_compiled_code.num_of_captures = re_ctx.num_of_captures * 2;
     re_compiled_code.num_of_non_captures = re_ctx.num_of_non_captures;
 

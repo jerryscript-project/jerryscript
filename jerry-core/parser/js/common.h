@@ -81,7 +81,7 @@ typedef struct
 {
   union
   {
-    jmem_cpointer_t value;               /**< literal value (not processed by the parser) */
+    ecma_value_t value;                  /**< literal value (not processed by the parser) */
     const uint8_t *char_p;               /**< character value */
     ecma_compiled_code_t *bytecode_p;    /**< compiled function or regexp pointer */
     uint32_t source_data;                /**< encoded source literal */

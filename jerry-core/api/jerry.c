@@ -1846,11 +1846,12 @@ jerry_delete_property_by_index (const jerry_value_t obj_val, /**< object value *
     return false;
   }
 
-  ecma_string_t str_idx;
-  ecma_init_ecma_string_from_uint32 (&str_idx, index);
+  ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 (index);
   ecma_value_t ret_value = ecma_op_object_delete (ecma_get_object_from_value (obj_value),
-                                                  &str_idx,
+                                                  str_idx_p,
                                                   false);
+  ecma_deref_ecma_string (str_idx_p);
+
   return ecma_is_value_true (ret_value);
 } /* jerry_delete_property_by_index */
 
@@ -1905,9 +1906,9 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_string_t str_idx;
-  ecma_init_ecma_string_from_uint32 (&str_idx, index);
-  ecma_value_t ret_value = ecma_op_object_get (ecma_get_object_from_value (obj_value), &str_idx);
+  ecma_string_t *str_idx_p = ecma_new_ecma_string_from_uint32 (index);
+  ecma_value_t ret_value = ecma_op_object_get (ecma_get_object_from_value (obj_value), str_idx_p);
+  ecma_deref_ecma_string (str_idx_p);
 
   return jerry_return (ret_value);
 } /* jerry_get_property_by_index */

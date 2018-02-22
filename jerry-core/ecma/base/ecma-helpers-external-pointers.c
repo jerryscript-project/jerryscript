@@ -45,10 +45,9 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
   JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
-  ecma_string_t name;
-  ecma_init_ecma_magic_string (&name, id);
+  ecma_string_t *name_p = ecma_get_magic_string (id);
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
-  ecma_property_t *property_p = ecma_find_named_property (obj_p, &name);
   bool is_new = (property_p == NULL);
 
   ecma_native_pointer_t *native_pointer_p;
@@ -56,7 +55,7 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
   if (is_new)
   {
     ecma_property_value_t *value_p;
-    value_p = ecma_create_named_data_property (obj_p, &name, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+    value_p = ecma_create_named_data_property (obj_p, name_p, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
 
     native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
 
@@ -68,8 +67,6 @@ ecma_create_native_property (ecma_object_t *obj_p, /**< object to create propert
 
     native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
   }
-
-  JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
 
   native_pointer_p->data_p = data_p;
   native_pointer_p->u.info_p = info_p;
@@ -130,12 +127,8 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
   JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
-  ecma_string_t name;
-  ecma_init_ecma_magic_string (&name, id);
-
-  ecma_property_t *property_p = ecma_find_named_property (obj_p, &name);
-
-  JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (&name));
+  ecma_string_t *name_p = ecma_get_magic_string (id);
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   if (property_p == NULL)
   {

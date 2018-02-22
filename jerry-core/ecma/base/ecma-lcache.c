@@ -143,38 +143,13 @@ static inline jmem_cpointer_t __attr_always_inline___
 ecma_string_to_lcache_property_name (const ecma_string_t *prop_name_p, /**< property name */
                                      ecma_property_t *name_type_p) /**< [out] property name type */
 {
-  ecma_string_container_t container = ECMA_STRING_GET_CONTAINER (prop_name_p);
-
-  switch (container)
+  if (ECMA_IS_DIRECT_STRING (prop_name_p))
   {
-    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-    case ECMA_STRING_CONTAINER_MAGIC_STRING:
-    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
-    {
-#ifdef JERRY_CPOINTER_32_BIT
-
-      *name_type_p = (ecma_property_t) container;
-      return (jmem_cpointer_t) prop_name_p->u.uint32_number;
-
-#else /* !JERRY_CPOINTER_32_BIT */
-
-      if (prop_name_p->u.uint32_number < (UINT16_MAX + 1))
-      {
-        *name_type_p = (ecma_property_t) container;
-        return (jmem_cpointer_t) prop_name_p->u.uint32_number;
-      }
-
-#endif /* JERRY_CPOINTER_32_BIT */
-
-      break;
-    }
-    default:
-    {
-      break;
-    }
+    *name_type_p = (ecma_property_t) ECMA_GET_DIRECT_STRING_TYPE (prop_name_p);
+    return (jmem_cpointer_t) ECMA_GET_DIRECT_STRING_VALUE (prop_name_p);
   }
 
-  *name_type_p = ECMA_PROPERTY_NAME_TYPE_STRING;
+  *name_type_p = ECMA_DIRECT_STRING_PTR;
 
   jmem_cpointer_t prop_name_cp;
   ECMA_SET_NON_NULL_POINTER (prop_name_cp, prop_name_p);

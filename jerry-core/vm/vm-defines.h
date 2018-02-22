@@ -46,7 +46,7 @@ typedef struct vm_frame_ctx_t
   uint8_t *byte_code_start_p;                         /**< byte code start pointer */
   ecma_value_t *registers_p;                          /**< register start pointer */
   ecma_value_t *stack_top_p;                          /**< stack top pointer */
-  jmem_cpointer_t *literal_start_p;                   /**< literal list start pointer */
+  ecma_value_t *literal_start_p;                      /**< literal list start pointer */
   ecma_object_t *lex_env_p;                           /**< current lexical environment */
   struct vm_frame_ctx_t *prev_context_p;              /**< previous context */
   ecma_value_t this_binding;                          /**< this binding */

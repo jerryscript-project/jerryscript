@@ -233,15 +233,16 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
   ecma_job_promise_resolve_thenable_t *job_p = (ecma_job_promise_resolve_thenable_t *) obj_p;
   ecma_object_t *promise_p = ecma_get_object_from_value (job_p->promise);
   ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (promise_p);
-  ecma_string_t str_resolve, str_reject;
-  ecma_init_ecma_magic_string (&str_resolve, LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
-  ecma_init_ecma_magic_string (&str_reject, LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+
+  ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
+  ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+
   ecma_op_object_put (promise_p,
-                      &str_resolve,
+                      str_resolve_p,
                       funcs->resolve,
                       false);
   ecma_op_object_put (promise_p,
-                      &str_reject,
+                      str_reject_p,
                       funcs->reject,
                       false);
 

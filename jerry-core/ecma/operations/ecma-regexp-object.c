@@ -239,7 +239,7 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
 
   /* Initialize RegExp object properties */
   re_initialize_props (object_p,
-                       ECMA_GET_NON_NULL_POINTER (ecma_string_t, bytecode_p->pattern_cp),
+                       ecma_get_string_from_value (bytecode_p->pattern),
                        bytecode_p->header.status_flags);
 
   return ecma_make_object_value (object_p);

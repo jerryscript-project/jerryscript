@@ -104,23 +104,24 @@ main (void)
 
     for (uint32_t j = 0; j < test_sub_iters; j++)
     {
-      jmem_cpointer_t lit1;
-      jmem_cpointer_t lit2;
+      ecma_value_t lit1;
+      ecma_value_t lit2;
       if (ptrs[j])
       {
         lit1 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
         lit2 = ecma_find_or_create_literal_string (ptrs[j], lengths[j]);
+        TEST_ASSERT (ecma_is_value_string (lit1));
+        TEST_ASSERT (ecma_is_value_string (lit2));
         TEST_ASSERT (lit1 == lit2);
       }
       else
       {
         lit1 = ecma_find_or_create_literal_number (numbers[j]);
         lit2 = ecma_find_or_create_literal_number (numbers[j]);
+        TEST_ASSERT (ecma_is_value_number (lit1));
+        TEST_ASSERT (ecma_is_value_number (lit2));
         TEST_ASSERT (lit1 == lit2);
       }
-      TEST_ASSERT (lit1);
-      TEST_ASSERT (lit2);
-      TEST_ASSERT (lit1 == lit2);
     }
 
     /* Check empty string exists. */

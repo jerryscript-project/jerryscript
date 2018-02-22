@@ -80,7 +80,7 @@ jerry_debugger_free_unreferenced_byte_code (void)
  * Send backtrace.
  */
 static void
-jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer the the received data */
+jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the received data */
 {
   JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_backtrace_t, get_backtrace_p);
 
@@ -198,7 +198,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
     }
     else
     {
-      /* Primitve type. */
+      /* Primitive type. */
       message = ecma_op_to_string (result);
       JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (message));
     }
@@ -253,7 +253,7 @@ jerry_debugger_sleep (void)
  *         false - otherwise
  */
 inline bool __attr_always_inline___
-jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer the the received data */
+jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the received data */
                                 uint32_t message_size, /**< message size */
                                 bool *resume_exec_p, /**< pointer to the resume exec flag */
                                 uint8_t *expected_message_type_p, /**< message type */

@@ -381,10 +381,15 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
   {
     ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
 
+    if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                      prop_iter_p->next_property_cp);
+    }
+
     while (prop_iter_p != NULL)
     {
-      JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP
-                    || ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+      JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
       ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 0);
       ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, 1);

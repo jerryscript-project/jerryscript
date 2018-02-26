@@ -68,8 +68,7 @@ ecma_builtin_function_prototype_object_to_string (ecma_value_t this_arg) /**< th
   }
   else
   {
-    ecma_string_t *function_to_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__FUNCTION_TO_STRING);
-    ret_value = ecma_make_string_value (function_to_string_p);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__FUNCTION_TO_STRING);
   }
   return ret_value;
 } /* ecma_builtin_function_prototype_object_to_string */

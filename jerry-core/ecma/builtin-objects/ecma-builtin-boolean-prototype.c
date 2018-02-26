@@ -62,20 +62,16 @@ ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< thi
                   ecma_builtin_boolean_prototype_object_value_of (this_arg),
                   ret_value);
 
-  ecma_string_t *ret_str_p;
-
   if (ecma_is_value_true (value_of_ret))
   {
-    ret_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_TRUE);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_TRUE);
   }
   else
   {
     JERRY_ASSERT (ecma_is_value_boolean (value_of_ret));
 
-    ret_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_FALSE);
   }
-
-  ret_value = ecma_make_string_value (ret_str_p);
 
   ECMA_FINALIZE (value_of_ret);
 

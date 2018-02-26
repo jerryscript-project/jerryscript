@@ -175,12 +175,8 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
     if (ecma_is_value_object (result))
     {
-      ecma_string_t *message_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
-
       message = ecma_op_object_find (ecma_get_object_from_value (result),
-                                     message_string_p);
-
-      ecma_deref_ecma_string (message_string_p);
+                                     ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
 
       if (!ecma_is_value_string (message)
           || ecma_string_is_empty (ecma_get_string_from_value (message)))
@@ -978,11 +974,9 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
   lit_utf8_byte_t data[16];
   memcpy (data, lit_get_magic_string_utf8 (string_id), size);
 
-  ecma_string_t *message_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
-
   ecma_property_t *property_p;
   property_p = ecma_find_named_property (ecma_get_object_from_value (exception_obj_value),
-                                         message_string_p);
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
 
   if (property_p == NULL
       || ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)

@@ -362,55 +362,46 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
                             ecma_value_t resolve_func, /**< the resolve function */
                             ecma_value_t reject_func) /**< the reject function */
 {
-  ecma_string_t *str_capability = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_resolve = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *str_reject = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
 
   /* 2. */
-  ecma_value_t capability = ecma_op_object_get (executor_p, str_capability);
+  ecma_value_t capability = ecma_op_object_get (executor_p, capability_str_p);
   /* 3. */
-  ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), str_resolve);
+  ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), resolve_str_p);
 
   if (resolve != ECMA_VALUE_UNDEFINED)
   {
     ecma_free_value (resolve);
     ecma_free_value (capability);
-    ecma_deref_ecma_string (str_capability);
-    ecma_deref_ecma_string (str_resolve);
-    ecma_deref_ecma_string (str_reject);
 
     return ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' function should be undefined."));
   }
 
   /* 4. */
-  ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), str_reject);
+  ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
 
   if (reject != ECMA_VALUE_UNDEFINED)
   {
     ecma_free_value (reject);
     ecma_free_value (capability);
-    ecma_deref_ecma_string (str_capability);
-    ecma_deref_ecma_string (str_resolve);
-    ecma_deref_ecma_string (str_reject);
 
     return ecma_raise_type_error (ECMA_ERR_MSG ("'reject' function should be undefined."));
   }
 
   /* 5. */
   ecma_op_object_put (ecma_get_object_from_value (capability),
-                      str_resolve,
+                      resolve_str_p,
                       resolve_func,
                       false);
   /* 6. */
   ecma_op_object_put (ecma_get_object_from_value (capability),
-                      str_reject,
+                      reject_str_p,
                       reject_func,
                       false);
 
   ecma_free_value (capability);
-  ecma_deref_ecma_string (str_capability);
-  ecma_deref_ecma_string (str_resolve);
-  ecma_deref_ecma_string (str_reject);
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_call_builtin_executor */
@@ -593,15 +584,16 @@ ecma_promise_new_capability (void)
 {
   /* 3. */
   ecma_object_t *capability_p = ecma_op_create_object_object_noarg ();
-  ecma_string_t *str_capability = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_promise = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+
+  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
   /* 4. */
   ecma_object_t *executor_p;
   executor_p = ecma_op_create_object_object_noarg ();
   ecma_value_t executor = ecma_make_object_value (executor_p);
   /* 5. */
   ecma_op_object_put (executor_p,
-                      str_capability,
+                      capability_str_p,
                       ecma_make_object_value (capability_p),
                       false);
 
@@ -610,13 +602,12 @@ ecma_promise_new_capability (void)
 
   /* 10. */
   ecma_op_object_put (capability_p,
-                      str_promise,
+                      promise_str_p,
                       promise,
                       false);
 
   ecma_deref_object (executor_p);
-  ecma_deref_ecma_string (str_promise);
-  ecma_deref_ecma_string (str_capability);
+
   /* 7. */
   if (ECMA_IS_VALUE_ERROR (promise))
   {
@@ -627,9 +618,8 @@ ecma_promise_new_capability (void)
 
   ecma_free_value (promise);
   /* 8. */
-  ecma_string_t *str_resolve = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_value_t resolve = ecma_op_object_get (capability_p, str_resolve);
-  ecma_deref_ecma_string (str_resolve);
+  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+  ecma_value_t resolve = ecma_op_object_get (capability_p, resolve_str_p);
 
   if (!ecma_op_is_callable (resolve))
   {
@@ -640,9 +630,8 @@ ecma_promise_new_capability (void)
 
   ecma_free_value (resolve);
   /* 9. */
-  ecma_string_t *str_reject = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
-  ecma_value_t reject = ecma_op_object_get (capability_p, str_reject);
-  ecma_deref_ecma_string (str_reject);
+  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_value_t reject = ecma_op_object_get (capability_p, reject_str_p);
 
   if (!ecma_op_is_callable (reject))
   {
@@ -671,9 +660,9 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
                       ecma_value_t on_rejected, /**< on_rejected function */
                       ecma_value_t result_capability) /**< promise capability */
 {
-  ecma_string_t *str_capability = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_handler = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
-  ecma_string_t *str_promise = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *handler_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
+  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
 
   /* 3. boolean true indicates "indentity" */
   if (!ecma_op_is_callable (on_fulfilled))
@@ -691,20 +680,20 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   ecma_object_t *fulfill_reaction_p = ecma_op_create_object_object_noarg ();
   ecma_object_t *reject_reaction_p = ecma_op_create_object_object_noarg ();
   ecma_op_object_put (fulfill_reaction_p,
-                      str_capability,
+                      capability_str_p,
                       result_capability,
                       false);
   ecma_op_object_put (fulfill_reaction_p,
-                      str_handler,
+                      handler_str_p,
                       on_fulfilled,
                       false);
 
   ecma_op_object_put (reject_reaction_p,
-                      str_capability,
+                      capability_str_p,
                       result_capability,
                       false);
   ecma_op_object_put (reject_reaction_p,
-                      str_handler,
+                      handler_str_p,
                       on_rejected,
                       false);
 
@@ -738,13 +727,10 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   }
 
   /* 10. */
-  ecma_value_t ret = ecma_op_object_get (ecma_get_object_from_value (result_capability), str_promise);
+  ecma_value_t ret = ecma_op_object_get (ecma_get_object_from_value (result_capability), promise_str_p);
 
   ecma_deref_object (fulfill_reaction_p);
   ecma_deref_object (reject_reaction_p);
-  ecma_deref_ecma_string (str_capability);
-  ecma_deref_ecma_string (str_handler);
-  ecma_deref_ecma_string (str_promise);
   return ret;
 } /* ecma_promise_do_then */
 

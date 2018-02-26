@@ -220,7 +220,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
 
     if (magic_string_ex_id < lit_get_magic_string_ex_count ())
     {
-      return ecma_get_magic_string_ex (magic_string_ex_id);
+      return ecma_new_ecma_string_from_magic_string_ex_id (magic_string_ex_id);
     }
   }
 
@@ -410,6 +410,22 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of t
 } /* ecma_new_ecma_string_from_uint32 */
 
 /**
+ * Returns the constant assigned to the uint32 number.
+ *
+ * Note:
+ *   Calling ecma_deref_ecma_string on the returned pointer is optional.
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_get_ecma_string_from_uint32 (uint32_t uint32_number)
+{
+  JERRY_ASSERT (uint32_number <= ECMA_DIRECT_STRING_MAX_IMM);
+
+  return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT, (uintptr_t) uint32_number);
+} /* ecma_get_ecma_string_from_uint32 */
+
+/**
  * Allocate new ecma-string and fill it with ecma-number
  *
  * @return pointer to ecma-string descriptor
@@ -458,16 +474,19 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
 } /* ecma_new_ecma_string_from_number */
 
 /**
- * Allocate new ecma-string and fill it with reference to ECMA magic string
+ * Returns the constant assigned to the magic string id.
+ *
+ * Note:
+ *   Calling ecma_deref_ecma_string on the returned pointer is optional.
  *
  * @return pointer to ecma-string descriptor
  */
 inline ecma_string_t * __attr_always_inline___
-ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id) /**< identifier of magic string */
+ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string */
 {
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
   return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC, (uintptr_t) id);
-} /* ecma_new_ecma_string_from_magic_string_id */
+} /* ecma_get_magic_string */
 
 /**
  * Allocate new ecma-string and fill it with reference to ECMA magic string
@@ -494,15 +513,18 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
 /**
- * Allocate new ecma-string and fill it with reference to length magic string
+ * Returns the constant assigned to the length magic string.
+ *
+ * Note:
+ *   Calling ecma_deref_ecma_string on the returned pointer is optional.
  *
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t *
-ecma_new_ecma_length_string (void)
+ecma_get_length_string (void)
 {
-  return ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING_LENGTH);
-} /* ecma_new_ecma_length_string */
+  return ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
+} /* ecma_get_length_string */
 
 /**
  * Append a cesu8 string after an ecma-string
@@ -666,7 +688,7 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
     if (magic_string_ex_id < lit_get_magic_string_ex_count ())
     {
       ecma_deref_ecma_string (string1_p);
-      return ecma_get_magic_string_ex (magic_string_ex_id);
+      return ecma_new_ecma_string_from_magic_string_ex_id (magic_string_ex_id);
     }
   }
 
@@ -844,7 +866,7 @@ ecma_append_magic_string_to_string (ecma_string_t *string1_p,
 {
   if (unlikely (ecma_string_is_empty (string1_p)))
   {
-    return ecma_new_ecma_string_from_magic_string_id (string2_id);
+    return ecma_get_magic_string (string2_id);
   }
 
   const lit_utf8_byte_t *cesu8_string2_p = lit_get_magic_string_utf8 (string2_id);
@@ -2154,28 +2176,6 @@ ecma_string_get_char_at_pos (const ecma_string_t *string_p, /**< ecma-string */
 
   return ch;
 } /* ecma_string_get_char_at_pos */
-
-/**
- * Get specified magic string
- *
- * @return ecma-string containing specified magic string
- */
-inline ecma_string_t * __attr_always_inline___
-ecma_get_magic_string (lit_magic_string_id_t id) /**< magic string id */
-{
-  return ecma_new_ecma_string_from_magic_string_id (id);
-} /* ecma_get_magic_string */
-
-/**
- * Get specified external magic string
- *
- * @return ecma-string containing specified external magic string
- */
-inline ecma_string_t * __attr_always_inline___
-ecma_get_magic_string_ex (lit_magic_string_ex_id_t id) /**< external magic string id */
-{
-  return ecma_new_ecma_string_from_magic_string_ex_id (id);
-} /* ecma_get_magic_string_ex */
 
 /**
  * Check if passed string equals to one of magic strings

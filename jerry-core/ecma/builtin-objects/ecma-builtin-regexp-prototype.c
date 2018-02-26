@@ -89,13 +89,11 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
         /* Get source. */
         ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
         ecma_value_t source_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-        ecma_deref_ecma_string (magic_string_p);
         ecma_string_t *pattern_string_p = ecma_get_string_from_value (source_value);
 
         /* Get flags. */
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
         ecma_value_t global_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-        ecma_deref_ecma_string (magic_string_p);
 
         JERRY_ASSERT (ecma_is_value_boolean (global_value));
 
@@ -106,7 +104,6 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
         ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-        ecma_deref_ecma_string (magic_string_p);
 
         JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
 
@@ -117,7 +114,6 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
         magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
         ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-        ecma_deref_ecma_string (magic_string_p);
 
         JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
 
@@ -280,14 +276,10 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     if (bytecode_p == NULL)
     {
       /* Missing bytecode means empty RegExp: '/(?:)/', so always return empty string. */
-      ecma_string_t *capture_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-
       ecma_value_t arguments_list[1];
-      arguments_list[0] = ecma_make_string_value (capture_str_p);
+      arguments_list[0] = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
 
       ret_value = ecma_op_create_array_object (arguments_list, 1, false);
-
-      ecma_deref_ecma_string (capture_str_p);
 
       re_set_result_array_properties (ecma_get_object_from_value (ret_value),
                                       ecma_get_string_from_value (input_str_value),
@@ -364,7 +356,6 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     /* Get RegExp source from the source property */
     ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
     ecma_value_t source_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-    ecma_deref_ecma_string (magic_string_p);
 
     ecma_string_t *output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SLASH_CHAR);
     ecma_string_t *source_str_p = ecma_get_string_from_value (source_value);
@@ -379,7 +370,6 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     /* Check the global flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
     ecma_value_t global_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-    ecma_deref_ecma_string (magic_string_p);
 
     JERRY_ASSERT (ecma_is_value_boolean (global_value));
 
@@ -391,7 +381,6 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     /* Check the ignoreCase flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
     ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-    ecma_deref_ecma_string (magic_string_p);
 
     JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
 
@@ -403,7 +392,6 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     /* Check the multiline flag */
     magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
     ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-    ecma_deref_ecma_string (magic_string_p);
 
     JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
 

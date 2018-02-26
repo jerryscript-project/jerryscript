@@ -175,14 +175,11 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
 {
   ecma_object_t *new_error_obj_p = ecma_new_standard_error (error_type);
 
-  ecma_string_t *message_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE);
-
   ecma_property_value_t *prop_value_p;
   prop_value_p = ecma_create_named_data_property (new_error_obj_p,
-                                                  message_magic_string_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE),
                                                   ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                   NULL);
-  ecma_deref_ecma_string (message_magic_string_p);
 
   ecma_ref_ecma_string (message_string_p);
   prop_value_p->value = ecma_make_string_value (message_string_p);
@@ -262,6 +259,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
       /* Convert an argument to string without side effects. */
       ecma_string_t *arg_string_p;
       const ecma_value_t arg_val = va_arg (args, ecma_value_t);
+
       if (unlikely (ecma_is_value_object (arg_val)))
       {
         ecma_object_t *arg_object_p = ecma_get_object_from_value (arg_val);

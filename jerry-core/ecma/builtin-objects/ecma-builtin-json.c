@@ -856,11 +856,10 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
     if (ecma_op_is_callable (arg2))
     {
       ecma_object_t *object_p = ecma_op_create_object_object_noarg ();
-      ecma_string_t *name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
       ecma_property_value_t *prop_value_p;
       prop_value_p = ecma_create_named_data_property (object_p,
-                                                      name_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY),
                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                       NULL);
 
@@ -869,9 +868,8 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
 
       ret_value = ecma_builtin_json_walk (ecma_get_object_from_value (arg2),
                                           object_p,
-                                          name_p);
+                                          ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY));
       ecma_deref_object (object_p);
-      ecma_deref_ecma_string (name_p);
     }
     else
     {
@@ -1143,7 +1141,6 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
       ECMA_FINALIZE (str_val);
 
       ecma_deref_object (obj_wrapper_p);
-      ecma_deref_ecma_string (empty_str_p);
     }
 
     ecma_deref_ecma_string (context.gap_str_p);
@@ -1413,8 +1410,7 @@ ecma_builtin_json_str (ecma_string_t *key_p, /**< property key*/
       else
       {
         /* 9.b */
-        ecma_string_t *null_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
-        ret_value = ecma_make_string_value (null_str_p);
+        ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_NULL);
       }
     }
     /* 10. */
@@ -1695,9 +1691,7 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
     /* 8.b */
     if (ecma_is_value_undefined (str_val))
     {
-      ecma_string_t *null_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
-      ecma_append_to_values_collection (partial_p, ecma_make_string_value (null_str_p), 0);
-      ecma_deref_ecma_string (null_str_p);
+      ecma_append_to_values_collection (partial_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_NULL), 0);
     }
     /* 8.c */
     else

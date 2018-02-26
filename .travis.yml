@@ -114,6 +114,7 @@ matrix:
   allow_failures:
     - env: OPTS="--check-pylint"
     - env: JOBNAME="Mbed/K64F Build Test"
+    - env: JOBNAME="NuttX/STM32F4 Build Test"
   fast_finish: true
 
 # The channel name "chat.freenode.net#jerryscript"

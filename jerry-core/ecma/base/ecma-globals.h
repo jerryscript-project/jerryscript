@@ -961,6 +961,7 @@ typedef double ecma_number_t;
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 # define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
+# define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 16777215
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
  * Number.MAX_VALUE
@@ -974,6 +975,12 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.3
  */
 # define ECMA_NUMBER_MIN_VALUE ((ecma_number_t) 5e-324)
+/**
+ * Number.MAX_SAFE_INTEGER
+ *
+ * See also: ECMA_262 v6.0, 20.1.2.6
+ */
+# define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 9007199254740991)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
 /**

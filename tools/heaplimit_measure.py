@@ -51,9 +51,9 @@ def get_args():
 
 def check_files(opts):
     files = [JERRY_BUILDER, opts.testfile]
-    for file in files:
-        if not os.path.isfile(file):
-            sys.exit("File not found: %s" % file)
+    for _file in files:
+        if not os.path.isfile(_file):
+            sys.exit("File not found: %s" % _file)
 
 
 def build_bin(heapsize, opts):

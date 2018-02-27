@@ -159,9 +159,8 @@ class JerryPendingBreakpoint(object):
         return result
 
 
-
 class JerryFunction(object):
-
+    # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, is_func, byte_code_cp, source, source_name, line, column, name, lines, offsets):
         self.is_func = is_func
         self.byte_code_cp = byte_code_cp
@@ -176,10 +175,9 @@ class JerryFunction(object):
         self.first_breakpoint_offset = offsets[0]
 
         if len(self.source) > 1 and not self.source[-1]:
-          self.source.pop()
+            self.source.pop()
 
-        for i in range(len(lines)):
-            line = lines[i]
+        for i, line in enumerate(lines):
             offset = offsets[i]
             breakpoint = JerryBreakpoint(line, offset, self)
             self.lines[line] = breakpoint
@@ -215,17 +213,11 @@ class DebuggerPrompt(Cmd):
     def postcmd(self, stop, line):
         return self.stop
 
-    def disable_args(self, args):
-        if args:
-            print("Error: No argument expected")
-            return True
-        return False
-
     def do_quit(self, args):
         """ Exit JerryScript debugger """
         self.do_delete("all")
         self.do_exception("0")  # disable the exception handler
-        self.exec_command(args, JERRY_DEBUGGER_CONTINUE)
+        self._exec_command(args, JERRY_DEBUGGER_CONTINUE)
         self.stop = True
         self.quit = True
 
@@ -247,7 +239,7 @@ class DebuggerPrompt(Cmd):
 
     do_b = do_break
 
-    def exec_command(self, args, command_id):
+    def _exec_command(self, args, command_id):
         self.stop = True
         if args != "":
             print("Error: No argument expected")
@@ -256,7 +248,7 @@ class DebuggerPrompt(Cmd):
 
     def do_continue(self, args):
         """ Continue execution """
-        self.exec_command(args, JERRY_DEBUGGER_CONTINUE)
+        self._exec_command(args, JERRY_DEBUGGER_CONTINUE)
         self.stop = True
         self.cont = True
         if not self.non_interactive:
@@ -266,19 +258,19 @@ class DebuggerPrompt(Cmd):
 
     def do_step(self, args):
         """ Next breakpoint, step into functions """
-        self.exec_command(args, JERRY_DEBUGGER_STEP)
+        self._exec_command(args, JERRY_DEBUGGER_STEP)
         self.cont = True
 
     do_s = do_step
 
     def do_next(self, args):
         """ Next breakpoint in the same context """
-        self.exec_command(args, JERRY_DEBUGGER_NEXT)
+        self._exec_command(args, JERRY_DEBUGGER_NEXT)
         self.cont = True
 
     do_n = do_next
 
-    def do_list(self, args):
+    def do_list(self, _):
         """ Lists the available breakpoints """
         if self.debugger.active_breakpoint_list:
             print("=== %sActive breakpoints %s ===" % (self.debugger.green_bg, self.debugger.nocolor))
@@ -324,7 +316,8 @@ class DebuggerPrompt(Cmd):
             else:
                 print("Error: Breakpoint %d not found" % (breakpoint_index))
 
-    def exec_backtrace(self, args):
+    def do_backtrace(self, args):
+        """ Get backtrace data from debugger """
         max_depth = 0
 
         if args:
@@ -346,10 +339,6 @@ class DebuggerPrompt(Cmd):
         self.debugger.send_message(message)
         self.stop = True
 
-    def do_backtrace(self, args):
-        """ Get backtrace data from debugger """
-        self.exec_backtrace(args)
-
     do_bt = do_backtrace
 
     def do_src(self, args):
@@ -365,7 +354,7 @@ class DebuggerPrompt(Cmd):
 
     do_source = do_src
 
-    def scroll_direction(self, args):
+    def _scroll_direction(self, args):
         """ Helper function for do_scroll """
         self.debugger.src_offset_diff = int(max(math.floor(self.debugger.display / 3), 1))
         if args in "up":
@@ -375,16 +364,16 @@ class DebuggerPrompt(Cmd):
             self.debugger.src_offset += self.debugger.src_offset_diff
             print_source(self.debugger, self.debugger.display, self.debugger.src_offset)
 
-    def do_scroll(self, args):
+    def do_scroll(self, _):
         """ Scroll the source up or down """
         while True:
             key = sys.stdin.readline()
             if key == 'w\n':
-                self.scroll_direction("up")
+                self._scroll_direction("up")
             elif key == 's\n':
-                self.scroll_direction("down")
+                self._scroll_direction("down")
             elif key == 'q\n':
-                break;
+                break
             else:
                 print("Invalid key")
 
@@ -403,12 +392,13 @@ class DebuggerPrompt(Cmd):
 
     def do_dump(self, args):
         """ Dump all of the debugger data """
-        if self.disable_args(args):
+        if args:
+            print("Error: No argument expected")
             return
 
         pprint(self.debugger.function_list)
 
-    def send_string(self, args, message_type):
+    def _send_string(self, args, message_type):
         size = len(args)
         if size == 0:
             return
@@ -459,7 +449,7 @@ class DebuggerPrompt(Cmd):
 
     def do_eval(self, args):
         """ Evaluate JavaScript source code """
-        self.send_string(args, JERRY_DEBUGGER_EVAL)
+        self._send_string(args, JERRY_DEBUGGER_EVAL)
 
     do_e = do_eval
 
@@ -483,7 +473,7 @@ class DebuggerPrompt(Cmd):
 
     def do_memstats(self, args):
         """ Memory statistics """
-        self.exec_command(args, JERRY_DEBUGGER_MEMSTATS)
+        self._exec_command(args, JERRY_DEBUGGER_MEMSTATS)
         return
 
     do_ms = do_memstats
@@ -502,12 +492,12 @@ class DebuggerPrompt(Cmd):
             sys.exit("Error: Javascript file expected!")
             return
 
-        with open(path, 'r') as f:
-            content = path + "\0" + f.read()
-            self.send_string(content, JERRY_DEBUGGER_CLIENT_SOURCE)
+        with open(path, 'r') as src_file:
+            content = path + "\0" + src_file.read()
+            self._send_string(content, JERRY_DEBUGGER_CLIENT_SOURCE)
 
     def send_no_more_source(self):
-        self.exec_command("", JERRY_DEBUGGER_NO_MORE_SOURCES)
+        self._exec_command("", JERRY_DEBUGGER_NO_MORE_SOURCES)
         self.cont = True
 
 class Multimap(object):
@@ -539,7 +529,7 @@ class Multimap(object):
 
 
 class JerryDebugger(object):
-
+    # pylint: disable=too-many-instance-attributes,too-many-statements
     def __init__(self, address):
 
         if ":" not in address:
@@ -768,6 +758,7 @@ class JerryDebugger(object):
             self.message_data += data
 
 
+# pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def parse_source(debugger, data):
     source_code = ""
     source_code_name = ""
@@ -1061,6 +1052,7 @@ def get_breakpoint(debugger, breakpoint_data):
     return (function.offsets[nearest_offset], False)
 
 
+# pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def main():
     args = arguments_parse()
 
@@ -1260,16 +1252,12 @@ if __name__ == "__main__":
     try:
         main()
     except socket.error as error_msg:
-        try:
-            errno = error_msg.errno
-            msg = str(error_msg)
-        except:
-            errno = error_msg[0]
-            msg = error_msg[1]
+        ERRNO = error_msg.errno
+        MSG = str(error_msg)
 
-        if errno == 111:
+        if ERRNO == 111:
             sys.exit("Failed to connect to the JerryScript debugger.")
-        elif errno == 32 or errno == 104:
+        elif ERRNO == 32 or ERRNO == 104:
             sys.exit("Connection closed.")
         else:
-            sys.exit("Failed to connect to the JerryScript debugger.\nError: %s" % (msg))
+            sys.exit("Failed to connect to the JerryScript debugger.\nError: %s" % (MSG))

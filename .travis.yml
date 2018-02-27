@@ -22,7 +22,8 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - env: OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings"
+    - env: OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
+      install: pip install --user pylint==1.6.5
     - env: OPTS="--jerry-debugger"
     - env: OPTS="--jerry-tests --jerry-test-suite"
     - env: OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300
@@ -33,8 +34,6 @@ matrix:
     - env: OPTS="--unittests --buildoptions=--cmake-param=-DFEATURE_INIT_FINI=ON"
     - env: OPTS="--test262"
       install: sudo timedatectl set-timezone America/Los_Angeles
-    - env: OPTS="--check-pylint"
-      install: pip install --user pylint==1.6.5
     - os: osx
       before_install: tools/brew-install-deps.sh
       env: OPTS="--jerry-tests --jerry-test-suite --unittests"
@@ -112,7 +111,6 @@ matrix:
       install: make -f ./targets/zephyr/Makefile.travis install
       script: make -f ./targets/zephyr/Makefile.travis script
   allow_failures:
-    - env: OPTS="--check-pylint"
     - env: JOBNAME="Mbed/K64F Build Test"
   fast_finish: true
 

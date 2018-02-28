@@ -25,18 +25,18 @@ matrix:
     - env: OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
       install: pip install --user pylint==1.6.5
     - env: OPTS="--jerry-debugger"
-    - env: OPTS="--jerry-tests --jerry-test-suite"
-    - env: OPTS="--jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300
+    - env: OPTS="--quiet --jerry-tests --jerry-test-suite"
+    - env: OPTS="--quiet --jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake" TIMEOUT=300
       install: tools/apt-get-install-qemu-arm.sh
     - env: OPTS="--buildoption-test"
-    - env: OPTS="--jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
+    - env: OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
     - env: OPTS="--unittests"
     - env: OPTS="--unittests --buildoptions=--cmake-param=-DFEATURE_INIT_FINI=ON"
     - env: OPTS="--test262"
       install: sudo timedatectl set-timezone America/Los_Angeles
     - os: osx
       before_install: tools/brew-install-deps.sh
-      env: OPTS="--jerry-tests --jerry-test-suite --unittests"
+      env: OPTS="--quiet --jerry-tests --jerry-test-suite --unittests"
     - install: echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
       env:
         # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
@@ -59,7 +59,7 @@ matrix:
           packages:
             - gcc-5
             - gcc-5-multilib
-      env: OPTS="--jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true TIMEOUT=600
+      env: OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true TIMEOUT=600
     - compiler: gcc-5
       addons:
         apt:
@@ -68,7 +68,7 @@ matrix:
           packages:
             - gcc-5
             - gcc-5-multilib
-      env: OPTS="--jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
+      env: OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
 
     - env: JOBNAME="ESP8266 Build Test"
       cache: ccache

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Usage:
-#       ./tools/runners/run-test-suite.sh ENGINE TESTS [--skip-list=item1,item2] [--snapshot] ENGINE_ARGS....
+#       ./tools/runners/run-test-suite.sh ENGINE TESTS [-q] [--skip-list=item1,item2] [--snapshot] ENGINE_ARGS....
 
 TIMEOUT=${TIMEOUT:=5}
 TIMEOUT_CMD=`which timeout`
@@ -36,6 +36,13 @@ TESTS_BASENAME=`basename $TESTS`
 TEST_FILES=$OUTPUT_DIR/$TESTS_BASENAME.files
 TEST_FAILED=$OUTPUT_DIR/$TESTS_BASENAME.failed
 TEST_PASSED=$OUTPUT_DIR/$TESTS_BASENAME.passed
+
+VERBOSE=1
+if [[ "$1" == "-q" ]]
+then
+    unset VERBOSE
+    shift
+fi
 
 if [[ "$1" =~ ^--skip-list=.* ]]
 then
@@ -147,7 +154,7 @@ do
 
         if [ $status_code -eq 0 ]
         then
-            echo "[$tested/$TOTAL] $cmd_line: PASS"
+            test $VERBOSE && echo "[$tested/$TOTAL] $cmd_line: PASS"
 
             cmd_line="${ENGINE#$ROOT_DIR} $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP"
             $TIMEOUT_CMD $TIMEOUT $ENGINE $ENGINE_ARGS --exec-snapshot $SNAPSHOT_TEMP &> $ENGINE_TEMP
@@ -175,7 +182,7 @@ do
 
         failed=$((failed+1))
     else
-        echo "[$tested/$TOTAL] $cmd_line: $PASS"
+        test $VERBOSE && echo "[$tested/$TOTAL] $cmd_line: $PASS"
 
         echo "$test" >> $TEST_PASSED
 

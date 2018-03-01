@@ -139,7 +139,7 @@ ecma_builtin_string_prototype_object_char_at (ecma_value_t this_arg, /**< this a
   /* 5 */
   if (index_num < 0 || index_num >= len || !len)
   {
-    ret_value = ecma_make_string_value (ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY));
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
@@ -446,13 +446,11 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
     else
     {
       /* 8.a. */
-      ecma_string_t *index_zero_string_p = ecma_new_ecma_string_from_uint32 (0);
-
-      ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
+      ecma_string_t *index_zero_string_p = ecma_get_ecma_string_from_uint32 (0);
 
       ECMA_TRY_CATCH (put_value,
                       ecma_op_object_put (regexp_obj_p,
-                                          last_index_string_p,
+                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                           ecma_make_integer_value (0),
                                           true),
                       ret_value);
@@ -503,7 +501,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
             /* 8.f.iii.2.a. */
             ECMA_TRY_CATCH (index_put_value,
                             ecma_op_object_put (regexp_obj_p,
-                                                last_index_string_p,
+                                                ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                                 ecma_make_number_value (this_index + 1),
                                                 true),
                             ret_value);
@@ -575,9 +573,6 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
       ECMA_FINALIZE (new_array_value);
 
       ECMA_FINALIZE (put_value);
-
-      ecma_deref_ecma_string (last_index_string_p);
-      ecma_deref_ecma_string (index_zero_string_p);
     }
 
     ECMA_FINALIZE (global_value);
@@ -671,14 +666,12 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
       JERRY_ASSERT (ecma_is_value_object (match_value));
 
       ecma_object_t *match_object_p = ecma_get_object_from_value (match_value);
-      ecma_string_t *zero_string_p = ecma_new_ecma_string_from_uint32 (0);
-
       ECMA_TRY_CATCH (index_value,
                       ecma_op_object_get_by_magic_id (match_object_p, LIT_MAGIC_STRING_INDEX),
                       ret_value);
 
       ECMA_TRY_CATCH (result_string_value,
-                      ecma_op_object_get (match_object_p, zero_string_p),
+                      ecma_op_object_get (match_object_p, ecma_get_ecma_string_from_uint32 (0)),
                       ret_value);
 
       /* We directly call the built-in exec, so
@@ -701,8 +694,6 @@ ecma_builtin_string_prototype_object_replace_match (ecma_builtin_replace_search_
 
       ECMA_FINALIZE (result_string_value);
       ECMA_FINALIZE (index_value);
-
-      ecma_deref_ecma_string (zero_string_p);
     }
     else
     {
@@ -1082,18 +1073,16 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
         }
         else
         {
-          ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
           ecma_object_t *regexp_obj_p = ecma_get_object_from_value (context_p->regexp_or_search_string);
 
           ECMA_TRY_CATCH (put_value,
                           ecma_op_object_put (regexp_obj_p,
-                                              last_index_string_p,
+                                              ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                               ecma_make_uint32_value (context_p->match_end + 1),
                                               true),
                           ret_value);
 
           ECMA_FINALIZE (put_value);
-          ecma_deref_ecma_string (last_index_string_p);
         }
       }
     }
@@ -1244,17 +1233,14 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
 
     if (context.is_global)
     {
-      ecma_string_t *last_index_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-
       ECMA_TRY_CATCH (put_value,
                       ecma_op_object_put (regexp_obj_p,
-                                          last_index_string_p,
+                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                           ecma_make_integer_value (0),
                                           true),
                       ret_value);
 
       ECMA_FINALIZE (put_value);
-      ecma_deref_ecma_string (last_index_string_p);
     }
 
     if (ecma_is_value_empty (ret_value))
@@ -1554,9 +1540,10 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
         {
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
           ecma_value_t regexp_value = ecma_copy_value_if_not_object (separator);
-          ecma_string_t *substr_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
           ecma_value_t match_result;
-          match_result = ecma_regexp_exec_helper (regexp_value, ecma_make_string_value (substr_str_p), true);
+          match_result = ecma_regexp_exec_helper (regexp_value,
+                                                  ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY),
+                                                  true);
           should_return = !ecma_is_value_null (match_result);
 
           if (ECMA_IS_VALUE_ERROR (match_result))
@@ -1564,7 +1551,6 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
             match_result = JERRY_CONTEXT (error_value);
           }
 
-          ecma_deref_ecma_string (substr_str_p);
           ecma_free_value (match_result);
 #else
           return ecma_raise_type_error (ECMA_ERR_MSG ("REGEXP separator is disabled in split method."));
@@ -1663,10 +1649,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           else
           {
             ecma_object_t *match_obj_p = ecma_get_object_from_value (match_result);
-            ecma_string_t *zero_str_p = ecma_new_ecma_string_from_uint32 (0);
+            ecma_string_t *zero_str_p = ecma_get_ecma_string_from_uint32 (0);
             ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
             ecma_property_value_t *index_prop_value_p;
-
 
             if (separator_is_regexp)
             {
@@ -1691,13 +1676,11 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
                                                                     magic_index_str_p,
                                                                     ECMA_PROPERTY_FLAG_WRITABLE,
                                                                     NULL);
+
               ecma_named_data_property_assign_value (match_obj_p,
                                                      index_prop_value_p,
                                                      ecma_make_uint32_value (curr_pos));
-
             }
-
-            ecma_deref_ecma_string (magic_index_str_p);
 
             ecma_value_t match_comp_value = ecma_op_object_get (match_obj_p, zero_str_p);
             JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (match_comp_value));
@@ -1705,12 +1688,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
             ecma_string_t *match_str_p = ecma_get_string_from_value (match_comp_value);
             ecma_length_t match_str_length = ecma_string_get_length (match_str_p);
 
-            ecma_string_t *magic_empty_str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-            separator_is_empty = ecma_compare_ecma_strings (magic_empty_str_p, match_str_p);
+            separator_is_empty = ecma_string_is_empty (match_str_p);
 
-            ecma_deref_ecma_string (magic_empty_str_p);
             ecma_free_value (match_comp_value);
-            ecma_deref_ecma_string (zero_str_p);
 
             ecma_number_t index_num = ecma_get_number_from_value (index_prop_value_p->value);
             JERRY_ASSERT (index_num >= 0);

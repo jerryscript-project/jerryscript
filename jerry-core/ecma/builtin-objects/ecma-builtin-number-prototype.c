@@ -590,8 +590,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
     /* 4. */
     if (ecma_number_is_nan (this_num))
     {
-      ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_string_value (nan_str_p);
+      ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
     }
     else
     {
@@ -609,7 +608,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
         lit_magic_string_id_t id = (is_negative ? LIT_MAGIC_STRING_NEGATIVE_INFINITY_UL
                                                 : LIT_MAGIC_STRING_INFINITY_UL);
 
-        ret_value = ecma_make_string_value (ecma_get_magic_string (id));
+        ret_value = ecma_make_magic_string_value (id);
       }
       else
       {
@@ -721,8 +720,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
     /* 3. */
     if (ecma_number_is_nan (this_num))
     {
-      ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_string_value (nan_str_p);
+      ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
     }
     else
     {
@@ -740,7 +738,7 @@ ecma_builtin_number_prototype_object_to_exponential (ecma_value_t this_arg, /**<
         lit_magic_string_id_t id = (is_negative ? LIT_MAGIC_STRING_NEGATIVE_INFINITY_UL
                                                 : LIT_MAGIC_STRING_INFINITY_UL);
 
-        ret_value = ecma_make_string_value (ecma_get_magic_string (id));
+        ret_value = ecma_make_magic_string_value (id);
       }
       else
       {
@@ -858,8 +856,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
     /* 4. */
     if (ecma_number_is_nan (this_num))
     {
-      ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-      ret_value = ecma_make_string_value (nan_str_p);
+      ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
     }
     else
     {
@@ -877,7 +874,7 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
         lit_magic_string_id_t id = (is_negative ? LIT_MAGIC_STRING_NEGATIVE_INFINITY_UL
                                                 : LIT_MAGIC_STRING_INFINITY_UL);
 
-        ret_value = ecma_make_string_value (ecma_get_magic_string (id));
+        ret_value = ecma_make_magic_string_value (id);
       }
       /* 8. */
       else if (arg_num < 1.0 || arg_num >= 22.0)

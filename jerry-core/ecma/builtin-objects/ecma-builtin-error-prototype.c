@@ -74,9 +74,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
     if (ecma_is_value_undefined (name_get_ret_value))
     {
-      ecma_string_t *error_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ERROR_UL);
-
-      name_to_str_completion = ecma_make_string_value (error_magic_string_p);
+      name_to_str_completion = ecma_make_magic_string_value (LIT_MAGIC_STRING_ERROR_UL);
     }
     else
     {
@@ -97,9 +95,7 @@ ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this 
 
       if (ecma_is_value_undefined (msg_get_ret_value))
       {
-        ecma_string_t *empty_magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-
-        msg_to_str_completion = ecma_make_string_value (empty_magic_string_p);
+        msg_to_str_completion = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
       }
       else
       {

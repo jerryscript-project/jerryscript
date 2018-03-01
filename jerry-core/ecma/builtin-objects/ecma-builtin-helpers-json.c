@@ -207,7 +207,6 @@ ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket
 
   /* 10.a.i */
   properties_str_p = ecma_builtin_helper_json_create_separated_properties (partial_p, comma_str_p);
-  ecma_deref_ecma_string (comma_str_p);
 
   /* 10.a.ii */
   ecma_string_t *result_str_p = ecma_new_ecma_string_from_code_unit (left_bracket);

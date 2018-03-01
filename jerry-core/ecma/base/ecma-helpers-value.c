@@ -515,6 +515,15 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
 } /* ecma_make_string_value */
 
 /**
+ * String value constructor
+ */
+inline ecma_value_t __attr_pure___ __attr_always_inline___
+ecma_make_magic_string_value (lit_magic_string_id_t id) /**< magic string id */
+{
+  return (ecma_value_t) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC, (uintptr_t) id);
+} /* ecma_make_magic_string_value */
+
+/**
  * Object value constructor
  */
 inline ecma_value_t __attr_pure___ __attr_always_inline___

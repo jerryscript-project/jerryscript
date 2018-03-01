@@ -59,17 +59,14 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
                                                 ecma_number_t length) /**< new length */
 {
   ecma_value_t ret_value;
-  ecma_string_t *magic_string_length_p = ecma_new_ecma_length_string ();
 
   ecma_value_t length_value = ecma_make_number_value (length);
   ret_value = ecma_op_object_put (object,
-                                  magic_string_length_p,
+                                  ecma_get_length_string (),
                                   length_value,
                                   true),
 
   ecma_free_value (length_value);
-  ecma_deref_ecma_string (magic_string_length_p);
-
   return ret_value;
 } /* ecma_builtin_array_prototype_helper_set_length */
 
@@ -155,8 +152,7 @@ ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_ar
   /* 5. */
   if (length == 0)
   {
-    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_string_value (empty_string_p);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
@@ -282,13 +278,10 @@ ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separa
 {
   if (ecma_is_value_undefined (separator))
   {
-    ecma_string_t *comma_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
-    return ecma_make_string_value (comma_string_p);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_COMMA_CHAR);
   }
-  else
-  {
-    return ecma_op_to_string (separator);
-  }
+
+  return ecma_op_to_string (separator);
 } /* ecma_op_array_get_separator_string */
 
 /**
@@ -314,8 +307,7 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
   if (ecma_is_value_undefined (index_value)
       || ecma_is_value_null (index_value))
   {
-    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_string_value (empty_string_p);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
@@ -371,8 +363,7 @@ ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argume
   if (length == 0)
   {
     /* 6. */
-    ecma_string_t *empty_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_make_string_value (empty_string_p);
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
@@ -709,10 +700,10 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
   }
   else
   {
-    ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (0);
-
     /* 5. */
-    ECMA_TRY_CATCH (first_value, ecma_op_object_get (obj_p, index_str_p), ret_value);
+    ECMA_TRY_CATCH (first_value,
+                    ecma_op_object_get (obj_p, ecma_get_ecma_string_from_uint32 (0)),
+                    ret_value);
 
     /* 6. and 7. */
     for (uint32_t k = 1; k < len && ecma_is_value_empty (ret_value); k++)
@@ -766,7 +757,6 @@ ecma_builtin_array_prototype_object_shift (ecma_value_t this_arg) /**< this argu
     }
 
     ECMA_FINALIZE (first_value);
-    ecma_deref_ecma_string (index_str_p);
   }
 
   ECMA_OP_TO_NUMBER_FINALIZE (len_number);

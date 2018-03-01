@@ -127,8 +127,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
   JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
                 || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
-  ecma_string_t *name_p = ecma_get_magic_string (id);
-  ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, ecma_get_magic_string (id));
 
   if (property_p == NULL)
   {

@@ -46,27 +46,18 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   JERRY_ASSERT (arguments_list_len == 0
                 || arguments_list_p != NULL);
 
-  ecma_string_t *prim_prop_str_value_p;
+  ecma_value_t prim_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
 
-  if (arguments_list_len == 0)
+  if (arguments_list_len > 0)
   {
-    prim_prop_str_value_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-  }
-  else
-  {
-    ecma_value_t to_str_arg_value = ecma_op_to_string (arguments_list_p[0]);
+    prim_value = ecma_op_to_string (arguments_list_p[0]);
 
-    if (ECMA_IS_VALUE_ERROR (to_str_arg_value))
+    if (ECMA_IS_VALUE_ERROR (prim_value))
     {
-      return to_str_arg_value;
+      return prim_value;
     }
-    else
-    {
-      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (to_str_arg_value));
-      JERRY_ASSERT (ecma_is_value_string (to_str_arg_value));
 
-      prim_prop_str_value_p = ecma_get_string_from_value (to_str_arg_value);
-    }
+    JERRY_ASSERT (ecma_is_value_string (prim_value));
   }
 
 #ifndef CONFIG_DISABLE_STRING_BUILTIN
@@ -83,7 +74,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
-  ext_object_p->u.class_prop.u.value = ecma_make_string_value (prim_prop_str_value_p);
+  ext_object_p->u.class_prop.u.value = prim_value;
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_string_object */
@@ -131,9 +122,9 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     ecma_deref_ecma_string (name_p);
   }
 
-  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), 0);
-  ecma_deref_ecma_string (length_str_p);
+  ecma_append_to_values_collection (for_non_enumerable_p,
+                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
+                                    0);
 } /* ecma_op_string_list_lazy_property_names */
 
 /**

@@ -353,9 +353,9 @@ ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obje
 
   ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
-  ecma_string_t *length_str_p = ecma_new_ecma_length_string ();
-  ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (length_str_p), 0);
-  ecma_deref_ecma_string (length_str_p);
+  ecma_append_to_values_collection (for_non_enumerable_p,
+                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
+                                    0);
 } /* ecma_op_array_list_lazy_property_names */
 
 /**

@@ -145,15 +145,15 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   ecma_job_promise_reaction_t *job_p = (ecma_job_promise_reaction_t *) obj_p;
   ecma_object_t *reaction_p = ecma_get_object_from_value (job_p->reaction);
 
-  ecma_string_t *str_capability = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_handler = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
-  ecma_string_t *str_resolve = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *str_reject = ecma_new_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *handler_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
+  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
 
   /* 2. */
-  ecma_value_t capability = ecma_op_object_get (reaction_p, str_capability);
+  ecma_value_t capability = ecma_op_object_get (reaction_p, capability_str_p);
   /* 3. */
-  ecma_value_t handler = ecma_op_object_get (reaction_p, str_handler);
+  ecma_value_t handler = ecma_op_object_get (reaction_p, handler_str_p);
 
   JERRY_ASSERT (ecma_is_value_boolean (handler) || ecma_op_is_callable (handler));
 
@@ -183,7 +183,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
     }
 
     /* 7. */
-    ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), str_reject);
+    ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
 
     JERRY_ASSERT (ecma_op_is_callable (reject));
 
@@ -196,7 +196,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   else
   {
     /* 8. */
-    ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), str_resolve);
+    ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), resolve_str_p);
 
     JERRY_ASSERT (ecma_op_is_callable (resolve));
 
@@ -210,10 +210,6 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   ecma_free_value (handler_result);
   ecma_free_value (handler);
   ecma_free_value (capability);
-  ecma_deref_ecma_string (str_capability);
-  ecma_deref_ecma_string (str_handler);
-  ecma_deref_ecma_string (str_resolve);
-  ecma_deref_ecma_string (str_reject);
   ecma_free_promise_reaction_job (job_p);
 
   return status;

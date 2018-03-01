@@ -192,8 +192,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
 {
   if (ecma_number_is_nan (date_num))
   {
-    ecma_string_t *nan_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_NAN);
-    return ecma_make_string_value (nan_str_p);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
   }
 
   switch (builtin_routine_id)
@@ -624,8 +623,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
   if (ecma_number_is_nan (*prim_value_p))
   {
-    ecma_string_t *magic_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INVALID_DATE_UL);
-    return ecma_make_string_value (magic_str_p);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_INVALID_DATE_UL);
   }
 
   switch (builtin_routine_id)

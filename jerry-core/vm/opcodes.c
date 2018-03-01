@@ -92,8 +92,7 @@ opfunc_logical_not (ecma_value_t left_value) /**< left value */
 ecma_value_t
 opfunc_typeof (ecma_value_t left_value) /**< left value */
 {
-  ecma_string_t *type_str_p = ecma_get_magic_string (ecma_get_typeof_lit_id (left_value));
-  return ecma_make_string_value (type_str_p);
+  return ecma_make_magic_string_value (ecma_get_typeof_lit_id (left_value));
 } /* opfunc_typeof */
 
 /**

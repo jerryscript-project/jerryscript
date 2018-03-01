@@ -59,46 +59,44 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
                                            ecma_length_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_string_t *ret_string_p = NULL;
 
   if (args_number == 0)
   {
-    ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
-  else
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_string_t *ret_string_p = NULL;
+  lit_utf8_size_t utf8_buf_size = args_number * LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
+
+  JMEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
+                           utf8_buf_size,
+                           lit_utf8_byte_t);
+
+  lit_utf8_size_t utf8_buf_used = 0;
+
+  for (ecma_length_t arg_index = 0;
+       arg_index < args_number && ecma_is_value_empty (ret_value);
+       arg_index++)
   {
-    lit_utf8_size_t utf8_buf_size = args_number * LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
+    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
 
-    JMEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
-                             utf8_buf_size,
-                             lit_utf8_byte_t);
+    uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
+    ecma_char_t code_unit = (uint16_t) uint32_char_code;
 
-    lit_utf8_size_t utf8_buf_used = 0;
+    JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
+    utf8_buf_used += lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
+    JERRY_ASSERT (utf8_buf_used <= utf8_buf_size);
 
-    for (ecma_length_t arg_index = 0;
-         arg_index < args_number && ecma_is_value_empty (ret_value);
-         arg_index++)
-    {
-      ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
-
-      uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
-      ecma_char_t code_unit = (uint16_t) uint32_char_code;
-
-      JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
-      utf8_buf_used += lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
-      JERRY_ASSERT (utf8_buf_used <= utf8_buf_size);
-
-      ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
-    }
-
-    if (ecma_is_value_empty (ret_value))
-    {
-      ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_buf_p, utf8_buf_used);
-    }
-
-    JMEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
+    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   }
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_buf_p, utf8_buf_used);
+  }
+
+  JMEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
 
   if (ecma_is_value_empty (ret_value))
   {
@@ -123,10 +121,7 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
 
   if (arguments_list_len == 0)
   {
-    ecma_string_t *str_p = ecma_new_ecma_string_from_magic_string_id (LIT_MAGIC_STRING__EMPTY);
-    ecma_value_t str_value = ecma_make_string_value (str_p);
-
-    ret_value = str_value;
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {

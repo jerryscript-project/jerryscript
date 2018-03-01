@@ -167,6 +167,7 @@ ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
 ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p) __attr_pure___;
+ecma_value_t ecma_make_magic_string_value (lit_magic_string_id_t id) __attr_pure___;
 ecma_value_t ecma_make_object_value (const ecma_object_t *object_p) __attr_pure___;
 ecma_value_t ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) __attr_pure___;
 ecma_value_t ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p) __attr_pure___;
@@ -195,10 +196,11 @@ ecma_string_t *ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8
                                                                   lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit);
 ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
+ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
-ecma_string_t *ecma_new_ecma_string_from_magic_string_id (lit_magic_string_id_t id);
+ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);
 ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id);
-ecma_string_t *ecma_new_ecma_length_string (void);
+ecma_string_t *ecma_get_length_string (void);
 ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
                                             const lit_utf8_byte_t *cesu8_string2_p,
                                             lit_utf8_size_t cesu8_string2_size,
@@ -252,8 +254,6 @@ lit_utf8_size_t ecma_string_get_size (const ecma_string_t *string_p);
 lit_utf8_size_t ecma_string_get_utf8_size (const ecma_string_t *string_p);
 ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, ecma_length_t index);
 
-ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);
-ecma_string_t *ecma_get_magic_string_ex (lit_magic_string_ex_id_t id);
 lit_magic_string_id_t ecma_get_string_magic (const ecma_string_t *string_p);
 
 lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);

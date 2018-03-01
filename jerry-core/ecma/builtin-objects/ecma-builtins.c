@@ -223,8 +223,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
-      ecma_string_t *prim_prop_str_value_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-      ext_object_p->u.class_prop.u.value = ecma_make_string_value (prim_prop_str_value_p);
+      ext_object_p->u.class_prop.u.value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
       break;
     }
 #endif /* !CONFIG_DISABLE_STRING_BUILTIN */
@@ -624,7 +623,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
     case ECMA_BUILTIN_PROPERTY_STRING:
     {
-      value = ecma_make_string_value (ecma_get_magic_string (curr_property_p->value));
+      value = ecma_make_magic_string_value (curr_property_p->value);
       break;
     }
     case ECMA_BUILTIN_PROPERTY_OBJECT:
@@ -731,9 +730,9 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
     ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
     /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
-    ecma_string_t *name_p = ecma_new_ecma_length_string ();
-    ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
-    ecma_deref_ecma_string (name_p);
+    ecma_append_to_values_collection (for_non_enumerable_p,
+                                      ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
+                                      0);
   }
   else
   {
@@ -776,7 +775,9 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       if (!(*bitset_p & bit_for_index) || ecma_op_object_has_own_property (object_p, name_p))
       {
-        ecma_append_to_values_collection (for_non_enumerable_p, ecma_make_string_value (name_p), 0);
+        ecma_append_to_values_collection (for_non_enumerable_p,
+                                          ecma_make_magic_string_value (curr_property_p->magic_string_id),
+                                          0);
       }
 
       ecma_deref_ecma_string (name_p);

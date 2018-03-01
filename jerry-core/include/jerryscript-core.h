@@ -217,7 +217,7 @@ typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_na
 typedef struct
 {
   void (*init_cb) (void *); /**< callback responsible for initializing a context item, or NULL to zero out the memory */
-  void (*deinit_cb) (void *); /**< callback responsible for deinitializing a context item */
+  void (*deinit_cb) (void *); /**< callback responsible for deinitializing a context item, or NULL */
   size_t bytes_needed; /**< number of bytes to allocate for this manager */
 } jerry_context_data_manager_t;
 

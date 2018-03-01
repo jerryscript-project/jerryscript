@@ -21,6 +21,7 @@ static bool test_context_data1_new_called = false;
 static bool test_context_data2_new_called = false;
 static bool test_context_data1_free_called = false;
 static bool test_context_data2_free_called = false;
+static bool test_context_data3_new_called = false;
 
 /* Context item 1 */
 const char *string1 = "item1";
@@ -70,6 +71,24 @@ static const jerry_context_data_manager_t manager2 =
   .bytes_needed = sizeof (const char *)
 };
 
+/* Context item 3 */
+const char *string3 = "item3";
+
+static void
+test_context_data3_new (void *user_data_p)
+{
+  test_context_data3_new_called = true;
+  *((const char **) user_data_p) = string3;
+} /* test_context_data3_new */
+
+static const jerry_context_data_manager_t manager3 =
+{
+  .init_cb = test_context_data3_new,
+  /* NULL is allowed: */
+  .deinit_cb = NULL,
+  .bytes_needed = 0,
+};
+
 int
 main (void)
 {
@@ -79,9 +98,11 @@ main (void)
 
   TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager1)), "item1"));
   TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager2)), "item2"));
+  TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager3)), "item3"));
 
   TEST_ASSERT (test_context_data1_new_called);
   TEST_ASSERT (test_context_data2_new_called);
+  TEST_ASSERT (test_context_data3_new_called);
 
   TEST_ASSERT (!test_context_data1_free_called);
   TEST_ASSERT (!test_context_data2_free_called);

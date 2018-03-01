@@ -215,7 +215,10 @@ jerry_cleanup (void)
        this_p = next_p)
   {
     next_p = this_p->next_p;
-    this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    if (this_p->manager_p->deinit_cb)
+    {
+      this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    }
     jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
 

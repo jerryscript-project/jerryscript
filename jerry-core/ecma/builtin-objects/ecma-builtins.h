@@ -23,6 +23,17 @@
  */
 typedef enum
 {
+#define BUILTIN(a, b, c, d, e)
+#define BUILTIN_ROUTINE(builtin_id, \
+                        object_type, \
+                        object_prototype_builtin_id, \
+                        is_extensible, \
+                        lowercase_name) \
+  builtin_id,
+#include "ecma-builtins.inc.h"
+#undef BUILTIN
+#undef BUILTIN_ROUTINE
+#define BUILTIN_ROUTINE(a, b, c, d, e)
 #define BUILTIN(builtin_id, \
                 object_type, \
                 object_prototype_builtin_id, \
@@ -30,6 +41,8 @@ typedef enum
                 lowercase_name) \
   builtin_id,
 #include "ecma-builtins.inc.h"
+#undef BUILTIN
+#undef BUILTIN_ROUTINE
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 

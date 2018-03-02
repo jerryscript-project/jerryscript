@@ -75,6 +75,15 @@ typedef enum
 #define LEXER_FLAG_LATE_INIT 0x80
 
 /**
+ * Type of property length.
+ */
+#ifdef JERRY_CPOINTER_32_BIT
+typedef uint32_t prop_length_t;
+#else /* !JERRY_CPOINTER_32_BIT */
+typedef uint16_t prop_length_t;
+#endif /* JERRY_CPOINTER_32_BIT */
+
+/**
  * Literal data.
  */
 typedef struct
@@ -93,7 +102,7 @@ typedef struct
   union
 #endif /* PARSER_DUMP_BYTE_CODE */
   {
-    uint16_t length;                     /**< length of ident / string literal */
+    prop_length_t length;                /**< length of ident / string literal */
     uint16_t index;                      /**< real index during post processing */
   } prop;
 

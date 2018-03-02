@@ -17,6 +17,13 @@
 DIR="$1"
 shift
 
+VERBOSE=1
+if [ "$1" == "-q" ]
+then
+    unset VERBOSE
+    shift
+fi
+
 UNITTEST_ERROR=$DIR/unittests.failed
 UNITTEST_OK=$DIR/unittests.passed
 
@@ -76,7 +83,7 @@ do
 
         failed=$((failed+1))
     else
-        echo "[$tested/$total] $cmd_line: PASS"
+        test $VERBOSE && echo "[$tested/$total] $cmd_line: PASS"
 
         echo "$unit_test" >> $UNITTEST_OK
 

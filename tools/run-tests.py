@@ -135,6 +135,8 @@ def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--toolchain', metavar='FILE',
                         help='Add toolchain file')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Only print out failing tests')
     parser.add_argument('--buildoptions', metavar='LIST',
                         help='Add a comma separated list of extra build options to each test')
     parser.add_argument('--skip-list', metavar='LIST',
@@ -266,6 +268,9 @@ def run_jerry_tests(options):
         if options.skip_list:
             skip_list.append(options.skip_list)
 
+        if options.quiet:
+            test_cmd.append("-q")
+
         if skip_list:
             test_cmd.append("--skip-list=" + ",".join(skip_list))
 
@@ -291,6 +296,9 @@ def run_jerry_test_suite(options):
             test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
         else:
             test_cmd.append(settings.JERRY_TEST_SUITE_ES51_LIST)
+
+        if options.quiet:
+            test_cmd.append("-q")
 
         if options.skip_list:
             test_cmd.append("--skip-list=" + options.skip_list)
@@ -331,7 +339,8 @@ def run_unittests(options):
 
         ret_test |= run_check([
             settings.UNITTEST_RUNNER_SCRIPT,
-            bin_dir_path
+            bin_dir_path,
+            "-q" if options.quiet else "",
         ])
 
     return ret_build | ret_test

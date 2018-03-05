@@ -106,7 +106,7 @@ parser_copy_identifiers (parser_context_t *context_p) /**< context */
     /* The literal data is updated at every iteration to handle out-of memory. */
     parent_p->literal_pool_data = parent_literal_pool.data;
 
-    parent_literal_p->prop.length = (uint16_t) length;
+    parent_literal_p->prop.length = (prop_length_t) length;
     parent_literal_p->type = LEXER_IDENT_LITERAL;
     parent_literal_p->status_flags = (uint8_t) (literal_p->status_flags & LEXER_FLAG_SOURCE_PTR);
     parent_literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE | LEXER_FLAG_UNUSED_IDENT;

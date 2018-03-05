@@ -233,7 +233,7 @@ typedef enum
 typedef struct
 {
   const uint8_t *char_p;                     /**< start of identifier or string token */
-  uint16_t length;                           /**< length or index of a literal */
+  prop_length_t length;                      /**< length or index of a literal */
   uint8_t type;                              /**< type of the current literal */
   uint8_t has_escape;                        /**< has escape sequences */
 } lexer_lit_location_t;

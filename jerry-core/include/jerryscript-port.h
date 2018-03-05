@@ -150,6 +150,31 @@ double jerry_port_get_current_time (void);
  */
 struct jerry_instance_t *jerry_port_get_current_instance (void);
 
+/*
+ * Debugger Port API
+ */
+
+/* forward declaration */
+struct jerry_debugger_uint8_data_t;
+
+/**
+ * Transport APIs, different transport will define
+ * the real implementation of these APIs
+ */
+struct jerry_debugger_transport_t
+{
+  bool (*accept_connection) (struct jerry_debugger_transport_t *transport_p);
+  void (*close_connection) (void);
+  bool (*send) (size_t data_size);
+  bool (*receive) (struct jerry_debugger_uint8_data_t **message_data_p);
+};
+
+/**
+ * The default transport layer that uses TCP socket
+ * other transports can be added like usb, bluetooth
+ */
+struct jerry_debugger_transport_t *jerry_port_init_socket_transport (uint16_t tcp_port);
+
 /**
  * Makes the process sleep for a given time.
  *

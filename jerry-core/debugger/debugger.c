@@ -1068,4 +1068,53 @@ jerry_debugger_send_exception_string (void)
   return result;
 } /* jerry_debugger_send_exception_string */
 
+/**
+ * Initialize the debugger connection.
+ *
+ * @return true - if the connection succeeded
+ *         false - otherwise
+ */
+bool
+jerry_debugger_accept_connection (void)
+{
+  return JERRY_CONTEXT (debugger_transport_p)->accept_connection (JERRY_CONTEXT (debugger_transport_p));
+} /* jerry_debugger_accept_connection */
+
+/**
+ * Close the connection to the client.
+ */
+void
+jerry_debugger_close_connection (void)
+{
+  JERRY_CONTEXT (debugger_transport_p)->close_connection ();
+} /* jerry_debugger_close_connection */
+
+/**
+ * Send message to the client side
+ *
+ * @return true - if the data was sent successfully to the debugger client,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_send (size_t data_size) /**< data size */
+{
+  return JERRY_CONTEXT (debugger_transport_p)->send (data_size);
+} /* jerry_debugger_send */
+
+/**
+ * Receive message from the client.
+ *
+ * Note:
+ *   If the function returns with true, the value of
+ *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
+ *
+ * @return true - if execution should be resumed,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+{
+  return JERRY_CONTEXT (debugger_transport_p)->receive (message_data_p);
+} /* jerry_debugger_receive */
+
 #endif /* JERRY_DEBUGGER */

@@ -380,7 +380,7 @@ int jerry_main (int argc, char *argv[])
 
   if (start_debug_server)
   {
-    jerry_debugger_init (debug_port);
+    jerry_debugger_init (jerry_port_init_socket_transport (debug_port));
   }
 
   register_js_function ("assert", jerryx_handler_assert);
@@ -525,3 +525,14 @@ jerryx_port_handler_print_char (char c) /**< the character to print */
 {
   printf ("%c", c);
 } /* jerryx_port_handler_print_char */
+
+/**
+ * Dummy function to return the transport.
+ *
+ * @return NULL
+ */
+jerry_debugger_transport_t *
+jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
+{
+  return NULL;
+} /* jerry_port_init_socket_transport */

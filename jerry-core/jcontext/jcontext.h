@@ -117,11 +117,10 @@ typedef struct
   jmem_cpointer_t debugger_byte_code_free_tail; /**< tail of byte code free linked list */
   uint32_t debugger_flags; /**< debugger flags */
   uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
-  uint16_t debugger_port; /**< debugger socket communication port */
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be written */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
-  int debugger_connection; /**< holds the file descriptor of the socket communication */
+  jerry_debugger_transport_t *debugger_transport_p; /**< holds the pointer to the debugger transport */
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JERRY_ENABLE_LINE_INFO

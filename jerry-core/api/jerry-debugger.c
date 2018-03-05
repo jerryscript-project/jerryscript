@@ -93,13 +93,18 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
  * Debugger server initialization. Must be called after jerry_init.
  */
 void
-jerry_debugger_init (uint16_t port) /**< server port number */
+jerry_debugger_init (jerry_debugger_transport_t *transport_p) /**< transport */
 {
 #ifdef JERRY_DEBUGGER
-  JERRY_CONTEXT (debugger_port) = port;
+  JERRY_CONTEXT (debugger_transport_p) = transport_p;
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p) != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->accept_connection != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->close_connection != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->send != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->receive != NULL);
   jerry_debugger_accept_connection ();
 #else /* !JERRY_DEBUGGER */
-  JERRY_UNUSED (port);
+  JERRY_UNUSED (transport_p);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_init */
 

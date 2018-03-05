@@ -133,7 +133,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   /* 7. */
   prop_value_p = ecma_create_named_data_property (obj_p,
-                                                  ecma_get_length_string (),
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                                   ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                   NULL);
 

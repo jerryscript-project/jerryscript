@@ -275,20 +275,6 @@ typedef struct
 } ecma_native_pointer_t;
 
 /**
- * Special property identifiers.
- */
-typedef enum
-{
-  ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
-
-  /* Note: when new special types are added
-   * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
-  ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
-
-  ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
-} ecma_internal_property_id_t;
-
-/**
  * Property's 'Writable' attribute's values description.
  */
 typedef enum
@@ -351,32 +337,6 @@ typedef enum
 #define ECMA_PROPERTY_FLAG_SHIFT 2
 
 /**
- * Define special property type.
- */
-#define ECMA_SPECIAL_PROPERTY_VALUE(type) \
-  ((uint8_t) (ECMA_PROPERTY_TYPE_SPECIAL | ((type) << ECMA_PROPERTY_FLAG_SHIFT)))
-
-/**
- * Type of deleted property.
- */
-#define ECMA_PROPERTY_TYPE_DELETED ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_DELETED)
-
-/**
- * Type of hash-map property.
- */
-#define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
-
-/**
- * Type of property not found.
- */
-#define ECMA_PROPERTY_TYPE_NOT_FOUND ECMA_PROPERTY_TYPE_DELETED
-
-/**
- * Type of property not found and no more searching in the proto chain.
- */
-#define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP ECMA_PROPERTY_TYPE_HASHMAP
-
-/**
  * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
  * and ECMA_PROPERTY_TYPE_NAMEDACCESSOR).
  */
@@ -421,6 +381,54 @@ typedef enum
  * Shift for property name part.
  */
 #define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
+
+/**
+ * Special property identifiers.
+ */
+typedef enum
+{
+  /* Note: when new special types are added
+   * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
+  ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
+  ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
+
+  ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
+} ecma_internal_property_id_t;
+
+/**
+ * Define special property type.
+ */
+#define ECMA_SPECIAL_PROPERTY_VALUE(type) \
+  ((uint8_t) (ECMA_PROPERTY_TYPE_SPECIAL | ((type) << ECMA_PROPERTY_NAME_TYPE_SHIFT)))
+
+/**
+ * Type of deleted property.
+ */
+#define ECMA_PROPERTY_TYPE_DELETED ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_DELETED)
+
+/**
+ * Type of hash-map property.
+ */
+#define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
+
+/**
+ * Name constant of a deleted property.
+ */
+#ifdef JERRY_CPOINTER_32_BIT
+#define ECMA_PROPERTY_DELETED_NAME 0xffffffffu
+#else /* !JERRY_CPOINTER_32_BIT */
+#define ECMA_PROPERTY_DELETED_NAME 0xffffu
+#endif /* JERRY_CPOINTER_32_BIT */
+
+/**
+ * Type of property not found.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND ECMA_PROPERTY_TYPE_HASHMAP
+
+/**
+ * Type of property not found and no more searching in the proto chain.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP ECMA_PROPERTY_TYPE_DELETED
 
 /**
  * Abstract property representation.
@@ -522,12 +530,6 @@ typedef struct
  */
 #define ECMA_PROPERTY_IS_NAMED_PROPERTY(property) \
   (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_SPECIAL)
-
-/**
- * Returns the internal property type
- */
-#define ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE(property_p) \
-  ((ecma_internal_property_id_t) (*(property_p) >> ECMA_PROPERTY_FLAG_SHIFT))
 
 /**
  * Add the offset part to a property for computing its property data pointer.

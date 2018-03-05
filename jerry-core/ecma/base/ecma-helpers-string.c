@@ -513,20 +513,6 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
 /**
- * Returns the constant assigned to the length magic string.
- *
- * Note:
- *   Calling ecma_deref_ecma_string on the returned pointer is optional.
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_get_length_string (void)
-{
-  return ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
-} /* ecma_get_length_string */
-
-/**
  * Append a cesu8 string after an ecma-string
  *
  * Note:

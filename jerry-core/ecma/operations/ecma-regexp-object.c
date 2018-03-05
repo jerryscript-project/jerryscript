@@ -1185,7 +1185,7 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
     array_item_prop_desc.value = ecma_make_uint32_value (num_of_elements);
 
     ecma_op_object_define_own_property (array_obj_p,
-                                        ecma_get_length_string (),
+                                        ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                         &array_item_prop_desc,
                                         true);
   }

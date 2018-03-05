@@ -1708,8 +1708,13 @@ ecma_string_compare_to_property_name (ecma_property_t property, /**< property na
     return ecma_property_to_string (property, prop_name_cp) == string_p;
   }
 
+  if (ECMA_IS_DIRECT_STRING (string_p))
+  {
+    return false;
+  }
+
   ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_name_cp);
-  return ecma_compare_ecma_strings (prop_name_p, string_p);
+  return ecma_compare_ecma_non_direct_strings (prop_name_p, string_p);
 } /* ecma_string_compare_to_property_name */
 
 /**
@@ -1722,8 +1727,8 @@ ecma_string_compare_to_property_name (ecma_property_t property, /**< property na
  *         false - otherwise
  */
 static bool __attr_noinline___
-ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-string */
-                                    const ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /**< ecma-string */
+                                    const ecma_string_t *string2_p) /**< ecma-string */
 {
   JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_GET_CONTAINER (string2_p));
 
@@ -1756,14 +1761,14 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /* ecma-stri
 } /* ecma_compare_ecma_strings_longpath */
 
 /**
- * Compare ecma-string to ecma-string
+ * Compare two ecma-strings
  *
  * @return true - if strings are equal;
  *         false - otherwise
  */
 inline bool __attr_always_inline___
-ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
-                           const ecma_string_t *string2_p) /* ecma-string */
+ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
+                           const ecma_string_t *string2_p) /**< ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
@@ -1798,6 +1803,45 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /* ecma-string */
 
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_strings */
+
+/**
+ * Compare two non-direct ecma-strings
+ *
+ * @return true - if strings are equal;
+ *         false - otherwise
+ */
+inline bool __attr_always_inline___
+ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-string */
+                                      const ecma_string_t *string2_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
+  JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (string1_p) && !ECMA_IS_DIRECT_STRING (string2_p));
+
+  /* Fast paths first. */
+  if (string1_p == string2_p)
+  {
+    return true;
+  }
+
+  if (string1_p->hash != string2_p->hash)
+  {
+    return false;
+  }
+
+  ecma_string_container_t string1_container = ECMA_STRING_GET_CONTAINER (string1_p);
+
+  if (string1_container != ECMA_STRING_GET_CONTAINER (string2_p))
+  {
+    return false;
+  }
+
+  if (string1_container >= ECMA_STRING_CONTAINER_UINT32_IN_DESC)
+  {
+    return string1_p->u.common_uint32_field == string2_p->u.common_uint32_field;
+  }
+
+  return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
+} /* ecma_compare_ecma_non_direct_strings */
 
 /**
  * Relational compare of ecma-strings.

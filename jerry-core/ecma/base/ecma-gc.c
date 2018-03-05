@@ -192,8 +192,8 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
     }
     case ECMA_PROPERTY_TYPE_SPECIAL:
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (&property) == ECMA_SPECIAL_PROPERTY_DELETED
-                    || ECMA_PROPERTY_GET_SPECIAL_PROPERTY_TYPE (&property) == ECMA_SPECIAL_PROPERTY_HASHMAP);
+      JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_HASHMAP
+                    || property == ECMA_PROPERTY_TYPE_DELETED);
       break;
     }
     default:
@@ -490,10 +490,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ecma_free_property (object_p, name_cp, property_p);
         }
       }
-
-      /* Both must be deleted. */
-      JERRY_ASSERT (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_DELETED
-                    && prop_iter_p->types[1] == ECMA_PROPERTY_TYPE_DELETED);
 
       prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                       prop_iter_p->next_property_cp);

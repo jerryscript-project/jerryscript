@@ -247,6 +247,7 @@ bool ecma_string_compare_to_property_name (ecma_property_t property, jmem_cpoint
                                            const ecma_string_t *string_p);
 
 bool ecma_compare_ecma_strings (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
+bool ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
 bool ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
 ecma_length_t ecma_string_get_length (const ecma_string_t *string_p);
 ecma_length_t ecma_string_get_utf8_length (const ecma_string_t *string_p);

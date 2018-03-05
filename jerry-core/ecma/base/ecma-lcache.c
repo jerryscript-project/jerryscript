@@ -175,12 +175,35 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
-  size_t row_index = ecma_lcache_row_index (object_cp, ecma_string_hash (prop_name_p));
+  ecma_property_t prop_name_type;
+  jmem_cpointer_t prop_name_cp;
+  lit_string_hash_t name_hash;
+
+  if (ECMA_IS_DIRECT_STRING (prop_name_p))
+  {
+    prop_name_type = (ecma_property_t) ECMA_GET_DIRECT_STRING_TYPE (prop_name_p);
+
+    uintptr_t value = ECMA_GET_DIRECT_STRING_VALUE (prop_name_p);
+    prop_name_cp = (jmem_cpointer_t) value;
+    name_hash = (lit_string_hash_t) value;
+
+    if (prop_name_type == ECMA_DIRECT_STRING_MAGIC_EX)
+    {
+      name_hash = (lit_string_hash_t) (name_hash + LIT_MAGIC_STRING__COUNT);
+    }
+  }
+  else
+  {
+    prop_name_type = ECMA_DIRECT_STRING_PTR;
+
+    ECMA_SET_NON_NULL_POINTER (prop_name_cp, prop_name_p);
+    name_hash = prop_name_p->hash;
+  }
+
+  size_t row_index = ecma_lcache_row_index (object_cp, name_hash);
+
   ecma_lcache_hash_entry_t *entry_p = JERRY_HASH_TABLE_CONTEXT (table) [row_index];
   ecma_lcache_hash_entry_t *entry_end_p = entry_p + ECMA_LCACHE_HASH_ROW_LENGTH;
-
-  ecma_property_t prop_name_type;
-  jmem_cpointer_t prop_name_cp = ecma_string_to_lcache_property_name (prop_name_p, &prop_name_type);
 
   while (entry_p < entry_end_p)
   {

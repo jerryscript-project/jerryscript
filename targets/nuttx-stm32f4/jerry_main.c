@@ -152,10 +152,12 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
 {
   assert (jerry_value_has_error_flag (error_value));
 
-  jerry_value_clear_error_flag (&error_value);
+  error_value = jerry_get_value_without_error_flag (error_value);
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
   jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
   jerry_char_t err_str_buf[256];
+
+  jerry_release_value (error_value);
 
   if (err_str_size >= 256)
   {

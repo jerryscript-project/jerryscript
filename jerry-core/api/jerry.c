@@ -3335,5 +3335,62 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
 } /* jerry_get_typedarray_buffer */
 
 /**
+ * Create an object from JSON
+ *
+ * Note:
+ *      The returned value must be freed with jerry_release_value
+ * @return jerry_value_t from json formated string or an error massage
+ */
+jerry_value_t
+jerry_json_parse (const jerry_char_t *string_p, /**< json string */
+                  jerry_size_t string_size) /**< json string size */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
+  ecma_value_t ret_value = ecma_builtin_json_parse_buffer (string_p, string_size);
+
+  if (ecma_is_value_undefined (ret_value))
+  {
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error.")));
+  }
+
+  return ret_value;
+#else /* CONFIG_DISABLE_JSON_BUILTIN */
+  JERRY_UNUSED (string_p);
+  JERRY_UNUSED (string_size);
+
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
+} /* jerry_json_parse */
+
+/**
+ * Create a Json formated string from an object
+ *
+ * Note:
+ *      The returned value must be freed with jerry_release_value
+ * @return json formated jerry_value_t or an error massage
+ */
+jerry_value_t
+jerry_json_stringfy (const jerry_value_t object_to_stringify) /**< a jerry_object_t to stringify */
+{
+  jerry_assert_api_available ();
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
+  ecma_value_t ret_value = ecma_builtin_json_string_from_object (object_to_stringify);
+
+  if (ecma_is_value_undefined (ret_value))
+  {
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON stringify error.")));
+  }
+
+  return ret_value;
+#else /* CONFIG_DISABLE_JSON_BUILTIN */
+  JERRY_UNUSED (object_to_stringify);
+
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
+} /* jerry_json_stringfy */
+
+/**
  * @}
  */

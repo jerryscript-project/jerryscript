@@ -25,6 +25,7 @@ import socket
 import struct
 import sys
 import math
+import time
 
 # Expected debugger protocol version.
 JERRY_DEBUGGER_VERSION = 1
@@ -265,7 +266,22 @@ class DebuggerPrompt(Cmd):
 
     def do_next(self, args):
         """ Next breakpoint in the same context """
-        self._exec_command(args, JERRY_DEBUGGER_NEXT)
+        if not args:
+            args = 0
+        else:
+            try:
+                args = int(args)
+                if args <= 0:
+                    raise ValueError(args)
+            except ValueError as val_errno:
+                print("Error: expected a positive integer: %s" % val_errno)
+                return
+
+            args = min(args, len(self.debugger.last_breakpoint_hit.function.lines) -
+                       self.debugger.last_breakpoint_hit.function.line) - 1
+            self.debugger.repeats_remain = args
+
+        self._exec_command("", JERRY_DEBUGGER_NEXT)
         self.cont = True
 
     do_n = do_next
@@ -561,6 +577,7 @@ class JerryDebugger(object):
         self.src_offset_diff = 0
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
+        self.repeats_remain = 0
 
         self.send_message(b"GET /jerry-debugger HTTP/1.1\r\n" +
                           b"Upgrade: websocket\r\n" +
@@ -1141,7 +1158,12 @@ def main():
             if debugger.display:
                 print_source(prompt.debugger, debugger.display, 0)
 
-            prompt.cmdloop()
+            if debugger.repeats_remain:
+                prompt.do_next(debugger.repeats_remain)
+                time.sleep(0.1)
+            else:
+                prompt.cmdloop()
+
             if prompt.quit:
                 break
 

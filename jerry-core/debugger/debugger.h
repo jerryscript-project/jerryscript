@@ -26,7 +26,7 @@
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (1)
+#define JERRY_DEBUGGER_VERSION (2)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.
@@ -178,11 +178,12 @@ typedef enum
   JERRY_DEBUGGER_CONTINUE = 12, /**< continue execution */
   JERRY_DEBUGGER_STEP = 13, /**< next breakpoint, step into functions */
   JERRY_DEBUGGER_NEXT = 14, /**< next breakpoint in the same context */
+  JERRY_DEBUGGER_FINISH = 15, /**< Continue running just after the function in the current stack frame returns */
   /* The following messages are only available in breakpoint
    * mode and this mode is kept after the message is processed. */
-  JERRY_DEBUGGER_GET_BACKTRACE = 15, /**< get backtrace */
-  JERRY_DEBUGGER_EVAL = 16, /**< first message of evaluating a string */
-  JERRY_DEBUGGER_EVAL_PART = 17, /**< next message of evaluating a string */
+  JERRY_DEBUGGER_GET_BACKTRACE = 16, /**< get backtrace */
+  JERRY_DEBUGGER_EVAL = 17, /**< first message of evaluating a string */
+  JERRY_DEBUGGER_EVAL_PART = 18, /**< next message of evaluating a string */
 
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
 } jerry_debugger_header_type_t;

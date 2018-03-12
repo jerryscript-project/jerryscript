@@ -28,7 +28,7 @@ import math
 import time
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 1
+JERRY_DEBUGGER_VERSION = 2
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -85,9 +85,10 @@ JERRY_DEBUGGER_CONTEXT_RESET = 11
 JERRY_DEBUGGER_CONTINUE = 12
 JERRY_DEBUGGER_STEP = 13
 JERRY_DEBUGGER_NEXT = 14
-JERRY_DEBUGGER_GET_BACKTRACE = 15
-JERRY_DEBUGGER_EVAL = 16
-JERRY_DEBUGGER_EVAL_PART = 17
+JERRY_DEBUGGER_FINISH = 15
+JERRY_DEBUGGER_GET_BACKTRACE = 16
+JERRY_DEBUGGER_EVAL = 17
+JERRY_DEBUGGER_EVAL_PART = 18
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -285,6 +286,13 @@ class DebuggerPrompt(Cmd):
         self.cont = True
 
     do_n = do_next
+
+    def do_finish(self, args):
+        """ Continue running until the current function returns """
+        self._exec_command(args, JERRY_DEBUGGER_FINISH)
+        self.cont = True
+
+    do_f = do_finish
 
     def do_list(self, _):
         """ Lists the available breakpoints """

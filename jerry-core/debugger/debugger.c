@@ -35,8 +35,8 @@
  * debugger versioning.
  */
 JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 27
-                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 18
-                     && JERRY_DEBUGGER_VERSION == 1,
+                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
+                     && JERRY_DEBUGGER_VERSION == 2,
                      debugger_version_correlates_to_message_type_count);
 
 /**
@@ -434,6 +434,19 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = JERRY_CONTEXT (vm_top_context_p);
+      *resume_exec_p = true;
+      return true;
+    }
+
+    case JERRY_DEBUGGER_FINISH:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
+
+      JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
+
+      /* This will point to the current context's parent (where the function was called)
+       * and in case of NULL the result will the same as in case of STEP. */
+      JERRY_CONTEXT (debugger_stop_context) = JERRY_CONTEXT (vm_top_context_p->prev_context_p);
       *resume_exec_p = true;
       return true;
     }

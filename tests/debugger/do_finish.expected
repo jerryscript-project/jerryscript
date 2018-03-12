@@ -1,0 +1,20 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_finish.js:15
+(jerry-debugger) finish
+out: finish-test
+Stopped at tests/debugger/do_finish.js:26
+(jerry-debugger) finish
+Stopped at tests/debugger/do_finish.js:18 (in foo() at line:17, col:1)
+(jerry-debugger) finish
+out: foo
+out: bar
+Stopped at tests/debugger/do_finish.js:42
+(jerry-debugger) step
+Stopped at tests/debugger/do_finish.js:29 (in dog() at line:28, col:1)
+(jerry-debugger) finish
+out: *bark*
+out: *sit*
+out: *bark*
+Stopped at tests/debugger/do_finish.js:44
+(jerry-debugger) continue
+out: END: finish-test

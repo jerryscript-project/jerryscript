@@ -797,6 +797,33 @@ typedef struct
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
 
+/**
+ * Compiled byte code data.
+ */
+typedef struct
+{
+  uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */
+  uint16_t refs;                    /**< reference counter for the byte code */
+  uint16_t status_flags;            /**< various status flags:
+                                      *    CBC_CODE_FLAGS_FUNCTION flag tells whether
+                                      *    the byte code is function or regular expression.
+                                      *    If function, the other flags must be CBC_CODE_FLAGS...
+                                      *    If regexp, the other flags must be RE_FLAG... */
+} ecma_compiled_code_t;
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+
+/**
+ * Description of static function objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header;
+  const ecma_compiled_code_t *bytecode_p;
+} ecma_static_function_t;
+
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
 
 /**
@@ -809,6 +836,19 @@ typedef struct
   jmem_cpointer_t scope_cp; /**< function scope */
   jmem_cpointer_t bytecode_cp; /**< function byte code */
 } ecma_arrow_function_t;
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+
+/**
+ * Description of static arrow function objects.
+ */
+typedef struct
+{
+  ecma_arrow_function_t header;
+  const ecma_compiled_code_t *bytecode_p;
+} ecma_static_arrow_function_t;
+
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
@@ -1275,20 +1315,6 @@ typedef struct
   uint32_t refs_and_flags; /**< reference counter */
   ecma_value_t value; /**< referenced value */
 } ecma_error_reference_t;
-
-/**
- * Compiled byte code data.
- */
-typedef struct
-{
-  uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */
-  uint16_t refs;                    /**< reference counter for the byte code */
-  uint16_t status_flags;            /**< various status flags:
-                                      *    CBC_CODE_FLAGS_FUNCTION flag tells whether
-                                      *    the byte code is function or regular expression.
-                                      *    If function, the other flags must be CBC_CODE_FLAGS...
-                                      *    If regexp, the other flags must be RE_FLAG... */
-} ecma_compiled_code_t;
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
 

@@ -275,7 +275,15 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
 
   ecma_deref_object (lex_env_p);
   ecma_free_value (this_binding);
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+  if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+  {
+    ecma_bytecode_deref (bytecode_data_p);
+  }
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   ecma_bytecode_deref (bytecode_data_p);
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
   return completion_value;
 } /* vm_run_eval */
@@ -289,8 +297,24 @@ static ecma_value_t
 vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                              ecma_value_t lit_value) /**< literal */
 {
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+  ecma_compiled_code_t *bytecode_p;
+
+  if (likely (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
+  {
+    bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                  lit_value);
+  }
+  else
+  {
+    uint8_t *byte_p = ((uint8_t *) frame_ctx_p->bytecode_header_p) + lit_value;
+    bytecode_p = (ecma_compiled_code_t *) byte_p;
+  }
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                                       lit_value);
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+
   bool is_function = ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION) != 0);
 
   if (is_function)
@@ -556,7 +580,16 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
   ecma_value_t self_reference;
+
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+  self_reference = 0;
+  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+  {
+    ECMA_SET_INTERNAL_VALUE_POINTER (self_reference, bytecode_header_p);
+  }
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
   ECMA_SET_INTERNAL_VALUE_POINTER (self_reference, bytecode_header_p);
+#endif
 
   /* Prepare. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
@@ -625,6 +658,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t value_index;
           ecma_value_t lit_value;
+          bool is_immutable_binding = false;
 
           READ_LITERAL_INDEX (value_index);
 
@@ -634,6 +668,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
+            is_immutable_binding = (self_reference == literal_start_p[value_index]);
             lit_value = vm_construct_literal_object (frame_ctx_p,
                                                      literal_start_p[value_index]);
           }
@@ -646,7 +681,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-            if (likely (value_index < register_end || self_reference != literal_start_p[value_index]))
+            if (likely (!is_immutable_binding))
             {
               vm_var_decl (frame_ctx_p, name_p);
 

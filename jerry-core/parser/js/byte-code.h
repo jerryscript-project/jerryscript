@@ -653,7 +653,8 @@ typedef enum
   CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED = (1u << 5), /**< non-strict arguments object must be constructed */
   CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 6), /**< no need to create a lexical environment */
   CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 7), /**< this function is an arrow function */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 8), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 8), /**< this function is a static snapshot function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 9), /**< this function should be ignored by debugger */
 } cbc_code_flags;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,

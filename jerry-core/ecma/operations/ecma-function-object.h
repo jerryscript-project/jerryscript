@@ -43,6 +43,17 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compile
 ecma_object_t *
 ecma_op_create_external_function_object (ecma_external_handler_t handler_cb);
 
+const ecma_compiled_code_t *
+ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+const ecma_compiled_code_t *
+ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_p);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
+ecma_value_t
+ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
+
 ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
                        const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
@@ -50,9 +61,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
 ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, const ecma_value_t *arguments_list_p,
                             ecma_length_t arguments_list_len);
-
-ecma_value_t
-ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
 ecma_property_t *
 ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);

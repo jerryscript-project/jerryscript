@@ -208,19 +208,16 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           if (type != ECMA_OBJECT_TYPE_ARROW_FUNCTION)
           {
             ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-            bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                               ext_func_p->u.function.bytecode_cp);
+            bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
           }
           else
           {
             ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
-            bytecode_data_p = ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
-                                                         arrow_func_p->bytecode_cp);
+            bytecode_data_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
           }
 #else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-          bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                             ext_func_p->u.function.bytecode_cp);
+          bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
           uint32_t len;
@@ -532,19 +529,16 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         if (type != ECMA_OBJECT_TYPE_ARROW_FUNCTION)
         {
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-          bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                             ext_func_p->u.function.bytecode_cp);
+          bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
         }
         else
         {
           ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
-          bytecode_data_p = ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
-                                                       arrow_func_p->bytecode_cp);
+          bytecode_data_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
         }
 #else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
         ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-        bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                           ext_func_p->u.function.bytecode_cp);
+        bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
         uint32_t len;

@@ -111,11 +111,11 @@ snapshot_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
 } /* snapshot_write_to_buffer_by_offset */
 
 /**
- * Snapshot callback for byte codes.
+ * Save snapshot helper.
  *
  * @return start offset
  */
-static uint16_t
+static uint32_t
 snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled code */
                             uint8_t *snapshot_buffer_p, /**< snapshot buffer */
                             size_t snapshot_buffer_size, /**< snapshot buffer size */
@@ -128,7 +128,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   JERRY_ASSERT ((globals_p->snapshot_buffer_write_offset & (JMEM_ALIGNMENT - 1)) == 0);
 
-  if ((globals_p->snapshot_buffer_write_offset >> JMEM_ALIGNMENT_LOG) > 0xffffu)
+  if (globals_p->snapshot_buffer_write_offset > (UINT32_MAX >> 1))
   {
     globals_p->snapshot_error_occured = true;
     return 0;
@@ -136,8 +136,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   /* The snapshot generator always parses a single file,
    * so the base always starts right after the snapshot header. */
-  size_t buffer_offset = globals_p->snapshot_buffer_write_offset - sizeof (jerry_snapshot_header_t);
-  uint16_t start_offset = (uint16_t) (buffer_offset >> JMEM_ALIGNMENT_LOG);
+  uint32_t start_offset = (uint32_t) (globals_p->snapshot_buffer_write_offset - sizeof (jerry_snapshot_header_t));
 
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
@@ -203,28 +202,24 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   }
 
   /* Sub-functions and regular expressions are stored recursively. */
-  uint8_t *src_buffer_p = (uint8_t *) compiled_code_p;
-  uint8_t *dst_buffer_p = (uint8_t *) copied_code_p;
-  ecma_value_t *src_literal_start_p;
-  ecma_value_t *dst_literal_start_p;
+  uint8_t *buffer_p = (uint8_t *) copied_code_p;
+  ecma_value_t *literal_start_p;
   uint32_t const_literal_end;
   uint32_t literal_end;
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
-    src_literal_start_p = (ecma_value_t *) (src_buffer_p + sizeof (cbc_uint16_arguments_t));
-    dst_literal_start_p = (ecma_value_t *) (dst_buffer_p + sizeof (cbc_uint16_arguments_t));
+    literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
 
-    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) src_buffer_p;
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
   }
   else
   {
-    src_literal_start_p = (ecma_value_t *) (src_buffer_p + sizeof (cbc_uint8_arguments_t));
-    dst_literal_start_p = (ecma_value_t *) (dst_buffer_p + sizeof (cbc_uint8_arguments_t));
+    literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
 
-    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) src_buffer_p;
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
   }
@@ -232,23 +227,153 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   for (uint32_t i = const_literal_end; i < literal_end; i++)
   {
     ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                                        src_literal_start_p[i]);
+                                                                        literal_start_p[i]);
 
     if (bytecode_p == compiled_code_p)
     {
-      dst_literal_start_p[i] = start_offset;
+      literal_start_p[i] = 0;
     }
     else
     {
-      dst_literal_start_p[i] = snapshot_add_compiled_code (bytecode_p,
-                                                           snapshot_buffer_p,
-                                                           snapshot_buffer_size,
-                                                           globals_p);
+      uint32_t offset = snapshot_add_compiled_code (bytecode_p,
+                                                    snapshot_buffer_p,
+                                                    snapshot_buffer_size,
+                                                    globals_p);
+
+      JERRY_ASSERT (globals_p->snapshot_error_occured || offset > start_offset);
+
+      literal_start_p[i] = offset - start_offset;
     }
   }
 
   return start_offset;
 } /* snapshot_add_compiled_code */
+
+/**
+ * Save static snapshot helper.
+ *
+ * @return start offset
+ */
+static uint32_t
+static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled code */
+                                   uint8_t *snapshot_buffer_p, /**< snapshot buffer */
+                                   size_t snapshot_buffer_size, /**< snapshot buffer size */
+                                   snapshot_globals_t *globals_p) /**< snapshot globals */
+{
+  if (globals_p->snapshot_error_occured)
+  {
+    return 0;
+  }
+
+  JERRY_ASSERT ((globals_p->snapshot_buffer_write_offset & (JMEM_ALIGNMENT - 1)) == 0);
+
+  if (globals_p->snapshot_buffer_write_offset >= UINT32_MAX)
+  {
+    globals_p->snapshot_error_occured = true;
+    return 0;
+  }
+
+  /* The snapshot generator always parses a single file,
+   * so the base always starts right after the snapshot header. */
+  uint32_t start_offset = (uint32_t) (globals_p->snapshot_buffer_write_offset - sizeof (jerry_snapshot_header_t));
+
+  uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
+  ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
+
+  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  {
+    /* Regular expression literals are not supported. */
+    globals_p->snapshot_error_occured = true;
+    return 0;
+  }
+
+  if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
+                                           snapshot_buffer_size,
+                                           &globals_p->snapshot_buffer_write_offset,
+                                           compiled_code_p,
+                                           ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
+  {
+    globals_p->snapshot_error_occured = true;
+    return 0;
+  }
+
+  /* Sub-functions and regular expressions are stored recursively. */
+  uint8_t *buffer_p = (uint8_t *) copied_code_p;
+  ecma_value_t *literal_start_p;
+  uint32_t argument_end;
+  uint32_t const_literal_end;
+  uint32_t literal_end;
+
+  ((ecma_compiled_code_t *) copied_code_p)->status_flags |= CBC_CODE_FLAGS_STATIC_FUNCTION;
+
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
+
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
+    argument_end = args_p->argument_end;
+    literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
+    const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+  }
+  else
+  {
+    literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
+
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
+    argument_end = args_p->argument_end;
+    literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
+    const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+  }
+
+  for (uint32_t i = 0; i < const_literal_end; i++)
+  {
+    if (!ecma_is_value_direct (literal_start_p[i])
+        && !ecma_is_value_direct_string (literal_start_p[i]))
+    {
+      globals_p->snapshot_error_occured = true;
+      return 0;
+    }
+  }
+
+  for (uint32_t i = const_literal_end; i < literal_end; i++)
+  {
+    ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                        literal_start_p[i]);
+
+    if (bytecode_p == compiled_code_p)
+    {
+      literal_start_p[i] = 0;
+    }
+    else
+    {
+      uint32_t offset = static_snapshot_add_compiled_code (bytecode_p,
+                                                           snapshot_buffer_p,
+                                                           snapshot_buffer_size,
+                                                           globals_p);
+
+      JERRY_ASSERT (globals_p->snapshot_error_occured || offset > start_offset);
+
+      literal_start_p[i] = offset - start_offset;
+    }
+  }
+
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+  {
+    buffer_p += ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG;
+    literal_start_p = ((ecma_value_t *) buffer_p) - argument_end;
+
+    for (uint32_t i = 0; i < argument_end; i++)
+    {
+      if (!ecma_is_value_direct_string (literal_start_p[i]))
+      {
+        globals_p->snapshot_error_occured = true;
+        return 0;
+      }
+    }
+  }
+
+  return start_offset;
+} /* static_snapshot_add_compiled_code */
 
 /**
  * Set the uint16_t offsets in the code area.
@@ -358,11 +483,10 @@ jerry_snapshot_set_offsets (uint32_t *buffer_p, /**< buffer */
 static ecma_compiled_code_t *
 snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of the
                                                           *   current primary function */
-                             size_t offset, /**< byte code offset */
                              const uint8_t *literal_base_p, /**< literal start */
                              bool copy_bytecode) /**< byte code should be copied to memory */
 {
-  ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) (base_addr_p + offset);
+  ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) base_addr_p;
   uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
@@ -431,7 +555,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     jmem_stats_allocate_byte_code_bytes (code_size);
 #endif /* JMEM_STATS */
 
-    memcpy (bytecode_p, base_addr_p + offset, code_size);
+    memcpy (bytecode_p, base_addr_p, code_size);
   }
   else
   {
@@ -453,7 +577,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     jmem_stats_allocate_byte_code_bytes (new_code_size);
 #endif /* JMEM_STATS */
 
-    memcpy (bytecode_p, base_addr_p + offset, start_offset);
+    memcpy (bytecode_p, base_addr_p, start_offset);
 
     bytecode_p->size = (uint16_t) (new_code_size >> JMEM_ALIGNMENT_LOG);
 
@@ -463,7 +587,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     {
       uint32_t argument_size = (uint32_t) (argument_end * sizeof (ecma_value_t));
       memcpy (byte_p + new_code_size - argument_size,
-              base_addr_p + offset + code_size - argument_size,
+              base_addr_p + code_size - argument_size,
               argument_size);
     }
 
@@ -491,9 +615,9 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
   for (uint32_t i = const_literal_end; i < literal_end; i++)
   {
-    size_t literal_offset = ((size_t) literal_start_p[i]) << JMEM_ALIGNMENT_LOG;
+    size_t literal_offset = (size_t) literal_start_p[i];
 
-    if (literal_offset == offset)
+    if (literal_offset == 0)
     {
       /* Self reference */
       ECMA_SET_INTERNAL_VALUE_POINTER (literal_start_p[i],
@@ -502,8 +626,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     else
     {
       ecma_compiled_code_t *literal_bytecode_p;
-      literal_bytecode_p = snapshot_load_compiled_code (base_addr_p,
-                                                        literal_offset,
+      literal_bytecode_p = snapshot_load_compiled_code (base_addr_p + literal_offset,
                                                         literal_base_p,
                                                         copy_bytecode);
 
@@ -532,6 +655,17 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+
+/**
+ * jerry_parse_and_save_snapshot_with_args flags.
+ */
+typedef enum
+{
+  JERRY_SNAPSHOT_SAVE_STATIC = (1u << 0), /**< static snapshot */
+  JERRY_SNAPSHOT_SAVE_STRICT = (1u << 1), /**< strict mode code */
+  JERRY_SNAPSHOT_SAVE_EVAL = (1u << 2), /**< eval context code */
+} jerry_parse_and_save_snapshot_flags_t;
+
 /**
  * Generate snapshot from specified source and arguments
  *
@@ -545,9 +679,7 @@ jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< scri
                                          size_t source_size, /**< script source size */
                                          const jerry_char_t *args_p, /**< arguments string */
                                          size_t args_size, /**< arguments string size */
-                                         bool is_for_global, /**< snapshot would be executed as global (true)
-                                                              *   or eval (false) */
-                                         bool is_strict, /**< strict mode */
+                                         uint32_t flags, /**< jerry_parse_and_save_snapshot_flags_t flags */
                                          uint32_t *buffer_p, /**< buffer to save snapshot to */
                                          size_t buffer_size) /**< the buffer's size */
 {
@@ -565,7 +697,7 @@ jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< scri
                                       args_size,
                                       source_p,
                                       source_size,
-                                      is_strict,
+                                      (flags & JERRY_SNAPSHOT_SAVE_STRICT) != 0,
                                       &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -574,7 +706,14 @@ jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< scri
     return 0;
   }
 
-  snapshot_add_compiled_code (bytecode_data_p, (uint8_t *) buffer_p, buffer_size, &globals);
+  if (flags & JERRY_SNAPSHOT_SAVE_STATIC)
+  {
+    static_snapshot_add_compiled_code (bytecode_data_p, (uint8_t *) buffer_p, buffer_size, &globals);
+  }
+  else
+  {
+    snapshot_add_compiled_code (bytecode_data_p, (uint8_t *) buffer_p, buffer_size, &globals);
+  }
 
   if (globals.snapshot_error_occured)
   {
@@ -589,32 +728,35 @@ jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< scri
   header.number_of_funcs = 1;
   header.func_offsets[0] = aligned_header_size;
 
-  if (!is_for_global)
+  if (flags & JERRY_SNAPSHOT_SAVE_EVAL)
   {
     header.func_offsets[0] |= JERRY_SNAPSHOT_EVAL_CONTEXT;
   }
 
   lit_mem_to_snapshot_id_map_entry_t *lit_map_p = NULL;
-  uint32_t literals_num;
+  uint32_t literals_num = 0;
 
-  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
-
-  ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
-
-  if (!ecma_save_literals_for_snapshot (lit_pool_p,
-                                        buffer_p,
-                                        buffer_size,
-                                        &globals.snapshot_buffer_write_offset,
-                                        &lit_map_p,
-                                        &literals_num))
+  if (!(flags & JERRY_SNAPSHOT_SAVE_STATIC))
   {
-    JERRY_ASSERT (lit_map_p == NULL);
-    return 0;
-  }
+    ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
 
-  jerry_snapshot_set_offsets (buffer_p + (aligned_header_size / sizeof (uint32_t)),
-                              (uint32_t) (header.lit_table_offset - aligned_header_size),
-                              lit_map_p);
+    ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
+
+    if (!ecma_save_literals_for_snapshot (lit_pool_p,
+                                          buffer_p,
+                                          buffer_size,
+                                          &globals.snapshot_buffer_write_offset,
+                                          &lit_map_p,
+                                          &literals_num))
+    {
+      JERRY_ASSERT (lit_map_p == NULL);
+      return 0;
+    }
+
+    jerry_snapshot_set_offsets (buffer_p + (aligned_header_size / sizeof (uint32_t)),
+                                (uint32_t) (header.lit_table_offset - aligned_header_size),
+                                lit_map_p);
+  }
 
   size_t header_offset = 0;
 
@@ -633,6 +775,7 @@ jerry_parse_and_save_snapshot_with_args (const jerry_char_t *source_p, /**< scri
 
   return globals.snapshot_buffer_write_offset;
 } /* jerry_parse_and_save_snapshot_with_args */
+
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
 /**
@@ -653,12 +796,14 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
                                size_t buffer_size) /**< the buffer's size */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  uint32_t flags = (!is_for_global ? JERRY_SNAPSHOT_SAVE_EVAL : 0);
+  flags |= (is_strict ? JERRY_SNAPSHOT_SAVE_STRICT : 0);
+
   return jerry_parse_and_save_snapshot_with_args (source_p,
                                                   source_size,
                                                   NULL,
                                                   0,
-                                                  is_for_global,
-                                                  is_strict,
+                                                  flags,
                                                   buffer_p,
                                                   buffer_size);
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
@@ -672,6 +817,48 @@ jerry_parse_and_save_snapshot (const jerry_char_t *source_p, /**< script source 
   return 0;
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_snapshot */
+
+/**
+ * Generate static snapshot from specified source
+ *
+ * @return size of snapshot, if it was generated succesfully
+ *          (i.e. there are no syntax errors in source code, all static snapshot requirements
+ *           are satisfied, buffer size is sufficient, and snapshot support is enabled in
+ *           current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *         0 - otherwise.
+ */
+size_t
+jerry_parse_and_save_static_snapshot (const jerry_char_t *source_p, /**< script source */
+                                      size_t source_size, /**< script source size */
+                                      bool is_for_global, /**< snapshot would be executed as global (true)
+                                                           *   or eval (false) */
+                                      bool is_strict, /**< strict mode */
+                                      uint32_t *buffer_p, /**< buffer to save snapshot to */
+                                      size_t buffer_size) /**< the buffer's size */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  uint32_t flags = JERRY_SNAPSHOT_SAVE_STATIC;
+  flags |= (!is_for_global ? JERRY_SNAPSHOT_SAVE_EVAL : 0);
+  flags |= (is_strict ? JERRY_SNAPSHOT_SAVE_STRICT : 0);
+
+  return jerry_parse_and_save_snapshot_with_args (source_p,
+                                                  source_size,
+                                                  NULL,
+                                                  0,
+                                                  flags,
+                                                  buffer_p,
+                                                  buffer_size);
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (is_for_global);
+  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+
+  return 0;
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+} /* jerry_parse_and_save_static_snapshot */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
 /**
@@ -731,18 +918,29 @@ jerry_snapshot_result_at (const uint32_t *snapshot_p, /**< snapshot */
 
   JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
 
-  const uint8_t *literal_base_p = (uint8_t *) (snapshot_data_p + header_p->lit_table_offset);
-  ecma_compiled_code_t *bytecode_p;
-
   uint32_t func_offset = header_p->func_offsets[func_index] & ~JERRY_SNAPSHOT_EVAL_CONTEXT;
-  bytecode_p = snapshot_load_compiled_code (snapshot_data_p + func_offset,
-                                            0,
-                                            literal_base_p,
-                                            copy_bytecode);
+  ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) (snapshot_data_p + func_offset);
 
-  if (bytecode_p == NULL)
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
   {
-    return ecma_raise_type_error (invalid_format_error_p);
+    if (copy_bytecode)
+    {
+      ecma_raise_common_error (ECMA_ERR_MSG ("Static snapshots cannot be copied into memory"));
+      return ecma_create_error_reference_from_context ();
+    }
+  }
+  else
+  {
+    const uint8_t *literal_base_p = (uint8_t *) (snapshot_data_p + header_p->lit_table_offset);
+
+    bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
+                                              literal_base_p,
+                                              copy_bytecode);
+
+    if (bytecode_p == NULL)
+    {
+      return ecma_raise_type_error (invalid_format_error_p);
+    }
   }
 
   ecma_value_t ret_val;
@@ -752,8 +950,11 @@ jerry_snapshot_result_at (const uint32_t *snapshot_p, /**< snapshot */
     ecma_object_t *lex_env_p = ecma_get_global_environment ();
     ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
                                                                 bytecode_p);
-    ecma_bytecode_deref (bytecode_p);
 
+    if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+    {
+      ecma_bytecode_deref (bytecode_p);
+    }
     ret_val = ecma_make_object_value (func_obj_p);
   }
   else if (header_p->func_offsets[func_index] & JERRY_SNAPSHOT_EVAL_CONTEXT)
@@ -763,7 +964,10 @@ jerry_snapshot_result_at (const uint32_t *snapshot_p, /**< snapshot */
   else
   {
     ret_val = vm_run_global (bytecode_p);
-    ecma_bytecode_deref (bytecode_p);
+    if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+    {
+      ecma_bytecode_deref (bytecode_p);
+    }
   }
 
   if (ECMA_IS_VALUE_ERROR (ret_val))
@@ -861,7 +1065,8 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
     ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {
       ecma_value_t *literal_start_p;
       uint32_t argument_end;
@@ -932,7 +1137,8 @@ update_literal_offsets (uint8_t *buffer_p, /**< snapshot buffer start */
     ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {
       ecma_value_t *literal_start_p;
       uint32_t argument_end;
@@ -1574,6 +1780,14 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_literals */
 
+/**
+ * Generate snapshot from specified function source
+ *
+ * @return size of snapshot, if it was generated succesfully
+ *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
+ *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *         0 - otherwise.
+ */
 size_t jerry_parse_and_save_function_snapshot (const jerry_char_t *source_p, /**< function body source */
                                                size_t source_size, /**< function body size */
                                                const jerry_char_t *args_p, /**< arguments string */
@@ -1583,12 +1797,13 @@ size_t jerry_parse_and_save_function_snapshot (const jerry_char_t *source_p, /**
                                                size_t buffer_size) /**< the buffer's size */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  uint32_t flags = (is_strict ? JERRY_SNAPSHOT_SAVE_STRICT : 0);
+
   return jerry_parse_and_save_snapshot_with_args (source_p,
                                                   source_size,
                                                   args_p,
                                                   args_size,
-                                                  true,
-                                                  is_strict,
+                                                  flags,
                                                   buffer_p,
                                                   buffer_size);
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
@@ -1604,6 +1819,56 @@ size_t jerry_parse_and_save_function_snapshot (const jerry_char_t *source_p, /**
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 } /* jerry_parse_and_save_function_snapshot */
 
+/**
+ * Generate static snapshot from specified function source
+ *
+ * @return size of snapshot, if it was generated succesfully
+ *          (i.e. there are no syntax errors in source code, all static snapshot requirements
+ *           are satisfied, buffer size is sufficient, and snapshot support is enabled in
+ *           current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *         0 - otherwise.
+ */
+size_t jerry_parse_and_save_static_function_snapshot (const jerry_char_t *source_p, /**< function body source */
+                                                      size_t source_size, /**< function body size */
+                                                      const jerry_char_t *args_p, /**< arguments string */
+                                                      size_t args_size, /**< arguments string size */
+                                                      bool is_strict, /**< strict mode */
+                                                      uint32_t *buffer_p, /**< buffer to save snapshot to */
+                                                      size_t buffer_size) /**< the buffer's size */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  uint32_t flags = JERRY_SNAPSHOT_SAVE_STATIC;
+  flags |= (is_strict ? JERRY_SNAPSHOT_SAVE_STRICT : 0);
+
+  return jerry_parse_and_save_snapshot_with_args (source_p,
+                                                  source_size,
+                                                  args_p,
+                                                  args_size,
+                                                  flags,
+                                                  buffer_p,
+                                                  buffer_size);
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+  JERRY_UNUSED (source_p);
+  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (args_p);
+  JERRY_UNUSED (args_size);
+  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (buffer_size);
+
+  return 0;
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+} /* jerry_parse_and_save_static_function_snapshot */
+
+/**
+ * Load function from specified snapshot buffer
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of bytecode - if run was successful
+ *         thrown error - otherwise
+ */
 jerry_value_t jerry_load_function_snapshot_at (const uint32_t *function_snapshot_p, /**< snapshot of the function(s) */
                                                const size_t function_snapshot_size, /**< size of the snapshot */
                                                size_t func_index, /**< index of the function to load */

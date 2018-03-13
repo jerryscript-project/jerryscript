@@ -558,11 +558,7 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  const ecma_compiled_code_t *bytecode_data_p;
-  bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
-                                                     ext_func_p->u.function.bytecode_cp);
-
-  return jerry_return (vm_run_global (bytecode_data_p));
+  return jerry_return (vm_run_global (ecma_op_function_get_compiled_code (ext_func_p)));
 } /* jerry_run */
 
 /**

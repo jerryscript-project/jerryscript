@@ -139,6 +139,13 @@ double jerry_port_get_current_time (void);
 struct jerry_instance_t *jerry_port_get_current_instance (void);
 
 /**
+ * Makes the process sleep for a given time.
+ */
+#ifdef JERRY_DEBUGGER
+void jerry_port_sleep (uint32_t sleep_time);
+#endif /* JERRY_DEBUGGER */
+
+/**
  * @}
  */
 

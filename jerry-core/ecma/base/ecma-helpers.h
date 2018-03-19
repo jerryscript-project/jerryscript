@@ -154,6 +154,7 @@ bool ecma_are_values_integer_numbers (ecma_value_t first_value, ecma_value_t sec
 bool ecma_is_value_float_number (ecma_value_t value) __attr_const___;
 bool ecma_is_value_number (ecma_value_t value) __attr_const___;
 bool ecma_is_value_string (ecma_value_t value) __attr_const___;
+bool ecma_is_value_direct_string (ecma_value_t value) __attr_const___;
 bool ecma_is_value_object (ecma_value_t value) __attr_const___;
 bool ecma_is_value_error_reference (ecma_value_t value) __attr_const___;
 bool ecma_is_value_collection_chunk (ecma_value_t value) __attr_const___;

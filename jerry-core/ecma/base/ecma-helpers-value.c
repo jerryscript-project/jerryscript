@@ -312,6 +312,18 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_string */
 
 /**
+ * Check if the value is direct_ecma-string.
+ *
+ * @return true - if the value contains ecma-string value,
+ *         false - otherwise
+ */
+inline bool __attr_const___ __attr_always_inline___
+ecma_is_value_direct_string (ecma_value_t value) /**< ecma value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT_STRING);
+} /* ecma_is_value_direct_string */
+
+/**
  * Check if the value is object.
  *
  * @return true - if the value contains object value,

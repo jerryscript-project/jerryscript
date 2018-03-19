@@ -631,10 +631,22 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       /* Function with byte-code (not a built-in function). */
       ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+      if (ext_func_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
+      {
+        ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                              ext_func_p->u.function.bytecode_cp));
+        ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+      }
+      else
+      {
+        ecma_dealloc_extended_object (object_p, sizeof (ecma_static_function_t));
+      }
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
       ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                             ext_func_p->u.function.bytecode_cp));
-
       ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
       return;
     }
 
@@ -643,12 +655,24 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     {
       ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
 
-      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                      arrow_func_p->bytecode_cp));
-
       ecma_free_value_if_not_object (arrow_func_p->this_binding);
 
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+      if (arrow_func_p->bytecode_cp != ECMA_NULL_POINTER)
+      {
+        ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
+                                                        arrow_func_p->bytecode_cp));
+        ecma_dealloc_extended_object (object_p, sizeof (ecma_arrow_function_t));
+      }
+      else
+      {
+        ecma_dealloc_extended_object (object_p, sizeof (ecma_static_arrow_function_t));
+      }
+#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
+                                                      arrow_func_p->bytecode_cp));
       ecma_dealloc_extended_object (object_p, sizeof (ecma_arrow_function_t));
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
       return;
     }
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */

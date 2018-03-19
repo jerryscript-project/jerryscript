@@ -23,6 +23,29 @@
  */
 #define SNAPSHOT_BUFFER_SIZE (256)
 
+/**
+ * Magic strings
+ */
+static const jerry_char_ptr_t magic_strings[] =
+{
+  (const jerry_char_ptr_t) " ",
+  (const jerry_char_ptr_t) "a",
+  (const jerry_char_ptr_t) "b",
+  (const jerry_char_ptr_t) "c",
+  (const jerry_char_ptr_t) "from",
+  (const jerry_char_ptr_t) "func",
+  (const jerry_char_ptr_t) "string",
+  (const jerry_char_ptr_t) "snapshot"
+};
+
+/**
+ * Magic string lengths
+ */
+static const jerry_length_t magic_string_lengths[] =
+{
+  1, 1, 1, 1, 4, 4, 6, 8
+};
+
 static void test_function_snapshot (void)
 {
   /* function to snapshot */
@@ -142,6 +165,10 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool
 
   jerry_init (JERRY_INIT_EMPTY);
 
+  jerry_register_magic_strings (magic_strings,
+                                sizeof (magic_string_lengths) / sizeof (jerry_length_t),
+                                magic_string_lengths);
+
   jerry_value_t res = jerry_exec_snapshot (snapshot_p,
                                            snapshot_size,
                                            copy_bytecode);
@@ -161,15 +188,15 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool
 int
 main (void)
 {
+  static uint32_t global_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+  static uint32_t eval_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+
   TEST_INIT ();
 
   /* Dump / execute snapshot */
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    static uint32_t global_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-    static uint32_t eval_mode_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-
     const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
 
     jerry_init (JERRY_INIT_EMPTY);
@@ -184,11 +211,11 @@ main (void)
     /* Check the snapshot data. Unused bytes should be filled with zeroes */
     const uint8_t expected_data[] =
     {
-      0x4A, 0x52, 0x52, 0x59, 0x09, 0x00, 0x00, 0x00,
+      0x4A, 0x52, 0x52, 0x59, 0x0A, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00,
       0x01, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00,
       0x03, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00,
-      0x00, 0x00, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x01, 0x18, 0x00, 0x00, 0x00,
       0x28, 0x00, 0xB7, 0x46, 0x00, 0x00, 0x00, 0x00,
       0x03, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x01, 0x01, 0x07, 0x00, 0x00, 0x00,
@@ -227,6 +254,36 @@ main (void)
     test_exec_snapshot (eval_mode_snapshot_buffer,
                         eval_mode_snapshot_size,
                         true);
+  }
+
+  /* Static snapshot */
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
+      && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  {
+    const char *code_to_snapshot_p = ("function func(a, b, c) {"
+                                      "  c = 'snapshot';"
+                                      "  return arguments[0] + ' ' + b + ' ' + arguments[2];"
+                                      "};"
+                                      "func('string', 'from');");
+
+    jerry_init (JERRY_INIT_EMPTY);
+    jerry_register_magic_strings (magic_strings,
+                                  sizeof (magic_string_lengths) / sizeof (jerry_length_t),
+                                  magic_string_lengths);
+
+    size_t global_mode_snapshot_size = jerry_parse_and_save_static_snapshot ((jerry_char_t *) code_to_snapshot_p,
+                                                                             strlen (code_to_snapshot_p),
+                                                                             true,
+                                                                             false,
+                                                                             global_mode_snapshot_buffer,
+                                                                             SNAPSHOT_BUFFER_SIZE);
+    TEST_ASSERT (global_mode_snapshot_size != 0);
+
+    jerry_cleanup ();
+
+    test_exec_snapshot (global_mode_snapshot_buffer,
+                        global_mode_snapshot_size,
+                        false);
   }
 
   /* Merge snapshot */

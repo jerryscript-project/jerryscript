@@ -104,26 +104,13 @@ ecma_value_t
 opfunc_instanceof (ecma_value_t left_value, /**< left value */
                    ecma_value_t right_value) /**< right value */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'instanceof' check."));
-  }
-  else
-  {
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
-
-    ECMA_TRY_CATCH (is_instance_of,
-                    ecma_op_object_has_instance (right_value_obj_p, left_value),
-                    ret_value);
-
-    ret_value = is_instance_of;
-
-    ECMA_FINALIZE (is_instance_of);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'instanceof' check."));
   }
 
-  return ret_value;
+  ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
+  return ecma_op_object_has_instance (right_value_obj_p, left_value);
 } /* opfunc_instanceof */
 
 /**
@@ -138,25 +125,23 @@ ecma_value_t
 opfunc_in (ecma_value_t left_value, /**< left value */
            ecma_value_t right_value) /**< right value */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   if (!ecma_is_value_object (right_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
-  else
+
+  ecma_value_t left_string_value = ecma_op_to_string (left_value);
+  if (ECMA_IS_VALUE_ERROR (left_string_value))
   {
-    ECMA_TRY_CATCH (str_left_value, ecma_op_to_string (left_value), ret_value);
-
-    ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (str_left_value);
-    ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
-
-    ret_value = ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p));
-
-    ECMA_FINALIZE (str_left_value);
+    return left_string_value;
   }
 
-  return ret_value;
+  ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (left_string_value);
+  ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
+
+  ecma_free_value (left_string_value);
+
+  return ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p));
 } /* opfunc_in */
 
 /**

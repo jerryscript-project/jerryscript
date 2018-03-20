@@ -264,6 +264,8 @@ def run_jerry_tests(options):
 
         if '--profile=es2015-subset' not in job.build_args:
             skip_list.append(r"es2015\/")
+        else:
+            skip_list.append(r"es5.1\/")
 
         if options.skip_list:
             skip_list.append(options.skip_list)

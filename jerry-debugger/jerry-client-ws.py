@@ -1238,6 +1238,7 @@ def main():
 
             # Subtypes of output
             if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
+                message = message.rstrip('\n')
                 if subtype in [JERRY_DEBUGGER_OUTPUT_OK,
                                JERRY_DEBUGGER_OUTPUT_DEBUG]:
                     print("%sout: %s%s" % (debugger.blue, debugger.nocolor, message))

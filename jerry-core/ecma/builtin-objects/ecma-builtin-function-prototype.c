@@ -115,13 +115,22 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
         ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
 
         /* 4. */
-        ECMA_TRY_CATCH (length_value,
-                        ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH),
-                        ret_value);
+        ecma_value_t length_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
+        if (ECMA_IS_VALUE_ERROR (length_value))
+        {
+          return length_value;
+        }
 
-        ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
-                                     length_value,
-                                     ret_value);
+        ecma_number_t length_number;
+        ecma_value_t get_result = ecma_get_number (length_value, &length_number);
+
+        ecma_free_value (length_value);
+
+        if (ECMA_IS_VALUE_ERROR (get_result))
+        {
+          return get_result;
+        }
+        JERRY_ASSERT (ecma_is_value_empty (get_result));
 
         /* 5. */
         const uint32_t length = ecma_number_to_uint32 (length_number);
@@ -134,45 +143,40 @@ ecma_builtin_function_prototype_object_apply (ecma_value_t this_arg, /**< this a
         {
           /* 6. */
           JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
-          uint32_t last_index = 0;
+          uint32_t index = 0;
 
           /* 7. */
-          for (uint32_t index = 0;
-               index < length && ecma_is_value_empty (ret_value);
-               index++)
+          for (index = 0; index < length; index++)
           {
             ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
-
-            ECMA_TRY_CATCH (get_value,
-                            ecma_op_object_get (obj_p, curr_idx_str_p),
-                            ret_value);
-
-            arguments_list_p[index] = ecma_copy_value (get_value);
-            last_index = index + 1;
-
-            ECMA_FINALIZE (get_value);
+            ecma_value_t get_value = ecma_op_object_get (obj_p, curr_idx_str_p);
             ecma_deref_ecma_string (curr_idx_str_p);
+
+            if (ECMA_IS_VALUE_ERROR (get_value))
+            {
+              ret_value = get_value;
+              break;
+            }
+
+            arguments_list_p[index] = get_value;
           }
 
           if (ecma_is_value_empty (ret_value))
           {
-            JERRY_ASSERT (last_index == length);
+            JERRY_ASSERT (index == length);
             ret_value = ecma_op_function_call (func_obj_p,
                                                arg1,
                                                arguments_list_p,
                                                length);
           }
 
-          for (uint32_t index = 0; index < last_index; index++)
+          for (uint32_t remove_index = 0; remove_index < index; remove_index++)
           {
-            ecma_free_value (arguments_list_p[index]);
+            ecma_free_value (arguments_list_p[remove_index]);
           }
 
           JMEM_FINALIZE_LOCAL_ARRAY (arguments_list_p);
         }
-
-        ECMA_OP_TO_NUMBER_FINALIZE (length_number);
-        ECMA_FINALIZE (length_value);
       }
     }
   }

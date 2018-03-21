@@ -168,45 +168,40 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
                    ecma_value_t property, /**< property name */
                    bool is_strict) /**< strict mode */
 {
-  ecma_value_t completion_value = ECMA_VALUE_EMPTY;
-
   if (ecma_is_value_undefined (object))
   {
-    completion_value = ECMA_VALUE_TRUE;
+    return ECMA_VALUE_TRUE;
   }
-  else
+
+  ecma_value_t check_coercible = ecma_op_check_object_coercible (object);
+  if (ECMA_IS_VALUE_ERROR (check_coercible))
   {
-    completion_value = ECMA_VALUE_EMPTY;
+    return check_coercible;
+  }
+  JERRY_ASSERT (check_coercible == ECMA_VALUE_EMPTY);
 
-    ECMA_TRY_CATCH (check_coercible_ret,
-                    ecma_op_check_object_coercible (object),
-                    completion_value);
-    ECMA_TRY_CATCH (str_name_value,
-                    ecma_op_to_string (property),
-                    completion_value);
-
-    JERRY_ASSERT (ecma_is_value_string (str_name_value));
-    ecma_string_t *name_string_p = ecma_get_string_from_value (str_name_value);
-
-    ECMA_TRY_CATCH (obj_value, ecma_op_to_object (object), completion_value);
-
-    JERRY_ASSERT (ecma_is_value_object (obj_value));
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
-    JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
-
-    ECMA_TRY_CATCH (delete_op_ret_val,
-                    ecma_op_object_delete (obj_p, name_string_p, is_strict),
-                    completion_value);
-
-    completion_value = delete_op_ret_val;
-
-    ECMA_FINALIZE (delete_op_ret_val);
-    ECMA_FINALIZE (obj_value);
-    ECMA_FINALIZE (str_name_value);
-    ECMA_FINALIZE (check_coercible_ret);
+  ecma_value_t str_name_value = ecma_op_to_string (property);
+  if (ECMA_IS_VALUE_ERROR (str_name_value))
+  {
+    return str_name_value;
   }
 
-  return completion_value;
+  JERRY_ASSERT (ecma_is_value_string (str_name_value));
+  ecma_string_t *name_string_p = ecma_get_string_from_value (str_name_value);
+
+  ecma_value_t obj_value = ecma_op_to_object (object);
+  /* The ecma_op_check_object_coercible call already checked the op_to_object error cases. */
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_value));
+  JERRY_ASSERT (ecma_is_value_object (obj_value));
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+
+  ecma_value_t delete_op_ret = ecma_op_object_delete (obj_p, name_string_p, is_strict);
+  JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || (is_strict == true && ECMA_IS_VALUE_ERROR (delete_op_ret)));
+  ecma_free_value (obj_value);
+  ecma_free_value (str_name_value);
+
+  return delete_op_ret;
 } /* vm_op_delete_prop */
 
 /**
@@ -251,36 +246,33 @@ ecma_collection_chunk_t *
 opfunc_for_in (ecma_value_t left_value, /**< left value */
                ecma_value_t *result_obj_p) /**< expression object */
 {
-  ecma_value_t compl_val = ECMA_VALUE_EMPTY;
   ecma_collection_chunk_t *prop_names_p = NULL;
 
   /* 3. */
-  if (!ecma_is_value_undefined (left_value)
-      && !ecma_is_value_null (left_value))
+  if (ecma_is_value_undefined (left_value)
+      || ecma_is_value_null (left_value))
   {
-    /* 4. */
-    ECMA_TRY_CATCH (obj_expr_value,
-                    ecma_op_to_object (left_value),
-                    compl_val);
-
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-    ecma_collection_header_t *prop_names_coll_p = ecma_op_object_get_property_names (obj_p, false, true, true);
-
-    if (prop_names_coll_p->item_count != 0)
-    {
-      prop_names_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                       prop_names_coll_p->first_chunk_cp);
-
-      ecma_ref_object (obj_p);
-      *result_obj_p = ecma_make_object_value (obj_p);
-    }
-
-    jmem_heap_free_block (prop_names_coll_p, sizeof (ecma_collection_header_t));
-
-    ECMA_FINALIZE (obj_expr_value);
+    return prop_names_p;
   }
 
-  JERRY_ASSERT (ecma_is_value_empty (compl_val));
+  /* 4. */
+  ecma_value_t obj_expr_value = ecma_op_to_object (left_value);
+  /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
+  ecma_collection_header_t *prop_names_coll_p = ecma_op_object_get_property_names (obj_p, false, true, true);
+
+  if (prop_names_coll_p->item_count != 0)
+  {
+    prop_names_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
+                                     prop_names_coll_p->first_chunk_cp);
+
+    ecma_ref_object (obj_p);
+    *result_obj_p = ecma_make_object_value (obj_p);
+  }
+
+  jmem_heap_free_block (prop_names_coll_p, sizeof (ecma_collection_header_t));
+  ecma_free_value (obj_expr_value);
 
   return prop_names_p;
 } /* opfunc_for_in */

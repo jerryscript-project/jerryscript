@@ -239,10 +239,14 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
   while (ecma_is_value_empty (ret_value) && should_loop)
   {
-    ECMA_TRY_CATCH (empty,
-                    re_parse_next_token (re_ctx_p->parser_ctx_p,
-                                         &(re_ctx_p->current_token)),
-                    ret_value);
+    ecma_value_t next_token_result = re_parse_next_token (re_ctx_p->parser_ctx_p,
+                                                          &(re_ctx_p->current_token));
+    if (ECMA_IS_VALUE_ERROR (next_token_result))
+    {
+      ret_value = next_token_result;
+      break;
+    }
+    JERRY_ASSERT (next_token_result == ECMA_VALUE_EMPTY);
 
     uint32_t new_atom_start_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 
@@ -444,7 +448,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         break;
       }
     }
-    ECMA_FINALIZE (empty);
   }
 
   return ret_value;
@@ -561,10 +564,16 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   re_ctx.num_of_captures = 1;
   re_append_opcode (&bc_ctx, RE_OP_SAVE_AT_START);
 
-  ECMA_TRY_CATCH (empty, re_parse_alternative (&re_ctx, true), ret_value);
+  ecma_value_t parse_alt_result = re_parse_alternative (&re_ctx, true);
 
+  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
+
+  if (ECMA_IS_VALUE_ERROR (parse_alt_result))
+  {
+    ret_value = parse_alt_result;
+  }
   /* 2. Check for invalid backreference */
-  if (re_ctx.highest_backref >= re_ctx.num_of_captures)
+  else if (re_ctx.highest_backref >= re_ctx.num_of_captures)
   {
     ret_value = ecma_raise_syntax_error ("Invalid backreference.\n");
   }
@@ -588,10 +597,6 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
                              (uint8_t *) &re_compiled_code,
                              sizeof (re_compiled_code_t));
   }
-
-  ECMA_FINALIZE (empty);
-
-  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
 
   size_t byte_code_size = (size_t) (bc_ctx.block_end_p - bc_ctx.block_start_p);
 

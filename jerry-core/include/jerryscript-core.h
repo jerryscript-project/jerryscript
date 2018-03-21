@@ -210,6 +210,18 @@ typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
+/**
+ * Function type applied for each object in the engine.
+ */
+typedef bool (*jerry_objects_foreach_t) (const jerry_value_t object,
+                                         void *user_data_p);
+
+/**
+ * Function type applied for each matching object in the engine.
+ */
+typedef bool (*jerry_objects_foreach_by_native_info_t) (const jerry_value_t object,
+                                                        void *object_data_p,
+                                                        void *user_data_p);
 
 /**
  * User context item manager
@@ -439,6 +451,11 @@ void jerry_set_object_native_handle (const jerry_value_t obj_val, uintptr_t hand
 bool jerry_get_object_native_pointer (const jerry_value_t obj_val,
                                       void **out_native_pointer_p,
                                       const jerry_object_native_info_t **out_pointer_info_p);
+bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
+                            void *user_data);
+bool jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_info_p,
+                                           jerry_objects_foreach_by_native_info_t foreach_p,
+                                           void *user_data_p);
 void jerry_set_object_native_pointer (const jerry_value_t obj_val,
                                       void *native_pointer_p,
                                       const jerry_object_native_info_t *native_info_p);

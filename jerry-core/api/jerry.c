@@ -2463,6 +2463,70 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
 } /* jerry_set_object_native_handle */
 
 /**
+ * Traverse objects.
+ *
+ * @return true - traversal was interrupted by the callback.
+ *         false - otherwise - traversal visited all objects.
+ */
+bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
+                            void *user_data_p)
+{
+  jerry_assert_api_available ();
+
+  JERRY_ASSERT (foreach_p != NULL);
+
+  for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
+       iter_p != NULL;
+       iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
+  {
+    if (!ecma_is_lexical_environment (iter_p)
+        && !foreach_p (ecma_make_object_value (iter_p), user_data_p))
+    {
+      return true;
+    }
+  }
+
+  return false;
+} /* jerry_objects_foreach */
+
+/**
+ * Traverse objects having a given native type info.
+ *
+ * @return true - traversal was interrupted by the callback.
+ *         false - otherwise - traversal visited all objects.
+ */
+bool
+jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_info_p,
+                                      jerry_objects_foreach_by_native_info_t foreach_p,
+                                      void *user_data_p)
+{
+  jerry_assert_api_available ();
+
+  JERRY_ASSERT (native_info_p != NULL);
+  JERRY_ASSERT (foreach_p != NULL);
+
+  ecma_native_pointer_t *native_pointer_p;
+
+  for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
+       iter_p != NULL;
+       iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
+  {
+    if (!ecma_is_lexical_environment (iter_p))
+    {
+      native_pointer_p = ecma_get_native_pointer_value (iter_p, LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+      if (native_pointer_p
+          && ((const jerry_object_native_info_t *) native_pointer_p->u.info_p) == native_info_p
+          && !foreach_p (ecma_make_object_value (iter_p), native_pointer_p->data_p, user_data_p))
+      {
+        return true;
+      }
+    }
+  }
+
+  return false;
+} /* jerry_objects_foreach_by_native_info */
+
+/**
  * Get native pointer and its type information, associated with specified object.
  *
  * Note:

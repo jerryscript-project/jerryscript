@@ -24,12 +24,6 @@
 
 #ifdef JERRY_DEBUGGER
 
-#ifdef HAVE_TIME_H
-#include <time.h>
-#elif defined (HAVE_UNISTD_H)
-#include <unistd.h>
-#endif /* HAVE_TIME_H */
-
 /**
  * The number of message types in the debugger should reflect the
  * debugger versioning.
@@ -220,15 +214,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 void
 jerry_debugger_sleep (void)
 {
-#ifdef HAVE_TIME_H
-  nanosleep (&(const struct timespec)
-  {
-    JERRY_DEBUGGER_TIMEOUT / 1000, (JERRY_DEBUGGER_TIMEOUT % 1000) * 1000000L /* Seconds, nanoseconds */
-  }
-  , NULL);
-#elif defined (HAVE_UNISTD_H)
-  usleep ((useconds_t) JERRY_DEBUGGER_TIMEOUT * 1000);
-#endif /* HAVE_TIME_H */
+  jerry_port_sleep (JERRY_DEBUGGER_TIMEOUT);
 } /* jerry_debugger_sleep */
 
 /**

@@ -31,91 +31,91 @@ Options.__new__.__defaults__ = ([], [])
 def get_binary_path(bin_dir_path):
     return os.path.join(bin_dir_path, 'jerry')
 
+# Variables for the unittest options
+COMMON_OPTIONS = ['--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
+                  '--snapshot-exec=on', '--vm-exec-stop=on']
+UNITTESTS = ['--unittests', '--line-info=on']
+DOCTESTS = ['--doctests']
+DEBUG = ['--debug']
+ES_2015 = ['--profile=es2015-subset']
+ES_5 = ['--profile=es5.1']
+MEM_STATS = ['--mem-stats=on']
+
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
     Options('unittests',
-            ['--unittests', '--profile=es2015-subset', '--jerry-cmdline=off', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on', '--vm-exec-stop=on',
-             '--mem-stats=on']),
+            UNITTESTS + COMMON_OPTIONS + ES_2015 + MEM_STATS),
     Options('unittests-debug',
-            ['--unittests', '--debug', '--profile=es2015-subset', '--jerry-cmdline=off',
-             '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on',
-             '--vm-exec-stop=on', '--mem-stats=on']),
+            UNITTESTS + COMMON_OPTIONS + DEBUG + ES_2015 + MEM_STATS),
     Options('doctests',
-            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
-             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+            DOCTESTS + COMMON_OPTIONS + ES_2015),
     Options('doctests-debug',
-            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+            DOCTESTS + COMMON_OPTIONS + DEBUG + ES_2015),
     Options('unittests-es5.1',
-            ['--unittests', '--profile=es5.1', '--jerry-cmdline=off', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on', '--vm-exec-stop=on',
-             '--mem-stats=on']),
+            UNITTESTS + COMMON_OPTIONS + ES_5 + MEM_STATS),
     Options('unittests-es5.1-debug',
-            ['--unittests', '--debug', '--profile=es5.1', '--jerry-cmdline=off',
-             '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on',
-             '--vm-exec-stop=on', '--mem-stats=on']),
+            UNITTESTS + COMMON_OPTIONS + DEBUG + ES_5 + MEM_STATS),
     Options('doctests-es5.1',
-            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
-             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1']),
+            DOCTESTS, COMMON_OPTIONS + ES_5),
     Options('doctests-es5.1-debug',
-            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1'])
+            DOCTESTS, COMMON_OPTIONS + DEBUG + ES_5)
 ]
 
+COMMON_SNAPSHOT_OPTIONS = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
     Options('jerry_tests'),
     Options('jerry_tests-debug',
-            ['--debug']),
+            DEBUG),
     Options('jerry_tests-debug-cpointer_32bit',
-            ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
+            DEBUG + ['--cpointer-32bit=on', '--mem-heap=1024']),
     Options('jerry_tests-snapshot',
-            ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            COMMON_SNAPSHOT_OPTIONS,
             ['--snapshot']),
     Options('jerry_tests-debug-snapshot',
-            ['--debug', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            DEBUG + COMMON_SNAPSHOT_OPTIONS,
             ['--snapshot']),
     Options('jerry_tests-es2015_subset-debug',
-            ['--debug', '--profile=es2015-subset']),
+            DEBUG + ES_2015),
     Options('jerry_tests-es5.1-debug',
-            ['--debug', '--profile=es5.1']),
+            DEBUG + ES_5),
     Options('jerry_tests-debug-external_context',
             ['--debug', '--jerry-libc=off', '--external-context=on'])
 ]
+
+# Variables for jerry-test-suite options
+MINIMAL = ['--profile=minimal']
+SNAPSHOT = ['--snapshot']
 
 # Test options for jerry-test-suite
 JERRY_TEST_SUITE_OPTIONS = JERRY_TESTS_OPTIONS[:]
 JERRY_TEST_SUITE_OPTIONS.extend([
     Options('jerry_test_suite-minimal',
-            ['--profile=minimal']),
+            MINIMAL),
     Options('jerry_test_suite-minimal-snapshot',
-            ['--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
+            MINIMAL + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT),
     Options('jerry_test_suite-minimal-debug',
-            ['--debug', '--profile=minimal']),
+            DEBUG + MINIMAL),
     Options('jerry_test_suite-minimal-debug-snapshot',
-            ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
+            DEBUG + MINIMAL + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT),
     Options('jerry_test_suite-es2015_subset',
-            ['--profile=es2015-subset']),
+            ES_2015),
     Options('jerry_test_suite-es2015_subset-snapshot',
-            ['--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
+            ES_2015 + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT),
     Options('jerry_test_suite-es2015_subset-debug-snapshot',
-            ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
+            DEBUG + ES_2015 + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT),
     Options('jerry_test_suite_es5.1',
-            ['--profile=es5.1']),
+            ES_5),
     Options('jerry_test_suite-es5.1-snapshot',
-            ['--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
+            ES_5 + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT),
     Options('jerry_test_suite-es5.1-debug-snapshot',
-            ['--debug', '--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
-            ['--snapshot'])
+            DEBUG + ES_5 + COMMON_SNAPSHOT_OPTIONS,
+            SNAPSHOT)
 ])
 
 # Test options for test262

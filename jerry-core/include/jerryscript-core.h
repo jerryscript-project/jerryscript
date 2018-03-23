@@ -90,6 +90,11 @@ typedef enum
   JERRY_FEATURE_SNAPSHOT_EXEC, /**< executing snapshot files */
   JERRY_FEATURE_DEBUGGER, /**< debugging */
   JERRY_FEATURE_VM_EXEC_STOP, /**< stopping ECMAScript execution */
+  JERRY_FEATURE_JSON, /**< JSON support */
+  JERRY_FEATURE_PROMISE, /**< promise support */
+  JERRY_FEATURE_TYPEDARRAY, /**< Typedarray support */
+  JERRY_FEATURE_DATE, /**< Date support */
+  JERRY_FEATURE_REGEXP, /**< Regexp support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 

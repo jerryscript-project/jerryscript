@@ -44,7 +44,19 @@ JERRY_UNITTESTS_OPTIONS = [
              '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
     Options('doctests-debug',
             ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset'])
+             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+    Options('unittests-es5.1',
+            ['--unittests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
+             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1', '--mem-stats=on']),
+    Options('unittests-es5.1-debug',
+            ['--unittests', '--jerry-cmdline=off', '--debug', '--error-messages=on', '--snapshot-save=on',
+             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1', '--mem-stats=on']),
+    Options('doctests-es5.1',
+            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
+             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1']),
+    Options('doctests-es5.1-debug',
+            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
+             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1'])
 ]
 
 # Test options for jerry-tests
@@ -62,6 +74,8 @@ JERRY_TESTS_OPTIONS = [
             ['--snapshot']),
     Options('jerry_tests-es2015_subset-debug',
             ['--debug', '--profile=es2015-subset']),
+    Options('jerry_tests-es5.1-debug',
+            ['--debug', '--profile=es5.1']),
     Options('jerry_tests-debug-external_context',
             ['--debug', '--jerry-libc=off', '--external-context=on'])
 ]
@@ -77,7 +91,8 @@ JERRY_TEST_SUITE_OPTIONS.extend([
     Options('jerry_test_suite-minimal-debug',
             ['--debug', '--profile=minimal']),
     Options('jerry_test_suite-minimal-debug-snapshot',
-            ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on',
+             '--jerry-cmdline-snapshot=on'],
             ['--snapshot']),
     Options('jerry_test_suite-es2015_subset',
             ['--profile=es2015-subset']),
@@ -86,6 +101,15 @@ JERRY_TEST_SUITE_OPTIONS.extend([
             ['--snapshot']),
     Options('jerry_test_suite-es2015_subset-debug-snapshot',
             ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on',
+             '--jerry-cmdline-snapshot=on'],
+            ['--snapshot']),
+    Options('jerry_test_suite_es5.1',
+            ['--profile=es5.1']),
+    Options('jerry_test_suite-es5.1-snapshot',
+            ['--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            ['--snapshot']),
+    Options('jerry_test_suite-es5.1-debug-snapshot',
+            ['--debug', '--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on',
              '--jerry-cmdline-snapshot=on'],
             ['--snapshot'])
 ])

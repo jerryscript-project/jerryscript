@@ -55,14 +55,6 @@ JERRY_STATIC_ASSERT ((int) ECMA_DIRECT_STRING_UINT == (int) ECMA_STRING_CONTAINE
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_NAME_TYPE_SHIFT > ECMA_VALUE_SHIFT,
                      ecma_property_name_type_shift_must_be_greater_than_ecma_value_shift);
 
-/**
- * Checks whether the string is direct
- */
-static inline bool __attr_always_inline___
-ecma_is_string_direct (ecma_string_t *string_p)
-{
-  return (((uintptr_t) string_p) & 0x1) != 0;
-} /* ecma_is_string_direct */
 
 /**
  * Convert a string to an unsigned 32 bit value if possible

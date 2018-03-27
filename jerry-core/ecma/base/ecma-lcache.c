@@ -134,27 +134,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 
-/**
- * Converts a string into a property name
- *
- * @return the compressed pointer part of the name
- */
-static inline jmem_cpointer_t __attr_always_inline___
-ecma_string_to_lcache_property_name (const ecma_string_t *prop_name_p, /**< property name */
-                                     ecma_property_t *name_type_p) /**< [out] property name type */
-{
-  if (ECMA_IS_DIRECT_STRING (prop_name_p))
-  {
-    *name_type_p = (ecma_property_t) ECMA_GET_DIRECT_STRING_TYPE (prop_name_p);
-    return (jmem_cpointer_t) ECMA_GET_DIRECT_STRING_VALUE (prop_name_p);
-  }
 
-  *name_type_p = ECMA_DIRECT_STRING_PTR;
-
-  jmem_cpointer_t prop_name_cp;
-  ECMA_SET_NON_NULL_POINTER (prop_name_cp, prop_name_p);
-  return prop_name_cp;
-} /* ecma_string_to_lcache_property_name */
 
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 

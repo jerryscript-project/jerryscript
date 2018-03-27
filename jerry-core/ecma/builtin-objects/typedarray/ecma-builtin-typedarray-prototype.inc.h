@@ -45,6 +45,10 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
 
+/* Routine properties:
+ *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_typedarray_prototype_object_to_string, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_JOIN,  ecma_builtin_typedarray_prototype_join, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_EVERY, ecma_builtin_typedarray_prototype_every, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_typedarray_prototype_some, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_typedarray_prototype_for_each, 2, 1)

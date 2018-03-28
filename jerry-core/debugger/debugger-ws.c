@@ -24,6 +24,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+/* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
+
+/**
+ * Last fragment of a Websocket package.
+ */
+#define JERRY_DEBUGGER_WEBSOCKET_FIN_BIT 0x80
+
 /**
  * Masking-key is available.
  */
@@ -420,9 +427,12 @@ jerry_debugger_close_connection (void)
  * @return true - if the data was sent successfully to the debugger client,
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+bool
 jerry_debugger_send (size_t data_size) /**< data size */
 {
+  jerry_debugger_send_type_t *message_p = (jerry_debugger_send_type_t *) JERRY_CONTEXT (debugger_send_buffer);
+  message_p->header.ws_opcode = JERRY_DEBUGGER_WEBSOCKET_FIN_BIT | JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME;
+  message_p->header.size = (uint8_t) (data_size - sizeof (jerry_debugger_send_header_t));
   return jerry_debugger_send_tcp (JERRY_CONTEXT (debugger_send_buffer), data_size);
 } /* jerry_debugger_send */
 

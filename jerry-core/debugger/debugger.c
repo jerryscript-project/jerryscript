@@ -136,14 +136,15 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the recei
 } /* jerry_debugger_send_backtrace */
 
 /**
- * Send result of evaluated expression.
+ * Send result of evaluated expression or throw an error.
  *
  * @return true - if no error is occured
  *         false - otherwise
  */
 static bool
-jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated string */
-                          size_t eval_string_size) /**< evaluated string size */
+jerry_debugger_send_eval_or_throw (const lit_utf8_byte_t *eval_string_p, /**< evaluated string */
+                                   size_t eval_string_size, /**< evaluated string size */
+                                   bool *is_eval) /**< [in,out] throw or eval call */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
   JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
@@ -154,11 +155,21 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
   if (!ECMA_IS_VALUE_ERROR (result))
   {
+    if (!*is_eval)
+    {
+      JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_THROW_ERROR_FLAG);
+      JERRY_CONTEXT (error_value) = result;
+      JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_STOP);
+      JERRY_CONTEXT (debugger_stop_context) = NULL;
+      return true;
+    }
+
     ecma_value_t to_string_value = ecma_op_to_string (result);
     ecma_free_value (result);
     result = to_string_value;
   }
 
+  *is_eval = true;
   ecma_value_t message = result;
   uint8_t type = JERRY_DEBUGGER_EVAL_OK;
 
@@ -205,7 +216,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   ecma_free_value (message);
 
   return success;
-} /* jerry_debugger_send_eval */
+} /* jerry_debugger_send_eval_or_throw */
 
 /**
  * Suspend execution for a given time.
@@ -254,6 +265,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
   if (*expected_message_type_p != 0)
   {
     JERRY_ASSERT (*expected_message_type_p == JERRY_DEBUGGER_EVAL_PART
+                  || *expected_message_type_p == JERRY_DEBUGGER_THROW_PART
                   || *expected_message_type_p == JERRY_DEBUGGER_CLIENT_SOURCE_PART);
 
     jerry_debugger_uint8_data_t *uint8_data_p = (jerry_debugger_uint8_data_t *) *message_data_p;
@@ -300,9 +312,19 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     }
 
     bool result = false;
+    bool is_eval = true;
     if (*expected_message_type_p == JERRY_DEBUGGER_EVAL_PART)
     {
-      result = jerry_debugger_send_eval (string_p, uint8_data_p->uint8_size);
+      result = jerry_debugger_send_eval_or_throw (string_p, uint8_data_p->uint8_size, &is_eval);
+    }
+    else if (*expected_message_type_p == JERRY_DEBUGGER_THROW_PART)
+    {
+      is_eval = false;
+      result = jerry_debugger_send_eval_or_throw (string_p, uint8_data_p->uint8_size, &is_eval);
+      if (!is_eval)
+      {
+        *resume_exec_p = true;
+      }
     }
     else
     {
@@ -499,6 +521,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     }
 
     case JERRY_DEBUGGER_EVAL:
+    case JERRY_DEBUGGER_THROW:
     {
       if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
       {
@@ -511,6 +534,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
       uint32_t eval_size;
       memcpy (&eval_size, eval_first_p->eval_size, sizeof (uint32_t));
+      bool is_eval = (recv_buffer_p[0] == JERRY_DEBUGGER_EVAL);
 
       if (eval_size <= JERRY_DEBUGGER_MAX_RECEIVE_SIZE - sizeof (jerry_debugger_receive_eval_first_t))
       {
@@ -520,8 +544,13 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
           jerry_debugger_close_connection ();
           return false;
         }
+        bool ret_val = jerry_debugger_send_eval_or_throw ((lit_utf8_byte_t *) (eval_first_p + 1), eval_size, &is_eval);
+        if (!is_eval)
+        {
+          *resume_exec_p = true;
+        }
 
-        return jerry_debugger_send_eval ((lit_utf8_byte_t *) (eval_first_p + 1), eval_size);
+        return ret_val;
       }
 
       jerry_debugger_uint8_data_t *eval_uint8_data_p;
@@ -538,7 +567,8 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
               message_size - sizeof (jerry_debugger_receive_eval_first_t));
 
       *message_data_p = eval_uint8_data_p;
-      *expected_message_type_p = JERRY_DEBUGGER_EVAL_PART;
+      *expected_message_type_p = is_eval ? JERRY_DEBUGGER_EVAL_PART : JERRY_DEBUGGER_THROW_PART;
+
       return true;
     }
 

@@ -2530,6 +2530,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->byte_code_p = byte_code_start_p;
 
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
+          {
+            result = JERRY_CONTEXT (error_value);
+            goto error;
+          }
 #endif /* JERRY_DEBUGGER */
           continue;
         }
@@ -2552,6 +2557,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                   || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
           {
             jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+            if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
+            {
+              result = JERRY_CONTEXT (error_value);
+              goto error;
+            }
             continue;
           }
 
@@ -2573,6 +2583,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                   || JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p)))
           {
             jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
+            if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
+            {
+              result = JERRY_CONTEXT (error_value);
+              goto error;
+            }
           }
 #endif /* JERRY_DEBUGGER */
           continue;
@@ -2712,9 +2727,20 @@ error:
           && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
           && !(JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION | JERRY_DEBUGGER_VM_IGNORE)))
       {
+        /* Save the error to a local value, because the engine enters breakpoint mode after,
+           therefore an evaluation error, or user-created error throw would overwrite it. */
+        ecma_value_t current_error_value = JERRY_CONTEXT (error_value);
         if (jerry_debugger_send_exception_string ())
         {
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+          if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
+          {
+            ecma_free_value (current_error_value);
+          }
+          else
+          {
+            JERRY_CONTEXT (error_value) = current_error_value;
+          }
         }
       }
 #endif /* JERRY_DEBUGGER */

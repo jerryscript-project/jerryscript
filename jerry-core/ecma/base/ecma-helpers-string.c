@@ -1458,14 +1458,13 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
 
         size = lit_get_magic_string_ex_size (id);
+        result_p = lit_get_magic_string_ex_utf8 (id);
         length = 0;
 
         if (unlikely (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
         {
-          length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id), size);
+          length = lit_utf8_string_length (result_p, size);
         }
-
-        result_p = lit_get_magic_string_ex_utf8 (id);
         break;
       }
     }

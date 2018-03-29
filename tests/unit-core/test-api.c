@@ -1118,6 +1118,15 @@ main (void)
 
   jerry_release_value (args[0]);
 
+  const char *test_magic_str_access_src_p = "'console'.charAt(6) == 'e'";
+  res = jerry_eval ((const jerry_char_t *) test_magic_str_access_src_p,
+                    strlen (test_magic_str_access_src_p),
+                    false);
+  TEST_ASSERT (jerry_value_is_boolean (res));
+  TEST_ASSERT (jerry_get_boolean_value (res) == true);
+
+  jerry_release_value (res);
+
   cesu8_length = jerry_get_string_length (args[1]);
   cesu8_sz = jerry_get_string_size (args[1]);
 

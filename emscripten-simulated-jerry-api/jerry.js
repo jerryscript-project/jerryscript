@@ -295,6 +295,20 @@
       return shouldUseStrict ? '"use strict";\n' : '';
     },
 
+    /* EM_ASM chokes on object literals... :( */
+    typedArrayConstructorByTypeNameMap: {
+       // These values MUST match the jerry_typedarray_type_t enum in jerryscript-core.h:
+       1: Uint8Array,          /* JERRY_TYPEDARRAY_UINT8, */
+       2: Uint8ClampedArray,   /* JERRY_TYPEDARRAY_UINT8CLAMPED, */
+       3: Int8Array,           /* JERRY_TYPEDARRAY_INT8, */
+       4: Uint16Array,         /* JERRY_TYPEDARRAY_UINT16, */
+       5: Int16Array,          /* JERRY_TYPEDARRAY_INT16, */
+       6: Uint32Array,         /* JERRY_TYPEDARRAY_UINT32, */
+       7: Int32Array,          /* JERRY_TYPEDARRAY_INT32, */
+       8: Float32Array,        /* JERRY_TYPEDARRAY_FLOAT32, */
+       9: Float64Array,        /* JERRY_TYPEDARRAY_FLOAT64, */
+    },
+
     create_external_function: function (function_ptr) {
       var f = function () {
         var nativeHandlerArgs = [

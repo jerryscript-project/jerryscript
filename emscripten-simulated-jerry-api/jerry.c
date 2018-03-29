@@ -39,7 +39,7 @@ jerry_get_arg_value (jerry_value_t value) /**< return value */
 {
   return (jerry_value_t) EM_ASM_INT (
     {
-      return __jerry.getArgValueRef($0);
+      return __jerry.getArgValueRef ($0);
     }
     , value);
 } /* jerry_get_arg_value */
@@ -63,7 +63,7 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
 {
   return (jerry_value_t) EM_ASM_INT (
     {
-      /* jerry_eval() uses an indirect eval() call,
+      /* jerry_eval () uses an indirect eval () call,
        * so the global execution context is used.
        * Also see ECMA 5.1 -- 10.4.2 Entering Eval Code.*/
       var indirectEval = eval;
@@ -75,7 +75,7 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
     }
     , source_p, source_size, is_strict);
@@ -133,7 +133,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
     }
     , source_p, source_size, is_strict);
@@ -166,14 +166,14 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
       try
       {
         new Function (strictCommentAndSource);
-        var funcStr = "(function(" + args + "){" + strictCommentAndSource + "})";
+        var funcStr = "(function (" + args + "){" + strictCommentAndSource + "})";
         var indirectEval = eval;
         var f = indirectEval (funcStr);
         return __jerry.ref (f);
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
     }
     , arg_list_p, arg_list_size, source_p, source_size, is_strict);
@@ -226,7 +226,7 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       };
     }
     , func_val);
@@ -689,7 +689,7 @@ jerry_substring_to_utf8_char_buffer (const jerry_value_t val, /**< input string 
   return (jerry_size_t) EM_ASM_INT (
     {
       var str = __jerry.get ($0);
-      /* String.prototype.slice()'s beginIndex/endIndex arguments aren't
+      /* String.prototype.slice ()'s beginIndex/endIndex arguments aren't
        * Unicode codepoint positions: surrogates are counted separately... */
       var utf8Pos = 0;
       var utf16StartPos;
@@ -895,7 +895,7 @@ jerry_value_t jerry_create_error (jerry_error_t error_type,
 } /* jerry_create_error */
 
 #define JERRY_ERROR(type, msg, sz) (jerry_value_t) (EM_ASM_INT ({ \
-    return __jerry.ref(new (type)(Module.Pointer_stringify($0, $1))) \
+    return __jerry.ref (new (type)(Module.Pointer_stringify($0, $1))) \
   }, (msg), (sz)))
 
 jerry_value_t jerry_create_error_sz (jerry_error_t error_type,
@@ -1160,7 +1160,7 @@ jerry_value_t jerry_get_property (const jerry_value_t obj_value,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (rv);
     }
@@ -1184,7 +1184,7 @@ jerry_value_t jerry_get_property_by_index (const jerry_value_t obj_value,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (rv);
     }
@@ -1214,7 +1214,7 @@ jerry_value_t jerry_set_property (const jerry_value_t obj_value,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (true);
     }
@@ -1241,7 +1241,7 @@ jerry_value_t jerry_set_property_by_index (const jerry_value_t obj_value,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (true);
     }
@@ -1489,7 +1489,7 @@ jerry_value_t jerry_call_function (const jerry_value_t func_obj_val,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (rv);
     }
@@ -1510,7 +1510,7 @@ jerry_value_t jerry_construct_object (const jerry_value_t func_obj_val,
       var args =[];
       for (var i = 0; i < $2; ++i)
       {
-        args.push (__jerry.get (getValue ($1 + (i * 4 /* sizeof(i32) */), 'i32')));
+        args.push (__jerry.get (getValue ($1 + (i * 4 /* sizeof (i32) */), 'i32')));
       }
       /* Call the constructor with new object as `this`. */
       var bindArgs =[null].concat (args);
@@ -1521,7 +1521,7 @@ jerry_value_t jerry_construct_object (const jerry_value_t func_obj_val,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (rv);
     }
@@ -1709,7 +1709,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_value, /**< object to g
     , obj_val, out_native_pointer_p, out_native_info_p);
 } /* jerry_get_object_native_pointer */
 
-static bool __attribute__((used))
+static bool __attribute__ ((used))
 _jerry_call_foreach_cb (jerry_object_property_foreach_t foreach_p,
                         const jerry_value_t property_name,
                         const jerry_value_t property_value,
@@ -1787,7 +1787,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise,
       }
       catch (e)
       {
-        return __jerry.setErrorByValue(e);
+        return __jerry.setErrorByValue (e);
       }
       return __jerry.ref (rv);
     }
@@ -1795,7 +1795,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise,
   );
 } /* jerry_resolve_or_reject_promise */
 
-static void __attribute__((used))
+static void __attribute__ ((used))
 _jerry_call_native_object_free_callbacks (const jerry_object_native_info_t *native_info_p,
                                           void *native_pointer_p,
                                           jerry_object_free_callback_t native_handle_freecb_p,
@@ -1828,6 +1828,18 @@ bool jerry_value_has_error_flag (const jerry_value_t value)
     , value));
 } /* jerry_value_has_error_flag */
 
+bool
+jerry_value_has_abort_flag (const jerry_value_t value) /**< api value */
+{
+  EM_ASM (
+      {
+          throw new Error ("jerry_value_has_abort_flag () is not implemented");
+      }
+  );
+  JERRY_UNUSED (value);
+  return false;
+} /* jerry_value_has_abort_flag */
+
 void jerry_value_clear_error_flag (jerry_value_t *value_p)
 {
   *value_p = (jerry_value_t) EM_ASM_INT (
@@ -1846,6 +1858,17 @@ void jerry_value_set_error_flag (jerry_value_t *value_p)
     , *value_p);
 } /* jerry_value_set_error_flag */
 
+void
+jerry_value_set_abort_flag (jerry_value_t *value_p)
+{
+  EM_ASM (
+      {
+          throw new Error ("jerry_value_set_abort_flag () is not implemented");
+      }
+  );
+  JERRY_UNUSED (value_p);
+} /* jerry_value_set_abort_flag */
+
 jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value)
 {
   return (jerry_value_t) (EM_ASM_INT (
@@ -1853,7 +1876,46 @@ jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value)
       return __jerry.getRefFromError ($0);
     }
     , value));
-} /* jerry_value_set_error_flag */
+} /* jerry_get_value_without_error_flag */
+
+jerry_error_t
+jerry_get_error_type (const jerry_value_t value) /**< api value */
+{
+  jerry_value_t object = jerry_get_arg_value (value);
+  return (jerry_error_t) EM_ASM_INT (
+    {
+      var value = __jerry.get ($0);
+      if (value === null || value === undefined)
+      {
+        return 0;
+      }
+      if (!__jerry.hasProto)
+      {
+        throw new Error ('Not implemented, host engine does not implement __proto__.');
+      }
+
+      switch (value.__proto__)
+      {
+        case Error.prototype:
+          return 1;
+        case EvalError.prototype:
+          return 2;
+        case RangeError.prototype:
+          return 3;
+        case ReferenceError.prototype:
+          return 4;
+        case SyntaxError.prototype:
+          return 5;
+        case TypeError.prototype:
+          return 6;
+        case URIError.prototype;
+          return 7;
+        default:
+          return 0;
+      }
+    }
+    , object);
+} /* jerry_get_error_type */
 
 /*************************************
  * Converters of `jerry_value_t`
@@ -2040,10 +2102,301 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 {
   EM_ASM (
     {
-      console.warn ("jerry_set_vm_exec_stop_callback() is not implemented, ignoring the call.");
+      console.warn ("jerry_set_vm_exec_stop_callback () is not implemented, ignoring the call.");
     }
   );
   JERRY_UNUSED (stop_cb);
   JERRY_UNUSED (user_p);
   JERRY_UNUSED (frequency);
 } /* jerry_set_vm_exec_stop_callback */
+
+bool
+jerry_value_is_arraybuffer (const jerry_value_t value) /**< value to check if it is an ArrayBuffer */
+{
+  jerry_value_t buffer = jerry_get_arg_value (value);
+  return (bool) EM_ASM_INT (
+    {
+      var val = __jerry.get ($0);
+      return val instanceof ArrayBuffer;
+    }
+    ,
+    buffer);
+} /* jerry_value_is_arraybuffer */
+
+jerry_value_t
+jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffer to create */
+{
+  return (jerry_value_t) EM_ASM_INT (
+    {
+      var val = new ArrayBuffer ($0);
+      return __jerry.ref (val);
+    }
+    ,
+    size);
+} /* jerry_create_arraybuffer */
+
+jerry_value_t
+jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
+                                   uint8_t *buffer_p, /**< buffer to use as the ArrayBuffer's backing */
+                                   jerry_object_native_free_callback_t free_cb) /**< buffer free callback */
+{
+  EM_ASM (
+    {
+      throw new Error ("jerry_create_arraybuffer_external () is not implemented!");
+    }
+  );
+  JERRY_UNUSED (size);
+  JERRY_UNUSED (buffer_p);
+  JERRY_UNUSED (free_cb);
+  return jerry_create_undefined ();
+} /* jerry_create_arraybuffer_external */
+
+/**
+ * Copy bytes into the ArrayBuffer from a buffer.
+ *
+ * Note:
+ *     * if the object passed is not an ArrayBuffer will return 0.
+ *
+ * @return number of bytes copied into the ArrayBuffer.
+ */
+jerry_length_t
+jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer */
+                         jerry_length_t offset, /**< start offset of the ArrayBuffer */
+                         const uint8_t *buf_p, /**< buffer to copy from */
+                         jerry_length_t buf_size) /**< number of bytes to copy from the buffer */
+{
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  return (jerry_length_t) EM_ASM_INT (
+    {
+      var buffer = __jerry.get ($0);
+      var offset = $1;
+      var bufPtr = $2;
+      var bufSize = $3;
+      if (false === buffer instanceof ArrayBuffer)
+      {
+        return 0;
+      }
+      var length = buffer.byteLength;
+      if (offset >= length)
+      {
+        return 0;
+      }
+      var copyCount = Math.min (length - offset, bufSize);
+      if (copyCount > 0)
+      {
+        var dest = new Uint8Array (buffer);
+        var src = Module.HEAPU8.subarray (bufPtr, bufPtr + copyCount);
+        dest.set (src, offset);
+      }
+      return copyCount;
+    }
+    ,
+    buffer, offset, buf_p, buf_size);
+} /* jerry_arraybuffer_write */
+
+/**
+ * Copy bytes from a buffer into an ArrayBuffer.
+ *
+ * Note:
+ *     * if the object passed is not an ArrayBuffer will return 0.
+ *
+ * @return number of bytes read from the ArrayBuffer.
+ */
+jerry_length_t
+jerry_arraybuffer_read (const jerry_value_t value, /**< ArrayBuffer to read from */
+                        jerry_length_t offset, /**< start offset of the ArrayBuffer */
+                        uint8_t *buf_p, /**< destination buffer to copy to */
+                        jerry_length_t buf_size) /**< number of bytes to copy into the buffer */
+{
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  return (jerry_length_t) EM_ASM_INT (
+    {
+      var buffer = __jerry.get ($0);
+      var offset = $1;
+      var bufPtr = $2;
+      var bufSize = $3;
+      if (false === buffer instanceof ArrayBuffer)
+      {
+        return 0;
+      }
+      var length = buffer.byteLength;
+      if (offset >= length)
+      {
+        return 0;
+      }
+      var copyCount = Math.min (length - offset, bufSize);
+      if (copyCount > 0)
+      {
+        var src = new Uint8Array (buffer, offset, copyCount);
+        Module.HEAPU8.set (src, bufPtr);
+      }
+      return copyCount;
+    }
+    ,
+    buffer, offset, buf_p, buf_size);
+} /* jerry_arraybuffer_read */
+
+jerry_length_t
+jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer */
+{
+  jerry_value_t buffer = jerry_get_arg_value (value);
+
+  return (jerry_length_t) EM_ASM_INT (
+    {
+      var buffer = __jerry.get ($0);
+      if (false === buffer instanceof ArrayBuffer)
+      {
+        return 0;
+      }
+      return buffer.byteLength;
+    }
+    ,
+    buffer);
+} /* jerry_get_arraybuffer_byte_length */
+
+uint8_t *
+jerry_get_arraybuffer_pointer (const jerry_value_t value) /**< Array Buffer to use */
+{
+  EM_ASM (
+    {
+      throw new Error ("jerry_get_arraybuffer_pointer () is not implemented!");
+    }
+  );
+  JERRY_UNUSED (value);
+  return NULL;
+} /* jerry_get_arraybuffer_pointer */
+
+bool
+jerry_value_is_typedarray (jerry_value_t value) /**< value to check if it is a TypedArray */
+{
+  jerry_value_t array = jerry_get_arg_value (value);
+
+  return (bool) EM_ASM_INT (
+    {
+      var array = __jerry.get ($0);
+      return (array instanceof Object.getPrototypeOf (Uint8Array));
+    }
+    ,
+    array);
+} /* jerry_value_is_typedarray */
+
+// Disgusting hack
+#define ONLY_LENGTH_VALUE (0)
+
+jerry_value_t
+jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                         jerry_length_t length) /**< element count of the new TypedArray */
+{
+  return jerry_create_typedarray_for_arraybuffer_sz (type_name, ONLY_LENGTH_VALUE, 0, length);
+} /* jerry_create_typedarray */
+
+jerry_value_t
+jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                                            const jerry_value_t arraybuffer, /**< ArrayBuffer to use */
+                                            jerry_length_t byte_offset, /**< offset for the ArrayBuffer */
+                                            jerry_length_t length) /**< number of elements to use from ArrayBuffer */
+{
+  const bool only_length = (arraybuffer == ONLY_LENGTH_VALUE);
+  jerry_value_t buffer = only_length ? jerry_create_undefined () : jerry_get_arg_value (arraybuffer);
+
+  return (jerry_value_t) EM_ASM_INT (
+    {
+      var Ctor = __jerry.typedArrayConstructorByTypeNameMap[$0];
+      if (!Ctor)
+      {
+        return __jerry.setErrorByValue (new TypeError ("incorrect type for TypedArray."));
+      }
+      var onlyLength = $4;
+      var buffer = __jerry.get ($1);
+      var byteOffset = $2;
+      var length = $3;
+      if (onlyLength)
+      {
+        return __jerry.ref (new Ctor (length));
+      }
+      else if (!(buffer instanceof ArrayBuffer))
+      {
+        return __jerry.setErrorByValue (new TypeError ("Argument is not an ArrayBuffer"));
+      }
+      return __jerry.ref (new Ctor (buffer, byteOffset, length));
+    }
+    ,
+    type_name, buffer, byte_offset, length, only_length);
+} /* jerry_create_typedarray_for_arraybuffer_sz */
+
+jerry_value_t
+jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**< type of TypedArray to create */
+                                         const jerry_value_t arraybuffer) /**< ArrayBuffer to use */
+{
+  jerry_length_t byteLength = jerry_get_arraybuffer_byte_length (arraybuffer);
+  return jerry_create_typedarray_for_arraybuffer_sz (type_name, arraybuffer, 0, byteLength);
+} /* jerry_create_typedarray_for_arraybuffer */
+
+jerry_typedarray_type_t
+jerry_get_typedarray_type (jerry_value_t value) /**< object to get the TypedArray type */
+{
+  jerry_value_t array = jerry_get_arg_value (value);
+
+  return (jerry_value_t) EM_ASM_INT (
+    {
+      var array = __jerry.get ($0);
+      var constructorByTypeNameMap = __jerry.typedArrayConstructorByTypeNameMap;
+      for (var typeName in constructorByTypeNameMap)
+      {
+        if (array instanceof constructorByTypeNameMap[typeName])
+        {
+          return typeName;
+        }
+      }
+      return 0;
+    }
+    ,
+    array);
+} /* jerry_get_typedarray_type */
+
+jerry_length_t
+jerry_get_typedarray_length (jerry_value_t value) /**< TypedArray to query */
+{
+  jerry_value_t array = jerry_get_arg_value (value);
+
+  return (jerry_length_t) EM_ASM_INT (
+    {
+      var array = __jerry.get ($0);
+      return (array instanceof Object.getPrototypeOf (Uint8Array)) ? array.length : 0;
+    }
+    ,
+    array);
+} /* jerry_get_typedarray_length */
+
+jerry_value_t
+jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arraybuffer from */
+                             jerry_length_t *byte_offset, /**< [out] byteOffset property */
+                             jerry_length_t *byte_length) /**< [out] byteLength property */
+{
+  jerry_value_t array = jerry_get_arg_value (value);
+
+  return (jerry_length_t) EM_ASM_INT (
+    {
+      var array = __jerry.get ($0);
+      var byteOffsetPtr = $1;
+      var byteLengthPtr = $2;
+      if (!(array instanceof Object.getPrototypeOf (Uint8Array)))
+      {
+        return __jerry.setErrorByValue (new TypeError ("Object is not a TypedArray."));
+      }
+      var buffer = array.buffer;
+      if (0 !== byteOffsetPtr)
+      {
+        Module.setValue (byteOffsetPtr, array.byteOffset, 'i32');
+      }
+      if (0 !== byteLengthPtr)
+      {
+        Module.setValue (byteLengthPtr, array.byteLength, 'i32');
+      }
+      return __jerry.ref (buffer);
+    }
+    ,
+    array, byte_offset, byte_length);
+} /* jerry_get_typedarray_buffer */

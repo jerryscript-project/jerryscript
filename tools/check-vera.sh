@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-EMSCRIPTEN_SIM_FILES=`find ./emscripten-simulated-jerry-api -name "*.c" -or -name "*.h"`
 JERRY_CORE_FILES=`find ./jerry-core -name "*.c" -or -name "*.h"`
 JERRY_EXT_FILES=`find ./jerry-ext -name "*.c" -or -name "*.h"`
 JERRY_PORT_FILES=`find ./jerry-port -name "*.c" -or -name "*.h"`
@@ -22,6 +21,7 @@ JERRY_LIBC_FILES=`find ./jerry-libc -name "*.c" -or -name "*.h"`
 JERRY_LIBM_FILES=`find ./jerry-libm -name "*.c" -or -name "*.h"`
 JERRY_MAIN_FILES=`find ./jerry-main -name "*.c" -or -name "*.h"`
 UNIT_TEST_FILES=`find ./tests/unit-* -name "*.c" -or -name "*.h"`
+EMSCRIPTEN_SIM_FILES=`find ./emscripten-simulated-jerry-api -name "*.c" -or -name "*.h" -not -path "*/node_modules/*"`
 
 if [ -n "$1" ]
 then

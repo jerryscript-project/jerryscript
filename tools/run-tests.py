@@ -381,7 +381,10 @@ def run_unittests(options):
 
 def run_emx_unittests(options):
     ret_build = ret_test = 0
-    options.buildoptions = "--emscripten-simulated-jerry-api=ON"
+    if options.buildoptions:
+        options.buildoptions += ",--emscripten-simulated-jerry-api=ON"
+    else:
+        options.buildoptions = "--emscripten-simulated-jerry-api=ON"
     for job in JERRY_EMX_UNITTESTS_OPTIONS:
         ret_build, bin_dir_path = create_binary(job, options)
         if ret_build:

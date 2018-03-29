@@ -266,6 +266,8 @@ main (void)
     jerry_release_value (arraybuffer);
   }
 
+  // external buffers are currently not implemented for emx:
+#ifndef EMSCRIPTEN
   /* Test ArrayBuffer with buffer allocated externally */
   {
     const uint32_t buffer_size = 15;
@@ -369,8 +371,12 @@ main (void)
     TEST_ASSERT (jerry_get_error_type (input_buffer) == JERRY_ERROR_RANGE);
     jerry_release_value (input_buffer);
   }
+#endif /* EMSCRIPTEN */
 
   jerry_cleanup ();
 
+  // external buffers are currently not implemented for emx:
+#ifndef EMSCRIPTEN
   TEST_ASSERT (callback_called == true);
+#endif /* EMSCRIPTEN */
 } /* main */

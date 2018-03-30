@@ -1908,7 +1908,7 @@ jerry_get_error_type (const jerry_value_t value) /**< api value */
           return 5;
         case TypeError.prototype:
           return 6;
-        case URIError.prototype;
+        case URIError.prototype:
           return 7;
         default:
           return 0;

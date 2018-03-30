@@ -61,8 +61,4 @@ echo "Activating $EMSDK_USE_VERSION..."
 echo "Sourcing $EMSDK/emsdk_env.sh..."
 source $EMSDK/emsdk_env.sh
 
-echo "Install node module weak"
-cd $JERRYSCRIPT_ROOT
-npm install weak
-
 echo "Jobs done."

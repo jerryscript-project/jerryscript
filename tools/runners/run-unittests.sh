@@ -77,7 +77,7 @@ do
     runtime=
     if [[ $unit_test =~ \.js$ ]]
     then
-        runtime="node --expose-gc"
+        runtime="${EMX_JERRY_NODE:-node} --expose-gc"
     fi
     $runtime $unit_test &>$UNITTEST_TEMP
     status_code=$?

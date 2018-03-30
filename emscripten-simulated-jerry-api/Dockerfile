@@ -23,8 +23,12 @@ RUN apt-get install -q -y \
     # emsdk depends on git
     git
 
-# Install Node 6.x
-RUN curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash - && \
+# Install Node 7.x
+# 6.14.1 is the minimum for correct TypedArray support, but let's install
+# a slightly newer one.
+RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && \
     sudo apt-get install -y nodejs
+
+RUN cd ${JERRYSCRIPT_ROOT} && npm install weak
 
 RUN ${JERRYSCRIPT_ROOT}/tools/prepare-emx.sh

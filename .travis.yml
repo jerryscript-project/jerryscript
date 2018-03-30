@@ -59,7 +59,10 @@ matrix:
         - docker build . -t jerryscript
         - docker build emscripten-simulated-jerry-api -t jerryscript-emx
       script:
-        - docker run jerryscript-emx bash -c "source /root/emsdk/emsdk_env.sh && /jerryscript/tools/run-tests.py --emx-unittests"
+        # Stash the location of the newer Node.js into EMX_JERRY_NODE. emsdk_env.sh will add really (v4) Node.js to the
+        # path, which is too old to actually execute and pass the unit tests because it's missing support for ES2015
+        # TypedArray and ArrayBuffer.
+        - docker run jerryscript-emx bash -c "export EMX_JERRY_NODE=`which node` && source /root/emsdk/emsdk_env.sh && /jerryscript/tools/run-tests.py --emx-unittests"
     - compiler: gcc-5
       addons:
         apt:

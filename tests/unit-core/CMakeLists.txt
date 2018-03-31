@@ -27,6 +27,7 @@ endif()
 file(GLOB SOURCE_UNIT_TEST_MAIN_API_MODULES api/*.c)
 
 if(EMSCRIPTEN_SIMULATED_JERRY_API)
+  list(REMOVE_ITEM SOURCE_UNIT_TEST_MAIN_API_MODULES ${CMAKE_SOURCE_DIR}/tests/unit-core/api/test-abort.c)
   list(REMOVE_ITEM SOURCE_UNIT_TEST_MAIN_API_MODULES ${CMAKE_SOURCE_DIR}/tests/unit-core/api/test-snapshot.c)
 endif()
 

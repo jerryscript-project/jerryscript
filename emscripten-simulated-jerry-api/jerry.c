@@ -2036,7 +2036,10 @@ void jerry_cleanup (void)
        this_p = next_p)
   {
     next_p = this_p->next_p;
-    this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    if (this_p->manager_p->deinit_cb)
+    {
+      this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    }
     free (this_p);
   }
 

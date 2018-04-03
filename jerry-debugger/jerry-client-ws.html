@@ -249,9 +249,9 @@ function DebuggerClient(address)
     {
       var chr = string.charCodeAt(i);
 
-      if (chr >= 0x7ff)
+      if (chr > 0x7ff)
       {
-        byteLength ++;
+        byteLength++;
       }
 
       if (chr >= 0x7f)
@@ -272,7 +272,7 @@ function DebuggerClient(address)
     {
       var chr = string.charCodeAt(i);
 
-      if (chr >= 0x7ff)
+      if (chr > 0x7ff)
       {
         result[offset] = 0xe0 | (chr >> 12);
         result[offset + 1] = 0x80 | ((chr >> 6) & 0x3f);

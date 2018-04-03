@@ -240,6 +240,7 @@ endif()
 # External compiler & linker flags
 if(DEFINED EXTERNAL_COMPILE_FLAGS)
   jerry_add_compile_flags(${EXTERNAL_COMPILE_FLAGS})
+  jerry_add_flags(CMAKE_ASM_FLAGS "${EXTERNAL_COMPILE_FLAGS}")
 endif()
 
 if(DEFINED EXTERNAL_LINKER_FLAGS)

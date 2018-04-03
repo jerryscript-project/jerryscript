@@ -117,15 +117,15 @@
  *   store s16-s31 vfp registers to buffer, pointed with r0 register,
  *   and increase the register on size of stored data.
  */
-#ifdef __TARGET_HOST_ARMv7_HARD_FLOAT
+#if defined (__VFP_FP__) && !defined (__SOFTFP__)
 # define _STORE_VFP_S16_S31_IF_HARD_FLOAT \
    vstm r0!, {s16 - s31};
 # define _LOAD_VFP_S16_S31_IF_HARD_FLOAT \
    vldm r0!, {s16 - s31};
-#else /* !__TARGET_HOST_ARMv7_HARD_FLOAT */
+#else /* !__VFP_FP__ || __SOFTFP__ */
 # define _STORE_VFP_S16_S31_IF_HARD_FLOAT
 # define _LOAD_VFP_S16_S31_IF_HARD_FLOAT
-#endif /* __TARGET_HOST_ARMv7_HARD_FLOAT */
+#endif /* __VFP_FP__ && !__SOFTFP__ */
 
 /*
  * setjmp

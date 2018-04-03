@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#if defined (__TARGET_HOST_x64)
+#if defined (__x86_64__)
 #include "arch/x86-64.h"
-#elif defined (__TARGET_HOST_x86)
+#elif defined (__i386__)
 #include "arch/x86-32.h"
-#elif defined (__TARGET_HOST_ARMv7)
+#elif defined (__ARM_ARCH_7A__)
 #include "arch/arm-v7.h"
-#else /* !__TARGET_HOST_x64 && !__TARGET_HOST_x86 && !__TARGET_HOST_ARMv7 */
+#else /* !__x86_64__ && !__i386__ && !__ARM_ARCH_7A__ */
 #error "Unsupported architecture"
-#endif /* __TARGET_HOST_x64 */
+#endif /* __x86_64__ */
 
 #if defined (__linux__)
 .macro func _name

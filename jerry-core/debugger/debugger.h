@@ -108,6 +108,12 @@ typedef enum
 } jerry_debugger_flags_t;
 
 /**
+ * Waiting for data from the client.
+ */
+#define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
+  (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
+
+/**
  * Set debugger flags.
  */
 #define JERRY_DEBUGGER_SET_FLAGS(flags) \

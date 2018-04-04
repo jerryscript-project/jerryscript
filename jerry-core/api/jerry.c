@@ -210,24 +210,35 @@ jerry_cleanup (void)
   }
 #endif /* JERRY_DEBUGGER */
 
-  for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p), *next_p = NULL;
+  for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p);
        this_p != NULL;
-       this_p = next_p)
+       this_p = this_p->next_p)
   {
-    next_p = this_p->next_p;
     if (this_p->manager_p->deinit_cb)
     {
       this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
     }
-    jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
 
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
   ecma_free_all_enqueued_jobs ();
 #endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
   ecma_finalize ();
-  jmem_finalize ();
   jerry_make_api_unavailable ();
+
+  for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p), *next_p = NULL;
+       this_p != NULL;
+       this_p = next_p)
+  {
+    next_p = this_p->next_p;
+    if (this_p->manager_p->finalize_cb)
+    {
+      this_p->manager_p->finalize_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+    }
+    jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
+  }
+
+  jmem_finalize ();
 } /* jerry_cleanup */
 
 /**

@@ -19,9 +19,10 @@
 
 static bool test_context_data1_new_called = false;
 static bool test_context_data2_new_called = false;
+static bool test_context_data3_new_called = false;
 static bool test_context_data1_free_called = false;
 static bool test_context_data2_free_called = false;
-static bool test_context_data3_new_called = false;
+static bool test_context_data1_finalize_called = false;
 
 /* Context item 1 */
 const char *string1 = "item1";
@@ -38,12 +39,23 @@ test_context_data1_free (void *user_data_p)
 {
   test_context_data1_free_called = true;
   TEST_ASSERT ((*(const char **) user_data_p) == string1);
+  TEST_ASSERT (!test_context_data1_finalize_called);
 } /* test_context_data1_free */
+
+static void
+test_context_data1_finalize (void *user_data_p)
+{
+  TEST_ASSERT (test_context_data1_free_called);
+  TEST_ASSERT (!test_context_data1_finalize_called);
+  TEST_ASSERT ((*(const char **) user_data_p) == string1);
+  test_context_data1_finalize_called = true;
+} /* test_context_data1_finalize */
 
 static const jerry_context_data_manager_t manager1 =
 {
   .init_cb = test_context_data1_new,
   .deinit_cb = test_context_data1_free,
+  .finalize_cb = test_context_data1_finalize,
   .bytes_needed = sizeof (const char *)
 };
 
@@ -86,6 +98,7 @@ static const jerry_context_data_manager_t manager3 =
   .init_cb = test_context_data3_new,
   /* NULL is allowed: */
   .deinit_cb = NULL,
+  .finalize_cb = NULL,
   .bytes_needed = 0,
 };
 

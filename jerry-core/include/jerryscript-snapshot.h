@@ -28,12 +28,26 @@ extern "C"
  */
 
 /**
+ * Flags for jerry_generate_snapshot and jerry_generate_function_snapshot.
+ */
+typedef enum
+{
+  JERRY_SNAPSHOT_SAVE_STATIC = (1u << 0), /**< static snapshot */
+  JERRY_SNAPSHOT_SAVE_STRICT = (1u << 1), /**< strict mode code */
+} jerry_generate_snapshot_opts_t;
+
+/**
  * Snapshot functions.
  */
-size_t jerry_parse_and_save_snapshot (const jerry_char_t *source_p, size_t source_size, bool is_for_global,
-                                      bool is_strict, uint32_t *buffer_p, size_t buffer_size);
-size_t jerry_parse_and_save_static_snapshot (const jerry_char_t *source_p, size_t source_size, bool is_for_global,
-                                             bool is_strict, uint32_t *buffer_p, size_t buffer_size);
+jerry_value_t jerry_generate_snapshot (const jerry_char_t *resource_name_p, size_t resource_name_length,
+                                       const jerry_char_t *source_p, size_t source_size,
+                                       uint32_t generate_snapshot_opts, uint32_t *buffer_p, size_t buffer_size);
+jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, size_t resource_name_length,
+                                                const jerry_char_t *source_p, size_t source_size,
+                                                const jerry_char_t *args_p, size_t args_size,
+                                                uint32_t generate_snapshot_opts, uint32_t *buffer_p,
+                                                size_t buffer_size);
+
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode);
 jerry_value_t jerry_exec_snapshot_at (const uint32_t *snapshot_p, size_t snapshot_size,
                                       size_t func_index, bool copy_bytecode);
@@ -41,13 +55,6 @@ size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer
                               uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);
 size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
                                       uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
-
-size_t jerry_parse_and_save_function_snapshot (const jerry_char_t *source_p, size_t source_size,
-                                               const jerry_char_t *args_p, size_t args_size,
-                                               bool is_strict, uint32_t *buffer_p, size_t buffer_size);
-size_t jerry_parse_and_save_static_function_snapshot (const jerry_char_t *source_p, size_t source_size,
-                                                      const jerry_char_t *args_p, size_t args_size,
-                                                      bool is_strict, uint32_t *buffer_p, size_t buffer_size);
 jerry_value_t jerry_load_function_snapshot_at (const uint32_t *function_snapshot_p,
                                                const size_t function_snapshot_size,
                                                size_t func_index,

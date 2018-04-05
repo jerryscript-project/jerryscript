@@ -223,7 +223,6 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
-#ifdef JERRY_DEBUGGER
 
 /**
  * Runs the source code received by jerry_debugger_wait_for_client_source.
@@ -253,7 +252,6 @@ wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource nam
   return ret_val;
 } /* wait_for_source_callback */
 
-#endif /* JERRY_DEBUGGER */
 
 /**
  * Command line option IDs
@@ -625,53 +623,54 @@ main (int argc,
   if (is_wait_mode)
   {
     is_repl_mode = false;
-#ifdef JERRY_DEBUGGER
 
-    while (true)
+    if (jerry_is_feature_enabled (JERRY_FEATURE_DEBUGGER))
     {
-      jerry_debugger_wait_for_source_status_t receive_status;
-
-      do
+      while (true)
       {
-        jerry_value_t run_result;
+        jerry_debugger_wait_for_source_status_t receive_status;
 
-        receive_status = jerry_debugger_wait_for_client_source (wait_for_source_callback,
-                                                                NULL,
-                                                                &run_result);
-
-        if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+        do
         {
-          ret_value = jerry_create_error (JERRY_ERROR_COMMON,
-                                          (jerry_char_t *) "Connection aborted before source arrived.");
+          jerry_value_t run_result;
+
+          receive_status = jerry_debugger_wait_for_client_source (wait_for_source_callback,
+                                                                  NULL,
+                                                                  &run_result);
+
+          if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+          {
+            ret_value = jerry_create_error (JERRY_ERROR_COMMON,
+                                            (jerry_char_t *) "Connection aborted before source arrived.");
+          }
+
+          if (receive_status == JERRY_DEBUGGER_SOURCE_END)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "No more client source.\n");
+          }
+
+          jerry_release_value (run_result);
+        }
+        while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
+
+        if (receive_status != JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
+        {
+          break;
         }
 
-        if (receive_status == JERRY_DEBUGGER_SOURCE_END)
-        {
-          jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "No more client source.\n");
-        }
+        jerry_cleanup ();
 
-        jerry_release_value (run_result);
+        jerry_init (flags);
+        jerry_debugger_init (debug_port);
+
+        register_js_function ("assert", jerryx_handler_assert);
+        register_js_function ("gc", jerryx_handler_gc);
+        register_js_function ("print", jerryx_handler_print);
+
+        ret_value = jerry_create_undefined ();
       }
-      while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
-
-      if (receive_status != JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
-      {
-        break;
-      }
-
-      jerry_cleanup ();
-
-      jerry_init (flags);
-      jerry_debugger_init (debug_port);
-
-      register_js_function ("assert", jerryx_handler_assert);
-      register_js_function ("gc", jerryx_handler_gc);
-      register_js_function ("print", jerryx_handler_print);
-
-      ret_value = jerry_create_undefined ();
     }
 
-#endif /* JERRY_DEBUGGER */
   }
 
   if (is_repl_mode)

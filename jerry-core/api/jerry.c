@@ -222,6 +222,9 @@ jerry_cleanup (void)
     jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+  ecma_free_all_enqueued_jobs ();
+#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
   ecma_finalize ();
   jmem_finalize ();
   jerry_make_api_unavailable ();

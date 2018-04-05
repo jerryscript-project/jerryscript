@@ -347,6 +347,23 @@ ecma_process_all_enqueued_jobs (void)
 } /* ecma_process_all_enqueued_jobs */
 
 /**
+ * Release enqueued Promise jobs.
+ */
+void
+ecma_free_all_enqueued_jobs (void)
+{
+  while (JERRY_CONTEXT (job_queue_head_p) != NULL)
+  {
+    ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
+    JERRY_CONTEXT (job_queue_head_p) = item_p->next_p;
+    void *job_p = item_p->job_p;
+    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+
+    ecma_free_promise_reaction_job (job_p);
+  }
+} /* ecma_free_all_enqueued_jobs */
+
+/**
  * @}
  * @}
  */

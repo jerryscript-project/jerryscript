@@ -34,11 +34,6 @@ typedef struct
 } jerry_snapshot_header_t;
 
 /**
- * Evaluate this function on the top of the scope chain.
- */
-#define JERRY_SNAPSHOT_EVAL_CONTEXT 0x1u
-
-/**
  * Jerry snapshot magic marker.
  */
 #define JERRY_SNAPSHOT_MAGIC (0x5952524Au)
@@ -46,7 +41,7 @@ typedef struct
 /**
  * Jerry snapshot format version.
  */
-#define JERRY_SNAPSHOT_VERSION (10u)
+#define JERRY_SNAPSHOT_VERSION (11u)
 
 /**
  * Snapshot configuration flags.

@@ -97,13 +97,13 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
   {
     const char msg[] = "[Error message too long]";
     err_str_size = sizeof (msg) / sizeof (char) - 1;
-    memcpy (err_str_buf, msg, err_str_size);
+    memcpy (err_str_buf, msg, err_str_size + 1);
   }
   else
   {
-    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-    assert (sz == err_str_size);
-    err_str_buf[err_str_size] = 0;
+    jerry_size_t string_end = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    assert (string_end == err_str_size);
+    err_str_buf[string_end] = 0;
 
     if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES)
         && jerry_get_error_type (error_value) == JERRY_ERROR_SYNTAX)
@@ -112,7 +112,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
       unsigned int err_col = 0;
 
       /* 1. parse column and line information */
-      for (jerry_size_t i = 0; i < sz; i++)
+      for (jerry_size_t i = 0; i < string_end; i++)
       {
         if (!strncmp ((char *) (err_str_buf + i), "[line: ", 7))
         {
@@ -121,7 +121,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
           char num_str[8];
           unsigned int j = 0;
 
-          while (i < sz && err_str_buf[i] != ',')
+          while (i < string_end && err_str_buf[i] != ',')
           {
             num_str[j] = (char) err_str_buf[i];
             j++;
@@ -139,7 +139,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
           i += 10;
           j = 0;
 
-          while (i < sz && err_str_buf[i] != ']')
+          while (i < string_end && err_str_buf[i] != ']')
           {
             num_str[j] = (char) err_str_buf[i];
             j++;

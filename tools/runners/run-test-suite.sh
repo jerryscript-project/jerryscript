@@ -148,8 +148,8 @@ do
         # Testing snapshot
         SNAPSHOT_TEMP=`mktemp $(basename -s .js $test).snapshot.XXXXXXXXXX`
 
-        cmd_line="${SNAPSHOT_TOOL#$ROOT_DIR} generate --context global -o $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
-        $TIMEOUT_CMD $TIMEOUT $SNAPSHOT_TOOL generate --context global -o $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP
+        cmd_line="${SNAPSHOT_TOOL#$ROOT_DIR} generate -o $SNAPSHOT_TEMP ${full_test#$ROOT_DIR}"
+        $TIMEOUT_CMD $TIMEOUT $SNAPSHOT_TOOL generate -o $SNAPSHOT_TEMP $full_test &> $ENGINE_TEMP
         status_code=$?
 
         if [ $status_code -eq 0 ]

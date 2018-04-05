@@ -82,10 +82,10 @@ static void test_function_snapshot (void)
 
   jerry_init (flags);
 
-  jerry_value_t function_obj = jerry_load_function_snapshot_at (function_snapshot_buffer,
-                                                                function_snapshot_size,
-                                                                0,
-                                                                false);
+  jerry_value_t function_obj = jerry_load_function_snapshot (function_snapshot_buffer,
+                                                             function_snapshot_size,
+                                                             0,
+                                                             0);
 
   TEST_ASSERT (!jerry_value_has_error_flag (function_obj));
   TEST_ASSERT (jerry_value_is_function (function_obj));
@@ -110,12 +110,10 @@ static void test_function_snapshot (void)
   jerry_cleanup ();
 } /* test_function_snapshot */
 
-static void arguments_test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode)
+static void arguments_test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32_t exec_snapshot_flags)
 {
   jerry_init (JERRY_INIT_EMPTY);
-  jerry_value_t res = jerry_exec_snapshot (snapshot_p,
-                                           snapshot_size,
-                                           copy_bytecode);
+  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags);
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_number (res));
   double raw_value = jerry_get_number_value (res);
@@ -158,12 +156,12 @@ static void test_function_arguments_snapshot (void)
 
     jerry_cleanup ();
 
-    arguments_test_exec_snapshot (arguments_snapshot_buffer, snapshot_size, false);
-    arguments_test_exec_snapshot (arguments_snapshot_buffer, snapshot_size, true);
+    arguments_test_exec_snapshot (arguments_snapshot_buffer, snapshot_size, 0);
+    arguments_test_exec_snapshot (arguments_snapshot_buffer, snapshot_size, JERRY_SNAPSHOT_EXEC_COPY_DATA);
   }
 } /* test_function_arguments_snapshot */
 
-static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool copy_bytecode)
+static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32_t exec_snapshot_flags)
 {
   char string_data[32];
 
@@ -173,9 +171,7 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, bool
                                 sizeof (magic_string_lengths) / sizeof (jerry_length_t),
                                 magic_string_lengths);
 
-  jerry_value_t res = jerry_exec_snapshot (snapshot_p,
-                                           snapshot_size,
-                                           copy_bytecode);
+  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags);
 
   TEST_ASSERT (!jerry_value_has_error_flag (res));
   TEST_ASSERT (jerry_value_is_string (res));
@@ -238,8 +234,8 @@ main (void)
 
     jerry_cleanup ();
 
-    test_exec_snapshot (snapshot_buffer, snapshot_size, false);
-    test_exec_snapshot (snapshot_buffer, snapshot_size, true);
+    test_exec_snapshot (snapshot_buffer, snapshot_size, 0);
+    test_exec_snapshot (snapshot_buffer, snapshot_size, JERRY_SNAPSHOT_EXEC_COPY_DATA);
   }
 
   /* Static snapshot */
@@ -271,9 +267,14 @@ main (void)
     size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
     jerry_release_value (generate_result);
 
+    /* Static snapshots are not supported by default. */
+    jerry_value_t exec_result = jerry_exec_snapshot (snapshot_buffer, snapshot_size, 0, 0);
+    TEST_ASSERT (jerry_value_has_error_flag (exec_result));
+    jerry_release_value (exec_result);
+
     jerry_cleanup ();
 
-    test_exec_snapshot (snapshot_buffer, snapshot_size, false);
+    test_exec_snapshot (snapshot_buffer, snapshot_size, JERRY_SNAPSHOT_EXEC_ALLOW_STATIC);
   }
 
   /* Merge snapshot */
@@ -342,12 +343,12 @@ main (void)
 
     jerry_init (JERRY_INIT_EMPTY);
 
-    jerry_value_t res = jerry_exec_snapshot_at (merged_snapshot_buffer, merged_size, 0, false);
+    jerry_value_t res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 0, 0);
     TEST_ASSERT (!jerry_value_has_error_flag (res));
     TEST_ASSERT (jerry_get_number_value (res) == 123);
     jerry_release_value (res);
 
-    res = jerry_exec_snapshot_at (merged_snapshot_buffer, merged_size, 1, false);
+    res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 1, 0);
     TEST_ASSERT (!jerry_value_has_error_flag (res));
     TEST_ASSERT (jerry_get_number_value (res) == 456);
     jerry_release_value (res);

@@ -864,6 +864,21 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #ifdef JERRY_VM_EXEC_STOP
           || feature == JERRY_FEATURE_VM_EXEC_STOP
 #endif /* JERRY_VM_EXEC_STOP */
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
+          || feature == JERRY_FEATURE_JSON
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+          || feature == JERRY_FEATURE_PROMISE
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+          || feature == JERRY_FEATURE_TYPEDARRAY
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_DATE_BUILTIN
+          || feature == JERRY_FEATURE_DATE
+#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+          || feature == JERRY_FEATURE_REGEXP
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
           );
 } /* jerry_is_feature_enabled */
 

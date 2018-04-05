@@ -806,6 +806,35 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
 } /* ecma_builtin_json_walk */
 
 /**
+ * Function to set a string token from the given arguments, fills its fields and advances the string pointer.
+ *
+ * @return ecma_value_t containing an object or an error massage
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_json_parse_buffer (const lit_utf8_byte_t * str_start_p, /**< String to parse */
+                                lit_utf8_size_t string_size) /**< size of the string */
+{
+  ecma_json_token_t token;
+  token.current_p = str_start_p;
+  token.end_p = str_start_p + string_size;
+
+  ecma_value_t final_result = ecma_builtin_json_parse_value (&token);
+
+  if (!ecma_is_value_undefined (final_result))
+  {
+    ecma_builtin_json_parse_next_token (&token, false);
+
+    if (token.type != end_token)
+    {
+      ecma_free_value (final_result);
+      final_result = ECMA_VALUE_UNDEFINED;
+    }
+  }
+  return final_result;
+} /*ecma_builtin_json_parse_buffer*/
+
+/**
  * The JSON object's 'parse' routine
  *
  * See also:
@@ -830,22 +859,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
 
   ECMA_STRING_TO_UTF8_STRING (string_p, str_start_p, string_size);
 
-  ecma_json_token_t token;
-  token.current_p = str_start_p;
-  token.end_p = str_start_p + string_size;
-
-  ecma_value_t final_result = ecma_builtin_json_parse_value (&token);
-
-  if (!ecma_is_value_undefined (final_result))
-  {
-    ecma_builtin_json_parse_next_token (&token, false);
-
-    if (token.type != end_token)
-    {
-      ecma_free_value (final_result);
-      final_result = ECMA_VALUE_UNDEFINED;
-    }
-  }
+  ecma_value_t final_result = ecma_builtin_json_parse_buffer (str_start_p, string_size);
 
   if (ecma_is_value_undefined (final_result))
   {
@@ -891,6 +905,61 @@ ecma_builtin_json_object (ecma_object_t *obj_p, ecma_json_stringify_context_t *c
 
 static ecma_value_t
 ecma_builtin_json_array (ecma_object_t *obj_p, ecma_json_stringify_context_t *context_p);
+
+/**
+ * Helper function to stringify an object in JSON format representing an ecma_value.
+ *
+ *  @return ecma_value_t string created from an abject formating by a given context
+ *          Returned value must be freed with ecma_free_value.
+ *
+ */
+static ecma_value_t ecma_builtin_json_str_helper (const ecma_value_t arg1, /**< object argument */
+                                                  ecma_json_stringify_context_t context) /**< context argument */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_object_t *obj_wrapper_p = ecma_op_create_object_object_noarg ();
+  ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  ecma_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
+                                                  empty_str_p,
+                                                  arg1,
+                                                  false);
+  JERRY_ASSERT (ecma_is_value_true (put_comp_val));
+  ecma_free_value (put_comp_val);
+  ECMA_TRY_CATCH (str_val,
+                  ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
+                  ret_value);
+  ret_value = ecma_copy_value (str_val);
+  ECMA_FINALIZE (str_val);
+  ecma_free_value (put_comp_val);
+  ecma_deref_ecma_string (empty_str_p);
+  ecma_deref_object (obj_wrapper_p);
+
+  return ret_value;
+} /* ecma_builtin_json_str_helper */
+
+/**
+ * Function to create a json formated string from an object
+ *
+ * @return ecma_value_t containing a json string
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_json_string_from_object (const ecma_value_t arg1) /**< object argument */
+{
+  ecma_json_stringify_context_t context;
+  context.occurence_stack_last_p = NULL;
+  context.indent_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  context.property_list_p = ecma_new_values_collection ();
+  context.replacer_function_p = NULL;
+  context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+
+  ecma_value_t ret_value = ecma_builtin_json_str_helper (arg1, context);
+
+  ecma_deref_ecma_string (context.gap_str_p);
+  ecma_deref_ecma_string (context.indent_str_p);
+  ecma_free_values_collection (context.property_list_p, 0);
+  return ret_value;
+} /*ecma_builtin_json_string_from_object*/
 
 /**
  * The JSON object's 'stringify' routine
@@ -1119,28 +1188,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
     if (ecma_is_value_empty (ret_value))
     {
       /* 9. */
-      ecma_object_t *obj_wrapper_p = ecma_op_create_object_object_noarg ();
-      ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-
-      /* 10. */
-      ecma_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
-                                                      empty_str_p,
-                                                      arg1,
-                                                      false);
-
-      JERRY_ASSERT (ecma_is_value_true (put_comp_val));
-      ecma_free_value (put_comp_val);
-
-      /* 11. */
-      ECMA_TRY_CATCH (str_val,
-                      ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
-                      ret_value);
-
-      ret_value = ecma_copy_value (str_val);
-
-      ECMA_FINALIZE (str_val);
-
-      ecma_deref_object (obj_wrapper_p);
+      ret_value = ecma_builtin_json_str_helper (arg1, context);
     }
 
     ecma_deref_ecma_string (context.gap_str_p);

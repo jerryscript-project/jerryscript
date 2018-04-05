@@ -152,6 +152,9 @@ typedef struct
   ecma_object_t *replacer_function_p;
 } ecma_json_stringify_context_t;
 
+ecma_value_t ecma_builtin_json_parse_buffer (const lit_utf8_byte_t * str_start_p,
+                                             lit_utf8_size_t string_size);
+ecma_value_t ecma_builtin_json_string_from_object (const ecma_value_t arg1);
 bool ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, ecma_object_t *object_p);
 bool ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, ecma_value_t string_value);
 

@@ -18,6 +18,8 @@
 #include "ecma-builtin-helpers.h"
 #include "lit-char-helpers.h"
 
+#ifndef CONFIG_DISABLE_JSON_BUILTIN
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -220,6 +222,8 @@ ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket
 
   return ecma_make_string_value (result_str_p);
 } /* ecma_builtin_helper_json_create_non_formatted_json */
+
+#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
 
 /**
  * @}

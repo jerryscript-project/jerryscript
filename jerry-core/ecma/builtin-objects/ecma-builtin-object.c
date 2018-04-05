@@ -14,7 +14,6 @@
  */
 
 #include "ecma-alloc.h"
-#include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -109,27 +108,38 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
 {
   JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  bool was_object = ecma_is_value_object (arg);
 
   /* 1. */
-  if (!ecma_is_value_object (arg))
+  if (!was_object)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+    arg = ecma_op_to_object (arg);
+    if (ECMA_IS_VALUE_ERROR (arg))
+    {
+      return arg;
+    }
+#else /* CONFIG_DISABLE_ES2015_BUILTIN */
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+  }
+  /* 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+  ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
+
+  if (prototype_p)
+  {
+    ret_value = ecma_make_object_value (prototype_p);
+    ecma_ref_object (prototype_p);
   }
   else
   {
-    /* 2. */
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-    ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
+    ret_value = ECMA_VALUE_NULL;
+  }
 
-    if (prototype_p)
-    {
-      ret_value = ecma_make_object_value (prototype_p);
-      ecma_ref_object (prototype_p);
-    }
-    else
-    {
-      ret_value = ECMA_VALUE_NULL;
-    }
+  if (!was_object)
+  {
+    ecma_free_value (arg);
   }
 
   return ret_value;

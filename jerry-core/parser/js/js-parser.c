@@ -2700,7 +2700,7 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
 
   context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
 
-  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_list_t))
+  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_breakpoint_info_t))
   {
     parser_send_breakpoints (context_p, type);
   }

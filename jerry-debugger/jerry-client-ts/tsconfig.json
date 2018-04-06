@@ -1,0 +1,25 @@
+{
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./dist/**"
+  ],
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "lib": [
+      "es5",
+      "es2015.iterable",
+      "es2015.promise"
+    ],
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  }
+}

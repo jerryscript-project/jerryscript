@@ -1,0 +1,63 @@
+{
+  "name": "@jerryscript/debugger",
+  "version": "0.0.1",
+  "description": "Debugger for JerryScript",
+  "bin": {
+    "jerry-debugger": "dist/cli/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "prepare": "tsc",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "tslint -p .",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": "https://github.com/jerryscript-project/jerryscript/",
+  "author": "JS Foundation and other contributors",
+  "license": "Apache-2.0",
+  "private": false,
+  "dependencies": {
+    "chrome-remote-debug-protocol": "^1.2.20170721",
+    "commander": "^2.15.0",
+    "noice-json-rpc": "^1.1.1",
+    "uuid": "^3.2.1",
+    "ws": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/jest": "^22.1.2",
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^9.4.6",
+    "@types/uuid": "^3.4.3",
+    "@types/ws": "^4.0.1",
+    "jest": "^22.3.0",
+    "ts-jest": "^22.0.4",
+    "tslint": "^5.9.1",
+    "tslint-config-standard": "^7.0.0",
+    "typescript": "^2.7.1"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "globals": {
+      "ts-jest": {
+        "enableTsDiagnostics": true
+      }
+    },
+    "rootDir": "src",
+    "resetMocks": true,
+    "resetModules": true
+  }
+}

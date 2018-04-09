@@ -16,16 +16,19 @@
 #include "jerryscript.h"
 #include "test-common.h"
 
-#ifdef JMEM_STATS
-
-const char *test_source = (
-                           "var a = 'hello';"
-                           "var b = 'world';"
-                           "var c = a + ' ' + b;"
-                           );
 
 int main (void)
 {
+  if (!jerry_is_feature_enabled (JERRY_FEATURE_MEM_STATS))
+  {
+    return 0;
+  }
+  const char *test_source = (
+                         "var a = 'hello';"
+                         "var b = 'world';"
+                         "var c = a + ' ' + b;"
+                         );
+
   jerry_init (JERRY_INIT_EMPTY);
   jerry_value_t parsed_code_val = jerry_parse ((jerry_char_t *) test_source, strlen (test_source), false);
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
@@ -49,13 +52,3 @@ int main (void)
 
   return 0;
 } /* main */
-
-#else /* JMEM_STATS */
-
-int
-main (void)
-{
-  return 0;
-} /* main */
-
-#endif /* !JMEM_STATS */

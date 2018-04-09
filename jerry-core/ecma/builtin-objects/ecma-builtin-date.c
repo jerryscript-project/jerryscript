@@ -22,6 +22,7 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
+#include "math.h"
 
 #ifndef CONFIG_DISABLE_DATE_BUILTIN
 
@@ -437,7 +438,7 @@ static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg) /**< this argument */
 {
   JERRY_UNUSED (this_arg);
-  return ecma_make_number_value (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
+  return ecma_make_number_value (floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ())));
 } /* ecma_builtin_date_now */
 
 /**

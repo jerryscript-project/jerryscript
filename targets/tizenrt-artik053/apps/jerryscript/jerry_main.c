@@ -270,6 +270,16 @@ register_js_function (const char *name_p, /**< name of the function */
  */
 static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 
+/**
+ * Dummy function to return the transport.
+ *
+ * @return NULL
+ */
+jerry_debugger_transport_t *
+jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
+{
+  return NULL;
+} /* jerry_port_init_socket_transport */
 
 /**
  * JerryScript command main
@@ -507,17 +517,6 @@ jerryx_port_handler_print_char (char c) /**< the character to print */
 {
   printf ("%c", c);
 } /* jerryx_port_handler_print_char */
-
-/**
- * Dummy function to return the transport.
- *
- * @return NULL
- */
-jerry_debugger_transport_t *
-jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
-{
-  return NULL;
-} /* jerry_port_init_socket_transport */
 
 /**
 * Main program.

@@ -178,12 +178,6 @@ struct jerry_debugger_transport_t
 };
 
 /**
- * The default transport layer that uses TCP socket
- * other transports can be added like usb, bluetooth
- */
-struct jerry_debugger_transport_t *jerry_port_init_socket_transport (uint16_t tcp_port);
-
-/**
  * Makes the process sleep for a given time.
  *
  * Note:

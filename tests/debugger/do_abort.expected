@@ -1,0 +1,12 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_abort.js:24
+(jerry-debugger) s
+Stopped at tests/debugger/do_abort.js:25
+(jerry-debugger) s
+Stopped at tests/debugger/do_abort.js:26
+(jerry-debugger) s
+Stopped at tests/debugger/do_abort.js:20 (in g() at line:19, col:1)
+(jerry-debugger) s
+Stopped at tests/debugger/do_abort.js:16 (in f() at line:15, col:1)
+(jerry-debugger) abort new Error('Fatal error :)')
+err: Script Error: Error: Fatal error :)

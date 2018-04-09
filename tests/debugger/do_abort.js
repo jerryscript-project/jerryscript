@@ -20,16 +20,11 @@ function g() {
   f();
 }
 
-try {
+// In regular JS, it is not possible to escape from this loop
+while (true) {
   try {
-
-    while (true) {
-      g();
-    }
-
+    g();
   } catch (e) {
-    var s = "Stop here";
+    var s = "Don't stop here";
   }
-} catch (e) {
-  var s = "Stop here again";
 }

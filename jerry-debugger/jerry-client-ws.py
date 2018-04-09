@@ -28,7 +28,7 @@ import math
 import time
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 2
+JERRY_DEBUGGER_VERSION = 3
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -59,6 +59,11 @@ JERRY_DEBUGGER_OUTPUT_RESULT = 25
 JERRY_DEBUGGER_OUTPUT_RESULT_END = 26
 
 # Subtypes of eval
+JERRY_DEBUGGER_EVAL_EVAL = "\0"
+JERRY_DEBUGGER_EVAL_THROW = "\1"
+JERRY_DEBUGGER_EVAL_ABORT = "\2"
+
+# Subtypes of eval result
 JERRY_DEBUGGER_EVAL_OK = 1
 JERRY_DEBUGGER_EVAL_ERROR = 2
 
@@ -89,8 +94,6 @@ JERRY_DEBUGGER_FINISH = 15
 JERRY_DEBUGGER_GET_BACKTRACE = 16
 JERRY_DEBUGGER_EVAL = 17
 JERRY_DEBUGGER_EVAL_PART = 18
-JERRY_DEBUGGER_THROW = 19
-JERRY_DEBUGGER_THROW_PART = 20
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
@@ -426,8 +429,6 @@ class DebuggerPrompt(Cmd):
 
     def _send_string(self, args, message_type):
         size = len(args)
-        if size == 0:
-            return
 
         # 1: length of type byte
         # 4: length of an uint32 value
@@ -451,8 +452,6 @@ class DebuggerPrompt(Cmd):
 
         if message_type == JERRY_DEBUGGER_EVAL:
             message_type = JERRY_DEBUGGER_EVAL_PART
-        elif message_type == JERRY_DEBUGGER_THROW:
-            message_type = JERRY_DEBUGGER_THROW_PART
         else:
             message_type = JERRY_DEBUGGER_CLIENT_SOURCE_PART
 
@@ -477,13 +476,17 @@ class DebuggerPrompt(Cmd):
 
     def do_eval(self, args):
         """ Evaluate JavaScript source code """
-        self._send_string(args, JERRY_DEBUGGER_EVAL)
+        self._send_string(JERRY_DEBUGGER_EVAL_EVAL + args, JERRY_DEBUGGER_EVAL)
 
     do_e = do_eval
 
     def do_throw(self, args):
         """ Throw an exception """
-        self._send_string(args, JERRY_DEBUGGER_THROW)
+        self._send_string(JERRY_DEBUGGER_EVAL_THROW + args, JERRY_DEBUGGER_EVAL)
+
+    def do_abort(self, args):
+        """ Throw an exception """
+        self._send_string(JERRY_DEBUGGER_EVAL_ABORT + args, JERRY_DEBUGGER_EVAL)
 
     def do_exception(self, args):
         """ Config the exception handler module """

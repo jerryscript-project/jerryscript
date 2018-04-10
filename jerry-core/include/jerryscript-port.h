@@ -163,9 +163,6 @@ struct jerry_debugger_uint8_data_t;
  */
 struct jerry_debugger_transport_t
 {
-  uint8_t send_header_size;
-  uint8_t receive_header_size;
-  uint8_t max_message_size;
   bool (*accept_connection) (struct jerry_debugger_transport_t *transport_p);
   void (*close_connection) (struct jerry_debugger_transport_t *transport_p);
   bool (*send) (struct jerry_debugger_transport_t *transport_p,

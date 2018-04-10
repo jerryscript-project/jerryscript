@@ -576,9 +576,6 @@ jerry_debugger_receive_ws (struct jerry_debugger_transport_t *transport_p, /**< 
 
 static struct jerry_debugger_transport_t socket_transport =
 {
-  .send_header_size = JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE,
-  .receive_header_size = JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE,
-  .max_message_size = JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX,
   .accept_connection = jerry_debugger_accept_connection_ws,
   .close_connection = jerry_debugger_close_connection_ws,
   .send = jerry_debugger_send_ws,
@@ -597,6 +594,10 @@ jerry_port_default_init_socket_transport (uint16_t tcp_port) /**< server port nu
 {
 #ifdef JERRY_DEBUGGER
   debugger_port = tcp_port;
+  jerry_debugger_set_transmit_sizes (JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE,
+                                     JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX,
+                                     JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE,
+                                     JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
   return &socket_transport;
 #else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (tcp_port);

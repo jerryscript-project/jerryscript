@@ -1077,24 +1077,22 @@ jerry_debugger_send_exception_string (void)
 bool
 jerry_debugger_accept_connection (void)
 {
-  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer) + JERRY_CONTEXT (debugger_transport_p)->send_header_size;
+  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer) + JERRY_CONTEXT (debugger_send_header_size);
   JERRY_CONTEXT (debugger_send_buffer_payload_p) = payload_p;
 
   uint8_t max_send_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE -
-                                     JERRY_CONTEXT (debugger_transport_p)->send_header_size);
-  if (max_send_size > JERRY_CONTEXT (debugger_transport_p)->max_message_size)
+                                     JERRY_CONTEXT (debugger_send_header_size));
+  if (max_send_size <= JERRY_CONTEXT (debugger_max_send_size))
   {
-    max_send_size = JERRY_CONTEXT (debugger_transport_p)->max_message_size;
+    JERRY_CONTEXT (debugger_max_send_size) = max_send_size;
   }
-  JERRY_CONTEXT (debugger_max_send_size) = max_send_size;
 
   uint8_t max_receive_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE -
-                                        JERRY_CONTEXT (debugger_transport_p)->receive_header_size);
-  if (max_receive_size > JERRY_CONTEXT (debugger_transport_p)->max_message_size)
+                                        JERRY_CONTEXT (debugger_receive_header_size));
+  if (max_receive_size <= JERRY_CONTEXT (debugger_max_send_size))
   {
-    max_receive_size = JERRY_CONTEXT (debugger_transport_p)->max_message_size;
+    JERRY_CONTEXT (debugger_max_receive_size) = max_receive_size;
   }
-  JERRY_CONTEXT (debugger_max_receive_size) = max_receive_size;
 
   if (!JERRY_CONTEXT (debugger_transport_p)->accept_connection (JERRY_CONTEXT (debugger_transport_p)))
   {
@@ -1186,7 +1184,7 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
       return true;
     }
 
-    if (offset < JERRY_CONTEXT (debugger_transport_p)->receive_header_size)
+    if (offset < JERRY_CONTEXT (debugger_receive_header_size))
     {
       if (expected_message_type != 0)
       {
@@ -1197,7 +1195,7 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
     }
 
     uint32_t message_total_size = (uint32_t) (message_size +
-                                              JERRY_CONTEXT (debugger_transport_p)->receive_header_size);
+                                              JERRY_CONTEXT (debugger_receive_header_size));
 
     if (offset < message_total_size)
     {
@@ -1212,7 +1210,7 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
     /* The jerry_debugger_process_message function is inlined
       * so passing these arguments is essentially free. */
     if (!jerry_debugger_process_message (JERRY_CONTEXT (debugger_receive_buffer) +
-                                         JERRY_CONTEXT (debugger_transport_p)->receive_header_size,
+                                         JERRY_CONTEXT (debugger_receive_header_size),
                                          (uint32_t) message_size,
                                          &resume_exec,
                                          &expected_message_type,

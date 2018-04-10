@@ -109,6 +109,29 @@ jerry_debugger_init (jerry_debugger_transport_t *transport_p) /**< transport */
 } /* jerry_debugger_init */
 
 /**
+ * Debugger transport transmission sizes, each transport will need to set these.
+ */
+void
+jerry_debugger_set_transmit_sizes (size_t send_header_size, /**< transport send header size */
+                                   size_t max_send_size, /**< transport max send size */
+                                   size_t receive_header_size, /**< transport receive header size */
+                                   size_t max_receive_size) /**< transport max receive size */
+{
+#ifdef JERRY_DEBUGGER
+  JERRY_CONTEXT (debugger_send_header_size) = (uint8_t) send_header_size;
+  JERRY_CONTEXT (debugger_max_send_size) = (uint8_t) max_send_size;
+  JERRY_CONTEXT (debugger_receive_header_size) = (uint8_t) receive_header_size;
+  JERRY_CONTEXT (debugger_max_receive_size) = (uint8_t) max_receive_size;
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (send_header_size);
+  JERRY_UNUSED (max_send_size);
+  JERRY_UNUSED (receive_header_size);
+  JERRY_UNUSED (max_receive_size);
+#endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_set_transmit_sizes */
+
+
+/**
  * Sets whether the engine should wait and run a source.
  *
  * @return enum JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED - if the source is not received

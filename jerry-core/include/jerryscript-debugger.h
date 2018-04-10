@@ -56,6 +56,10 @@ typedef jerry_value_t (*jerry_debugger_wait_for_source_callback_t) (const jerry_
 typedef struct jerry_debugger_transport_t jerry_debugger_transport_t;
 
 void jerry_debugger_init (jerry_debugger_transport_t *transport_p);
+void jerry_debugger_set_transmit_sizes (size_t send_header_size,
+                                        size_t max_send_size,
+                                        size_t receive_header_size,
+                                        size_t max_receive_size);
 bool jerry_debugger_is_connected (void);
 void jerry_debugger_stop (void);
 void jerry_debugger_continue (void);

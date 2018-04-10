@@ -118,6 +118,8 @@ typedef struct
   uint32_t debugger_flags; /**< debugger flags */
   uint16_t debugger_receive_buffer_offset; /**< receive buffer offset */
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
+  uint8_t debugger_send_header_size; /**< header size reserved when sending */
+  uint8_t debugger_receive_header_size; /**< header size reserved when receiving */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be written */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
   jerry_debugger_transport_t *debugger_transport_p; /**< holds the pointer to the debugger transport */

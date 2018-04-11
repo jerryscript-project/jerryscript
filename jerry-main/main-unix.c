@@ -565,10 +565,10 @@ main (int argc,
       }
       else
       {
-        ret_value = jerry_exec_snapshot_at (snapshot_p,
-                                            snapshot_size,
-                                            exec_snapshot_file_indices[i],
-                                            true);
+        ret_value = jerry_exec_snapshot (snapshot_p,
+                                         snapshot_size,
+                                         exec_snapshot_file_indices[i],
+                                         JERRY_SNAPSHOT_EXEC_COPY_DATA);
       }
 
       if (jerry_value_has_error_flag (ret_value))

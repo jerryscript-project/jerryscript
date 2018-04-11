@@ -36,7 +36,7 @@ textarea {
 </div>
 <script>
 // Expected JerryScript debugger protocol version
-var JERRY_DEBUGGER_VERSION = 2;
+var JERRY_DEBUGGER_VERSION = 3;
 
 // Messages sent by the server to client.
 var JERRY_DEBUGGER_CONFIGURATION = 1;
@@ -67,6 +67,11 @@ var JERRY_DEBUGGER_OUTPUT_RESULT = 25;
 var JERRY_DEBUGGER_OUTPUT_RESULT_END = 26;
 
 // Subtypes of eval
+JERRY_DEBUGGER_EVAL_EVAL = "\0"
+JERRY_DEBUGGER_EVAL_THROW = "\1"
+JERRY_DEBUGGER_EVAL_ABORT = "\2"
+
+// Subtypes of eval result
 var JERRY_DEBUGGER_EVAL_OK = 1;
 var JERRY_DEBUGGER_EVAL_ERROR = 2;
 
@@ -1220,7 +1225,7 @@ function DebuggerClient(address)
       return;
     }
 
-    var array = stringToCesu8(str);
+    var array = stringToCesu8(JERRY_DEBUGGER_EVAL_EVAL + str);
     var byteLength = array.byteLength;
 
     if (byteLength <= maxMessageSize)

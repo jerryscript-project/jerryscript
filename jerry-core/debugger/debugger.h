@@ -26,7 +26,7 @@
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (2)
+#define JERRY_DEBUGGER_VERSION (3)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.
@@ -193,22 +193,30 @@ typedef enum
   JERRY_DEBUGGER_EVAL_PART = 18, /**< next message of evaluating a string */
 
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
-  JERRY_DEBUGGER_THROW = 19, /**< first message of the throw string */
-  JERRY_DEBUGGER_THROW_PART = 20, /**< next part of the throw message */
 } jerry_debugger_header_type_t;
 
 /**
-  * Subtypes of eval_result.
-  */
+ * Subtypes of eval.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_EVAL_EVAL = 0, /**< evaluate expression */
+  JERRY_DEBUGGER_EVAL_THROW = 1, /**< evaluate expression and throw the result */
+  JERRY_DEBUGGER_EVAL_ABORT = 2, /**< evaluate expression and abrot with the result */
+} jerry_debugger_eval_type_t;
+
+/**
+ * Subtypes of eval_result.
+ */
 typedef enum
 {
   JERRY_DEBUGGER_EVAL_OK = 1, /**< eval result, no error */
   JERRY_DEBUGGER_EVAL_ERROR = 2, /**< eval result when an error has occurred */
-} jerry_debugger_eval_subtype_t;
+} jerry_debugger_eval_result_type_t;
 
 /**
-  * Subtypes of output_result.
-  */
+ * Subtypes of output_result.
+ */
 typedef enum
 {
   JERRY_DEBUGGER_OUTPUT_OK = 1, /**< output result, no error */

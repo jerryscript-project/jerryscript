@@ -2532,7 +2532,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
           {
-            result = JERRY_CONTEXT (error_value);
+            result = ECMA_VALUE_ERROR;
             goto error;
           }
 #endif /* JERRY_DEBUGGER */
@@ -2559,7 +2559,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
             if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
             {
-              result = JERRY_CONTEXT (error_value);
+              result = ECMA_VALUE_ERROR;
               goto error;
             }
             continue;
@@ -2585,7 +2585,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_BREAKPOINT_HIT);
             if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
             {
-              result = JERRY_CONTEXT (error_value);
+              result = ECMA_VALUE_ERROR;
               goto error;
             }
           }
@@ -2723,16 +2723,22 @@ error:
 
       stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
 #ifdef JERRY_DEBUGGER
+      const uint32_t dont_stop = (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION
+                                  | JERRY_DEBUGGER_VM_IGNORE
+                                  | JERRY_DEBUGGER_THROW_ERROR_FLAG);
+
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
           && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
-          && !(JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION | JERRY_DEBUGGER_VM_IGNORE)))
+          && !(JERRY_CONTEXT (debugger_flags) & dont_stop))
       {
         /* Save the error to a local value, because the engine enters breakpoint mode after,
            therefore an evaluation error, or user-created error throw would overwrite it. */
         ecma_value_t current_error_value = JERRY_CONTEXT (error_value);
+
         if (jerry_debugger_send_exception_string ())
         {
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
+
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_THROW_ERROR_FLAG)
           {
             ecma_free_value (current_error_value);

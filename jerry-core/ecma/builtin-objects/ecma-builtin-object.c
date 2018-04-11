@@ -137,10 +137,12 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
     ret_value = ECMA_VALUE_NULL;
   }
 
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
   if (!was_object)
   {
     ecma_free_value (arg);
   }
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
 
   return ret_value;
 } /* ecma_builtin_object_object_get_prototype_of */

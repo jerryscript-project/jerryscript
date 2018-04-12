@@ -112,6 +112,7 @@ matrix:
       script: make -f ./targets/zephyr/Makefile.travis script
   allow_failures:
     - env: JOBNAME="Mbed/K64F Build Test"
+    - env: JOBNAME="Zephyr/Arduino 101 Build Test"
   fast_finish: true
 
 # The channel name "chat.freenode.net#jerryscript"

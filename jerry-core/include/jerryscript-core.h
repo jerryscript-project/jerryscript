@@ -99,6 +99,15 @@ typedef enum
 } jerry_feature_t;
 
 /**
+ * Option flags for jerry_parse and jerry_parse_function functions.
+ */
+typedef enum
+{
+  JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
+  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+} jerry_parse_opts_t;
+
+/**
  * Character type of JerryScript.
  */
 typedef uint8_t jerry_char_t;
@@ -308,12 +317,11 @@ bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);
  * Parser and executor functions.
  */
 bool jerry_run_simple (const jerry_char_t *script_source_p, size_t script_source_size, jerry_init_flag_t flags);
-jerry_value_t jerry_parse (const jerry_char_t *source_p, size_t source_size, bool is_strict);
-jerry_value_t jerry_parse_named_resource (const jerry_char_t *resource_name_p, size_t resource_name_length,
-                                          const jerry_char_t *source_p, size_t source_size, bool is_strict);
+jerry_value_t jerry_parse (const jerry_char_t *resource_name_p, size_t resource_name_length,
+                           const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 jerry_value_t jerry_parse_function (const jerry_char_t *resource_name_p, size_t resource_name_length,
                                     const jerry_char_t *arg_list_p, size_t arg_list_size,
-                                    const jerry_char_t *source_p, size_t source_size, bool is_strict);
+                                    const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 jerry_value_t jerry_run (const jerry_value_t func_val);
 jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, bool is_strict);
 

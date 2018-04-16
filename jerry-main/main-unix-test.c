@@ -96,7 +96,7 @@ main (int argc,
     }
     else
     {
-      ret_value = jerry_parse (source_p, source_size, false);
+      ret_value = jerry_parse (NULL, 0, source_p, source_size, JERRY_PARSE_NO_OPTS);
 
       if (!jerry_value_has_error_flag (ret_value))
       {

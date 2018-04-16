@@ -70,7 +70,11 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
 
   /* Render strict-equal as a function. */
-  jerry_value_t parse_result = jerry_parse ((jerry_char_t *) strict_equal_source, strlen (strict_equal_source), true);
+  jerry_value_t parse_result = jerry_parse (NULL,
+                                            0,
+                                            (jerry_char_t *) strict_equal_source,
+                                            strlen (strict_equal_source),
+                                            JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_has_error_flag (parse_result));
   jerry_value_t strict_equal = jerry_run (parse_result);
   TEST_ASSERT (!jerry_value_has_error_flag (strict_equal));

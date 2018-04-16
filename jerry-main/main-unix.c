@@ -236,11 +236,11 @@ wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource nam
                           size_t source_size, /**< source code size */
                           void *user_p __attribute__((unused))) /**< user pointer */
 {
-  jerry_value_t ret_val = jerry_parse_named_resource (resource_name_p,
-                                                      resource_name_size,
-                                                      source_p,
-                                                      source_size,
-                                                      false);
+  jerry_value_t ret_val = jerry_parse (resource_name_p,
+                                       resource_name_size,
+                                       source_p,
+                                       source_size,
+                                       JERRY_PARSE_NO_OPTS);
 
   if (!jerry_value_has_error_flag (ret_val))
   {
@@ -597,11 +597,11 @@ main (int argc,
         break;
       }
 
-      ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
-                                              strlen (file_names[i]),
-                                              source_p,
-                                              source_size,
-                                              false);
+      ret_value = jerry_parse ((jerry_char_t *) file_names[i],
+                               strlen (file_names[i]),
+                               source_p,
+                               source_size,
+                               JERRY_PARSE_NO_OPTS);
 
       if (!jerry_value_has_error_flag (ret_value) && !is_parse_only)
       {

@@ -365,7 +365,11 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  parsed_code_val = jerry_parse ((jerry_char_t *) test_source, strlen (test_source), false);
+  parsed_code_val = jerry_parse (NULL,
+                                 0,
+                                 (jerry_char_t *) test_source,
+                                 strlen (test_source),
+                                 JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
 
   res = jerry_run (parsed_code_val);
@@ -1023,7 +1027,7 @@ main (void)
                                                  strlen (func_arg_list),
                                                  (const jerry_char_t *) func_src,
                                                  strlen (func_src),
-                                                 false);
+                                                 JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_has_error_flag (func_val));
 
@@ -1066,9 +1070,11 @@ main (void)
     jerry_init (JERRY_INIT_SHOW_OPCODES);
 
     const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
-    parsed_code_val = jerry_parse ((jerry_char_t *) parser_err_src_p,
+    parsed_code_val = jerry_parse (NULL,
+                                   0,
+                                   (jerry_char_t *) parser_err_src_p,
                                    strlen (parser_err_src_p),
-                                   false);
+                                   JERRY_PARSE_NO_OPTS);
     TEST_ASSERT (jerry_value_has_error_flag (parsed_code_val));
     jerry_value_clear_error_flag (&parsed_code_val);
     jerry_value_t err_str_val = jerry_value_to_string (parsed_code_val);
@@ -1094,7 +1100,11 @@ main (void)
                                 magic_string_lengths);
 
   const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
-  parsed_code_val = jerry_parse ((jerry_char_t *) ms_code_src_p, strlen (ms_code_src_p), false);
+  parsed_code_val = jerry_parse (NULL,
+                                 0,
+                                 (jerry_char_t *) ms_code_src_p,
+                                 strlen (ms_code_src_p),
+                                 JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
 
   res = jerry_run (parsed_code_val);

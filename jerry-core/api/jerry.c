@@ -364,7 +364,7 @@ jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
 
   jerry_init (flags);
 
-  jerry_value_t parse_ret_val = jerry_parse (script_source_p, script_source_size, false);
+  jerry_value_t parse_ret_val = jerry_parse (NULL, 0, script_source_p, script_source_size, JERRY_PARSE_NO_OPTS);
 
   if (!ecma_is_value_error_reference (parse_ret_val))
   {
@@ -392,10 +392,26 @@ jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
  *         thrown error - otherwise
  */
 jerry_value_t
-jerry_parse (const jerry_char_t *source_p, /**< script source */
+jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
+             size_t resource_name_length, /**< length of resource name */
+             const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
-             bool is_strict) /**< strict mode */
+             uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
+#if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      && resource_name_length > 0)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                resource_name_p,
+                                resource_name_length);
+  }
+#else /* !(JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER) */
+  JERRY_UNUSED (resource_name_p);
+  JERRY_UNUSED (resource_name_length);
+#endif /* JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER */
+
 #ifndef JERRY_DISABLE_JS_PARSER
   jerry_assert_api_available ();
 
@@ -406,7 +422,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
                                       0,
                                       source_p,
                                       source_size,
-                                      is_strict,
+                                      (parse_opts & JERRY_PARSE_STRICT_MODE) != 0,
                                       &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -425,43 +441,11 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 #else /* JERRY_DISABLE_JS_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
-  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (parse_opts);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled.")));
 #endif /* !JERRY_DISABLE_JS_PARSER */
 } /* jerry_parse */
-
-/**
- * Parse script and construct an ECMAScript function. The lexical
- * environment is set to the global lexical environment. The name
- * (usually a file name) is also passed to this function which is
- * used by the debugger to find the source code.
- *
- * @return function object value - if script was parsed successfully,
- *         thrown error - otherwise
- */
-jerry_value_t
-jerry_parse_named_resource (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
-                            size_t resource_name_length, /**< length of resource name */
-                            const jerry_char_t *source_p, /**< script source */
-                            size_t source_size, /**< script source size */
-                            bool is_strict) /**< strict mode */
-{
-#if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
-                                JERRY_DEBUGGER_NO_SUBTYPE,
-                                resource_name_p,
-                                resource_name_length);
-  }
-#else /* !(JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER) */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && !JERRY_DISABLE_JS_PARSER */
-
-  return jerry_parse (source_p, source_size, is_strict);
-} /* jerry_parse_named_resource */
 
 /**
  * Parse function and construct an EcmaScript function. The lexical
@@ -477,7 +461,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                       size_t arg_list_size, /**< script source size */
                       const jerry_char_t *source_p, /**< script source */
                       size_t source_size, /**< script source size */
-                      bool is_strict) /**< strict mode */
+                      uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
 #if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -508,7 +492,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                                       arg_list_size,
                                       source_p,
                                       source_size,
-                                      is_strict,
+                                      (parse_opts & JERRY_PARSE_STRICT_MODE) != 0,
                                       &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -529,7 +513,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   JERRY_UNUSED (arg_list_size);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
-  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (parse_opts);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled.")));
 #endif /* !JERRY_DISABLE_JS_PARSER */

@@ -159,28 +159,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
       ecma_string_t *pattern_string_p = NULL;
 
       /* Get source string. */
-      if (!ecma_is_value_undefined (pattern_arg))
-      {
-        ECMA_TRY_CATCH (regexp_str_value,
-                        ecma_op_to_string (pattern_arg),
-                        ret_value);
-
-        if (ecma_string_is_empty (ecma_get_string_from_value (regexp_str_value)))
-        {
-          pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
-        }
-        else
-        {
-          pattern_string_p = ecma_get_string_from_value (regexp_str_value);
-          ecma_ref_ecma_string (pattern_string_p);
-        }
-
-        ECMA_FINALIZE (regexp_str_value);
-      }
-      else
-      {
-        pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
-      }
+      ret_value = ecma_regexp_read_pattern_str_helper (pattern_arg, &pattern_string_p);
 
       /* Parse flags. */
       if (ecma_is_value_empty (ret_value) && !ecma_is_value_undefined (flags_arg))

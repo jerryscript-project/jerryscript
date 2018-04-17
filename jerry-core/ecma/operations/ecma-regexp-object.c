@@ -1428,6 +1428,44 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 } /* ecma_regexp_exec_helper */
 
 /**
+ * Helper function for converting a RegExp pattern parameter to string.
+ *
+ * See also:
+ *         RegExp.compile
+ *         RegExp dispatch call
+ *
+ * @return empty value if success, error value otherwise
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_regexp_read_pattern_str_helper (ecma_value_t pattern_arg, /**< the RegExp pattern */
+                                     ecma_string_t **pattern_string_p) /**< [out] ptr to the pattern string ptr */
+{
+  if (!ecma_is_value_undefined (pattern_arg))
+  {
+    ecma_value_t regexp_str_value = ecma_op_to_string (pattern_arg);
+    if (ECMA_IS_VALUE_ERROR (regexp_str_value))
+    {
+      return regexp_str_value;
+    }
+
+    *pattern_string_p = ecma_get_string_from_value (regexp_str_value);
+    if (!ecma_string_is_empty (*pattern_string_p))
+    {
+      ecma_ref_ecma_string (*pattern_string_p);
+    }
+
+    ecma_free_value (regexp_str_value); // must be freed *after* ecma_ref_ecma_string
+  }
+
+  if (!*pattern_string_p || ecma_string_is_empty (*pattern_string_p))
+  {
+    *pattern_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+  }
+  return ECMA_VALUE_EMPTY;
+} /* ecma_regexp_read_pattern_str_helper */
+
+/**
  * @}
  * @}
  */

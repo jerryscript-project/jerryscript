@@ -395,7 +395,7 @@ int jerry_main (int argc, char *argv[])
     const jerry_char_t script[] = "var str = 'Hello World'; print(str + ' from JerryScript')";
     size_t script_size = strlen ((const char *) script);
 
-    ret_value = jerry_parse (script, script_size, false);
+    ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
 
     if (!jerry_value_has_error_flag (ret_value))
     {
@@ -415,11 +415,11 @@ int jerry_main (int argc, char *argv[])
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      ret_value = jerry_parse_named_resource ((jerry_char_t *) file_names[i],
-                                              strlen (file_names[i]),
-                                              source_p,
-                                              source_size,
-                                              false);
+      ret_value = jerry_parse ((jerry_char_t *) file_names[i],
+                               strlen (file_names[i]),
+                               source_p,
+                               source_size,
+                               JERRY_PARSE_NO_OPTS);
 
       if (!jerry_value_has_error_flag (ret_value))
       {

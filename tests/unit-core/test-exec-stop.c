@@ -50,9 +50,11 @@ main (void)
   jerry_set_vm_exec_stop_callback (vm_exec_stop_callback, &countdown, 16);
 
   const char *inf_loop_code_src_p = "while(true) {}";
-  jerry_value_t parsed_code_val = jerry_parse ((jerry_char_t *) inf_loop_code_src_p,
+  jerry_value_t parsed_code_val = jerry_parse (NULL,
+                                               0,
+                                               (jerry_char_t *) inf_loop_code_src_p,
                                                strlen (inf_loop_code_src_p),
-                                               false);
+                                               JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
   jerry_value_t res = jerry_run (parsed_code_val);
@@ -72,9 +74,11 @@ main (void)
   inf_loop_code_src_p = ("function f() { while (true) ; }\n"
                          "try { f(); } catch(e) {}");
 
-  parsed_code_val = jerry_parse ((jerry_char_t *) inf_loop_code_src_p,
+  parsed_code_val = jerry_parse (NULL,
+                                 0,
+                                 (jerry_char_t *) inf_loop_code_src_p,
                                  strlen (inf_loop_code_src_p),
-                                 false);
+                                 JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
   res = jerry_run (parsed_code_val);

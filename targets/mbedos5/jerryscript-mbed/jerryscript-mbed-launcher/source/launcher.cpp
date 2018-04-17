@@ -42,7 +42,7 @@ static int load_javascript() {
         const jerry_char_t* code = reinterpret_cast<const jerry_char_t*>(js_codes[src].source);
         const size_t length = js_codes[src].length;
 
-        jerry_value_t parsed_code = jerry_parse(code, length, false);
+        jerry_value_t parsed_code = jerry_parse(NULL, 0, code, length, JERRY_PARSE_NO_OPTS);
 
         if (jerry_value_has_error_flag(parsed_code)) {
             LOG_PRINT_ALWAYS("jerry_parse failed [%s]\r\n", js_codes[src].name);

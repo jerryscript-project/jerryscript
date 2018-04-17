@@ -66,7 +66,7 @@ int test_jerry (int argc, char **argv)
   register_js_function ("print", jerryx_handler_print);
 
   /* Setup Global scope code */
-  ret_value = jerry_parse (script, script_size, false);
+  ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
 
   if (!jerry_value_has_error_flag (ret_value))
   {

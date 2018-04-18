@@ -155,7 +155,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   {
     if (eval_string_p[0] != JERRY_DEBUGGER_EVAL_EVAL)
     {
-      JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_THROW_ERROR_FLAG);
+      JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
       JERRY_CONTEXT (error_value) = result;
 
       /* Stop where the error is caught. */
@@ -709,7 +709,7 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
     return;
   }
 
-  JERRY_DEBUGGER_UPDATE_FLAGS (JERRY_DEBUGGER_BREAKPOINT_MODE, JERRY_DEBUGGER_THROW_ERROR_FLAG);
+  JERRY_DEBUGGER_UPDATE_FLAGS (JERRY_DEBUGGER_BREAKPOINT_MODE, JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
 
   jerry_debugger_uint8_data_t *uint8_data = NULL;
 

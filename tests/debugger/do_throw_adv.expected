@@ -1,0 +1,42 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_throw_adv.js:15
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 2
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) s
+Stopped at tests/debugger/do_throw_adv.js:32
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 4
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: Catch again
+Stopped at tests/debugger/do_throw_adv.js:41
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 7
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 10
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: Replace the other error
+Stopped at tests/debugger/do_throw_adv.js:63
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 13
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: Should be caught
+Stopped at tests/debugger/do_throw_adv.js:76
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: 16
+Stopped at tests/debugger/do_throw_adv.js:18 (in f() at line:17, col:1)
+(jerry-debugger) c
+err: Script Error: 16

@@ -98,13 +98,13 @@ typedef enum
   JERRY_DEBUGGER_BREAKPOINT_MODE = 1u << 1, /**< debugger waiting at a breakpoint */
   JERRY_DEBUGGER_VM_STOP = 1u << 2, /**< stop at the next breakpoint even if disabled */
   JERRY_DEBUGGER_VM_IGNORE = 1u << 3, /**< ignore all breakpoints */
-  JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger stop at an exception */
-  JERRY_DEBUGGER_PARSER_WAIT = 1u << 5, /**< debugger should wait after parsing is completed */
-  JERRY_DEBUGGER_PARSER_WAIT_MODE = 1u << 6, /**< debugger is waiting after parsing is completed */
-  JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 7, /**< debugger waiting for client code */
-  JERRY_DEBUGGER_CLIENT_NO_SOURCE = 1u << 8, /**< debugger leaving the client source loop */
-  JERRY_DEBUGGER_CONTEXT_RESET_MODE = 1u << 9, /**< debugger and engine reinitialization mode */
-  JERRY_DEBUGGER_THROW_ERROR_FLAG = 1u << 10, /**< debugger client sent an error throw */
+  JERRY_DEBUGGER_VM_IGNORE_EXCEPTION = 1u << 4, /**< debugger doesn't stop at any exception */
+  JERRY_DEBUGGER_VM_EXCEPTION_THROWN = 1u << 5, /**< no need to stop for this exception */
+  JERRY_DEBUGGER_PARSER_WAIT = 1u << 6, /**< debugger should wait after parsing is completed */
+  JERRY_DEBUGGER_PARSER_WAIT_MODE = 1u << 7, /**< debugger is waiting after parsing is completed */
+  JERRY_DEBUGGER_CLIENT_SOURCE_MODE = 1u << 8, /**< debugger waiting for client code */
+  JERRY_DEBUGGER_CLIENT_NO_SOURCE = 1u << 9, /**< debugger leaving the client source loop */
+  JERRY_DEBUGGER_CONTEXT_RESET_MODE = 1u << 10, /**< debugger and engine reinitialization mode */
 } jerry_debugger_flags_t;
 
 /**

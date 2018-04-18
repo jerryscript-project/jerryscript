@@ -566,6 +566,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value, true);
       ret_value = ECMA_VALUE_ERROR;
     }
+    else
+    {
+#ifdef JERRY_DEBUGGER
+      JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
+#endif /* JERRY_DEBUGGER */
+    }
   }
   else
   {

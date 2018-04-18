@@ -1292,6 +1292,24 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       flags = cbc_ext_flags[ext_opcode];
       JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
       byte_code_p += 2;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+      if (ext_opcode == CBC_EXT_LINE)
+      {
+        uint32_t value = 0;
+        uint8_t byte;
+
+        do
+        {
+          byte = *byte_code_p++;
+          value = (value << 7) | (byte & CBC_LOWER_SEVEN_BIT_MASK);
+        }
+        while (byte & CBC_HIGHEST_BIT_MASK);
+
+        JERRY_DEBUG_MSG (" %d\n", (int) value);
+        continue;
+      }
+#endif /* JERRY_ENABLE_LINE_INFO */
     }
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
@@ -1488,6 +1506,23 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       flags = cbc_ext_flags[ext_opcode];
       PARSER_NEXT_BYTE (page_p, offset);
       length++;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+      if (ext_opcode == CBC_EXT_LINE)
+      {
+        uint8_t last_byte = 0;
+
+        do
+        {
+          last_byte = page_p->bytes[offset];
+          PARSER_NEXT_BYTE (page_p, offset);
+          length++;
+        }
+        while (last_byte & CBC_HIGHEST_BIT_MASK);
+
+        continue;
+      }
+#endif /* JERRY_ENABLE_LINE_INFO */
     }
 
     while (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
@@ -1638,6 +1673,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     total_size += context_p->argument_count * sizeof (ecma_value_t);
   }
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
+  {
+    total_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_ENABLE_LINE_INFO */
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
   total_size_used = total_size;
@@ -1802,6 +1844,25 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       opcode_p++;
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+
+#ifdef JERRY_ENABLE_LINE_INFO
+      if (ext_opcode == CBC_EXT_LINE)
+      {
+        uint8_t last_byte = 0;
+
+        do
+        {
+          last_byte = page_p->bytes[offset];
+          *dst_p++ = last_byte;
+
+          real_offset++;
+          PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+        }
+        while (last_byte & CBC_HIGHEST_BIT_MASK);
+
+        continue;
+      }
+#endif /* JERRY_ENABLE_LINE_INFO */
     }
 
     if (flags & CBC_HAS_BRANCH_ARG)
@@ -1993,6 +2054,21 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       argument_count++;
     }
   }
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
+  {
+    ecma_value_t *resource_name_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
+
+    if ((context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
+        && !(context_p->status_flags & PARSER_IS_STRICT))
+    {
+      resource_name_p -= context_p->argument_count;
+    }
+
+    resource_name_p[-1] = JERRY_CONTEXT (resource_name);
+  }
+#endif /* JERRY_ENABLE_LINE_INFO */
 
   if (context_p->status_flags & PARSER_NAMED_FUNCTION_EXP)
   {

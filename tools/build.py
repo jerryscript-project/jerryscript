@@ -86,6 +86,8 @@ def get_arguments():
                         help='build default jerry port implementation (%(choices)s; default: %(default)s)')
     parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='enable js-parser (%(choices)s; default: %(default)s)')
+    parser.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='provide line info (%(choices)s; default: %(default)s)')
     parser.add_argument('--link-lib', metavar='OPT', action='append', default=[],
                         help='add custom library to be linked')
     parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[],
@@ -152,6 +154,7 @@ def generate_build_options(arguments):
     build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
     build_options.append('-DFEATURE_CPOINTER_32_BIT=%s' % arguments.cpointer_32bit)
     build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
+    build_options.append('-DFEATURE_LINE_INFO=%s' % arguments.line_info)
     build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
     build_options.append('-DJERRY_CMDLINE_TEST=%s' % arguments.jerry_cmdline_test)
     build_options.append('-DJERRY_CMDLINE_SNAPSHOT=%s' % arguments.jerry_cmdline_snapshot)

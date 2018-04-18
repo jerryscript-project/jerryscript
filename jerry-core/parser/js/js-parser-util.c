@@ -17,6 +17,10 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
+#ifdef JERRY_ENABLE_LINE_INFO
+#include "jcontext.h"
+#endif /* JERRY_ENABLE_LINE_INFO */
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -351,6 +355,57 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
     }
   }
 } /* parser_emit_cbc_push_number */
+
+#ifdef JERRY_ENABLE_LINE_INFO
+
+/**
+ * Append a line info data
+ */
+void
+parser_emit_line_info (parser_context_t *context_p, /**< context */
+                       uint32_t line, /**< current line */
+                       bool flush_cbc) /**< flush last byte code */
+{
+  if (JERRY_CONTEXT (resource_name) == ECMA_VALUE_UNDEFINED)
+  {
+    return;
+  }
+
+  if (flush_cbc && context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
+  {
+    parser_flush_cbc (context_p);
+  }
+
+#ifdef PARSER_DUMP_BYTE_CODE
+  if (context_p->is_show_opcodes)
+  {
+    JERRY_DEBUG_MSG ("  [%3d] CBC_EXT_LINE %d\n", (int) context_p->stack_depth, line);
+  }
+#endif /* PARSER_DUMP_BYTE_CODE */
+
+  parser_emit_two_bytes (context_p, CBC_EXT_OPCODE, CBC_EXT_LINE);
+  context_p->byte_code_size += 2;
+
+  context_p->last_line_info_line = line;
+
+  do
+  {
+    uint8_t byte = (uint8_t) (line & CBC_LOWER_SEVEN_BIT_MASK);
+
+    line >>= 7;
+
+    if (line > 0)
+    {
+      byte = (uint8_t) (byte | CBC_HIGHEST_BIT_MASK);
+    }
+
+    PARSER_APPEND_TO_BYTE_CODE (context_p, byte);
+    context_p->byte_code_size++;
+  }
+  while (line > 0);
+} /* parser_emit_line_info */
+
+#endif /* JERRY_ENABLE_LINE_INFO */
 
 /**
  * Append a byte code with a branch argument

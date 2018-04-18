@@ -95,6 +95,7 @@ typedef enum
   JERRY_FEATURE_TYPEDARRAY, /**< Typedarray support */
   JERRY_FEATURE_DATE, /**< Date support */
   JERRY_FEATURE_REGEXP, /**< Regexp support */
+  JERRY_FEATURE_LINE_INFO, /**< line info available */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -465,7 +466,7 @@ bool jerry_delete_property (const jerry_value_t obj_val, const jerry_value_t pro
 bool jerry_delete_property_by_index (const jerry_value_t obj_val, uint32_t index);
 
 jerry_value_t jerry_get_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
-jerry_value_t jerry_get_property_by_index (const jerry_value_t  obj_val, uint32_t index);
+jerry_value_t jerry_get_property_by_index (const jerry_value_t obj_val, uint32_t index);
 jerry_value_t jerry_set_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
                                   const jerry_value_t value_to_set);
 jerry_value_t jerry_set_property_by_index (const jerry_value_t obj_val, uint32_t index,
@@ -531,6 +532,7 @@ jerry_instance_t *jerry_create_instance (uint32_t heap_size, jerry_instance_allo
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
+jerry_value_t jerry_get_backtrace (uint32_t max_depth);
 
 /**
  * Array buffer components.

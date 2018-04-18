@@ -24,6 +24,10 @@
 #include "jcontext.h"
 #include "jrt.h"
 
+#ifdef JERRY_ENABLE_LINE_INFO
+#include "vm.h"
+#endif /* JERRY_ENABLE_LINE_INFO */
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -133,6 +137,24 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
   ecma_deref_object (prototype_obj_p);
 
   ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  /* The "stack" identifier is not a magic string. */
+  const char *stack_id_p = "stack";
+
+  ecma_string_t *stack_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) stack_id_p, 5);
+
+  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (new_error_obj_p,
+                                                                         stack_str_p,
+                                                                         ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                         NULL);
+  ecma_deref_ecma_string (stack_str_p);
+
+  ecma_value_t backtrace_value = vm_get_backtrace (0);
+
+  prop_value_p->value = backtrace_value;
+  ecma_deref_object (ecma_get_object_from_value (backtrace_value));
+#endif /* JERRY_ENABLE_LINE_INFO */
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */

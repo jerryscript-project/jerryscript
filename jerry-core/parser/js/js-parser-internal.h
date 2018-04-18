@@ -308,8 +308,12 @@ typedef struct
   /** extra data for each breakpoint */
   parser_breakpoint_info_t breakpoint_info[JERRY_DEBUGGER_MAX_BUFFER_SIZE / sizeof (parser_breakpoint_info_t)];
   uint16_t breakpoint_info_count; /**< current breakpoint index */
-  parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint was inserted */
+  parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
 #endif /* JERRY_DEBUGGER */
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  parser_line_counter_t last_line_info_line; /**< last line where line info has been inserted */
+#endif /* JERRY_ENABLE_LINE_INFO */
 } parser_context_t;
 
 /**
@@ -484,6 +488,12 @@ void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_
 void parser_send_breakpoints (parser_context_t *context_p, jerry_debugger_header_type_t type);
 
 #endif /* JERRY_DEBUGGER */
+
+#ifdef JERRY_ENABLE_LINE_INFO
+
+void parser_emit_line_info (parser_context_t *context_p, uint32_t line, bool flush_cbc);
+
+#endif /* JERRY_ENABLE_LINE_INFO */
 
 /**
  * @}

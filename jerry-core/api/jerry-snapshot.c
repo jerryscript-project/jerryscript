@@ -726,6 +726,10 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
 
+#ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
+#endif /* JERRY_ENABLE_LINE_INFO */
+
   snapshot_globals_t globals;
   ecma_value_t parse_status;
   ecma_compiled_code_t *bytecode_data_p;
@@ -1579,6 +1583,11 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
   ecma_value_t parse_status;
   ecma_compiled_code_t *bytecode_data_p;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
+#endif /* JERRY_ENABLE_LINE_INFO */
+
   parse_status = parser_parse_script (NULL,
                                       0,
                                       source_p,

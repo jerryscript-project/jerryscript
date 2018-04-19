@@ -926,10 +926,10 @@ jerry_value_has_abort_flag (const jerry_value_t value) /**< api value */
 } /* jerry_value_has_abort_flag */
 
 /**
- * Clear the error flag
+ * Clear the error and abort value.
  */
 void
-jerry_value_clear_error_flag (jerry_value_t *value_p)
+jerry_value_clear_error (jerry_value_t *value_p)
 {
   jerry_assert_api_available ();
 
@@ -937,7 +937,7 @@ jerry_value_clear_error_flag (jerry_value_t *value_p)
   {
     *value_p = ecma_clear_error_reference (*value_p, false);
   }
-} /* jerry_value_clear_error_flag */
+} /* jerry_value_clear_error */
 
 /**
  * Set the error flag if the value is not an error reference.
@@ -956,7 +956,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
       return;
     }
 
-    jerry_value_clear_error_flag (value_p);
+    jerry_value_clear_error (value_p);
   }
 
   *value_p = ecma_create_error_reference (*value_p, true);
@@ -979,7 +979,7 @@ jerry_value_set_abort_flag (jerry_value_t *value_p)
       return;
     }
 
-    jerry_value_clear_error_flag (value_p);
+    jerry_value_clear_error (value_p);
   }
 
   *value_p = ecma_create_error_reference (*value_p, false);

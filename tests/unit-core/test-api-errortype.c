@@ -40,7 +40,7 @@ main (void)
     TEST_ASSERT (jerry_value_is_error (error_obj));
     TEST_ASSERT (jerry_get_error_type (error_obj) == errors[idx]);
 
-    jerry_value_clear_error_flag (&error_obj);
+    jerry_value_clear_error (&error_obj);
 
     TEST_ASSERT (jerry_get_error_type (error_obj) == errors[idx]);
 

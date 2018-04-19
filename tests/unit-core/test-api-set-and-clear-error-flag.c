@@ -27,7 +27,7 @@ main (void)
   jerry_value_set_error_flag (&obj_val);
   jerry_value_t err_val = jerry_acquire_value (obj_val);
 
-  jerry_value_clear_error_flag (&obj_val);
+  jerry_value_clear_error (&obj_val);
   jerry_release_value (obj_val);
 
   jerry_release_value (err_val);

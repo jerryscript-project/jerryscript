@@ -98,7 +98,7 @@ main (int argc,
     {
       ret_value = jerry_parse (NULL, 0, source_p, source_size, JERRY_PARSE_NO_OPTS);
 
-      if (!jerry_value_has_error_flag (ret_value))
+      if (!jerry_value_is_error (ret_value))
       {
         jerry_value_t func_val = ret_value;
         ret_value = jerry_run (func_val);
@@ -106,7 +106,7 @@ main (int argc,
       }
     }
 
-    if (jerry_value_has_error_flag (ret_value))
+    if (jerry_value_is_error (ret_value))
     {
       break;
     }
@@ -117,7 +117,7 @@ main (int argc,
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unhandled exception: Script Error!\n");
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;

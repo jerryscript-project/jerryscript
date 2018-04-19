@@ -128,7 +128,7 @@ static void
 print_unhandled_exception (jerry_value_t error_value, /**< error value */
                            const jerry_char_t *source_p) /**< source_p */
 {
-  assert (jerry_value_has_error_flag (error_value));
+  assert (jerry_value_is_error (error_value));
 
   error_value = jerry_get_value_without_error_flag (error_value);
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
@@ -257,7 +257,7 @@ register_js_function (const char *name_p, /**< name of the function */
 {
   jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
 
-  if (jerry_value_has_error_flag (result_val))
+  if (jerry_value_is_error (result_val))
   {
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
   }
@@ -373,7 +373,7 @@ jerry_cmd_main (int argc, char *argv[])
 
     ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
 
-    if (!jerry_value_has_error_flag (ret_value))
+    if (!jerry_value_is_error (ret_value))
     {
       ret_value = jerry_run (ret_value);
     }
@@ -397,14 +397,14 @@ jerry_cmd_main (int argc, char *argv[])
                                source_size,
                                JERRY_PARSE_NO_OPTS);
 
-      if (!jerry_value_has_error_flag (ret_value))
+      if (!jerry_value_is_error (ret_value))
       {
         jerry_value_t func_val = ret_value;
         ret_value = jerry_run (func_val);
         jerry_release_value (func_val);
       }
 
-      if (jerry_value_has_error_flag (ret_value))
+      if (jerry_value_is_error (ret_value))
       {
         print_unhandled_exception (ret_value, source_p);
         free ((void*) source_p);
@@ -421,7 +421,7 @@ jerry_cmd_main (int argc, char *argv[])
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     ret_code = JERRY_STANDALONE_EXIT_CODE_FAIL;
   }

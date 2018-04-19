@@ -108,7 +108,7 @@ test_typedarray_info (jerry_value_t typedarray, /**< target TypedArray to query 
                       jerry_length_t element_count, /**< expected element count */
                       jerry_length_t bytes_per_element) /**< bytes per element for the given type */
 {
-  TEST_ASSERT (!jerry_value_has_error_flag (typedarray));
+  TEST_ASSERT (!jerry_value_is_error (typedarray));
   TEST_ASSERT (jerry_value_is_typedarray (typedarray));
   TEST_ASSERT (jerry_get_typedarray_type (typedarray) == typedarray_type);
   TEST_ASSERT (jerry_get_typedarray_length (typedarray) == element_count);
@@ -138,7 +138,7 @@ test_typedarray_queries (test_entry_t test_entries[]) /**< test cases */
     {
       jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) test_entries[i].constructor_name);
       jerry_value_t prop_value = jerry_get_property (global_obj_val, prop_name);
-      TEST_ASSERT (!jerry_value_has_error_flag (prop_value));
+      TEST_ASSERT (!jerry_value_is_error (prop_value));
       jerry_value_t length_arg = jerry_create_number (test_entries[i].element_count);
 
       jerry_value_t typedarray = jerry_construct_object (prop_value, &length_arg, 1);
@@ -256,7 +256,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
                                                                arraybuffer,
                                                                offset,
                                                                element_count);
-      TEST_ASSERT (!jerry_value_has_error_flag (typedarray));
+      TEST_ASSERT (!jerry_value_is_error (typedarray));
 
       jerry_release_value (js_offset);
       jerry_release_value (js_element_count);
@@ -273,7 +273,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
     jerry_value_t result = jerry_eval ((jerry_char_t *) eval_src_p,
                                        strlen (eval_src_p),
                                        true);
-    TEST_ASSERT (!jerry_value_has_error_flag (result));
+    TEST_ASSERT (!jerry_value_is_error (result));
     jerry_release_value (result);
 
     {
@@ -385,7 +385,7 @@ main (void)
                                        strlen (eval_src_p),
                                        true);
 
-    TEST_ASSERT (!jerry_value_has_error_flag (result));
+    TEST_ASSERT (!jerry_value_is_error (result));
     jerry_release_value (result);
 
     /* Check write results */
@@ -451,7 +451,7 @@ main (void)
         jerry_length_t offset = 22;
         jerry_length_t byte_count = 23;
         jerry_value_t error = jerry_get_typedarray_buffer (values[idx], &offset, &byte_count);
-        TEST_ASSERT (jerry_value_has_error_flag (error));
+        TEST_ASSERT (jerry_value_is_error (error));
         TEST_ASSERT (offset == 22);
         TEST_ASSERT (byte_count == 23);
         jerry_release_value (error);
@@ -463,7 +463,7 @@ main (void)
       if (!jerry_value_is_arraybuffer (values[idx]))
       {
         jerry_value_t error = jerry_create_typedarray_for_arraybuffer (JERRY_TYPEDARRAY_UINT8, values[idx]);
-        TEST_ASSERT (jerry_value_has_error_flag (error));
+        TEST_ASSERT (jerry_value_is_error (error));
         jerry_release_value (error);
       }
 

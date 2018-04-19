@@ -32,11 +32,11 @@ int js_entry (const char *source_p, const size_t source_size)
 
   jerry_value_t parsed_code = jerry_parse (NULL, 0, jerry_src, source_size, JERRY_PARSE_NO_OPTS);
 
-  if (!jerry_value_has_error_flag (parsed_code))
+  if (!jerry_value_is_error (parsed_code))
   {
     jerry_value_t ret_value = jerry_run (parsed_code);
 
-    if (jerry_value_has_error_flag (ret_value))
+    if (jerry_value_is_error (ret_value))
       {
       printf ("Error: ret_value has an error flag!\r\n");
       return ret_code = -1;
@@ -63,7 +63,7 @@ int js_eval (const char *source_p, const size_t source_size)
                                       source_size,
                                       false);
 
-  if (jerry_value_has_error_flag (ret_val))
+  if (jerry_value_is_error (ret_val))
   {
     printf ("Error: jerry_eval failed!\r\n");
     status = -1;
@@ -83,7 +83,7 @@ int js_loop (uint32_t ticknow)
 
   jerry_release_value (sys_name);
 
-  if (jerry_value_has_error_flag (sysloop_func))
+  if (jerry_value_is_error (sysloop_func))
   {
     printf ("Error: '%s' not defined!!!\r\n", fn_sys_loop_name);
     jerry_release_value (global_obj);
@@ -108,7 +108,7 @@ int js_loop (uint32_t ticknow)
                                                        global_obj,
                                                        val_args,
                                                        val_argv);
-  if (jerry_value_has_error_flag (ret_val_sysloop))
+  if (jerry_value_is_error (ret_val_sysloop))
   {
     status = -3;
   }

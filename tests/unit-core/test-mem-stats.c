@@ -35,10 +35,10 @@ int main (void)
                                                (jerry_char_t *) test_source,
                                                strlen (test_source),
                                                JERRY_PARSE_NO_OPTS);
-  TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (!jerry_value_is_error (res));
 
   jerry_heap_stats_t stats;
   memset (&stats, 0, sizeof (stats));

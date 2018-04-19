@@ -153,10 +153,10 @@ main (void)
                                                (jerry_char_t *) test_source,
                                                strlen (test_source),
                                                JERRY_PARSE_NO_OPTS);
-  TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (!jerry_value_is_error (res));
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
@@ -181,7 +181,7 @@ main (void)
   /* Run the jobqueue. */
   res = jerry_run_all_enqueued_jobs ();
 
-  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (!jerry_value_is_error (res));
   TEST_ASSERT (count_in_assert == 2);
 
   jerry_release_value (my_promise1);

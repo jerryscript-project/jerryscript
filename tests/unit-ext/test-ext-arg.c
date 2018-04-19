@@ -133,7 +133,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
 
   if (validator1_count == 0)
   {
-    TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (!jerry_value_is_error (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "abc") == 0);
@@ -141,7 +141,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
   }
   else if (validator1_count == 1)
   {
-    TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (!jerry_value_is_error (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "abc") == 0);
@@ -149,7 +149,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
   }
   else if (validator1_count == 2)
   {
-    TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (!jerry_value_is_error (is_ok));
     TEST_ASSERT (arg1);
     TEST_ASSERT (arg2 == 10.5);
     TEST_ASSERT (strcmp (arg3, "") == 0);
@@ -157,7 +157,7 @@ test_validator1_handler (const jerry_value_t func_obj_val __attribute__((unused)
   }
   else
   {
-    TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (jerry_value_is_error (is_ok));
   }
 
   jerry_release_value (is_ok);
@@ -177,7 +177,7 @@ my_custom_transform (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS 
   jerry_value_t js_arg = jerryx_arg_js_iterator_pop (js_arg_iter_p);
   jerry_value_t to_number = jerry_value_to_number (js_arg);
 
-  if (jerry_value_has_error_flag (to_number))
+  if (jerry_value_is_error (to_number))
   {
     jerry_release_value (to_number);
 
@@ -226,13 +226,13 @@ test_validator2_handler (const jerry_value_t func_obj_val __attribute__((unused)
 
   if (validator2_count == 0)
   {
-    TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (!jerry_value_is_error (is_ok));
     TEST_ASSERT (thing_p == &my_thing_a);
     TEST_ASSERT (thing_p->x == 1);
   }
   else
   {
-    TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+    TEST_ASSERT (jerry_value_is_error (is_ok));
   }
 
   jerry_release_value (is_ok);
@@ -269,7 +269,7 @@ test_validator_prop1_handler (const jerry_value_t func_obj_val __attribute__((un
                                                                 mapping,
                                                                 ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
   TEST_ASSERT (native1);
   TEST_ASSERT (native2 == 1.5);
   TEST_ASSERT (native3 == 3);
@@ -317,7 +317,7 @@ test_validator_prop2_handler (const jerry_value_t func_obj_val __attribute__((un
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
 
-  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
 
   if (validator_prop_count == 1)
   {
@@ -354,7 +354,7 @@ test_validator_prop3_handler (const jerry_value_t func_obj_val __attribute__((un
                                                                 mapping,
                                                                 ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (jerry_value_is_error (is_ok));
   TEST_ASSERT (!native1);
   TEST_ASSERT (native2);
 
@@ -399,7 +399,7 @@ test_validator_int1_handler (const jerry_value_t func_obj_val __attribute__((unu
                                                    mapping,
                                                    ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
   TEST_ASSERT (num0 == 0);
   TEST_ASSERT (num1 == 255);
   TEST_ASSERT (num2 == 128);
@@ -448,7 +448,7 @@ test_validator_int2_handler (const jerry_value_t func_obj_val __attribute__((unu
                                                    mapping,
                                                    ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (jerry_value_is_error (is_ok));
   TEST_ASSERT (num0 == -2);
   TEST_ASSERT (num1 == -2);
   TEST_ASSERT (num2 == -1);
@@ -484,7 +484,7 @@ test_validator_int3_handler (const jerry_value_t func_obj_val __attribute__((unu
                                                    mapping,
                                                    ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (jerry_value_is_error (is_ok));
 
   jerry_release_value (is_ok);
   validator_int_count++;
@@ -522,7 +522,7 @@ test_validator_array1_handler (const jerry_value_t func_obj_val __attribute__((u
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
 
-  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
 
   if (validator_array_count == 0)
   {
@@ -553,7 +553,7 @@ test_validator_array2_handler (const jerry_value_t func_obj_val __attribute__((u
 
   jerry_value_t is_ok = jerryx_arg_transform_array (args_p[0], item_mapping, ARRAY_SIZE (item_mapping));
 
-  TEST_ASSERT (jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (jerry_value_is_error (is_ok));
   TEST_ASSERT (native1 == 1);
   TEST_ASSERT (!native2);
 
@@ -582,7 +582,7 @@ test_utf8_string (void)
                                                    mapping,
                                                    ARRAY_SIZE (mapping));
 
-  TEST_ASSERT (!jerry_value_has_error_flag (is_ok));
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
   TEST_ASSERT (!strcmp (buf, expect_utf8_buf));
 
   jerry_release_value (str);
@@ -665,10 +665,10 @@ main (void)
                                                (jerry_char_t *) test_source,
                                                strlen (test_source),
                                                JERRY_PARSE_NO_OPTS);
-  TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);
-  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (!jerry_value_is_error (res));
   TEST_ASSERT (validator1_count == 5);
   TEST_ASSERT (validator2_count == 3);
   TEST_ASSERT (validator_prop_count == 4);

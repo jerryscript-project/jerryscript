@@ -50,7 +50,7 @@ find_test_object_by_property (const jerry_value_t candidate,
   jerry_value_t *args_p = (jerry_value_t *) context_p;
   jerry_value_t result = jerry_has_property (candidate, args_p[0]);
 
-  bool has_property = (!jerry_value_has_error_flag (result) && jerry_get_boolean_value (result));
+  bool has_property = (!jerry_value_is_error (result) && jerry_get_boolean_value (result));
 
   /* If the object has the desired property, store a new reference to it in args_p[1]. */
   if (has_property)
@@ -75,9 +75,9 @@ main (void)
                                             (jerry_char_t *) strict_equal_source,
                                             strlen (strict_equal_source),
                                             JERRY_PARSE_STRICT_MODE);
-  TEST_ASSERT (!jerry_value_has_error_flag (parse_result));
+  TEST_ASSERT (!jerry_value_is_error (parse_result));
   jerry_value_t strict_equal = jerry_run (parse_result);
-  TEST_ASSERT (!jerry_value_has_error_flag (strict_equal));
+  TEST_ASSERT (!jerry_value_is_error (strict_equal));
   jerry_release_value (parse_result);
 
   /* Create an object and associate some native data with it. */

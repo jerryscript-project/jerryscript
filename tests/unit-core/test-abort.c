@@ -45,7 +45,7 @@ main (void)
   jerry_value_t callback_name = jerry_create_string ((jerry_char_t *) "callback");
   jerry_value_t func = jerry_create_external_function (callback_func);
   jerry_value_t res = jerry_set_property (global, callback_name, func);
-  TEST_ASSERT (!jerry_value_has_error_flag (res));
+  TEST_ASSERT (!jerry_value_is_error (res));
 
   jerry_release_value (res);
   jerry_release_value (func);
@@ -68,7 +68,7 @@ main (void)
                                                strlen (inf_loop_code_src_p),
                                                JERRY_PARSE_NO_OPTS);
 
-  TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
   TEST_ASSERT (jerry_value_has_abort_flag (res));
@@ -101,7 +101,7 @@ main (void)
                                  strlen (inf_loop_code_src_p),
                                  JERRY_PARSE_NO_OPTS);
 
-  TEST_ASSERT (!jerry_value_has_error_flag (parsed_code_val));
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
   TEST_ASSERT (jerry_value_has_abort_flag (res));
@@ -112,19 +112,19 @@ main (void)
   /* Test flag overwrites. */
   jerry_value_t value = jerry_create_string ((jerry_char_t *) "Error description");
   TEST_ASSERT (!jerry_value_has_abort_flag (value));
-  TEST_ASSERT (!jerry_value_has_error_flag (value));
+  TEST_ASSERT (!jerry_value_is_error (value));
 
   jerry_value_set_abort_flag (&value);
   TEST_ASSERT (jerry_value_has_abort_flag (value));
-  TEST_ASSERT (jerry_value_has_error_flag (value));
+  TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_value_set_error_flag (&value);
   TEST_ASSERT (!jerry_value_has_abort_flag (value));
-  TEST_ASSERT (jerry_value_has_error_flag (value));
+  TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_value_set_abort_flag (&value);
   TEST_ASSERT (jerry_value_has_abort_flag (value));
-  TEST_ASSERT (jerry_value_has_error_flag (value));
+  TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_release_value (value);
 

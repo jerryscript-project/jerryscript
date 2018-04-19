@@ -166,7 +166,7 @@ register_native_function (const char* name,
   jerry_release_value (global_obj_val);
   jerry_release_value (prop_name_val);
 
-  if (jerry_value_has_error_flag (res))
+  if (jerry_value_is_error (res))
   {
     printf ("!!! register_native_function failed: [%s]\r\n", name);
     jerry_release_value (res);

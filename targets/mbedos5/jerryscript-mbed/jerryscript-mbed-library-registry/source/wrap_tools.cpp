@@ -32,7 +32,7 @@ bool jsmbed_wrap_register_global_function(const char* name, jerry_external_handl
         return is_ok;
     }
 
-    if (jerry_value_has_error_flag(reg_function)) {
+    if (jerry_value_is_error(reg_function)) {
         is_ok = false;
         LOG_PRINT_ALWAYS("Error: jerry_create_external_function has error flag! \r\n");
         jerry_release_value(global_object_val);
@@ -45,7 +45,7 @@ bool jsmbed_wrap_register_global_function(const char* name, jerry_external_handl
     jerry_value_t set_result = jerry_set_property(global_object_val, jerry_name, reg_function);
 
 
-    if (jerry_value_has_error_flag(set_result)) {
+    if (jerry_value_is_error(set_result)) {
         is_ok = false;
         LOG_PRINT_ALWAYS("Error: jerry_create_external_function failed: [%s]\r\n", name);
     }

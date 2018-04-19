@@ -111,7 +111,7 @@ register_native_function (const char* name,
     return is_ok;
   }
 
-  if (jerry_value_has_error_flag (reg_function))
+  if (jerry_value_is_error (reg_function))
   {
     is_ok = false;
     printf ("Error: create_external_function has error flag! \n\r");
@@ -127,7 +127,7 @@ register_native_function (const char* name,
                                                  reg_function);
 
 
-  if (jerry_value_has_error_flag (set_result))
+  if (jerry_value_is_error (set_result))
   {
     is_ok = false;
     printf ("Error: register_native_function failed: [%s]\r\n", name);

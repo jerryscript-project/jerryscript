@@ -116,7 +116,7 @@ jerryx_module_check_cache (jerry_value_t cache, /**< cache from which to attempt
   jerry_value_t js_has_property = jerry_has_property (cache, module_name);
 
   /* If we succeed in getting an answer, we examine the answer. */
-  if (!jerry_value_has_error_flag (js_has_property))
+  if (!jerry_value_is_error (js_has_property))
   {
     bool has_property = jerry_get_boolean_value (js_has_property);
 
@@ -146,7 +146,7 @@ jerryx_module_add_to_cache (jerry_value_t cache, /**< cache to which to add the 
 {
   jerry_value_t ret = jerry_set_property (cache, module_name, module);
 
-  if (jerry_value_has_error_flag (ret))
+  if (jerry_value_is_error (ret))
   {
     jerry_release_value (module);
   }
@@ -258,7 +258,7 @@ jerryx_module_resolve (const jerry_value_t name, /**< name of the module to load
     resolve_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->resolve_p);
     if (resolve_p != NULL && resolve_p (canonical_names[index], &ret))
     {
-      if (!jerry_value_has_error_flag (ret))
+      if (!jerry_value_is_error (ret))
       {
         ret = jerryx_module_add_to_cache (instances, canonical_names[index], ret);
       }

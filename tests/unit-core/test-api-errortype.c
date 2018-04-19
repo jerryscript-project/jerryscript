@@ -37,7 +37,7 @@ main (void)
   for (size_t idx = 0; idx < sizeof (errors) / sizeof (errors[0]); idx++)
   {
     jerry_value_t error_obj = jerry_create_error (errors[idx], (const jerry_char_t *)"test");
-    TEST_ASSERT (jerry_value_has_error_flag (error_obj));
+    TEST_ASSERT (jerry_value_is_error (error_obj));
     TEST_ASSERT (jerry_get_error_type (error_obj) == errors[idx]);
 
     jerry_value_clear_error_flag (&error_obj);

@@ -100,7 +100,7 @@ test_read_with_offset (uint8_t offset) /**< offset for buffer read. */
                                           strlen (eval_arraybuffer_src_p),
                                           true);
 
-  TEST_ASSERT (!jerry_value_has_error_flag (arraybuffer));
+  TEST_ASSERT (!jerry_value_is_error (arraybuffer));
   TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
   TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == 15);
 
@@ -136,7 +136,7 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
                                           strlen (eval_arraybuffer_src_p),
                                           true);
 
-  TEST_ASSERT (!jerry_value_has_error_flag (arraybuffer));
+  TEST_ASSERT (!jerry_value_is_error (arraybuffer));
   TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
   TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == 15);
 
@@ -199,7 +199,7 @@ main (void)
     jerry_value_t eval_arraybuffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
                                                  strlen (eval_arraybuffer_src_p),
                                                  true);
-    TEST_ASSERT (!jerry_value_has_error_flag (eval_arraybuffer));
+    TEST_ASSERT (!jerry_value_is_error (eval_arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (eval_arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (eval_arraybuffer) == 10);
     jerry_release_value (eval_arraybuffer);
@@ -209,7 +209,7 @@ main (void)
   {
     const uint32_t length = 15;
     jerry_value_t arraybuffer = jerry_create_arraybuffer (length);
-    TEST_ASSERT (!jerry_value_has_error_flag (arraybuffer));
+    TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
     jerry_release_value (arraybuffer);
@@ -225,7 +225,7 @@ main (void)
   {
     const uint32_t length = 0;
     jerry_value_t arraybuffer = jerry_create_arraybuffer (length);
-    TEST_ASSERT (!jerry_value_has_error_flag (arraybuffer));
+    TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
 
@@ -253,7 +253,7 @@ main (void)
   {
     const uint32_t length = 0;
     jerry_value_t arraybuffer = jerry_create_arraybuffer (length);
-    TEST_ASSERT (!jerry_value_has_error_flag (arraybuffer));
+    TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
 
@@ -321,7 +321,7 @@ main (void)
                                         strlen (eval_arraybuffer_src_p),
                                         true);
 
-    TEST_ASSERT (!jerry_value_has_error_flag (buffer));
+    TEST_ASSERT (!jerry_value_is_error (buffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (buffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (buffer) == 20);
 
@@ -365,7 +365,7 @@ main (void)
   /* Test ArrayBuffer external with invalid arguments */
   {
     jerry_value_t input_buffer = jerry_create_arraybuffer_external (0, NULL, NULL);
-    TEST_ASSERT (jerry_value_has_error_flag (input_buffer));
+    TEST_ASSERT (jerry_value_is_error (input_buffer));
     TEST_ASSERT (jerry_get_error_type (input_buffer) == JERRY_ERROR_RANGE);
     jerry_release_value (input_buffer);
   }

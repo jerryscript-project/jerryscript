@@ -1053,7 +1053,7 @@ main (void)
   {
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t num_val = jerry_create_number (123);
-    jerry_value_set_error_flag (&num_val);
+    jerry_value_set_error (&num_val);
     TEST_ASSERT (jerry_value_is_error (num_val));
     jerry_value_t num2_val = jerry_get_value_without_error_flag (num_val);
     TEST_ASSERT (!jerry_value_is_error (num2_val));

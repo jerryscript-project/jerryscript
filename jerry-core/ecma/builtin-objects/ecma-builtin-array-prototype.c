@@ -2296,171 +2296,20 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
 } /* ecma_builtin_array_prototype_object_filter */
 
 /**
- * The Array.prototype object's 'reduce' routine
+ * Reduces the Array starting from left or right
  *
  * See also:
- *          ECMA-262 v5, 15.4.4.21
+ *         Array.prototype.reduce
+ *         Array.prototype.reduceRight
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this argument */
-                                            const ecma_value_t args[], /**< arguments list */
-                                            ecma_length_t args_number) /**< number of arguments */
-{
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_value_t callbackfn = (args_number > 0) ? args[0] : ECMA_VALUE_UNDEFINED;
-  ecma_value_t initial_value = (args_number > 1) ? args[1] : ECMA_VALUE_UNDEFINED;
-
-  /* 1. */
-  ECMA_TRY_CATCH (obj_this,
-                  ecma_op_to_object (this_arg),
-                  ret_value);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-
-  /* 2. */
-  ECMA_TRY_CATCH (len_value,
-                  ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH),
-                  ret_value);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
-
-  /* 3. */
-  uint32_t len = ecma_number_to_uint32 (len_number);
-
-  /* 4. */
-  if (!ecma_op_is_callable (callbackfn))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
-  }
-  else
-  {
-    ecma_object_t *func_object_p;
-
-    JERRY_ASSERT (ecma_is_value_object (callbackfn));
-    func_object_p = ecma_get_object_from_value (callbackfn);
-    ecma_value_t accumulator = ECMA_VALUE_UNDEFINED;
-
-    /* 5. */
-    if (len_number == ECMA_NUMBER_ZERO && ecma_is_value_undefined (initial_value))
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
-    }
-    else
-    {
-      /* 6. */
-      uint32_t index = 0;
-
-      /* 7.a */
-      if (args_number > 1)
-      {
-        accumulator = ecma_copy_value (initial_value);
-      }
-      else
-      {
-        /* 8.a */
-        bool k_present = false;
-
-        /* 8.b */
-        while (!k_present && index < len && ecma_is_value_empty (ret_value))
-        {
-          /* 8.b.i */
-          ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
-          k_present = true;
-
-          /* 8.b.ii-iii */
-          ECMA_TRY_CATCH (current_value, ecma_op_object_find (obj_p, index_str_p), ret_value);
-
-          if (ecma_is_value_found (current_value))
-          {
-            accumulator = ecma_copy_value (current_value);
-          }
-          else
-          {
-            k_present = false;
-          }
-
-          ECMA_FINALIZE (current_value);
-
-          /* 8.b.iv */
-          index++;
-
-          ecma_deref_ecma_string (index_str_p);
-        }
-
-        /* 8.c */
-        if (!k_present)
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Missing array element."));
-        }
-      }
-      /* 9. */
-      ecma_value_t current_index;
-
-      for (; index < len && ecma_is_value_empty (ret_value); index++)
-      {
-        /* 9.a */
-        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
-
-        /* 9.b */
-        ECMA_TRY_CATCH (current_value, ecma_op_object_find (obj_p, index_str_p), ret_value);
-
-        if (ecma_is_value_found (current_value))
-        {
-          /* 9.c.i, 9.c.ii */
-          current_index = ecma_make_uint32_value (index);
-          ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
-
-          ECMA_TRY_CATCH (call_value,
-                          ecma_op_function_call (func_object_p,
-                                                 ECMA_VALUE_UNDEFINED,
-                                                 call_args,
-                                                 4),
-                          ret_value);
-
-          ecma_free_value (accumulator);
-          accumulator = ecma_copy_value (call_value);
-
-          ECMA_FINALIZE (call_value);
-        }
-
-        ECMA_FINALIZE (current_value);
-
-        ecma_deref_ecma_string (index_str_p);
-        /* 9.d in for loop */
-      }
-
-      if (ecma_is_value_empty (ret_value))
-      {
-        ret_value = ecma_copy_value (accumulator);
-      }
-    }
-
-    ecma_free_value (accumulator);
-  }
-
-  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
-  ECMA_FINALIZE (len_value);
-  ECMA_FINALIZE (obj_this);
-
-  return ret_value;
-} /* ecma_builtin_array_prototype_object_reduce */
-
-/**
- * The Array.prototype object's 'reduceRight' routine
- *
- * See also:
- *          ECMA-262 v5, 15.4.4.22
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< this argument */
-                                                  const ecma_value_t args[], /**< arguments list */
-                                                  ecma_length_t args_number) /**< number of arguments */
+ecma_builtin_array_reduce_from (ecma_value_t this_arg, /**< this argument */
+                                const ecma_value_t args[], /**< arguments list */
+                                ecma_length_t args_number, /**< number of arguments */
+                                bool start_from_left) /**< whether the reduce starts from left or right */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_value_t callbackfn = (args_number > 0) ? args[0] : ECMA_VALUE_UNDEFINED;
@@ -2505,7 +2354,8 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
       ecma_value_t accumulator = ECMA_VALUE_UNDEFINED;
 
       /* 6. */
-      int64_t index = (int64_t) len - 1;
+      uint32_t index = 0;
+      const uint32_t last_index = len - 1;
 
       /* 7.a */
       if (args_number > 1)
@@ -2518,10 +2368,11 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         bool k_present = false;
 
         /* 8.b */
-        while (!k_present && index >= 0 && ecma_is_value_empty (ret_value))
+        while (!k_present && index < len && ecma_is_value_empty (ret_value))
         {
           /* 8.b.i */
-          ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
+          ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (start_from_left ? index
+                                                                                         : last_index - index);
           k_present = true;
 
           /* 8.b.ii-iii */
@@ -2539,7 +2390,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
           ECMA_FINALIZE (current_value);
 
           /* 8.b.iv */
-          index--;
+          index++;
 
           ecma_deref_ecma_string (index_str_p);
         }
@@ -2553,10 +2404,12 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
       /* 9. */
       ecma_value_t current_index;
 
-      for (; index >= 0 && ecma_is_value_empty (ret_value); index--)
+      for (; index < len && ecma_is_value_empty (ret_value); index++)
       {
+        const uint32_t corrected_index = start_from_left ? index : last_index - index;
+
         /* 9.a */
-        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) index);
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (corrected_index);
 
         /* 9.b */
         ECMA_TRY_CATCH (current_value, ecma_op_object_find (obj_p, index_str_p), ret_value);
@@ -2564,7 +2417,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         if (ecma_is_value_found (current_value))
         {
           /* 9.c.i, 9.c.ii */
-          current_index = ecma_make_uint32_value ((uint32_t) index);
+          current_index = ecma_make_uint32_value (corrected_index);
           ecma_value_t call_args[] = {accumulator, current_value, current_index, obj_this};
 
           ECMA_TRY_CATCH (call_value,
@@ -2583,6 +2436,7 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
         ECMA_FINALIZE (current_value);
 
         ecma_deref_ecma_string (index_str_p);
+
         /* 9.d in for loop */
       }
 
@@ -2600,6 +2454,40 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
   ECMA_FINALIZE (obj_this);
 
   return ret_value;
+} /* ecma_builtin_array_reduce_from */
+
+/**
+ * The Array.prototype object's 'reduce' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.21
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_reduce (ecma_value_t this_arg, /**< this argument */
+                                            const ecma_value_t args[], /**< arguments list */
+                                            ecma_length_t args_number) /**< number of arguments */
+{
+  return ecma_builtin_array_reduce_from (this_arg, args, args_number, true);
+} /* ecma_builtin_array_prototype_object_reduce */
+
+/**
+ * The Array.prototype object's 'reduceRight' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.22
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< this argument */
+                                                  const ecma_value_t args[], /**< arguments list */
+                                                  ecma_length_t args_number) /**< number of arguments */
+{
+  return ecma_builtin_array_reduce_from (this_arg, args, args_number, false);
 } /* ecma_builtin_array_prototype_object_reduce_right */
 
 /**

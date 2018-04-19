@@ -768,6 +768,227 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 } /* ecma_builtin_typedarray_prototype_set */
 
 /**
+ * TypedArray.prototype's 'toString' single element operation routine based
+ * on the Array.prototype's 'toString' single element operation routine
+ *
+ * See also:
+ *          ECMA-262 v5.1, 15.4.4.2
+ *
+ * @return ecma_value_t value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_op_typedarray_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
+                                           uint32_t index) /**< array index */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+  ecma_value_t index_value = ecma_op_object_get (obj_p, index_string_p);
+  ecma_deref_ecma_string (index_string_p);
+
+  if (ECMA_IS_VALUE_ERROR (index_value))
+  {
+    return index_value;
+  }
+
+  if (ecma_is_value_undefined (index_value)
+      || ecma_is_value_null (index_value))
+  {
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+  else
+  {
+    ret_value = ecma_op_to_string (index_value);
+  }
+
+  ecma_free_value (index_value);
+  return ret_value;
+} /* ecma_op_typedarray_get_to_string_at_index */
+
+/**
+ * The TypedArray.prototype.toString's separator creation routine based on
+ * the Array.prototype.toString's separator routine
+ *
+ * See also:
+ *          ECMA-262 v5.1, 15.4.4.2 4th step
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_op_typedarray_get_separator_string (ecma_value_t separator) /**< possible separator */
+{
+  if (ecma_is_value_undefined (separator))
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_COMMA_CHAR);
+  }
+
+  return ecma_op_to_string (separator);
+} /* ecma_op_typedarray_get_separator_string */
+
+/**
+ * The TypedArray.prototype object's 'join' routine basen on
+ * the Array.porottype object's 'join'
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.5
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_join (const ecma_value_t this_arg, /**< this argument */
+                                        const ecma_value_t separator_arg) /**< separator argument */
+{
+  /* 1. */
+  ecma_value_t obj_value = ecma_op_to_object (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (obj_value))
+  {
+    return obj_value;
+  }
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+
+  /* 2. */
+  ecma_value_t length_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
+
+  if (ECMA_IS_VALUE_ERROR (length_value))
+  {
+    ecma_free_value (obj_value);
+    return length_value;
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
+                               length_value,
+                               ret_value);
+
+  /* 3. */
+  uint32_t length = ecma_number_to_uint32 (length_number);
+  /* 4-5. */
+  ecma_value_t separator_value = ecma_op_typedarray_get_separator_string (separator_arg);
+  if (ECMA_IS_VALUE_ERROR (separator_value))
+  {
+    ecma_free_value (length_value);
+    ecma_free_value (obj_value);
+    return separator_value;
+  }
+
+  if (length == 0)
+  {
+    /* 6. */
+    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+  else
+  {
+    ecma_string_t *separator_string_p = ecma_get_string_from_value (separator_value);
+
+    /* 7-8. */
+    ecma_value_t first_value = ecma_op_typedarray_get_to_string_at_index (obj_p, 0);
+    if (ECMA_IS_VALUE_ERROR (first_value))
+    {
+      ecma_free_value (separator_value);
+      ecma_free_value (length_value);
+      ecma_free_value (obj_value);
+      return first_value;
+    }
+
+    ecma_string_t *return_string_p = ecma_get_string_from_value (first_value);
+    ecma_ref_ecma_string (return_string_p);
+    if (ecma_is_value_empty (ret_value))
+    {
+      /* 9-10. */
+      for (uint32_t k = 1; k < length; k++)
+      {
+        /* 10.a */
+        return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+
+       /* 10.b, 10.c */
+        ecma_value_t next_string_value = ecma_op_typedarray_get_to_string_at_index (obj_p, k);
+        if (ECMA_IS_VALUE_ERROR (next_string_value))
+        {
+          ecma_free_value (first_value);
+          ecma_free_value (separator_value);
+          ecma_free_value (length_value);
+          ecma_free_value (obj_value);
+          return next_string_value;
+        }
+
+        /* 10.d */
+        ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
+        return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
+
+        ecma_free_value (next_string_value);
+      }
+      ret_value = ecma_make_string_value (return_string_p);
+    }
+    else
+    {
+      ecma_deref_ecma_string (return_string_p);
+    }
+
+    ecma_free_value (first_value);
+  }
+  ecma_free_value (separator_value);
+
+  ecma_free_value (length_value);
+  ecma_free_value (obj_value);
+  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_join */
+
+/**
+ * The TypedArray.prototype object's 'toString' routine basen on
+ * the Array.porottype object's 'toString'
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.2
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  /* 1. */
+  ecma_value_t obj_this_value = ecma_op_to_object (this_arg);
+  if (ECMA_IS_VALUE_ERROR (obj_this_value))
+  {
+    return obj_this_value;
+  }
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this_value);
+
+  /* 2. */
+  ecma_value_t join_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_JOIN);
+  if (ECMA_IS_VALUE_ERROR (join_value))
+  {
+    ecma_free_value (obj_this_value);
+    return join_value;
+  }
+
+  if (!ecma_op_is_callable (join_value))
+  {
+    /* 3. */
+    ret_value = ecma_builtin_helper_object_to_string (this_arg);
+  }
+  else
+  {
+    /* 4. */
+    ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
+
+    ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+  }
+
+  ecma_free_value (join_value);
+  ecma_free_value (obj_this_value);
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_object_to_string */
+
+/**
  * @}
  * @}
  * @}

@@ -377,7 +377,7 @@ bool jerry_value_has_abort_flag (const jerry_value_t value);
 void jerry_value_clear_error_flag (jerry_value_t *value_p);
 void jerry_value_set_error_flag (jerry_value_t *value_p);
 void jerry_value_set_abort_flag (jerry_value_t *value_p);
-jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value);
+jerry_value_t jerry_get_value_without_error (jerry_value_t value);
 
 /**
  * Error object function(s).

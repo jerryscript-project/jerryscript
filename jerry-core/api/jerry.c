@@ -994,10 +994,10 @@ jerry_value_set_abort_flag (jerry_value_t *value_p)
  *
  * @return the real value of the jerry_value
  */
-jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value) /**< api value */
+jerry_value_t jerry_get_value_without_error (jerry_value_t value) /**< api value */
 {
   return jerry_acquire_value (jerry_get_arg_value (value));
-} /* jerry_get_value_without_error_flag */
+} /* jerry_get_value_without_error */
 
 /**
  * Return the type of the Error object if possible.

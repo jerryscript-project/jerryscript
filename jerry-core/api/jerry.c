@@ -415,6 +415,11 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #ifndef JERRY_DISABLE_JS_PARSER
   jerry_assert_api_available ();
 
+#if defined JERRY_ENABLE_LINE_INFO && !defined JERRY_DISABLE_JS_PARSER
+  JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
+                                                                      (lit_utf8_size_t) resource_name_length);
+#endif /* JERRY_ENABLE_LINE_INFO && !JERRY_DISABLE_JS_PARSER */
+
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;
 
@@ -481,6 +486,11 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
 
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
+                                                                      (lit_utf8_size_t) resource_name_length);
+#endif /* JERRY_ENABLE_LINE_INFO */
 
   if (arg_list_p == NULL)
   {
@@ -874,6 +884,9 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
           || feature == JERRY_FEATURE_REGEXP
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#ifdef JERRY_ENABLE_LINE_INFO
+          || feature == JERRY_FEATURE_LINE_INFO
+#endif /* JERRY_ENABLE_LINE_INFO */
           );
 } /* jerry_is_feature_enabled */
 
@@ -2845,6 +2858,18 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 #endif /* JERRY_VM_EXEC_STOP */
 } /* jerry_set_vm_exec_stop_callback */
 
+/**
+ * Get backtrace. The backtrace is an array of strings where
+ * each string contains the position of the corresponding frame.
+ * The array length is zero if the backtrace is not available.
+ *
+ * @return array value
+ */
+jerry_value_t
+jerry_get_backtrace (uint32_t max_depth)
+{
+  return vm_get_backtrace (max_depth);
+} /* jerry_get_backtrace */
 
 /**
  * Check if the given value is an ArrayBuffer object.

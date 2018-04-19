@@ -17,9 +17,9 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
 #include "jcontext.h"
-#endif /*JERRY_DEBUGGER */
+#endif /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
 
 /** \addtogroup parser Parser
  * @{
@@ -314,9 +314,9 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
     parser_line_counter_t ident_line_counter = context_p->token.line;
-#endif /* JERRY_DEBUGGER */
+#endif /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
@@ -346,6 +346,13 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         context_p->last_breakpoint_line = ident_line_counter;
       }
 #endif /* JERRY_DEBUGGER */
+
+#ifdef JERRY_ENABLE_LINE_INFO
+      if (ident_line_counter != context_p->last_line_info_line)
+      {
+        parser_emit_line_info (context_p, ident_line_counter, false);
+      }
+#endif /* JERRY_ENABLE_LINE_INFO */
 
       parser_parse_expression (context_p,
                                PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
@@ -1080,6 +1087,10 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   switch_case_was_found = false;
   default_case_was_found = false;
 
+#ifdef JERRY_ENABLE_LINE_INFO
+  uint32_t last_line_info_line = context_p->last_line_info_line;
+#endif /* JERRY_ENABLE_LINE_INFO */
+
   while (true)
   {
     parser_scan_until (context_p, &unused_range, LEXER_KEYW_CASE);
@@ -1134,6 +1145,13 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
 
       lexer_next_token (context_p);
 
+#ifdef JERRY_ENABLE_LINE_INFO
+      if (context_p->token.line != context_p->last_line_info_line)
+      {
+        parser_emit_line_info (context_p, context_p->token.line, true);
+      }
+#endif /* JERRY_ENABLE_LINE_INFO */
+
       parser_parse_expression (context_p, PARSE_EXPR);
 
       if (context_p->token.type != LEXER_COLON)
@@ -1147,6 +1165,10 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   }
 
   JERRY_ASSERT (switch_case_was_found || default_case_was_found);
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  context_p->last_line_info_line = last_line_info_line;
+#endif /* JERRY_ENABLE_LINE_INFO */
 
   if (!switch_case_was_found)
   {
@@ -1634,6 +1656,15 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 #endif /* JERRY_DEBUGGER */
 
+#ifdef JERRY_ENABLE_LINE_INFO
+  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
+  {
+    parser_emit_cbc_ext (context_p, CBC_EXT_RESOURCE_NAME);
+    parser_flush_cbc (context_p);
+  }
+  context_p->last_line_info_line = 0;
+#endif /* JERRY_ENABLE_LINE_INFO */
+
   while (context_p->token.type == LEXER_LITERAL
          && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
@@ -1685,6 +1716,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           context_p->last_breakpoint_line = context_p->token.line;
         }
 #endif /* JERRY_DEBUGGER */
+#ifdef JERRY_ENABLE_LINE_INFO
+        parser_emit_line_info (context_p, context_p->token.line, false);
+#endif /* JERRY_ENABLE_LINE_INFO */
 
         lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
         parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
@@ -1754,6 +1788,20 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       context_p->last_breakpoint_line = context_p->token.line;
     }
 #endif /* JERRY_DEBUGGER */
+
+#ifdef JERRY_ENABLE_LINE_INFO
+    if (context_p->token.line != context_p->last_line_info_line
+        && context_p->token.type != LEXER_SEMICOLON
+        && context_p->token.type != LEXER_LEFT_BRACE
+        && context_p->token.type != LEXER_RIGHT_BRACE
+        && context_p->token.type != LEXER_KEYW_VAR
+        && context_p->token.type != LEXER_KEYW_FUNCTION
+        && context_p->token.type != LEXER_KEYW_CASE
+        && context_p->token.type != LEXER_KEYW_DEFAULT)
+    {
+      parser_emit_line_info (context_p, context_p->token.line, true);
+    }
+#endif /* JERRY_ENABLE_LINE_INFO */
 
     switch (context_p->token.type)
     {

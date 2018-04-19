@@ -124,6 +124,10 @@ typedef struct
   int debugger_connection; /**< holds the file descriptor of the socket communication */
 #endif /* JERRY_DEBUGGER */
 
+#ifdef JERRY_ENABLE_LINE_INFO
+  ecma_value_t resource_name; /**< resource name (usually a file name) */
+#endif /* JERRY_ENABLE_LINE_INFO */
+
 #ifdef JMEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
 #endif /* JMEM_STATS */

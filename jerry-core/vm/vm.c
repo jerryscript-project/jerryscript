@@ -2596,6 +2596,52 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* JERRY_DEBUGGER */
           continue;
         }
+#ifdef JERRY_ENABLE_LINE_INFO
+        case VM_OC_RESOURCE_NAME:
+        {
+          ecma_length_t formal_params_number = 0;
+
+          if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+          {
+            if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+            {
+              cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+
+              formal_params_number = args_p->argument_end;
+            }
+            else
+            {
+              cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+
+              formal_params_number = args_p->argument_end;
+            }
+          }
+
+          uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+          byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+
+          ecma_value_t *resource_name_p = (ecma_value_t *) byte_p;
+          resource_name_p -= formal_params_number;
+
+          frame_ctx_p->resource_name = resource_name_p[-1];
+          continue;
+        }
+        case VM_OC_LINE:
+        {
+          uint32_t value = 0;
+          uint8_t byte;
+
+          do
+          {
+            byte = *byte_code_p++;
+            value = (value << 7) | (byte & CBC_LOWER_SEVEN_BIT_MASK);
+          }
+          while (byte & CBC_HIGHEST_BIT_MASK);
+
+          frame_ctx_p->current_line = value;
+          continue;
+        }
+#endif /* JERRY_ENABLE_LINE_INFO */
         default:
         {
           JERRY_UNREACHABLE ();
@@ -2990,6 +3036,10 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.lex_env_p = lex_env_p;
   frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx.this_binding = this_binding_value;
+#ifdef JERRY_ENABLE_LINE_INFO
+  frame_ctx.resource_name = ECMA_VALUE_UNDEFINED;
+  frame_ctx.current_line = 0;
+#endif /* JERRY_ENABLE_LINE_INFO */
   frame_ctx.context_depth = 0;
   frame_ctx.is_eval_code = is_eval_code;
   frame_ctx.call_operation = VM_NO_EXEC_OP;
@@ -3000,38 +3050,6 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
 
   return vm_execute (&frame_ctx, arg_list_p, arg_list_len);
 } /* vm_run */
-
-/**
- * Check whether currently executed code is strict mode code
- *
- * @return true - current code is executed in strict mode,
- *         false - otherwise
- */
-bool
-vm_is_strict_mode (void)
-{
-  JERRY_ASSERT (JERRY_CONTEXT (vm_top_context_p) != NULL);
-
-  return JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE;
-} /* vm_is_strict_mode */
-
-/**
- * Check whether currently performed call (on top of call-stack) is performed in form,
- * meeting conditions of 'Direct Call to Eval' (see also: ECMA-262 v5, 15.1.2.1.1)
- *
- * Warning:
- *         the function should only be called from implementation
- *         of built-in 'eval' routine of Global object
- *
- * @return true - currently performed call is performed through 'eval' identifier,
- *                without 'this' argument,
- *         false - otherwise
- */
-inline bool __attr_always_inline___
-vm_is_direct_eval_form_call (void)
-{
-  return (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0;
-} /* vm_is_direct_eval_form_call */
 
 /**
  * @}

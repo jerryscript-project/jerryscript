@@ -23,6 +23,10 @@
 #include "js-parser.h"
 #include "vm.h"
 
+#ifdef JERRY_ENABLE_LINE_INFO
+#include "jcontext.h"
+#endif /* JERRY_ENABLE_LINE_INFO */
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -87,6 +91,10 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   ecma_compiled_code_t *bytecode_data_p;
 
   bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+#endif /* JERRY_ENABLE_LINE_INFO */
 
   ecma_value_t parse_status = parser_parse_script (NULL,
                                                    0,

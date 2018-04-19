@@ -89,9 +89,58 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
   assert (!jerry_value_has_error_flag (error_value));
 
+  jerry_char_t err_str_buf[256];
+
+  if (jerry_value_is_object (error_value))
+  {
+    jerry_value_t stack_str = jerry_create_string ((const jerry_char_t *) "stack");
+    jerry_value_t backtrace_val = jerry_get_property (error_value, stack_str);
+    jerry_release_value (stack_str);
+
+    if (!jerry_value_has_error_flag (backtrace_val)
+        && jerry_value_is_array (backtrace_val))
+    {
+      printf ("Exception backtrace:\n");
+
+      uint32_t length = jerry_get_array_length (backtrace_val);
+
+      /* This length should be enough. */
+      if (length > 32)
+      {
+        length = 32;
+      }
+
+      for (uint32_t i = 0; i < length; i++)
+      {
+        jerry_value_t item_val = jerry_get_property_by_index (backtrace_val, i);
+
+        if (!jerry_value_has_error_flag (item_val)
+            && jerry_value_is_string (item_val))
+        {
+          jerry_size_t str_size = jerry_get_string_size (item_val);
+
+          if (str_size >= 256)
+          {
+            printf ("%3d: [Backtrace string too long]\n", i);
+          }
+          else
+          {
+            jerry_size_t string_end = jerry_string_to_char_buffer (item_val, err_str_buf, str_size);
+            assert (string_end == str_size);
+            err_str_buf[string_end] = 0;
+
+            printf ("%3d: %s\n", i, err_str_buf);
+          }
+        }
+
+        jerry_release_value (item_val);
+      }
+    }
+    jerry_release_value (backtrace_val);
+  }
+
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
   jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
-  jerry_char_t err_str_buf[256];
 
   if (err_str_size >= 256)
   {

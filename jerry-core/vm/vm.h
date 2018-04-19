@@ -203,8 +203,10 @@ typedef enum
   VM_OC_FINALLY,                 /**< finally */
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
-  VM_OC_BREAKPOINT_ENABLED,       /**< enabled breakpoint for debugger */
-  VM_OC_BREAKPOINT_DISABLED,      /**< disabled breakpoint for debugger */
+  VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
+  VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
+  VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
+  VM_OC_LINE,                    /**< line number of the next statement */
 } vm_oc_types;
 
 /**
@@ -285,6 +287,8 @@ ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t
 
 bool vm_is_strict_mode (void);
 bool vm_is_direct_eval_form_call (void);
+
+ecma_value_t vm_get_backtrace (uint32_t max_depth);
 
 /**
  * @}

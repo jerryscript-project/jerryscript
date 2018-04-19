@@ -22,6 +22,7 @@ set(FEATURE_DEBUGGER           OFF     CACHE BOOL   "Enable JerryScript debugger
 set(FEATURE_ERROR_MESSAGES     OFF     CACHE BOOL   "Enable error messages?")
 set(FEATURE_EXTERNAL_CONTEXT   OFF     CACHE BOOL   "Enable external context?")
 set(FEATURE_JS_PARSER          ON      CACHE BOOL   "Enable js-parser?")
+set(FEATURE_LINE_INFO          OFF     CACHE BOOL   "Enable line info?")
 set(FEATURE_MEM_STATS          OFF     CACHE BOOL   "Enable memory statistics?")
 set(FEATURE_MEM_STRESS_TEST    OFF     CACHE BOOL   "Enable mem-stress test?")
 set(FEATURE_PARSER_DUMP        OFF     CACHE BOOL   "Enable parser byte-code dumps?")
@@ -63,6 +64,7 @@ message(STATUS "FEATURE_DEBUGGER            " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_ERROR_MESSAGES      " ${FEATURE_ERROR_MESSAGES})
 message(STATUS "FEATURE_EXTERNAL_CONTEXT    " ${FEATURE_EXTERNAL_CONTEXT})
 message(STATUS "FEATURE_JS_PARSER           " ${FEATURE_JS_PARSER})
+message(STATUS "FEATURE_LINE_INFO           " ${FEATURE_LINE_INFO})
 message(STATUS "FEATURE_MEM_STATS           " ${FEATURE_MEM_STATS})
 message(STATUS "FEATURE_MEM_STRESS_TEST     " ${FEATURE_MEM_STRESS_TEST})
 message(STATUS "FEATURE_PARSER_DUMP         " ${FEATURE_PARSER_DUMP} ${FEATURE_PARSER_DUMP_MESSAGE})
@@ -172,6 +174,11 @@ endif()
 # JS-Parser
 if(NOT FEATURE_JS_PARSER)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DISABLE_JS_PARSER)
+endif()
+
+# JS line info
+if(FEATURE_LINE_INFO)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LINE_INFO)
 endif()
 
 # Memory statistics

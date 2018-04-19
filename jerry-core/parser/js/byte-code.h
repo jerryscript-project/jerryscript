@@ -539,6 +539,10 @@
   /* Basic opcodes. */ \
   CBC_OPCODE (CBC_EXT_DEBUGGER, CBC_NO_FLAG, 0, \
               VM_OC_NONE) \
+  CBC_OPCODE (CBC_EXT_RESOURCE_NAME, CBC_NO_FLAG, 0, \
+              VM_OC_RESOURCE_NAME) \
+  CBC_OPCODE (CBC_EXT_LINE, CBC_NO_FLAG, 0, \
+              VM_OC_LINE) \
   \
   /* Binary compound assignment opcodes with pushing the result. */ \
   CBC_EXT_BINARY_LVALUE_OPERATION (CBC_EXT_ASSIGN_ADD, \

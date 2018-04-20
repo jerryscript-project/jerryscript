@@ -382,17 +382,17 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**<
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
 
 /**
- * The String.prototype object's 'match' routine
+ * The common preparation code for 'search' and 'match' functions
+ * of the String prototype.
  *
- * See also:
- *          ECMA-262 v5, 15.5.4.10
- *
- * @return ecma value
+ * @return empty value on success, error value otherwise
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this argument */
-                                            ecma_value_t arg) /**< routine's argument */
+ecma_builtin_string_prepare_search (ecma_value_t this_arg, /**< this argument */
+                                    ecma_value_t *this_to_string_value_ptr, /**< [out] ptr to store as string */
+                                    ecma_value_t regexp_arg, /**< regex argument */
+                                    ecma_value_t *regexp_value) /**< [out] ptr to store the regexp object */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
@@ -406,25 +406,51 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
                   ecma_op_to_string (this_arg),
                   ret_value);
 
-  ecma_value_t regexp_value = ECMA_VALUE_EMPTY;
+  *this_to_string_value_ptr = ecma_copy_value (this_to_string_value);
+
   /* 3. */
-  if (ecma_is_value_object (arg)
-      && ecma_object_class_is (ecma_get_object_from_value (arg), LIT_MAGIC_STRING_REGEXP_UL))
+  if (ecma_is_value_object (regexp_arg)
+      && ecma_object_class_is (ecma_get_object_from_value (regexp_arg), LIT_MAGIC_STRING_REGEXP_UL))
   {
-    regexp_value = ecma_copy_value (arg);
+    *regexp_value = ecma_copy_value (regexp_arg);
   }
   else
   {
     /* 4. */
-    ecma_value_t regexp_arguments[1] = { arg };
+    ecma_value_t regexp_arguments[1] = { regexp_arg };
     ECMA_TRY_CATCH (new_regexp_value,
                     ecma_builtin_regexp_dispatch_construct (regexp_arguments, 1),
                     ret_value);
 
-    regexp_value = ecma_copy_value (new_regexp_value);
+    *regexp_value = ecma_copy_value (new_regexp_value);
 
     ECMA_FINALIZE (new_regexp_value);
   }
+
+  ECMA_FINALIZE (this_to_string_value);
+  ECMA_FINALIZE (this_check_coercible_value);
+
+  return ret_value;
+} /* ecma_builtin_string_prepare_search */
+
+/**
+ * The String.prototype object's 'match' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.5.4.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this argument */
+                                            ecma_value_t regexp_arg) /**< routine's argument */
+{
+  ecma_value_t this_to_string_value = ECMA_VALUE_EMPTY;
+  ecma_value_t regexp_value = ECMA_VALUE_EMPTY;
+
+  ecma_value_t ret_value = ecma_builtin_string_prepare_search (this_arg, &this_to_string_value,
+                                                               regexp_arg, &regexp_value);
 
   if (ecma_is_value_empty (ret_value))
   {
@@ -580,9 +606,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
     ecma_free_value (regexp_value);
   }
 
-  ECMA_FINALIZE (this_to_string_value);
-
-  ECMA_FINALIZE (this_check_coercible_value);
+  ecma_free_value (this_to_string_value);
 
   return ret_value;
 } /* ecma_builtin_string_prototype_object_match */
@@ -1286,39 +1310,11 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this argument */
                                              ecma_value_t regexp_arg) /**< routine's argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  /* 1. */
-  ECMA_TRY_CATCH (check_coercible_value,
-                  ecma_op_check_object_coercible (this_arg),
-                  ret_value);
-
-  /* 2. */
-  ECMA_TRY_CATCH (to_string_value,
-                  ecma_op_to_string (this_arg),
-                  ret_value);
-
+  ecma_value_t to_string_value = ECMA_VALUE_EMPTY;
   ecma_value_t regexp_value = ECMA_VALUE_EMPTY;
 
-  /* 3. */
-  if (ecma_is_value_object (regexp_arg)
-      && ecma_object_class_is (ecma_get_object_from_value (regexp_arg), LIT_MAGIC_STRING_REGEXP_UL))
-  {
-    regexp_value = ecma_copy_value (regexp_arg);
-  }
-  else
-  {
-    /* 4. */
-    ecma_value_t regexp_arguments[1] = { regexp_arg };
-
-    ECMA_TRY_CATCH (new_regexp_value,
-                    ecma_builtin_regexp_dispatch_construct (regexp_arguments, 1),
-                    ret_value);
-
-    regexp_value = ecma_copy_value (new_regexp_value);
-
-    ECMA_FINALIZE (new_regexp_value);
-  }
+  ecma_value_t ret_value = ecma_builtin_string_prepare_search (this_arg, &to_string_value,
+                                                               regexp_arg, &regexp_value);
 
   /* 5. */
   if (ecma_is_value_empty (ret_value))
@@ -1355,8 +1351,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
     ecma_free_value (regexp_value);
   }
 
-  ECMA_FINALIZE (to_string_value);
-  ECMA_FINALIZE (check_coercible_value);
+  ecma_free_value (to_string_value);
 
   /* 6. */
   return ret_value;

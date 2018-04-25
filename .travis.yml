@@ -70,6 +70,20 @@ matrix:
             - gcc-5-multilib
       env: OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--jerry-libc=off,--static-link=off,--system-allocator=on,--linker-flag=-fuse-ld=gold" UBSAN_OPTIONS=print_stacktrace=1 TIMEOUT=600
 
+    - env: JOBNAME="JerryScript debugger TS client library"
+      language: node_js
+      node_js:
+        - "9"
+      cache: yarn
+      before_install:
+        - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.5.1
+        - export PATH="$HOME/.yarn/bin:$PATH"
+      before_script:
+        - "cd jerry-debugger/jerry-client-ts"
+      script:
+      - yarn
+      - yarn lint
+      - yarn test
     - env: JOBNAME="ESP8266 Build Test"
       cache: ccache
       install: make -f ./targets/esp8266/Makefile.travis install

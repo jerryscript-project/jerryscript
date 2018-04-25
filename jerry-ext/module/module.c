@@ -123,7 +123,10 @@ jerryx_module_check_cache (jerry_value_t cache, /**< cache from which to attempt
     /* If the module is indeed in the cache, we return it. */
     if (has_property)
     {
-      (*result) = jerry_get_property (cache, module_name);
+      if (result != NULL)
+      {
+        (*result) = jerry_get_property (cache, module_name);
+      }
       ret = true;
     }
   }
@@ -201,6 +204,86 @@ jerryx_module_resolver_t jerryx_module_native_resolver =
   .resolve_p = jerryx_resolve_native_module
 };
 
+
+static void
+jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module to load */
+                             const jerryx_module_resolver_t **resolvers_p, /**< list of resolvers */
+                             size_t resolver_count, /**< number of resolvers in @p resolvers */
+                             jerry_value_t *result) /**< location to store the result, or NULL to remove the module */
+{
+  size_t index;
+  size_t canonical_names_used = 0;
+  jerry_value_t instances;
+  jerry_value_t canonical_names[resolver_count];
+  jerry_value_t (*get_canonical_name_p) (const jerry_value_t name);
+  bool (*resolve_p) (const jerry_value_t canonical_name,
+                     jerry_value_t *result);
+
+  if (!jerry_value_is_string (name))
+  {
+    if (result != NULL)
+    {
+      *result = jerryx_module_create_error (JERRY_ERROR_COMMON, module_name_not_string, name);
+    }
+    goto done;
+  }
+
+  instances = *(jerry_value_t *) jerry_get_context_data (&jerryx_module_manager);
+
+  /**
+   * Establish the canonical name for the requested module. Each resolver presents its own canonical name. If one of
+   * the canonical names matches a cached module, it is returned as the result.
+   */
+  for (index = 0; index < resolver_count; index++)
+  {
+    get_canonical_name_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->get_canonical_name_p);
+    canonical_names[index] = ((get_canonical_name_p == NULL) ? jerry_acquire_value (name)
+                                                             : get_canonical_name_p (name));
+    canonical_names_used++;
+    if (jerryx_module_check_cache (instances, canonical_names[index], result))
+    {
+      /* A NULL for result indicates that we are to delete the module from the cache if found. Let's do that here.*/
+      if (result == NULL)
+      {
+        jerry_delete_property (instances, canonical_names[index]);
+      }
+      goto done;
+    }
+  }
+
+  if (result == NULL)
+  {
+    goto done;
+  }
+
+  /**
+   * Past this point we assume a module is wanted, and therefore result is not NULL. So, we try each resolver until one
+   * manages to resolve the module.
+   */
+  for (index = 0; index < resolver_count; index++)
+  {
+    resolve_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->resolve_p);
+    if (resolve_p != NULL && resolve_p (canonical_names[index], result))
+    {
+      if (!jerry_value_is_error (*result))
+      {
+        *result = jerryx_module_add_to_cache (instances, canonical_names[index], *result);
+      }
+      goto done;
+    }
+  }
+
+  /* If none of the resolvers manage to find the module, complain with "Module not found" */
+  *result = jerryx_module_create_error (JERRY_ERROR_COMMON, module_not_found, name);
+
+done:
+  /* Release the canonical names as returned by the various resolvers. */
+  for (index = 0; index < canonical_names_used; index++)
+  {
+    jerry_release_value (canonical_names[index]);
+  }
+} /* jerryx_module_resolve_local */
+
 /**
  * Resolve a single module using the module resolvers available in the section declared above and load it into the
  * current context.
@@ -219,61 +302,27 @@ jerryx_module_resolve (const jerry_value_t name, /**< name of the module to load
                        const jerryx_module_resolver_t **resolvers_p, /**< list of resolvers */
                        size_t resolver_count) /**< number of resolvers in @p resolvers */
 {
-  size_t index;
-  size_t canonical_names_used = 0;
-  jerry_value_t ret;
-  jerry_value_t instances;
-  jerry_value_t canonical_names[resolver_count];
-  jerry_value_t (*get_canonical_name_p) (const jerry_value_t name);
-  bool (*resolve_p) (const jerry_value_t canonical_name,
-                     jerry_value_t *result);
-
-  if (!jerry_value_is_string (name))
-  {
-    ret = jerryx_module_create_error (JERRY_ERROR_COMMON, module_name_not_string, name);
-    goto done;
-  }
-
-  instances = *(jerry_value_t *) jerry_get_context_data (&jerryx_module_manager);
-
-  /**
-   * Establish the canonical name for the requested module. Each resolver presents its own canonical name. If one of
-   * the canonical names matches a cached module, it is returned as the result.
-   */
-  for (index = 0; index < resolver_count; index++)
-  {
-    get_canonical_name_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->get_canonical_name_p);
-    canonical_names[index] = ((get_canonical_name_p == NULL) ? jerry_acquire_value (name)
-                                                             : get_canonical_name_p (name));
-    canonical_names_used++;
-    if (jerryx_module_check_cache (instances, canonical_names[index], &ret))
-    {
-      goto done;
-    }
-  }
-
-  /* Try each resolver until one manages to find the module. */
-  for (index = 0; index < resolver_count; index++)
-  {
-    resolve_p = (resolvers_p[index] == NULL ? NULL : resolvers_p[index]->resolve_p);
-    if (resolve_p != NULL && resolve_p (canonical_names[index], &ret))
-    {
-      if (!jerry_value_is_error (ret))
-      {
-        ret = jerryx_module_add_to_cache (instances, canonical_names[index], ret);
-      }
-      goto done;
-    }
-  }
-
-  /* If none of the resolvers manage to find the module, complain with "Module not found" */
-  ret = jerryx_module_create_error (JERRY_ERROR_COMMON, module_not_found, name);
-
-done:
-  /* Release the canonical names as returned by the various resolvers. */
-  for (index = 0; index < canonical_names_used; index++)
-  {
-    jerry_release_value (canonical_names[index]);
-  }
+  /* Set to zero to circumvent fatal warning. */
+  jerry_value_t ret = 0;
+  jerryx_module_resolve_local (name, resolvers_p, resolver_count, &ret);
   return ret;
 } /* jerryx_module_resolve */
+
+void
+jerryx_module_clear_cache (const jerry_value_t name, /**< name of the module to remove, or undefined */
+                           const jerryx_module_resolver_t **resolvers_p, /**< list of resolvers */
+                           size_t resolver_count) /**< number of resolvers in @p resolvers */
+{
+  void *instances_p = jerry_get_context_data (&jerryx_module_manager);
+
+  if (jerry_value_is_undefined (name))
+  {
+    /* We were requested to clear the entire cache, so we bounce the context data in the most agnostic way possible. */
+    jerryx_module_manager.deinit_cb (instances_p);
+    jerryx_module_manager.init_cb (instances_p);
+    return;
+  }
+
+  /* Delete the requested module from the cache if it's there. */
+  jerryx_module_resolve_local (name, resolvers_p, resolver_count, NULL);
+} /* jerryx_module_clear_cache */

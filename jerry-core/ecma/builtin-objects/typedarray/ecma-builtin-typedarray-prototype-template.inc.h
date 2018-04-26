@@ -13,16 +13,31 @@
  * limitations under the License.
  */
 
-/*
- * Float64Array prototype description
- */
-
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 
-#define TYPEDARRAY_BYTES_PER_ELEMENT 8
-#define TYPEDARRAY_BUILTIN_ID ECMA_BUILTIN_ID_FLOAT64ARRAY
-#include "ecma-builtin-typedarray-prototype-template.inc.h"
+#ifndef TYPEDARRAY_BYTES_PER_ELEMENT
+# error "Please define TYPEDARRAY_BYTES_PER_ELEMENT"
+#endif /* !TYPEDARRAY_BYTES_PER_ELEMENT */
 
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#ifndef TYPEDARRAY_BUILTIN_ID
+# error "Please define TYPEDARRAY_BUILTIN_ID"
+#endif /* !TYPEDARRAY_BUILTIN_ID */
+
+#include "ecma-builtin-helpers-macro-defines.inc.h"
+
+/* ES2015 22.2.3.4 */
+OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
+              TYPEDARRAY_BUILTIN_ID,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+
+/* ES2015 22.2.6.1 */
+NUMBER_VALUE (LIT_MAGIC_STRING_BYTES_PER_ELEMENT_U,
+              TYPEDARRAY_BYTES_PER_ELEMENT,
+              ECMA_PROPERTY_FIXED)
+
+#include "ecma-builtin-helpers-macro-undefs.inc.h"
+
+#undef TYPEDARRAY_BUILTIN_ID
+#undef TYPEDARRAY_BYTES_PER_ELEMENT
+
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */

@@ -32,6 +32,8 @@
 #define BUILTIN_UNDERSCORED_ID typedarray
 #include "ecma-builtin-internal-routines-template.inc.h"
 
+#include "ecma-builtin-typedarray-helpers.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -91,83 +93,15 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
 
-  uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
-  ecma_object_t *proto_p;
-  uint8_t element_size_shift;
-  lit_magic_string_id_t class_id;
-
-  switch (builtin_id)
+  const uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
+  if (!ecma_typedarray_helper_is_typedarray (builtin_id))
   {
-    case ECMA_BUILTIN_ID_INT8ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE);
-      element_size_shift = 0;
-      class_id = LIT_MAGIC_STRING_INT8_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_UINT8ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT8ARRAY_PROTOTYPE);
-      element_size_shift = 0;
-      class_id = LIT_MAGIC_STRING_UINT8_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY_PROTOTYPE);
-      element_size_shift = 0;
-      class_id = LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_INT16ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT16ARRAY_PROTOTYPE);
-      element_size_shift = 1;
-      class_id = LIT_MAGIC_STRING_INT16_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_UINT16ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT16ARRAY_PROTOTYPE);
-      element_size_shift = 1;
-      class_id = LIT_MAGIC_STRING_UINT16_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_INT32ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_INT32ARRAY_PROTOTYPE);
-      element_size_shift = 2;
-      class_id = LIT_MAGIC_STRING_INT32_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_UINT32ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_UINT32ARRAY_PROTOTYPE);
-      element_size_shift = 2;
-      class_id = LIT_MAGIC_STRING_UINT32_ARRAY_UL;
-      break;
-    }
-    case ECMA_BUILTIN_ID_FLOAT32ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT32ARRAY_PROTOTYPE);
-      element_size_shift = 2;
-      class_id = LIT_MAGIC_STRING_FLOAT32_ARRAY_UL;
-      break;
-    }
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-    case ECMA_BUILTIN_ID_FLOAT64ARRAY:
-    {
-      proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE);
-      element_size_shift = 3;
-      class_id = LIT_MAGIC_STRING_FLOAT64_ARRAY_UL;
-      break;
-    }
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
-    default:
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a typedarray constructor"));
-    }
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a typedarray constructor"));
   }
+
+  ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (builtin_id));
+  const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (builtin_id);
+  const lit_magic_string_id_t class_id = ecma_typedarray_helper_get_magic_string (builtin_id);
 
   ecma_deref_object (proto_p);
 

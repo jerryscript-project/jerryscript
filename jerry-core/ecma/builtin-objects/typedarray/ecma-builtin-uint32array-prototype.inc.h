@@ -17,20 +17,10 @@
  * Uint32Array prototype description
  */
 
-#include "ecma-builtin-helpers-macro-defines.inc.h"
-
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
-/* ES2015 22.2.3.4 */
-OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ECMA_BUILTIN_ID_UINT32ARRAY,
-              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
-
-/* ES2015 22.2.6.1 */
-NUMBER_VALUE (LIT_MAGIC_STRING_BYTES_PER_ELEMENT_U,
-              4,
-              ECMA_PROPERTY_FIXED)
+#define TYPEDARRAY_BYTES_PER_ELEMENT 4
+#define TYPEDARRAY_BUILTIN_ID ECMA_BUILTIN_ID_UINT32ARRAY
+#include "ecma-builtin-typedarray-prototype-template.inc.h"
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
-
-#include "ecma-builtin-helpers-macro-undefs.inc.h"

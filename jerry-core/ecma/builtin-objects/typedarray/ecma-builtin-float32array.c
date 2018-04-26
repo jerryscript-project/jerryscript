@@ -30,6 +30,8 @@
 #define BUILTIN_UNDERSCORED_ID float32array
 #include "ecma-builtin-internal-routines-template.inc.h"
 
+#include "ecma-builtin-typedarray-helpers.h"
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -63,18 +65,8 @@ ecma_value_t
 ecma_builtin_float32array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                               ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
-
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT32ARRAY_PROTOTYPE);
-  ecma_value_t val = ecma_op_create_typedarray (arguments_list_p,
-                                                arguments_list_len,
-                                                prototype_obj_p,
-                                                2,
-                                                LIT_MAGIC_STRING_FLOAT32_ARRAY_UL);
-
-  ecma_deref_object (prototype_obj_p);
-
-  return val;
+  return ecma_typedarray_helper_dispatch_construct (arguments_list_p, arguments_list_len,
+                                                    ECMA_BUILTIN_ID_FLOAT32ARRAY);
 } /* ecma_builtin_float32array_dispatch_construct */
 
 /**

@@ -35,8 +35,8 @@ JERRY_DEBUGGER_CONFIGURATION = 1
 JERRY_DEBUGGER_PARSE_ERROR = 2
 JERRY_DEBUGGER_BYTE_CODE_CP = 3
 JERRY_DEBUGGER_PARSE_FUNCTION = 4
-JERRY_DEBUGGER_BREAKPOINT_LIST = 5
-JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST = 6
+JERRY_DEBUGGER_SOURCE_INFO = 5
+JERRY_DEBUGGER_SOURCE_OFFSET_HOLES = 6
 JERRY_DEBUGGER_SOURCE_CODE = 7
 JERRY_DEBUGGER_SOURCE_CODE_END = 8
 JERRY_DEBUGGER_SOURCE_CODE_NAME = 9
@@ -57,6 +57,19 @@ JERRY_DEBUGGER_EVAL_RESULT_END = 23
 JERRY_DEBUGGER_WAIT_FOR_SOURCE = 24
 JERRY_DEBUGGER_OUTPUT_RESULT = 25
 JERRY_DEBUGGER_OUTPUT_RESULT_END = 26
+
+# Source code information
+JERRY_DEBUGGER_SRC_BASE_OFFSET = 0
+JERRY_DEBUGGER_SRC_OFFSET = 1
+JERRY_DEBUGGER_SRC_LINE = 2
+JERRY_DEBUGGER_SRC_STATEMENT = 3
+JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT = 4
+JERRY_DEBUGGER_SRC_EXPR = 5
+JERRY_DEBUGGER_SRC_EXPR_START = 6
+JERRY_DEBUGGER_SRC_EXPR_END = 7
+
+JERRY_DEBUGGER_SRC_TYPE_MASK = 0x1f
+JERRY_DEBUGGER_SRC_LENGTH_SHIFT = 5
 
 # Subtypes of eval
 JERRY_DEBUGGER_EVAL_EVAL = "\0"
@@ -129,15 +142,16 @@ def arguments_parse():
 
 class JerryBreakpoint(object):
 
-    def __init__(self, line, offset, function):
+    def __init__(self, line, column, offset, function):
         self.line = line
+        self.column = column
         self.offset = offset
         self.function = function
         self.active_index = -1
 
     def __str__(self):
         result = self.function.source_name or "<unknown>"
-        result += ":%d" % (self.line)
+        result += ":%d:%d" % (self.line, self.column)
 
         if self.function.is_func:
             result += " (in "
@@ -146,8 +160,8 @@ class JerryBreakpoint(object):
         return result
 
     def __repr__(self):
-        return ("Breakpoint(line:%d, offset:%d, active_index:%d)"
-                % (self.line, self.offset, self.active_index))
+        return ("Breakpoint(line:%d, column:%d, offset:%d, active_index:%d)"
+                % (self.line, self.column, self.offset, self.active_index))
 
 class JerryPendingBreakpoint(object):
     def __init__(self, line=None, source_name=None, function=None):
@@ -166,9 +180,34 @@ class JerryPendingBreakpoint(object):
         return result
 
 
+class JerrySourceInfo(object):
+
+    def __init__(self, line, column, offset, breakpoint, function):
+        self.line = line
+        self.column = column
+        self.offset = offset
+        self.breakpoint = breakpoint
+        self.function = function
+
+    def __str__(self):
+        result = self.function.source_name or "<unknown>"
+        result += ":%d:%d" % (self.line, self.column)
+
+        if self.function.is_func:
+            result += " (in "
+            result += self.function.name or "function"
+            result += "() at line:%d, col:%d)" % (self.function.line, self.function.column)
+        return result
+
+    def __repr__(self):
+        return ("SourceInfo(line:%d, column: %d, offset:%d, %s)"
+                % (self.line, self.column, self.offset, self.breakpoint))
+
+
 class JerryFunction(object):
     # pylint: disable=too-many-instance-attributes,too-many-arguments
-    def __init__(self, is_func, byte_code_cp, source, source_name, line, column, name, lines, offsets):
+    def __init__(self, is_func, byte_code_cp, source, source_name, line, column,
+                 name, src_info_types, src_info_values, src_info_offset_holes):
         self.is_func = is_func
         self.byte_code_cp = byte_code_cp
         self.source = re.split("\r\n|[\r\n]", source)
@@ -178,17 +217,111 @@ class JerryFunction(object):
         self.offsets = {}
         self.line = line
         self.column = column
-        self.first_breakpoint_line = lines[0]
-        self.first_breakpoint_offset = offsets[0]
+        self.first_breakpoint_line = -1
+        self.first_breakpoint_offset = 0
 
         if len(self.source) > 1 and not self.source[-1]:
             self.source.pop()
 
-        for i, line in enumerate(lines):
-            offset = offsets[i]
-            breakpoint = JerryBreakpoint(line, offset, self)
-            self.lines[line] = breakpoint
-            self.offsets[offset] = breakpoint
+        if (src_info_types.pop() & JERRY_DEBUGGER_SRC_TYPE_MASK) != JERRY_DEBUGGER_SRC_BASE_OFFSET:
+            raise Exception("Corrupted data: missing base offset")
+
+        base_offset = src_info_values.pop()
+        offset = -1
+        offset_hole_index = 0
+        line = 0
+        received_line = 0
+        column = 0
+        received_column = 0
+        breakpoint = None
+        position_stack = None
+
+        for i, src_info_full_type in enumerate(src_info_types):
+            src_info_type = src_info_full_type & JERRY_DEBUGGER_SRC_TYPE_MASK
+
+            if (src_info_type < JERRY_DEBUGGER_SRC_OFFSET
+                    or src_info_type > JERRY_DEBUGGER_SRC_EXPR_END):
+                raise Exception("Corrupted data: invalid type")
+
+            if src_info_type == JERRY_DEBUGGER_SRC_LINE:
+                received_line = src_info_values[i]
+                continue
+
+            if src_info_type in [JERRY_DEBUGGER_SRC_OFFSET,
+                                 JERRY_DEBUGGER_SRC_EXPR_END]:
+                # Set JerrySourceInfo for the previous offset
+                if offset >= 0:
+                    self.offsets[offset] = JerrySourceInfo(line, column,
+                                                           offset, breakpoint, self)
+                else:
+                    offset = base_offset
+
+                if src_info_type == JERRY_DEBUGGER_SRC_EXPR_END:
+                    position_stack.pop()
+                    line = position_stack[-1]["line"]
+                    column = position_stack[-1]["column"]
+
+                counter = src_info_values[i]
+                if counter == 0:
+                    continue
+
+                breakpoint = None
+                while counter > 0:
+                    mask = 1 << (offset_hole_index & 0x7)
+                    byte = ord(src_info_offset_holes[offset_hole_index >> 3])
+
+                    if (byte & mask) != 0:
+                        offset += 1
+
+                    offset_hole_index += 1
+                    counter -= 1
+                continue
+
+            # The column is not sent if it is the same as the last received
+            # column value. However the current column value may be different
+            # from the last received column value.
+            if (src_info_full_type >> JERRY_DEBUGGER_SRC_LENGTH_SHIFT) > 0:
+                received_column = src_info_values[i]
+
+            line = received_line
+            column = received_column
+
+            if src_info_type <= JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT:
+                # Reset position stack
+                position_stack = [{"line":line, "column": column}]
+
+                if src_info_type == JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT:
+                    breakpoint = JerryBreakpoint(line, column, offset, self)
+
+                    self.lines[line] = breakpoint
+
+                    if self.first_breakpoint_line == -1:
+                        self.first_breakpoint_line = line
+                        self.first_breakpoint_offset = offset
+
+            elif src_info_type == JERRY_DEBUGGER_SRC_EXPR:
+                # Nesting is not allowed here
+                self.offsets[offset] = JerrySourceInfo(line, column,
+                                                       offset, breakpoint, self)
+                line = position_stack[-1]["line"]
+                column = position_stack[-1]["column"]
+
+                mask = 1 << (offset_hole_index & 0x7)
+                byte = ord(src_info_offset_holes[offset_hole_index >> 3])
+
+                if (byte & mask) == 0:
+                    raise Exception("Corrupted data: missing byte-code")
+
+                offset_hole_index += 1
+                offset += 1
+                breakpoint = None
+            else: # JERRY_DEBUGGER_SRC_EXPR_START
+                position_stack.append({"line":line, "column": column})
+
+        if offset >= 0:
+            self.offsets[offset] = JerrySourceInfo(line, column,
+                                                   offset, breakpoint, self)
+
 
     def __repr__(self):
         result = ("Function(byte_code_cp:0x%x, source_name:%r, name:%r, line:%d, column:%d { "
@@ -283,8 +416,6 @@ class DebuggerPrompt(Cmd):
                 print("Error: expected a positive integer: %s" % val_errno)
                 return
 
-            args = min(args, len(self.debugger.last_breakpoint_hit.function.lines) -
-                       self.debugger.last_breakpoint_hit.function.line) - 1
             self.debugger.repeats_remain = args
 
         self._exec_command("", JERRY_DEBUGGER_NEXT)
@@ -578,7 +709,7 @@ class JerryDebugger(object):
 
         self.message_data = b""
         self.function_list = {}
-        self.last_breakpoint_hit = None
+        self.current_source_info = None
         self.next_breakpoint_index = 0
         self.active_breakpoint_list = {}
         self.pending_breakpoint_list = {}
@@ -802,8 +933,9 @@ def parse_source(debugger, data):
     stack = [{"line": 1,
               "column": 1,
               "name": "",
-              "lines": [],
-              "offsets": []}]
+              "src_info_types": [],
+              "src_info_values": [],
+              "src_info_offset_holes": b""}]
     new_function_list = {}
 
     while True:
@@ -839,24 +971,31 @@ def parse_source(debugger, data):
                           "line": position[0],
                           "column": position[1],
                           "name": function_name,
-                          "lines": [],
-                          "offsets": []})
+                          "src_info_types": [],
+                          "src_info_values": [],
+                          "src_info_offset_holes": []})
             function_name = ""
 
-        elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_LIST, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST]:
-            name = "lines"
-            if buffer_type == JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST:
-                name = "offsets"
-
-            logging.debug("Breakpoint %s received", name)
-
+        elif buffer_type == JERRY_DEBUGGER_SOURCE_INFO:
             buffer_pos = 3
-            while buffer_size > 0:
-                line = struct.unpack(debugger.byte_order + debugger.idx_format,
-                                     data[buffer_pos: buffer_pos + 4])
-                stack[-1][name].append(line[0])
-                buffer_pos += 4
-                buffer_size -= 4
+            buffer_size += 3
+            while buffer_pos < buffer_size:
+                src_info_type = ord(data[buffer_pos])
+                value_size = src_info_type >> JERRY_DEBUGGER_SRC_LENGTH_SHIFT
+
+                buffer_pos += 1
+                src_info_value = 0
+                while value_size > 0:
+                    src_info_value = ((src_info_value << 8)
+                                      | ord(data[buffer_pos]))
+                    buffer_pos += 1
+                    value_size -= 1
+
+                stack[-1]["src_info_types"].append(src_info_type)
+                stack[-1]["src_info_values"].append(src_info_value)
+
+        elif buffer_type == JERRY_DEBUGGER_SOURCE_OFFSET_HOLES:
+            stack[-1]["src_info_offset_holes"] += data[3:]
 
         elif buffer_type == JERRY_DEBUGGER_BYTE_CODE_CP:
             byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
@@ -878,8 +1017,9 @@ def parse_source(debugger, data):
                                      func_desc["line"],
                                      func_desc["column"],
                                      func_desc["name"],
-                                     func_desc["lines"],
-                                     func_desc["offsets"])
+                                     func_desc["src_info_types"],
+                                     func_desc["src_info_values"],
+                                     func_desc["src_info_offset_holes"])
 
             new_function_list[byte_code_cp] = function
 
@@ -954,33 +1094,34 @@ def src_check_args(args):
 
 
 def print_source(debugger, line_num, offset):
-    last_bp = debugger.last_breakpoint_hit
-    if not last_bp:
+    current_source_info = debugger.current_source_info
+    if not current_source_info:
         return
 
-    lines = last_bp.function.source
-    if last_bp.function.source_name:
-        print("Source: %s" % (last_bp.function.source_name))
+    lines = current_source_info.function.source
+    if current_source_info.function.source_name:
+        print("Source: %s" % (current_source_info.function.source_name))
 
     if line_num == 0:
         start = 0
-        end = len(last_bp.function.source)
+        end = len(current_source_info.function.source)
     else:
-        start = max(last_bp.line - line_num, 0)
-        end = min(last_bp.line + line_num - 1, len(last_bp.function.source))
+        start = max(current_source_info.line - line_num, 0)
+        end = min(current_source_info.line + line_num - 1,
+                  len(current_source_info.function.source))
         if offset:
             if start + offset < 0:
                 debugger.src_offset += debugger.src_offset_diff
                 offset += debugger.src_offset_diff
-            elif end + offset > len(last_bp.function.source):
+            elif end + offset > len(current_source_info.function.source):
                 debugger.src_offset -= debugger.src_offset_diff
                 offset -= debugger.src_offset_diff
 
             start = max(start + offset, 0)
-            end = min(end + offset, len(last_bp.function.source))
+            end = min(end + offset, len(current_source_info.function.source))
 
     for i in range(start, end):
-        if i == last_bp.line - 1:
+        if i == current_source_info.line - 1:
             print("%s%4d%s %s>%s %s" % (debugger.green, i + 1, debugger.nocolor, debugger.red, \
                                         debugger.nocolor, lines[i]))
         else:
@@ -1069,7 +1210,7 @@ def set_breakpoint(debugger, string, pending):
     return True
 
 
-def get_breakpoint(debugger, breakpoint_data):
+def get_source_info(debugger, breakpoint_data):
     function = debugger.function_list[breakpoint_data[0]]
     offset = breakpoint_data[1]
 
@@ -1138,7 +1279,7 @@ def main():
         if buffer_type in [JERRY_DEBUGGER_PARSE_ERROR,
                            JERRY_DEBUGGER_BYTE_CODE_CP,
                            JERRY_DEBUGGER_PARSE_FUNCTION,
-                           JERRY_DEBUGGER_BREAKPOINT_LIST,
+                           JERRY_DEBUGGER_SOURCE_INFO,
                            JERRY_DEBUGGER_SOURCE_CODE,
                            JERRY_DEBUGGER_SOURCE_CODE_END,
                            JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -1156,8 +1297,8 @@ def main():
         elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_HIT, JERRY_DEBUGGER_EXCEPTION_HIT]:
             breakpoint_data = struct.unpack(debugger.byte_order + debugger.cp_format + debugger.idx_format, data[3:])
 
-            breakpoint = get_breakpoint(debugger, breakpoint_data)
-            debugger.last_breakpoint_hit = breakpoint[0]
+            source_info = get_source_info(debugger, breakpoint_data)
+            debugger.current_source_info = source_info[0]
 
             if buffer_type == JERRY_DEBUGGER_EXCEPTION_HIT:
                 print("Exception throw detected (to disable automatic stop type exception 0)")
@@ -1165,15 +1306,12 @@ def main():
                     print("Exception hint: %s" % (exception_string))
                     exception_string = ""
 
-            if breakpoint[1]:
-                breakpoint_info = "at"
-            else:
-                breakpoint_info = "around"
+            breakpoint = source_info[0].breakpoint
+            source_hint = ""
+            if source_info[1] and breakpoint and breakpoint.active_index >= 0:
+                source_hint = " breakpoint:%s%d%s" % (debugger.red, breakpoint.active_index, debugger.nocolor)
 
-            if breakpoint[0].active_index >= 0:
-                breakpoint_info += " breakpoint:%s%d%s" % (debugger.red, breakpoint[0].active_index, debugger.nocolor)
-
-            print("Stopped %s %s" % (breakpoint_info, breakpoint[0]))
+            print("Stopped at%s %s" % (source_hint, source_info[0]))
             if debugger.display:
                 print_source(prompt.debugger, debugger.display, 0)
 
@@ -1202,9 +1340,9 @@ def main():
                     breakpoint_data = struct.unpack(debugger.byte_order + debugger.cp_format + debugger.idx_format,
                                                     data[buffer_pos: buffer_pos + debugger.cp_size + 4])
 
-                    breakpoint = get_breakpoint(debugger, breakpoint_data)
+                    source_info = get_source_info(debugger, breakpoint_data)
 
-                    print("Frame %d: %s" % (frame_index, breakpoint[0]))
+                    print("Frame %d: %s" % (frame_index, source_info[0]))
 
                     frame_index += 1
                     buffer_pos += 6
@@ -1284,7 +1422,6 @@ def main():
 
         elif buffer_type == JERRY_DEBUGGER_WAIT_FOR_SOURCE:
             prompt.send_client_source()
-
 
         else:
             raise Exception("Unknown message")

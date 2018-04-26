@@ -1,21 +1,21 @@
 Connecting to: localhost:5001
-Stopped at tests/debugger/do_display.js:20
+Stopped at tests/debugger/do_display.js:20:1
 (jerry-debugger) b a
-Breakpoint 1 at tests/debugger/do_display.js:15 (in a() at line:15, col:1)
+Breakpoint 1 at tests/debugger/do_display.js:15:16 (in a() at line:15, col:1)
 (jerry-debugger) b b
-Breakpoint 2 at tests/debugger/do_display.js:16 (in b() at line:16, col:1)
+Breakpoint 2 at tests/debugger/do_display.js:16:16 (in b() at line:16, col:1)
 (jerry-debugger) b c
-Breakpoint 3 at tests/debugger/do_display.js:17 (in c() at line:17, col:1)
+Breakpoint 3 at tests/debugger/do_display.js:17:16 (in c() at line:17, col:1)
 (jerry-debugger) b d
-Breakpoint 4 at tests/debugger/do_display.js:18 (in d() at line:18, col:1)
+Breakpoint 4 at tests/debugger/do_display.js:18:16 (in d() at line:18, col:1)
 (jerry-debugger) display
 Non-negative integer number expected, 0 turns off this function
 (jerry-debugger) c
-Stopped at breakpoint:1 tests/debugger/do_display.js:15 (in a() at line:15, col:1)
+Stopped at breakpoint:1 tests/debugger/do_display.js:15:16 (in a() at line:15, col:1)
 (jerry-debugger) display 2
 (jerry-debugger) c
 out: hi
-Stopped at breakpoint:2 tests/debugger/do_display.js:16 (in b() at line:16, col:1)
+Stopped at breakpoint:2 tests/debugger/do_display.js:16:16 (in b() at line:16, col:1)
 Source: tests/debugger/do_display.js
   15   function a() { print("hi"); }
   16 > function b() { print("welcome"); }
@@ -23,7 +23,7 @@ Source: tests/debugger/do_display.js
 (jerry-debugger) display 5435
 (jerry-debugger) c
 out: welcome
-Stopped at breakpoint:3 tests/debugger/do_display.js:17 (in c() at line:17, col:1)
+Stopped at breakpoint:3 tests/debugger/do_display.js:17:16 (in c() at line:17, col:1)
 Source: tests/debugger/do_display.js
    1   // Copyright JS Foundation and other contributors, http://js.foundation
    2   //
@@ -51,6 +51,6 @@ Source: tests/debugger/do_display.js
 (jerry-debugger) display 0
 (jerry-debugger) c
 out: hello
-Stopped at breakpoint:4 tests/debugger/do_display.js:18 (in d() at line:18, col:1)
+Stopped at breakpoint:4 tests/debugger/do_display.js:18:16 (in d() at line:18, col:1)
 (jerry-debugger) c
 out: goodbye

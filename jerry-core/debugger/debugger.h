@@ -138,8 +138,8 @@ typedef enum
   JERRY_DEBUGGER_PARSE_ERROR = 2, /**< parse error */
   JERRY_DEBUGGER_BYTE_CODE_CP = 3, /**< byte code compressed pointer */
   JERRY_DEBUGGER_PARSE_FUNCTION = 4, /**< parsing a new function */
-  JERRY_DEBUGGER_BREAKPOINT_LIST = 5, /**< list of line offsets */
-  JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST = 6, /**< list of byte code offsets */
+  JERRY_DEBUGGER_SOURCE_INFO = 5, /**< source code info */
+  JERRY_DEBUGGER_SOURCE_OFFSET_HOLES = 6, /**< info about the removed byte-code bytes */
   JERRY_DEBUGGER_SOURCE_CODE = 7, /**< source code fragment */
   JERRY_DEBUGGER_SOURCE_CODE_END = 8, /**< source code last fragment */
   JERRY_DEBUGGER_SOURCE_CODE_NAME = 9, /**< source code name fragment */
@@ -194,6 +194,32 @@ typedef enum
 
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
 } jerry_debugger_header_type_t;
+
+/**
+ * Source code information.
+ */
+typedef enum
+{
+  /* Note: the number of columns and offsets must be the same. */
+  JERRY_DEBUGGER_SRC_BASE_OFFSET = 0, /**< base byte code offset (value: base offset) */
+  JERRY_DEBUGGER_SRC_OFFSET = 1, /**< increase current byte code offset (value: offset) */
+  JERRY_DEBUGGER_SRC_LINE = 2, /**< set current line (value: line) */
+  JERRY_DEBUGGER_SRC_STATEMENT = 3, /**< statement start (value: column) */
+  JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT = 4, /**< statement start with a breakpoint (value: column) */
+  JERRY_DEBUGGER_SRC_EXPR = 5, /**< expression with fixed byte code offset (value: column) */
+  JERRY_DEBUGGER_SRC_EXPR_START = 6, /**< expression start (value: column) */
+  JERRY_DEBUGGER_SRC_EXPR_END = 7, /**< expression end (value: offset) */
+} jerry_debugger_source_info_type_t;
+
+/**
+ * Mask for getting the type of an item.
+ */
+#define JERRY_DEBUGGER_SRC_TYPE_MASK 0x1f
+
+/**
+ * Shift for getting the length of source item value.
+ */
+#define JERRY_DEBUGGER_SRC_LENGTH_SHIFT 5
 
 /**
  * Subtypes of eval.

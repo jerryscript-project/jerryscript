@@ -19,6 +19,10 @@
 #include "lit-char-helpers.h"
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 
+#ifdef JERRY_DEBUGGER
+#include "jcontext.h"
+#endif /* JERRY_DEBUGGER */
+
 #ifndef JERRY_DISABLE_JS_PARSER
 
 /** \addtogroup parser Parser
@@ -1020,6 +1024,11 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
         parser_push_result (context_p);
 
+#ifdef JERRY_DEBUGGER
+        parser_line_counter_t debugger_start_line = context_p->token.line;
+        parser_line_counter_t debugger_start_column = context_p->token.column;
+#endif /* JERRY_DEBUGGER */
+
         if (context_p->stack_top_uint8 == LEXER_KEYW_NEW)
         {
           parser_stack_pop_uint8 (context_p);
@@ -1116,6 +1125,17 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
         {
           parser_emit_cbc (context_p, CBC_EVAL);
         }
+
+#ifdef JERRY_DEBUGGER
+        if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+        {
+          parser_flush_cbc (context_p);
+          parser_append_source_location (context_p,
+                                         JERRY_DEBUGGER_SRC_EXPR,
+                                         debugger_start_line,
+                                         debugger_start_column);
+        }
+#endif /* JERRY_DEBUGGER */
 
         if (call_arguments == 0)
         {

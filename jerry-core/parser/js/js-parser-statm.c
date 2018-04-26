@@ -315,8 +315,11 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
 #if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
-    parser_line_counter_t ident_line_counter = context_p->token.line;
+    parser_line_counter_t ident_line = context_p->token.line;
 #endif /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
+#ifdef JERRY_DEBUGGER
+    parser_line_counter_t ident_column = context_p->token.column;
+#endif /* JERRY_DEBUGGER */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
@@ -328,29 +331,27 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     {
 #ifdef JERRY_DEBUGGER
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-          && ident_line_counter != context_p->last_breakpoint_line)
+          && ident_line != context_p->debugger_current_breakpoint_line)
       {
         JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
 
         cbc_argument_t last_cbc = context_p->last_cbc;
         context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
 
-        parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-        parser_flush_cbc (context_p);
-
-        parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
+        parser_append_source_location (context_p,
+                                       JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT,
+                                       ident_line,
+                                       ident_column);
 
         context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
         context_p->last_cbc = last_cbc;
-
-        context_p->last_breakpoint_line = ident_line_counter;
       }
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JERRY_ENABLE_LINE_INFO
-      if (ident_line_counter != context_p->last_line_info_line)
+      if (ident_line != context_p->last_line_info_line)
       {
-        parser_emit_line_info (context_p, ident_line_counter, false);
+        parser_emit_line_info (context_p, ident_line, false);
       }
 #endif /* JERRY_ENABLE_LINE_INFO */
 
@@ -1652,7 +1653,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
-    context_p->last_breakpoint_line = 0;
+    context_p->debugger_current_breakpoint_line = 0;
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -1706,14 +1707,12 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #ifdef JERRY_DEBUGGER
         if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
         {
-          JERRY_ASSERT (context_p->last_breakpoint_line == 0);
+          JERRY_ASSERT (context_p->debugger_current_breakpoint_line == 0);
 
-          parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-          parser_flush_cbc (context_p);
-
-          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
-
-          context_p->last_breakpoint_line = context_p->token.line;
+          parser_append_source_location (context_p,
+                                         JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT,
+                                         context_p->token.line,
+                                         context_p->token.column);
         }
 #endif /* JERRY_DEBUGGER */
 #ifdef JERRY_ENABLE_LINE_INFO
@@ -1771,7 +1770,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #ifdef JERRY_DEBUGGER
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
-        && context_p->token.line != context_p->last_breakpoint_line
         && context_p->token.type != LEXER_SEMICOLON
         && context_p->token.type != LEXER_LEFT_BRACE
         && context_p->token.type != LEXER_RIGHT_BRACE
@@ -1780,12 +1778,17 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         && context_p->token.type != LEXER_KEYW_CASE
         && context_p->token.type != LEXER_KEYW_DEFAULT)
     {
-      parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-      parser_flush_cbc (context_p);
+      uint8_t type = JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT;
 
-      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
+      if (context_p->token.line == context_p->debugger_current_breakpoint_line)
+      {
+        type = JERRY_DEBUGGER_SRC_STATEMENT;
+      }
 
-      context_p->last_breakpoint_line = context_p->token.line;
+      parser_append_source_location (context_p,
+                                     type,
+                                     context_p->token.line,
+                                     context_p->token.column);
     }
 #endif /* JERRY_DEBUGGER */
 

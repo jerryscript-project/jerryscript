@@ -591,7 +591,6 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
         literal_p->status_flags = (uint8_t) (literal_p->status_flags & ~LEXER_FLAG_INITIALIZED);
 
-
         if (literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME)
         {
           init_index = const_literal_end;
@@ -1438,19 +1437,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       && !(context_p->status_flags & PARSER_DEBUGGER_BREAKPOINT_APPENDED))
   {
     /* Always provide at least one breakpoint. */
-    parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-    parser_flush_cbc (context_p);
-
-    parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
-
-    context_p->last_breakpoint_line = context_p->token.line;
-  }
-
-  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && context_p->breakpoint_info_count > 0)
-  {
-    parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
-    JERRY_ASSERT (context_p->breakpoint_info_count == 0);
+    parser_append_source_location (context_p,
+                                   JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT,
+                                   context_p->token.line,
+                                   context_p->token.column);
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -1782,6 +1772,21 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (dst_p == byte_code_p + initializers_length);
 
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    parser_append_source_info_value (context_p,
+                                     JERRY_DEBUGGER_SRC_BASE_OFFSET,
+                                     (uint32_t) (dst_p - ((uint8_t *) compiled_code_p)));
+
+    if (context_p->debugger_source_info_size > 0
+        && (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+    {
+      parser_send_source_info (context_p);
+    }
+  }
+#endif /* JERRY_DEBUGGER */
+
   page_p = context_p->byte_code.first_p;
   offset = 0;
   real_offset = 0;
@@ -1822,14 +1827,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     real_offset++;
     PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
     flags = cbc_flags[opcode];
-
-#ifdef JERRY_DEBUGGER
-    if (opcode == CBC_BREAKPOINT_DISABLED)
-    {
-      uint32_t bp_offset = (uint32_t) (((uint8_t *) dst_p) - ((uint8_t *) compiled_code_p) - 1);
-      parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST, bp_offset);
-    }
-#endif /* JERRY_DEBUGGER */
 
     if (opcode == CBC_EXT_OPCODE)
     {
@@ -1946,11 +1943,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #ifdef JERRY_DEBUGGER
-  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && context_p->breakpoint_info_count > 0)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST);
-    JERRY_ASSERT (context_p->breakpoint_info_count == 0);
+    parser_send_offset_holes (context_p);
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -2301,7 +2296,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 #ifdef JERRY_DEBUGGER
-  context.breakpoint_info_count = 0;
+  context.debugger_source_info_size = 0;
+  context.debugger_current_offset = UINT32_MAX;
+  context.debugger_current_line = 0;
+  context.debugger_current_column = 0;
+  context.debugger_current_breakpoint_line = 0;
 #endif /* JERRY_DEBUGGER */
 
   PARSER_TRY (context.try_buffer)
@@ -2404,10 +2403,10 @@ parser_save_context (parser_context_t *context_p, /**< context */
 
 #ifdef JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && context_p->breakpoint_info_count > 0)
+      && context_p->debugger_source_info_size > 0)
   {
-    parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
-    context_p->breakpoint_info_count = 0;
+    parser_send_source_info (context_p);
+    JERRY_ASSERT (context_p->debugger_source_info_size == 0);
   }
 #endif /* JERRY_DEBUGGER */
 
@@ -2426,6 +2425,12 @@ parser_save_context (parser_context_t *context_p, /**< context */
   saved_context_p->byte_code = context_p->byte_code;
   saved_context_p->byte_code_size = context_p->byte_code_size;
   saved_context_p->literal_pool_data = context_p->literal_pool.data;
+
+#ifdef JERRY_DEBUGGER
+  saved_context_p->debugger_current_offset = context_p->debugger_current_offset;
+  saved_context_p->debugger_current_line = context_p->debugger_current_line;
+  saved_context_p->debugger_current_column = context_p->debugger_current_column;
+#endif /* JERRY_DEBUGGER */
 
 #ifndef JERRY_NDEBUG
   saved_context_p->context_stack_depth = context_p->context_stack_depth;
@@ -2450,6 +2455,12 @@ parser_save_context (parser_context_t *context_p, /**< context */
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = 0;
 #endif /* !JERRY_NDEBUG */
+
+#ifdef JERRY_DEBUGGER
+  context_p->debugger_current_offset = UINT32_MAX;
+  context_p->debugger_current_line = 0;
+  context_p->debugger_current_column = 0;
+#endif /* JERRY_DEBUGGER */
 } /* parser_save_context */
 
 /**
@@ -2482,6 +2493,12 @@ parser_restore_context (parser_context_t *context_p, /**< context */
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = saved_context_p->context_stack_depth;
 #endif /* !JERRY_NDEBUG */
+
+#ifdef JERRY_DEBUGGER
+  context_p->debugger_current_offset = saved_context_p->debugger_current_offset;
+  context_p->debugger_current_line = saved_context_p->debugger_current_line;
+  context_p->debugger_current_column = saved_context_p->debugger_current_column;
+#endif /* JERRY_DEBUGGER */
 } /* parser_restore_context */
 
 /**
@@ -2765,42 +2782,269 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #ifdef JERRY_DEBUGGER
 
 /**
- * Append a breakpoint info.
+ * Append a source info type.
  */
 void
-parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
-                               jerry_debugger_header_type_t type, /**< message type */
-                               uint32_t value) /**< line or offset of the breakpoint */
+parser_append_source_info_type (parser_context_t *context_p, /**< context */
+                                jerry_debugger_source_info_type_t type) /**< type of source info */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
-  context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
-
-  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_breakpoint_info_t))
+  if (type == JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT)
   {
-    parser_send_breakpoints (context_p, type);
+    context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
   }
 
-  context_p->breakpoint_info[context_p->breakpoint_info_count].value = value;
-  context_p->breakpoint_info_count = (uint16_t) (context_p->breakpoint_info_count + 1);
-} /* parser_append_breakpoint_info */
+  uint32_t new_source_info_size = context_p->debugger_source_info_size + 1u;
+
+  if (new_source_info_size > JERRY_DEBUGGER_SEND_MAX (uint8_t))
+  {
+    parser_send_source_info (context_p);
+    JERRY_ASSERT (context_p->debugger_source_info_size == 0);
+
+    new_source_info_size = 1u;
+  }
+
+  uint8_t *buffer_p = context_p->debugger_source_info + context_p->debugger_source_info_size;
+
+  context_p->debugger_source_info_size = (uint16_t) new_source_info_size;
+
+  *buffer_p++ = (uint8_t) type;
+} /* parser_append_source_info_type */
 
 /**
- * Send current breakpoint list.
+ * Append a source info with value.
  */
 void
-parser_send_breakpoints (parser_context_t *context_p, /**< context */
-                         jerry_debugger_header_type_t type) /**< message type */
+parser_append_source_info_value (parser_context_t *context_p, /**< context */
+                                 jerry_debugger_source_info_type_t type, /**< type of source info */
+                                 uint32_t value) /**< source value */
 {
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-  JERRY_ASSERT (context_p->breakpoint_info_count > 0);
 
-  jerry_debugger_send_data (type,
-                            context_p->breakpoint_info,
-                            context_p->breakpoint_info_count * sizeof (parser_breakpoint_info_t));
+  if (type == JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT)
+  {
+    context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
+  }
 
-  context_p->breakpoint_info_count = 0;
-} /* parser_send_breakpoints */
+  uint32_t value_size = 1;
+
+  if (unlikely (value >= 0x10000))
+  {
+    value_size = 3;
+
+    if (value >= 0x1000000)
+    {
+      value_size = 4;
+    }
+  }
+  else if (value >= 0x100)
+  {
+    value_size = 2;
+  }
+
+  uint32_t new_source_info_size = context_p->debugger_source_info_size + 1u + value_size;
+
+  if (new_source_info_size > JERRY_DEBUGGER_SEND_MAX (uint8_t))
+  {
+    parser_send_source_info (context_p);
+    JERRY_ASSERT (context_p->debugger_source_info_size == 0);
+
+    new_source_info_size = 1u + value_size;
+  }
+
+  uint8_t *buffer_p = context_p->debugger_source_info + context_p->debugger_source_info_size;
+
+  context_p->debugger_source_info_size = (uint16_t) new_source_info_size;
+
+  *buffer_p++ = (uint8_t) (type | (value_size << JERRY_DEBUGGER_SRC_LENGTH_SHIFT));
+
+  /* Multipy by 8: one byte is a sequence of 8 bits. */
+  value_size <<= 3;
+
+  do
+  {
+    value_size -= 8;
+    *buffer_p++ = (uint8_t) (value >> value_size);
+  }
+  while (value_size > 0);
+} /* parser_append_source_info_value */
+
+/**
+ * Append source location.
+ */
+void
+parser_append_source_location (parser_context_t *context_p, /**< context */
+                               jerry_debugger_source_info_type_t type, /**< type of source info */
+                               parser_line_counter_t line, /**< source location line */
+                               parser_line_counter_t column) /**< source location column */
+{
+  JERRY_ASSERT (type == JERRY_DEBUGGER_SRC_STATEMENT
+                || type == JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT
+                || type == JERRY_DEBUGGER_SRC_EXPR
+                || type == JERRY_DEBUGGER_SRC_EXPR_START);
+
+  if (context_p->debugger_current_line != line)
+  {
+    parser_append_source_info_value (context_p, JERRY_DEBUGGER_SRC_LINE, line);
+    context_p->debugger_current_line = line;
+
+    if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+    {
+      return;
+    }
+  }
+
+  if (type == JERRY_DEBUGGER_SRC_EXPR_END)
+  {
+    /* This ensures that the parser_append_source_info_type case runs below. */
+    column = context_p->debugger_current_column;
+  }
+
+  uint32_t byte_code_size = context_p->byte_code_size;
+
+  if (byte_code_size != context_p->debugger_current_offset)
+  {
+    JERRY_ASSERT (context_p->debugger_current_offset == UINT32_MAX
+                  || byte_code_size > context_p->debugger_current_offset);
+
+    uint32_t debugger_current_offset = context_p->debugger_current_offset;
+
+    if (debugger_current_offset == UINT32_MAX)
+    {
+      debugger_current_offset = 0;
+    }
+
+    /* Send only the increment. */
+    parser_append_source_info_value (context_p,
+                                     JERRY_DEBUGGER_SRC_OFFSET,
+                                     byte_code_size - debugger_current_offset);
+    context_p->debugger_current_offset = byte_code_size;
+
+    if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+    {
+      return;
+    }
+  }
+
+  if (type == JERRY_DEBUGGER_SRC_EXPR)
+  {
+    context_p->debugger_current_offset++;
+  }
+
+  if (type == JERRY_DEBUGGER_SRC_STATEMENT_BREAKPOINT)
+  {
+    JERRY_ASSERT (context_p->debugger_current_breakpoint_line != line);
+
+    parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
+    parser_flush_cbc (context_p);
+
+    context_p->debugger_current_breakpoint_line = line;
+  }
+
+  if (column == context_p->debugger_current_column)
+  {
+    parser_append_source_info_type (context_p, type);
+    return;
+  }
+
+  context_p->debugger_current_column = column;
+  parser_append_source_info_value (context_p, type, column);
+} /* parser_append_source_location */
+
+/**
+ * Send offset hole bitset to the debugger client.
+ */
+void
+parser_send_offset_holes (parser_context_t *context_p)
+{
+  size_t max_send_size = JERRY_DEBUGGER_SEND_MAX (uint8_t);
+  size_t current_send_size = 0;
+
+  parser_mem_page_t *page_p = context_p->byte_code.first_p;
+  parser_mem_page_t *last_page_p = context_p->byte_code.last_p;
+  size_t last_position = context_p->byte_code.last_position;
+
+  size_t offset = 0;
+  uint8_t bitset = 0;
+  size_t bitset_index = 1 << 0;
+  uint8_t prev_offset_byte = 0;
+
+  while (page_p != last_page_p || offset < last_position)
+  {
+    if (bitset_index == (1 << 8))
+    {
+      if (current_send_size >= max_send_size)
+      {
+        jerry_debugger_send_data (JERRY_DEBUGGER_SOURCE_OFFSET_HOLES,
+                                  context_p->debugger_source_info,
+                                  current_send_size);
+
+        if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+        {
+          return;
+        }
+        current_send_size = 0;
+      }
+      context_p->debugger_source_info[current_send_size++] = bitset;
+
+      bitset = 0;
+      bitset_index = 1 << 0;
+    }
+
+    uint8_t offset_byte = page_p->bytes[offset] & CBC_LOWER_SEVEN_BIT_MASK;
+
+    if (prev_offset_byte != offset_byte)
+    {
+      bitset = (uint8_t) (bitset | bitset_index);
+    }
+
+    prev_offset_byte = offset_byte;
+    bitset_index <<= 1;
+
+    if (++(offset) >= PARSER_CBC_STREAM_PAGE_SIZE)
+    {
+      offset = 0;
+      prev_offset_byte = 0;
+      page_p = page_p->next_p;
+    }
+  }
+
+  if (current_send_size >= max_send_size)
+  {
+    jerry_debugger_send_data (JERRY_DEBUGGER_SOURCE_OFFSET_HOLES,
+                              context_p->debugger_source_info,
+                              current_send_size);
+
+    if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
+    {
+      return;
+    }
+    current_send_size = 0;
+  }
+
+  context_p->debugger_source_info[current_send_size++] = bitset;
+
+  jerry_debugger_send_data (JERRY_DEBUGGER_SOURCE_OFFSET_HOLES,
+                            context_p->debugger_source_info,
+                            current_send_size);
+} /* parser_send_offset_holes */
+
+/**
+ * Send current source info data to the debugger client.
+ */
+void
+parser_send_source_info (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_ASSERT (context_p->debugger_source_info_size > 0);
+
+  jerry_debugger_send_data (JERRY_DEBUGGER_SOURCE_INFO,
+                            context_p->debugger_source_info,
+                            context_p->debugger_source_info_size);
+
+  context_p->debugger_source_info_size = 0;
+} /* parser_send_source_info */
 
 #endif /* JERRY_DEBUGGER */
 

@@ -1,13 +1,13 @@
 Connecting to: localhost:5001
-Stopped at tests/debugger/client_source.js:15
+Stopped at tests/debugger/client_source.js:15:1
 (jerry-debugger) s
 out: client-source-test
-Stopped at tests/debugger/client_source.js:40
+Stopped at tests/debugger/client_source.js:40:1
 (jerry-debugger) s
-Stopped at tests/debugger/client_source.js:35 (in test() at line:33, col:1)
+Stopped at tests/debugger/client_source.js:35:3 (in test() at line:33, col:1)
 (jerry-debugger) s
 out: function test
-Stopped at tests/debugger/client_source.js:36 (in test() at line:33, col:1)
+Stopped at tests/debugger/client_source.js:36:7 (in test() at line:33, col:1)
 (jerry-debugger) continue
 out: function foo
 out: function bar

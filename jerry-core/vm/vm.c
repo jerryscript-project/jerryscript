@@ -748,6 +748,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
 
   ecma_value_t *stack_top_p;
+  uint8_t *byte_code_start_p;
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
@@ -796,7 +797,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     /* Internal loop for byte code execution. */
     while (true)
     {
-      uint8_t *byte_code_start_p = byte_code_p;
+      byte_code_start_p = byte_code_p;
+
       uint8_t opcode = *byte_code_p++;
       uint32_t opcode_data = opcode;
 
@@ -2787,6 +2789,8 @@ error:
 
         if (jerry_debugger_send_exception_string ())
         {
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+
           jerry_debugger_breakpoint_hit (JERRY_DEBUGGER_EXCEPTION_HIT);
 
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_EXCEPTION_THROWN)

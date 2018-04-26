@@ -213,16 +213,6 @@ typedef struct parser_branch_node_t
   parser_branch_t branch;                     /**< branch */
 } parser_branch_node_t;
 
-#ifdef JERRY_DEBUGGER
-/**
- * Extra information for each breakpoint.
- */
-typedef struct
-{
-  uint32_t value;                             /**< line or offset of the breakpoint */
-} parser_breakpoint_info_t;
-#endif /* JERRY_DEBUGGER */
-
 /**
  * Those members of a context which needs
  * to be saved when a sub-function is parsed.
@@ -249,6 +239,12 @@ typedef struct parser_saved_context_t
 #ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
 #endif /* !JERRY_NDEBUG */
+
+#ifdef JERRY_DEBUGGER
+  uint32_t debugger_current_offset;           /**< current offset */
+  parser_line_counter_t debugger_current_line; /**< current line */
+  parser_line_counter_t debugger_current_column; /**< current column */
+#endif /* JERRY_DEBUGGER */
 } parser_saved_context_t;
 
 /**
@@ -305,10 +301,12 @@ typedef struct
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 #ifdef JERRY_DEBUGGER
-  /** extra data for each breakpoint */
-  parser_breakpoint_info_t breakpoint_info[JERRY_DEBUGGER_MAX_BUFFER_SIZE / sizeof (parser_breakpoint_info_t)];
-  uint16_t breakpoint_info_count; /**< current breakpoint index */
-  parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
+  uint8_t debugger_source_info[JERRY_DEBUGGER_MAX_BUFFER_SIZE]; /**< buffer for sending source info */
+  uint16_t debugger_source_info_size;         /**< size of data stored in debugger_source_info */
+  uint32_t debugger_current_offset;           /**< current offset */
+  parser_line_counter_t debugger_current_line; /**< current line */
+  parser_line_counter_t debugger_current_column; /**< current column */
+  parser_line_counter_t debugger_current_breakpoint_line; /**< line of the last breakpoint */
 #endif /* JERRY_DEBUGGER */
 
 #ifdef JERRY_ENABLE_LINE_INFO
@@ -484,8 +482,13 @@ void parser_raise_error (parser_context_t *context_p, parser_error_t error);
 
 #ifdef JERRY_DEBUGGER
 
-void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_header_type_t type, uint32_t value);
-void parser_send_breakpoints (parser_context_t *context_p, jerry_debugger_header_type_t type);
+void parser_append_source_info_type (parser_context_t *context_p, jerry_debugger_source_info_type_t type);
+void parser_append_source_info_value (parser_context_t *context_p, jerry_debugger_source_info_type_t type,
+                                      uint32_t value);
+void parser_append_source_location (parser_context_t *context_p, jerry_debugger_source_info_type_t type,
+                                    parser_line_counter_t line, parser_line_counter_t column);
+void parser_send_offset_holes (parser_context_t *context_p);
+void parser_send_source_info (parser_context_t *context_p);
 
 #endif /* JERRY_DEBUGGER */
 

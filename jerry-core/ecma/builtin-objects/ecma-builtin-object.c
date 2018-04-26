@@ -483,17 +483,19 @@ ecma_builtin_object_object_prevent_extensions (ecma_value_t this_arg, /**< 'this
 } /* ecma_builtin_object_object_prevent_extensions */
 
 /**
- * The Object object's 'isSealed' routine
+ * Common helper code for the 'isFrozen' and 'isSealed' fuctions of Object.
  *
  * See also:
- *          ECMA-262 v5, 15.2.3.11
+ *         Object.isFrozen
+ *         Object.isSealed
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argument */
-                                      ecma_value_t arg) /**< routine's argument */
+ecma_builtin_object_frozen_or_sealed_helper (ecma_value_t this_arg, /**< 'this' argument */
+                                             ecma_value_t arg, /**< routine's argument */
+                                             bool frozen_mode) /**< routine mode */
 {
   JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
@@ -507,17 +509,17 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
 
-    bool is_sealed;
+    bool is_sealed_or_frozen;
 
     /* 3. */
     if (ecma_get_object_extensible (obj_p))
     {
-      is_sealed = false;
+      is_sealed_or_frozen = false;
     }
     else
     {
       /* the value can be updated in the loop below */
-      is_sealed = true;
+      is_sealed_or_frozen = true;
 
       /* 2. */
       ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
@@ -535,10 +537,19 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
                                                                     NULL,
                                                                     ECMA_PROPERTY_GET_NO_OPTIONS);
 
-        /* 2.b */
+        /* 2.b for isFrozen */
+        if (frozen_mode
+            && ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+            && ecma_is_property_writable (property))
+        {
+          is_sealed_or_frozen = false;
+          break;
+        }
+
+        /* 2.b for isSealed, 2.c for isFrozen */
         if (ecma_is_property_configurable (property))
         {
-          is_sealed = false;
+          is_sealed_or_frozen = false;
           break;
         }
       }
@@ -547,10 +558,26 @@ ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argumen
     }
 
     /* 4. */
-    ret_value = is_sealed ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+    ret_value = is_sealed_or_frozen ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
   }
 
   return ret_value;
+} /* ecma_builtin_object_frozen_or_sealed_helper */
+
+/**
+ * The Object object's 'isSealed' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.2.3.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_is_sealed (ecma_value_t this_arg, /**< 'this' argument */
+                                      ecma_value_t arg) /**< routine's argument */
+{
+  return ecma_builtin_object_frozen_or_sealed_helper (this_arg, arg, false);
 } /* ecma_builtin_object_object_is_sealed */
 
 /**
@@ -566,69 +593,7 @@ static ecma_value_t
 ecma_builtin_object_object_is_frozen (ecma_value_t this_arg, /**< 'this' argument */
                                       ecma_value_t arg) /**< routine's argument */
 {
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  /* 1. */
-  if (!ecma_is_value_object (arg))
-  {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
-  }
-  else
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-
-    bool is_frozen;
-
-    /* 3. */
-    if (ecma_get_object_extensible (obj_p))
-    {
-      is_frozen = false;
-    }
-    else
-    {
-      is_frozen = true;
-
-      /* 2. */
-      ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, false, false);
-
-      ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
-
-      while (ecma_value_p != NULL)
-      {
-        ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-        ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
-
-        /* 2.a */
-        ecma_property_t property = ecma_op_object_get_own_property (obj_p,
-                                                                    property_name_p,
-                                                                    NULL,
-                                                                    ECMA_PROPERTY_GET_NO_OPTIONS);
-
-        /* 2.b */
-        if (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR
-            && ecma_is_property_writable (property))
-        {
-          is_frozen = false;
-          break;
-        }
-
-        /* 2.c */
-        if (ecma_is_property_configurable (property))
-        {
-          is_frozen = false;
-          break;
-        }
-      }
-
-      ecma_free_values_collection (props_p, 0);
-    }
-
-    /* 4 */
-    ret_value = is_frozen ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
-  }
-
-  return ret_value;
+  return ecma_builtin_object_frozen_or_sealed_helper (this_arg, arg, true);
 } /* ecma_builtin_object_object_is_frozen */
 
 /**

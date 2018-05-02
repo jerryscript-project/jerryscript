@@ -22,9 +22,10 @@ Memory usage and Binary footprint are measured at [here](https://jerryscript-pro
 
 The following table shows the latest results on the devices:
 
-|  STM32F4-Discovery  | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/stm32f4dis.svg)](https://jerryscript-project.github.io/jerryscript-test-results/?view=stm32) |
+|  STM32F4-Discovery  | [![Remote Testrunner](https://firebasestorage.googleapis.com/v0/b/remote-testrunner.appspot.com/o/status%2Fjerryscript%2Fstm32f4dis.svg?alt=media&token=1)](https://jerryscript-project.github.io/jerryscript-test-results/?view=stm32f4dis) |
 |        :---:        |                                             :---:                                                                                         |
-|  **Raspberry Pi 2** | [![Remote Testrunner](https://jerryscript-project.github.io/jerryscript-test-results/status/rpi2.svg)](https://jerryscript-project.github.io/jerryscript-test-results/?view=rpi2)       |
+|  **Raspberry Pi 2** | [![Remote Testrunner](https://firebasestorage.googleapis.com/v0/b/remote-testrunner.appspot.com/o/status%2Fjerryscript%2Frpi2.svg?alt=media&token=1)](https://jerryscript-project.github.io/jerryscript-test-results/?view=rpi2)       |
+|  **Artik053** | [![Remote Testrunner](https://firebasestorage.googleapis.com/v0/b/remote-testrunner.appspot.com/o/status%2Fjerryscript%2Fartik053.svg?alt=media&token=1)](https://jerryscript-project.github.io/jerryscript-test-results/?view=artik053)       |
 
 IRC channel: #jerryscript on [freenode](https://freenode.net)
 Mailing list: jerryscript-dev@groups.io, you can subscribe [here](https://groups.io/g/jerryscript-dev) and access the mailing list archive [here](https://groups.io/g/jerryscript-dev/topics).

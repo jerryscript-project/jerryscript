@@ -837,7 +837,7 @@ ecma_builtin_object_object_define_properties (ecma_value_t this_arg, /**< 'this'
     ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
     for (uint32_t index = 0;
-         index < property_number && ecma_is_value_empty (ret_value);
+         ecma_value_p != NULL && index < property_number && ecma_is_value_empty (ret_value);
          index++)
     {
       ECMA_TRY_CATCH (define_own_prop_ret,

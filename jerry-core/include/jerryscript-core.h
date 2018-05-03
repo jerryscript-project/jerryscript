@@ -336,6 +336,7 @@ jerry_value_t jerry_get_global_object (void);
 /**
  * Checker functions of 'jerry_value_t'.
  */
+bool jerry_value_is_abort (const jerry_value_t value);
 bool jerry_value_is_array (const jerry_value_t value);
 bool jerry_value_is_boolean (const jerry_value_t value);
 bool jerry_value_is_constructor (const jerry_value_t value);
@@ -373,7 +374,6 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature);
 /**
  * Error manipulation functions.
  */
-bool jerry_value_has_abort_flag (const jerry_value_t value);
 void jerry_value_clear_error_flag (jerry_value_t *value_p);
 void jerry_value_set_error_flag (jerry_value_t *value_p);
 void jerry_value_set_abort_flag (jerry_value_t *value_p);

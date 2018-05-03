@@ -627,6 +627,27 @@ jerry_get_global_object (void)
 } /* jerry_get_global_object */
 
 /**
+ * Check if the specified value is an abort value.
+ *
+ * @return true  - if both the error and abort values are set,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_abort (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_error_reference (value))
+  {
+    return false;
+  }
+
+  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
+
+  return (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT) != 0;
+} /* jerry_value_is_abort */
+
+/**
  * Check if the specified value is an array object value.
  *
  * @return true  - if the specified value is an array object,
@@ -905,27 +926,6 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 } /* jerry_is_feature_enabled */
 
 /**
- * Check if the specified value is an abort value.
- *
- * @return true  - if both the error and abort flags of the specified value are true,
- *         false - otherwise
- */
-bool
-jerry_value_has_abort_flag (const jerry_value_t value) /**< api value */
-{
-  jerry_assert_api_available ();
-
-  if (!ecma_is_value_error_reference (value))
-  {
-    return false;
-  }
-
-  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
-
-  return (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT) != 0;
-} /* jerry_value_has_abort_flag */
-
-/**
  * Clear the error flag
  */
 void
@@ -951,7 +951,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
   {
     /* This is a rare case so it is optimized for
      * binary size rather than performance. */
-    if (!jerry_value_has_abort_flag (*value_p))
+    if (!jerry_value_is_abort (*value_p))
     {
       return;
     }
@@ -974,7 +974,7 @@ jerry_value_set_abort_flag (jerry_value_t *value_p)
   {
     /* This is a rare case so it is optimized for
      * binary size rather than performance. */
-    if (jerry_value_has_abort_flag (*value_p))
+    if (jerry_value_is_abort (*value_p))
     {
       return;
     }

@@ -71,7 +71,7 @@ main (void)
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
-  TEST_ASSERT (jerry_value_has_abort_flag (res));
+  TEST_ASSERT (jerry_value_is_abort (res));
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
@@ -104,26 +104,26 @@ main (void)
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);
 
-  TEST_ASSERT (jerry_value_has_abort_flag (res));
+  TEST_ASSERT (jerry_value_is_abort (res));
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
 
   /* Test flag overwrites. */
   jerry_value_t value = jerry_create_string ((jerry_char_t *) "Error description");
-  TEST_ASSERT (!jerry_value_has_abort_flag (value));
+  TEST_ASSERT (!jerry_value_is_abort (value));
   TEST_ASSERT (!jerry_value_is_error (value));
 
   jerry_value_set_abort_flag (&value);
-  TEST_ASSERT (jerry_value_has_abort_flag (value));
+  TEST_ASSERT (jerry_value_is_abort (value));
   TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_value_set_error_flag (&value);
-  TEST_ASSERT (!jerry_value_has_abort_flag (value));
+  TEST_ASSERT (!jerry_value_is_abort (value));
   TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_value_set_abort_flag (&value);
-  TEST_ASSERT (jerry_value_has_abort_flag (value));
+  TEST_ASSERT (jerry_value_is_abort (value));
   TEST_ASSERT (jerry_value_is_error (value));
 
   jerry_release_value (value);

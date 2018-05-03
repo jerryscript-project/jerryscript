@@ -1076,7 +1076,7 @@ main (void)
                                    strlen (parser_err_src_p),
                                    JERRY_PARSE_NO_OPTS);
     TEST_ASSERT (jerry_value_is_error (parsed_code_val));
-    jerry_value_clear_error_flag (&parsed_code_val);
+    jerry_value_clear_error (&parsed_code_val);
     jerry_value_t err_str_val = jerry_value_to_string (parsed_code_val);
     jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
     jerry_char_t err_str_buf[256];

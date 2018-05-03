@@ -339,6 +339,7 @@ jerry_value_t jerry_get_global_object (void);
 bool jerry_value_is_array (const jerry_value_t value);
 bool jerry_value_is_boolean (const jerry_value_t value);
 bool jerry_value_is_constructor (const jerry_value_t value);
+bool jerry_value_is_error (const jerry_value_t value);
 bool jerry_value_is_function (const jerry_value_t value);
 bool jerry_value_is_number (const jerry_value_t value);
 bool jerry_value_is_null (const jerry_value_t value);
@@ -370,9 +371,8 @@ jerry_type_t jerry_value_get_type (const jerry_value_t value);
 bool jerry_is_feature_enabled (const jerry_feature_t feature);
 
 /**
- * Error flag manipulation functions.
+ * Error manipulation functions.
  */
-bool jerry_value_has_error_flag (const jerry_value_t value);
 bool jerry_value_has_abort_flag (const jerry_value_t value);
 void jerry_value_clear_error_flag (jerry_value_t *value_p);
 void jerry_value_set_error_flag (jerry_value_t *value_p);

@@ -47,7 +47,7 @@ jerryx_arg_transform_args (const jerry_value_t *js_arg_p, /**< points to the arr
     .js_arg_idx = 0
   };
 
-  for (; c_arg_cnt != 0 && !jerry_value_has_error_flag (ret); c_arg_cnt--, c_arg_p++)
+  for (; c_arg_cnt != 0 && !jerry_value_is_error (ret); c_arg_cnt--, c_arg_p++)
   {
     ret = c_arg_p->func (&iterator, c_arg_p);
   }
@@ -86,7 +86,7 @@ jerryx_arg_transform_this_and_args (const jerry_value_t this_val, /**< the this_
 
   jerry_value_t ret = c_arg_p->func (&iterator, c_arg_p);
 
-  if (jerry_value_has_error_flag (ret))
+  if (jerry_value_is_error (ret))
   {
     jerry_release_value (ret);
 
@@ -123,7 +123,7 @@ jerryx_arg_transform_object_properties (const jerry_value_t obj_val,/**< the JS 
     prop[i] = jerry_get_property (obj_val, name_str);
     jerry_release_value (name_str);
 
-    if (jerry_value_has_error_flag (prop[i]))
+    if (jerry_value_is_error (prop[i]))
     {
       for (jerry_length_t j = 0; j < i; j++)
       {
@@ -166,7 +166,7 @@ jerryx_arg_transform_array (const jerry_value_t array_val, /**< points to the JS
   {
     arr[i] = jerry_get_property_by_index (array_val, i);
 
-    if (jerry_value_has_error_flag (arr[i]))
+    if (jerry_value_is_error (arr[i]))
     {
       for (jerry_length_t j = 0; j < i; j++)
       {

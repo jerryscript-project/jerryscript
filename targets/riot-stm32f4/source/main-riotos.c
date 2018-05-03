@@ -36,7 +36,7 @@ register_js_function (const char *name_p, /**< name of the function */
 {
   jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
 
-  if (jerry_value_has_error_flag (result_val))
+  if (jerry_value_is_error (result_val))
   {
     printf ("Warning: failed to register '%s' method.", name_p);
   }
@@ -68,7 +68,7 @@ int test_jerry (int argc, char **argv)
   /* Setup Global scope code */
   ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
 
-  if (!jerry_value_has_error_flag (ret_value))
+  if (!jerry_value_is_error (ret_value))
   {
     /* Execute the parsed source code in the Global scope */
     ret_value = jerry_run (ret_value);
@@ -76,7 +76,7 @@ int test_jerry (int argc, char **argv)
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     printf ("Script Error!");
 

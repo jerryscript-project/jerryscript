@@ -44,7 +44,7 @@ jerry_value_t print_function;
 
 void jerry_resolve_error (jerry_value_t ret_value)
 {
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     jerry_value_clear_error_flag (&ret_value);
     jerry_value_t err_str_val = jerry_value_to_string (ret_value);
@@ -113,7 +113,7 @@ void eval_jerry_script (int argc, char *argv[], struct tcmd_handler_ctx *ctx)
 
     jerry_value_t eval_ret = jerry_eval (buffer, str_total_length - 1, false);
 
-    if (jerry_value_has_error_flag (eval_ret))
+    if (jerry_value_is_error (eval_ret))
     {
       jerry_resolve_error (eval_ret);
       TCMD_RSP_ERROR (ctx, NULL);

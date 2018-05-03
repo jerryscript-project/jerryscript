@@ -671,6 +671,20 @@ jerry_value_is_constructor (const jerry_value_t value) /**< jerry api value */
 } /* jerry_value_is_constructor */
 
 /**
+ * Check if the specified value is an error or abort value.
+ *
+ * @return true  - if the specified value is an error value,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_error (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_is_value_error_reference (value);
+} /* jerry_value_is_error */
+
+/**
  * Check if the specified value is a function object value.
  *
  * @return true - if the specified value is callable,
@@ -889,20 +903,6 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
 #endif /* JERRY_ENABLE_LINE_INFO */
           );
 } /* jerry_is_feature_enabled */
-
-/**
- * Check if the specified value is an error or abort value.
- *
- * @return true  - if the error flag of the specified value is true,
- *         false - otherwise
- */
-bool
-jerry_value_has_error_flag (const jerry_value_t value) /**< api value */
-{
-  jerry_assert_api_available ();
-
-  return ecma_is_value_error_reference (value);
-} /* jerry_value_has_error_flag */
 
 /**
  * Check if the specified value is an abort value.

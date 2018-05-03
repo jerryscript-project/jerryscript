@@ -79,7 +79,7 @@ jerryx_arg_transform_number_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
 
   jerry_value_t to_number = jerry_value_to_number (js_arg);
 
-  if (jerry_value_has_error_flag (to_number))
+  if (jerry_value_is_error (to_number))
   {
     jerry_release_value (to_number);
 
@@ -177,14 +177,14 @@ jerryx_arg_helper_process_double (double *d, /**< [in, out] the number to be pro
   { \
     double tmp = 0.0; \
     jerry_value_t rv = jerryx_arg_transform_number ## suffix ## _common (js_arg_iter_p, &tmp); \
-    if (jerry_value_has_error_flag (rv)) \
+    if (jerry_value_is_error (rv)) \
     { \
       return rv; \
     } \
     jerry_release_value (rv); \
     jerryx_arg_int_option_t *options_p = (jerryx_arg_int_option_t *) &c_arg_p->extra_info; \
     rv = jerryx_arg_helper_process_double (&tmp, min, max, *options_p); \
-    if (jerry_value_has_error_flag (rv)) \
+    if (jerry_value_is_error (rv)) \
     { \
       return rv; \
     } \
@@ -329,7 +329,7 @@ jerryx_arg_transform_string_common (jerryx_arg_js_iterator_t *js_arg_iter_p, /**
 
   jerry_value_t to_string = jerry_value_to_string (js_arg);
 
-  if (jerry_value_has_error_flag (to_string))
+  if (jerry_value_is_error (to_string))
   {
     jerry_release_value (to_string);
 

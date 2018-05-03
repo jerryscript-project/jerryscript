@@ -37,7 +37,7 @@ int js_eval (const char *source_p, const size_t source_size)
   jerry_value_t res = jerry_eval ((jerry_char_t *) source_p,
                                   source_size,
                                   false);
-  if (jerry_value_has_error_flag (res)) {
+  if (jerry_value_is_error (res)) {
     jerry_release_value (res);
     return -1;
   }
@@ -54,7 +54,7 @@ int js_loop (uint32_t ticknow)
   jerry_value_t sysloop_func = jerry_get_property (global_obj_val, prop_name_val);
   jerry_release_value (prop_name_val);
 
-  if (jerry_value_has_error_flag (sysloop_func)) {
+  if (jerry_value_is_error (sysloop_func)) {
     printf ("Error: '%s' not defined!!!\r\n", fn_sys_loop_name);
     jerry_release_value (sysloop_func);
     jerry_release_value (global_obj_val);
@@ -83,7 +83,7 @@ int js_loop (uint32_t ticknow)
   jerry_release_value (sysloop_func);
   jerry_release_value (global_obj_val);
 
-  if (jerry_value_has_error_flag (res)) {
+  if (jerry_value_is_error (res)) {
     jerry_release_value (res);
     return -3;
   }

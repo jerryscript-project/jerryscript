@@ -36,7 +36,7 @@ main (int argc, char **argv)
   jerry_value_t module = jerryx_module_resolve (module_name, &resolver, 1);
   jerry_release_value (module_name);
 
-  TEST_ASSERT (jerry_value_has_error_flag (module));
+  TEST_ASSERT (jerry_value_is_error (module));
 
   /* Retrieve the error message. */
   jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "message");

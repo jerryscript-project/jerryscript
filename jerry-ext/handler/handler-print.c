@@ -54,7 +54,7 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
   {
     jerry_value_t str_val = jerry_value_to_string (args_p[arg_index]);
 
-    if (!jerry_value_has_error_flag (str_val))
+    if (!jerry_value_is_error (str_val))
     {
       if (arg_index != 0)
       {

@@ -87,7 +87,7 @@ read_file (const char *file_name,
 static void
 print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
-  assert (!jerry_value_has_error_flag (error_value));
+  assert (!jerry_value_is_error (error_value));
 
   jerry_char_t err_str_buf[256];
 
@@ -97,7 +97,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
     jerry_value_t backtrace_val = jerry_get_property (error_value, stack_str);
     jerry_release_value (stack_str);
 
-    if (!jerry_value_has_error_flag (backtrace_val)
+    if (!jerry_value_is_error (backtrace_val)
         && jerry_value_is_array (backtrace_val))
     {
       printf ("Exception backtrace:\n");
@@ -114,7 +114,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
       {
         jerry_value_t item_val = jerry_get_property_by_index (backtrace_val, i);
 
-        if (!jerry_value_has_error_flag (item_val)
+        if (!jerry_value_is_error (item_val)
             && jerry_value_is_string (item_val))
         {
           jerry_size_t str_size = jerry_get_string_size (item_val);
@@ -262,7 +262,7 @@ register_js_function (const char *name_p, /**< name of the function */
 {
   jerry_value_t result_val = jerryx_handler_register_global ((const jerry_char_t *) name_p, handler_p);
 
-  if (jerry_value_has_error_flag (result_val))
+  if (jerry_value_is_error (result_val))
   {
     jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Warning: failed to register '%s' method.", name_p);
     jerry_value_clear_error_flag (&result_val);
@@ -291,7 +291,7 @@ wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource nam
                                        source_size,
                                        JERRY_PARSE_NO_OPTS);
 
-  if (!jerry_value_has_error_flag (ret_val))
+  if (!jerry_value_is_error (ret_val))
   {
     jerry_value_t func_val = ret_val;
     ret_val = jerry_run (func_val);
@@ -620,14 +620,14 @@ main (int argc,
                                          JERRY_SNAPSHOT_EXEC_COPY_DATA);
       }
 
-      if (jerry_value_has_error_flag (ret_value))
+      if (jerry_value_is_error (ret_value))
       {
         break;
       }
     }
   }
 
-  if (!jerry_value_has_error_flag (ret_value))
+  if (!jerry_value_is_error (ret_value))
   {
     for (int i = 0; i < files_counter; i++)
     {
@@ -652,14 +652,14 @@ main (int argc,
                                source_size,
                                JERRY_PARSE_NO_OPTS);
 
-      if (!jerry_value_has_error_flag (ret_value) && !is_parse_only)
+      if (!jerry_value_is_error (ret_value) && !is_parse_only)
       {
         jerry_value_t func_val = ret_value;
         ret_value = jerry_run (func_val);
         jerry_release_value (func_val);
       }
 
-      if (jerry_value_has_error_flag (ret_value))
+      if (jerry_value_is_error (ret_value))
       {
         break;
       }
@@ -756,7 +756,7 @@ main (int argc,
         /* Evaluate the line */
         jerry_value_t ret_val_eval = jerry_eval (buffer, len, false);
 
-        if (!jerry_value_has_error_flag (ret_val_eval))
+        if (!jerry_value_is_error (ret_val_eval))
         {
           /* Print return value */
           const jerry_value_t args[] = { ret_val_eval };
@@ -768,7 +768,7 @@ main (int argc,
           jerry_release_value (ret_val_eval);
           ret_val_eval = jerry_run_all_enqueued_jobs ();
 
-          if (jerry_value_has_error_flag (ret_val_eval))
+          if (jerry_value_is_error (ret_val_eval))
           {
             jerry_value_clear_error_flag (&ret_val_eval);
             print_unhandled_exception (ret_val_eval);
@@ -787,7 +787,7 @@ main (int argc,
 
   int ret_code = JERRY_STANDALONE_EXIT_CODE_OK;
 
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     jerry_value_clear_error_flag (&ret_value);
     print_unhandled_exception (ret_value);
@@ -799,7 +799,7 @@ main (int argc,
 
   ret_value = jerry_run_all_enqueued_jobs ();
 
-  if (jerry_value_has_error_flag (ret_value))
+  if (jerry_value_is_error (ret_value))
   {
     jerry_value_clear_error_flag (&ret_value);
     print_unhandled_exception (ret_value);

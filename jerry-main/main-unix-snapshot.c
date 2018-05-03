@@ -127,11 +127,11 @@ read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
 static void
 print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
-  assert (!jerry_value_has_error_flag (error_value));
+  assert (!jerry_value_is_error (error_value));
 
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
 
-  if (jerry_value_has_error_flag (err_str_val))
+  if (jerry_value_is_error (err_str_val))
   {
     /* Avoid recursive error throws. */
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Snapshot error: [value cannot be converted to string]\n");
@@ -316,7 +316,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
                                              output_buffer,
                                              sizeof (output_buffer) / sizeof (uint32_t));
 
-  if (jerry_value_has_error_flag (snapshot_result))
+  if (jerry_value_is_error (snapshot_result))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Generating snapshot failed!\n");
 

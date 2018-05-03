@@ -140,7 +140,7 @@ handle_require (const jerry_value_t js_function,
 static void
 assert_number (jerry_value_t js_value, double expected_result)
 {
-  TEST_ASSERT (!jerry_value_has_error_flag (js_value));
+  TEST_ASSERT (!jerry_value_is_error (js_value));
   TEST_ASSERT (jerry_get_number_value (js_value) == expected_result);
 } /* assert_number */
 

@@ -34,7 +34,7 @@ DECLARE_GLOBAL_FUNCTION(setTimeout) {
 
     jerry_value_t result = jerry_set_property_by_index(function_obj_p, id, args[0]);
 
-    if (jerry_value_has_error_flag(result)) {
+    if (jerry_value_is_error(result)) {
         jerry_release_value(result);
         mbed::js::EventLoop::getInstance().getQueue().cancel(id);
 

@@ -60,6 +60,24 @@ const char eval_string5[] =
 "  return x === y ? 1 : 0;"
 "}) ();";
 
+/* Make sure the result of a module load is removed from the cache. */
+const char eval_string6[] =
+"(function() {"
+"  var x = require('cache-check');"
+"  clear_require_cache('cache-check');"
+"  var y = require('cache-check');"
+"  return x !== y ? 1 : 0;"
+"}) ();";
+
+/* Make sure the entire cache is cleared. */
+const char eval_string7[] =
+"(function() {"
+"  var x = require('cache-check');"
+"  clear_require_cache(undefined);"
+"  var y = require('cache-check');"
+"  return x !== y ? 1 : 0;"
+"}) ();";
+
 /*
  * Define a resolver for a module named "differently-handled-module" to check that custom resolvers work.
  */
@@ -120,6 +138,22 @@ static const jerryx_module_resolver_t *resolvers[3] =
 };
 
 static jerry_value_t
+handle_clear_require_cache (const jerry_value_t js_function,
+                            const jerry_value_t this_val,
+                            const jerry_value_t args_p[],
+                            const jerry_length_t args_count)
+{
+  (void) js_function;
+  (void) this_val;
+  (void) args_count;
+
+  TEST_ASSERT (args_count == 1);
+  jerryx_module_clear_cache (args_p[0], resolvers, 3);
+
+  return 0;
+} /* handle_clear_require_cache */
+
+static jerry_value_t
 handle_require (const jerry_value_t js_function,
                 const jerry_value_t this_val,
                 const jerry_value_t args_p[],
@@ -172,19 +206,28 @@ main (int argc, char **argv)
   jerry_init (JERRY_INIT_EMPTY);
 
   js_global = jerry_get_global_object ();
+
   js_function = jerry_create_external_function (handle_require);
   js_property_name = jerry_create_string ((const jerry_char_t *) "require");
   jerry_set_property (js_global, js_property_name, js_function);
+  jerry_release_value (js_property_name);
+  jerry_release_value (js_function);
+
+  js_function = jerry_create_external_function (handle_clear_require_cache);
+  js_property_name = jerry_create_string ((const jerry_char_t *) "clear_require_cache");
+  jerry_set_property (js_global, js_property_name, js_function);
+  jerry_release_value (js_property_name);
+  jerry_release_value (js_function);
+
+  jerry_release_value (js_global);
 
   eval_one (eval_string1, 42);
   eval_one (eval_string2, 29);
   eval_one (eval_string3, 1);
   eval_one (eval_string4, 1);
   eval_one (eval_string5, 1);
-
-  jerry_release_value (js_property_name);
-  jerry_release_value (js_function);
-  jerry_release_value (js_global);
+  eval_one (eval_string6, 1);
+  eval_one (eval_string7, 1);
 
   jerry_cleanup ();
 } /* main */

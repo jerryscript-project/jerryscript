@@ -27,7 +27,7 @@ TEST262_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/test262')
 
 BUILD_SCRIPT = path.join(TOOLS_DIR, 'build.py')
 CPPCHECK_SCRIPT = path.join(TOOLS_DIR, 'check-cppcheck.sh')
-DEBUGGER_CLIENT_SCRIPT = path.join(PROJECT_DIR, 'jerry-debugger/jerry-client-ws.py')
+DEBUGGER_CLIENT_SCRIPT = path.join(PROJECT_DIR, 'jerry-debugger/jerry_client.py')
 DEBUGGER_TEST_RUNNER_SCRIPT = path.join(TOOLS_DIR, 'runners/run-debugger-test.sh')
 DOXYGEN_SCRIPT = path.join(TOOLS_DIR, 'check-doxygen.sh')
 LICENSE_SCRIPT = path.join(TOOLS_DIR, 'check-license.py')

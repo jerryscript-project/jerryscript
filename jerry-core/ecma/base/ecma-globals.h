@@ -218,7 +218,7 @@ enum
  * Checks whether the error flag is set.
  */
 #define ECMA_IS_VALUE_ERROR(value) \
-  (unlikely ((value) == ECMA_VALUE_ERROR))
+  (JERRY_UNLIKELY ((value) == ECMA_VALUE_ERROR))
 
 /**
  * Representation for native external pointer

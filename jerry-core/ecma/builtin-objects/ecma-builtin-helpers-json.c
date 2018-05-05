@@ -115,7 +115,7 @@ ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *
     ecma_string_t *current_p = ecma_get_string_from_value (*ecma_value_p);
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
-    if (likely (!first))
+    if (JERRY_LIKELY (!first))
     {
       properties_str_p = ecma_concat_ecma_strings (properties_str_p, separator_p);
     }

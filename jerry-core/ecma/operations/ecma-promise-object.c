@@ -41,7 +41,7 @@
  * @return true - if the object is a promise.
  *         false - otherwise.
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_promise (ecma_object_t *obj_p) /**< points to object */
 {
   return ecma_object_class_is (obj_p, LIT_MAGIC_STRING_PROMISE_UL);
@@ -66,7 +66,7 @@ ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseResult of promise.
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
                          ecma_value_t result) /**< the result value */
 {
@@ -84,7 +84,7 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
  *
  * @return the state's enum value
  */
-inline uint8_t __attr_always_inline___
+inline uint8_t JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_get_state (ecma_object_t *obj_p) /**< points to promise object */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
@@ -95,7 +95,7 @@ ecma_promise_get_state (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseState of promise.
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
                         uint8_t state) /**< the state */
 {

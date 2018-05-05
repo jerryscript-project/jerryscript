@@ -40,7 +40,7 @@
  * @return true - if the type is a normal or arrow function;
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_normal_or_arrow_function (ecma_object_type_t type)
 {
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
@@ -282,7 +282,7 @@ ecma_op_create_external_function_object (ecma_external_handler_t handler_cb) /**
  *
  * @return compiled code
  */
-inline const ecma_compiled_code_t * __attr_always_inline___
+inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< function pointer */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
@@ -308,7 +308,7 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
  *
  * @return compiled code
  */
-inline const ecma_compiled_code_t * __attr_always_inline___
+inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_p) /**< arrow function pointer */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
@@ -434,7 +434,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    if (unlikely (ecma_get_object_is_builtin (func_obj_p)))
+    if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)))
     {
       ret_value = ecma_builtin_dispatch_call (func_obj_p,
                                               this_arg_value,
@@ -561,7 +561,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                        arguments_list_p,
                                                        arguments_list_len);
 
-    if (unlikely (ecma_is_value_error_reference (ret_value)))
+    if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
     {
       JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value, true);
       ret_value = ECMA_VALUE_ERROR;
@@ -741,7 +741,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    if (unlikely (ecma_get_object_is_builtin (func_obj_p)
+    if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)
                   && !ecma_builtin_function_is_routine (func_obj_p)))
     {
       ret_value = ecma_builtin_dispatch_construct (func_obj_p,

@@ -353,7 +353,7 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
  * @return true - if property is found
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
                                  ecma_string_t *property_name_p) /**< property name */
 {
@@ -371,7 +371,7 @@ ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
  * @return true - if property is found
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
@@ -639,7 +639,7 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t __attr_always_inline___
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
                                   ecma_string_t *property_name_p) /**< property name */
 {
@@ -718,7 +718,7 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t __attr_always_inline___
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
                                 lit_magic_string_id_t property_id) /**< property magic string id */
 {
@@ -1872,7 +1872,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
  * @return value of the object if the class matches
  *         ECMA_VALUE_NOT_FOUND otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_object_class_is (ecma_object_t *object_p, /**< object */
                       uint32_t class_id) /**< class id */
 {

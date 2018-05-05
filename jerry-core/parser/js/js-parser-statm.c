@@ -701,7 +701,7 @@ parser_parse_while_statement_start (parser_context_t *context_p) /**< context */
 /**
  * Parse while statement (ending part).
  */
-static void __attr_noinline___
+static void JERRY_ATTR_NOINLINE
 parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_while_statement_t while_statement;
@@ -947,7 +947,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 /**
  * Parse for statement (ending part).
  */
-static void __attr_noinline___
+static void JERRY_ATTR_NOINLINE
 parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_for_statement_t for_statement;
@@ -1028,7 +1028,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
 /**
  * Parse switch statement (starting part).
  */
-static void __attr_noinline___
+static void JERRY_ATTR_NOINLINE
 parser_parse_switch_statement_start (parser_context_t *context_p) /**< context */
 {
   parser_switch_statement_t switch_statement;
@@ -2202,7 +2202,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 /**
  * Free jumps stored on the stack if a parse error is occured.
  */
-void __attr_noinline___
+void JERRY_ATTR_NOINLINE
 parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
 {
   while (true)

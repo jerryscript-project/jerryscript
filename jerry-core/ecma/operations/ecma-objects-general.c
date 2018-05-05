@@ -431,10 +431,10 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   {
     /* No action required. */
   }
-  else if (likely (property_desc_type == current_property_type))
+  else if (JERRY_LIKELY (property_desc_type == current_property_type))
   {
     /* If property is configurable, there is no need for checks. */
-    if (unlikely (!is_current_configurable))
+    if (JERRY_UNLIKELY (!is_current_configurable))
     {
       if (property_desc_type == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {

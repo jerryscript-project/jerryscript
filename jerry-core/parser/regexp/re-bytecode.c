@@ -123,7 +123,7 @@ re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode conte
  *
  * @return ecma character
  */
-inline ecma_char_t __attr_always_inline___
+inline ecma_char_t JERRY_ATTR_ALWAYS_INLINE
 re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
 {
   ecma_char_t chr;
@@ -137,7 +137,7 @@ re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return current RegExp opcode
  */
-inline re_opcode_t __attr_always_inline___
+inline re_opcode_t JERRY_ATTR_ALWAYS_INLINE
 re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
 {
   uint8_t bytecode = **bc_p;
@@ -150,7 +150,7 @@ re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return opcode parameter
  */
-inline uint32_t __attr_always_inline___
+inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
 {
   uint32_t value;
@@ -164,7 +164,7 @@ re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
  *
  * @return bytecode length (unsigned integer)
  */
-inline uint32_t __attr_pure___ __attr_always_inline___
+inline uint32_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   return ((uint32_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p));

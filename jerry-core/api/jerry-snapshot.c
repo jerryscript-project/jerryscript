@@ -33,7 +33,7 @@
  *
  * @return configuration flags
  */
-static inline uint32_t __attr_always_inline___
+static inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 snapshot_get_global_flags (bool has_regex) /**< regex literal is present */
 {
   JERRY_UNUSED (has_regex);
@@ -55,7 +55,7 @@ snapshot_get_global_flags (bool has_regex) /**< regex literal is present */
  *
  * @return true if global_flags accepted, false otherwise
  */
-static inline bool __attr_always_inline___
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 {
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
@@ -92,7 +92,7 @@ typedef struct
  * @return true - if write was successful, i.e. offset + data_size doesn't exceed buffer size,
  *         false - otherwise
  */
-static inline bool __attr_always_inline___
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 snapshot_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
                                     size_t buffer_size, /**< size of buffer */
                                     size_t *in_out_buffer_offset_p,  /**< [in,out] offset to write to

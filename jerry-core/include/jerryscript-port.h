@@ -114,6 +114,11 @@ typedef struct
 /**
  * Get timezone and daylight saving data
  *
+ * Note:
+ *      This port function is called by jerry-core when
+ *      CONFIG_DISABLE_DATE_BUILTIN is _not_ defined. Otherwise this function is
+ *      not used.
+ *
  * @return true  - if success
  *         false - otherwise
  */
@@ -121,6 +126,12 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
 
 /**
  * Get system time
+ *
+ * Note:
+ *      This port function is called by jerry-core when
+ *      CONFIG_DISABLE_DATE_BUILTIN is _not_ defined. It is also common practice
+ *      in application code to use this function for the initialization of the
+ *      random number generator.
  *
  * @return milliseconds since Unix epoch
  */
@@ -130,9 +141,10 @@ double jerry_port_get_current_time (void);
  * Get the current instance which contains the current context, heap and other
  * structures. Each port should provide its own implementation of this interface.
  *
- *Note:
- *    This port function is called by jerry-core when JERRY_ENABLE_EXTERNAL_CONTEXT
- *    is defined. Otherwise this function is not used.
+ * Note:
+ *      This port function is called by jerry-core when
+ *      JERRY_ENABLE_EXTERNAL_CONTEXT is defined. Otherwise this function is not
+ *      used.
  *
  * @return the pointer to the jerry instance.
  */
@@ -140,10 +152,12 @@ struct jerry_instance_t *jerry_port_get_current_instance (void);
 
 /**
  * Makes the process sleep for a given time.
+ *
+ * Note:
+ *      This port function is called by jerry-core when JERRY_DEBUGGER is
+ *      defined. Otherwise this function is not used.
  */
-#ifdef JERRY_DEBUGGER
 void jerry_port_sleep (uint32_t sleep_time);
-#endif /* JERRY_DEBUGGER */
 
 /**
  * @}

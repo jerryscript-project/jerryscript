@@ -915,18 +915,35 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 } /* jerry_is_feature_enabled */
 
 /**
- * Clear the error flag
+ * Get the value from an error value.
+ *
+ * Extract the api value from an error. If the second argument is true
+ * it will release the input error value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry_value_t value
  */
-void
-jerry_value_clear_error_flag (jerry_value_t *value_p) /**< api value */
+jerry_value_t
+jerry_get_value_from_error (jerry_value_t value, /**< api value */
+                            bool release) /**< release api value */
 {
   jerry_assert_api_available ();
 
-  if (ecma_is_value_error_reference (*value_p))
+  if (!ecma_is_value_error_reference (value))
   {
-    *value_p = ecma_clear_error_reference (*value_p, false);
+    return value;
   }
-} /* jerry_value_clear_error_flag */
+
+  jerry_value_t ret_val = jerry_acquire_value (ecma_get_error_reference_from_value (value)->value);
+
+  if (release)
+  {
+    jerry_release_value (value);
+  }
+  return ret_val;
+} /* jerry_get_value_from_error */
 
 /**
  * Set the error flag if the value is not an error reference.
@@ -944,8 +961,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p) /**< api value */
     {
       return;
     }
-
-    jerry_value_clear_error_flag (value_p);
+    *value_p = ecma_clear_error_reference (*value_p, false);
   }
 
   *value_p = ecma_create_error_reference (*value_p, true);
@@ -967,26 +983,11 @@ jerry_value_set_abort_flag (jerry_value_t *value_p) /**< api value */
     {
       return;
     }
-
-    jerry_value_clear_error_flag (value_p);
+    *value_p = ecma_clear_error_reference (*value_p, false);
   }
 
   *value_p = ecma_create_error_reference (*value_p, false);
 } /* jerry_value_set_abort_flag */
-
-/**
- * If the input value is an error value, then return a new reference to its referenced value.
- * Otherwise, return a new reference to the value itself.
- *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return the real value of the jerry_value
- */
-jerry_value_t jerry_get_value_without_error_flag (jerry_value_t value) /**< api value */
-{
-  return jerry_acquire_value (jerry_get_arg_value (value));
-} /* jerry_get_value_without_error_flag */
 
 /**
  * Return the type of the Error object if possible.

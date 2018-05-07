@@ -27,10 +27,11 @@ main (void)
   jerry_value_set_error_flag (&obj_val);
   jerry_value_t err_val = jerry_acquire_value (obj_val);
 
-  jerry_value_clear_error_flag (&obj_val);
-  jerry_release_value (obj_val);
+  obj_val = jerry_get_value_from_error (err_val, true);
 
+  JERRY_ASSERT (obj_val != err_val);
   jerry_release_value (err_val);
+  jerry_release_value (obj_val);
 
   jerry_cleanup ();
 } /* main */

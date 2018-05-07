@@ -21,7 +21,7 @@
  * implementations.
  */
 
- #ifdef __GNUC__
+#ifdef __GNUC__
 /*
  * Note:
  *      This is nasty and dangerous. However, we only need the timeval structure

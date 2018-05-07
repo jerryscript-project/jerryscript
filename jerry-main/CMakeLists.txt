@@ -19,7 +19,7 @@ project (jerry-main C)
 set(ENABLE_LINK_MAP OFF CACHE BOOL "Enable generating a link map file?")
 
 # Status messages
-message(STATUS "ENABLE_LINK_MAP           " ${ENABLE_LINK_MAP})
+message(STATUS "ENABLE_LINK_MAP             " ${ENABLE_LINK_MAP})
 
 # Generate map file
 if(ENABLE_LINK_MAP)

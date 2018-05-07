@@ -883,6 +883,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #ifdef JERRY_ENABLE_LINE_INFO
           || feature == JERRY_FEATURE_LINE_INFO
 #endif /* JERRY_ENABLE_LINE_INFO */
+#ifdef JERRY_ENABLE_LOGGING
+          || feature == JERRY_FEATURE_LOGGING
+#endif /* JERRY_ENABLE_LOGGING */
           );
 } /* jerry_is_feature_enabled */
 

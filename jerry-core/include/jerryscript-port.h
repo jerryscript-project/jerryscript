@@ -97,6 +97,11 @@ typedef enum
  *
  * Example: a libc-based port may implement this with vfprintf(stderr) or
  * vfprintf(logfile), or both, depending on log level.
+ *
+ * Note:
+ *      This port function is called by jerry-core when JERRY_ENABLE_LOGGING is
+ *      defined. It is also common practice though to use this function in
+ *      application code.
  */
 void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_port_log (jerry_log_level_t level, const char *format, ...);
 

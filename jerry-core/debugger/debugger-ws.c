@@ -101,10 +101,10 @@ jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 
   if (log_error)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
   }
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
+  JERRY_DEBUG_MSG ("Debugger client connection closed.\n");
 
   close (JERRY_CONTEXT (debugger_connection));
   JERRY_CONTEXT (debugger_connection) = -1;
@@ -226,7 +226,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
 
     if (length == 0)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Handshake buffer too small.\n");
+      JERRY_ERROR_MSG ("Handshake buffer too small.\n");
       return false;
     }
 
@@ -234,7 +234,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
 
     if (size < 0)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+      JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
       return false;
     }
 
@@ -255,7 +255,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
   if ((size_t) (request_end_p - request_buffer_p) < text_len
       || memcmp (request_buffer_p, text_p, text_len) != 0)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid handshake format.\n");
+    JERRY_ERROR_MSG ("Invalid handshake format.\n");
     return false;
   }
 
@@ -268,7 +268,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
   {
     if ((size_t) (request_end_p - websocket_key_p) < text_len)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Sec-WebSocket-Key not found.\n");
+      JERRY_ERROR_MSG ("Sec-WebSocket-Key not found.\n");
       return false;
     }
 
@@ -367,7 +367,7 @@ jerry_debugger_accept_connection (void)
 
   if ((server_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
@@ -376,32 +376,32 @@ jerry_debugger_accept_connection (void)
   if (setsockopt (server_socket, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof (int)) == -1)
   {
     close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
   if (bind (server_socket, (struct sockaddr *)&addr, sizeof (struct sockaddr)) == -1)
   {
     close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
   if (listen (server_socket, 1) == -1)
   {
     close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Waiting for client connection\n");
+  JERRY_DEBUG_MSG ("Waiting for client connection\n");
 
   JERRY_CONTEXT (debugger_connection) = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
 
   if (JERRY_CONTEXT (debugger_connection) == -1)
   {
     close (server_socket);
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", strerror (errno));
+    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
@@ -444,7 +444,7 @@ jerry_debugger_accept_connection (void)
     return false;
   }
 
-  jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Connected from: %s\n", inet_ntoa (addr.sin_addr));
+  JERRY_DEBUG_MSG ("Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
   JERRY_CONTEXT (debugger_stop_context) = NULL;
@@ -541,14 +541,14 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
         || (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) > JERRY_CONTEXT (debugger_max_receive_size)
         || !(recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_MASK_BIT))
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unsupported Websocket message.\n");
+      JERRY_ERROR_MSG ("Unsupported Websocket message.\n");
       jerry_debugger_close_connection ();
       return true;
     }
 
     if ((recv_buffer_p[0] & JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unsupported Websocket opcode.\n");
+      JERRY_ERROR_MSG ("Unsupported Websocket opcode.\n");
       jerry_debugger_close_connection ();
       return true;
     }

@@ -247,7 +247,7 @@ jerry_debugger_sleep (void)
 #define JERRY_DEBUGGER_CHECK_PACKET_SIZE(type) \
   if (message_size != sizeof (type)) \
   { \
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n"); \
+    JERRY_ERROR_MSG ("Invalid message size\n"); \
     jerry_debugger_close_connection (); \
     return false; \
   }
@@ -270,7 +270,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
   if (recv_buffer_p[0] >= JERRY_DEBUGGER_CONTINUE
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Message requires breakpoint mode\n");
+    JERRY_ERROR_MSG ("Message requires breakpoint mode\n");
     jerry_debugger_close_connection ();
     return false;
   }
@@ -285,7 +285,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     if (recv_buffer_p[0] != *expected_message_type_p)
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unexpected message\n");
+      JERRY_ERROR_MSG ("Unexpected message\n");
       jerry_debugger_close_connection ();
       return false;
     }
@@ -295,7 +295,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     if (message_size < sizeof (jerry_debugger_receive_uint8_data_part_t) + 1)
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+      JERRY_ERROR_MSG ("Invalid message size\n");
       jerry_debugger_close_connection ();
       return false;
     }
@@ -307,7 +307,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     if (message_size > expected_data)
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+      JERRY_ERROR_MSG ("Invalid message size\n");
       jerry_debugger_close_connection ();
       return false;
     }
@@ -357,7 +357,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
       if (byte_code_free_cp != JERRY_CONTEXT (debugger_byte_code_free_tail))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid byte code free order\n");
+        JERRY_ERROR_MSG ("Invalid byte code free order\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -482,12 +482,12 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (exception_config_p->enable == 0)
       {
         JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION);
-        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Stop at exception disabled\n");
+        JERRY_DEBUG_MSG ("Stop at exception disabled\n");
       }
       else
       {
         JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION);
-        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Stop at exception enabled\n");
+        JERRY_DEBUG_MSG ("Stop at exception enabled\n");
       }
 
       return true;
@@ -501,12 +501,12 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (parser_config_p->enable_wait != 0)
       {
         JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_PARSER_WAIT);
-        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Waiting after parsing enabled\n");
+        JERRY_DEBUG_MSG ("Waiting after parsing enabled\n");
       }
       else
       {
         JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_PARSER_WAIT);
-        jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Waiting after parsing disabled\n");
+        JERRY_DEBUG_MSG ("Waiting after parsing disabled\n");
       }
 
       return true;
@@ -518,7 +518,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_PARSER_WAIT_MODE))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Not in parser wait mode\n");
+        JERRY_ERROR_MSG ("Not in parser wait mode\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -531,7 +531,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+        JERRY_ERROR_MSG ("Invalid message size\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -545,7 +545,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       {
         if (eval_size != message_size - sizeof (jerry_debugger_receive_eval_first_t))
         {
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+          JERRY_ERROR_MSG ("Invalid message size\n");
           jerry_debugger_close_connection ();
           return false;
         }
@@ -581,14 +581,14 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       if (message_size <= sizeof (jerry_debugger_receive_client_source_first_t))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+        JERRY_ERROR_MSG ("Invalid message size\n");
         jerry_debugger_close_connection ();
         return false;
       }
 
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Not in client source mode\n");
+        JERRY_ERROR_MSG ("Not in client source mode\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -603,7 +603,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (client_source_size <= JERRY_CONTEXT (debugger_max_receive_size) - header_size
           && client_source_size != message_size - header_size)
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Invalid message size\n");
+        JERRY_ERROR_MSG ("Invalid message size\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -640,7 +640,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Not in client source mode\n");
+        JERRY_ERROR_MSG ("Not in client source mode\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -658,7 +658,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Not in client source mode\n");
+        JERRY_ERROR_MSG ("Not in client source mode\n");
         jerry_debugger_close_connection ();
         return false;
       }
@@ -674,7 +674,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
     default:
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Unexpected message.");
+      JERRY_ERROR_MSG ("Unexpected message.");
       jerry_debugger_close_connection ();
       return false;
     }

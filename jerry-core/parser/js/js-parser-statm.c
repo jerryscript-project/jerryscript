@@ -1670,9 +1670,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   {
     lexer_lit_location_t lit_location;
     uint32_t status_flags = context_p->status_flags;
-#ifdef PARSER_DUMP_BYTE_CODE
-    bool switch_to_strict_mode = false;
-#endif /* PARSER_DUMP_BYTE_CODE */
 
     JERRY_ASSERT (context_p->stack_depth == 0);
 
@@ -1683,10 +1680,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         && memcmp (PARSER_USE_STRICT_LITERAL, lit_location.char_p, PARSER_USE_STRICT_LENGTH) == 0)
     {
       context_p->status_flags |= PARSER_IS_STRICT;
-
-#ifdef PARSER_DUMP_BYTE_CODE
-      switch_to_strict_mode = true;
-#endif /* PARSER_DUMP_BYTE_CODE */
     }
 
     lexer_next_token (context_p);
@@ -1731,7 +1724,8 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #ifdef PARSER_DUMP_BYTE_CODE
     if (context_p->is_show_opcodes
-        && switch_to_strict_mode)
+        && !(status_flags & PARSER_IS_STRICT)
+        && (context_p->status_flags & PARSER_IS_STRICT))
     {
       JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
     }

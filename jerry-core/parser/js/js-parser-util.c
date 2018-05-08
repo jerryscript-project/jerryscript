@@ -86,17 +86,18 @@ void
 parser_flush_cbc (parser_context_t *context_p) /**< context */
 {
   uint8_t flags;
+  uint16_t last_opcode = context_p->last_cbc_opcode;
 
-  if (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE)
+  if (last_opcode == PARSER_CBC_UNAVAILABLE)
   {
     return;
   }
 
   context_p->status_flags |= PARSER_NO_END_LABEL;
 
-  if (PARSER_IS_BASIC_OPCODE (context_p->last_cbc_opcode))
+  if (PARSER_IS_BASIC_OPCODE (last_opcode))
   {
-    cbc_opcode_t opcode = (cbc_opcode_t) context_p->last_cbc_opcode;
+    cbc_opcode_t opcode = (cbc_opcode_t) last_opcode;
 
     JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
@@ -106,7 +107,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
   }
   else
   {
-    cbc_ext_opcode_t opcode = (cbc_ext_opcode_t) PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode);
+    cbc_ext_opcode_t opcode = (cbc_ext_opcode_t) PARSER_GET_EXT_OPCODE (last_opcode);
 
     JERRY_ASSERT (opcode < CBC_EXT_END);
     flags = cbc_ext_flags[opcode];
@@ -167,18 +168,10 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    const char *name_p;
-
-    if (PARSER_IS_BASIC_OPCODE (context_p->last_cbc_opcode))
-    {
-      name_p = cbc_names[context_p->last_cbc_opcode];
-    }
-    else
-    {
-      name_p = cbc_ext_names[PARSER_GET_EXT_OPCODE (context_p->last_cbc_opcode)];
-    }
-
-    JERRY_DEBUG_MSG ("  [%3d] %s", (int) context_p->stack_depth, name_p);
+    JERRY_DEBUG_MSG ("  [%3d] %s",
+                     (int) context_p->stack_depth,
+                     PARSER_IS_BASIC_OPCODE (last_opcode) ? cbc_names[last_opcode]
+                                                          : cbc_ext_names[PARSER_GET_EXT_OPCODE (last_opcode)]);
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {
@@ -328,17 +321,10 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    int real_value = value;
-
-    if (is_negative_number)
-    {
-      real_value = -real_value;
-    }
-
     JERRY_DEBUG_MSG ("  [%3d] %s number:%d\n",
                      (int) context_p->stack_depth,
                      cbc_names[opcode],
-                     real_value);
+                     is_negative_number ? -(int) value : (int) value);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
@@ -453,14 +439,9 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
-    if (extra_byte_code_increase == 0)
-    {
-      JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_names[opcode]);
-    }
-    else
-    {
-      JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, cbc_ext_names[opcode]);
-    }
+    JERRY_DEBUG_MSG ("  [%3d] %s\n",
+                     (int) context_p->stack_depth,
+                     extra_byte_code_increase == 0 ? cbc_names[opcode] : cbc_ext_names[opcode]);
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 

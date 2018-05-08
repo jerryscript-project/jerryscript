@@ -1238,13 +1238,9 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
   while (byte_code_p < byte_code_end_p)
   {
-    cbc_opcode_t opcode;
-    cbc_ext_opcode_t ext_opcode;
-    size_t cbc_offset;
-
-    opcode = (cbc_opcode_t) *byte_code_p;
-    ext_opcode = CBC_EXT_NOP;
-    cbc_offset = (size_t) (byte_code_p - byte_code_start_p);
+    cbc_opcode_t opcode = (cbc_opcode_t) *byte_code_p;
+    cbc_ext_opcode_t ext_opcode = CBC_EXT_NOP;
+    size_t cbc_offset = (size_t) (byte_code_p - byte_code_start_p);
 
     if (opcode != CBC_EXT_OPCODE)
     {
@@ -1274,15 +1270,15 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
       if (opcode == CBC_PUSH_NUMBER_POS_BYTE)
       {
-        int value = *byte_code_p++;
-        JERRY_DEBUG_MSG (" number:%d\n", value + 1);
+        JERRY_DEBUG_MSG (" number:%d\n", *byte_code_p + 1);
+        byte_code_p++;
         continue;
       }
 
       if (opcode == CBC_PUSH_NUMBER_NEG_BYTE)
       {
-        int value = *byte_code_p++;
-        JERRY_DEBUG_MSG (" number:%d\n", -(value + 1));
+        JERRY_DEBUG_MSG (" number:%d\n", -(*byte_code_p + 1));
+        byte_code_p++;
         continue;
       }
     }
@@ -1342,13 +1338,9 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
     if (flags & CBC_HAS_BRANCH_ARG)
     {
-      size_t branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (opcode);
+      size_t branch_offset_length = (opcode != CBC_EXT_OPCODE ? CBC_BRANCH_OFFSET_LENGTH (opcode)
+                                                              : CBC_BRANCH_OFFSET_LENGTH (ext_opcode));
       size_t offset = 0;
-
-      if (opcode == CBC_EXT_OPCODE)
-      {
-        branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (ext_opcode);
-      }
 
       do
       {
@@ -1356,14 +1348,9 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       }
       while (--branch_offset_length > 0);
 
-      if (CBC_BRANCH_IS_FORWARD (flags))
-      {
-        JERRY_DEBUG_MSG (" offset:%d(->%d)", (int) offset, (int) (cbc_offset + offset));
-      }
-      else
-      {
-        JERRY_DEBUG_MSG (" offset:%d(->%d)", (int) offset, (int) (cbc_offset - offset));
-      }
+      JERRY_DEBUG_MSG (" offset:%d(->%d)",
+                       (int) offset,
+                       (int) (cbc_offset + (CBC_BRANCH_IS_FORWARD (flags) ? offset : -offset)));
     }
 
     JERRY_DEBUG_MSG ("\n");

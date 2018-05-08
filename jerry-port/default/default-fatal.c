@@ -61,20 +61,16 @@ bool jerry_port_default_is_abort_on_fail (void)
  *      The "abort-on-fail" behaviour is only available if the port
  *      implementation library is compiled without the DISABLE_EXTRA_API macro.
  */
-void jerry_port_fatal (jerry_fatal_code_t code)
+void jerry_port_fatal (jerry_fatal_code_t code) /**< cause of error */
 {
 #ifndef DISABLE_EXTRA_API
   if (code != 0
       && code != ERR_OUT_OF_MEMORY
-      && jerry_port_default_is_abort_on_fail ())
+      && abort_on_fail)
   {
     abort ();
   }
-  else
-  {
 #endif /* !DISABLE_EXTRA_API */
-    exit (code);
-#ifndef DISABLE_EXTRA_API
-  }
-#endif /* !DISABLE_EXTRA_API */
+
+  exit (code);
 } /* jerry_port_fatal */

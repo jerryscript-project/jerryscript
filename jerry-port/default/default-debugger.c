@@ -13,27 +13,30 @@
  * limitations under the License.
  */
 
-#include "jerryscript-port.h"
-#include "jerryscript-port-default.h"
-
 #ifdef HAVE_TIME_H
 #include <time.h>
 #elif defined (HAVE_UNISTD_H)
 #include <unistd.h>
 #endif /* HAVE_TIME_H */
 
-#ifdef JERRY_DEBUGGER
-void jerry_port_sleep (uint32_t sleep_time)
+#include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
+
+/**
+ * Default implementation of jerry_port_sleep. Uses 'nanosleep' or 'usleep' if
+ * available on the system, does nothing otherwise.
+ */
+void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
 {
 #ifdef HAVE_TIME_H
-  nanosleep (&(const struct timespec)
-  {
-    (time_t) sleep_time / 1000, ((long int) sleep_time % 1000) * 1000000L /* Seconds, nanoseconds */
-  }
-  , NULL);
+  struct timespec sleep_timespec;
+  sleep_timespec.tv_sec = (time_t) sleep_time / 1000;
+  sleep_timespec.tv_nsec = ((long int) sleep_time % 1000) * 1000000L;
+
+  nanosleep (&sleep_timespec, NULL);
 #elif defined (HAVE_UNISTD_H)
   usleep ((useconds_t) sleep_time * 1000);
-#endif /* HAVE_TIME_H */
+#else
   (void) sleep_time;
+#endif /* HAVE_TIME_H */
 } /* jerry_port_sleep */
-#endif /* JERRY_DEBUGGER */

@@ -470,7 +470,7 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
  *         - The String.prototype.indexOf routine.
  *         - The String.prototype.lastIndexOf routine.
  *
- * @return uint32_t - (last) index of search string
+ * @return ecma_value_t - (last) index of search string as an ecma-value
  */
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
@@ -544,14 +544,14 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
  *         - The ecma_builtin_helper_string_prototype_object_index_of helper routine.
  *         - The ecma_builtin_string_prototype_object_replace_match helper routine.
  *
- * @return uint32_t - the normalized value of the index
+ * @return bool - whether there is a match for the search string
  */
 bool
 ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index */
                                        ecma_string_t *search_str_p, /**< string's length */
                                        bool first_index, /**< whether search for first (t) or last (f) index */
                                        ecma_length_t start_pos, /**< start position */
-                                       ecma_length_t *ret_index_p) /**< position found in original string */
+                                       ecma_length_t *ret_index_p) /**< [out] position found in original string */
 {
   bool match_found = false;
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);

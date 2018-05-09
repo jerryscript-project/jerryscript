@@ -61,10 +61,12 @@ jerry_port_default_set_log_level (jerry_log_level_t level) /**< log level */
 #endif /* !DISABLE_EXTRA_API */
 
 /**
- * Default implementation of jerry_port_log. Prints log message to a buffer
- * then prints the buffer to the standard error with 'fprintf' if message
- * level is less than or equal to the set log level.
- * Additionally, sends the message to the debugger client.
+ * Default implementation of jerry_port_log. Prints log message to the standard
+ * error with 'vfprintf' if message log level is less than or equal to the
+ * current log level.
+ *
+ * If debugger support is enabled, printing happens first to an in-memory buffer,
+ * which is then sent both to the standard error and to the debugger client.
  *
  * Note:
  *      Changing the log level from JERRY_LOG_LEVEL_ERROR is only possible if
@@ -72,7 +74,7 @@ jerry_port_default_set_log_level (jerry_log_level_t level) /**< log level */
  *      DISABLE_EXTRA_API macro.
  */
 void
-jerry_port_log (jerry_log_level_t level, /**< log level */
+jerry_port_log (jerry_log_level_t level, /**< message log level */
                 const char *format, /**< format string */
                 ...)  /**< parameters */
 {
@@ -81,13 +83,15 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
     va_list args;
     va_start (args, format);
 #ifdef JERRY_DEBUGGER
-    char buffer[256];
-    int length = 0;
-    length = vsnprintf (buffer, 255, format, args);
-    buffer[length] = '\0';
+    int length = vsnprintf (NULL, 0, format, args);
+    va_end (args);
+    va_start (args, format);
+
+    char buffer[length + 1];
+    vsnprintf (buffer, (size_t) length + 1, format, args);
+
     fprintf (stderr, "%s", buffer);
-    jerry_char_t *jbuffer = (jerry_char_t *) buffer;
-    jerry_debugger_send_output (jbuffer, (jerry_size_t) length, (uint8_t) (level + 2));
+    jerry_debugger_send_output ((jerry_char_t *) buffer, (jerry_size_t) length, (uint8_t) (level + 2));
 #else /* If jerry-debugger isn't defined, libc is turned on */
     vfprintf (stderr, format, args);
 #endif /* JERRY_DEBUGGER */

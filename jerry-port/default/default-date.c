@@ -37,18 +37,16 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< [out] time zone str
   tz.tz_minuteswest = 0;
   tz.tz_dsttime = 0;
 
-  if (gettimeofday (&tv, &tz) != 0)
+  if (gettimeofday (&tv, &tz) == 0)
   {
-    return false;
+    tz_p->offset = tz.tz_minuteswest;
+    tz_p->daylight_saving_time = tz.tz_dsttime > 0 ? 1 : 0;
+
+    return true;
   }
-
-  tz_p->offset = tz.tz_minuteswest;
-  tz_p->daylight_saving_time = tz.tz_dsttime > 0 ? 1 : 0;
-
-  return true;
-#else /* !__GNUC__ */
-  return false;
 #endif /* __GNUC__ */
+
+  return false;
 } /* jerry_port_get_time_zone */
 
 /**
@@ -64,13 +62,11 @@ double jerry_port_get_current_time (void)
 #ifdef __GNUC__
   struct timeval tv;
 
-  if (gettimeofday (&tv, NULL) != 0)
+  if (gettimeofday (&tv, NULL) == 0)
   {
-    return 0.0;
+    return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
   }
-
-  return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
-#else /* __!GNUC__ */
-  return 0.0;
 #endif /* __GNUC__ */
+
+  return 0.0;
 } /* jerry_port_get_current_time */

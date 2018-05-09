@@ -119,6 +119,7 @@ typedef struct
  *      CONFIG_DISABLE_DATE_BUILTIN is _not_ defined. Otherwise this function is
  *      not used.
  *
+ * @param[out] tz_p time zone structure to fill.
  * @return true  - if success
  *         false - otherwise
  */
@@ -156,6 +157,8 @@ struct jerry_instance_t *jerry_port_get_current_instance (void);
  * Note:
  *      This port function is called by jerry-core when JERRY_DEBUGGER is
  *      defined. Otherwise this function is not used.
+ *
+ * @param sleep_time milliseconds to sleep.
  */
 void jerry_port_sleep (uint32_t sleep_time);
 

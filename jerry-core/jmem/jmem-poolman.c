@@ -31,7 +31,8 @@
  * @{
  */
 
-/*
+/**
+ * @{
  * Valgrind-related options and headers
  */
 #ifdef JERRY_VALGRIND
@@ -55,6 +56,7 @@
 # define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */
+/** @} */
 
 /**
  * Finalize pool manager

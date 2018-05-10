@@ -31,7 +31,9 @@ JERRY_STATIC_ASSERT (ECMA_DIRECT_SHIFT == ECMA_VALUE_SHIFT + 1,
 
 JERRY_STATIC_ASSERT (((1 << (ECMA_DIRECT_SHIFT - 1)) | ECMA_TYPE_DIRECT) == ECMA_DIRECT_TYPE_SIMPLE_VALUE,
                      currently_directly_encoded_values_start_after_direct_type_simple_value);
-
+/**
+ * Position of the sign bit in ecma-numbers
+ */
 #define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
                               ECMA_NUMBER_BIASED_EXP_WIDTH)
 

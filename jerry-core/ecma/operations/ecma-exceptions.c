@@ -34,12 +34,19 @@
  * \addtogroup exceptions Exceptions
  * @{
  */
+
+/**
+ * Map error type to error prototype.
+ */
 typedef struct
 {
-  ecma_standard_error_t error_type;
-  ecma_builtin_id_t error_prototype_id;
+  ecma_standard_error_t error_type; /**< Native error type */
+  ecma_builtin_id_t error_prototype_id; /**< ID of the error prototype */
 } ecma_error_mapping_t;
 
+/**
+ * List of error type mappings
+ */
 const ecma_error_mapping_t ecma_error_mappings[] =
 {
 #define ERROR_ELEMENT(TYPE, ID) { TYPE, ID }

@@ -72,6 +72,12 @@ parser_emit_two_bytes (parser_context_t *context_p, /**< context */
   }
 } /* parser_emit_two_bytes */
 
+/**
+ * Append byte to the end of the current byte code stream.
+ *
+ * @param context_p parser context
+ * @param byte byte
+ */
 #define PARSER_APPEND_TO_BYTE_CODE(context_p, byte) \
   if ((context_p)->byte_code.last_position >= PARSER_CBC_STREAM_PAGE_SIZE) \
   { \
@@ -476,7 +482,9 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 } /* parser_emit_cbc_forward_branch */
 
 /**
- * Append a branch byte code and create an item
+ * Append a branch byte code and create an item.
+ *
+ * @return newly created parser branch node
  */
 parser_branch_node_t *
 parser_emit_cbc_forward_branch_item (parser_context_t *context_p, /**< context */

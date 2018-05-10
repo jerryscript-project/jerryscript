@@ -591,7 +591,7 @@ ecma_builtin_global_object_character_is_in (uint32_t character, /**< character *
   return (bitset[character >> 3] & (1u << (character & 0x7))) != 0;
 } /* ecma_builtin_global_object_character_is_in */
 
-/*
+/**
  * Unescaped URI characters bitset:
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped URI set.
@@ -602,7 +602,7 @@ static const uint8_t unescaped_uri_set[16] =
   0xff, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
 };
 
-/*
+/**
  * Unescaped URI component characters bitset:
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped component URI set.
@@ -613,17 +613,10 @@ static const uint8_t unescaped_uri_component_set[16] =
   0xfe, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
 };
 
-/*
+/**
  * Format is a percent sign followed by two hex digits.
  */
 #define URI_ENCODED_BYTE_SIZE (3)
-
-/*
- * These two types shows whether the byte is present in
- * the original stream or decoded from a %xx sequence.
- */
-#define URI_DECODE_ORIGINAL_BYTE 0
-#define URI_DECODE_DECODED_BYTE 1
 
 /**
  * Helper function to decode URI.
@@ -1100,17 +1093,17 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg, /**< thi
 
 #ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
 
-/*
+/**
  * Maximum value of a byte.
  */
 #define ECMA_ESCAPE_MAXIMUM_BYTE_VALUE (255)
 
-/*
+/**
  * Format is a percent sign followed by lowercase u and four hex digits.
  */
 #define ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE (6)
 
-/*
+/**
  * Escape characters bitset:
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character does not need to be converted to %xx form.

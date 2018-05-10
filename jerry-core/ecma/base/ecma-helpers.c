@@ -174,6 +174,9 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 
 /**
  * Check if the object is lexical environment.
+ *
+ * @return true  - if object is a lexical environment
+ *         false - otherwise
  */
 inline bool JERRY_ATTR_PURE
 ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexical environment */
@@ -187,6 +190,9 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 
 /**
  * Get value of [[Extensible]] object's internal property.
+ *
+ * @return true  - if object is extensible
+ *         false - otherwise
  */
 inline bool JERRY_ATTR_PURE
 ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
@@ -219,6 +225,8 @@ ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
 
 /**
  * Get object's internal implementation-defined type.
+ *
+ * @return type of the object (ecma_object_type_t)
  */
 inline ecma_object_type_t JERRY_ATTR_PURE
 ecma_get_object_type (const ecma_object_t *object_p) /**< object */
@@ -231,6 +239,9 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 
 /**
  * Get object's prototype.
+ *
+ * @return pointer to the prototype object
+ *         NULL if there is no prototype
  */
 inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
@@ -245,7 +256,8 @@ ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
 /**
  * Check if the object is a built-in object
  *
- * @return true / false
+ * @return true  - if object is a built-in object
+ *         false - otherwise
  */
 inline bool JERRY_ATTR_PURE
 ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
@@ -270,8 +282,10 @@ ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
 } /* ecma_set_object_is_builtin */
 
 /**
- * Get the builtin id of the object.
+ * Get the built-in ID of the object.
  * If the object is not builtin, return ECMA_BUILTIN_ID__COUNT
+ *
+ * @return the ID of the built-in
  */
 inline uint8_t
 ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
@@ -298,6 +312,8 @@ ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
 
 /**
  * Get type of lexical environment.
+ *
+ * @return type of the lexical environment (ecma_lexical_environment_type_t)
  */
 inline ecma_lexical_environment_type_t JERRY_ATTR_PURE
 ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment */
@@ -310,6 +326,8 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
 
 /**
  * Get outer reference of lexical environment.
+ *
+ * @return pointer to the outer reference
  */
 inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical environment */
@@ -326,6 +344,8 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
  *
  * See also:
  *          ecma_op_object_get_property_names
+ *
+ * @return pointer to the head of the property list
  */
 inline ecma_property_header_t *JERRY_ATTR_PURE
 ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
@@ -340,6 +360,9 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 
 /**
  * Get lexical environment's 'provideThis' property
+ *
+ * @return true  - if it has 'this' property
+ *         false - otherwise
  */
 inline bool JERRY_ATTR_PURE
 ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound lexical environment */
@@ -354,6 +377,8 @@ ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound 
 
 /**
  * Get lexical environment's bound object.
+ *
+ * @return pointer to ecma object
  */
 inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
@@ -1294,6 +1319,8 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
 /**
  * Construct empty property descriptor, i.e.:
  *  property descriptor with all is_defined flags set to false and the rest - to default value.
+ *
+ * @return empty property descriptor
  */
 ecma_property_descriptor_t
 ecma_make_empty_property_descriptor (void)

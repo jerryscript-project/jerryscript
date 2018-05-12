@@ -151,6 +151,30 @@ double jerry_port_get_current_time (void);
  */
 struct jerry_instance_t *jerry_port_get_current_instance (void);
 
+/*
+ * Debugger Port API
+ */
+
+/* forward declaration */
+struct jerry_debugger_uint8_data_t;
+
+/**
+ * Transport APIs, different transport will define
+ * the real implementation of these APIs
+ */
+struct jerry_debugger_transport_t
+{
+  bool (*accept_connection) (struct jerry_debugger_transport_t *transport_p);
+  void (*close_connection) (struct jerry_debugger_transport_t *transport_p);
+  bool (*send) (struct jerry_debugger_transport_t *transport_p,
+                uint8_t *message_data_p,
+                size_t data_size);
+  bool (*receive) (struct jerry_debugger_transport_t *transport_p,
+                   uint8_t *message_data_p,
+                   size_t *data_size,
+                   uint32_t *buffer_offset);
+};
+
 /**
  * Makes the process sleep for a given time.
  *

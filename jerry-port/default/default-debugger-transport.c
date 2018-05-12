@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include "debugger.h"
-#include "jcontext.h"
 #include "jerryscript-port.h"
+#include "jerryscript-port-default.h"
+#include "jmem.h"
 
 #ifdef JERRY_DEBUGGER
 
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 #include <unistd.h>
 
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
@@ -45,6 +46,11 @@
  * Packet length mask.
  */
 #define JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK 0x7fu
+
+/**
+ * Maximum number of bytes transmitted or received.
+ */
+#define JERRY_DEBUGGER_MAX_BUFFER_SIZE 128
 
 /**
  * Size of websocket header size.
@@ -89,16 +95,19 @@ typedef struct
   uint8_t mask[4]; /**< mask bytes */
 } jerry_debugger_receive_header_t;
 
+static uint16_t debugger_port; /**< debugger socket communication port */
+static int fd; /**< holds the file descriptor of the socket communication */
+
+void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
+                                  const uint8_t *input2, size_t input2_len,
+                                  uint8_t output[20]);
+
 /**
  * Close the socket connection to the client.
  */
 static void
 jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-
-  JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
-
   if (log_error)
   {
     JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
@@ -106,10 +115,13 @@ jerry_debugger_close_connection_tcp (bool log_error) /**< log error */
 
   JERRY_DEBUG_MSG ("Debugger client connection closed.\n");
 
-  close (JERRY_CONTEXT (debugger_connection));
-  JERRY_CONTEXT (debugger_connection) = -1;
+  if (fd != -1)
+  {
+    close (fd);
+    fd = -1;
+  }
 
-  jerry_debugger_free_unreferenced_byte_code ();
+  JERRY_DEBUG_MSG ("Debugger client connection closed.\n");
 } /* jerry_debugger_close_connection_tcp */
 
 /**
@@ -122,11 +134,9 @@ static bool
 jerry_debugger_send_tcp (const uint8_t *data_p, /**< data pointer */
                          size_t data_size) /**< data size */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-
   do
   {
-    ssize_t sent_bytes = send (JERRY_CONTEXT (debugger_connection), data_p, data_size, 0);
+    ssize_t sent_bytes = send (fd, data_p, data_size, 0);
 
     if (sent_bytes < 0)
     {
@@ -330,39 +340,28 @@ jerry_process_handshake (int client_socket, /**< client socket */
 } /* jerry_process_handshake */
 
 /**
- * Initialize the socket connection.
+ * Default implementation of debugger accept_connection api. This implementation
+ * uses a socket API which is not yet supported by jerry-libc so the standard
+ * libc is used instead.
+ *
+ * Note:
+ *      This function is only available if the port implementation library is
+ *      compiled with the JERRY_DEBUGGER macro.
  *
  * @return true - if the connection succeeded
  *         false - otherwise
  */
-bool
-jerry_debugger_accept_connection (void)
+static bool
+jerry_debugger_accept_connection_ws (struct jerry_debugger_transport_t *transport_p) /**< transport object */
 {
+  JERRY_UNUSED (transport_p);
+
   int server_socket;
   struct sockaddr_in addr;
   socklen_t sin_size = sizeof (struct sockaddr_in);
 
-  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer) + JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE;
-  JERRY_CONTEXT (debugger_send_buffer_payload_p) = payload_p;
-
-  uint8_t max_send_size = (JERRY_DEBUGGER_MAX_BUFFER_SIZE - JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE);
-  if (max_send_size > JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX)
-  {
-    max_send_size = JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX;
-  }
-  JERRY_CONTEXT (debugger_max_send_size) = max_send_size;
-
-  uint8_t receive_header_size = (JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE);
-  uint8_t max_receive_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE - receive_header_size);
-
-  if (max_receive_size > JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX)
-  {
-    max_receive_size = JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX;
-  }
-  JERRY_CONTEXT (debugger_max_receive_size) = max_receive_size;
-
   addr.sin_family = AF_INET;
-  addr.sin_port = htons (JERRY_CONTEXT (debugger_port));
+  addr.sin_port = htons (debugger_port);
   addr.sin_addr.s_addr = INADDR_ANY;
 
   if ((server_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
@@ -396,9 +395,9 @@ jerry_debugger_accept_connection (void)
 
   JERRY_DEBUG_MSG ("Waiting for client connection\n");
 
-  JERRY_CONTEXT (debugger_connection) = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
+  fd = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
 
-  if (JERRY_CONTEXT (debugger_connection) == -1)
+  if (fd == -1)
   {
     close (server_socket);
     JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
@@ -407,205 +406,201 @@ jerry_debugger_accept_connection (void)
 
   close (server_socket);
 
-  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_CONNECTED);
-
   bool is_handshake_ok = false;
 
   JMEM_DEFINE_LOCAL_ARRAY (request_buffer_p, 1024, uint8_t);
 
-  is_handshake_ok = jerry_process_handshake (JERRY_CONTEXT (debugger_connection),
-                                             request_buffer_p);
+  is_handshake_ok = jerry_process_handshake (fd, request_buffer_p);
 
   JMEM_FINALIZE_LOCAL_ARRAY (request_buffer_p);
 
   if (!is_handshake_ok)
   {
-    jerry_debugger_close_connection ();
-    return false;
-  }
-
-  if (!jerry_debugger_send_configuration (max_receive_size))
-  {
+    jerry_debugger_close_connection_tcp (false);
     return false;
   }
 
   /* Set non-blocking mode. */
-  int socket_flags = fcntl (JERRY_CONTEXT (debugger_connection), F_GETFL, 0);
+  int socket_flags = fcntl (fd, F_GETFL, 0);
 
   if (socket_flags < 0)
   {
+    JERRY_ERROR_MSG ("socket_flags error: %s\n", strerror (errno));
     jerry_debugger_close_connection_tcp (true);
     return false;
   }
 
-  if (fcntl (JERRY_CONTEXT (debugger_connection), F_SETFL, socket_flags | O_NONBLOCK) == -1)
+  if (fcntl (fd, F_SETFL, socket_flags | O_NONBLOCK) == -1)
   {
+    JERRY_ERROR_MSG ("nonblock error: %s\n", strerror (errno));
     jerry_debugger_close_connection_tcp (true);
     return false;
   }
 
   JERRY_DEBUG_MSG ("Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
-  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
-  JERRY_CONTEXT (debugger_stop_context) = NULL;
-
   return true;
-} /* jerry_debugger_accept_connection */
+} /* jerry_debugger_accept_connection_ws */
 
 /**
+ * Default implementation of debugger close_connection api.
  * Close the socket connection to the client.
  */
-inline void __attr_always_inline___
-jerry_debugger_close_connection (void)
+static inline void __attr_always_inline___
+jerry_debugger_close_connection_ws (struct jerry_debugger_transport_t *transport_p) /**< transport object */
 {
+  JERRY_UNUSED (transport_p);
+
   jerry_debugger_close_connection_tcp (false);
-} /* jerry_debugger_close_connection */
+} /* jerry_debugger_close_connection_ws */
 
 /**
- * Send message to the client side
+ * Default implementation of debugger send api.
+ * Send message to the client side.
  *
- * @return true - if the data was sent successfully to the debugger client,
+ * Note:
+ *   This function is only available if the port implementation library is
+ *    compiled with the JERRY_DEBUGGER macro.
+ *
+ * @return true - if the data was sent successfully to the client side
  *         false - otherwise
  */
-bool
-jerry_debugger_send (size_t data_size) /**< data size */
+static bool
+jerry_debugger_send_ws (struct jerry_debugger_transport_t *transport_p, /**< transport object */
+                        uint8_t *message_data_p, /**< send data pointer */
+                        size_t data_size) /**< send data size */
 {
-  JERRY_ASSERT (data_size <= JERRY_CONTEXT (debugger_max_send_size));
+  JERRY_UNUSED (transport_p);
 
-  uint8_t *header_p = JERRY_CONTEXT (debugger_send_buffer);
+  uint8_t *header_p = message_data_p;
   header_p[0] = JERRY_DEBUGGER_WEBSOCKET_FIN_BIT | JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME;
   header_p[1] = (uint8_t) data_size;
 
   return jerry_debugger_send_tcp (header_p, data_size + JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE);
-} /* jerry_debugger_send */
+} /* jerry_debugger_send_ws */
 
 /**
- * Receive message from the client.
+ * Default implementation of debugger receive api.
+ * Receive message from the client side.
  *
- * Note:
- *   If the function returns with true, the value of
- *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
+ *   This function is only available if the port implementation library is
+ *   compiled with the JERRY_DEBUGGER macro.
  *
- * @return true - if execution should be resumed,
+ * @return true - if the data was received successfully from the client side,
  *         false - otherwise
  */
-bool
-jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+static bool
+jerry_debugger_receive_ws (struct jerry_debugger_transport_t *transport_p, /**< transport object */
+                           uint8_t *message_data_p, /**< received data pointer */
+                           size_t *data_size, /**< [out] received data size */
+                           uint32_t *data_offset) /**< [in/out] data buffer offset */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_max_receive_size) <= JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
+  JERRY_UNUSED (transport_p);
 
-  JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
-                                       : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
+  uint8_t *recv_buffer_p = message_data_p;
+  uint32_t offset = *data_offset;
 
-  JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
+  ssize_t byte_recv = recv (fd,
+                            message_data_p + offset,
+                            JERRY_DEBUGGER_MAX_BUFFER_SIZE - offset,
+                            0);
 
-  uint8_t *recv_buffer_p = JERRY_CONTEXT (debugger_receive_buffer);
-  bool resume_exec = false;
-  uint8_t expected_message_type = 0;
-
-  while (true)
+  if (byte_recv < 0)
   {
-    uint32_t offset = JERRY_CONTEXT (debugger_receive_buffer_offset);
-
-    ssize_t byte_recv = recv (JERRY_CONTEXT (debugger_connection),
-                              recv_buffer_p + offset,
-                              JERRY_DEBUGGER_MAX_BUFFER_SIZE - offset,
-                              0);
-
-    if (byte_recv < 0)
+    if (errno != EWOULDBLOCK)
     {
-      if (errno != EWOULDBLOCK)
-      {
-        jerry_debugger_close_connection_tcp (true);
-        return true;
-      }
-
-      byte_recv = 0;
+      JERRY_ERROR_MSG ("recv error: %s\n", strerror (errno));
+      jerry_debugger_close_connection_tcp (true);
+      return false;
     }
 
-    offset += (uint32_t) byte_recv;
-    JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) offset;
-
-    if (offset < sizeof (jerry_debugger_receive_header_t))
-    {
-      if (expected_message_type != 0)
-      {
-        continue;
-      }
-
-      return resume_exec;
-    }
-
-    if ((recv_buffer_p[0] & ~JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_FIN_BIT
-        || (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) > JERRY_CONTEXT (debugger_max_receive_size)
-        || !(recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_MASK_BIT))
-    {
-      JERRY_ERROR_MSG ("Unsupported Websocket message.\n");
-      jerry_debugger_close_connection ();
-      return true;
-    }
-
-    if ((recv_buffer_p[0] & JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME)
-    {
-      JERRY_ERROR_MSG ("Unsupported Websocket opcode.\n");
-      jerry_debugger_close_connection ();
-      return true;
-    }
-
-    uint32_t message_size = (uint32_t) (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK);
-    uint32_t message_total_size = (uint32_t) (message_size + sizeof (jerry_debugger_receive_header_t));
-
-    if (offset < message_total_size)
-    {
-      if (expected_message_type != 0)
-      {
-        continue;
-      }
-
-      return resume_exec;
-    }
-
-    /* Unmask data bytes. */
-    uint8_t *data_p = recv_buffer_p + sizeof (jerry_debugger_receive_header_t);
-    const uint8_t *mask_p = data_p - JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
-    const uint8_t *mask_end_p = data_p;
-    const uint8_t *data_end_p = data_p + message_size;
-
-    while (data_p < data_end_p)
-    {
-      /* Invert certain bits with xor operation. */
-      *data_p = *data_p ^ *mask_p;
-
-      data_p++;
-      mask_p++;
-
-      if (mask_p >= mask_end_p)
-      {
-        mask_p -= JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
-      }
-    }
-
-    /* The jerry_debugger_process_message function is inlined
-     * so passing these arguments is essentially free. */
-    if (!jerry_debugger_process_message (recv_buffer_p + sizeof (jerry_debugger_receive_header_t),
-                                         message_size,
-                                         &resume_exec,
-                                         &expected_message_type,
-                                         message_data_p))
-    {
-      return true;
-    }
-
-    if (message_total_size < offset)
-    {
-      memmove (recv_buffer_p,
-               recv_buffer_p + message_total_size,
-               offset - message_total_size);
-    }
-
-    JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) (offset - message_total_size);
+    byte_recv = 0;
   }
-} /* jerry_debugger_receive */
+
+  offset += (uint32_t) byte_recv;
+  *data_offset = offset;
+
+  if (offset < sizeof (jerry_debugger_receive_header_t))
+  {
+    return true;
+  }
+
+  uint8_t receive_header_size = JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
+  uint8_t max_receive_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE - receive_header_size);
+  if ((recv_buffer_p[0] & ~JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_FIN_BIT
+      || (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) > max_receive_size
+      || !(recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_MASK_BIT))
+  {
+    JERRY_ERROR_MSG ("Unsupported Websocket message.\n");
+    return false;
+  }
+
+  if ((recv_buffer_p[0] & JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME)
+  {
+    JERRY_ERROR_MSG ("Unsupported Websocket opcode.\n");
+    return false;
+  }
+
+  uint32_t message_size = (uint32_t) (recv_buffer_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK);
+  uint32_t message_total_size = (uint32_t) (message_size + sizeof (jerry_debugger_receive_header_t));
+
+  if (offset < message_total_size)
+  {
+    return true;
+  }
+
+  /* Unmask data bytes. */
+  uint8_t *data_p = recv_buffer_p + sizeof (jerry_debugger_receive_header_t);
+  const uint8_t *mask_p = data_p - JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
+  const uint8_t *mask_end_p = data_p;
+  const uint8_t *data_end_p = data_p + message_size;
+
+  while (data_p < data_end_p)
+  {
+    /* Invert certain bits with xor operation. */
+    *data_p = *data_p ^ *mask_p;
+
+    data_p++;
+    mask_p++;
+
+    if (mask_p >= mask_end_p)
+    {
+      mask_p -= JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
+    }
+  }
+
+  *data_size = (size_t) message_size;
+
+  return true;
+} /* jerry_debugger_receive_ws */
+
+static struct jerry_debugger_transport_t socket_transport =
+{
+  .accept_connection = jerry_debugger_accept_connection_ws,
+  .close_connection = jerry_debugger_close_connection_ws,
+  .send = jerry_debugger_send_ws,
+  .receive = jerry_debugger_receive_ws,
+};
 
 #endif /* JERRY_DEBUGGER */
+
+/**
+ * Create and return the socket transport on the provided port for the debugger
+ *
+ * @return the transport created
+ */
+struct jerry_debugger_transport_t *
+jerry_port_default_init_socket_transport (uint16_t tcp_port) /**< server port number */
+{
+#ifdef JERRY_DEBUGGER
+  debugger_port = tcp_port;
+  jerry_debugger_set_transmit_sizes (JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE,
+                                     JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX,
+                                     JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE,
+                                     JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
+  return &socket_transport;
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (tcp_port);
+  return NULL;
+#endif /* JERRY_DEBUGGER */
+} /* jerry_port_default_init_socket_transport */

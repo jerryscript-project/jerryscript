@@ -1068,4 +1068,166 @@ jerry_debugger_send_exception_string (void)
   return result;
 } /* jerry_debugger_send_exception_string */
 
+/**
+ * Initialize the debugger connection.
+ *
+ * @return true - if the connection succeeded
+ *         false - otherwise
+ */
+bool
+jerry_debugger_accept_connection (void)
+{
+  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer) + JERRY_CONTEXT (debugger_send_header_size);
+  JERRY_CONTEXT (debugger_send_buffer_payload_p) = payload_p;
+
+  uint8_t max_send_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE -
+                                     JERRY_CONTEXT (debugger_send_header_size));
+  if (max_send_size <= JERRY_CONTEXT (debugger_max_send_size))
+  {
+    JERRY_CONTEXT (debugger_max_send_size) = max_send_size;
+  }
+
+  uint8_t max_receive_size = (uint8_t) (JERRY_DEBUGGER_MAX_BUFFER_SIZE -
+                                        JERRY_CONTEXT (debugger_receive_header_size));
+  if (max_receive_size <= JERRY_CONTEXT (debugger_max_send_size))
+  {
+    JERRY_CONTEXT (debugger_max_receive_size) = max_receive_size;
+  }
+
+  if (!JERRY_CONTEXT (debugger_transport_p)->accept_connection (JERRY_CONTEXT (debugger_transport_p)))
+  {
+    return false;
+  }
+
+  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_CONNECTED);
+
+  if (!jerry_debugger_send_configuration (max_receive_size))
+  {
+    return false;
+  }
+
+  JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
+  JERRY_CONTEXT (debugger_stop_context) = NULL;
+  return true;
+} /* jerry_debugger_accept_connection */
+
+/**
+ * Close the connection to the client.
+ */
+void
+jerry_debugger_close_connection (void)
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
+
+  JERRY_CONTEXT (debugger_transport_p)->close_connection (JERRY_CONTEXT (debugger_transport_p));
+  jerry_debugger_free_unreferenced_byte_code ();
+} /* jerry_debugger_close_connection */
+
+/**
+ * Send message to the client side
+ *
+ * @return true - if the data was sent successfully to the debugger client,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_send (size_t data_size) /**< data size */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_ASSERT (data_size <= JERRY_CONTEXT (debugger_max_send_size));
+
+  if (!JERRY_CONTEXT (debugger_transport_p)->send (JERRY_CONTEXT (debugger_transport_p),
+                                                   JERRY_CONTEXT (debugger_send_buffer),
+                                                   data_size))
+  {
+    jerry_debugger_close_connection ();
+    return false;
+  }
+
+  return true;
+} /* jerry_debugger_send */
+
+/**
+ * Receive message from the client.
+ *
+ * Note:
+ *   If the function returns with true, the value of
+ *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
+ *
+ * @return true - if execution should be resumed,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
+                                       : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
+
+  JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
+
+  bool resume_exec = false;
+  uint8_t expected_message_type = 0;
+  size_t message_size;
+
+  while (true)
+  {
+    uint32_t offset = JERRY_CONTEXT (debugger_receive_buffer_offset);
+    bool success = JERRY_CONTEXT (debugger_transport_p)->receive (JERRY_CONTEXT (debugger_transport_p),
+                                                                  JERRY_CONTEXT (debugger_receive_buffer),
+                                                                  &message_size,
+                                                                  &offset);
+
+    if (!success)
+    {
+      jerry_debugger_close_connection ();
+      return true;
+    }
+
+    if (offset < JERRY_CONTEXT (debugger_receive_header_size))
+    {
+      if (expected_message_type != 0)
+      {
+        continue;
+      }
+
+      return resume_exec;
+    }
+
+    uint32_t message_total_size = (uint32_t) (message_size +
+                                              JERRY_CONTEXT (debugger_receive_header_size));
+
+    if (offset < message_total_size)
+    {
+      if (expected_message_type != 0)
+      {
+        continue;
+      }
+
+      return resume_exec;
+    }
+
+    /* The jerry_debugger_process_message function is inlined
+      * so passing these arguments is essentially free. */
+    if (!jerry_debugger_process_message (JERRY_CONTEXT (debugger_receive_buffer) +
+                                         JERRY_CONTEXT (debugger_receive_header_size),
+                                         (uint32_t) message_size,
+                                         &resume_exec,
+                                         &expected_message_type,
+                                         (jerry_debugger_uint8_data_t**) message_data_p))
+    {
+      return true;
+    }
+
+    if (message_total_size < offset)
+    {
+      memmove (JERRY_CONTEXT (debugger_receive_buffer),
+               JERRY_CONTEXT (debugger_receive_buffer) + message_total_size,
+               offset - message_total_size);
+    }
+
+    JERRY_CONTEXT (debugger_receive_buffer_offset) = (uint16_t) (offset - message_total_size);
+  }
+} /* jerry_debugger_receive */
+
 #endif /* JERRY_DEBUGGER */

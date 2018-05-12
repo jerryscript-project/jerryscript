@@ -270,6 +270,16 @@ register_js_function (const char *name_p, /**< name of the function */
  */
 static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 
+/**
+ * Dummy function to return the transport.
+ *
+ * @return NULL
+ */
+jerry_debugger_transport_t *
+jerry_port_init_socket_transport (uint16_t tcp_port) /**< server port number */
+{
+  return NULL;
+} /* jerry_port_init_socket_transport */
 
 /**
  * JerryScript command main
@@ -356,7 +366,7 @@ jerry_cmd_main (int argc, char *argv[])
 
   if (start_debug_server)
   {
-    jerry_debugger_init (debug_port);
+    jerry_debugger_init (jerry_port_init_socket_transport (debug_port));
   }
 
   register_js_function ("assert", jerryx_handler_assert);

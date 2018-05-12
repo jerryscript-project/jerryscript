@@ -108,6 +108,12 @@ typedef enum
 } jerry_debugger_flags_t;
 
 /**
+ * Waiting for data from the client.
+ */
+#define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
+  (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
+
+/**
  * Set debugger flags.
  */
 #define JERRY_DEBUGGER_SET_FLAGS(flags) \
@@ -414,6 +420,11 @@ bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_co
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
 bool jerry_debugger_send_exception_string (void);
+
+bool jerry_debugger_accept_connection (void);
+void jerry_debugger_close_connection (void);
+bool jerry_debugger_send (size_t data_size);
+bool jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p);
 
 #endif /* JERRY_DEBUGGER */
 

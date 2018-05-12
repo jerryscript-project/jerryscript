@@ -592,7 +592,7 @@ main (int argc,
   jerry_init (flags);
   if (start_debug_server)
   {
-    jerry_debugger_init (debug_port);
+    jerry_debugger_init (jerry_port_default_init_socket_transport (debug_port));
   }
 
   register_js_function ("assert", jerryx_handler_assert);
@@ -710,7 +710,7 @@ main (int argc,
         jerry_cleanup ();
 
         jerry_init (flags);
-        jerry_debugger_init (debug_port);
+        jerry_debugger_init (jerry_port_default_init_socket_transport (debug_port));
 
         register_js_function ("assert", jerryx_handler_assert);
         register_js_function ("gc", jerryx_handler_gc);

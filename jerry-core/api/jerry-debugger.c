@@ -93,15 +93,43 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
  * Debugger server initialization. Must be called after jerry_init.
  */
 void
-jerry_debugger_init (uint16_t port) /**< server port number */
+jerry_debugger_init (jerry_debugger_transport_t *transport_p) /**< transport */
 {
 #ifdef JERRY_DEBUGGER
-  JERRY_CONTEXT (debugger_port) = port;
+  JERRY_CONTEXT (debugger_transport_p) = transport_p;
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p) != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->accept_connection != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->close_connection != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->send != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_transport_p)->receive != NULL);
   jerry_debugger_accept_connection ();
 #else /* !JERRY_DEBUGGER */
-  JERRY_UNUSED (port);
+  JERRY_UNUSED (transport_p);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_init */
+
+/**
+ * Debugger transport transmission sizes, each transport will need to set these.
+ */
+void
+jerry_debugger_set_transmit_sizes (size_t send_header_size, /**< transport send header size */
+                                   size_t max_send_size, /**< transport max send size */
+                                   size_t receive_header_size, /**< transport receive header size */
+                                   size_t max_receive_size) /**< transport max receive size */
+{
+#ifdef JERRY_DEBUGGER
+  JERRY_CONTEXT (debugger_send_header_size) = (uint8_t) send_header_size;
+  JERRY_CONTEXT (debugger_max_send_size) = (uint8_t) max_send_size;
+  JERRY_CONTEXT (debugger_receive_header_size) = (uint8_t) receive_header_size;
+  JERRY_CONTEXT (debugger_max_receive_size) = (uint8_t) max_receive_size;
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (send_header_size);
+  JERRY_UNUSED (max_send_size);
+  JERRY_UNUSED (receive_header_size);
+  JERRY_UNUSED (max_receive_size);
+#endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_set_transmit_sizes */
+
 
 /**
  * Sets whether the engine should wait and run a source.

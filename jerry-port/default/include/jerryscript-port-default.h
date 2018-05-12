@@ -40,6 +40,12 @@ void jerry_port_default_set_log_level (jerry_log_level_t level);
 void jerry_port_default_set_instance (jerry_instance_t *instance_p);
 
 /**
+ * The default transport layer that uses TCP socket
+ * other transports can be added like usb, bluetooth
+ */
+struct jerry_debugger_transport_t *jerry_port_default_init_socket_transport (uint16_t tcp_port);
+
+/**
  * @}
  */
 

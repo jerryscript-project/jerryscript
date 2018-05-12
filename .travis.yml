@@ -80,6 +80,7 @@ matrix:
           && ${TRAVIS_BRANCH} == "master"
           && ${TRAVIS_EVENT_TYPE} == "push" ]];
         then
+          git fetch --unshallow;
           build-wrapper-linux-x86-64 --out-dir bw-output ./tools/build.py;
           sonar-scanner -Dsonar.projectVersion="${TRAVIS_COMMIT}";
         fi

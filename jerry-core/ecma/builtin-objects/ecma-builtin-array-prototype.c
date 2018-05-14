@@ -64,7 +64,7 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
   ret_value = ecma_op_object_put (object,
                                   ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                   length_value,
-                                  true),
+                                  true);
 
   ecma_free_value (length_value);
   return ret_value;

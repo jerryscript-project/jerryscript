@@ -293,18 +293,6 @@ jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, /**< chara
 } /* jerry_register_magic_strings */
 
 /**
- * Get Jerry configured memory limits
- */
-void
-jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, /**< [out] Jerry's maximum usage of
-                                                            *         data + bss + brk sections */
-                         size_t *out_stack_limit_p) /**< [out] Jerry's maximum usage of stack */
-{
-  *out_data_bss_brk_limit_p = CONFIG_MEM_HEAP_AREA_SIZE + CONFIG_MEM_DATA_LIMIT_MINUS_HEAP_SIZE;
-  *out_stack_limit_p = CONFIG_MEM_STACK_LIMIT;
-} /* jerry_get_memory_limits */
-
-/**
  * Run garbage collection
  */
 void

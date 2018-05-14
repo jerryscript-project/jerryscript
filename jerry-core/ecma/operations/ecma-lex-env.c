@@ -39,15 +39,11 @@
 void
 ecma_init_global_lex_env (void)
 {
-#ifdef CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE
-  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_decl_lex_env (NULL);
-#else /* !CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
   JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL, glob_obj_p, false);
 
   ecma_deref_object (glob_obj_p);
-#endif /* CONFIG_ECMA_GLOBAL_ENVIRONMENT_DECLARATIVE */
 } /* ecma_init_global_lex_env */
 
 /**

@@ -26,11 +26,6 @@
  */
 
 /**
- * Number of ecma values inlined into stack frame
- */
-#define VM_STACK_FRAME_INLINED_VALUES_NUMBER CONFIG_VM_STACK_FRAME_INLINED_VALUES_NUMBER
-
-/**
  * Header of a ECMA stack frame's chunk
  */
 typedef struct

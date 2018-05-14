@@ -302,7 +302,7 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
  *
  * @return ecma_char_t canonicalized character
  */
-inline ecma_char_t __attr_always_inline___
+inline ecma_char_t JERRY_ATTR_ALWAYS_INLINE
 re_canonicalize (ecma_char_t ch, /**< character */
                  bool is_ignorecase) /**< IgnoreCase flag */
 {

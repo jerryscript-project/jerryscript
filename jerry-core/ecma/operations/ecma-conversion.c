@@ -372,7 +372,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  if (unlikely (ecma_is_value_object (value)))
+  if (JERRY_UNLIKELY (ecma_is_value_object (value)))
   {
     ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 

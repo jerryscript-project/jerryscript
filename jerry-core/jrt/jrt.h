@@ -29,34 +29,6 @@
 #include "jrt-types.h"
 
 /*
- * Attributes
- */
-#define __noreturn __attribute__((noreturn))
-#define __attr_noinline___ __attribute__((noinline))
-#define __attr_return_value_should_be_checked___ __attribute__((warn_unused_result))
-#define __attr_hot___ __attribute__((hot))
-#ifndef __attr_always_inline___
-#define __attr_always_inline___ __attribute__((always_inline))
-#endif /* !__attr_always_inline___ */
-#ifndef __attr_const___
-#define __attr_const___ __attribute__((const))
-#endif /* !__attr_const___ */
-#ifndef __attr_pure___
-#define __attr_pure___ __attribute__((pure))
-#endif /* !__attr_pure___ */
-
-/*
- * Conditions' likeliness, unlikeliness.
- */
-#ifdef __GNUC__
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     __builtin_expect(!!(x), 0)
-#else /* !__GNUC__ */
-#define likely(x)       (x)
-#define unlikely(x)     (x)
-#endif /* __GNUC__ */
-
-/*
  * Normally compilers store const(ant)s in ROM. Thus saving RAM.
  * But if your compiler does not support it then the directive below can force it.
  *
@@ -91,13 +63,15 @@
   enum { JERRY_STATIC_ASSERT_GLUE (static_assertion_failed_, __LINE__, msg) = 1 / (!!(x)) }
 
 #ifndef JERRY_NDEBUG
-void __noreturn jerry_assert_fail (const char *assertion, const char *file, const char *function, const uint32_t line);
-void __noreturn jerry_unreachable (const char *file, const char *function, const uint32_t line);
+void JERRY_ATTR_NORETURN
+jerry_assert_fail (const char *assertion, const char *file, const char *function, const uint32_t line);
+void JERRY_ATTR_NORETURN
+jerry_unreachable (const char *file, const char *function, const uint32_t line);
 
 #define JERRY_ASSERT(x) \
   do \
   { \
-    if (unlikely (!(x))) \
+    if (JERRY_UNLIKELY (!(x))) \
     { \
       jerry_assert_fail (#x, __FILE__, __func__, __LINE__); \
     } \
@@ -128,7 +102,7 @@ void __noreturn jerry_unreachable (const char *file, const char *function, const
 /**
  * Exit on fatal error
  */
-void __noreturn jerry_fatal (jerry_fatal_code_t code);
+void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 
 /*
  * Logging

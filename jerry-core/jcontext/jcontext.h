@@ -187,7 +187,7 @@ struct jerry_instance_t
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 
-static inline jmem_heap_t * __attr_always_inline___
+static inline jmem_heap_t * JERRY_ATTR_ALWAYS_INLINE
 jerry_context_get_current_heap (void)
 {
   return JERRY_GET_CURRENT_INSTANCE ()->heap_p;
@@ -207,7 +207,7 @@ jerry_context_get_current_heap (void)
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
 
-static inline jerry_hash_table_t * __attr_always_inline___
+static inline jerry_hash_table_t * JERRY_ATTR_ALWAYS_INLINE
 jerry_context_get_current_lcache (void)
 {
   return (jerry_hash_table_t *) (JERRY_GET_CURRENT_INSTANCE ()->lcache_p);

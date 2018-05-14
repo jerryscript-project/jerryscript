@@ -87,7 +87,7 @@ DECLARE_ROUTINES_FOR (number)
  *
  * @return pointer to allocated memory
  */
-inline ecma_object_t * __attr_always_inline___
+inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_object (void)
 {
 #ifdef JMEM_STATS
@@ -100,7 +100,7 @@ ecma_alloc_object (void)
 /**
  * Dealloc memory from an ecma-object
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
 {
 #ifdef JMEM_STATS
@@ -115,7 +115,7 @@ ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
  *
  * @return pointer to allocated memory
  */
-inline ecma_extended_object_t * __attr_always_inline___
+inline ecma_extended_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_extended_object (size_t size) /**< size of object */
 {
 #ifdef JMEM_STATS
@@ -128,7 +128,7 @@ ecma_alloc_extended_object (size_t size) /**< size of object */
 /**
  * Dealloc memory of an extended object
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
                               size_t size) /**< size of object */
 {
@@ -144,7 +144,7 @@ ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
  *
  * @return pointer to allocated memory
  */
-inline ecma_string_t * __attr_always_inline___
+inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_string (void)
 {
 #ifdef JMEM_STATS
@@ -157,7 +157,7 @@ ecma_alloc_string (void)
 /**
  * Dealloc memory from ecma-string descriptor
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
 {
 #ifdef JMEM_STATS
@@ -172,7 +172,7 @@ ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
  *
  * @return pointer to allocated memory
  */
-inline ecma_string_t * __attr_always_inline___
+inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_string_buffer (size_t size) /**< size of string */
 {
 #ifdef JMEM_STATS
@@ -185,7 +185,7 @@ ecma_alloc_string_buffer (size_t size) /**< size of string */
 /**
  * Dealloc memory of a string with character data
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
                             size_t size) /**< size of string */
 {
@@ -201,7 +201,7 @@ ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
  *
  * @return pointer to allocated memory
  */
-inline ecma_getter_setter_pointers_t * __attr_always_inline___
+inline ecma_getter_setter_pointers_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_getter_setter_pointers (void)
 {
 #ifdef JMEM_STATS
@@ -214,7 +214,7 @@ ecma_alloc_getter_setter_pointers (void)
 /**
  * Dealloc memory from getter-setter pointer pair
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_setter_pointers_p) /**< pointer pair
                                                                                                 * to be freed */
 {
@@ -230,7 +230,7 @@ ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_sette
  *
  * @return pointer to allocated memory
  */
-inline ecma_property_pair_t * __attr_always_inline___
+inline ecma_property_pair_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_property_pair (void)
 {
 #ifdef JMEM_STATS
@@ -243,7 +243,7 @@ ecma_alloc_property_pair (void)
 /**
  * Dealloc memory of an ecma-property
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */
 {
 #ifdef JMEM_STATS

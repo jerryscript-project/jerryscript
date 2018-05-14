@@ -455,7 +455,7 @@ jerry_debugger_accept_connection (void)
 /**
  * Close the socket connection to the client.
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_debugger_close_connection (void)
 {
   jerry_debugger_close_connection_tcp (false);

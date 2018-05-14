@@ -86,7 +86,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     }
   }
 
-  if (unlikely (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
+  if (JERRY_UNLIKELY (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
     ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
@@ -129,7 +129,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
                  ecma_value_t value, /**< ecma value */
                  bool is_strict) /**< strict mode */
 {
-  if (unlikely (!ecma_is_value_object (object)))
+  if (JERRY_UNLIKELY (!ecma_is_value_object (object)))
   {
     ecma_value_t to_object = ecma_op_to_object (object);
     ecma_free_value (object);
@@ -300,7 +300,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   ecma_compiled_code_t *bytecode_p;
 
-  if (likely (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
+  if (JERRY_LIKELY (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
   {
     bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                   lit_value);
@@ -365,7 +365,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  * @return true - if the implicit 'this' value is updated,
  *         false - otherwise
  */
-static inline bool __attr_always_inline___
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value */
 {
   if (ecma_is_value_object (*this_value_p))
@@ -681,7 +681,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-            if (likely (!is_immutable_binding))
+            if (JERRY_LIKELY (!is_immutable_binding))
             {
               vm_var_decl (frame_ctx_p, name_p);
 
@@ -740,7 +740,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
  *
  * @return ecma value
  */
-static ecma_value_t __attr_noinline___
+static ecma_value_t JERRY_ATTR_NOINLINE
 vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
@@ -869,12 +869,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         branch_offset = *(byte_code_p++);
 
-        if (unlikely (branch_offset_length != 1))
+        if (JERRY_UNLIKELY (branch_offset_length != 1))
         {
           branch_offset <<= 8;
           branch_offset |= *(byte_code_p++);
 
-          if (unlikely (branch_offset_length == 3))
+          if (JERRY_UNLIKELY (branch_offset_length == 3))
           {
             branch_offset <<= 8;
             branch_offset |= *(byte_code_p++);
@@ -1271,7 +1271,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               int_increase = 1 << ECMA_DIRECT_SHIFT;
             }
 
-            if (likely (int_increase != 0))
+            if (JERRY_LIKELY (int_increase != 0))
             {
               /* Postfix operators require the unmodifed number value. */
               if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
@@ -2090,11 +2090,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               {
                 branch_offset = *(byte_code_p++);
 
-                if (unlikely (branch_offset_length != 1))
+                if (JERRY_UNLIKELY (branch_offset_length != 1))
                 {
                   branch_offset <<= 8;
                   branch_offset |= *(byte_code_p++);
-                  if (unlikely (branch_offset_length == 3))
+                  if (JERRY_UNLIKELY (branch_offset_length == 3))
                   {
                     branch_offset <<= 8;
                     branch_offset |= *(byte_code_p++);
@@ -2327,7 +2327,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = chunk_p->items[index];
           index++;
 
-          if (likely (!ecma_is_value_collection_chunk (chunk_p->items[index])))
+          if (JERRY_LIKELY (!ecma_is_value_collection_chunk (chunk_p->items[index])))
           {
             context_top_p[-3] = index;
             continue;
@@ -2364,7 +2364,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             ecma_string_t *prop_name_p = ecma_get_string_from_value (chunk_p->items[index]);
 
-            if (likely (ecma_op_object_has_property (object_p, prop_name_p)))
+            if (JERRY_LIKELY (ecma_op_object_has_property (object_p, prop_name_p)))
             {
               byte_code_p = byte_code_start_p + branch_offset;
               break;
@@ -2373,7 +2373,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             index++;
             ecma_value_t value = chunk_p->items[index];
 
-            if (likely (!ecma_is_value_collection_chunk (value)))
+            if (JERRY_LIKELY (!ecma_is_value_collection_chunk (value)))
             {
               stack_top_p[-3] = index;
             }
@@ -2898,7 +2898,7 @@ error:
  *
  * @return ecma value
  */
-static ecma_value_t __attr_noinline___
+static ecma_value_t JERRY_ATTR_NOINLINE
 vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
             const ecma_value_t *arg_p, /**< arguments list */
             ecma_length_t arg_list_len) /**< length of arguments list */

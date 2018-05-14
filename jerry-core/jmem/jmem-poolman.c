@@ -76,7 +76,7 @@ jmem_pools_finalize (void)
  * @return pointer to allocated chunk, if allocation was successful,
  *         or NULL - if not enough memory.
  */
-inline void * __attr_hot___ __attr_always_inline___
+inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_alloc (size_t size) /**< size of the chunk */
 {
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
@@ -131,7 +131,7 @@ jmem_pools_alloc (size_t size) /**< size of the chunk */
 /**
  * Free the chunk
  */
-inline void __attr_hot___ __attr_always_inline___
+inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
                  size_t size) /**< size of the chunk */
 {

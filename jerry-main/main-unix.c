@@ -283,8 +283,9 @@ wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource nam
                           size_t resource_name_size, /**< size of resource name */
                           const jerry_char_t *source_p, /**< source code */
                           size_t source_size, /**< source code size */
-                          void *user_p __attribute__((unused))) /**< user pointer */
+                          void *user_p) /**< user pointer */
 {
+  (void) user_p; /* unused */
   jerry_value_t ret_val = jerry_parse (resource_name_p,
                                        resource_name_size,
                                        source_p,
@@ -403,8 +404,9 @@ check_usage (bool condition, /**< the condition that must hold */
  */
 static void *
 instance_alloc (size_t size,
-                void *cb_data_p __attribute__((unused)))
+                void *cb_data_p)
 {
+  (void) cb_data_p; /* unused */
   return malloc (size);
 } /* instance_alloc */
 

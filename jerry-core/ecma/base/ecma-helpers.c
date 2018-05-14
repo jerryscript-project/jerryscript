@@ -175,7 +175,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 /**
  * Check if the object is lexical environment.
  */
-inline bool __attr_pure___
+inline bool JERRY_ATTR_PURE
 ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -188,7 +188,7 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 /**
  * Get value of [[Extensible]] object's internal property.
  */
-inline bool __attr_pure___
+inline bool JERRY_ATTR_PURE
 ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -220,7 +220,7 @@ ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
 /**
  * Get object's internal implementation-defined type.
  */
-inline ecma_object_type_t __attr_pure___
+inline ecma_object_type_t JERRY_ATTR_PURE
 ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -232,7 +232,7 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 /**
  * Get object's prototype.
  */
-inline ecma_object_t *__attr_pure___
+inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -247,7 +247,7 @@ ecma_get_object_prototype (const ecma_object_t *object_p) /**< object */
  *
  * @return true / false
  */
-inline bool __attr_pure___
+inline bool JERRY_ATTR_PURE
 ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -299,7 +299,7 @@ ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
 /**
  * Get type of lexical environment.
  */
-inline ecma_lexical_environment_type_t __attr_pure___
+inline ecma_lexical_environment_type_t JERRY_ATTR_PURE
 ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -311,7 +311,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
 /**
  * Get outer reference of lexical environment.
  */
-inline ecma_object_t *__attr_pure___
+inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -327,7 +327,7 @@ ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) /**< lexical en
  * See also:
  *          ecma_op_object_get_property_names
  */
-inline ecma_property_header_t *__attr_pure___
+inline ecma_property_header_t *JERRY_ATTR_PURE
 ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -341,7 +341,7 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 /**
  * Get lexical environment's 'provideThis' property
  */
-inline bool __attr_pure___
+inline bool JERRY_ATTR_PURE
 ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -355,7 +355,7 @@ ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound 
 /**
  * Get lexical environment's bound object.
  */
-inline ecma_object_t *__attr_pure___
+inline ecma_object_t *JERRY_ATTR_PURE
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -1065,7 +1065,7 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
  * Note:
  *      value previously stored in the property is freed
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        ecma_property_value_t *prop_value_p, /**< property value reference */
                                        ecma_value_t value) /**< value to assign */
@@ -1157,7 +1157,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
  * @return true - property is writable,
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_writable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1191,7 +1191,7 @@ ecma_set_property_writable_attr (ecma_property_t *property_p, /**< [in,out] prop
  * @return true - property is enumerable,
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_enumerable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1227,7 +1227,7 @@ ecma_set_property_enumerable_attr (ecma_property_t *property_p, /**< [in,out] pr
  * @return true - property is configurable,
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_configurable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1262,7 +1262,7 @@ ecma_set_property_configurable_attr (ecma_property_t *property_p, /**< [in,out] 
  *
  * @return true / false
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1274,7 +1274,7 @@ ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 /**
  * Set value of flag indicating whether the property is registered in LCache
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
                            bool is_lcached) /**< new value for lcached flag */
 {
@@ -1388,7 +1388,7 @@ ecma_create_error_reference_from_context (void)
  *
  * @return error reference value
  */
-inline ecma_value_t __attr_always_inline___
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
 {
   return ecma_create_error_reference (ecma_make_object_value (object_p), true);
@@ -1400,7 +1400,7 @@ ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced obj
 void
 ecma_ref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
 {
-  if (likely (error_ref_p->refs_and_flags < ECMA_ERROR_MAX_REF))
+  if (JERRY_LIKELY (error_ref_p->refs_and_flags < ECMA_ERROR_MAX_REF))
   {
     error_ref_p->refs_and_flags += ECMA_ERROR_REF_ONE;
   }

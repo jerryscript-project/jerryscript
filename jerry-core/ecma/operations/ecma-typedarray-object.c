@@ -490,7 +490,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
  *
  * @return the pointer to the internal arraybuffer
  */
-inline ecma_object_t * __attr_always_inline___
+inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p) /**< the pointer to the typedarray object */
 {
   JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (typedarray_p)));

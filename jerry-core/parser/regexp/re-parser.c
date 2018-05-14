@@ -68,7 +68,7 @@ re_hex_lookup (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
  * @return true - if non-greedy character found
  *         false - otherwise
  */
-static inline bool __attr_always_inline___
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 re_parse_non_greedy_char (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
 {
   if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p

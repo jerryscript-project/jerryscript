@@ -69,7 +69,7 @@
   ecma_number_t num_var; \
   return_value = ecma_get_number (value, &num_var); \
   \
-  if (likely (ecma_is_value_empty (return_value))) \
+  if (JERRY_LIKELY (ecma_is_value_empty (return_value))) \
   {
 
 /**

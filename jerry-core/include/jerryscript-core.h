@@ -20,17 +20,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jerryscript-compiler.h"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-#ifdef __GNUC__
-#define JERRY_DEPRECATED_API __attribute__((deprecated))
-#else /* !__GNUC__ */
-/* TODO: for other compilers */
-#define JERRY_DEPRECATED_API
-#endif /* __GNUC__ */
 
 /** \addtogroup jerry Jerry engine interface
  * @{
@@ -491,9 +486,9 @@ jerry_value_t jerry_get_object_keys (const jerry_value_t obj_val);
 jerry_value_t jerry_get_prototype (const jerry_value_t obj_val);
 jerry_value_t jerry_set_prototype (const jerry_value_t obj_val, const jerry_value_t proto_obj_val);
 
-JERRY_DEPRECATED_API
+JERRY_ATTR_DEPRECATED
 bool jerry_get_object_native_handle (const jerry_value_t obj_val, uintptr_t *out_handle_p);
-JERRY_DEPRECATED_API
+JERRY_ATTR_DEPRECATED
 void jerry_set_object_native_handle (const jerry_value_t obj_val, uintptr_t handle_p,
                                      jerry_object_free_callback_t freecb_p);
 

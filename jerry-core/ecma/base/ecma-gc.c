@@ -124,7 +124,7 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 void
 ecma_ref_object (ecma_object_t *object_p) /**< object */
 {
-  if (likely (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF))
+  if (JERRY_LIKELY (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF))
   {
     object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs + ECMA_OBJECT_REF_ONE);
   }
@@ -137,7 +137,7 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 /**
  * Decrease reference counter of an object
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
@@ -778,7 +778,7 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
     if (ecma_gc_is_object_visited (obj_iter_p))
     {
       /* Moving the object to list of marked objects. */
-      if (likely (obj_prev_p != NULL))
+      if (JERRY_LIKELY (obj_prev_p != NULL))
       {
         obj_prev_p->gc_next_cp = obj_iter_p->gc_next_cp;
       }
@@ -828,7 +828,7 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
       if (ecma_gc_is_object_visited (obj_iter_p))
       {
         /* Moving the object to list of marked objects */
-        if (likely (obj_prev_p != NULL))
+        if (JERRY_LIKELY (obj_prev_p != NULL))
         {
           obj_prev_p->gc_next_cp = obj_iter_p->gc_next_cp;
         }

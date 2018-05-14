@@ -177,7 +177,7 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (unlikely (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL))
   {
     ecma_instantiate_builtin (builtin_id);
   }
@@ -193,7 +193,7 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
  * @return true - if the function object is a built-in routine
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p) /**< function object */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
@@ -233,7 +233,7 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, ext_object_size, obj_type);
 
-  if (unlikely (!is_extensible))
+  if (JERRY_UNLIKELY (!is_extensible))
   {
     ecma_set_object_extensible (obj_p, false);
   }

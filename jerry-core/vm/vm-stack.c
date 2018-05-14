@@ -75,7 +75,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       {
         ecma_value_t value = chunk_p->items[index];
 
-        if (unlikely (ecma_is_value_collection_chunk (value)))
+        if (JERRY_UNLIKELY (ecma_is_value_collection_chunk (value)))
         {
           ecma_collection_chunk_t *next_chunk_p = ecma_get_collection_chunk_from_value (value);
           jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));

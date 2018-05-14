@@ -219,7 +219,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
   ecma_string_t *string_desc_p;
   lit_utf8_byte_t *data_p;
 
-  if (likely (string_size <= UINT16_MAX))
+  if (JERRY_LIKELY (string_size <= UINT16_MAX))
   {
     string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + string_size);
 
@@ -307,7 +307,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
     lit_utf8_byte_t *data_p;
 
-    if (likely (converted_string_size <= UINT16_MAX))
+    if (JERRY_LIKELY (converted_string_size <= UINT16_MAX))
     {
       string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + converted_string_size);
 
@@ -387,7 +387,7 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
 ecma_string_t *
 ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of the string */
 {
-  if (likely (uint32_number <= ECMA_DIRECT_STRING_MAX_IMM))
+  if (JERRY_LIKELY (uint32_number <= ECMA_DIRECT_STRING_MAX_IMM))
   {
     return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT, (uintptr_t) uint32_number);
   }
@@ -473,7 +473,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
  *
  * @return pointer to ecma-string descriptor
  */
-inline ecma_string_t * __attr_always_inline___
+inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string */
 {
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
@@ -490,7 +490,7 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 {
   JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
 
-  if (likely (id <= ECMA_DIRECT_STRING_MAX_IMM))
+  if (JERRY_LIKELY (id <= ECMA_DIRECT_STRING_MAX_IMM))
   {
     return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC_EX, (uintptr_t) id);
   }
@@ -521,7 +521,7 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && cesu8_string2_size > 0 && cesu8_string2_length > 0);
 
-  if (unlikely (ecma_string_is_empty (string1_p)))
+  if (JERRY_UNLIKELY (ecma_string_is_empty (string1_p)))
   {
     return ecma_new_ecma_string_from_utf8 (cesu8_string2_p, cesu8_string2_size);
   }
@@ -673,7 +673,7 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
   ecma_string_t *string_desc_p;
   lit_utf8_byte_t *data_p;
 
-  if (likely (new_size <= UINT16_MAX))
+  if (JERRY_LIKELY (new_size <= UINT16_MAX))
   {
     string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + new_size);
 
@@ -734,12 +734,12 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
-  if (unlikely (ecma_string_is_empty (string1_p)))
+  if (JERRY_UNLIKELY (ecma_string_is_empty (string1_p)))
   {
     ecma_ref_ecma_string (string2_p);
     return string2_p;
   }
-  else if (unlikely (ecma_string_is_empty (string2_p)))
+  else if (JERRY_UNLIKELY (ecma_string_is_empty (string2_p)))
   {
     return string1_p;
   }
@@ -842,7 +842,7 @@ ecma_string_t *
 ecma_append_magic_string_to_string (ecma_string_t *string1_p,
                                     lit_magic_string_id_t string2_id)
 {
-  if (unlikely (ecma_string_is_empty (string1_p)))
+  if (JERRY_UNLIKELY (ecma_string_is_empty (string1_p)))
   {
     return ecma_get_magic_string (string2_id);
   }
@@ -868,7 +868,7 @@ ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 
   JERRY_ASSERT (string_p->refs_and_container >= ECMA_STRING_REF_ONE);
 
-  if (likely (string_p->refs_and_container < ECMA_STRING_MAX_REF))
+  if (JERRY_LIKELY (string_p->refs_and_container < ECMA_STRING_MAX_REF))
   {
     /* Increase reference counter. */
     string_p->refs_and_container = (uint16_t) (string_p->refs_and_container + ECMA_STRING_REF_ONE);
@@ -990,7 +990,7 @@ ecma_string_to_number (const ecma_string_t *string_p) /**< ecma-string */
  * @return ECMA_STRING_NOT_ARRAY_INDEX if string is not array index
  *         the array index otherwise
  */
-inline uint32_t __attr_always_inline___
+inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_get_array_index (const ecma_string_t *str_p) /**< ecma-string */
 {
   if (ECMA_IS_DIRECT_STRING (str_p))
@@ -1021,7 +1021,7 @@ ecma_string_get_array_index (const ecma_string_t *str_p) /**< ecma-string */
  *
  * @return number of bytes, actually copied to the buffer.
  */
-lit_utf8_size_t __attr_return_value_should_be_checked___
+lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT
 ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_p, /**< ecma-string descriptor */
                                   lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                               * (can be NULL if buffer_size == 0) */
@@ -1071,7 +1071,7 @@ ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_p, /**< ecma-strin
  *
  * @return number of bytes, actually copied to the buffer.
  */
-lit_utf8_size_t __attr_return_value_should_be_checked___
+lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT
 ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_p, /**< ecma-string descriptor */
                                  lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                              * (can be NULL if buffer_size == 0) */
@@ -1347,7 +1347,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
  * It is the caller's responsibility to make sure that the string fits in the buffer.
  * Check if the size of the string is equal with the size of the buffer.
  */
-inline void __attr_always_inline___
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                            lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                        * (can be NULL if buffer_size == 0) */
@@ -1364,7 +1364,7 @@ ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string 
  *
  * @return size in bytes
  */
-static inline ecma_length_t __attr_always_inline___
+static inline ecma_length_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_get_uint32_size (const uint32_t uint32_number) /**< number in the string-descriptor */
 {
   uint32_t prev_number = 1;
@@ -1453,7 +1453,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         result_p = lit_get_magic_string_ex_utf8 (id);
         length = 0;
 
-        if (unlikely (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
+        if (JERRY_UNLIKELY (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
         {
           length = lit_utf8_string_length (result_p, size);
         }
@@ -1500,7 +1500,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         size = lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
         length = 0;
 
-        if (unlikely (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
+        if (JERRY_UNLIKELY (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
         {
           length = lit_utf8_string_length (lit_get_magic_string_ex_utf8 (string_p->u.magic_string_ex_id), size);
         }
@@ -1529,7 +1529,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
  * @return true - if the string equals to the magic string id
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, /**< property name */
                                       lit_magic_string_id_t id) /**< magic string id */
 {
@@ -1542,7 +1542,7 @@ ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, /**< proper
  * @return true - if the string is an empty string
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_is_empty (const ecma_string_t *string_p) /**< ecma-string */
 {
   return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING__EMPTY);
@@ -1554,14 +1554,14 @@ ecma_string_is_empty (const ecma_string_t *string_p) /**< ecma-string */
  * @return true - if the string equals to "length"
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
 {
   return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING_LENGTH);
 } /* ecma_string_is_length */
 
 
-static inline ecma_string_t * __attr_always_inline___
+static inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_property_to_string (ecma_property_t property, /**< property name type */
                          jmem_cpointer_t prop_name_cp) /**< property name compressed pointer */
 {
@@ -1575,7 +1575,7 @@ ecma_property_to_string (ecma_property_t property, /**< property name type */
  *
  * @return the compressed pointer part of the name
  */
-inline jmem_cpointer_t __attr_always_inline___
+inline jmem_cpointer_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_to_property_name (ecma_string_t *prop_name_p, /**< property name */
                               ecma_property_t *name_type_p) /**< [out] property name type */
 {
@@ -1619,7 +1619,7 @@ ecma_string_from_property_name (ecma_property_t property, /**< property name typ
  *
  * @return hash code of property name
  */
-inline lit_string_hash_t __attr_always_inline___
+inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_get_property_name_hash (ecma_property_t property, /**< property name type */
                                     jmem_cpointer_t prop_name_cp) /**< property name compressed pointer */
 {
@@ -1675,7 +1675,7 @@ ecma_string_get_property_index (ecma_property_t property, /**< property name typ
  * @return true if they are equals
  *         false otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_compare_to_property_name (ecma_property_t property, /**< property name type */
                                       jmem_cpointer_t prop_name_cp, /**< property name compressed pointer */
                                       const ecma_string_t *string_p) /**< other string */
@@ -1703,7 +1703,7 @@ ecma_string_compare_to_property_name (ecma_property_t property, /**< property na
  * @return true - if strings are equal;
  *         false - otherwise
  */
-static bool __attr_noinline___
+static bool JERRY_ATTR_NOINLINE
 ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /**< ecma-string */
                                     const ecma_string_t *string2_p) /**< ecma-string */
 {
@@ -1743,7 +1743,7 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /**< ecma-st
  * @return true - if strings are equal;
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
                            const ecma_string_t *string2_p) /**< ecma-string */
 {
@@ -1787,7 +1787,7 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
  * @return true - if strings are equal;
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-string */
                                       const ecma_string_t *string2_p) /**< ecma-string */
 {
@@ -2219,7 +2219,7 @@ ecma_get_string_magic (const ecma_string_t *string_p) /**< ecma-string */
  *
  * @return calculated hash
  */
-inline lit_string_hash_t __attr_always_inline___
+inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate hash for */
 {
   if (!ECMA_IS_DIRECT_STRING (string_p))

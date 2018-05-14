@@ -551,7 +551,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
                                                                                     *   passed to routine */
                                               ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  if (unlikely (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_JSON))
+  if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_JSON))
   {
     return ecma_builtin_date_prototype_to_json (this_arg);
   }

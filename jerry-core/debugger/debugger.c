@@ -258,7 +258,7 @@ jerry_debugger_sleep (void)
  * @return true - if message is processed successfully
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the received data */
                                 uint32_t message_size, /**< message size */
                                 bool *resume_exec_p, /**< pointer to the resume exec flag */

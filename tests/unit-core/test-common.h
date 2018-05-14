@@ -28,7 +28,7 @@
 #define TEST_ASSERT(x) \
   do \
   { \
-    if (unlikely (!(x))) \
+    if (JERRY_UNLIKELY (!(x))) \
     { \
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, \
                       "TEST: Assertion '%s' failed at %s(%s):%lu.\n", \

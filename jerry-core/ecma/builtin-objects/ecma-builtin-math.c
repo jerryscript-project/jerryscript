@@ -122,7 +122,7 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
       ecma_fast_free_value (value);
     }
 
-    if (unlikely (ecma_number_is_nan (arg_num)))
+    if (JERRY_UNLIKELY (ecma_number_is_nan (arg_num)))
     {
       result_num = arg_num;
       break;

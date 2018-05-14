@@ -125,7 +125,7 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< 
   return (lit_utf8_size_t) (p - to_digits_p);
 } /* ecma_builtin_number_prototype_helper_to_string */
 
-static inline lit_utf8_size_t __attr_always_inline___
+static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< number as string
                                                                            * in binary-floating point number */
                                                int32_t exponent, /**< decimal exponent */
@@ -164,7 +164,7 @@ ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< n
  *
  * @return rounded number
  */
-static inline lit_utf8_size_t __attr_always_inline___
+static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,out] number as a string in decimal
                                                                         *   form */
                                             lit_utf8_size_t num_digits, /**< length of the string representation */

@@ -238,7 +238,7 @@ ecma_number_get_sign_field (ecma_number_t num) /**< ecma-number */
                   fraction is filled with anything but not all zero bits,
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 {
   bool is_nan = (num != num);
@@ -291,7 +291,7 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
  * @return true - if sign bit of ecma-number is set
  *         false - otherwise
  */
-inline bool __attr_always_inline___
+inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
@@ -360,7 +360,7 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
   uint64_t fraction = ecma_number_get_fraction_field (num);
   int32_t exponent;
 
-  if (unlikely (biased_exp == 0))
+  if (JERRY_UNLIKELY (biased_exp == 0))
   {
     /* IEEE-754 2008, 3.4, d */
     if (ecma_number_is_zero (num))
@@ -658,18 +658,18 @@ ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
  *
  * @return number - result of multiplication.
  */
-inline ecma_value_t __attr_always_inline___
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_integer_multiply (ecma_integer_value_t left_integer, /**< left operand */
                        ecma_integer_value_t right_integer) /**< right operand */
 {
 #if defined (__GNUC__) || defined (__clang__)
   /* Check if left_integer is power of 2 */
-  if (unlikely ((left_integer & (left_integer - 1)) == 0))
+  if (JERRY_UNLIKELY ((left_integer & (left_integer - 1)) == 0))
   {
     /* Right shift right_integer with log2 (left_integer) */
     return ecma_make_integer_value (right_integer << (__builtin_ctz ((unsigned int) left_integer)));
   }
-  else if (unlikely ((right_integer & (right_integer - 1)) == 0))
+  else if (JERRY_UNLIKELY ((right_integer & (right_integer - 1)) == 0))
   {
     /* Right shift left_integer with log2 (right_integer) */
     return ecma_make_integer_value (left_integer << (__builtin_ctz ((unsigned int) right_integer)));

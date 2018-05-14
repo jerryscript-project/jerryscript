@@ -97,10 +97,10 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
  *           - before jerry_init and after jerry_cleanup
  *           - between enter to and return from a native free callback
  */
-static inline void __attr_always_inline___
+static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_assert_api_available (void)
 {
-  if (unlikely (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE)))
+  if (JERRY_UNLIKELY (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE)))
   {
     /* Terminates the execution. */
     JERRY_UNREACHABLE ();
@@ -110,7 +110,7 @@ jerry_assert_api_available (void)
 /**
  * Turn on API availability
  */
-static inline void __attr_always_inline___
+static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_make_api_available (void)
 {
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE;
@@ -119,7 +119,7 @@ jerry_make_api_available (void)
 /**
  * Turn off API availability
  */
-static inline void __attr_always_inline___
+static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_make_api_unavailable (void)
 {
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_API_AVAILABLE;
@@ -133,10 +133,10 @@ jerry_make_api_unavailable (void)
  *
  * @return return value for Jerry API functions
  */
-static inline jerry_value_t __attr_always_inline___
+static inline jerry_value_t JERRY_ATTR_ALWAYS_INLINE
 jerry_get_arg_value (jerry_value_t value) /**< return value */
 {
-  if (unlikely (ecma_is_value_error_reference (value)))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
     value = ecma_get_error_reference_from_value (value)->value;
   }
@@ -165,7 +165,7 @@ jerry_return (jerry_value_t value) /**< return value */
  *
  * @return return value for Jerry API functions
  */
-static inline jerry_value_t __attr_always_inline___
+static inline jerry_value_t JERRY_ATTR_ALWAYS_INLINE
 jerry_throw (jerry_value_t value) /**< return value */
 {
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (value));
@@ -178,7 +178,7 @@ jerry_throw (jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
-  if (unlikely (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE))
   {
     /* This function cannot be called twice unless jerry_cleanup is called. */
     JERRY_UNREACHABLE ();
@@ -947,7 +947,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
 {
   jerry_assert_api_available ();
 
-  if (unlikely (ecma_is_value_error_reference (*value_p)))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (*value_p)))
   {
     /* This is a rare case so it is optimized for
      * binary size rather than performance. */
@@ -970,7 +970,7 @@ jerry_value_set_abort_flag (jerry_value_t *value_p)
 {
   jerry_assert_api_available ();
 
-  if (unlikely (ecma_is_value_error_reference (*value_p)))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (*value_p)))
   {
     /* This is a rare case so it is optimized for
      * binary size rather than performance. */
@@ -1182,7 +1182,7 @@ jerry_acquire_value (jerry_value_t value) /**< API value */
 {
   jerry_assert_api_available ();
 
-  if (unlikely (ecma_is_value_error_reference (value)))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
     ecma_ref_error_reference (ecma_get_error_reference_from_value (value));
     return value;
@@ -1199,7 +1199,7 @@ jerry_release_value (jerry_value_t value) /**< API value */
 {
   jerry_assert_api_available ();
 
-  if (unlikely (ecma_is_value_error_reference (value)))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
     ecma_deref_error_reference (ecma_get_error_reference_from_value (value));
     return;

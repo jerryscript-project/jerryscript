@@ -50,7 +50,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
   /* 3. */
-  if (unlikely (is_unresolvable_reference))
+  if (JERRY_UNLIKELY (is_unresolvable_reference))
   {
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
     ecma_value_t var_name_val = ecma_make_string_value (var_name_string_p);
@@ -151,7 +151,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
   const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
 
   /* 3. */
-  if (unlikely (is_unresolvable_reference))
+  if (JERRY_UNLIKELY (is_unresolvable_reference))
   {
     /* 3.a. */
     if (is_strict)

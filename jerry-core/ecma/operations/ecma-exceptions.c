@@ -282,7 +282,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
       ecma_string_t *arg_string_p;
       const ecma_value_t arg_val = va_arg (args, ecma_value_t);
 
-      if (unlikely (ecma_is_value_object (arg_val)))
+      if (JERRY_UNLIKELY (ecma_is_value_object (arg_val)))
       {
         ecma_object_t *arg_object_p = ecma_get_object_from_value (arg_val);
         lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);

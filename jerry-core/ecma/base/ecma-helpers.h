@@ -138,48 +138,48 @@ typedef enum
 #define ECMA_BOOL_TO_BITFIELD(x) ((x) ? 1 : 0)
 
 /* ecma-helpers-value.c */
-bool ecma_is_value_direct (ecma_value_t value) __attr_const___;
-bool ecma_is_value_simple (ecma_value_t value) __attr_const___;
-bool ecma_is_value_empty (ecma_value_t value) __attr_const___;
-bool ecma_is_value_undefined (ecma_value_t value) __attr_const___;
-bool ecma_is_value_null (ecma_value_t value) __attr_const___;
-bool ecma_is_value_boolean (ecma_value_t value) __attr_const___;
-bool ecma_is_value_true (ecma_value_t value) __attr_const___;
-bool ecma_is_value_false (ecma_value_t value) __attr_const___;
-bool ecma_is_value_found (ecma_value_t value) __attr_const___;
-bool ecma_is_value_array_hole (ecma_value_t value) __attr_const___;
+bool JERRY_ATTR_CONST ecma_is_value_direct (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_simple (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_empty (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_undefined (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_null (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_boolean (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_true (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_false (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_found (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_array_hole (ecma_value_t value);
 
-bool ecma_is_value_integer_number (ecma_value_t value) __attr_const___;
-bool ecma_are_values_integer_numbers (ecma_value_t first_value, ecma_value_t second_value) __attr_const___;
-bool ecma_is_value_float_number (ecma_value_t value) __attr_const___;
-bool ecma_is_value_number (ecma_value_t value) __attr_const___;
-bool ecma_is_value_string (ecma_value_t value) __attr_const___;
-bool ecma_is_value_direct_string (ecma_value_t value) __attr_const___;
-bool ecma_is_value_object (ecma_value_t value) __attr_const___;
-bool ecma_is_value_error_reference (ecma_value_t value) __attr_const___;
-bool ecma_is_value_collection_chunk (ecma_value_t value) __attr_const___;
+bool JERRY_ATTR_CONST ecma_is_value_integer_number (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_are_values_integer_numbers (ecma_value_t first_value, ecma_value_t second_value);
+bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_object (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_error_reference (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_collection_chunk (ecma_value_t value);
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
-ecma_value_t ecma_make_boolean_value (bool boolean_value) __attr_const___;
-ecma_value_t ecma_make_integer_value (ecma_integer_value_t integer_value) __attr_const___;
+ecma_value_t JERRY_ATTR_CONST ecma_make_boolean_value (bool boolean_value);
+ecma_value_t JERRY_ATTR_CONST ecma_make_integer_value (ecma_integer_value_t integer_value);
 ecma_value_t ecma_make_nan_value (void);
 ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
-ecma_value_t ecma_make_string_value (const ecma_string_t *ecma_string_p) __attr_pure___;
-ecma_value_t ecma_make_magic_string_value (lit_magic_string_id_t id) __attr_pure___;
-ecma_value_t ecma_make_object_value (const ecma_object_t *object_p) __attr_pure___;
-ecma_value_t ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) __attr_pure___;
-ecma_value_t ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p) __attr_pure___;
-ecma_integer_value_t ecma_get_integer_from_value (ecma_value_t value) __attr_const___;
-ecma_number_t ecma_get_float_from_value (ecma_value_t value) __attr_pure___;
-ecma_number_t ecma_get_number_from_value (ecma_value_t value) __attr_pure___;
-ecma_string_t *ecma_get_string_from_value (ecma_value_t value) __attr_pure___;
-ecma_object_t *ecma_get_object_from_value (ecma_value_t value) __attr_pure___;
-ecma_error_reference_t *ecma_get_error_reference_from_value (ecma_value_t value) __attr_pure___;
-ecma_collection_chunk_t *ecma_get_collection_chunk_from_value (ecma_value_t value) __attr_pure___;
-ecma_value_t ecma_invert_boolean_value (ecma_value_t value) __attr_const___;
+ecma_value_t JERRY_ATTR_PURE ecma_make_string_value (const ecma_string_t *ecma_string_p);
+ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
+ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
+ecma_value_t JERRY_ATTR_PURE ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p);
+ecma_value_t JERRY_ATTR_PURE ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p);
+ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t value);
+ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
+ecma_number_t JERRY_ATTR_PURE ecma_get_number_from_value (ecma_value_t value);
+ecma_string_t JERRY_ATTR_PURE *ecma_get_string_from_value (ecma_value_t value);
+ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
+ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
+ecma_collection_chunk_t JERRY_ATTR_PURE *ecma_get_collection_chunk_from_value (ecma_value_t value);
+ecma_value_t JERRY_ATTR_CONST ecma_invert_boolean_value (ecma_value_t value);
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
 ecma_value_t ecma_copy_value_if_not_object (ecma_value_t value);
@@ -212,11 +212,11 @@ void ecma_deref_ecma_string (ecma_string_t *string_p);
 ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 uint32_t ecma_string_get_array_index (const ecma_string_t *str_p);
 
-lit_utf8_size_t __attr_return_value_should_be_checked___
+lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT
 ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p,
                                   lit_utf8_byte_t *buffer_p,
                                   lit_utf8_size_t buffer_size);
-lit_utf8_size_t __attr_return_value_should_be_checked___
+lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT
 ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
                                  lit_utf8_byte_t *buffer_p,
                                  lit_utf8_size_t buffer_size);
@@ -299,19 +299,19 @@ ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext
 ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p);
 ecma_object_t *ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p,
                                            bool provide_this);
-bool ecma_is_lexical_environment (const ecma_object_t *object_p) __attr_pure___;
-bool ecma_get_object_extensible (const ecma_object_t *object_p) __attr_pure___;
+bool JERRY_ATTR_PURE ecma_is_lexical_environment (const ecma_object_t *object_p);
+bool JERRY_ATTR_PURE ecma_get_object_extensible (const ecma_object_t *object_p);
 void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
-ecma_object_type_t ecma_get_object_type (const ecma_object_t *object_p) __attr_pure___;
-ecma_object_t *ecma_get_object_prototype (const ecma_object_t *object_p) __attr_pure___;
-bool ecma_get_object_is_builtin (const ecma_object_t *object_p) __attr_pure___;
+ecma_object_type_t JERRY_ATTR_PURE ecma_get_object_type (const ecma_object_t *object_p);
+ecma_object_t JERRY_ATTR_PURE *ecma_get_object_prototype (const ecma_object_t *object_p);
+bool JERRY_ATTR_PURE ecma_get_object_is_builtin (const ecma_object_t *object_p);
 void ecma_set_object_is_builtin (ecma_object_t *object_p);
 uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
-ecma_lexical_environment_type_t ecma_get_lex_env_type (const ecma_object_t *object_p) __attr_pure___;
-ecma_object_t *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p) __attr_pure___;
-ecma_property_header_t *ecma_get_property_list (const ecma_object_t *object_p) __attr_pure___;
-ecma_object_t *ecma_get_lex_env_binding_object (const ecma_object_t *object_p) __attr_pure___;
-bool ecma_get_lex_env_provide_this (const ecma_object_t *object_p) __attr_pure___;
+ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecma_object_t *object_p);
+ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
+ecma_property_header_t JERRY_ATTR_PURE *ecma_get_property_list (const ecma_object_t *object_p);
+ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
+bool JERRY_ATTR_PURE ecma_get_lex_env_provide_this (const ecma_object_t *object_p);
 
 ecma_property_value_t *
 ecma_create_named_data_property (ecma_object_t *object_p, ecma_string_t *name_p, uint8_t prop_attributes,

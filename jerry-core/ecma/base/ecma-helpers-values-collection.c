@@ -105,7 +105,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
   ecma_length_t item_index;
   ecma_collection_chunk_t *chunk_p;
 
-  if (unlikely (header_p->item_count == 0))
+  if (JERRY_UNLIKELY (header_p->item_count == 0))
   {
     item_index = 0;
     chunk_p = (ecma_collection_chunk_t *) jmem_heap_alloc_block (sizeof (ecma_collection_chunk_t));
@@ -120,7 +120,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
     chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
                                          header_p->last_chunk_cp);
 
-    if (unlikely (item_index == 0))
+    if (JERRY_UNLIKELY (item_index == 0))
     {
       JERRY_ASSERT (ecma_is_value_collection_chunk (chunk_p->items[ECMA_COLLECTION_CHUNK_ITEMS])
                     && ecma_get_collection_chunk_from_value (chunk_p->items[ECMA_COLLECTION_CHUNK_ITEMS]) == NULL);
@@ -160,7 +160,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
 ecma_value_t *
 ecma_collection_iterator_init (ecma_collection_header_t *header_p) /**< header of collection */
 {
-  if (unlikely (!header_p || header_p->item_count == 0))
+  if (JERRY_UNLIKELY (!header_p || header_p->item_count == 0))
   {
     return NULL;
   }
@@ -183,7 +183,7 @@ ecma_collection_iterator_next (ecma_value_t *ecma_value_p) /**< current value */
 
   ecma_value_p++;
 
-  if (unlikely (ecma_is_value_collection_chunk (*ecma_value_p)))
+  if (JERRY_UNLIKELY (ecma_is_value_collection_chunk (*ecma_value_p)))
   {
     ecma_value_p = ecma_get_collection_chunk_from_value (*ecma_value_p)->items;
 

@@ -199,7 +199,7 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
   { \
     JERRY_ASSERT (var_name ## ___size != 0); \
     \
-    jmem_heap_free_block (var_name, var_name ## ___size); \
+    jmem_heap_free_block ((void *) (var_name), var_name ## ___size); \
   } \
   else \
   { \

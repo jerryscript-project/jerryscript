@@ -877,7 +877,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
   JERRY_ASSERT (num_in_uint32_range < uint64_2_pow_32);
   uint32_t uint32_num = (uint32_t) num_in_uint32_range;
 
-  const uint32_t ret = sign ? -uint32_num : uint32_num;
+  const uint32_t ret = sign ? (uint32_t) (-(int32_t) uint32_num) : uint32_num;
 
 #ifndef JERRY_NDEBUG
   if (sign

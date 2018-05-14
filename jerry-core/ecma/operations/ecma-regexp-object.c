@@ -573,7 +573,7 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
           {
             JERRY_ASSERT (ecma_is_value_boolean (match_value));
             /* restore saved */
-            memcpy (re_ctx_p->saved_p, saved_bck_p, size);
+            memcpy ((void *) (re_ctx_p->saved_p), saved_bck_p, size);
           }
         }
 

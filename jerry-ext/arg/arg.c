@@ -115,7 +115,7 @@ jerryx_arg_transform_object_properties (const jerry_value_t obj_val,/**< the JS 
     return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "Not an object.");
   }
 
-  jerry_value_t prop[name_cnt];
+  JERRY_VLA (jerry_value_t, prop, name_cnt);
 
   for (jerry_length_t i = 0; i < name_cnt; i++, name_p++)
   {
@@ -160,7 +160,7 @@ jerryx_arg_transform_array (const jerry_value_t array_val, /**< points to the JS
     return jerry_create_error (JERRY_ERROR_TYPE, (jerry_char_t *) "Not an array.");
   }
 
-  jerry_value_t arr[c_arg_cnt];
+  JERRY_VLA (jerry_value_t, arr, c_arg_cnt);
 
   for (jerry_length_t i = 0; i < c_arg_cnt; i++)
   {

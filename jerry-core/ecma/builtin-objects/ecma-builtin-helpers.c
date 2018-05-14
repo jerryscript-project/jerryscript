@@ -84,7 +84,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
      'Null' or one of possible object's classes.
      The string with null character is maximum 27 characters long. */
   const lit_utf8_size_t buffer_size = 27;
-  lit_utf8_byte_t str_buffer[buffer_size];
+  JERRY_VLA (lit_utf8_byte_t, str_buffer, buffer_size);
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
 

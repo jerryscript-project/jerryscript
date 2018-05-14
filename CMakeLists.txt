@@ -32,6 +32,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "TI")
   set(USING_TI 1)
 endif()
 
+if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+  set(USING_MSVC 1)
+endif()
+
 # Determining build type
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "MinSizeRel")
@@ -94,8 +98,21 @@ if(USING_TI)
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
+if(USING_MSVC)
+  set(JERRY_LIBC         OFF)
+  set(JERRY_LIBM         OFF)
+  set(ENABLE_ALL_IN_ONE  ON)
+  set(ENABLE_STRIP       OFF)
+
+  set(JERRY_LIBC_MESSAGE         " (FORCED BY COMPILER)")
+  set(JERRY_LIBM_MESSAGE         " (FORCED BY COMPILER)")
+  set(ENABLE_ALL_IN_ONE_MESSAGE  " (FORCED BY COMPILER)")
+  set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
+endif()
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE            " ${CMAKE_BUILD_TYPE})
+message(STATUS "CMAKE_C_COMPILER_ID         " ${CMAKE_C_COMPILER_ID})
 message(STATUS "CMAKE_SYSTEM_NAME           " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR      " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "ENABLE_ALL_IN_ONE           " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN_ONE_MESSAGE})
@@ -190,7 +207,7 @@ if(("${PLATFORM}" STREQUAL "DARWIN"))
   jerry_add_link_flags(-lSystem)
   set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
-else()
+elseif(NOT USING_MSVC)
   jerry_add_link_flags(-Wl,-z,noexecstack)
 endif()
 
@@ -199,9 +216,16 @@ if(JERRY_LIBC)
   jerry_add_link_flags(-nostdlib)
 endif()
 
+if(USING_MSVC)
+  jerry_add_link_flags(/OPT:NOREF)
+  # Disable MSVC warning 4996 globally because it stops us from using
+  # standard C functions.
+  jerry_add_compile_flags(/wd4996)
+endif()
+
 # Turn off stack protector
 if (USING_GCC OR USING_CLANG)
-jerry_add_compile_flags(-fno-stack-protector)
+  jerry_add_compile_flags(-fno-stack-protector)
 endif()
 
 if (USING_GCC OR USING_CLANG)

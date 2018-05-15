@@ -250,15 +250,12 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     /* 4. 11. 18. */
     ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
-    ecma_length_t args_length = arguments_number;
     ecma_object_t *function_p;
     ecma_extended_object_t *ext_function_p;
 
     if (arguments_number == 0
         || (arguments_number == 1 && !ecma_is_value_integer_number (arguments_list_p[0])))
     {
-      args_length = 1;
-
       function_p = ecma_create_object (prototype_obj_p,
                                        sizeof (ecma_extended_object_t),
                                        ECMA_OBJECT_TYPE_BOUND_FUNCTION);
@@ -280,7 +277,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
     {
       JERRY_ASSERT (arguments_number > 0);
 
-      size_t obj_size = sizeof (ecma_extended_object_t) + (args_length * sizeof (ecma_value_t));
+      size_t obj_size = sizeof (ecma_extended_object_t) + (arguments_number * sizeof (ecma_value_t));
 
       function_p = ecma_create_object (prototype_obj_p,
                                        obj_size,
@@ -302,7 +299,7 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
         *args_p++ = ecma_copy_value_if_not_object (arguments_list_p[i]);
       }
 
-      ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) args_length);
+      ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) arguments_number);
       ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
     }
 

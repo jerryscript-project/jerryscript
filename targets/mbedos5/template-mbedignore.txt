@@ -1,6 +1,5 @@
 cmake/*
 docs/*
-jerry-libc/*
 jerry-libm/*
 jerry-main/*
 jerry-port/default/default-date.c

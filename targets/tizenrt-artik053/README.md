@@ -10,7 +10,7 @@ If you are in a hurry, run following commands:
 
 ```
 $ sudo apt-add-repository -y "ppa:team-gcc-arm-embedded/ppa"
-$ sudo apt-get update 
+$ sudo apt-get update
 $ sudo apt-get install gcc-arm-embedded
 $ git clone https://github.com/jerryscript-project/jerryscript.git jerryscript
 $ cd jerryscript
@@ -87,7 +87,6 @@ jerryscript/tools/build.py \
     --clean \
     --lto=OFF \
     --jerry-cmdline=OFF \
-    --jerry-libc=OFF \
     --all-in-one=OFF \
     --mem-heap=70 \
     --profile=es2015-subset \

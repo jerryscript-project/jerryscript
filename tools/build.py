@@ -92,8 +92,6 @@ def get_arguments():
                          help=devhelp('build test version of the jerry command line tool (%(choices)s)'))
     compgrp.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build jerry-ext (%(choices)s)')
-    compgrp.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], type=str.upper,
-                         help='build and use jerry-libc (%(choices)s)')
     compgrp.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build and use jerry-libm (%(choices)s)')
     compgrp.add_argument('--jerry-port-default', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -178,7 +176,6 @@ def generate_build_options(arguments):
     build_options_append('JERRY_CMDLINE_SNAPSHOT', arguments.jerry_cmdline_snapshot)
     build_options_append('JERRY_CMDLINE_TEST', arguments.jerry_cmdline_test)
     build_options_append('JERRY_EXT', arguments.jerry_ext)
-    build_options_append('JERRY_LIBC', arguments.jerry_libc)
     build_options_append('JERRY_LIBM', arguments.jerry_libm)
     build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)
     build_options_append('UNITTESTS', arguments.unittests)

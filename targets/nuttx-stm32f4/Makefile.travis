@@ -43,7 +43,8 @@ install-clone-nuttx:
 	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.22
 
 # Perform all the necessary (JerryScript-independent) installation steps.
-install: install-apt-get-deps install-kconfig install-clone-nuttx
+install-noapt: install-kconfig install-clone-nuttx
+install: install-apt-get-deps install-noapt
 
 
 ## Targets for building NuttX with JerryScript.

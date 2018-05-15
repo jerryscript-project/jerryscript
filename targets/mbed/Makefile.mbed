@@ -74,6 +74,7 @@ js2c:
 
 yotta:
 	cd targets/mbed; \
+	 export WCMAKE=`which cmake`; export PATH=`pwd`:$$PATH; \
 	 yotta target $(YOTTA_TARGET); \
 	 yotta build
 

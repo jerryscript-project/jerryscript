@@ -680,7 +680,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   {
     target_offset_num = 0;
   }
-  if (target_offset_num <= -1.0 || target_offset_num >= (double) UINT32_MAX + 0.5)
+  if (target_offset_num <= -1.0 || target_offset_num >= (ecma_number_t) UINT32_MAX + 0.5)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
   }

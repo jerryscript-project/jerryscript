@@ -940,10 +940,10 @@ jerry_value_clear_error_flag (jerry_value_t *value_p)
 } /* jerry_value_clear_error_flag */
 
 /**
- * Set the error flag if the value is not an error reference.
+ * Set the error value if the value is not an error reference.
  */
 void
-jerry_value_set_error_flag (jerry_value_t *value_p)
+jerry_value_set_error (jerry_value_t *value_p)
 {
   jerry_assert_api_available ();
 
@@ -960,7 +960,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
   }
 
   *value_p = ecma_create_error_reference (*value_p, true);
-} /* jerry_value_set_error_flag */
+} /* jerry_value_set_error */
 
 /**
  * Set both the abort and error flags if the value is not an error reference.

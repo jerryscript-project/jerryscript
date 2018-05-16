@@ -596,7 +596,7 @@ ecma_builtin_global_object_character_is_in (uint32_t character, /**< character *
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped URI set.
  */
-static const uint8_t unescaped_uri_set[16] =
+static const uint8_t unescaped_uri_set[16] JERRY_CONST_DATA =
 {
   0x0, 0x0, 0x0, 0x0, 0xda, 0xff, 0xff, 0xaf,
   0xff, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
@@ -607,7 +607,7 @@ static const uint8_t unescaped_uri_set[16] =
  *   One bit for each character between 0 - 127.
  *   Bit is set if the character is in the unescaped component URI set.
  */
-static const uint8_t unescaped_uri_component_set[16] =
+static const uint8_t unescaped_uri_component_set[16] JERRY_CONST_DATA =
 {
   0x0, 0x0, 0x0, 0x0, 0x82, 0x67, 0xff, 0x3,
   0xfe, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x47
@@ -1116,7 +1116,7 @@ ecma_builtin_global_object_encode_uri_component (ecma_value_t this_arg, /**< thi
  *   Bit is set if the character does not need to be converted to %xx form.
  *   These characters are: a-z A-Z 0-9 @ * _ + - . /
  */
-static const uint8_t ecma_escape_set[16] =
+static const uint8_t ecma_escape_set[16] JERRY_CONST_DATA =
 {
   0x0, 0x0, 0x0, 0x0, 0x0, 0xec, 0xff, 0x3,
   0xff, 0xff, 0xff, 0x87, 0xfe, 0xff, 0xff, 0x7

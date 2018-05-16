@@ -77,7 +77,7 @@ enum
 /**
  * Built-in property list of the built-in object.
  */
-const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
+const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] JERRY_CONST_DATA =
 {
 #ifndef BUILTIN_CUSTOM_DISPATCH
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \

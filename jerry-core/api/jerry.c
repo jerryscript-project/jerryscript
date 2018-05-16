@@ -3151,7 +3151,7 @@ typedef struct
   uint8_t element_size_shift;
 } jerry_typedarray_mapping_t;
 
-static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
+static const jerry_typedarray_mapping_t jerry_typedarray_mappings[] JERRY_CONST_DATA =
 {
 #define TYPEDARRAY_ENTRY(NAME, LIT_NAME, SIZE_SHIFT) \
   { JERRY_TYPEDARRAY_ ## NAME, ECMA_BUILTIN_ID_ ## NAME ## ARRAY_PROTOTYPE, \

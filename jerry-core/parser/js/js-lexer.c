@@ -289,7 +289,7 @@ typedef struct
 /**
  * Keywords with 2 characters.
  */
-static const keyword_string_t keyword_length_2[4] =
+static const keyword_string_t keyword_length_2[4] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("do", LEXER_KEYW_DO),
   LEXER_KEYWORD ("if", LEXER_KEYW_IF),
@@ -300,7 +300,7 @@ static const keyword_string_t keyword_length_2[4] =
 /**
  * Keywords with 3 characters.
  */
-static const keyword_string_t keyword_length_3[6] =
+static const keyword_string_t keyword_length_3[6] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("for", LEXER_KEYW_FOR),
   LEXER_KEYWORD ("let", LEXER_KEYW_LET),
@@ -313,7 +313,7 @@ static const keyword_string_t keyword_length_3[6] =
 /**
  * Keywords with 4 characters.
  */
-static const keyword_string_t keyword_length_4[9] =
+static const keyword_string_t keyword_length_4[9] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("case", LEXER_KEYW_CASE),
   LEXER_KEYWORD ("else", LEXER_KEYW_ELSE),
@@ -329,7 +329,7 @@ static const keyword_string_t keyword_length_4[9] =
 /**
  * Keywords with 5 characters.
  */
-static const keyword_string_t keyword_length_5[10] =
+static const keyword_string_t keyword_length_5[10] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("break", LEXER_KEYW_BREAK),
   LEXER_KEYWORD ("catch", LEXER_KEYW_CATCH),
@@ -346,7 +346,7 @@ static const keyword_string_t keyword_length_5[10] =
 /**
  * Keywords with 6 characters.
  */
-static const keyword_string_t keyword_length_6[9] =
+static const keyword_string_t keyword_length_6[9] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("delete", LEXER_KEYW_DELETE),
   LEXER_KEYWORD ("export", LEXER_KEYW_EXPORT),
@@ -362,7 +362,7 @@ static const keyword_string_t keyword_length_6[9] =
 /**
  * Keywords with 7 characters.
  */
-static const keyword_string_t keyword_length_7[6] =
+static const keyword_string_t keyword_length_7[6] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("default", LEXER_KEYW_DEFAULT),
   LEXER_KEYWORD ("extends", LEXER_KEYW_EXTENDS),
@@ -375,7 +375,7 @@ static const keyword_string_t keyword_length_7[6] =
 /**
  * Keywords with 8 characters.
  */
-static const keyword_string_t keyword_length_8[4] =
+static const keyword_string_t keyword_length_8[4] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("continue", LEXER_KEYW_CONTINUE),
   LEXER_KEYWORD ("debugger", LEXER_KEYW_DEBUGGER),
@@ -386,7 +386,7 @@ static const keyword_string_t keyword_length_8[4] =
 /**
  * Keywords with 9 characters.
  */
-static const keyword_string_t keyword_length_9[3] =
+static const keyword_string_t keyword_length_9[3] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("interface", LEXER_KEYW_INTERFACE),
   LEXER_KEYWORD ("protected", LEXER_KEYW_PROTECTED),
@@ -396,7 +396,7 @@ static const keyword_string_t keyword_length_9[3] =
 /**
  * Keywords with 10 characters.
  */
-static const keyword_string_t keyword_length_10[3] =
+static const keyword_string_t keyword_length_10[3] JERRY_CONST_DATA =
 {
   LEXER_KEYWORD ("implements", LEXER_KEYW_IMPLEMENTS),
   LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF),
@@ -406,7 +406,7 @@ static const keyword_string_t keyword_length_10[3] =
 /**
  * List to the keywords.
  */
-static const keyword_string_t * const keyword_string_list[9] =
+static const keyword_string_t * const keyword_string_list[9] JERRY_CONST_DATA =
 {
   keyword_length_2,
   keyword_length_3,
@@ -2113,12 +2113,12 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */
 
-static const lexer_lit_location_t lexer_get_literal =
+static const lexer_lit_location_t lexer_get_literal JERRY_CONST_DATA =
 {
   (const uint8_t *) "get", 3, LEXER_IDENT_LITERAL, false
 };
 
-static const lexer_lit_location_t lexer_set_literal =
+static const lexer_lit_location_t lexer_set_literal JERRY_CONST_DATA =
 {
   (const uint8_t *) "set", 3, LEXER_IDENT_LITERAL, false
 };

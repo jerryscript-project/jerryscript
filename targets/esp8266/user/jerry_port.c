@@ -16,11 +16,23 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <sys/time.h>
-
-#include "esp_common.h"
-
+#include <time.h>
+#include <espressif/esp_common.h>
 #include "jerryscript-port.h"
+#ifdef JERRY_DEBUGGER
+#include "jerryscript-core.h"
+#include "jerryscript-debugger.h"
+#endif /* JERRY_DEBUGGER */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "esp_sntp.h"
+
+/**
+ * Default log level
+ */
+static jerry_log_level_t jerry_port_default_log_level = JERRY_LOG_LEVEL_DEBUG;
+
+#define JERRY_PORT_DEFAULT_LOG_LEVEL jerry_port_default_log_level
 
 /**
  * Provide log message implementation for the engine.
@@ -30,22 +42,35 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
                 const char *format, /**< format string */
                 ...)  /**< parameters */
 {
-  (void) level; /* ignore log level */
-
-  va_list args;
-  va_start (args, format);
-  vfprintf (stderr, format, args);
-  va_end (args);
+  if (level <= JERRY_PORT_DEFAULT_LOG_LEVEL)
+  {
+    va_list args;
+    va_start (args, format);
+#ifdef JERRY_DEBUGGER
+    char buffer[256];
+    int length = 0;
+    length = vsnprintf (buffer, 255, format, args);
+    buffer[length] = '\0';
+    printf ("%*s", length, buffer);
+    jerry_char_t *jbuffer = (jerry_char_t *) buffer;
+    jerry_debugger_send_output (jbuffer, (jerry_size_t) length, (uint8_t) (level + 2));
+#else
+    vprintf (format, args);
+#endif /* JERRY_DEBUGGER */
+    va_end (args);
+  }
 } /* jerry_port_log */
 
 /**
  * Provide fatal message implementation for the engine.
  */
 void
-jerry_port_fatal (jerry_fatal_code_t code)
+jerry_port_fatal (jerry_fatal_code_t code) /**< fatal error code */
 {
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Jerry Fatal Error!\n");
-  while (true);
+  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Jerry fatal error, error code: %d!\n", code);
+  while (true)
+  {
+  };
 } /* jerry_port_fatal */
 
 /**
@@ -56,8 +81,15 @@ jerry_port_fatal (jerry_fatal_code_t code)
 double
 jerry_port_get_current_time (void)
 {
-  uint32_t rtc_time = system_rtc_clock_cali_proc();
-  return (double) rtc_time;
+  if (sntp_been_initialized)
+  {
+    int32_t microseconds;
+    time_t seconds = sntp_get_rtc_time (&microseconds);
+
+    return ((double) (seconds * 1000 + microseconds / 1000));
+  }
+
+  return (double) (sdk_system_get_time () / 1000);
 } /* jerry_port_get_current_time */
 
 /**
@@ -66,11 +98,18 @@ jerry_port_get_current_time (void)
  * @return true
  */
 bool
-jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< time zone */
 {
-  /* We live in UTC. */
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
+  /* We live in GMT + 1. */
+  tz_p->offset = tz.tz_minuteswest;
+  tz_p->daylight_saving_time = tz.tz_dsttime > 0 ? 1 : 0;
 
   return true;
 } /* jerry_port_get_time_zone */
+
+#ifdef JERRY_DEBUGGER
+void jerry_port_sleep (uint32_t sleep_time)
+{
+  vTaskDelay (sleep_time / portTICK_PERIOD_MS);
+} /* jerry_port_sleep */
+#endif /* JERRY_DEBUGGER */

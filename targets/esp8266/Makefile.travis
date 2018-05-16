@@ -23,29 +23,32 @@ all:
 
 # Install tools via apt.
 install-apt-get-deps:
-	sudo apt-get install -q -y gperf texinfo wget
+	sudo apt-get install unrar autoconf automake libtool g++ gperf \
+	flex bison texinfo gawk libncurses5-dev libexpat1-dev python-pip \
+	sed git help2man vim-common zlib1g-dev
+	pip install --user pyserial
+
 
 # Fetch and build crosstool-NG with support for Xtensa.
-install-xtensa-kx106-gcc:
-	git clone https://github.com/jcmvbkbc/crosstool-NG.git ../crosstool-NG -b lx106-g++-1.21.0
-	cd ../crosstool-NG && ./bootstrap
-	cd ../crosstool-NG && ./configure --enable-local
-	$(MAKE) -C ../crosstool-NG --no-print-directory -Rr # HACK: without the command line arguments, make bails out with recursion error
-	cd ../crosstool-NG && ./ct-ng xtensa-lx106-elf
-	cd ../crosstool-NG && ./ct-ng build
+install-esp-open-sdk:
+	git clone --recursive https://github.com/pfalcon/esp-open-sdk.git ../esp-open-sdk
+	cd ../esp-open-sdk && git checkout b069537944fab5d3a260b82a9aaaad5c560dd6bd
+	cd ../esp-open-sdk && git submodule update --init
+	cd ../esp-open-sdk && sed -i "s/2.69/2.68/" lx106-hal/configure.ac
+	cd ../esp-open-sdk && sed -r -i 's%TOOLCHAIN ?=.*%TOOLCHAIN=$(CURDIR)/../esp-open-sdk/xtensa-lx106-elf%' Makefile
+	cd ../esp-open-sdk && make toolchain esptool libhal STANDALONE=n
 
 # Fetch Espressif SDK and Xtensa libraries.
-install-espressif-sdk:
-	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ../ESP8266_SDK
-	cd ../ESP8266_SDK && git checkout 2fab9e23d779cdd6e5900b8ba2b588e30d9b08c4
-	wget https://github.com/esp8266/esp8266-wiki/raw/master/libs/libhal.a -O ../ESP8266_SDK/lib/libhal.a
+install-esp-open-rtos:
+	git clone --recursive https://github.com/SuperHouse/esp-open-rtos.git ../esp-open-rtos
+	cd ../esp-open-rtos && git checkout 5830e001cf54378f657d5fabadc1d3f3e050b9d1
 
 # Perform all the necessary (JerryScript-independent) installation steps.
-install: install-apt-get-deps install-xtensa-kx106-gcc install-espressif-sdk
+install: install-apt-get-deps install-esp-open-sdk install-esp-open-rtos
 
 
 ## Targets for building ESP8266 with JerryScript.
 
 # Build the firmware (ESP8266 with JerryScript).
 script:
-	PATH=$(CURDIR)/../crosstool-NG/builds/xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/esp8266/Makefile.esp8266 BIN_PATH=build/obj-esp8266 SDK_PATH=$(CURDIR)/../ESP8266_SDK
+	 PATH=$(CURDIR)/../esp-open-sdk/xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/esp8266/Makefile.esp8266 RTOS_PATH=$(CURDIR)/../esp-open-rtos

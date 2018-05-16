@@ -179,7 +179,7 @@ typedef struct
 static inline size_t
 parser_statement_length (uint8_t type) /**< type of statement */
 {
-  static const uint8_t statement_lengths[12] =
+  static const uint8_t statement_lengths[12] JERRY_CONST_DATA =
   {
     /* PARSER_STATEMENT_BLOCK */
     1,

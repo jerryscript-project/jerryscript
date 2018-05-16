@@ -303,7 +303,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_value_t this_arg, /**< this
          * cases that can cause incorrect results due to precision issues, so we use a loop instead.
          */
         magnitude = 0;
-        double counter = this_arg_number;
+        ecma_number_t counter = this_arg_number;
         while (counter >= radix)
         {
           counter /= radix;

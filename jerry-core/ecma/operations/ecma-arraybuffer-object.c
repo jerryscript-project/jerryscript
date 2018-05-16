@@ -138,7 +138,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
     const uint32_t maximum_size_in_byte = UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1;
 
-    if (length_num <= -1.0 || length_num > (double) maximum_size_in_byte + 0.5)
+    if (length_num <= -1.0 || length_num > (ecma_number_t) maximum_size_in_byte + 0.5)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length."));
     }

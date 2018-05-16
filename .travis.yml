@@ -139,6 +139,7 @@ matrix:
           packages: [gperf, texinfo, wget]
 
     - env: JOBNAME="Mbed/K64F Build Test"
+      sudo: true # keep on sudo-enabled VM to avoid gcc dying of OOM
       addons:
         apt:
           sources:

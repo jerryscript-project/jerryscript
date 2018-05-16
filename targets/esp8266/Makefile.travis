@@ -41,7 +41,8 @@ install-espressif-sdk:
 	wget https://github.com/esp8266/esp8266-wiki/raw/master/libs/libhal.a -O ../ESP8266_SDK/lib/libhal.a
 
 # Perform all the necessary (JerryScript-independent) installation steps.
-install: install-apt-get-deps install-xtensa-kx106-gcc install-espressif-sdk
+install-noapt: install-xtensa-kx106-gcc install-espressif-sdk
+install: install-apt-get-deps install-noapt
 
 
 ## Targets for building ESP8266 with JerryScript.

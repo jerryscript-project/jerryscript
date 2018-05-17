@@ -930,12 +930,6 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       ecma_dealloc_string_buffer (string_p, string_p->u.long_utf8_string_size + sizeof (ecma_long_string_t));
       return;
     }
-    case ECMA_STRING_CONTAINER_UINT32_IN_DESC:
-    case ECMA_STRING_CONTAINER_MAGIC_STRING_EX:
-    {
-      /* only the string descriptor itself should be freed */
-      break;
-    }
     case ECMA_STRING_LITERAL_NUMBER:
     {
       ecma_free_value (string_p->u.lit_number);
@@ -943,7 +937,10 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
     }
     default:
     {
-      JERRY_UNREACHABLE ();
+      JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC
+                    || ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX);
+
+      /* only the string descriptor itself should be freed */
       break;
     }
   }
@@ -2107,6 +2104,7 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAGIC_STRING_EX);
+
       return lit_get_magic_string_ex_size (string_p->u.magic_string_ex_id);
     }
   }

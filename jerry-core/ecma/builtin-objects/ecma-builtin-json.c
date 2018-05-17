@@ -1266,6 +1266,7 @@ ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quo
         default:
         {
           JERRY_ASSERT (current_char == LIT_CHAR_BACKSLASH || current_char == LIT_CHAR_DOUBLE_QUOTE);
+
           break;
         }
       }

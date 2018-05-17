@@ -364,21 +364,19 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
                  const lit_utf8_byte_t *str_p, /**< input string pointer */
                  const lit_utf8_byte_t **out_str_p) /**< [out] matching substring iterator */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  re_opcode_t op;
-
   const lit_utf8_byte_t *str_curr_p = str_p;
 
-  while ((op = re_get_opcode (&bc_p)))
+  while (true)
   {
+    re_opcode_t op = re_get_opcode (&bc_p);
+
     switch (op)
     {
       case RE_OP_MATCH:
       {
         JERRY_TRACE_MSG ("Execute RE_OP_MATCH: match\n");
         *out_str_p = str_curr_p;
-        ret_value = ECMA_VALUE_TRUE;
-        return ret_value; /* match */
+        return ECMA_VALUE_TRUE; /* match */
       }
       case RE_OP_CHAR:
       {
@@ -1086,8 +1084,10 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
         return ECMA_VALUE_FALSE; /* fail */
       }
-      case RE_OP_GREEDY_ITERATOR:
+      default:
       {
+        JERRY_ASSERT (op == RE_OP_GREEDY_ITERATOR);
+
         uint32_t min, max, offset, num_of_iter;
         const lit_utf8_byte_t *sub_str_p = NULL;
 
@@ -1142,16 +1142,8 @@ re_match_regexp (re_matcher_ctx_t *re_ctx_p, /**< RegExp matcher context */
         }
         return ECMA_VALUE_FALSE; /* fail */
       }
-      default:
-      {
-        JERRY_TRACE_MSG ("UNKNOWN opcode (%u)!\n", (unsigned int) op);
-        return ecma_raise_common_error (ECMA_ERR_MSG ("Unknown RegExp opcode."));
-      }
     }
   }
-
-  JERRY_UNREACHABLE ();
-  return ECMA_VALUE_FALSE; /* fail */
 } /* re_match_regexp */
 
 /**

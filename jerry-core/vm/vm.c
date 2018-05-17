@@ -298,52 +298,26 @@ static ecma_value_t
 vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                              ecma_value_t lit_value) /**< literal */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   ecma_compiled_code_t *bytecode_p;
 
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   if (JERRY_LIKELY (!(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
   {
+#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
     bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                   lit_value);
+#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
   }
   else
   {
     uint8_t *byte_p = ((uint8_t *) frame_ctx_p->bytecode_header_p) + lit_value;
     bytecode_p = (ecma_compiled_code_t *) byte_p;
   }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
-  ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                                      lit_value);
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
-  bool is_function = ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION) != 0);
-
-  if (is_function)
-  {
-    ecma_object_t *func_obj_p;
-
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
-    if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
-    {
-      func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                   bytecode_p);
-    }
-    else
-    {
-      func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
-                                                         bytecode_p,
-                                                         frame_ctx_p->this_binding);
-    }
-#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-    func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                 bytecode_p);
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-
-    return ecma_make_object_value (func_obj_p);
-  }
-  else
-  {
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  {
     ecma_value_t ret_value;
     ret_value = ecma_op_create_regexp_object_from_bytecode ((re_compiled_code_t *) bytecode_p);
 
@@ -354,10 +328,30 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
 
     return ret_value;
-#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNREACHABLE (); /* Regular Expressions are not supported in the selected profile! */
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+
+  JERRY_ASSERT (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
+
+  ecma_object_t *func_obj_p;
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
+  {
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+    func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
+                                                 bytecode_p);
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  }
+  else
+  {
+    func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
+                                                       bytecode_p,
+                                                       frame_ctx_p->this_binding);
+  }
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
+  return ecma_make_object_value (func_obj_p);
 } /* vm_construct_literal_object */
 
 /**
@@ -853,6 +847,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             default:
             {
               JERRY_ASSERT (operands == VM_OC_GET_THIS_LITERAL);
+
               right_value = left_value;
               left_value = ecma_copy_value (frame_ctx_p->this_binding);
               break;
@@ -2681,7 +2676,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         default:
         {
           JERRY_UNREACHABLE ();
-          continue;
         }
       }
 

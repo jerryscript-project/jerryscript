@@ -90,8 +90,7 @@ ecma_typedarray_helper_get_shift_size (uint8_t builtin_id) /**< the builtin id o
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
     default:
     {
-      JERRY_ASSERT (false);
-      return ECMA_BUILTIN_ID__COUNT;
+      JERRY_UNREACHABLE ();
     }
   }
 } /* ecma_typedarray_helper_get_shift_size */
@@ -125,8 +124,7 @@ ecma_typedarray_helper_get_magic_string (uint8_t builtin_id) /**< the builtin id
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
     default:
     {
-      JERRY_ASSERT (false);
-      return LIT_MAGIC_STRING__COUNT;
+      JERRY_UNREACHABLE ();
     }
   }
 #undef TYPEDARRAY_ID_CASE
@@ -161,8 +159,7 @@ ecma_typedarray_helper_get_prototype_id (uint8_t builtin_id) /**< the builtin id
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
     default:
     {
-      JERRY_ASSERT (false);
-      return ECMA_BUILTIN_ID__COUNT;
+      JERRY_UNREACHABLE ();
     }
   }
 #undef TYPEDARRAY_ID_CASE

@@ -82,12 +82,6 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   switch (error_type)
   {
-    case ECMA_ERROR_COMMON:
-    {
-      prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
-      break;
-    }
-
     case ECMA_ERROR_EVAL:
     {
       prototype_id = ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE;
@@ -124,9 +118,11 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
       break;
     }
 
-    case ECMA_ERROR_NONE:
+    default:
     {
-      JERRY_UNREACHABLE ();
+      JERRY_ASSERT (error_type == ECMA_ERROR_COMMON);
+
+      prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
       break;
     }
   }

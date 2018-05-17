@@ -100,11 +100,7 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_assert_api_available (void)
 {
-  if (JERRY_UNLIKELY (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE)))
-  {
-    /* Terminates the execution. */
-    JERRY_UNREACHABLE ();
-  }
+  JERRY_ASSERT (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE);
 } /* jerry_assert_api_available */
 
 /**
@@ -178,11 +174,8 @@ jerry_throw (jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE))
-  {
-    /* This function cannot be called twice unless jerry_cleanup is called. */
-    JERRY_UNREACHABLE ();
-  }
+  /* This function cannot be called twice unless jerry_cleanup is called. */
+  JERRY_ASSERT (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE));
 
   /* Zero out all members. */
   memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
@@ -834,21 +827,16 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
     {
       return JERRY_TYPE_FUNCTION;
     }
-    case LIT_MAGIC_STRING_OBJECT:
+    default:
     {
+      JERRY_ASSERT (lit_id == LIT_MAGIC_STRING_OBJECT);
+
       /* Based on the ECMA 262 5.1 standard the 'null' value is an object.
        * Thus we'll do an extra check for 'null' here.
        */
       return ecma_is_value_null (argument) ? JERRY_TYPE_NULL : JERRY_TYPE_OBJECT;
     }
-    default:
-    {
-      JERRY_UNREACHABLE ();
-      break;
-    }
   }
-
-  return JERRY_TYPE_NONE;
 } /* jerry_value_get_type */
 
 /**

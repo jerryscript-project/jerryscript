@@ -232,8 +232,11 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   size_t row_index = ecma_lcache_row_index (object_cp, name_hash);
   ecma_lcache_hash_entry_t *entry_p = JERRY_HASH_TABLE_CONTEXT (table) [row_index];
 
-  for (uint32_t entry_index = 0; entry_index < ECMA_LCACHE_HASH_ROW_LENGTH; entry_index++)
+  while (true)
   {
+    /* The property must be present. */
+    JERRY_ASSERT (entry_p - JERRY_HASH_TABLE_CONTEXT (table) [row_index] < ECMA_LCACHE_HASH_ROW_LENGTH);
+
     if (entry_p->object_cp != ECMA_NULL_POINTER && entry_p->prop_p == prop_p)
     {
       JERRY_ASSERT (entry_p->object_cp == object_cp);
@@ -243,9 +246,6 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
     }
     entry_p++;
   }
-
-  /* The property must be present. */
-  JERRY_UNREACHABLE ();
 #else  /* CONFIG_ECMA_LCACHE_DISABLE */
   JERRY_UNUSED (name_cp);
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */

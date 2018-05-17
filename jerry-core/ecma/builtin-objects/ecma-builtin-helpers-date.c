@@ -740,8 +740,10 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
         number_length = 2;
         break;
       }
-      case LIT_CHAR_UPPERCASE_Z: /* Time zone seconds part. */
+      default:
       {
+        JERRY_ASSERT (*format_p == LIT_CHAR_UPPERCASE_Z); /* Time zone seconds part. */
+
         int32_t time_zone = (int32_t) ecma_date_local_time_zone (datetime_number);
 
         if (time_zone < 0)
@@ -751,11 +753,6 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
 
         number = time_zone % (int32_t) ECMA_DATE_MS_PER_HOUR;
         number_length = 2;
-        break;
-      }
-      default:
-      {
-        JERRY_UNREACHABLE ();
         break;
       }
     }

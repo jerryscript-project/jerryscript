@@ -837,8 +837,8 @@ ecma_op_typedarray_get_separator_string (ecma_value_t separator) /**< possible s
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_typedarray_prototype_join (const ecma_value_t this_arg, /**< this argument */
-                                        const ecma_value_t separator_arg) /**< separator argument */
+ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t separator_arg) /**< separator argument */
 {
   /* 1. */
   ecma_value_t obj_value = ecma_op_to_object (this_arg);

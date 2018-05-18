@@ -54,11 +54,17 @@
  */
 
 /**
- * Floating point format definitions
+ * Floating point format definitions (next float value)
  */
 #define ECMA_NEXT_FLOAT(value) (nextafter ((value), INFINITY))
+/**
+ * Floating point format definitions (previous float value)
+ */
 #define ECMA_PREV_FLOAT(value) (nextafter ((value), -INFINITY))
 
+/**
+ * Value of epsilon
+ */
 #define ERROL0_EPSILON 0.0000001
 
 /**

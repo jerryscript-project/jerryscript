@@ -629,7 +629,7 @@ typedef struct
   ecma_length_t match_end; /**< end position of the match */
 
   /* Replace value callable part. */
-  ecma_object_t *replace_function_p;
+  ecma_object_t *replace_function_p; /**< replace function */
 
   /* Replace value string part. */
   ecma_string_t *replace_string_p; /**< replace string */

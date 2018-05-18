@@ -195,6 +195,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
   return completion_value;
 } /* vm_op_set_value */
 
+/** Compact bytecode define */
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg4,
 
 /**
@@ -513,6 +514,11 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   frame_ctx_p->stack_top_p = stack_top_p;
 } /* opfunc_construct */
 
+/**
+ * Read literal index from the byte code stream into destination.
+ *
+ * @param destination destination
+ */
 #define READ_LITERAL_INDEX(destination) \
   do \
   { \
@@ -524,9 +530,16 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   } \
   while (0)
 
-/* TODO: For performance reasons, we define this as a macro.
+/**
+ * Get literal value by literal index.
+ *
+ * @param literal_index literal index
+ * @param target_value target value
+ *
+ * TODO: For performance reasons, we define this as a macro.
  * When we are able to construct a function with similar speed,
- * we can remove this macro. */
+ * we can remove this macro.
+ */
 #define READ_LITERAL(literal_index, target_value) \
   do \
   { \

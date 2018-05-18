@@ -46,7 +46,7 @@ typedef struct
 {
   ecma_value_t promise; /**< promise to be resolved */
   ecma_value_t thenable; /**< thenbale object */
-  ecma_value_t then; /** 'then' function */
+  ecma_value_t then; /**< 'then' function */
 } ecma_job_promise_resolve_thenable_t;
 
 /**

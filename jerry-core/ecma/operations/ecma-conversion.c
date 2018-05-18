@@ -305,7 +305,8 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_get_number (ecma_value_t value, ecma_number_t *number_p)
+ecma_get_number (ecma_value_t value, /**< ecma value*/
+                 ecma_number_t *number_p) /**< [out] ecma number */
 {
   if (ecma_is_value_integer_number (value))
   {

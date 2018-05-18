@@ -31,9 +31,13 @@
  * @{
  */
 
-/* Strict mode string literal in directive prologues */
+/**
+ * @{
+ * Strict mode string literal in directive prologues
+ */
 #define PARSER_USE_STRICT_LITERAL  "use strict"
 #define PARSER_USE_STRICT_LENGTH   10
+/** @} */
 
 /**
  * Parser statement types.
@@ -253,6 +257,8 @@ parser_stack_iterator_init (parser_context_t *context_p, /**< context */
 
 /**
  * Read the next byte from the stack.
+ *
+ * @return byte
  */
 static inline uint8_t
 parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterator */
@@ -496,6 +502,9 @@ parser_parse_if_statement_start (parser_context_t *context_p) /**< context */
 
 /**
  * Parse if statement (ending part).
+ *
+ * @return true  - if parsing an 'else' statement
+ *         false - otherwise
  */
 static bool
 parser_parse_if_statement_end (parser_context_t *context_p) /**< context */

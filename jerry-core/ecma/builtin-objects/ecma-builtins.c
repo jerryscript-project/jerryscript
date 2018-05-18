@@ -39,13 +39,21 @@ static void ecma_instantiate_builtin (ecma_builtin_id_t id);
  */
 typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_reference_t;
 
+/**
+ * Definition of built-in dispatch routine function pointer.
+ */
 typedef ecma_value_t (*ecma_builtin_dispatch_routine_t)(uint16_t builtin_routine_id,
                                                         ecma_value_t this_arg,
                                                         const ecma_value_t arguments_list[],
                                                         ecma_length_t arguments_number);
+/**
+ * Definition of built-in dispatch call function pointer.
+ */
 typedef ecma_value_t (*ecma_builtin_dispatch_call_t)(const ecma_value_t arguments_list[],
                                                      ecma_length_t arguments_number);
-
+/**
+ * List of the built-in routines.
+ */
 static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
 {
   #define BUILTIN(a, b, c, d, e)
@@ -70,6 +78,9 @@ static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
   #undef BUILTIN_ROUTINE
 };
 
+/**
+ * List of the built-in call functions.
+ */
 static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
 {
   #define BUILTIN(a, b, c, d, e)
@@ -84,6 +95,9 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
   #undef BUILTIN
 };
 
+/**
+ * List of the built-in construct functions.
+ */
 static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
 {
   #define BUILTIN(a, b, c, d, e)
@@ -131,7 +145,7 @@ static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_r
  * @return the number of properties
  */
 static size_t
-ecma_builtin_get_property_count (ecma_builtin_id_t builtin_id)
+ecma_builtin_get_property_count (ecma_builtin_id_t builtin_id) /**< built-in ID */
 {
   const ecma_builtin_property_descriptor_t *property_list_p = ecma_builtin_property_list_references[builtin_id];
 
@@ -147,6 +161,9 @@ ecma_builtin_get_property_count (ecma_builtin_id_t builtin_id)
 
 /**
  * Check if passed object is the instance of specified built-in.
+ *
+ * @return true  - if the object is instance of the specified built-in
+ *         false - otherwise
  */
 bool
 ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */

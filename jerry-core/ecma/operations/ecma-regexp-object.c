@@ -52,6 +52,10 @@
  *   [n+1] n/2 th group end
  */
 #define RE_GLOBAL_START_IDX 0
+
+/**
+ * @copydoc RE_GLOBAL_START_IDX
+ */
 #define RE_GLOBAL_END_IDX   1
 
 /**

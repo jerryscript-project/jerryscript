@@ -322,20 +322,29 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
 
+/**
+ * Value of epsilon
+ */
 #define EPSILON 0.0000001
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
- * Number.MAX_VALUE and Number.MIN_VALUE exponent parts while using 64 bit float representation
+ * Number.MAX_VALUE exponent part when using 64 bit float representation.
  */
-# define NUMBER_MAX_DECIMAL_EXPONENT 308
-# define NUMBER_MIN_DECIMAL_EXPONENT -324
+#define NUMBER_MAX_DECIMAL_EXPONENT 308
+/**
+ * Number.MIN_VALUE exponent part when using 64 bit float representation.
+ */
+#define NUMBER_MIN_DECIMAL_EXPONENT -324
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
- * Number.MAX_VALUE and Number.MIN_VALUE exponent parts while using 32 bit float representation
+ * Number.MAX_VALUE exponent part when using 32 bit float representation.
  */
-# define NUMBER_MAX_DECIMAL_EXPONENT 38
-# define NUMBER_MIN_DECIMAL_EXPONENT -45
+#define NUMBER_MAX_DECIMAL_EXPONENT 38
+/**
+ * Number.MIN_VALUE exponent part when using 32 bit float representation.
+ */
+#define NUMBER_MIN_DECIMAL_EXPONENT -45
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
@@ -934,13 +943,15 @@ ecma_number_to_int32 (ecma_number_t num) /**< ecma-number */
 } /* ecma_number_to_int32 */
 
 /**
-  * Perform conversion of ecma-number to decimal representation with decimal exponent
+  * Perform conversion of ecma-number to decimal representation with decimal exponent.
   *
   * Note:
   *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
   *         - parameter out_digits_p corresponds to s, the digits of the number;
   *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
   *         - return value corresponds to k, the number of digits.
+  *
+  * @return the number of digits
   */
 lit_utf8_size_t
 ecma_number_to_decimal (ecma_number_t num, /**< ecma-number */
@@ -1068,14 +1079,16 @@ ecma_double_to_binary_floating_point (double val, /**< ecma number */
 } /* ecma_double_to_binary_floating_point */
 
 /**
-  * Perform conversion of ecma-number to equivalent binary floating-point number representation with decimal exponent
-  *
-  * Note:
-  *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
-  *         - parameter out_digits_p corresponds to s, the digits of the number;
-  *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
-  *         - return value corresponds to k, the number of digits.
-  */
+ * Perform conversion of ecma-number to equivalent binary floating-point number representation with decimal exponent.
+ *
+ * Note:
+ *      The calculated values correspond to s, n, k parameters in ECMA-262 v5, 9.8.1, item 5:
+ *         - parameter out_digits_p corresponds to s, the digits of the number;
+ *         - parameter out_decimal_exp_p corresponds to n, the decimal exponent;
+ *         - return value corresponds to k, the number of digits.
+ *
+ * @return the number of digits
+ */
 lit_utf8_size_t
 ecma_number_to_binary_floating_point_number (ecma_number_t num, /**< ecma-number */
                                              lit_utf8_byte_t *out_digits_p, /**< [out] buffer to fill with digits */

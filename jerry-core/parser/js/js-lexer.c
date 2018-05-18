@@ -33,6 +33,9 @@
  * @{
  */
 
+/**
+ * Check whether the UTF-8 intermediate is an octet or not
+ */
 #define IS_UTF8_INTERMEDIATE_OCTET(byte) (((byte) & LIT_UTF8_EXTRA_BYTE_MASK) == LIT_UTF8_2_BYTE_CODE_POINT_MIN)
 
 /**
@@ -279,12 +282,17 @@ lexer_skip_spaces (parser_context_t *context_p) /**< context */
  */
 typedef struct
 {
-  const uint8_t *keyword_p;     /**< keyword string */
-  lexer_token_type_t type;      /**< keyword token type */
+  const uint8_t *keyword_p; /**< keyword string */
+  lexer_token_type_t type;  /**< keyword token type */
 } keyword_string_t;
 
+/**
+ * @{
+ * Keyword defines
+ */
 #define LEXER_KEYWORD(name, type) { (const uint8_t *) (name), (type) }
 #define LEXER_KEYWORD_END()       { (const uint8_t *) NULL, LEXER_EOS }
+/** @} */
 
 /**
  * Keywords with 2 characters.
@@ -971,6 +979,12 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   context_p->source_p = source_p;
 } /* lexer_parse_number */
 
+/**
+ * One character long token (e.g. comma).
+ *
+ * @param char1 character
+ * @param type1 type
+ */
 #define LEXER_TYPE_A_TOKEN(char1, type1) \
   case (uint8_t) (char1) : \
   { \
@@ -979,6 +993,14 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     break; \
   }
 
+/**
+ * Token pair, where the first token is prefix of the second (e.g. % and %=).
+ *
+ * @param char1 first character
+ * @param type1 type of the first character
+ * @param char2 second character
+ * @param type2 type of the second character
+ */
 #define LEXER_TYPE_B_TOKEN(char1, type1, char2, type2) \
   case (uint8_t) (char1) : \
   { \
@@ -994,6 +1016,16 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     break; \
   }
 
+/**
+ * Three tokens, where the first is the prefix of the other two (e.g. &, &&, &=).
+ *
+ * @param char1 first character
+ * @param type1 type of the first character
+ * @param char2 second character
+ * @param type2 type of the second character
+ * @param char3 third character
+ * @param type3 type of the third character
+ */
 #define LEXER_TYPE_C_TOKEN(char1, type1, char2, type2, char3, type3) \
   case (uint8_t) (char1) : \
   { \
@@ -1393,7 +1425,9 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
   context_p->literal_count++;
 } /* lexer_process_char_literal */
 
-/* Maximum buffer size for identifiers which contains escape sequences. */
+/**
+ * Maximum local buffer size for identifiers which contains escape sequences.
+ */
 #define LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE 48
 
 /**
@@ -2113,11 +2147,17 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */
 
+/**
+ * Description of "get" literal string.
+ */
 static const lexer_lit_location_t lexer_get_literal =
 {
   (const uint8_t *) "get", 3, LEXER_IDENT_LITERAL, false
 };
 
+/**
+ * Description of "set" literal string.
+ */
 static const lexer_lit_location_t lexer_set_literal =
 {
   (const uint8_t *) "set", 3, LEXER_IDENT_LITERAL, false

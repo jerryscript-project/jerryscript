@@ -55,6 +55,9 @@
 
 /**
  * Get next object in list of objects with same generation.
+ *
+ * @return pointer to the next ecma-object
+ *         NULL - if there is no next ecma-object
  */
 static inline ecma_object_t *
 ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
@@ -78,6 +81,9 @@ ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
 
 /**
  * Get visited flag of the object.
+ *
+ * @return true  - if visited
+ *         false - otherwise
  */
 static inline bool
 ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */

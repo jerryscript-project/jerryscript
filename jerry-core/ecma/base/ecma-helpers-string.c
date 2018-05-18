@@ -410,7 +410,7 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of t
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t *
-ecma_get_ecma_string_from_uint32 (uint32_t uint32_number)
+ecma_get_ecma_string_from_uint32 (uint32_t uint32_number) /**< input number */
 {
   JERRY_ASSERT (uint32_number <= ECMA_DIRECT_STRING_MAX_IMM);
 
@@ -839,8 +839,8 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
  * @return concatenation of an ecma-string and a magic string
  */
 ecma_string_t *
-ecma_append_magic_string_to_string (ecma_string_t *string1_p,
-                                    lit_magic_string_id_t string2_id)
+ecma_append_magic_string_to_string (ecma_string_t *string1_p, /**< string descriptor */
+                                    lit_magic_string_id_t string2_id) /**< magic string ID */
 {
   if (JERRY_UNLIKELY (ecma_string_is_empty (string1_p)))
   {
@@ -953,6 +953,8 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 
 /**
  * Convert ecma-string to number
+ *
+ * @return converted ecma-number
  */
 ecma_number_t
 ecma_string_to_number (const ecma_string_t *string_p) /**< ecma-string */
@@ -1560,7 +1562,11 @@ ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
   return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING_LENGTH);
 } /* ecma_string_is_length */
 
-
+/**
+ * Converts a property name into a string
+ *
+ * @return pointer to the converted ecma string
+ */
 static inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_property_to_string (ecma_property_t property, /**< property name type */
                          jmem_cpointer_t prop_name_cp) /**< property name compressed pointer */
@@ -1914,7 +1920,7 @@ ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-
                                               utf8_string2_size);
 } /* ecma_compare_ecma_strings_relational */
 
-/*
+/**
  * Special value to represent that no size is available.
  */
 #define ECMA_STRING_NO_ASCII_SIZE 0xffff

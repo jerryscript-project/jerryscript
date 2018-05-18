@@ -32,7 +32,8 @@
  * @{
  */
 
-/*
+/**
+ * @{
  * Valgrind-related options and headers
  */
 #ifdef JERRY_VALGRIND
@@ -47,7 +48,6 @@
 # define VALGRIND_UNDEFINED_SPACE(p, s)
 # define VALGRIND_DEFINED_SPACE(p, s)
 #endif /* JERRY_VALGRIND */
-
 #ifdef JERRY_VALGRIND_FREYA
 
 #ifdef JERRY_VALGRIND
@@ -77,12 +77,16 @@
 # define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s)
 # define VALGRIND_FREYA_FREELIKE_SPACE(p)
 #endif /* JERRY_VALGRIND_FREYA */
+/** @} */
 
 /**
  * End of list marker.
  */
 #define JMEM_HEAP_END_OF_LIST ((uint32_t) 0xffffffff)
 
+/**
+ * @{
+ */
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 /* In this case we simply store the pointer, since it fits anyway. */
 #define JMEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) (p))
@@ -91,10 +95,15 @@
 #define JMEM_HEAP_GET_OFFSET_FROM_ADDR(p) ((uint32_t) ((uint8_t *) (p) - JERRY_HEAP_CONTEXT (area)))
 #define JMEM_HEAP_GET_ADDR_FROM_OFFSET(u) ((jmem_heap_free_t *) (JERRY_HEAP_CONTEXT (area) + (u)))
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
+/**
+ * @}
+ */
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Get end of region
+ *
+ * @return pointer to the end of the region
  */
 static inline jmem_heap_free_t *  JERRY_ATTR_ALWAYS_INLINE JERRY_ATTR_PURE
 jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
@@ -122,7 +131,10 @@ static void jmem_heap_stat_nonskip (void);
 static void jmem_heap_stat_alloc_iter (void);
 static void jmem_heap_stat_free_iter (void);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-
+/**
+ * @{
+ * JMEM_HEAP_STAT_xxx definitions
+ */
 #  define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
 #  define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
 #  define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
@@ -130,7 +142,12 @@ static void jmem_heap_stat_free_iter (void);
 #  define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
 #  define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
 #  define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
+/** @} */
 #else /* !JMEM_STATS */
+/**
+ * @{
+ * JMEM_HEAP_STAT_xxx definitions
+ */
 #  define JMEM_HEAP_STAT_INIT()
 #  define JMEM_HEAP_STAT_ALLOC(v1)
 #  define JMEM_HEAP_STAT_FREE(v1)
@@ -138,6 +155,7 @@ static void jmem_heap_stat_free_iter (void);
 #  define JMEM_HEAP_STAT_NONSKIP()
 #  define JMEM_HEAP_STAT_ALLOC_ITER()
 #  define JMEM_HEAP_STAT_FREE_ITER()
+/** @} */
 #endif /* JMEM_STATS */
 
 /**
@@ -194,7 +212,7 @@ jmem_heap_finalize (void)
  *         NULL - if there is not enough memory.
  */
 static void * JERRY_ATTR_HOT
-jmem_heap_alloc_block_internal (const size_t size)
+jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block */
 {
 #ifndef JERRY_SYSTEM_ALLOCATOR
   /* Align size. */

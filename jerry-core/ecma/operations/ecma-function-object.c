@@ -41,7 +41,7 @@
  *         false - otherwise
  */
 inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_is_normal_or_arrow_function (ecma_object_type_t type)
+ecma_is_normal_or_arrow_function (ecma_object_type_t type) /**< object type */
 {
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
   return (type == ECMA_OBJECT_TYPE_FUNCTION || type == ECMA_OBJECT_TYPE_ARROW_FUNCTION);

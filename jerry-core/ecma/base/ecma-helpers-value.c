@@ -23,13 +23,6 @@
 
 #include "ecma-function-object.h"
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmahelpers Helpers for operations with ECMA data types
- * @{
- */
-
 JERRY_STATIC_ASSERT (ECMA_TYPE___MAX <= ECMA_VALUE_TYPE_MASK,
                      ecma_types_must_be_less_than_mask);
 
@@ -57,6 +50,13 @@ JERRY_STATIC_ASSERT (sizeof (uintptr_t) > sizeof (ecma_value_t),
 JERRY_STATIC_ASSERT ((ECMA_VALUE_FALSE | (1 << ECMA_DIRECT_SHIFT)) == ECMA_VALUE_TRUE
                      && ECMA_VALUE_FALSE != ECMA_VALUE_TRUE,
                      only_the_lowest_bit_must_be_different_for_simple_value_true_and_false);
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmahelpers Helpers for operations with ECMA data types
+ * @{
+ */
 
 /**
  * Get type field of ecma value
@@ -512,6 +512,8 @@ ecma_make_uint32_value (uint32_t uint32_number) /**< uint32 number to be encoded
 
 /**
  * String value constructor
+ *
+ * @return ecma-value representation of the string argument
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to reference in value */
@@ -528,6 +530,8 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
 
 /**
  * String value constructor
+ *
+ * @return ecma-value representation of the string argument
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_magic_string_value (lit_magic_string_id_t id) /**< magic string id */
@@ -537,6 +541,8 @@ ecma_make_magic_string_value (lit_magic_string_id_t id) /**< magic string id */
 
 /**
  * Object value constructor
+ *
+ * @return ecma-value representation of the object argument
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_object_value (const ecma_object_t *object_p) /**< object to reference in value */
@@ -548,6 +554,8 @@ ecma_make_object_value (const ecma_object_t *object_p) /**< object to reference 
 
 /**
  * Error reference constructor
+ *
+ * @return ecma-value representation of the Error reference
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) /**< error reference */
@@ -559,6 +567,8 @@ ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) /**<
 
 /**
  * Collection chunk constructor
+ *
+ * @return ecma-value representation of the collection chunk
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p) /**< collection chunk */
@@ -581,7 +591,7 @@ ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chun
 /**
  * Get integer value from an integer ecma value
  *
- * @return floating point value
+ * @return integer value
  */
 inline ecma_integer_value_t JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_get_integer_from_value (ecma_value_t value) /**< ecma value */
@@ -591,6 +601,11 @@ ecma_get_integer_from_value (ecma_value_t value) /**< ecma value */
   return ((ecma_integer_value_t) value) >> ECMA_DIRECT_SHIFT;
 } /* ecma_get_integer_from_value */
 
+/**
+ * Get floating point value from an ecma value
+ *
+ * @return floating point value
+ */
 inline ecma_number_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_float_from_value (ecma_value_t value) /**< ecma value */
 {
@@ -618,7 +633,7 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
 /**
  * Get pointer to ecma-string from ecma value
  *
- * @return the pointer
+ * @return the string pointer
  */
 inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_string_from_value (ecma_value_t value) /**< ecma value */

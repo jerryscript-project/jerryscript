@@ -33,6 +33,9 @@ JERRY_STATIC_ASSERT ((sizeof (cbc_uint16_arguments_t) % sizeof (jmem_cpointer_t)
  * @{
  */
 
+/**
+ * Compact bytecode definition
+ */
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) \
   ((arg2) | (((arg3) + CBC_STACK_ADJUST_BASE) << CBC_STACK_ADJUST_SHIFT)),
 

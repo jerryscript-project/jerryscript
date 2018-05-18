@@ -153,6 +153,9 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
  *
  * See also:
  *          ES2015 9.1.2
+ *
+ * @return true  - if success
+ *         false - otherwise
  */
 static bool
 ecma_set_prototype_of (ecma_value_t o_value, /**< O */

@@ -869,7 +869,8 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
  * @return true  - if the specified feature is enabled,
  *         false - otherwise
  */
-bool jerry_is_feature_enabled (const jerry_feature_t feature)
+bool
+jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check */
 {
   JERRY_ASSERT (feature < JERRY_FEATURE__COUNT);
 
@@ -929,7 +930,7 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature)
  * Clear the error flag
  */
 void
-jerry_value_clear_error_flag (jerry_value_t *value_p)
+jerry_value_clear_error_flag (jerry_value_t *value_p) /**< api value */
 {
   jerry_assert_api_available ();
 
@@ -943,7 +944,7 @@ jerry_value_clear_error_flag (jerry_value_t *value_p)
  * Set the error flag if the value is not an error reference.
  */
 void
-jerry_value_set_error_flag (jerry_value_t *value_p)
+jerry_value_set_error_flag (jerry_value_t *value_p) /**< api value */
 {
   jerry_assert_api_available ();
 
@@ -966,7 +967,7 @@ jerry_value_set_error_flag (jerry_value_t *value_p)
  * Set both the abort and error flags if the value is not an error reference.
  */
 void
-jerry_value_set_abort_flag (jerry_value_t *value_p)
+jerry_value_set_abort_flag (jerry_value_t *value_p) /**< api value */
 {
   jerry_assert_api_available ();
 
@@ -1505,7 +1506,7 @@ jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
  * @return length of the given array
  */
 uint32_t
-jerry_get_array_length (const jerry_value_t value)
+jerry_get_array_length (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_available ();
 
@@ -1557,7 +1558,7 @@ jerry_get_string_size (const jerry_value_t value) /**< input string */
  * @return number of bytes in the buffer needed to represent the UTF-8 encoded string
  */
 jerry_size_t
-jerry_get_utf8_string_size (const jerry_value_t value)
+jerry_get_utf8_string_size (const jerry_value_t value) /**< input string */
 {
   jerry_assert_api_available ();
 
@@ -2494,8 +2495,9 @@ jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set 
  * @return true - traversal was interrupted by the callback.
  *         false - otherwise - traversal visited all objects.
  */
-bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
-                            void *user_data_p)
+bool
+jerry_objects_foreach (jerry_objects_foreach_t foreach_p, /**< function pointer of the iterator function */
+                       void *user_data_p) /**< pointer to user data */
 {
   jerry_assert_api_available ();
 
@@ -2522,9 +2524,11 @@ bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
  *         false - otherwise - traversal visited all objects.
  */
 bool
-jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_info_p,
-                                      jerry_objects_foreach_by_native_info_t foreach_p,
-                                      void *user_data_p)
+jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_info_p, /**< the type info
+                                                                                        *   of the native pointer */
+                                      jerry_objects_foreach_by_native_info_t foreach_p, /**< function to apply for
+                                                                                         *   each matching object */
+                                      void *user_data_p) /**< pointer to user data */
 {
   jerry_assert_api_available ();
 
@@ -2757,7 +2761,7 @@ jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string
                                     (lit_utf8_size_t) buf_size);
 } /* jerry_is_valid_cesu8_string */
 
-/*
+/**
  * Create a jerry instance for external context.
  *
  * @return the pointer to the instance.
@@ -2866,7 +2870,7 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
  * @return array value
  */
 jerry_value_t
-jerry_get_backtrace (uint32_t max_depth)
+jerry_get_backtrace (uint32_t max_depth) /**< depth limit of the backtrace */
 {
   return vm_get_backtrace (max_depth);
 } /* jerry_get_backtrace */
@@ -3143,14 +3147,20 @@ jerry_value_is_typedarray (jerry_value_t value) /**< value to check if it is a T
 } /* jerry_value_is_typedarray */
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+/**
+ * TypedArray mapping type
+ */
 typedef struct
 {
-  jerry_typedarray_type_t api_type;
-  ecma_builtin_id_t prototype_id;
-  lit_magic_string_id_t lit_id;
-  uint8_t element_size_shift;
+  jerry_typedarray_type_t api_type; /**< api type */
+  ecma_builtin_id_t prototype_id; /**< prototype ID */
+  lit_magic_string_id_t lit_id; /**< literal ID */
+  uint8_t element_size_shift; /**< element size shift */
 } jerry_typedarray_mapping_t;
 
+/**
+ * List of TypedArray mappings
+ */
 static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
 {
 #define TYPEDARRAY_ENTRY(NAME, LIT_NAME, SIZE_SHIFT) \

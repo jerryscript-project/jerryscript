@@ -1281,6 +1281,9 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 9
+ *
+ * @return ecma value containing a boolean value or an error
+ *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
 ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
@@ -1729,6 +1732,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
 /**
  * The function is used in the assert of ecma_object_get_class_name
+ *
+ * @return true  - if class name is an object
+ *         false - otherwise
  */
 inline static bool
 ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */

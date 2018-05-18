@@ -125,6 +125,11 @@ ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< 
   return (lit_utf8_size_t) (p - to_digits_p);
 } /* ecma_builtin_number_prototype_helper_to_string */
 
+/**
+ * Helper function to convert a binary floating point number to string.
+ *
+ * @return size of result string
+ */
 static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< number as string
                                                                            * in binary-floating point number */

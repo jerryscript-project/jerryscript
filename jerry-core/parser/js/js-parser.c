@@ -1361,6 +1361,12 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
 #endif /* PARSER_DUMP_BYTE_CODE */
 
+/**
+ * Forward iterator: move to the next byte code
+ *
+ * @param page_p page
+ * @param offset offset
+ */
 #define PARSER_NEXT_BYTE(page_p, offset) \
   do { \
     if (++(offset) >= PARSER_CBC_STREAM_PAGE_SIZE) \
@@ -1370,6 +1376,13 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     } \
   } while (0)
 
+/**
+ * Forward iterator: move to the next byte code. Also updates the offset of the previous byte code.
+ *
+ * @param page_p page
+ * @param offset offset
+ * @param real_offset real offset
+ */
 #define PARSER_NEXT_BYTE_UPDATE(page_p, offset, real_offset) \
   do { \
     page_p->bytes[offset] = real_offset; \

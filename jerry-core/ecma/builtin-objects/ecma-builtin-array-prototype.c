@@ -125,7 +125,7 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg) /**< this 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_array_prototype_object_to_locale_string (const ecma_value_t this_arg) /**< this argument */
+ecma_builtin_array_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
@@ -331,8 +331,8 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_array_prototype_join (const ecma_value_t this_arg, /**< this argument */
-                                   const ecma_value_t separator_arg) /**< separator argument */
+ecma_builtin_array_prototype_join (ecma_value_t this_arg, /**< this argument */
+                                   ecma_value_t separator_arg) /**< separator argument */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 

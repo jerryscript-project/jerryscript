@@ -206,7 +206,20 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
 
     if (flags & CBC_HAS_BYTE_ARG)
     {
-      JERRY_DEBUG_MSG (" byte_arg:%d", (int) context_p->last_cbc.value);
+      if ((last_opcode == CBC_PUSH_NUMBER_POS_BYTE)
+          || (last_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE)))
+      {
+        JERRY_DEBUG_MSG (" number:%d", (int) context_p->last_cbc.value + 1);
+      }
+      else if ((last_opcode == CBC_PUSH_NUMBER_NEG_BYTE)
+               || (last_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE)))
+      {
+        JERRY_DEBUG_MSG (" number:%d", -((int) context_p->last_cbc.value + 1));
+      }
+      else
+      {
+        JERRY_DEBUG_MSG (" byte_arg:%d", (int) context_p->last_cbc.value);
+      }
     }
 
     JERRY_DEBUG_MSG ("\n");
@@ -311,41 +324,66 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
                              bool is_negative_number) /**< sign is negative */
 {
   uint16_t value = context_p->lit_object.index;
+  uint16_t lit_value = UINT16_MAX;
 
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
-    parser_flush_cbc (context_p);
-  }
-
-  cbc_opcode_t opcode = is_negative_number ? CBC_PUSH_NUMBER_NEG_BYTE : CBC_PUSH_NUMBER_POS_BYTE;
-
-  JERRY_ASSERT (value > 0 && value <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
-  JERRY_ASSERT (CBC_STACK_ADJUST_VALUE (cbc_flags[opcode]) == 1);
-
-  context_p->stack_depth++;
-
-#ifdef PARSER_DUMP_BYTE_CODE
-  if (context_p->is_show_opcodes)
-  {
-    JERRY_DEBUG_MSG ("  [%3d] %s number:%d\n",
-                     (int) context_p->stack_depth,
-                     cbc_names[opcode],
-                     is_negative_number ? -(int) value : (int) value);
-  }
-#endif /* PARSER_DUMP_BYTE_CODE */
-
-  parser_emit_two_bytes (context_p, opcode, (uint8_t) (value - 1));
-
-  context_p->byte_code_size += 2;
-
-  if (context_p->stack_depth > context_p->stack_limit)
-  {
-    context_p->stack_limit = context_p->stack_depth;
-    if (context_p->stack_limit > PARSER_MAXIMUM_STACK_LIMIT)
+    if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
-      parser_raise_error (context_p, PARSER_ERR_STACK_LIMIT_REACHED);
+      lit_value = context_p->last_cbc.literal_index;
+    }
+    else
+    {
+      if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
+      {
+        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+        lit_value = context_p->last_cbc.value;
+      }
+      else if (context_p->last_cbc_opcode == CBC_PUSH_THREE_LITERALS)
+      {
+        context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
+        lit_value = context_p->last_cbc.third_literal_index;
+      }
+
+      parser_flush_cbc (context_p);
     }
   }
+
+  if (value == 0)
+  {
+    if (lit_value == UINT16_MAX)
+    {
+      context_p->last_cbc_opcode = CBC_PUSH_NUMBER_0;
+      return;
+    }
+
+    context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0);
+    context_p->last_cbc.literal_index = lit_value;
+    return;
+  }
+
+  uint16_t opcode;
+
+  if (lit_value == UINT16_MAX)
+  {
+    opcode = (is_negative_number ? CBC_PUSH_NUMBER_NEG_BYTE
+                                 : CBC_PUSH_NUMBER_POS_BYTE);
+
+    JERRY_ASSERT (CBC_STACK_ADJUST_VALUE (PARSER_GET_FLAGS (opcode)) == 1);
+  }
+  else
+  {
+    opcode = PARSER_TO_EXT_OPCODE (is_negative_number ? CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE
+                                                      : CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE);
+    JERRY_ASSERT (CBC_STACK_ADJUST_VALUE (PARSER_GET_FLAGS (opcode)) == 2);
+
+    context_p->last_cbc.literal_index = lit_value;
+  }
+
+  JERRY_ASSERT (value > 0 && value <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
+
+  context_p->last_cbc_opcode = opcode;
+  context_p->last_cbc.value = (uint16_t) (value - 1);
 } /* parser_emit_cbc_push_number */
 
 #ifdef JERRY_ENABLE_LINE_INFO

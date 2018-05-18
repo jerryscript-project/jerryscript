@@ -808,12 +808,6 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         {
           JERRY_ASSERT (context_p->lit_object.index <= CBC_PUSH_NUMBER_BYTE_RANGE_END);
 
-          if (context_p->lit_object.index == 0)
-          {
-            parser_emit_cbc (context_p, CBC_PUSH_NUMBER_0);
-            break;
-          }
-
           parser_emit_cbc_push_number (context_p, is_negative_number);
           break;
         }
@@ -1562,6 +1556,11 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
     else
     {
       opcode = LEXER_BINARY_OP_TOKEN_TO_OPCODE (token);
+
+      if (PARSER_IS_PUSH_NUMBER (context_p->last_cbc_opcode))
+      {
+        lexer_convert_push_number_to_push_literal (context_p);
+      }
 
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {

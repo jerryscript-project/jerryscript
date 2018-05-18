@@ -356,11 +356,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
   {
     uint16_t init_index;
 
-    if (literal_p->status_flags & LEXER_FLAG_UNUSED_IDENT)
-    {
-      continue;
-    }
-
     if (literal_p->type != LEXER_IDENT_LITERAL)
     {
       if (literal_p->type == LEXER_STRING_LITERAL
@@ -389,6 +384,11 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       {
         argument_count++;
       }
+      continue;
+    }
+
+    if (literal_p->status_flags & LEXER_FLAG_UNUSED_IDENT)
+    {
       continue;
     }
 
@@ -559,8 +559,6 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
 #ifndef JERRY_NDEBUG
     uint16_t next_index = uninitialized_var_end;
 #endif /* !JERRY_NDEBUG */
-
-    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
 
     *dst_p++ = CBC_INITIALIZE_VARS;
     dst_p = parser_encode_literal (dst_p,
@@ -1267,20 +1265,6 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
                                                literal_pool_p);
         continue;
       }
-
-      if (opcode == CBC_PUSH_NUMBER_POS_BYTE)
-      {
-        JERRY_DEBUG_MSG (" number:%d\n", *byte_code_p + 1);
-        byte_code_p++;
-        continue;
-      }
-
-      if (opcode == CBC_PUSH_NUMBER_NEG_BYTE)
-      {
-        JERRY_DEBUG_MSG (" number:%d\n", -(*byte_code_p + 1));
-        byte_code_p++;
-        continue;
-      }
     }
     else
     {
@@ -1332,7 +1316,20 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
     if (flags & CBC_HAS_BYTE_ARG)
     {
-      JERRY_DEBUG_MSG (" byte_arg:%d", *byte_code_p);
+      if (opcode == CBC_PUSH_NUMBER_POS_BYTE
+          || ext_opcode == CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE)
+      {
+        JERRY_DEBUG_MSG (" number:%d", (int) *byte_code_p + 1);
+      }
+      else if (opcode == CBC_PUSH_NUMBER_NEG_BYTE
+               || ext_opcode == CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE)
+      {
+        JERRY_DEBUG_MSG (" number:%d", -((int) *byte_code_p + 1));
+      }
+      else
+      {
+        JERRY_DEBUG_MSG (" byte_arg:%d", *byte_code_p);
+      }
       byte_code_p++;
     }
 

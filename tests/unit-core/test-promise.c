@@ -113,31 +113,12 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
-/**
- * Checks whether global object has promise.
- */
-static bool
-promise_is_available (void)
-{
-  jerry_value_t global_obj_val = jerry_get_global_object ();
-  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "Promise");
-
-  jerry_value_t prop_value = jerry_has_property (global_obj_val, prop_name);
-  bool has_prop = jerry_get_boolean_value (prop_value);
-
-  jerry_release_value (global_obj_val);
-  jerry_release_value (prop_name);
-  jerry_release_value (prop_value);
-
-  return has_prop;
-} /* promise_is_available */
-
 int
 main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!promise_is_available ())
+  if (!jerry_is_feature_enabled (JERRY_FEATURE_PROMISE))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Promise is disabled!\n");
     jerry_cleanup ();
@@ -190,4 +171,6 @@ main (void)
   jerry_release_value (str_reject);
 
   jerry_cleanup ();
+
+  return 0;
 } /* main */

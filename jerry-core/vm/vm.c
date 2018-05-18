@@ -986,21 +986,44 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_copy_value (frame_ctx_p->this_binding);
           continue;
         }
-        case VM_OC_PUSH_NUMBER_0:
+        case VM_OC_PUSH_0:
         {
           *stack_top_p++ = ecma_make_integer_value (0);
           continue;
         }
-        case VM_OC_PUSH_NUMBER_POS_BYTE:
+        case VM_OC_PUSH_POS_BYTE:
         {
           ecma_integer_value_t number = *byte_code_p++;
           *stack_top_p++ = ecma_make_integer_value (number + 1);
           continue;
         }
-        case VM_OC_PUSH_NUMBER_NEG_BYTE:
+        case VM_OC_PUSH_NEG_BYTE:
         {
           ecma_integer_value_t number = *byte_code_p++;
           *stack_top_p++ = ecma_make_integer_value (-(number + 1));
+          continue;
+        }
+        case VM_OC_PUSH_LIT_0:
+        {
+          stack_top_p[0] = left_value;
+          stack_top_p[1] = ecma_make_integer_value (0);
+          stack_top_p += 2;
+          continue;
+        }
+        case VM_OC_PUSH_LIT_POS_BYTE:
+        {
+          ecma_integer_value_t number = *byte_code_p++;
+          stack_top_p[0] = left_value;
+          stack_top_p[1] = ecma_make_integer_value (number + 1);
+          stack_top_p += 2;
+          continue;
+        }
+        case VM_OC_PUSH_LIT_NEG_BYTE:
+        {
+          ecma_integer_value_t number = *byte_code_p++;
+          stack_top_p[0] = left_value;
+          stack_top_p[1] = ecma_make_integer_value (-(number + 1));
+          stack_top_p += 2;
           continue;
         }
         case VM_OC_PUSH_OBJECT:

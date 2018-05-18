@@ -117,6 +117,13 @@ typedef struct
   ((opcode) == CBC_PUSH_LITERAL \
    || (opcode) == CBC_PUSH_TWO_LITERALS \
    || (opcode) == CBC_PUSH_THREE_LITERALS)
+#define PARSER_IS_PUSH_NUMBER(opcode) \
+  ((opcode) == CBC_PUSH_NUMBER_0 \
+   || (opcode) == CBC_PUSH_NUMBER_POS_BYTE \
+   || (opcode) == CBC_PUSH_NUMBER_NEG_BYTE \
+   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0) \
+   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE) \
+   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE))
 
 #define PARSER_GET_LITERAL(literal_index) \
   ((lexer_literal_t *) parser_list_get (&context_p->literal_pool, (literal_index)))
@@ -429,7 +436,8 @@ ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *
 void lexer_expect_object_literal_id (parser_context_t *context_p, bool must_be_identifier);
 void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
-bool lexer_construct_number_object (parser_context_t *context_p, bool push_number_allowed, bool is_negative_number);
+bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
+void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
 bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right);

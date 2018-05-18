@@ -1,0 +1,30 @@
+version: 1.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  except:
+  - coverity_scan
+  - gh_pages
+skip_tags: true
+image:
+  - Visual Studio 2017
+configuration:
+  - Debug
+  - Release
+platform:
+  - x64
+  - Win32
+init:
+  - cmd: |
+      cmake -version
+before_build:
+  - cmd: |
+      mkdir build
+      cd build
+      if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" ..
+      if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" ..
+
+build:
+  project: build\Jerry.sln
+  parallel: true
+  verbosity: minimal

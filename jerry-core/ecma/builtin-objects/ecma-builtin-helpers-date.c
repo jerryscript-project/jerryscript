@@ -639,7 +639,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
   };
 
   const uint32_t date_buffer_length = 34;
-  lit_utf8_byte_t date_buffer[date_buffer_length];
+  JERRY_VLA (lit_utf8_byte_t, date_buffer, date_buffer_length);
 
   lit_utf8_byte_t *dest_p = date_buffer;
 

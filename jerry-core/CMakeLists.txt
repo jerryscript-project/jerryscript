@@ -146,9 +146,7 @@ endif()
 set(INCLUDE_THIRD_PARTY_VALGRIND "${CMAKE_SOURCE_DIR}/third-party/valgrind")
 
 # build mode specific compile/link flags
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_NDEBUG)
-endif()
+set(DEFINES_JERRY ${DEFINES_JERRY} $<$<NOT:$<CONFIG:Debug>>:JERRY_NDEBUG>)
 
 # Jerry heap-section
 if(DEFINED JERRY_HEAP_SECTION_ATTR)

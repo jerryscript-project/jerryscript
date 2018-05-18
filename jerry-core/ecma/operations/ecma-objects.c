@@ -1365,9 +1365,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
-  uint32_t names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
+  const size_t names_hashes_bitmap_size = ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size;
+  JERRY_VLA (uint32_t, names_hashes_bitmap, names_hashes_bitmap_size);
 
-  memset (names_hashes_bitmap, 0, sizeof (names_hashes_bitmap));
+  memset (names_hashes_bitmap, 0, names_hashes_bitmap_size * sizeof (names_hashes_bitmap[0]));
 
   for (ecma_object_t *prototype_chain_iter_p = obj_p;
        prototype_chain_iter_p != NULL;
@@ -1461,8 +1462,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
-    uint32_t own_names_hashes_bitmap[ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size];
-    memset (own_names_hashes_bitmap, 0, sizeof (own_names_hashes_bitmap));
+    const size_t own_names_hashes_bitmap_size = ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size;
+    JERRY_VLA (uint32_t, own_names_hashes_bitmap, own_names_hashes_bitmap_size);
+    memset (own_names_hashes_bitmap, 0, own_names_hashes_bitmap_size * sizeof (own_names_hashes_bitmap[0]));
 
     while (ecma_value_p != NULL)
     {

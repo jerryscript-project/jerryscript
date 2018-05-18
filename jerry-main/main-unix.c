@@ -417,13 +417,13 @@ main (int argc,
       char **argv)
 {
   srand ((unsigned) jerry_port_get_current_time ());
-  const char *file_names[argc];
+  JERRY_VLA (const char *, file_names, argc);
   int files_counter = 0;
 
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
-  const char *exec_snapshot_file_names[argc];
-  uint32_t exec_snapshot_file_indices[argc];
+  JERRY_VLA (const char *, exec_snapshot_file_names, argc);
+  JERRY_VLA (uint32_t, exec_snapshot_file_indices, argc);
   int exec_snapshots_count = 0;
 
   bool is_parse_only = false;

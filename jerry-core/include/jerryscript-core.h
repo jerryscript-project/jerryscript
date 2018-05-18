@@ -303,7 +303,6 @@ void jerry_init (jerry_init_flag_t flags);
 void jerry_cleanup (void);
 void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
                                    const jerry_length_t *str_lengths_p);
-void jerry_get_memory_limits (size_t *out_data_bss_brk_limit_p, size_t *out_stack_limit_p);
 void jerry_gc (void);
 void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
 

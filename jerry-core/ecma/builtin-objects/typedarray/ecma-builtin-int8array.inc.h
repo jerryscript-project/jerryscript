@@ -17,35 +17,11 @@
  * Int8Array description
  */
 
-#include "ecma-builtin-helpers-macro-defines.inc.h"
-
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
-/* ES2015 22.2.5 */
-NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              3,
-              ECMA_PROPERTY_FIXED)
-
-/* ES2015 22.2.5.1 */
-NUMBER_VALUE (LIT_MAGIC_STRING_BYTES_PER_ELEMENT_U,
-              1,
-              ECMA_PROPERTY_FIXED)
-
-/* ES2015 22.2.5 */
-NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              3,
-              ECMA_PROPERTY_FIXED)
-
-/* ES2015 22.2.5 */
-STRING_VALUE (LIT_MAGIC_STRING_NAME,
-              LIT_MAGIC_STRING_INT8_ARRAY_UL,
-              ECMA_PROPERTY_FIXED)
-
-/* ES2015 22.2.5.2 */
-OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
-              ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE,
-              ECMA_PROPERTY_FIXED)
+#define TYPEDARRAY_BYTES_PER_ELEMENT 1
+#define TYPEDARRAY_MAGIC_STRING_ID LIT_MAGIC_STRING_INT8_ARRAY_UL
+#define TYPEDARRAY_BUILTIN_ID ECMA_BUILTIN_ID_INT8ARRAY_PROTOTYPE
+#include "ecma-builtin-typedarray-template.inc.h"
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
-
-#include "ecma-builtin-helpers-macro-undefs.inc.h"

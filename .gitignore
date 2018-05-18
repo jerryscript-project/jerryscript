@@ -29,10 +29,6 @@ ID
 
 # targets
 jerry-targetjs.h
-targets/mbed/libjerry
-targets/mbed/build
-targets/mbed/yotta_modules
-targets/mbed/yotta_targets
 .output
 targets/esp8266/output.map
 targets/esp8266/libs

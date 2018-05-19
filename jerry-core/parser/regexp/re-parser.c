@@ -262,7 +262,10 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
     {
       case LIT_CHAR_BACKSLASH:
       {
-        lit_utf8_incr (&curr_p);
+        if (curr_p < parser_ctx_p->input_end_p)
+        {
+          lit_utf8_incr (&curr_p);
+        }
         break;
       }
       case LIT_CHAR_LEFT_SQUARE:

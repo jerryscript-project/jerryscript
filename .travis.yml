@@ -138,16 +138,6 @@ matrix:
         apt:
           packages: [gperf, texinfo, wget]
 
-    - env: JOBNAME="Mbed/K64F Build Test"
-      sudo: true # keep on sudo-enabled VM to avoid gcc dying of OOM
-      addons:
-        apt:
-          sources:
-            - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [gcc-arm-embedded, ninja-build, libffi-dev, libssl-dev]
-      install: make -f ./targets/mbed/Makefile.travis install-noapt
-      script: make -f ./targets/mbed/Makefile.travis script
-
     - env: JOBNAME="Mbed OS 5/K64F Build Test"
       addons:
         apt:

@@ -6,25 +6,78 @@ branches:
   - coverity_scan
   - gh_pages
 skip_tags: true
+
+# Build matrix setup: various Visual Studio jobs and one Ubuntu job.
 image:
   - Visual Studio 2017
+  - Ubuntu
 configuration:
-  - Debug
+  # - Debug
   - Release
 platform:
   - x64
-  - Win32
-init:
-  - cmd: |
-      cmake -version
-before_build:
-  - cmd: |
-      mkdir build
-      cd build
-      if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" ..
-      if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" ..
+  # - Win32
 
-build:
-  project: build\Jerry.sln
-  parallel: true
-  verbosity: minimal
+matrix:
+  exclude:
+    - image: Ubuntu
+      configuration: Debug
+    - image: Ubuntu
+      platform: Win32
+
+for:
+  # Steps of a Visual Studio job.
+  - matrix:
+      except:
+        - image: Ubuntu
+    init:
+      - cmake -version
+    before_build:
+      - if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" -Bbuild -H.
+      - if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" -Bbuild -H.
+    build:
+      project: build\Jerry.sln
+      parallel: true
+      verbosity: minimal
+
+  # Steps for the Ubuntu job.
+  # Running this job is on an opt-in basis. The commit message has to contain
+  # the "[run measurements]" string somewhere to make it run.
+  - matrix:
+      only:
+        - image: Ubuntu
+    init:
+      - |
+        if [[ "$APPVEYOR_REPO_COMMIT_MESSAGE" != *"[run measurements]"* && "$APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED" != *"[run measurements]"* ]]; then
+          appveyor exit
+        fi
+    install:
+      - sudo apt-get install -q -y python cmake make gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+    before_build:
+      - true
+    build_script:
+      - |
+        if [ -z "$APPVEYOR_PULL_REQUEST_NUMBER" ]; then
+          CURRENT=HEAD
+          BASELINE=HEAD^
+        else
+          git branch pr$APPVEYOR_PULL_REQUEST_NUMBER $APPVEYOR_PULL_REQUEST_HEAD_COMMIT
+          CURRENT=pr$APPVEYOR_PULL_REQUEST_NUMBER
+          BASELINE=master
+        fi
+      - tools/run-measurements.py $CURRENT $BASELINE --baseline 1 >measurements.txt
+    after_build:
+      - cat measurements.txt
+      - appveyor AddMessage "$(cat measurements.txt)"
+
+notifications:
+  - provider: GitHubPullRequest
+    on_build_success: true
+    on_build_failure: false
+    on_build_status_changed: false
+    template: "{{#jobs}}{{#messages}}{{message}}{{/messages}}{{/jobs}}"
+    # NOTE: The above template will generate an empty comment message if the
+    # Ubuntu job does not get executed and so it does not add the contents of
+    # measurements.txt to the AppVeyor messages. This will get rejected by
+    # GitHub and add an error note to the job but this is intentional: this is
+    # the only way (for now) to make commenting conditional.

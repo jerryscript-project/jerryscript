@@ -24,7 +24,7 @@ set(COMPILE_FLAGS_DOCTEST "-Wno-unused-parameter -Wno-unused-function -Wno-unuse
 # file names that will be generated. This allows the definition of proper
 # dependencies between the MarkDown files and the generated sources.
 execute_process(
-  COMMAND ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_SOURCE_DIR} ${DOC_FILES}
+  COMMAND ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
   OUTPUT_VARIABLE DOCTEST_OUTPUT
   RESULT_VARIABLE GEN_DOCTEST_RESULT
 )
@@ -53,7 +53,7 @@ endforeach()
 # Add custom command to run doctest generator if any of the MarkDown sources
 # changes.
 add_custom_command(
-  COMMAND ${GEN_DOCTEST} -d ${CMAKE_CURRENT_SOURCE_DIR} ${DOC_FILES}
+  COMMAND ${GEN_DOCTEST} -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
   DEPENDS ${GEN_DOCTEST} ${DOC_FILES}
   OUTPUT ${DOCTEST_COMPILE} ${DOCTEST_LINK} ${DOCTEST_RUN}
   COMMENT "Generating doctests"

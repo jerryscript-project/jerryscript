@@ -161,9 +161,7 @@ endmacro()
 macro(jerry_add_compile_warnings)
   foreach(_warning ${ARGV})
     jerry_add_compile_flags(-W${_warning})
-    if(USING_GCC)
-      jerry_add_compile_flags(-Werror=${_warning})
-    endif()
+    jerry_add_compile_flags(-Werror=${_warning})
   endforeach()
 endmacro()
 
@@ -177,14 +175,14 @@ jerry_add_flags(CMAKE_EXE_LINKER_FLAGS ${FLAGS_COMMON_ARCH})
 
 # Enable static build
 if(ENABLE_STATIC_LINK)
-  if (USING_GCC OR USING_CLANG)
+  if(USING_GCC OR USING_CLANG)
     jerry_add_link_flags("-static")
   endif()
 endif()
 
 # LTO
 if(ENABLE_LTO)
-  if (USING_GCC OR USING_CLANG)
+  if(USING_GCC OR USING_CLANG)
     jerry_add_compile_flags(-flto)
     jerry_add_link_flags(-flto)
   endif()
@@ -200,65 +198,47 @@ if(ENABLE_LTO)
 endif()
 
 # Compiler / Linker flags
-if (USING_GCC OR USING_CLANG)
-  jerry_add_compile_flags(-fno-builtin)
-endif()
-if(("${PLATFORM}" STREQUAL "DARWIN"))
+if("${PLATFORM}" STREQUAL "DARWIN")
   jerry_add_link_flags(-lSystem)
   set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
-elseif(NOT USING_MSVC)
+elseif(USING_GCC OR USING_CLANG)
   jerry_add_link_flags(-Wl,-z,noexecstack)
 endif()
 
-# Turn off linking to compiler's default libc, in case jerry-libc is used
-if(JERRY_LIBC)
-  jerry_add_link_flags(-nostdlib)
-endif()
-
-if(USING_MSVC)
-  jerry_add_link_flags(/OPT:NOREF)
-  # Disable MSVC warning 4996 globally because it stops us from using
-  # standard C functions.
-  jerry_add_compile_flags(/wd4996)
-endif()
-
-# Turn off stack protector
-if (USING_GCC OR USING_CLANG)
-  jerry_add_compile_flags(-fno-stack-protector)
-endif()
-
-if (USING_GCC OR USING_CLANG)
+if(USING_GCC OR USING_CLANG)
+  jerry_add_compile_flags(-std=c99 -pedantic)
+  # Turn off stack protector
+  jerry_add_compile_flags(-fno-builtin -fno-stack-protector)
   jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations shadow strict-prototypes undef old-style-definition)
-  jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes)
+  jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes -Werror)
 endif()
 
 if(USING_GCC)
   jerry_add_compile_warnings(logical-op)
-elseif(USING_CLANG)
+  # TODO: Remove workaround for gcc 7 bug if the fallthrough comment detection is fixed.
+  if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 7.0)
+    jerry_add_compile_flags(-Wno-implicit-fallthrough)
+  endif()
+endif()
+
+if(USING_CLANG)
   jerry_add_compile_flags(-Wno-nested-anon-types -Wno-static-in-inline)
 endif()
 
-if(JERRY_LIBC)
-  jerry_add_compile_flags(-Werror)
+if(USING_TI)
+  jerry_add_compile_flags(--c99)
 endif()
 
-# C
-if (USING_GCC OR USING_CLANG)
-  jerry_add_compile_flags(-std=c99 -pedantic)
-elseif(USING_TI)
-  jerry_add_compile_flags(--c99)
+if(USING_MSVC)
+  jerry_add_link_flags(/OPT:NOREF)
+  # Disable MSVC warning 4996 globally because it stops us from using standard C functions.
+  jerry_add_compile_flags(/wd4996)
 endif()
 
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   jerry_add_link_flags(-s)
-endif()
-
-# TODO: Remove workaround for gcc 7 bug if the
-# fallthrough comment detection is fixed.
-if (USING_GCC AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 7.0)
-  jerry_add_compile_flags(-Wno-implicit-fallthrough)
 endif()
 
 # External compiler & linker flags
@@ -273,6 +253,9 @@ endif()
 
 # Jerry's libc
 if(JERRY_LIBC)
+  # Turn off linking to compiler's default libc, in case jerry-libc is used
+  jerry_add_link_flags(-nostdlib)
+
   add_subdirectory(jerry-libc)
 endif()
 

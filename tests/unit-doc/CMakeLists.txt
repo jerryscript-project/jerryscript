@@ -59,10 +59,15 @@ add_custom_command(
   COMMENT "Generating doctests"
 )
 
+# Add custom target to trigger the custom command above. Targets below can/must
+# depend on this one so that the custom command gets executed only once.
+add_custom_target(all-doc-files DEPENDS ${DOCTEST_COMPILE} ${DOCTEST_LINK} ${DOCTEST_RUN})
+
 # Process compile-only doctests: add them to a dummy library
 # (named libcompile-doc-tests.a) to trigger compilation.
 if(NOT ("${DOCTEST_COMPILE}" STREQUAL ""))
   add_library(compile-doc-tests STATIC ${DOCTEST_COMPILE})
+  add_dependencies(compile-doc-tests all-doc-files)
   target_link_libraries(compile-doc-tests jerry-ext jerry-core jerry-port-default-minimal)
   set_property(TARGET compile-doc-tests APPEND_STRING PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_DOCTEST}")
 endif()
@@ -74,6 +79,7 @@ macro(doctest_add_executables NAME_PREFIX)
     set(TARGET_NAME ${NAME_PREFIX}-${TARGET_NAME})
 
     add_executable(${TARGET_NAME} ${DOCTEST_NAME})
+    add_dependencies(${TARGET_NAME} all-doc-files)
     set_property(TARGET ${TARGET_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_DOCTEST}")
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
     target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default-minimal)

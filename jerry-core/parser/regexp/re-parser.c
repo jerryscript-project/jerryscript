@@ -409,7 +409,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
           }
         }
       }
-      else if (ch == LIT_CHAR_LOWERCASE_X)
+      else if (ch == LIT_CHAR_LOWERCASE_X && re_hex_lookup (parser_ctx_p, 2))
       {
         ecma_char_t code_unit;
 
@@ -419,7 +419,9 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         }
 
         parser_ctx_p->input_curr_p += 2;
-        if (is_range == false && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
+        if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
+            && is_range == false
+            && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
         {
           start = code_unit;
           continue;
@@ -427,7 +429,7 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
 
         ch = code_unit;
       }
-      else if (ch == LIT_CHAR_LOWERCASE_U)
+      else if (ch == LIT_CHAR_LOWERCASE_U && re_hex_lookup (parser_ctx_p, 4))
       {
         ecma_char_t code_unit;
 
@@ -437,7 +439,9 @@ re_parse_char_class (re_parser_ctx_t *parser_ctx_p, /**< number of classes */
         }
 
         parser_ctx_p->input_curr_p += 4;
-        if (is_range == false && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
+        if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
+            && is_range == false
+            && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
         {
           start = code_unit;
           continue;

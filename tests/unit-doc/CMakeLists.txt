@@ -66,7 +66,7 @@ add_custom_target(all-doc-files DEPENDS ${DOCTEST_COMPILE} ${DOCTEST_LINK} ${DOC
 # Process compile-only doctests: add them to a dummy library
 # (named libcompile-doc-tests.a) to trigger compilation.
 if(NOT ("${DOCTEST_COMPILE}" STREQUAL ""))
-  add_library(compile-doc-tests STATIC ${DOCTEST_COMPILE})
+  add_library(compile-doc-tests ${DOCTEST_COMPILE})
   add_dependencies(compile-doc-tests all-doc-files)
   target_link_libraries(compile-doc-tests jerry-ext jerry-core jerry-port-default-minimal)
   set_property(TARGET compile-doc-tests APPEND_STRING PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_DOCTEST}")

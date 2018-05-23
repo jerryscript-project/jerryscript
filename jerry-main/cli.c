@@ -362,7 +362,7 @@ cli_print_help (const char *help) /**< the help message to print */
     cli_print_prefix (help, length);
 
     help += length;
-    while (*help == ' ' && *help != 0)
+    while (*help == ' ')
     {
       help++;
     }

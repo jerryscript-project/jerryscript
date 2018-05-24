@@ -121,7 +121,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
 
           if (str_size >= 256)
           {
-            printf ("%3d: [Backtrace string too long]\n", i);
+            printf ("%3u: [Backtrace string too long]\n", i);
           }
           else
           {
@@ -129,7 +129,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
             assert (string_end == str_size);
             err_str_buf[string_end] = 0;
 
-            printf ("%3d: %s\n", i, err_str_buf);
+            printf ("%3u: %s\n", i, err_str_buf);
           }
         }
 

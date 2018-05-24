@@ -1488,15 +1488,13 @@ jerry_append_ecma_string_to_buffer (uint8_t *buffer_p, /**< buffer */
                                     uint8_t *buffer_end_p, /**< the end of the buffer */
                                     ecma_string_t *string_p) /**< ecma-string */
 {
-  uint8_t *new_buffer_p = NULL;
-
   ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
 
   /* Append the string to the buffer. */
-  new_buffer_p = jerry_append_chars_to_buffer (buffer_p,
-                                               buffer_end_p,
-                                               (const char *) str_buffer_p,
-                                               str_buffer_size);
+  uint8_t *new_buffer_p = jerry_append_chars_to_buffer (buffer_p,
+                                                        buffer_end_p,
+                                                        (const char *) str_buffer_p,
+                                                        str_buffer_size);
 
   ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
 

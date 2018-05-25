@@ -60,7 +60,7 @@ static int shell_cmd_handler (char *source_buffer)
     printf ("Error executing statement: ");
     /* Clear error flag, otherwise print call below won't produce any
        output. */
-    jerry_value_clear_error_flag (&ret_val);
+    ret_val = jerry_get_value_from_error (ret_val, true);
   }
 
   if (!jerry_value_is_error (print_function))

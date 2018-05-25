@@ -175,7 +175,7 @@ main (void)
 
   TEST_ASSERT (jerry_value_is_error (error));
 
-  jerry_value_clear_error_flag (&error);
+  error = jerry_get_value_from_error (error, true);
 
   TEST_ASSERT (jerry_value_is_object (error));
 

@@ -320,7 +320,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Generating snapshot failed!\n");
 
-    jerry_value_clear_error_flag (&snapshot_result);
+    snapshot_result = jerry_get_value_from_error (snapshot_result, true);
 
     print_unhandled_exception (snapshot_result);
 

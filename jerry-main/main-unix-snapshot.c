@@ -412,8 +412,8 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
 
   cli_change_opts (cli_state_p, merge_opts);
 
-  const uint32_t *merge_buffers[argc];
-  size_t merge_buffer_sizes[argc];
+  JERRY_VLA (const uint32_t *, merge_buffers, argc);
+  JERRY_VLA (size_t, merge_buffer_sizes, argc);
   uint32_t number_of_files = 0;
 
   for (int id = cli_consume_option (cli_state_p); id != CLI_OPT_END; id = cli_consume_option (cli_state_p))

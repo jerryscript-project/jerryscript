@@ -1136,18 +1136,24 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                        is_throw);
     }
 
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
+    default:
     {
+      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
       if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
       {
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+        JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         return ecma_op_arguments_object_define_own_property (obj_p,
                                                              property_name_p,
                                                              property_desc_p,
                                                              is_throw);
-      }
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+      }
       /* ES2015 9.4.5.3 */
       if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
       {
@@ -1184,19 +1190,10 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                          property_name_p,
                                                          property_desc_p,
                                                          is_throw);
-
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
       break;
     }
-    default:
-    {
-      JERRY_ASSERT (false);
-    }
   }
-
-  JERRY_UNREACHABLE ();
-
-  return ecma_reject (is_throw);
 } /* ecma_op_object_define_own_property */
 
 /**
@@ -1391,10 +1388,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     {
       switch (type)
       {
-        case ECMA_OBJECT_TYPE_GENERAL:
-        {
-          break;
-        }
         case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
         {
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
@@ -1454,7 +1447,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         }
         default:
         {
-          JERRY_UNREACHABLE ();
+          JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL);
+
           break;
         }
       }
@@ -1795,10 +1789,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 
       switch (ext_obj_p->u.pseudo_array.type)
       {
-        case ECMA_PSEUDO_ARRAY_ARGUMENTS:
-        {
-          return LIT_MAGIC_STRING_ARGUMENTS_UL;
-        }
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
@@ -1808,11 +1798,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:
         {
-          JERRY_UNREACHABLE ();
+          JERRY_ASSERT (ext_obj_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+
+          return LIT_MAGIC_STRING_ARGUMENTS_UL;
         }
       }
 
-      JERRY_UNREACHABLE ();
       break;
     }
     case ECMA_OBJECT_TYPE_FUNCTION:

@@ -169,18 +169,15 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
     /* b. */
     return ECMA_VALUE_TRUE;
   }
-  else if (is_throw)
+
+  /* 4. */
+  if (is_throw)
   {
-    /* 4. */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property."));
   }
-  else
-  {
-    /* 5. */
-    return ECMA_VALUE_FALSE;
-  }
 
-  JERRY_UNREACHABLE ();
+  /* 5. */
+  return ECMA_VALUE_FALSE;
 } /* ecma_op_general_object_delete */
 
 /**

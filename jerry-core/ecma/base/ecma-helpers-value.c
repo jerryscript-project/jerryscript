@@ -714,11 +714,6 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
 {
   switch (ecma_get_value_type_field (value))
   {
-    case ECMA_TYPE_DIRECT:
-    case ECMA_TYPE_DIRECT_STRING:
-    {
-      return value;
-    }
     case ECMA_TYPE_FLOAT:
     {
       ecma_number_t *num_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
@@ -737,8 +732,10 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
     }
     default:
     {
-      JERRY_UNREACHABLE ();
-      return ECMA_VALUE_UNDEFINED;
+      JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT
+                    || ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT_STRING);
+
+      return value;
     }
   }
 } /* ecma_copy_value */
@@ -905,13 +902,6 @@ ecma_free_value (ecma_value_t value) /**< value description */
 {
   switch (ecma_get_value_type_field (value))
   {
-    case ECMA_TYPE_DIRECT:
-    case ECMA_TYPE_DIRECT_STRING:
-    {
-      /* no memory is allocated */
-      break;
-    }
-
     case ECMA_TYPE_FLOAT:
     {
       ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
@@ -934,7 +924,10 @@ ecma_free_value (ecma_value_t value) /**< value description */
 
     default:
     {
-      JERRY_UNREACHABLE ();
+      JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT
+                    || ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT_STRING);
+
+      /* no memory is allocated */
       break;
     }
   }

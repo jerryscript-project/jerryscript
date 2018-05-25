@@ -85,8 +85,13 @@ jmem_pools_alloc (size_t size) /**< size of the chunk */
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
 
+#ifdef JERRY_CPOINTER_32_BIT
   if (size <= 8)
   {
+#else /* !JERRY_CPOINTER_32_BIT */
+    JERRY_ASSERT (size <= 8);
+#endif /* JERRY_CPOINTER_32_BIT */
+
     if (JERRY_CONTEXT (jmem_free_8_byte_chunk_p) != NULL)
     {
       const jmem_pools_chunk_t *const chunk_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
@@ -103,9 +108,10 @@ jmem_pools_alloc (size_t size) /**< size of the chunk */
     {
       return (void *) jmem_heap_alloc_block (8);
     }
-  }
 
 #ifdef JERRY_CPOINTER_32_BIT
+  }
+
   JERRY_ASSERT (size <= 16);
 
   if (JERRY_CONTEXT (jmem_free_16_byte_chunk_p) != NULL)
@@ -124,10 +130,7 @@ jmem_pools_alloc (size_t size) /**< size of the chunk */
   {
     return (void *) jmem_heap_alloc_block (16);
   }
-#else /* !JERRY_CPOINTER_32_BIT */
-  JERRY_UNREACHABLE ();
-  return NULL;
-#endif
+#endif /* JERRY_CPOINTER_32_BIT */
 } /* jmem_pools_alloc */
 
 /**
@@ -143,22 +146,26 @@ jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
 
   VALGRIND_DEFINED_SPACE (chunk_to_free_p, size);
 
+#ifdef JERRY_CPOINTER_32_BIT
   if (size <= 8)
   {
+#else /* !JERRY_CPOINTER_32_BIT */
+    JERRY_ASSERT (size <= 8);
+#endif /* JERRY_CPOINTER_32_BIT */
+
     chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
     JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = chunk_to_free_p;
+
+#ifdef JERRY_CPOINTER_32_BIT
   }
   else
   {
-#ifdef JERRY_CPOINTER_32_BIT
     JERRY_ASSERT (size <= 16);
 
     chunk_to_free_p->next_p = JERRY_CONTEXT (jmem_free_16_byte_chunk_p);
     JERRY_CONTEXT (jmem_free_16_byte_chunk_p) = chunk_to_free_p;
-#else /* !JERRY_CPOINTER_32_BIT */
-    JERRY_UNREACHABLE ();
-#endif /* JERRY_CPOINTER_32_BIT */
   }
+#endif /* JERRY_CPOINTER_32_BIT */
 
   VALGRIND_NOACCESS_SPACE (chunk_to_free_p, size);
 } /* jmem_pools_free */

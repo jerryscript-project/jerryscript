@@ -264,13 +264,10 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument 
           {
             current_number =  (ecma_number_t) current_char - LIT_CHAR_UPPERCASE_A + 10;
           }
-          else if (lit_char_is_decimal_digit (current_char))
-          {
-            current_number =  (ecma_number_t) current_char - LIT_CHAR_0;
-          }
           else
           {
-            JERRY_UNREACHABLE ();
+            JERRY_ASSERT (lit_char_is_decimal_digit (current_char));
+            current_number =  (ecma_number_t) current_char - LIT_CHAR_0;
           }
 
           value += current_number * multiplier;

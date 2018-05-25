@@ -416,6 +416,7 @@ ecma_instantiate_builtin_helper (ecma_builtin_id_t builtin_id, /**< built-in id 
 static void
 ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 {
+  JERRY_ASSERT (id < ECMA_BUILTIN_ID__COUNT);
   switch (id)
   {
 #define BUILTIN(builtin_id, \
@@ -437,8 +438,6 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 #undef BUILTIN_ROUTINE
     default:
     {
-      JERRY_ASSERT (id < ECMA_BUILTIN_ID__COUNT);
-
       JERRY_UNREACHABLE (); /* The built-in is not implemented. */
     }
   }
@@ -685,11 +684,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       {
         switch (curr_property_p->value)
         {
-          case ECMA_BUILTIN_NUMBER_NAN:
-          {
-            num = ecma_number_make_nan ();
-            break;
-          }
           case ECMA_BUILTIN_NUMBER_POSITIVE_INFINITY:
           {
             num = ecma_number_make_infinity (false);
@@ -702,7 +696,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
           }
           default:
           {
-            JERRY_UNREACHABLE ();
+            JERRY_ASSERT (curr_property_p->value == ECMA_BUILTIN_NUMBER_NAN);
+
+            num = ecma_number_make_nan ();
             break;
           }
         }
@@ -739,17 +735,14 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       setter_p = ecma_builtin_make_function_object_for_setter_accessor (builtin_id, setter_id);
       break;
     }
-    case ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY:
+    default:
     {
+      JERRY_ASSERT (curr_property_p->type == ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY);
+
       is_accessor = true;
       getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id,
                                                                         curr_property_p->value);
       break;
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
-      return NULL;
     }
   }
 

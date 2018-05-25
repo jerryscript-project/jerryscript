@@ -196,15 +196,12 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
       }
       break;
     }
-    case ECMA_PROPERTY_TYPE_SPECIAL:
-    {
-      JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_HASHMAP
-                    || property == ECMA_PROPERTY_TYPE_DELETED);
-      break;
-    }
     default:
     {
-      JERRY_UNREACHABLE ();
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL);
+
+      JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_HASHMAP
+                    || property == ECMA_PROPERTY_TYPE_DELETED);
       break;
     }
   }
@@ -290,14 +287,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         switch (ext_object_p->u.pseudo_array.type)
         {
-          case ECMA_PSEUDO_ARRAY_ARGUMENTS:
-          {
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
-
-            ecma_gc_set_object_visited (lex_env_p);
-            break;
-          }
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
           case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
@@ -308,7 +297,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           default:
           {
-            JERRY_UNREACHABLE ();
+            JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
+
+            ecma_gc_set_object_visited (lex_env_p);
             break;
           }
         }
@@ -537,15 +531,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
-        /* The undefined id represents an uninitialized class. */
-        case LIT_MAGIC_STRING_UNDEFINED:
-        case LIT_MAGIC_STRING_ARGUMENTS_UL:
-        case LIT_MAGIC_STRING_BOOLEAN_UL:
-        case LIT_MAGIC_STRING_ERROR_UL:
-        {
-          break;
-        }
-
         case LIT_MAGIC_STRING_STRING_UL:
         case LIT_MAGIC_STRING_NUMBER_UL:
         {
@@ -615,7 +600,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
         default:
         {
-          JERRY_UNREACHABLE ();
+          /* The undefined id represents an uninitialized class. */
+          JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_UNDEFINED
+                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ARGUMENTS_UL
+                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL
+                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ERROR_UL);
           break;
         }
       }
@@ -689,8 +678,22 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.pseudo_array.type)
       {
-        case ECMA_PSEUDO_ARRAY_ARGUMENTS:
+#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         {
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+          return;
+        }
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
+        {
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_typedarray_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+        default:
+        {
+          JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+
           ecma_length_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
           ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
 
@@ -707,26 +710,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t) + formal_params_size);
           return;
         }
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
-        case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
-        {
-          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
-          return;
-        }
-        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
-        {
-          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_typedarray_object_t));
-          return;
-        }
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
-        default:
-        {
-          JERRY_UNREACHABLE ();
-          break;
-        }
       }
-
-      JERRY_UNREACHABLE ();
     }
 
     if (object_type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)

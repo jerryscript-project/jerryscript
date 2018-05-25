@@ -65,8 +65,10 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
       break;
     }
-    case VM_CONTEXT_FOR_IN:
+    default:
     {
+      JERRY_ASSERT (VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]) == VM_CONTEXT_FOR_IN);
+
       ecma_collection_chunk_t *chunk_p;
       chunk_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_collection_chunk_t, vm_stack_top_p[-2]);
       uint32_t index = vm_stack_top_p[-3];
@@ -94,11 +96,6 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
-      break;
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
       break;
     }
   }

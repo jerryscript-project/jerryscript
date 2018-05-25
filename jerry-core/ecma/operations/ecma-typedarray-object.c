@@ -94,7 +94,6 @@ ecma_get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the inte
     default:
     {
       JERRY_UNREACHABLE ();
-      return 0;
     }
   }
 } /* ecma_get_typedarray_element */

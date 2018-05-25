@@ -108,12 +108,9 @@ lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string s
 const lit_utf8_byte_t *
 lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic string id */
 {
-  if (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count))
-  {
-    return JERRY_CONTEXT (lit_magic_string_ex_array)[id];
-  }
+  JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count));
 
-  JERRY_UNREACHABLE ();
+  return JERRY_CONTEXT (lit_magic_string_ex_array)[id];
 } /* lit_get_magic_string_ex_utf8 */
 
 /**

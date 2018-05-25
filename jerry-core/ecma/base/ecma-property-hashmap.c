@@ -539,8 +539,6 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
       JERRY_ASSERT (entry_index != start_entry_index);
 #endif /* !JERRY_NDEBUG */
     }
-
-    JERRY_UNREACHABLE ();
   }
 
   while (true)

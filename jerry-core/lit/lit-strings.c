@@ -373,14 +373,11 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
     bytes_count = 3;
     ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_4_BITS_MASK));
   }
-  else if ((c & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
-  {
-    bytes_count = 4;
-    ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_3_BITS_MASK));
-  }
   else
   {
-    JERRY_ASSERT (false);
+    JERRY_ASSERT ((c & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER);
+    bytes_count = 4;
+    ret = ((lit_code_point_t) (c & LIT_UTF8_LAST_3_BITS_MASK));
   }
 
   JERRY_ASSERT (buf_size >= bytes_count);

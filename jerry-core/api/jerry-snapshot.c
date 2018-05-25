@@ -154,9 +154,9 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
     {
@@ -204,11 +204,11 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
     copied_code_p->status_flags = compiled_code_p->status_flags;
 
-#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNREACHABLE (); /* RegExp is not supported in the selected profile. */
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
     return start_offset;
   }
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+
+  JERRY_ASSERT (compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 
   if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
                                            snapshot_buffer_size,
@@ -536,9 +536,9 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) base_addr_p;
   uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
     const re_compiled_code_t *re_bytecode_p = NULL;
 
     const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (ecma_compiled_code_t);
@@ -554,10 +554,10 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     ecma_deref_ecma_string (pattern_str_p);
 
     return (ecma_compiled_code_t *) re_bytecode_p;
-#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
-    JERRY_UNREACHABLE (); /* RegExp is not supported in the selected profile. */
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
   }
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+
+  JERRY_ASSERT (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 
   size_t header_size;
   uint32_t argument_end = 0;

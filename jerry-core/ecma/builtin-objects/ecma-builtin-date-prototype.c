@@ -259,6 +259,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET);
+
       date_num = ecma_date_timezone_offset (date_num);
       break;
     }
@@ -342,6 +343,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_HOURS
                     || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_HOURS);
+
       conversions = 4;
       break;
     }
@@ -429,6 +431,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
       {
         JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_DATE
                       || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_DATE);
+
         day = converted_number[0];
         break;
       }
@@ -511,6 +514,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
       {
         JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS
                       || builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_MILLISECONDS);
+
         ms = converted_number[0];
         break;
       }
@@ -643,6 +647,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_UTC_STRING);
+
       return ecma_date_value_to_utc_string (*prim_value_p);
     }
   }

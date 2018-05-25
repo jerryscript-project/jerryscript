@@ -784,8 +784,9 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       break;
     }
-    case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
+    default:
     {
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 #ifdef JERRY_CPOINTER_32_BIT
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
@@ -793,11 +794,6 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* JERRY_CPOINTER_32_BIT */
       break;
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
-      return;
     }
   }
 
@@ -1056,8 +1052,9 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
                                     prop_iter_p->next_property_cp);
   }
 
-  while (prop_iter_p != NULL)
+  while (true)
   {
+    JERRY_ASSERT (prop_iter_p != NULL);
     JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
     ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
@@ -1074,9 +1071,6 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                     prop_iter_p->next_property_cp);
   }
-
-  JERRY_UNREACHABLE ();
-
 #else /* JERRY_NDEBUG */
   JERRY_UNUSED (object_p);
   JERRY_UNUSED (prop_value_p);

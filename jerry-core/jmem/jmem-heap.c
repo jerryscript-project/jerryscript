@@ -33,53 +33,6 @@
  */
 
 /**
- * @{
- * Valgrind-related options and headers
- */
-#ifdef JERRY_VALGRIND
-# include "memcheck.h"
-
-# define VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
-# define VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
-# define VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
-
-#else /* !JERRY_VALGRIND */
-# define VALGRIND_NOACCESS_SPACE(p, s)
-# define VALGRIND_UNDEFINED_SPACE(p, s)
-# define VALGRIND_DEFINED_SPACE(p, s)
-#endif /* JERRY_VALGRIND */
-#ifdef JERRY_VALGRIND_FREYA
-
-#ifdef JERRY_VALGRIND
-#error Valgrind and valgrind-freya modes are not compatible.
-#endif /* JERRY_VALGRIND */
-
-#include "memcheck.h"
-
-# define VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST \
-  bool mempool_request = JERRY_CONTEXT (valgrind_freya_mempool_request); \
-  JERRY_CONTEXT (valgrind_freya_mempool_request) = false
-
-# define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s) \
-  if (!mempool_request) \
-  { \
-    VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0); \
-  }
-
-# define VALGRIND_FREYA_FREELIKE_SPACE(p) \
-  if (!mempool_request) \
-  { \
-    VALGRIND_FREELIKE_BLOCK((p), 0); \
-  }
-
-#else /* !JERRY_VALGRIND_FREYA */
-# define VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST
-# define VALGRIND_FREYA_MALLOCLIKE_SPACE(p, s)
-# define VALGRIND_FREYA_FREELIKE_SPACE(p)
-#endif /* JERRY_VALGRIND_FREYA */
-/** @} */
-
-/**
  * End of list marker.
  */
 #define JMEM_HEAP_END_OF_LIST ((uint32_t) 0xffffffff)
@@ -184,7 +137,7 @@ jmem_heap_init (void)
 
   JERRY_CONTEXT (jmem_heap_list_skip_p) = &JERRY_HEAP_CONTEXT (first);
 
-  VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
+  JMEM_VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
   JMEM_HEAP_STAT_INIT ();
@@ -198,7 +151,7 @@ jmem_heap_finalize (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) == 0);
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), JMEM_HEAP_SIZE);
+  JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), JMEM_HEAP_SIZE);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_finalize */
 
@@ -219,7 +172,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
   const size_t required_size = ((size + JMEM_ALIGNMENT - 1) / JMEM_ALIGNMENT) * JMEM_ALIGNMENT;
   jmem_heap_free_t *data_space_p = NULL;
 
-  VALGRIND_DEFINED_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
 
   /* Fast path for 8 byte chunks, first region is guaranteed to be sufficient. */
   if (required_size == JMEM_ALIGNMENT
@@ -228,7 +181,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
     data_space_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (JERRY_HEAP_CONTEXT (first).next_offset);
     JERRY_ASSERT (jmem_is_heap_pointer (data_space_p));
 
-    VALGRIND_DEFINED_SPACE (data_space_p, sizeof (jmem_heap_free_t));
+    JMEM_VALGRIND_DEFINED_SPACE (data_space_p, sizeof (jmem_heap_free_t));
     JERRY_CONTEXT (jmem_heap_allocated_size) += JMEM_ALIGNMENT;
     JMEM_HEAP_STAT_ALLOC_ITER ();
 
@@ -243,15 +196,15 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
       jmem_heap_free_t *remaining_p;
       remaining_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (JERRY_HEAP_CONTEXT (first).next_offset) + 1;
 
-      VALGRIND_DEFINED_SPACE (remaining_p, sizeof (jmem_heap_free_t));
+      JMEM_VALGRIND_DEFINED_SPACE (remaining_p, sizeof (jmem_heap_free_t));
       remaining_p->size = data_space_p->size - JMEM_ALIGNMENT;
       remaining_p->next_offset = data_space_p->next_offset;
-      VALGRIND_NOACCESS_SPACE (remaining_p, sizeof (jmem_heap_free_t));
+      JMEM_VALGRIND_NOACCESS_SPACE (remaining_p, sizeof (jmem_heap_free_t));
 
       JERRY_HEAP_CONTEXT (first).next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (remaining_p);
     }
 
-    VALGRIND_UNDEFINED_SPACE (data_space_p, sizeof (jmem_heap_free_t));
+    JMEM_VALGRIND_UNDEFINED_SPACE (data_space_p, sizeof (jmem_heap_free_t));
 
     if (JERRY_UNLIKELY (data_space_p == JERRY_CONTEXT (jmem_heap_list_skip_p)))
     {
@@ -268,7 +221,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
     {
       jmem_heap_free_t *current_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (current_offset);
       JERRY_ASSERT (jmem_is_heap_pointer (current_p));
-      VALGRIND_DEFINED_SPACE (current_p, sizeof (jmem_heap_free_t));
+      JMEM_VALGRIND_DEFINED_SPACE (current_p, sizeof (jmem_heap_free_t));
       JMEM_HEAP_STAT_ALLOC_ITER ();
 
       const uint32_t next_offset = current_p->next_offset;
@@ -288,23 +241,23 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
           jmem_heap_free_t *const remaining_p = (jmem_heap_free_t *) ((uint8_t *) current_p + required_size);
 
           /* Update metadata. */
-          VALGRIND_DEFINED_SPACE (remaining_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_DEFINED_SPACE (remaining_p, sizeof (jmem_heap_free_t));
           remaining_p->size = current_p->size - (uint32_t) required_size;
           remaining_p->next_offset = next_offset;
-          VALGRIND_NOACCESS_SPACE (remaining_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_NOACCESS_SPACE (remaining_p, sizeof (jmem_heap_free_t));
 
           /* Update list. */
-          VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
           prev_p->next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (remaining_p);
-          VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
         }
         /* Block is an exact fit. */
         else
         {
           /* Remove the region from the list. */
-          VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
           prev_p->next_offset = next_offset;
-          VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
+          JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
         }
 
         JERRY_CONTEXT (jmem_heap_list_skip_p) = prev_p;
@@ -313,7 +266,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
         break;
       }
 
-      VALGRIND_NOACCESS_SPACE (current_p, sizeof (jmem_heap_free_t));
+      JMEM_VALGRIND_NOACCESS_SPACE (current_p, sizeof (jmem_heap_free_t));
       /* Next in list. */
       prev_p = current_p;
       current_offset = next_offset;
@@ -325,7 +278,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
     JERRY_CONTEXT (jmem_heap_limit) += CONFIG_MEM_HEAP_DESIRED_LIMIT;
   }
 
-  VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
 
   if (JERRY_UNLIKELY (!data_space_p))
   {
@@ -333,7 +286,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
   }
 
   JERRY_ASSERT ((uintptr_t) data_space_p % JMEM_ALIGNMENT == 0);
-  VALGRIND_UNDEFINED_SPACE (data_space_p, size);
+  JMEM_VALGRIND_UNDEFINED_SPACE (data_space_p, size);
   JMEM_HEAP_STAT_ALLOC (size);
 
   return (void *) data_space_p;
@@ -364,8 +317,6 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
     return NULL;
   }
 
-  VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
-
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
@@ -379,7 +330,7 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
 
   if (JERRY_LIKELY (data_space_p != NULL))
   {
-    VALGRIND_FREYA_MALLOCLIKE_SPACE (data_space_p, size);
+    JMEM_VALGRIND_MALLOCLIKE_SPACE (data_space_p, size);
     return data_space_p;
   }
 
@@ -393,7 +344,7 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
 
     if (JERRY_LIKELY (data_space_p != NULL))
     {
-      VALGRIND_FREYA_MALLOCLIKE_SPACE (data_space_p, size);
+      JMEM_VALGRIND_MALLOCLIKE_SPACE (data_space_p, size);
       return data_space_p;
     }
   }
@@ -448,22 +399,20 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
                       const size_t size) /**< size of allocated region */
 {
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST;
-
   /* checking that ptr points to the heap */
   JERRY_ASSERT (jmem_is_heap_pointer (ptr));
   JERRY_ASSERT (size > 0);
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
 
-  VALGRIND_FREYA_FREELIKE_SPACE (ptr);
-  VALGRIND_NOACCESS_SPACE (ptr, size);
+  JMEM_VALGRIND_FREELIKE_SPACE (ptr);
+  JMEM_VALGRIND_NOACCESS_SPACE (ptr, size);
   JMEM_HEAP_STAT_FREE_ITER ();
 
   jmem_heap_free_t *block_p = (jmem_heap_free_t *) ptr;
   jmem_heap_free_t *prev_p;
   jmem_heap_free_t *next_p;
 
-  VALGRIND_DEFINED_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
 
   if (block_p > JERRY_CONTEXT (jmem_heap_list_skip_p))
   {
@@ -479,34 +428,34 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JERRY_ASSERT (jmem_is_heap_pointer (block_p));
   const uint32_t block_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (block_p);
 
-  VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
   /* Find position of region in the list. */
   while (prev_p->next_offset < block_offset)
   {
     next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
     JERRY_ASSERT (jmem_is_heap_pointer (next_p));
 
-    VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
-    VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
+    JMEM_VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
+    JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
     prev_p = next_p;
 
     JMEM_HEAP_STAT_FREE_ITER ();
   }
 
   next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
-  VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
 
   /* Realign size */
   const size_t aligned_size = (size + JMEM_ALIGNMENT - 1) / JMEM_ALIGNMENT * JMEM_ALIGNMENT;
 
-  VALGRIND_DEFINED_SPACE (block_p, sizeof (jmem_heap_free_t));
-  VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (block_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
   /* Update prev. */
   if (jmem_heap_get_region_end (prev_p) == block_p)
   {
     /* Can be merged. */
     prev_p->size += (uint32_t) aligned_size;
-    VALGRIND_NOACCESS_SPACE (block_p, sizeof (jmem_heap_free_t));
+    JMEM_VALGRIND_NOACCESS_SPACE (block_p, sizeof (jmem_heap_free_t));
     block_p = prev_p;
   }
   else
@@ -515,7 +464,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
     prev_p->next_offset = block_offset;
   }
 
-  VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
   /* Update next. */
   if (jmem_heap_get_region_end (block_p) == next_p)
   {
@@ -530,9 +479,9 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
 
   JERRY_CONTEXT (jmem_heap_list_skip_p) = prev_p;
 
-  VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
-  VALGRIND_NOACCESS_SPACE (block_p, size);
-  VALGRIND_NOACCESS_SPACE (next_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_NOACCESS_SPACE (block_p, size);
+  JMEM_VALGRIND_NOACCESS_SPACE (next_p, sizeof (jmem_heap_free_t));
 
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) > 0);
   JERRY_CONTEXT (jmem_heap_allocated_size) -= aligned_size;
@@ -542,7 +491,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
     JERRY_CONTEXT (jmem_heap_limit) -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
   }
 
-  VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
 #else /* JERRY_SYSTEM_ALLOCATOR */
@@ -727,13 +676,6 @@ jmem_heap_stat_free_iter (void)
 } /* jmem_heap_stat_free_iter */
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 #endif /* JMEM_STATS */
-
-#undef VALGRIND_NOACCESS_SPACE
-#undef VALGRIND_UNDEFINED_SPACE
-#undef VALGRIND_DEFINED_SPACE
-#undef VALGRIND_FREYA_CHECK_MEMPOOL_REQUEST
-#undef VALGRIND_FREYA_MALLOCLIKE_SPACE
-#undef VALGRIND_FREYA_FREELIKE_SPACE
 
 /**
  * @}

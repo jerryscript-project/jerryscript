@@ -24,6 +24,27 @@
  * @{
  */
 
+ /**
+  * @{
+  * Valgrind-related options and headers
+  */
+ #ifdef JERRY_VALGRIND
+ # include "memcheck.h"
+
+ # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
+ # define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
+ # define JMEM_VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
+ # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s) VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
+ # define JMEM_VALGRIND_FREELIKE_SPACE(p)      VALGRIND_FREELIKE_BLOCK((p), 0)
+ #else /* !JERRY_VALGRIND */
+ # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)
+ # define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)
+ # define JMEM_VALGRIND_DEFINED_SPACE(p, s)
+ # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s)
+ # define JMEM_VALGRIND_FREELIKE_SPACE(p)
+ #endif /* JERRY_VALGRIND */
+ /** @} */
+
 #ifdef JMEM_STATS
 void jmem_heap_stats_reset_peak (void);
 void jmem_heap_stats_print (void);

@@ -131,11 +131,6 @@ typedef struct
 #ifdef JMEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
 #endif /* JMEM_STATS */
-
-#ifdef JERRY_VALGRIND_FREYA
-  uint8_t valgrind_freya_mempool_request; /**< Tells whether a pool manager
-                                           *   allocator request is in progress */
-#endif /* JERRY_VALGRIND_FREYA */
 } jerry_context_t;
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE

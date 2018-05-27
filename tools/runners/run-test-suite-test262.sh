@@ -24,6 +24,12 @@ if [ $? -ne 0 ]
 then
     TIMEOUT_CMD=`which gtimeout`
 fi
+if [ -z "${RUNTIME}" ]
+then
+  COMMAND="${TIMEOUT_CMD} ${TIMEOUT} ${ENGINE}"
+else
+  COMMAND="${TIMEOUT_CMD} ${TIMEOUT} ${RUNTIME} ${ENGINE}"
+fi
 
 if [ $# -lt 2 ]
 then
@@ -56,7 +62,7 @@ rm -f "${PATH_TO_TEST262}/test/suite/ch15/15.9/15.9.3/S15.9.3.1_A5_T6.js"
 
 echo "Starting test262 testing for ${ENGINE}. Running test262 may take a several minutes."
 
-python2 "${PATH_TO_TEST262}"/tools/packaging/test262.py --command "${TIMEOUT_CMD} ${TIMEOUT} ${ENGINE}" \
+python2 "${PATH_TO_TEST262}"/tools/packaging/test262.py --command "${COMMAND}" \
                                                         --tests="${PATH_TO_TEST262}" --summary \
                                                         &> "${REPORT_PATH}"
 TEST262_EXIT_CODE=$?

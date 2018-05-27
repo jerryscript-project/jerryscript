@@ -65,8 +65,8 @@ UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
 
 for unit_test in $UNITTESTS
 do
-    cmd_line="${unit_test#$ROOT_DIR}"
-    $unit_test &>$UNITTEST_TEMP
+    cmd_line="$RUNTIME ${unit_test#$ROOT_DIR}"
+    $RUNTIME $unit_test &>$UNITTEST_TEMP
     status_code=$?
 
     if [ $status_code -ne 0 ]

@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+import hashlib
 import os
 import subprocess
 import sys
@@ -28,94 +29,78 @@ OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args'])
 Options.__new__.__defaults__ = ([], [])
 
-def get_binary_path(bin_dir_path):
-    return os.path.join(bin_dir_path, 'jerry')
+OPTIONS_PROFILE_MIN = ['--profile=minimal']
+OPTIONS_PROFILE_ES51 = [] # NOTE: same as ['--profile=es5.1']
+OPTIONS_PROFILE_ES2015 = ['--profile=es2015-subset']
+OPTIONS_DEBUG = ['--debug']
+OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
+OPTIONS_UNITTESTS = ['--unittests', '--jerry-cmdline=off', '--error-messages=on',
+                     '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on',
+                     '--line-info=on', '--mem-stats=on']
+OPTIONS_DOCTESTS = ['--doctests', '--jerry-cmdline=off', '--error-messages=on',
+                    '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']
 
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
-    Options('unittests',
-            ['--unittests', '--profile=es2015-subset', '--jerry-cmdline=off', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on', '--vm-exec-stop=on',
-             '--mem-stats=on']),
-    Options('unittests-debug',
-            ['--unittests', '--debug', '--profile=es2015-subset', '--jerry-cmdline=off',
-             '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on',
-             '--vm-exec-stop=on', '--mem-stats=on']),
-    Options('doctests',
-            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
-             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
-    Options('doctests-debug',
-            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es2015-subset']),
+    Options('unittests-es2015_subset',
+            OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES2015),
+    Options('unittests-es2015_subset-debug',
+            OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
+    Options('doctests-es2015_subset',
+            OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES2015),
+    Options('doctests-es2015_subset-debug',
+            OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
     Options('unittests-es5.1',
-            ['--unittests', '--profile=es5.1', '--jerry-cmdline=off', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on', '--vm-exec-stop=on',
-             '--mem-stats=on']),
+            OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51),
     Options('unittests-es5.1-debug',
-            ['--unittests', '--debug', '--profile=es5.1', '--jerry-cmdline=off',
-             '--error-messages=on', '--snapshot-save=on', '--snapshot-exec=on', '--line-info=on',
-             '--vm-exec-stop=on', '--mem-stats=on']),
+            OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG),
     Options('doctests-es5.1',
-            ['--doctests', '--jerry-cmdline=off', '--error-messages=on', '--snapshot-save=on',
-             '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1']),
+            OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES51),
     Options('doctests-es5.1-debug',
-            ['--doctests', '--jerry-cmdline=off', '--debug', '--error-messages=on',
-             '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on', '--profile=es5.1'])
+            OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG)
 ]
 
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
-    Options('jerry_tests'),
-    Options('jerry_tests-debug',
-            ['--debug']),
-    Options('jerry_tests-debug-cpointer_32bit',
-            ['--debug', '--cpointer-32bit=on', '--mem-heap=1024']),
-    Options('jerry_tests-snapshot',
-            ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+    Options('jerry_tests-es5.1',
+            OPTIONS_PROFILE_ES51),
+    Options('jerry_tests-es5.1-snapshot',
+            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT,
             ['--snapshot']),
-    Options('jerry_tests-debug-snapshot',
-            ['--debug', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
-    Options('jerry_tests-es2015_subset-debug',
-            ['--debug', '--profile=es2015-subset']),
     Options('jerry_tests-es5.1-debug',
-            ['--debug', '--profile=es5.1']),
-    Options('jerry_tests-debug-external_context',
-            ['--debug', '--jerry-libc=off', '--external-context=on'])
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG),
+    Options('jerry_tests-es5.1-debug-snapshot',
+            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
+            ['--snapshot']),
+    Options('jerry_tests-es5.1-debug-cpointer_32bit',
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--cpointer-32bit=on', '--mem-heap=1024']),
+    Options('jerry_tests-es5.1-debug-external_context',
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--jerry-libc=off', '--external-context=on']),
+    Options('jerry_tests-es2015_subset-debug',
+            OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
 ]
 
 # Test options for jerry-test-suite
 JERRY_TEST_SUITE_OPTIONS = JERRY_TESTS_OPTIONS[:]
 JERRY_TEST_SUITE_OPTIONS.extend([
     Options('jerry_test_suite-minimal',
-            ['--profile=minimal']),
+            OPTIONS_PROFILE_MIN),
     Options('jerry_test_suite-minimal-snapshot',
-            ['--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            OPTIONS_PROFILE_MIN + OPTIONS_SNAPSHOT,
             ['--snapshot']),
     Options('jerry_test_suite-minimal-debug',
-            ['--debug', '--profile=minimal']),
+            OPTIONS_PROFILE_MIN + OPTIONS_DEBUG),
     Options('jerry_test_suite-minimal-debug-snapshot',
-            ['--debug', '--profile=minimal', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
+            OPTIONS_PROFILE_MIN + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
             ['--snapshot']),
     Options('jerry_test_suite-es2015_subset',
-            ['--profile=es2015-subset']),
+            OPTIONS_PROFILE_ES2015),
     Options('jerry_test_suite-es2015_subset-snapshot',
-            ['--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
+            OPTIONS_PROFILE_ES2015 + OPTIONS_SNAPSHOT,
             ['--snapshot']),
     Options('jerry_test_suite-es2015_subset-debug-snapshot',
-            ['--debug', '--profile=es2015-subset', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
+            OPTIONS_PROFILE_ES2015 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
             ['--snapshot']),
-    Options('jerry_test_suite_es5.1',
-            ['--profile=es5.1']),
-    Options('jerry_test_suite-es5.1-snapshot',
-            ['--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on'],
-            ['--snapshot']),
-    Options('jerry_test_suite-es5.1-debug-snapshot',
-            ['--debug', '--profile=es5.1', '--snapshot-save=on', '--snapshot-exec=on',
-             '--jerry-cmdline-snapshot=on'],
-            ['--snapshot'])
 ])
 
 # Test options for test262
@@ -210,8 +195,13 @@ def get_arguments():
 BINARY_CACHE = {}
 
 def create_binary(job, options):
-    build_cmd = [settings.BUILD_SCRIPT]
-    build_cmd.extend(job.build_args)
+    build_args = job.build_args[:]
+    if options.buildoptions:
+        for option in options.buildoptions.split(','):
+            if option not in build_args:
+                build_args.append(option)
+
+    build_cmd = [settings.BUILD_SCRIPT] + build_args
 
     build_dir_path = os.path.join(options.outdir, job.name)
     build_cmd.append('--builddir=%s' % build_dir_path)
@@ -219,16 +209,13 @@ def create_binary(job, options):
     if options.toolchain:
         build_cmd.append('--toolchain=%s' % options.toolchain)
 
-    if options.buildoptions:
-        build_cmd.extend(options.buildoptions.split(','))
-
     sys.stderr.write('Build command: %s\n' % ' '.join(build_cmd))
 
-    binary_key = tuple(job.build_args)
+    binary_key = tuple(sorted(build_args))
     if binary_key in BINARY_CACHE:
         ret, build_dir_path = BINARY_CACHE[binary_key]
         sys.stderr.write('(skipping: already built at %s with returncode %d)\n' % (build_dir_path, ret))
-        return ret, os.path.join(build_dir_path, 'bin')
+        return ret, build_dir_path
 
     try:
         subprocess.check_output(build_cmd)
@@ -237,7 +224,48 @@ def create_binary(job, options):
         ret = err.returncode
 
     BINARY_CACHE[binary_key] = (ret, build_dir_path)
-    return ret, os.path.join(build_dir_path, 'bin')
+    return ret, build_dir_path
+
+def get_binary_path(build_dir_path):
+    return os.path.join(build_dir_path, 'bin', 'jerry')
+
+def hash_binary(bin_path):
+    blocksize = 65536
+    hasher = hashlib.sha1()
+    with open(bin_path, 'rb') as bin_file:
+        buf = bin_file.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = bin_file.read(blocksize)
+    return hasher.hexdigest()
+
+def iterate_test_runner_jobs(jobs, options):
+    tested_paths = set()
+    tested_hashes = {}
+
+    for job in jobs:
+        ret_build, build_dir_path = create_binary(job, options)
+        if ret_build:
+            yield job, ret_build, build_dir_path, None
+
+        if build_dir_path in tested_paths:
+            sys.stderr.write('(skipping: already tested with %s)\n' % build_dir_path)
+            continue
+        else:
+            tested_paths.add(build_dir_path)
+
+        bin_path = get_binary_path(build_dir_path)
+        bin_hash = hash_binary(bin_path)
+
+        if bin_hash in tested_hashes:
+            sys.stderr.write('(skipping: already tested with equivalent %s)\n' % tested_hashes[bin_hash])
+            continue
+        else:
+            tested_hashes[bin_hash] = build_dir_path
+
+        test_cmd = [settings.TEST_RUNNER_SCRIPT, bin_path]
+
+        yield job, ret_build, test_cmd
 
 def run_check(runnable):
     sys.stderr.write('Test command: %s\n' % ' '.join(runnable))
@@ -252,7 +280,7 @@ def run_check(runnable):
 def run_jerry_debugger_tests(options):
     ret_build = ret_test = 0
     for job in DEBUGGER_TEST_OPTIONS:
-        ret_build, bin_dir_path = create_binary(job, options)
+        ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
             break
 
@@ -262,7 +290,7 @@ def run_jerry_debugger_tests(options):
                 test_case_path = os.path.join(settings.DEBUGGER_TESTS_DIR, test_case)
                 test_cmd = [
                     settings.DEBUGGER_TEST_RUNNER_SCRIPT,
-                    get_binary_path(bin_dir_path),
+                    get_binary_path(build_dir_path),
                     settings.DEBUGGER_CLIENT_SCRIPT,
                     os.path.relpath(test_case_path, settings.PROJECT_DIR)
                 ]
@@ -276,28 +304,24 @@ def run_jerry_debugger_tests(options):
 
 def run_jerry_tests(options):
     ret_build = ret_test = 0
-    for job in JERRY_TESTS_OPTIONS:
-        ret_build, bin_dir_path = create_binary(job, options)
+    for job, ret_build, test_cmd in iterate_test_runner_jobs(JERRY_TESTS_OPTIONS, options):
         if ret_build:
             break
 
-        test_cmd = [
-            settings.TEST_RUNNER_SCRIPT,
-            get_binary_path(bin_dir_path),
-            settings.JERRY_TESTS_DIR
-        ]
-        skip_list = []
-
-        if '--profile=es2015-subset' not in job.build_args:
-            skip_list.append(r"es2015\/")
-        else:
-            skip_list.append(r"es5.1\/")
-
-        if options.skip_list:
-            skip_list.append(options.skip_list)
+        test_cmd.append(settings.JERRY_TESTS_DIR)
 
         if options.quiet:
             test_cmd.append("-q")
+
+        skip_list = []
+
+        if '--profile=es2015-subset' in job.build_args:
+            skip_list.append(r"es5.1\/")
+        else:
+            skip_list.append(r"es2015\/")
+
+        if options.skip_list:
+            skip_list.append(options.skip_list)
 
         if skip_list:
             test_cmd.append("--skip-list=" + ",".join(skip_list))
@@ -311,12 +335,9 @@ def run_jerry_tests(options):
 
 def run_jerry_test_suite(options):
     ret_build = ret_test = 0
-    for job in JERRY_TEST_SUITE_OPTIONS:
-        ret_build, bin_dir_path = create_binary(job, options)
+    for job, ret_build, test_cmd in iterate_test_runner_jobs(JERRY_TEST_SUITE_OPTIONS, options):
         if ret_build:
             break
-
-        test_cmd = [settings.TEST_RUNNER_SCRIPT, get_binary_path(bin_dir_path)]
 
         if '--profile=minimal' in job.build_args:
             test_cmd.append(settings.JERRY_TEST_SUITE_MINIMAL_LIST)
@@ -341,13 +362,13 @@ def run_jerry_test_suite(options):
 def run_test262_test_suite(options):
     ret_build = ret_test = 0
     for job in TEST262_TEST_SUITE_OPTIONS:
-        ret_build, bin_dir_path = create_binary(job, options)
+        ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
             break
 
         test_cmd = [
             settings.TEST262_RUNNER_SCRIPT,
-            get_binary_path(bin_dir_path),
+            get_binary_path(build_dir_path),
             settings.TEST262_TEST_SUITE_DIR
         ]
 
@@ -361,13 +382,13 @@ def run_test262_test_suite(options):
 def run_unittests(options):
     ret_build = ret_test = 0
     for job in JERRY_UNITTESTS_OPTIONS:
-        ret_build, bin_dir_path = create_binary(job, options)
+        ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
             break
 
         ret_test |= run_check([
             settings.UNITTEST_RUNNER_SCRIPT,
-            bin_dir_path,
+            os.path.join(build_dir_path, 'bin'),
             "-q" if options.quiet else "",
         ])
 

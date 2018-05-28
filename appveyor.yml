@@ -6,6 +6,8 @@ branches:
   - coverity_scan
   - gh_pages
 skip_tags: true
+
+# Build matrix setup.
 image:
   - Visual Studio 2017
 configuration:
@@ -14,16 +16,13 @@ configuration:
 platform:
   - x64
   - Win32
-init:
-  - cmd: |
-      cmake -version
-before_build:
-  - cmd: |
-      mkdir build
-      cd build
-      if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" ..
-      if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" ..
 
+# Steps of a job.
+init:
+  - cmake -version
+before_build:
+  - if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" -Bbuild -H.
+  - if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" -Bbuild -H.
 build:
   project: build\Jerry.sln
   parallel: true

@@ -139,8 +139,6 @@ JERRY_BUILDOPTIONS = [
             ['--all-in-one=on']),
     Options('buildoption_test-valgrind',
             ['--valgrind=on']),
-    Options('buildoption_test-valgrind_freya',
-            ['--valgrind-freya=on']),
     Options('buildoption_test-mem_stats',
             ['--mem-stats=on']),
     Options('buildoption_test-show_opcodes',

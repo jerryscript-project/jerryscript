@@ -418,13 +418,21 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
 
   context_p->last_line_info_line = line;
 
+  const uint32_t max_shift_plus_7 = 7 * 5;
+  uint32_t shift = 7;
+
+  while (shift < max_shift_plus_7 && (line >> shift) > 0)
+  {
+    shift += 7;
+  }
+
   do
   {
-    uint8_t byte = (uint8_t) (line & CBC_LOWER_SEVEN_BIT_MASK);
+    shift -= 7;
 
-    line >>= 7;
+    uint8_t byte = (uint8_t) ((line >> shift) & CBC_LOWER_SEVEN_BIT_MASK);
 
-    if (line > 0)
+    if (shift > 0)
     {
       byte = (uint8_t) (byte | CBC_HIGHEST_BIT_MASK);
     }
@@ -432,7 +440,7 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
     PARSER_APPEND_TO_BYTE_CODE (context_p, byte);
     context_p->byte_code_size++;
   }
-  while (line > 0);
+  while (shift > 0);
 } /* parser_emit_line_info */
 
 #endif /* JERRY_ENABLE_LINE_INFO */

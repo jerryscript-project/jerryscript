@@ -38,8 +38,8 @@ matrix:
     - env:
         - JOBNAME="Linux/ARM Build & Correctness Tests"
         - OPTS="--quiet --jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake"
+        - RUNTIME=qemu-arm-static
         - TIMEOUT=300
-      sudo: true # keep on sudo-enabled VM to allow qemu to register itself to binfmt_misc
       addons:
         apt:
           packages: [gcc-arm-linux-gnueabihf, libc6-dev-armhf-cross, qemu-user-static]

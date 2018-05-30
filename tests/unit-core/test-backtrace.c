@@ -79,13 +79,9 @@ compare (jerry_value_t array, /**< array */
   TEST_ASSERT (memcmp (buf, str, len) == 0);
 } /* compare */
 
-int
-main (void)
+static void
+test_get_backtrace_api_call (void)
 {
-  TEST_INIT ();
-
-  TEST_ASSERT (jerry_is_feature_enabled (JERRY_FEATURE_LINE_INFO));
-
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t global = jerry_get_global_object ();
@@ -158,18 +154,22 @@ main (void)
   jerry_release_value (backtrace);
 
   jerry_cleanup ();
+} /* test_get_backtrace_api_call */
 
+static void
+test_exception_backtrace (void)
+{
   jerry_init (JERRY_INIT_EMPTY);
 
-  source = ("function f() {\n"
-            "  undef_reference;\n"
-            "}\n"
-            "\n"
-            "function g() {\n"
-            "  return f();\n"
-            "}\n"
-            "\n"
-            "g();\n");
+  const char *source = ("function f() {\n"
+                        "  undef_reference;\n"
+                        "}\n"
+                        "\n"
+                        "function g() {\n"
+                        "  return f();\n"
+                        "}\n"
+                        "\n"
+                        "g();\n");
 
   jerry_value_t error = run ("bad.js", source);
 
@@ -179,8 +179,8 @@ main (void)
 
   TEST_ASSERT (jerry_value_is_object (error));
 
-  name = jerry_create_string ((const jerry_char_t *) "stack");
-  backtrace = jerry_get_property (error, name);
+  jerry_value_t name = jerry_create_string ((const jerry_char_t *) "stack");
+  jerry_value_t backtrace = jerry_get_property (error, name);
 
   jerry_release_value (name);
   jerry_release_value (error);
@@ -197,6 +197,63 @@ main (void)
   jerry_release_value (backtrace);
 
   jerry_cleanup ();
+} /* test_exception_backtrace */
+
+static void
+test_large_line_count (void)
+{
+  jerry_init (JERRY_INIT_EMPTY);
+
+  const char *source = ("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+                        "g();\n");
+
+  jerry_value_t error = run ("bad.js", source);
+
+  TEST_ASSERT (jerry_value_is_error (error));
+
+  error = jerry_get_value_from_error (error, true);
+
+  TEST_ASSERT (jerry_value_is_object (error));
+
+  jerry_value_t name = jerry_create_string ((const jerry_char_t *) "stack");
+  jerry_value_t backtrace = jerry_get_property (error, name);
+
+  jerry_release_value (name);
+  jerry_release_value (error);
+
+  TEST_ASSERT (!jerry_value_is_error (backtrace)
+               && jerry_value_is_array (backtrace));
+
+  TEST_ASSERT (jerry_get_array_length (backtrace) == 1);
+
+  compare (backtrace, 0, "bad.js:385");
+
+  jerry_release_value (backtrace);
+
+  jerry_cleanup ();
+} /* test_large_line_count */
+
+int
+main (void)
+{
+  TEST_INIT ();
+
+  TEST_ASSERT (jerry_is_feature_enabled (JERRY_FEATURE_LINE_INFO));
+
+  test_get_backtrace_api_call ();
+  test_exception_backtrace ();
+  test_large_line_count ();
 
   return 0;
 } /* main */

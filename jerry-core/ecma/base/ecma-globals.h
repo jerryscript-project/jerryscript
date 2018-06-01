@@ -32,19 +32,6 @@
  */
 
 /**
- * Ecma-pointer field is used to calculate ecma value's address.
- *
- * Ecma-pointer contains value's shifted offset from common Ecma-pointers' base.
- * The offset is shifted right by JMEM_ALIGNMENT_LOG.
- * Least significant JMEM_ALIGNMENT_LOG bits of non-shifted offset are zeroes.
- */
-#ifdef JERRY_CPOINTER_32_BIT
-#define ECMA_POINTER_FIELD_WIDTH 32
-#else /* !JERRY_CPOINTER_32_BIT */
-#define ECMA_POINTER_FIELD_WIDTH 16
-#endif /* JERRY_CPOINTER_32_BIT */
-
-/**
  * The NULL value for compressed pointers
  */
 #define ECMA_NULL_POINTER JMEM_CP_NULL

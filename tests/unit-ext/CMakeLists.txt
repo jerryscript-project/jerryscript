@@ -28,8 +28,8 @@ foreach(SOURCE_UNIT_TEST_EXT ${SOURCE_UNIT_TEST_EXT_MODULES})
   set(TARGET_NAME unit-${TARGET_NAME})
 
   add_executable(${TARGET_NAME} ${SOURCE_UNIT_TEST_EXT})
-  set_property(TARGET ${TARGET_NAME}
-               PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
+  set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
+  set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
   target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default-minimal)
 

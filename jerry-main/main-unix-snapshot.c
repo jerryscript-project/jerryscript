@@ -92,7 +92,7 @@ static size_t
 read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
            const char *file_name) /**< file name */
 {
-  FILE *file = fopen (file_name, "r");
+  FILE *file = fopen (file_name, "rb");
 
   if (file == NULL)
   {
@@ -331,7 +331,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   size_t snapshot_size = (size_t) jerry_get_number_value (snapshot_result);
   jerry_release_value (snapshot_result);
 
-  FILE *snapshot_file_p = fopen (output_file_name_p, "w");
+  FILE *snapshot_file_p = fopen (output_file_name_p, "wb");
   if (snapshot_file_p == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Unable to write snapshot file: '%s'\n", output_file_name_p);
@@ -357,7 +357,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    FILE *literal_file_p = fopen (save_literals_file_name_p, "w");
+    FILE *literal_file_p = fopen (save_literals_file_name_p, "wb");
 
     if (literal_file_p == NULL)
     {
@@ -486,7 +486,7 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  FILE *file_p = fopen (output_file_name_p, "w");
+  FILE *file_p = fopen (output_file_name_p, "wb");
 
   if (file_p != NULL)
   {

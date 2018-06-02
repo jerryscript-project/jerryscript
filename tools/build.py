@@ -24,10 +24,6 @@ import subprocess
 import sys
 import settings
 
-BUILD_DIR = os.path.join(settings.PROJECT_DIR, 'build')
-
-DEFAULT_PROFILE = 'es5.1'
-
 def default_toolchain():
     (sysname, _, _, _, machine) = os.uname()
     toolchain = os.path.join(settings.PROJECT_DIR,
@@ -39,7 +35,7 @@ def get_arguments():
     devhelp_preparser = argparse.ArgumentParser(add_help=False)
     devhelp_preparser.add_argument('--devhelp', action='store_true', default=False,
                                    help='show help with all options '
-                                   '(including those, which are useful for developers only)')
+                                        '(including those, which are useful for developers only)')
 
     devhelp_arguments, args = devhelp_preparser.parse_known_args()
     if devhelp_arguments.devhelp:
@@ -48,96 +44,106 @@ def get_arguments():
     def devhelp(helpstring):
         return helpstring if devhelp_arguments.devhelp else argparse.SUPPRESS
 
-    parser = argparse.ArgumentParser(parents=[devhelp_preparser])
-    parser.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='all-in-one build (%(choices)s; default: %(default)s)')
-    parser.add_argument('--builddir', metavar='DIR', action='store', default=BUILD_DIR,
-                        help='specify output directory (default: %(default)s)')
-    parser.add_argument('--clean', action='store_true', default=False, help='clean build')
-    parser.add_argument('--cmake-param', metavar='OPT', action='append', default=[],
-                        help='add custom argument to CMake')
-    parser.add_argument('--compile-flag', metavar='OPT', action='append', default=[],
-                        help='add custom compile flag')
-    parser.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable 32 bit compressed pointers (%(choices)s; default: %(default)s)')
-    parser.add_argument('--debug', action='store_const', const='Debug', default='MinSizeRel', dest='build_type',
-                        help='debug build')
-    parser.add_argument('--doctests', action='store_const', const='ON', default='OFF',
-                        help='build doctests')
-    parser.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable error messages (%(choices)s; default: %(default)s)')
-    parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable external context (%(choices)s; default: %(default)s)')
-    parser.add_argument('--install', metavar='DIR', nargs='?', default=None, const=False,
-                        help='install after build (default: don\'t install; default directory if install: OS-specific)')
-    parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1,
-                        help='Allowed N build jobs at once (default: %(default)s)')
-    parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='build jerry command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-cmdline-snapshot', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='build snapshot command line tool (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable the jerry debugger (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='build jerry-ext (default: %(default)s)')
-    parser.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='build and use jerry-libc (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='build and use jerry-libm (%(choices)s; default: %(default)s)')
-    parser.add_argument('--jerry-port-default', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='build default jerry port implementation (%(choices)s; default: %(default)s)')
-    parser.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='enable js-parser (%(choices)s; default: %(default)s)')
-    parser.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='provide line info (%(choices)s; default: %(default)s)')
-    parser.add_argument('--link-lib', metavar='OPT', action='append', default=[],
-                        help='add custom library to be linked')
-    parser.add_argument('--linker-flag', metavar='OPT', action='append', default=[],
-                        help='add custom linker flag')
-    parser.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='enable link-time optimizations (%(choices)s; default: %(default)s)')
-    parser.add_argument('--mem-heap', metavar='SIZE', action='store', type=int, default=512,
-                        help='size of memory heap, in kilobytes (default: %(default)s)')
-    parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE,
-                        help='specify profile file (default: %(default)s)')
-    parser.add_argument('--shared-libs', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable building of shared libraries (%(choices)s; default: %(default)s)')
-    parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable executing snapshot files (%(choices)s; default: %(default)s)')
-    parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable saving snapshot files (%(choices)s; default: %(default)s)')
-    parser.add_argument('--system-allocator', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable system allocator (%(choices)s; default: %(default)s)')
-    parser.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='strip release binaries (%(choices)s; default: %(default)s)')
-    parser.add_argument('--toolchain', metavar='FILE', action='store', default=default_toolchain(),
-                        help='add toolchain file (default: %(default)s)')
-    parser.add_argument('--unittests', action='store_const', const='ON', default='OFF',
-                        help='build unittests')
-    parser.add_argument('-v', '--verbose', action='store_const', const='ON', default='OFF',
-                        help='increase verbosity')
-    parser.add_argument('--vm-exec-stop', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                        help='enable VM execution stopping (%(choices)s; default: %(default)s)')
+    parser = argparse.ArgumentParser(parents=[devhelp_preparser], epilog="""
+        This tool is a thin wrapper around cmake and make to help build the
+        project easily. All the real build logic is in the CMakeLists.txt files.
+        For most of the options, the defaults are also defined there.
+        """)
 
-    devgroup = parser.add_argument_group('developer options')
-    devgroup.add_argument('--jerry-cmdline-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('build test version of the jerry command line tool '
-                                       '(%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable the generation of a link map file for jerry command line tool '
-                                       '(%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable memory statistics (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable mem-stress test (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--regexp-strict-mode', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable regexp strict mode (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable parser byte-code dumps (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable regexp byte-code dumps (%(choices)s; default: %(default)s)'))
-    devgroup.add_argument('--valgrind', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
-                          help=devhelp('enable Valgrind support (%(choices)s; default: %(default)s)'))
+    buildgrp = parser.add_argument_group('general build options')
+    buildgrp.add_argument('--builddir', metavar='DIR', default=os.path.join(settings.PROJECT_DIR, 'build'),
+                          help='specify build directory (default: %(default)s)')
+    buildgrp.add_argument('--clean', action='store_true', default=False,
+                          help='clean build')
+    buildgrp.add_argument('--cmake-param', metavar='OPT', action='append', default=[],
+                          help='add custom argument to CMake')
+    buildgrp.add_argument('--compile-flag', metavar='OPT', action='append', default=[],
+                          help='add custom compile flag')
+    buildgrp.add_argument('--debug', action='store_const', const='Debug', dest='build_type',
+                          help='debug build')
+    buildgrp.add_argument('--install', metavar='DIR', nargs='?', default=None, const=False,
+                          help='install after build (default: don\'t install; '
+                               'default directory if install: OS-specific)')
+    buildgrp.add_argument('-j', '--jobs', metavar='N', type=int, default=multiprocessing.cpu_count() + 1,
+                          help='number of parallel build jobs (default: %(default)s)')
+    buildgrp.add_argument('--link-lib', metavar='OPT', action='append', default=[],
+                          help='add custom library to be linked')
+    buildgrp.add_argument('--linker-flag', metavar='OPT', action='append', default=[],
+                          help='add custom linker flag')
+    buildgrp.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='enable link-time optimizations (%(choices)s)')
+    buildgrp.add_argument('--shared-libs', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='enable building of shared libraries (%(choices)s)')
+    buildgrp.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='strip release binaries (%(choices)s)')
+    buildgrp.add_argument('--toolchain', metavar='FILE', default=default_toolchain(),
+                          help='specify toolchain file (default: %(default)s)')
+    buildgrp.add_argument('-v', '--verbose', action='store_const', const='ON',
+                          help='increase verbosity')
+
+    compgrp = parser.add_argument_group('optional components')
+    compgrp.add_argument('--doctests', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('build doctests (%(choices)s)'))
+    compgrp.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build jerry command line tool (%(choices)s)')
+    compgrp.add_argument('--jerry-cmdline-snapshot', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build snapshot command line tool (%(choices)s)')
+    compgrp.add_argument('--jerry-cmdline-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('build test version of the jerry command line tool (%(choices)s)'))
+    compgrp.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build jerry-ext (%(choices)s)')
+    compgrp.add_argument('--jerry-libc', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build and use jerry-libc (%(choices)s)')
+    compgrp.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build and use jerry-libm (%(choices)s)')
+    compgrp.add_argument('--jerry-port-default', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build default jerry port implementation (%(choices)s)')
+    compgrp.add_argument('--unittests', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('build unittests (%(choices)s)'))
+
+    coregrp = parser.add_argument_group('jerry-core options')
+    coregrp.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='all-in-one build (%(choices)s)')
+    coregrp.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable 32 bit compressed pointers (%(choices)s)')
+    coregrp.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable error messages (%(choices)s)')
+    coregrp.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable external context (%(choices)s)')
+    coregrp.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable the jerry debugger (%(choices)s)')
+    coregrp.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable js-parser (%(choices)s)')
+    coregrp.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='provide line info (%(choices)s)')
+    coregrp.add_argument('--mem-heap', metavar='SIZE', type=int,
+                         help='size of memory heap (in kilobytes)')
+    coregrp.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable memory statistics (%(choices)s)'))
+    coregrp.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable mem-stress test (%(choices)s)'))
+    coregrp.add_argument('--profile', metavar='FILE',
+                         help='specify profile file')
+    coregrp.add_argument('--regexp-strict-mode', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable regexp strict mode (%(choices)s)'))
+    coregrp.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable parser byte-code dumps (%(choices)s)'))
+    coregrp.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable regexp byte-code dumps (%(choices)s)'))
+    coregrp.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable executing snapshot files (%(choices)s)')
+    coregrp.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable saving snapshot files (%(choices)s)')
+    coregrp.add_argument('--system-allocator', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable system allocator (%(choices)s)')
+    coregrp.add_argument('--valgrind', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable Valgrind support (%(choices)s)'))
+    coregrp.add_argument('--vm-exec-stop', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable VM execution stopping (%(choices)s)')
+
+    maingrp = parser.add_argument_group('jerry-main options')
+    maingrp.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable the generation of link map for jerry command line tool (%(choices)s)'))
 
     arguments = parser.parse_args(args)
     if arguments.devhelp:
@@ -149,52 +155,59 @@ def get_arguments():
 def generate_build_options(arguments):
     build_options = []
 
-    build_options.append('-DENABLE_ALL_IN_ONE=%s' % arguments.all_in_one)
-    build_options.append('-DCMAKE_BUILD_TYPE=%s' % arguments.build_type)
-    build_options.append('-DEXTERNAL_COMPILE_FLAGS=' + ' '.join(arguments.compile_flag))
-    build_options.append('-DFEATURE_CPOINTER_32_BIT=%s' % arguments.cpointer_32bit)
-    build_options.append('-DFEATURE_ERROR_MESSAGES=%s' % arguments.error_messages)
-    build_options.append('-DFEATURE_LINE_INFO=%s' % arguments.line_info)
-    build_options.append('-DJERRY_CMDLINE=%s' % arguments.jerry_cmdline)
-    build_options.append('-DJERRY_CMDLINE_TEST=%s' % arguments.jerry_cmdline_test)
-    build_options.append('-DJERRY_CMDLINE_SNAPSHOT=%s' % arguments.jerry_cmdline_snapshot)
-    build_options.append('-DJERRY_PORT_DEFAULT=%s' % arguments.jerry_port_default)
-    build_options.append('-DJERRY_EXT=%s' % arguments.jerry_ext)
-    build_options.append('-DJERRY_LIBC=%s' % arguments.jerry_libc)
-    build_options.append('-DJERRY_LIBM=%s' % arguments.jerry_libm)
-    build_options.append('-DFEATURE_JS_PARSER=%s' % arguments.js_parser)
-    build_options.append('-DEXTERNAL_LINK_LIBS=' + ' '.join(arguments.link_lib))
-    build_options.append('-DEXTERNAL_LINKER_FLAGS=' + ' '.join(arguments.linker_flag))
-    build_options.append('-DENABLE_LTO=%s' % arguments.lto)
-    build_options.append('-DMEM_HEAP_SIZE_KB=%d' % arguments.mem_heap)
+    def build_options_append(cmakeopt, cliarg):
+        if cliarg:
+            build_options.append('-D%s=%s' % (cmakeopt, cliarg))
 
-    build_options.append('-DFEATURE_PROFILE=%s' % arguments.profile)
-    build_options.append('-DFEATURE_DEBUGGER=%s' % arguments.jerry_debugger)
-    build_options.append('-DFEATURE_EXTERNAL_CONTEXT=%s' % arguments.external_context)
-    build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
-    build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)
-    build_options.append('-DFEATURE_SYSTEM_ALLOCATOR=%s' % arguments.system_allocator)
-    build_options.append('-DBUILD_SHARED_LIBS=%s' % arguments.shared_libs)
-    build_options.append('-DENABLE_STRIP=%s' % arguments.strip)
-    build_options.append('-DFEATURE_VM_EXEC_STOP=%s' % arguments.vm_exec_stop)
+    # general build options
+    build_options_append('CMAKE_BUILD_TYPE', arguments.build_type)
+    build_options_append('EXTERNAL_COMPILE_FLAGS', ' '.join(arguments.compile_flag))
+    build_options_append('EXTERNAL_LINK_LIBS', ' '.join(arguments.link_lib))
+    build_options_append('EXTERNAL_LINKER_FLAGS', ' '.join(arguments.linker_flag))
+    build_options_append('ENABLE_LTO', arguments.lto)
+    build_options_append('BUILD_SHARED_LIBS', arguments.shared_libs)
+    build_options_append('ENABLE_STRIP', arguments.strip)
+    build_options_append('CMAKE_TOOLCHAIN_FILE', arguments.toolchain)
+    build_options_append('CMAKE_VERBOSE_MAKEFILE', arguments.verbose)
 
-    if arguments.toolchain:
-        build_options.append('-DCMAKE_TOOLCHAIN_FILE=%s' % arguments.toolchain)
+    # optional components
+    build_options_append('DOCTESTS', arguments.doctests)
+    build_options_append('JERRY_CMDLINE', arguments.jerry_cmdline)
+    build_options_append('JERRY_CMDLINE_SNAPSHOT', arguments.jerry_cmdline_snapshot)
+    build_options_append('JERRY_CMDLINE_TEST', arguments.jerry_cmdline_test)
+    build_options_append('JERRY_EXT', arguments.jerry_ext)
+    build_options_append('JERRY_LIBC', arguments.jerry_libc)
+    build_options_append('JERRY_LIBM', arguments.jerry_libm)
+    build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)
+    build_options_append('UNITTESTS', arguments.unittests)
 
-    build_options.append('-DUNITTESTS=%s' % arguments.unittests)
-    build_options.append('-DDOCTESTS=%s' % arguments.doctests)
-    build_options.append('-DCMAKE_VERBOSE_MAKEFILE=%s' % arguments.verbose)
+    # jerry-core options
+    build_options_append('ENABLE_ALL_IN_ONE', arguments.all_in_one)
+    build_options_append('FEATURE_CPOINTER_32_BIT', arguments.cpointer_32bit)
+    build_options_append('FEATURE_ERROR_MESSAGES', arguments.error_messages)
+    build_options_append('FEATURE_EXTERNAL_CONTEXT', arguments.external_context)
+    build_options_append('FEATURE_DEBUGGER', arguments.jerry_debugger)
+    build_options_append('FEATURE_JS_PARSER', arguments.js_parser)
+    build_options_append('FEATURE_LINE_INFO', arguments.line_info)
+    build_options_append('MEM_HEAP_SIZE_KB', arguments.mem_heap)
+    build_options_append('FEATURE_MEM_STATS', arguments.mem_stats)
+    build_options_append('FEATURE_MEM_STRESS_TEST', arguments.mem_stress_test)
+    build_options_append('FEATURE_PROFILE', arguments.profile)
+    build_options_append('FEATURE_REGEXP_STRICT_MODE', arguments.regexp_strict_mode)
+    build_options_append('FEATURE_PARSER_DUMP', arguments.show_opcodes)
+    build_options_append('FEATURE_REGEXP_DUMP', arguments.show_regexp_opcodes)
+    build_options_append('FEATURE_SNAPSHOT_EXEC', arguments.snapshot_exec)
+    build_options_append('FEATURE_SNAPSHOT_SAVE', arguments.snapshot_save)
+    build_options_append('FEATURE_SYSTEM_ALLOCATOR', arguments.system_allocator)
+    build_options_append('FEATURE_VALGRIND', arguments.valgrind)
+    build_options_append('FEATURE_VM_EXEC_STOP', arguments.vm_exec_stop)
 
-    # developer options
-    build_options.append('-DENABLE_LINK_MAP=%s' % arguments.link_map)
-    build_options.append('-DFEATURE_MEM_STATS=%s' % arguments.mem_stats)
-    build_options.append('-DFEATURE_MEM_STRESS_TEST=%s' % arguments.mem_stress_test)
-    build_options.append('-DFEATURE_PARSER_DUMP=%s' % arguments.show_opcodes)
-    build_options.append('-DFEATURE_REGEXP_STRICT_MODE=%s' % arguments.regexp_strict_mode)
-    build_options.append('-DFEATURE_REGEXP_DUMP=%s' % arguments.show_regexp_opcodes)
-    build_options.append('-DFEATURE_VALGRIND=%s' % arguments.valgrind)
+    # jerry-main options
+    build_options_append('ENABLE_LINK_MAP', arguments.link_map)
 
-    build_options.extend(arguments.cmake_param)
+    # general build options (final step)
+    if arguments.cmake_param:
+        build_options.extend(arguments.cmake_param)
 
     return build_options
 

@@ -51,36 +51,24 @@ JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <=
  */
 
 /**
- * Template of an allocation routine.
+ * Allocate memory for ecma-number
+ *
+ * @return pointer to allocated memory
  */
-#define ALLOC(ecma_type) ecma_ ## ecma_type ## _t * \
-  ecma_alloc_ ## ecma_type (void) \
-{ \
-  ecma_ ## ecma_type ## _t *ecma_type ## _p; \
-  ecma_type ## _p = (ecma_ ## ecma_type ## _t *) jmem_pools_alloc (sizeof (ecma_ ## ecma_type ## _t)); \
-  \
-  JERRY_ASSERT (ecma_type ## _p != NULL); \
-  \
-  return ecma_type ## _p; \
-}
+ecma_number_t *
+ecma_alloc_number (void)
+{
+  return (ecma_number_t *) jmem_pools_alloc (sizeof (ecma_number_t));
+} /* ecma_alloc_number */
 
 /**
- * Deallocation routine template
+ * Dealloc memory from an ecma-number
  */
-#define DEALLOC(ecma_type) void \
-  ecma_dealloc_ ## ecma_type (ecma_ ## ecma_type ## _t *ecma_type ## _p) \
-{ \
-  jmem_pools_free ((uint8_t *) ecma_type ## _p, sizeof (ecma_ ## ecma_type ## _t)); \
-}
-
-/**
- * Declaration of alloc/free routine for specified ecma-type.
- */
-#define DECLARE_ROUTINES_FOR(ecma_type) \
-  ALLOC (ecma_type) \
-  DEALLOC (ecma_type)
-
-DECLARE_ROUTINES_FOR (number)
+void
+ecma_dealloc_number (ecma_number_t *number_p) /**< number to be freed */
+{
+  jmem_pools_free ((uint8_t *) number_p, sizeof (ecma_number_t));
+} /* ecma_dealloc_number */
 
 /**
  * Allocate memory for ecma-object

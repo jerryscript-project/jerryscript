@@ -26,9 +26,13 @@
  */
 
 /**
- * Helpers for updating uint16_t values.
+ * Helper for += on uint16_t values.
  */
 #define VM_PLUS_EQUAL_U16(base, value) (base) = (uint16_t) ((base) + (value))
+
+/**
+ * Helper for -= on uint16_t values.
+ */
 #define VM_MINUS_EQUAL_U16(base, value) (base) = (uint16_t) ((base) - (value))
 
 /**

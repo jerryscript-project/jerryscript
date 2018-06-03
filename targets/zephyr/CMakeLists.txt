@@ -40,7 +40,7 @@ add_custom_target(
   COMMAND echo Z_CFLAGS=${system_includes} ${includes} ${definitions} ${options}
   COMMAND echo NOSTDINC_FLAGS=${system_includes}
   COMMAND echo ZEPHYRINCLUDE=${includes}
-  COMMAND echo KBUILD_CFLAGS=${definitions}${options}
+  COMMAND echo KBUILD_CFLAGS=${definitions} ${options}
   VERBATIM
   USES_TERMINAL
 )

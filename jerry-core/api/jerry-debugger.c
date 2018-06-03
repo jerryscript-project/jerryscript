@@ -28,7 +28,7 @@ jerry_debugger_is_connected (void)
 {
 #ifdef JERRY_DEBUGGER
   return JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED;
-#else
+#else /* !JERRY_DEBUGGER */
   return false;
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_is_connected */
@@ -190,7 +190,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
   }
 
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
-#else
+#else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (callback_p);
   JERRY_UNUSED (user_p);
 
@@ -202,13 +202,12 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
  * Send the output of the program to the debugger client.
  * Currently only sends print output.
  */
-
-#ifdef JERRY_DEBUGGER
 void
 jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
                             jerry_size_t str_size, /**< string size */
                             uint8_t type) /**< type of output */
 {
+#ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
@@ -216,5 +215,9 @@ jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
                                 (const uint8_t *) buffer,
                                 sizeof (uint8_t) * str_size);
   }
-} /* jerry_debugger_send_output */
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (buffer);
+  JERRY_UNUSED (str_size);
+  JERRY_UNUSED (type);
 #endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_send_output */

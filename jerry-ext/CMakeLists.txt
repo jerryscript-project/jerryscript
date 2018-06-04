@@ -33,7 +33,7 @@ set(SOURCE_EXT
     ${SOURCE_EXT_MODULE}
     ${SOURCE_EXT_HANDLER})
 
-add_library(${JERRY_EXT_NAME} STATIC ${SOURCE_EXT})
+add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 
 target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT})
 target_compile_definitions(${JERRY_EXT_NAME} PUBLIC ${DEFINES_EXT})

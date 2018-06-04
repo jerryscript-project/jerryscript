@@ -100,14 +100,14 @@ def get_arguments():
                         help='size of memory heap, in kilobytes (default: %(default)s)')
     parser.add_argument('--profile', metavar='FILE', action='store', default=DEFAULT_PROFILE,
                         help='specify profile file (default: %(default)s)')
+    parser.add_argument('--shared-libs', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
+                        help='enable building of shared libraries (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-exec', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable executing snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--snapshot-save', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable saving snapshot files (%(choices)s; default: %(default)s)')
     parser.add_argument('--system-allocator', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable system allocator (%(choices)s; default: %(default)s)')
-    parser.add_argument('--static-link', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
-                        help='enable static linking of binaries (%(choices)s; default: %(default)s)')
     parser.add_argument('--strip', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
                         help='strip release binaries (%(choices)s; default: %(default)s)')
     parser.add_argument('--toolchain', metavar='FILE', action='store', default=default_toolchain(),
@@ -174,7 +174,7 @@ def generate_build_options(arguments):
     build_options.append('-DFEATURE_SNAPSHOT_EXEC=%s' % arguments.snapshot_exec)
     build_options.append('-DFEATURE_SNAPSHOT_SAVE=%s' % arguments.snapshot_save)
     build_options.append('-DFEATURE_SYSTEM_ALLOCATOR=%s' % arguments.system_allocator)
-    build_options.append('-DENABLE_STATIC_LINK=%s' % arguments.static_link)
+    build_options.append('-DBUILD_SHARED_LIBS=%s' % arguments.shared_libs)
     build_options.append('-DENABLE_STRIP=%s' % arguments.strip)
     build_options.append('-DFEATURE_VM_EXEC_STOP=%s' % arguments.vm_exec_stop)
 

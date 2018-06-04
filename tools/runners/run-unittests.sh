@@ -29,8 +29,8 @@ UNITTEST_OK=$DIR/unittests.passed
 
 rm -f $UNITTEST_ERROR $UNITTEST_OK
 
-UNITTESTS=$(ls $DIR/unit-*)
-total=$(ls $DIR/unit-* | wc -l)
+UNITTESTS=$(find $DIR -maxdepth 1 -type f -name 'unit-*')
+total=$(find $DIR -maxdepth 1 -type f -name 'unit-*' | wc -l)
 
 if [ "$total" -eq 0 ]
 then

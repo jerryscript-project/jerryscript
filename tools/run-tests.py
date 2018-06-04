@@ -206,6 +206,9 @@ def create_binary(job, options):
     build_dir_path = os.path.join(options.outdir, job.name)
     build_cmd.append('--builddir=%s' % build_dir_path)
 
+    install_dir_path = os.path.join(build_dir_path, 'local')
+    build_cmd.append('--install=%s' % install_dir_path)
+
     if options.toolchain:
         build_cmd.append('--toolchain=%s' % options.toolchain)
 
@@ -227,7 +230,7 @@ def create_binary(job, options):
     return ret, build_dir_path
 
 def get_binary_path(build_dir_path):
-    return os.path.join(build_dir_path, 'bin', 'jerry')
+    return os.path.join(build_dir_path, 'local', 'bin', 'jerry')
 
 def hash_binary(bin_path):
     blocksize = 65536
@@ -388,7 +391,7 @@ def run_unittests(options):
 
         ret_test |= run_check([
             settings.UNITTEST_RUNNER_SCRIPT,
-            os.path.join(build_dir_path, 'bin'),
+            os.path.join(build_dir_path, 'tests'),
             "-q" if options.quiet else "",
         ])
 

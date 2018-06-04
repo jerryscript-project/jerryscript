@@ -131,17 +131,12 @@ message(STATUS "DOCTESTS                    " ${DOCTESTS})
 message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
 
 # Setup directories
-# Project binary dir
-set(PROJECT_BINARY_DIR "${CMAKE_BINARY_DIR}")
-
-# Library output directory
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/")
-
-# Executable output directory
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin/")
-
-# Archive targets output Directory
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib/")
+# Note: This mimics a conventional file system layout in the build directory for
+# the sake of convenient location of build artefacts. Proper installation to
+# traditional locations is also supported, e.g., to /usr/local.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/")
 
 # Remove rdynamic option
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )

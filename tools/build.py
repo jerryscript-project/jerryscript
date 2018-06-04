@@ -68,6 +68,8 @@ def get_arguments():
                         help='enable error messages (%(choices)s; default: %(default)s)')
     parser.add_argument('--external-context', metavar='X', choices=['ON', 'OFF'], default='OFF', type=str.upper,
                         help='enable external context (%(choices)s; default: %(default)s)')
+    parser.add_argument('--install', metavar='DIR', nargs='?', default=None, const=False,
+                        help='install after build (default: don\'t install; default directory if install: OS-specific)')
     parser.add_argument('-j', '--jobs', metavar='N', action='store', type=int, default=multiprocessing.cpu_count() + 1,
                         help='Allowed N build jobs at once (default: %(default)s)')
     parser.add_argument('--jerry-cmdline', metavar='X', choices=['ON', 'OFF'], default='ON', type=str.upper,
@@ -206,18 +208,27 @@ def configure_output_dir(arguments):
     if not os.path.exists(arguments.builddir):
         os.makedirs(arguments.builddir)
 
-def configure_build(arguments):
+def configure_jerry(arguments):
     configure_output_dir(arguments)
 
     build_options = generate_build_options(arguments)
 
     cmake_cmd = ['cmake', '-B' + arguments.builddir, '-H' + settings.PROJECT_DIR]
+
+    if arguments.install:
+        cmake_cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % arguments.install)
+
     cmake_cmd.extend(build_options)
 
     return subprocess.call(cmake_cmd)
 
-def build_jerry(arguments):
-    return subprocess.call(['make', '--no-print-directory', '-j', str(arguments.jobs), '-C', arguments.builddir])
+def make_jerry(arguments, target=None):
+    make_cmd = ['make', '--no-print-directory', '-j', str(arguments.jobs), '-C', arguments.builddir]
+
+    if target:
+        make_cmd.append(target)
+
+    return subprocess.call(make_cmd)
 
 def print_result(ret):
     print('=' * 30)
@@ -229,10 +240,14 @@ def print_result(ret):
 
 def main():
     arguments = get_arguments()
-    ret = configure_build(arguments)
+
+    ret = configure_jerry(arguments)
 
     if not ret:
-        ret = build_jerry(arguments)
+        ret = make_jerry(arguments)
+
+    if not ret and arguments.install is not None:
+        ret = make_jerry(arguments, 'install')
 
     print_result(ret)
     sys.exit(ret)

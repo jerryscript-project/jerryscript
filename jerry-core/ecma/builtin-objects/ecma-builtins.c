@@ -56,26 +56,26 @@ typedef ecma_value_t (*ecma_builtin_dispatch_call_t)(const ecma_value_t argument
  */
 static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
 {
-  #define BUILTIN(a, b, c, d, e)
-  #define BUILTIN_ROUTINE(builtin_id, \
-                          object_type, \
-                          object_prototype_builtin_id, \
-                          is_extensible, \
-                          lowercase_name) \
-    ecma_builtin_ ## lowercase_name ## _dispatch_routine,
-  #include "ecma-builtins.inc.h"
-  #undef BUILTIN
-  #undef BUILTIN_ROUTINE
-  #define BUILTIN_ROUTINE(a, b, c, d, e)
-  #define BUILTIN(builtin_id, \
-                  object_type, \
-                  object_prototype_builtin_id, \
-                  is_extensible, \
-                  lowercase_name) \
-    ecma_builtin_ ## lowercase_name ## _dispatch_routine,
-  #include "ecma-builtins.inc.h"
-  #undef BUILTIN
-  #undef BUILTIN_ROUTINE
+#define BUILTIN(a, b, c, d, e)
+#define BUILTIN_ROUTINE(builtin_id, \
+                        object_type, \
+                        object_prototype_builtin_id, \
+                        is_extensible, \
+                        lowercase_name) \
+  ecma_builtin_ ## lowercase_name ## _dispatch_routine,
+#include "ecma-builtins.inc.h"
+#undef BUILTIN
+#undef BUILTIN_ROUTINE
+#define BUILTIN_ROUTINE(a, b, c, d, e)
+#define BUILTIN(builtin_id, \
+                object_type, \
+                object_prototype_builtin_id, \
+                is_extensible, \
+                lowercase_name) \
+  ecma_builtin_ ## lowercase_name ## _dispatch_routine,
+#include "ecma-builtins.inc.h"
+#undef BUILTIN
+#undef BUILTIN_ROUTINE
 };
 
 /**
@@ -83,16 +83,16 @@ static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
  */
 static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
 {
-  #define BUILTIN(a, b, c, d, e)
-  #define BUILTIN_ROUTINE(builtin_id, \
-                          object_type, \
-                          object_prototype_builtin_id, \
-                          is_extensible, \
-                          lowercase_name) \
-    ecma_builtin_ ## lowercase_name ## _dispatch_call,
-  #include "ecma-builtins.inc.h"
-  #undef BUILTIN_ROUTINE
-  #undef BUILTIN
+#define BUILTIN(a, b, c, d, e)
+#define BUILTIN_ROUTINE(builtin_id, \
+                        object_type, \
+                        object_prototype_builtin_id, \
+                        is_extensible, \
+                        lowercase_name) \
+  ecma_builtin_ ## lowercase_name ## _dispatch_call,
+#include "ecma-builtins.inc.h"
+#undef BUILTIN_ROUTINE
+#undef BUILTIN
 };
 
 /**
@@ -100,16 +100,16 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
  */
 static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
 {
-  #define BUILTIN(a, b, c, d, e)
-  #define BUILTIN_ROUTINE(builtin_id, \
-                          object_type, \
-                          object_prototype_builtin_id, \
-                          is_extensible, \
-                          lowercase_name) \
-    ecma_builtin_ ## lowercase_name ## _dispatch_construct,
-  #include "ecma-builtins.inc.h"
-  #undef BUILTIN_ROUTINE
-  #undef BUILTIN
+#define BUILTIN(a, b, c, d, e)
+#define BUILTIN_ROUTINE(builtin_id, \
+                        object_type, \
+                        object_prototype_builtin_id, \
+                        is_extensible, \
+                        lowercase_name) \
+  ecma_builtin_ ## lowercase_name ## _dispatch_construct,
+#include "ecma-builtins.inc.h"
+#undef BUILTIN_ROUTINE
+#undef BUILTIN
 };
 
 /**

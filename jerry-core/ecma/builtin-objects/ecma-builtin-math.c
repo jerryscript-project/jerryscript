@@ -213,27 +213,25 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
     }
 
-    if (builtin_routine_id >= ECMA_MATH_OBJECT_ATAN2)
+    if (builtin_routine_id >= ECMA_MATH_OBJECT_ATAN2
+        && arguments_number >= 2)
     {
-      if (arguments_number >= 2)
+      if (ecma_is_value_number (arguments_list[1]))
       {
-        if (ecma_is_value_number (arguments_list[1]))
+        y = ecma_get_number_from_value (arguments_list[1]);
+      }
+      else
+      {
+        ecma_value_t value = ecma_op_to_number (arguments_list[1]);
+
+        if (ECMA_IS_VALUE_ERROR (value))
         {
-          y = ecma_get_number_from_value (arguments_list[1]);
+          return value;
         }
-        else
-        {
-          ecma_value_t value = ecma_op_to_number (arguments_list[1]);
 
-          if (ECMA_IS_VALUE_ERROR (value))
-          {
-            return value;
-          }
+        y = ecma_get_number_from_value (value);
 
-          y = ecma_get_number_from_value (value);
-
-          ecma_fast_free_value (value);
-        }
+        ecma_fast_free_value (value);
       }
     }
 

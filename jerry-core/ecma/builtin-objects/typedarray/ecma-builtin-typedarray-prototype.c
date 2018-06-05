@@ -198,12 +198,10 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
         ret_value = ECMA_VALUE_FALSE;
       }
     }
-    else if (mode == TYPEDARRAY_ROUTINE_SOME)
+    else if (mode == TYPEDARRAY_ROUTINE_SOME
+             && ecma_op_to_boolean (call_value))
     {
-      if (ecma_op_to_boolean (call_value))
-      {
-        ret_value = ECMA_VALUE_TRUE;
-      }
+      ret_value = ECMA_VALUE_TRUE;
     }
 
     ECMA_FINALIZE (call_value);

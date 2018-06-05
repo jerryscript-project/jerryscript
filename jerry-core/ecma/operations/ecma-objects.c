@@ -264,29 +264,27 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     {
       uint32_t index = ecma_string_get_array_index (property_name_p);
 
-      if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+      if (index != ECMA_STRING_NOT_ARRAY_INDEX
+          && index < ext_object_p->u.pseudo_array.u1.length)
       {
-        if (index < ext_object_p->u.pseudo_array.u1.length)
+        ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+        if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
         {
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-          {
-            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+          ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                      ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
+          JERRY_ASSERT (lex_env_p != NULL
+                        && ecma_is_lexical_environment (lex_env_p));
 
-            JERRY_ASSERT (lex_env_p != NULL
-                          && ecma_is_lexical_environment (lex_env_p));
+          ecma_value_t binding_value = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
 
-            ecma_value_t binding_value = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-
-            ecma_named_data_property_assign_value (object_p,
-                                                   ECMA_PROPERTY_VALUE_PTR (property_p),
-                                                   binding_value);
-            ecma_free_value (binding_value);
-          }
+          ecma_named_data_property_assign_value (object_p,
+                                                 ECMA_PROPERTY_VALUE_PTR (property_p),
+                                                 binding_value);
+          ecma_free_value (binding_value);
         }
       }
     }
@@ -456,24 +454,22 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX
+            && index < ext_object_p->u.pseudo_array.u1.length)
         {
-          if (index < ext_object_p->u.pseudo_array.u1.length)
+          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
           {
-            ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-            if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-              ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                          ext_object_p->u.pseudo_array.u2.lex_env_cp);
+            JERRY_ASSERT (lex_env_p != NULL
+                          && ecma_is_lexical_environment (lex_env_p));
 
-              JERRY_ASSERT (lex_env_p != NULL
-                            && ecma_is_lexical_environment (lex_env_p));
-
-              return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-            }
+            return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
           }
         }
       }
@@ -781,25 +777,23 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX
+            && index < ext_object_p->u.pseudo_array.u1.length)
         {
-          if (index < ext_object_p->u.pseudo_array.u1.length)
+          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
           {
-            ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-            if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-              ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                          ext_object_p->u.pseudo_array.u2.lex_env_cp);
+            JERRY_ASSERT (lex_env_p != NULL
+                          && ecma_is_lexical_environment (lex_env_p));
 
-              JERRY_ASSERT (lex_env_p != NULL
-                            && ecma_is_lexical_environment (lex_env_p));
-
-              ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
-              return ECMA_VALUE_TRUE;
-            }
+            ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
+            return ECMA_VALUE_TRUE;
           }
         }
       }

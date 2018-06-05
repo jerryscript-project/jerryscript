@@ -775,14 +775,10 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
       /* 9. */
-      if (prop_desc.is_get_defined
-          || prop_desc.is_set_defined)
+      if ((prop_desc.is_get_defined || prop_desc.is_set_defined)
+          && (prop_desc.is_value_defined || prop_desc.is_writable_defined))
       {
-        if (prop_desc.is_value_defined
-            || prop_desc.is_writable_defined)
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
-        }
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
       }
     }
 

@@ -1245,13 +1245,11 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
         try_statement.type = parser_finally_block;
       }
     }
-    else if (try_statement.type == parser_try_block)
+    else if (try_statement.type == parser_try_block
+             && context_p->token.type != LEXER_KEYW_CATCH
+             && context_p->token.type != LEXER_KEYW_FINALLY)
     {
-      if (context_p->token.type != LEXER_KEYW_CATCH
-          && context_p->token.type != LEXER_KEYW_FINALLY)
-      {
-        parser_raise_error (context_p, PARSER_ERR_CATCH_FINALLY_EXPECTED);
-      }
+      parser_raise_error (context_p, PARSER_ERR_CATCH_FINALLY_EXPECTED);
     }
   }
 
@@ -1694,41 +1692,39 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     lexer_next_token (context_p);
 
     if (context_p->token.type != LEXER_SEMICOLON
-        && context_p->token.type != LEXER_RIGHT_BRACE)
+        && context_p->token.type != LEXER_RIGHT_BRACE
+        && (!(context_p->token.flags & LEXER_WAS_NEWLINE)
+            || LEXER_IS_BINARY_OP_TOKEN (context_p->token.type)
+            || context_p->token.type == LEXER_LEFT_PAREN
+            || context_p->token.type == LEXER_LEFT_SQUARE
+            || context_p->token.type == LEXER_DOT))
     {
-      if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
-          || LEXER_IS_BINARY_OP_TOKEN (context_p->token.type)
-          || context_p->token.type == LEXER_LEFT_PAREN
-          || context_p->token.type == LEXER_LEFT_SQUARE
-          || context_p->token.type == LEXER_DOT)
-      {
-        /* The string is part of an expression statement. */
-        context_p->status_flags = status_flags;
+      /* The string is part of an expression statement. */
+      context_p->status_flags = status_flags;
 
 #ifdef JERRY_DEBUGGER
-        if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-        {
-          JERRY_ASSERT (context_p->last_breakpoint_line == 0);
+      if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      {
+        JERRY_ASSERT (context_p->last_breakpoint_line == 0);
 
-          parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
-          parser_flush_cbc (context_p);
+        parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
+        parser_flush_cbc (context_p);
 
-          parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
+        parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, context_p->token.line);
 
-          context_p->last_breakpoint_line = context_p->token.line;
-        }
+        context_p->last_breakpoint_line = context_p->token.line;
+      }
 #endif /* JERRY_DEBUGGER */
 #ifdef JERRY_ENABLE_LINE_INFO
-        parser_emit_line_info (context_p, context_p->token.line, false);
+      parser_emit_line_info (context_p, context_p->token.line, false);
 #endif /* JERRY_ENABLE_LINE_INFO */
 
-        lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
-        parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-        /* The extra_value is used for saving the token. */
-        context_p->token.extra_value = context_p->token.type;
-        context_p->token.type = LEXER_EXPRESSION_START;
-        break;
-      }
+      lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
+      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+      /* The extra_value is used for saving the token. */
+      context_p->token.extra_value = context_p->token.type;
+      context_p->token.type = LEXER_EXPRESSION_START;
+      break;
     }
 
 #ifdef PARSER_DUMP_BYTE_CODE
@@ -1746,16 +1742,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     }
 
     /* The last directive prologue can be the result of the script. */
-    if (!(context_p->status_flags & PARSER_IS_FUNCTION))
+    if (!(context_p->status_flags & PARSER_IS_FUNCTION)
+        && (context_p->token.type != LEXER_LITERAL
+            || context_p->token.lit_location.type != LEXER_STRING_LITERAL))
     {
-      if (context_p->token.type != LEXER_LITERAL
-          || context_p->token.lit_location.type != LEXER_STRING_LITERAL)
-      {
-        lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
-        parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-        parser_emit_cbc (context_p, CBC_POP_BLOCK);
-        parser_flush_cbc (context_p);
-      }
+      lexer_construct_literal_object (context_p, &lit_location, LEXER_STRING_LITERAL);
+      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+      parser_emit_cbc (context_p, CBC_POP_BLOCK);
+      parser_flush_cbc (context_p);
     }
   }
 

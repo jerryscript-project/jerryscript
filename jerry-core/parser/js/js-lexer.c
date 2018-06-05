@@ -1777,14 +1777,12 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   {
     int32_t int_num = (int32_t) num;
 
-    if (int_num == num)
+    if (int_num == num
+        && int_num <= CBC_PUSH_NUMBER_BYTE_RANGE_END
+        && (int_num != 0 || !is_negative_number))
     {
-      if (int_num <= CBC_PUSH_NUMBER_BYTE_RANGE_END
-          && (int_num != 0 || !is_negative_number))
-      {
-        context_p->lit_object.index = (uint16_t) int_num;
-        return true;
-      }
+      context_p->lit_object.index = (uint16_t) int_num;
+      return true;
     }
   }
 

@@ -218,7 +218,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 /**
  * Snapshot literal alignment.
  */
-#define JERRY_SNAPSHOT_LITERAL_ALIGNMENT (1u << JERRY_SNAPSHOT_LITERAL_ALIGNMENT_LOG)
+#define JERRY_SNAPSHOT_LITERAL_ALIGNMENT (1U << JERRY_SNAPSHOT_LITERAL_ALIGNMENT_LOG)
 
 /**
  * Literal offset shift.
@@ -228,7 +228,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 /**
  * Literal value is number.
  */
-#define JERRY_SNAPSHOT_LITERAL_IS_NUMBER (1u << ECMA_VALUE_SHIFT)
+#define JERRY_SNAPSHOT_LITERAL_IS_NUMBER (1U << ECMA_VALUE_SHIFT)
 
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 

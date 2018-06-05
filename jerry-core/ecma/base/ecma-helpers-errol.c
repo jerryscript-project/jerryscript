@@ -203,14 +203,14 @@ ecma_errol0_dtoa (double val, /**< ecma number */
 
     if ((high_bound.value == high_digit) && (high_bound.offset < 0))
     {
-      high_digit = (uint8_t) (high_digit - 1u);
+      high_digit = (uint8_t) (high_digit - 1U);
     }
 
     uint8_t low_digit = (uint8_t) low_bound.value;
 
     if ((low_bound.value == low_digit) && (low_bound.offset < 0))
     {
-      low_digit = (uint8_t) (low_digit - 1u);
+      low_digit = (uint8_t) (low_digit - 1U);
     }
 
     if (low_digit != high_digit)

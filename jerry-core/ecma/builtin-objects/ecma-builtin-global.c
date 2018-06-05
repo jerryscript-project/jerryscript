@@ -585,7 +585,7 @@ ecma_builtin_global_object_character_is_in (uint32_t character, /**< character *
                                             const uint8_t *bitset) /**< character set */
 {
   JERRY_ASSERT (character < 128);
-  return (bitset[character >> 3] & (1u << (character & 0x7))) != 0;
+  return (bitset[character >> 3] & (1U << (character & 0x7))) != 0;
 } /* ecma_builtin_global_object_character_is_in */
 
 /**

@@ -1263,7 +1263,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
 
   for (uint32_t i = 0; i < num_of_iter_length; i++)
   {
-    num_of_iter_p[i] = 0u;
+    num_of_iter_p[i] = 0U;
   }
 
   bool is_match = false;

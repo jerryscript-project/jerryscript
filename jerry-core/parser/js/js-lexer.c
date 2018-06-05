@@ -47,7 +47,7 @@ static parser_line_counter_t
 align_column_to_tab (parser_line_counter_t column) /**< current column */
 {
   /* Tab aligns to zero column start position. */
-  return (parser_line_counter_t) (((column + (8u - 1u)) & ~ECMA_STRING_CONTAINER_MASK) + 1u);
+  return (parser_line_counter_t) (((column + (8U - 1U)) & ~ECMA_STRING_CONTAINER_MASK) + 1U);
 } /* align_column_to_tab */
 
 /**
@@ -720,7 +720,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
                                                                     source_p + 1,
                                                                     hex_part_length));
         source_p += hex_part_length + 1;
-        PARSER_PLUS_EQUAL_LC (column, hex_part_length + 1u);
+        PARSER_PLUS_EQUAL_LC (column, hex_part_length + 1U);
         continue;
       }
     }

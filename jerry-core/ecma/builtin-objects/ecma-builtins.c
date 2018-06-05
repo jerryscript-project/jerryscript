@@ -632,7 +632,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   uint32_t *bitset_p = built_in_props_p->instantiated_bitset + (index >> 5);
 
-  uint32_t bit_for_index = (uint32_t) (1u << (index & 0x1f));
+  uint32_t bit_for_index = (uint32_t) (1U << (index & 0x1f));
 
   if (*bitset_p & bit_for_index)
   {
@@ -854,7 +854,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       ecma_string_t *name_p = ecma_get_magic_string (curr_property_p->magic_string_id);
 
-      uint32_t bit_for_index = (uint32_t) 1u << index;
+      uint32_t bit_for_index = (uint32_t) 1U << index;
 
       if (!(*bitset_p & bit_for_index) || ecma_op_object_has_own_property (object_p, name_p))
       {

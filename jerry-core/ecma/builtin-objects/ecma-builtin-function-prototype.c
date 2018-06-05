@@ -219,7 +219,7 @@ ecma_builtin_function_prototype_object_call (ecma_value_t this_arg, /**< this ar
       return ecma_op_function_call (func_obj_p,
                                     arguments_list_p[0],
                                     arguments_list_p + 1,
-                                    (ecma_length_t) (arguments_number - 1u));
+                                    (ecma_length_t) (arguments_number - 1U));
     }
   }
 } /* ecma_builtin_function_prototype_object_call */

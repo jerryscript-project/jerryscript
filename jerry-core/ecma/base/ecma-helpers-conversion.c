@@ -85,7 +85,7 @@
 #define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_HIGH_AND_MIDDLE_TO_UINT64(name, uint64_var) \
 { \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  uint64_var = ((name[3] << 32u) | (name[2])) + (((name[1] >> 31u) != 0 ? 1 : 0)); \
+  uint64_var = ((name[3] << 32U) | (name[2])) + (((name[1] >> 31U) != 0 ? 1 : 0)); \
 }
 
 /**
@@ -94,7 +94,7 @@
 #define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64(name, uint64_var) \
 { \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  uint64_var = (name[1] << 32u) | (name[0]); \
+  uint64_var = (name[1] << 32U) | (name[0]); \
 }
 
 /**
@@ -142,13 +142,13 @@
 { \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
   \
-  name[3] = (uint32_t) (name[3] << 1u); \
-  name[3] |= name[2] >> 31u; \
-  name[2] = (uint32_t) (name[2] << 1u); \
-  name[2] |= name[1] >> 31u; \
-  name[1] = (uint32_t) (name[1] << 1u); \
-  name[1] |= name[0] >> 31u; \
-  name[0] = (uint32_t) (name[0] << 1u); \
+  name[3] = (uint32_t) (name[3] << 1U); \
+  name[3] |= name[2] >> 31U; \
+  name[2] = (uint32_t) (name[2] << 1U); \
+  name[2] |= name[1] >> 31U; \
+  name[1] = (uint32_t) (name[1] << 1U); \
+  name[1] |= name[0] >> 31U; \
+  name[0] = (uint32_t) (name[0] << 1U); \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
@@ -160,13 +160,13 @@
 { \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
   \
-  name[0] >>= 1u; \
-  name[0] |= (uint32_t) (name[1] << 31u); \
-  name[1] >>= 1u; \
-  name[1] |= (uint32_t) (name[2] << 31u); \
-  name[2] >>= 1u; \
-  name[2] |= (uint32_t) (name[3] << 31u); \
-  name[3] >>= 1u; \
+  name[0] >>= 1U; \
+  name[0] |= (uint32_t) (name[1] << 31U); \
+  name[1] >>= 1U; \
+  name[1] |= (uint32_t) (name[2] << 31U); \
+  name[2] >>= 1U; \
+  name[2] |= (uint32_t) (name[3] << 31U); \
+  name[3] >>= 1U; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
 }
@@ -179,11 +179,11 @@
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
   \
   name[0] += 1ull; \
-  name[1] += (name[0] >> 32u); \
+  name[1] += (name[0] >> 32U); \
   name[0] = (uint32_t) name[0]; \
-  name[2] += (name[1] >> 32u); \
+  name[2] += (name[1] >> 32U); \
   name[1] = (uint32_t) name[1]; \
-  name[3] += (name[2] >> 32u); \
+  name[3] += (name[2] >> 32U); \
   name[2] = (uint32_t) name[2]; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
@@ -202,11 +202,11 @@
   name_add_to[2] += name_to_add[2]; \
   name_add_to[3] += name_to_add[3]; \
   \
-  name_add_to[1] += (name_add_to[0] >> 32u); \
+  name_add_to[1] += (name_add_to[0] >> 32U); \
   name_add_to[0] = (uint32_t) name_add_to[0]; \
-  name_add_to[2] += (name_add_to[1] >> 32u); \
+  name_add_to[2] += (name_add_to[1] >> 32U); \
   name_add_to[1] = (uint32_t) name_add_to[1]; \
-  name_add_to[3] += (name_add_to[2] >> 32u); \
+  name_add_to[3] += (name_add_to[2] >> 32U); \
   name_add_to[2] = (uint32_t) name_add_to[2]; \
   \
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
@@ -261,57 +261,57 @@
   h2 = name[2] * div10_p_high; \
   h3 = name[3] * div10_p_high; \
   intermediate[0] += (uint32_t) l0; \
-  intermediate[1] += l0 >> 32u; \
+  intermediate[1] += l0 >> 32U; \
   \
   intermediate[1] += (uint32_t) l1; \
-  intermediate[2] += l1 >> 32u; \
+  intermediate[2] += l1 >> 32U; \
   intermediate[1] += (uint32_t) m0; \
-  intermediate[2] += m0 >> 32u; \
+  intermediate[2] += m0 >> 32U; \
   \
   intermediate[2] += (uint32_t) l2; \
-  intermediate[3] += l2 >> 32u; \
+  intermediate[3] += l2 >> 32U; \
   intermediate[2] += (uint32_t) m1; \
-  intermediate[3] += m1 >> 32u; \
+  intermediate[3] += m1 >> 32U; \
   intermediate[2] += (uint32_t) m0; \
-  intermediate[3] += m0 >> 32u; \
+  intermediate[3] += m0 >> 32U; \
   \
   intermediate[3] += (uint32_t) l3; \
-  intermediate[4] += l3 >> 32u; \
+  intermediate[4] += l3 >> 32U; \
   intermediate[3] += (uint32_t) m2; \
-  intermediate[4] += m2 >> 32u; \
+  intermediate[4] += m2 >> 32U; \
   intermediate[3] += (uint32_t) m1; \
-  intermediate[4] += m1 >> 32u; \
+  intermediate[4] += m1 >> 32U; \
   intermediate[3] += (uint32_t) h0; \
-  intermediate[4] += h0 >> 32u; \
+  intermediate[4] += h0 >> 32U; \
   \
   intermediate[4] += (uint32_t) m3; \
-  intermediate[5] += m3 >> 32u; \
+  intermediate[5] += m3 >> 32U; \
   intermediate[4] += (uint32_t) m2; \
-  intermediate[5] += m2 >> 32u; \
+  intermediate[5] += m2 >> 32U; \
   intermediate[4] += (uint32_t) h1; \
-  intermediate[5] += h1 >> 32u; \
+  intermediate[5] += h1 >> 32U; \
   \
   intermediate[5] += (uint32_t) m3; \
-  intermediate[6] += m3 >> 32u; \
+  intermediate[6] += m3 >> 32U; \
   intermediate[5] += (uint32_t) h2; \
-  intermediate[6] += h2 >> 32u; \
+  intermediate[6] += h2 >> 32U; \
   \
   intermediate[6] += (uint32_t) h3; \
-  intermediate[7] += h3 >> 32u; \
+  intermediate[7] += h3 >> 32U; \
   \
-  intermediate[1] += intermediate[0] >> 32u; \
+  intermediate[1] += intermediate[0] >> 32U; \
   intermediate[0] = (uint32_t) intermediate[0]; \
-  intermediate[2] += intermediate[1] >> 32u; \
+  intermediate[2] += intermediate[1] >> 32U; \
   intermediate[1] = (uint32_t) intermediate[1]; \
-  intermediate[3] += intermediate[2] >> 32u; \
+  intermediate[3] += intermediate[2] >> 32U; \
   intermediate[2] = (uint32_t) intermediate[2]; \
-  intermediate[4] += intermediate[3] >> 32u; \
+  intermediate[4] += intermediate[3] >> 32U; \
   intermediate[3] = (uint32_t) intermediate[3]; \
-  intermediate[5] += intermediate[4] >> 32u; \
+  intermediate[5] += intermediate[4] >> 32U; \
   intermediate[4] = (uint32_t) intermediate[4]; \
-  intermediate[6] += intermediate[5] >> 32u; \
+  intermediate[6] += intermediate[5] >> 32U; \
   intermediate[5] = (uint32_t) intermediate[5]; \
-  intermediate[7] += intermediate[6] >> 32u; \
+  intermediate[7] += intermediate[6] >> 32U; \
   intermediate[6] = (uint32_t) intermediate[6]; \
   \
   name[0] = intermediate[4]; \
@@ -663,7 +663,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128);
   ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128,
                                               0ull,
-                                              fraction_uint64 >> 32u,
+                                              fraction_uint64 >> 32U,
                                               (uint32_t) fraction_uint64,
                                               0ull);
 

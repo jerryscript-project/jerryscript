@@ -190,17 +190,16 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument 
       if (ecma_is_value_empty (ret_value))
       {
         /* 10. */
-        if (strip_prefix)
+        if (strip_prefix
+            && ((end_p - start_p) >= 2)
+            && (current == LIT_CHAR_0))
         {
-          if (end_p - start_p >= 2 && current == LIT_CHAR_0)
+          ecma_char_t next = *string_curr_p;
+          if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
           {
-            ecma_char_t next = *string_curr_p;
-            if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
-            {
-              /* Skip the 'x' or 'X' characters. */
-              start_p = ++string_curr_p;
-              rad = 16;
-            }
+            /* Skip the 'x' or 'X' characters. */
+            start_p = ++string_curr_p;
+            rad = 16;
           }
         }
 

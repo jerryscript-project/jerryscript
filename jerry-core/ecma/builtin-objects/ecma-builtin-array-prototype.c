@@ -1716,13 +1716,11 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t this_arg, /**< this a
         /* 9.a */
         ECMA_TRY_CATCH (get_value, ecma_op_object_find (obj_p, idx_str_p), ret_value);
 
-        if (ecma_is_value_found (get_value))
+        /* 9.b.i, 9.b.ii */
+        if (ecma_is_value_found (get_value)
+            && ecma_op_strict_equality_compare (arg1, get_value))
         {
-          /* 9.b.i, 9.b.ii */
-          if (ecma_op_strict_equality_compare (arg1, get_value))
-          {
-            found_index = ((ecma_number_t) from_idx);
-          }
+          found_index = ((ecma_number_t) from_idx);
         }
 
         ECMA_FINALIZE (get_value);
@@ -1863,13 +1861,11 @@ ecma_builtin_array_prototype_object_last_index_of (ecma_value_t this_arg, /**< t
       /* 8.a */
       ECMA_TRY_CATCH (get_value, ecma_op_object_find (obj_p, idx_str_p), ret_value);
 
-      if (ecma_is_value_found (get_value))
+      /* 8.b.i, 8.b.ii */
+      if (ecma_is_value_found (get_value)
+          && ecma_op_strict_equality_compare (search_element, get_value))
       {
-        /* 8.b.i, 8.b.ii */
-        if (ecma_op_strict_equality_compare (search_element, get_value))
-        {
-          num = ((ecma_number_t) from_idx);
-        }
+        num = ((ecma_number_t) from_idx);
       }
 
       ECMA_FINALIZE (get_value);

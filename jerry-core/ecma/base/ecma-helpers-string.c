@@ -1511,12 +1511,10 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
   }
 
   *size_p = size;
-  if (*flags_p & ECMA_STRING_FLAG_IS_ASCII)
+  if ((*flags_p & ECMA_STRING_FLAG_IS_ASCII)
+      && length != size)
   {
-    if (length != size)
-    {
-      *flags_p = (uint8_t) (*flags_p & ~ECMA_STRING_FLAG_IS_ASCII);
-    }
+    *flags_p = (uint8_t) (*flags_p & ~ECMA_STRING_FLAG_IS_ASCII);
   }
 
   return result_p;

@@ -60,21 +60,19 @@ parser_push_result (parser_context_t *context_p) /**< context */
   {
     JERRY_ASSERT (CBC_SAME_ARGS (context_p->last_cbc_opcode, context_p->last_cbc_opcode + 1));
 
-    if (context_p->last_cbc_opcode == CBC_POST_INCR
-        || context_p->last_cbc_opcode == CBC_POST_DECR)
+    if ((context_p->last_cbc_opcode == CBC_POST_INCR
+         || context_p->last_cbc_opcode == CBC_POST_DECR)
+        && context_p->stack_depth >= context_p->stack_limit)
     {
-      if (context_p->stack_depth >= context_p->stack_limit)
+      /* Stack limit is increased for CBC_POST_INCR_PUSH_RESULT
+       * and CBC_POST_DECR_PUSH_RESULT opcodes. Needed by vm.c. */
+      JERRY_ASSERT (context_p->stack_depth == context_p->stack_limit);
+
+      context_p->stack_limit++;
+
+      if (context_p->stack_limit > PARSER_MAXIMUM_STACK_LIMIT)
       {
-        /* Stack limit is increased for CBC_POST_INCR_PUSH_RESULT
-         * and CBC_POST_DECR_PUSH_RESULT opcodes. Needed by vm.c. */
-        JERRY_ASSERT (context_p->stack_depth == context_p->stack_limit);
-
-        context_p->stack_limit++;
-
-        if (context_p->stack_limit > PARSER_MAXIMUM_STACK_LIMIT)
-        {
-          parser_raise_error (context_p, PARSER_ERR_STACK_LIMIT_REACHED);
-        }
+        parser_raise_error (context_p, PARSER_ERR_STACK_LIMIT_REACHED);
       }
     }
 
@@ -1501,16 +1499,14 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       opcode = (cbc_opcode_t) context_p->stack_top_uint8;
       parser_stack_pop_uint8 (context_p);
 
-      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
+          && opcode == CBC_ASSIGN_SET_IDENT)
       {
-        if (opcode == CBC_ASSIGN_SET_IDENT)
-        {
-          JERRY_ASSERT (CBC_ARGS_EQ (CBC_ASSIGN_LITERAL_SET_IDENT,
-                                     CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
-          context_p->last_cbc.value = parser_stack_pop_uint16 (context_p);
-          context_p->last_cbc_opcode = CBC_ASSIGN_LITERAL_SET_IDENT;
-          continue;
-        }
+        JERRY_ASSERT (CBC_ARGS_EQ (CBC_ASSIGN_LITERAL_SET_IDENT,
+                                   CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2));
+        context_p->last_cbc.value = parser_stack_pop_uint16 (context_p);
+        context_p->last_cbc_opcode = CBC_ASSIGN_LITERAL_SET_IDENT;
+        continue;
       }
 
       if (cbc_flags[opcode] & CBC_HAS_LITERAL_ARG)

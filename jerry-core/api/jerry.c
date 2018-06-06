@@ -921,7 +921,7 @@ jerry_get_value_from_error (jerry_value_t value, /**< api value */
 
   if (!ecma_is_value_error_reference (value))
   {
-    return value;
+    return release ? value : ecma_copy_value (value);
   }
 
   jerry_value_t ret_val = jerry_acquire_value (ecma_get_error_reference_from_value (value)->value);

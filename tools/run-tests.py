@@ -34,10 +34,10 @@ OPTIONS_PROFILE_ES51 = [] # NOTE: same as ['--profile=es5.1']
 OPTIONS_PROFILE_ES2015 = ['--profile=es2015-subset']
 OPTIONS_DEBUG = ['--debug']
 OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
-OPTIONS_UNITTESTS = ['--unittests', '--jerry-cmdline=off', '--error-messages=on',
+OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=on',
                      '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on',
                      '--line-info=on', '--mem-stats=on']
-OPTIONS_DOCTESTS = ['--doctests', '--jerry-cmdline=off', '--error-messages=on',
+OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on',
                     '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']
 
 # Test options for unittests

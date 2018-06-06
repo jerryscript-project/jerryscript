@@ -16,6 +16,9 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_CORE_NAME jerry-core)
 project (${JERRY_CORE_NAME} C)
 
+# Optional build settings
+set(ENABLE_ALL_IN_ONE          OFF     CACHE BOOL   "Enable all-in-one build?")
+
 # Optional features
 set(FEATURE_CPOINTER_32_BIT    OFF     CACHE BOOL   "Enable 32 bit compressed pointers?")
 set(FEATURE_DEBUGGER           OFF     CACHE BOOL   "Enable JerryScript debugger?")
@@ -37,6 +40,12 @@ set(FEATURE_VM_EXEC_STOP       OFF     CACHE BOOL   "Enable VM execution stoppin
 set(MEM_HEAP_SIZE_KB           "512"   CACHE STRING "Size of memory heap, in kilobytes")
 
 # Option overrides
+if(USING_MSVC)
+  set(ENABLE_ALL_IN_ONE ON) # FIXME: This should not be needed but right now it is. To be tracked down and followed up.
+
+  set(ENABLE_ALL_IN_ONE_MESSAGE " (FORCED BY COMPILER)")
+endif()
+
 if(FEATURE_SYSTEM_ALLOCATOR)
   set(FEATURE_CPOINTER_32_BIT ON)
 
@@ -58,6 +67,7 @@ if(JERRY_CMDLINE_SNAPSHOT)
 endif()
 
 # Status messages
+message(STATUS "ENABLE_ALL_IN_ONE           " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN_ONE_MESSAGE})
 message(STATUS "FEATURE_CPOINTER_32_BIT     " ${FEATURE_CPOINTER_32_BIT} ${FEATURE_CPOINTER_32_BIT_MESSAGE})
 message(STATUS "FEATURE_DEBUGGER            " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_ERROR_MESSAGES      " ${FEATURE_ERROR_MESSAGES})

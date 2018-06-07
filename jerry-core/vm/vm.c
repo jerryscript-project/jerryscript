@@ -1047,7 +1047,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_SET_PROPERTY:
         {
-          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-1]);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          const int index = (byte_code_start_p[0] == CBC_EXT_OPCODE) ? -2 : -1;
+#else
+          const int index = -1;
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
           ecma_string_t *prop_name_p;
           ecma_property_t *property_p;
 
@@ -1102,8 +1108,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SET_GETTER:
         case VM_OC_SET_SETTER:
         {
+          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          const int index = (byte_code_start_p[1] > CBC_EXT_SET_SETTER) ? -2 : -1;
+#else
+          const int index = -1;
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
           opfunc_set_accessor (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_SET_GETTER,
-                               stack_top_p[-1],
+                               stack_top_p[index],
                                left_value,
                                right_value);
 

@@ -277,6 +277,23 @@ lexer_skip_spaces (parser_context_t *context_p) /**< context */
   }
 } /* lexer_skip_spaces */
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Skip all the continuous empty statements.
+ */
+void
+lexer_skip_empty_statements (parser_context_t *context_p) /**< context */
+{
+  lexer_skip_spaces (context_p);
+
+  while (*context_p->source_p == LIT_CHAR_SEMICOLON)
+  {
+    lexer_next_token (context_p);
+    lexer_skip_spaces (context_p);
+  }
+} /* lexer_skip_empty_statements */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
 /**
  * Keyword data.
  */
@@ -1308,6 +1325,25 @@ lexer_check_colon (parser_context_t *context_p) /**< context */
           && context_p->source_p[0] == (uint8_t) LIT_CHAR_COLON);
 } /* lexer_check_colon */
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Checks whether the next token is a left parenthesis.
+ *
+ * @return true - if the next token is a left parenthesis
+ *         false - otherwise
+ */
+bool
+lexer_check_left_paren (parser_context_t *context_p) /**< context */
+{
+  lexer_skip_spaces (context_p);
+
+  context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+
+  return (context_p->source_p < context_p->source_end_p
+          && context_p->source_p[0] == (uint8_t) LIT_CHAR_LEFT_PAREN);
+} /* lexer_check_left_paren */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
 
 /**
@@ -2231,6 +2267,10 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 {
   lexer_skip_spaces (context_p);
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  bool is_static_method = (context_p->token.type == LEXER_KEYW_STATIC);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
 
@@ -2262,6 +2302,17 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
           }
         }
       }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      if ((context_p->status_flags & PARSER_IS_CLASS)
+          && !must_be_identifier
+          && !is_static_method
+          && context_p->token.lit_location.length == 6
+          && lexer_compare_raw_identifier_to_current (context_p, "static", 6))
+      {
+        context_p->token.type = LEXER_KEYW_STATIC;
+        return;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
       create_literal_object = true;
     }
@@ -2296,6 +2347,17 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         return;
       }
     }
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    if ((context_p->status_flags & PARSER_IS_CLASS)
+        && !must_be_identifier
+        && !is_static_method
+        && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
+    {
+      context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
+      return;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
     if (create_literal_object)
     {

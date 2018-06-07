@@ -87,6 +87,11 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
   PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTOR,              /**< multiple class constructor */
+  PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
+  PARSER_ERR_CLASS_STATIC_PROPERTY_NAME_PROTOTYPE,    /**< static method name 'prototype' is not allowed */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
   PARSER_ERR_COLON_EXPECTED,                          /**< colon expected */
   PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED,          /**< colon expected for conditional expression */
   PARSER_ERR_SEMICOLON_EXPECTED,                      /**< semicolon expected */

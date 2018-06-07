@@ -149,6 +149,7 @@ typedef enum
   LEXER_PROPERTY_SETTER,         /**< property setter function */
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
+  LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
 
   /* Future reserved words: these keywords
    * must form a group after all other keywords. */

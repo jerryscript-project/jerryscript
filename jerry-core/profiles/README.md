@@ -31,6 +31,7 @@ Alternatively, if you want to use a custom profile at
 ```
 # Turn off every ES2015 feature EXCEPT the arrow functions
 CONFIG_DISABLE_ES2015_BUILTIN
+CONFIG_DISABLE_ES2015_CLASS
 CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
 CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
@@ -84,6 +85,8 @@ In JerryScript all of the features are enabled by default, so an empty profile f
   Disable the [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions).
 * `CONFIG_DISABLE_ES2015_BUILTIN`:
   Disable the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
+* `CONFIG_DISABLE_ES2015_CLASS`:
+  Disable the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
 * `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`:
   Disable the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`:
@@ -91,4 +94,4 @@ In JerryScript all of the features are enabled by default, so an empty profile f
 * `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`:
   Disable the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
 * `CONFIG_DISABLE_ES2015`: Disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
-  (equivalent to `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`, `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`, and `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`).
+  (equivalent to `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_CLASS`, `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`, `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`, and `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`).

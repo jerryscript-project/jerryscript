@@ -16,6 +16,7 @@
 
 from __future__ import print_function
 
+import io
 import os
 import re
 import sys
@@ -78,7 +79,7 @@ def main():
             for fname in files:
                 if any(fname.endswith(ext) for ext in EXTENSIONS):
                     fpath = os.path.join(root, fname)
-                    with open(fpath) as curr_file:
+                    with io.open(fpath, 'r', errors='ignore') as curr_file:
                         if not LICENSE.search(curr_file.read()):
                             print('%s: incorrect license' % fpath)
                             is_ok = False

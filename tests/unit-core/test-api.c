@@ -514,6 +514,30 @@ main (void)
   TEST_ASSERT (utf8_sz == 12);
   jerry_release_value (args[0]);
 
+  /* Test string: '3' */
+  {
+    jerry_value_t test_str = jerry_create_string ((const jerry_char_t *) "3");
+    char result_string[1] = { 'E' };
+    jerry_size_t copied_utf8 = jerry_substring_to_utf8_char_buffer (test_str,
+                                                                    0,
+                                                                    1,
+                                                                    (jerry_char_t *) result_string,
+                                                                    sizeof (result_string));
+    TEST_ASSERT (copied_utf8 == 1);
+    TEST_ASSERT (result_string[0] == '3');
+
+    result_string[0] = 'E';
+    jerry_size_t copied = jerry_substring_to_char_buffer (test_str,
+                                                          0,
+                                                          1,
+                                                          (jerry_char_t *) result_string,
+                                                          sizeof (result_string));
+    TEST_ASSERT (copied == 1);
+    TEST_ASSERT (result_string[0] == '3');
+
+    jerry_release_value (test_str);
+  }
+
   /* Test jerry_substring_to_char_buffer */
   args[0] = jerry_create_string ((jerry_char_t *) "an ascii string");
 

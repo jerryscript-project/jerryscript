@@ -1226,7 +1226,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
                                     lit_utf8_size_t buffer_size) /**< size of buffer */
 {
   JERRY_ASSERT (string_desc_p != NULL);
-  JERRY_ASSERT (string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
+  JERRY_ASSERT (ECMA_IS_DIRECT_STRING (string_desc_p) || string_desc_p->refs_and_container >= ECMA_STRING_REF_ONE);
   JERRY_ASSERT (buffer_p != NULL || buffer_size == 0);
 
   lit_utf8_size_t size = 0;

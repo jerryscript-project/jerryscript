@@ -100,8 +100,19 @@ typedef enum
 typedef enum
 {
   JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
-  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+  JERRY_PARSE_STRICT_MODE = (1 << 0) /**< enable strict mode */
 } jerry_parse_opts_t;
+
+/**
+ * GC operational modes.
+ */
+typedef enum
+{
+  JERRY_GC_SEVERITY_LOW, /**< free unused objects, but keep memory
+                          *   allocated for performance improvements
+                          *   such as property hash tables for large objects */
+  JERRY_GC_SEVERITY_HIGH /**< free as much memory as possible */
+} jerry_gc_mode_t;
 
 /**
  * Character type of JerryScript.
@@ -303,7 +314,7 @@ void jerry_init (jerry_init_flag_t flags);
 void jerry_cleanup (void);
 void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
                                    const jerry_length_t *str_lengths_p);
-void jerry_gc (void);
+void jerry_gc (jerry_gc_mode_t mode);
 void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
 
 bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);

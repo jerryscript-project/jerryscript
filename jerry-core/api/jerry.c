@@ -289,11 +289,12 @@ jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, /**< chara
  * Run garbage collection
  */
 void
-jerry_gc (void)
+jerry_gc (jerry_gc_mode_t mode) /**< operational mode */
 {
   jerry_assert_api_available ();
 
-  ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);
+  ecma_gc_run (mode == JERRY_GC_SEVERITY_LOW ? JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW
+                                             : JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 } /* jerry_gc */
 
 /**

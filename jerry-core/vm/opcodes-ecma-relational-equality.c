@@ -130,18 +130,29 @@ opfunc_in (ecma_value_t left_value, /**< left value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
 
-  ecma_value_t left_string_value = ecma_op_to_string (left_value);
-  if (ECMA_IS_VALUE_ERROR (left_string_value))
+  bool to_string = !ecma_is_value_string (left_value);
+
+  if (to_string)
   {
-    return left_string_value;
+    left_value = ecma_op_to_string (left_value);
+
+    if (ECMA_IS_VALUE_ERROR (left_value))
+    {
+      return left_value;
+    }
   }
 
-  ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (left_string_value);
+  ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (left_value);
   ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
 
-  ecma_free_value (left_string_value);
+  ecma_value_t result = ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p,
+                                                                              left_value_prop_name_p));
 
-  return ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p, left_value_prop_name_p));
+  if (to_string)
+  {
+    ecma_free_value (left_value);
+  }
+  return result;
 } /* opfunc_in */
 
 /**

@@ -118,7 +118,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_abort (value));
   TEST_ASSERT (jerry_value_is_error (value));
 
-  jerry_value_set_error_flag (&value);
+  value = jerry_create_error_from_value (value, true);
   TEST_ASSERT (!jerry_value_is_abort (value));
   TEST_ASSERT (jerry_value_is_error (value));
 

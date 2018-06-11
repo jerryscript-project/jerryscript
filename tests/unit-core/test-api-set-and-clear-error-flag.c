@@ -24,14 +24,24 @@ main (void)
   jerry_init (JERRY_INIT_EMPTY);
 
   jerry_value_t obj_val = jerry_create_object ();
-  jerry_value_set_error_flag (&obj_val);
+  obj_val = jerry_create_error_from_value (obj_val, true);
   jerry_value_t err_val = jerry_acquire_value (obj_val);
 
   obj_val = jerry_get_value_from_error (err_val, true);
 
   JERRY_ASSERT (obj_val != err_val);
   jerry_release_value (err_val);
-  jerry_release_value (obj_val);
+
+  jerry_value_t value = jerry_create_number (42);
+  jerry_value_t error = jerry_create_error_from_value (value, true);
+  error = jerry_create_error_from_value (error, true);
+  jerry_release_value (error);
+
+  value = jerry_create_number (42);
+  error = jerry_create_error_from_value (value, true);
+  jerry_value_t error2 = jerry_create_error_from_value (error, false);
+  jerry_release_value (error);
+  jerry_release_value (error2);
 
   jerry_cleanup ();
 } /* main */

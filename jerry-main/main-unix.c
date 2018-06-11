@@ -59,7 +59,7 @@ read_file (const char *file_name,
   }
   else
   {
-    file = fopen (file_name, "r");
+    file = fopen (file_name, "rb");
     if (file == NULL)
     {
       jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name);

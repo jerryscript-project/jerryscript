@@ -36,7 +36,7 @@ static const uint8_t *
 read_file (const char *file_name,
            size_t *out_size_p)
 {
-  FILE *file = fopen (file_name, "r");
+  FILE *file = fopen (file_name, "rb");
   if (file == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name);

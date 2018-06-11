@@ -113,16 +113,25 @@ fopen (const char *path, /**< file path */
   bool truncate = false;
   bool create_if_not_exist = false;
   bool position_at_end = false;
+  int modifier_position = 1;
 
   assert (path != NULL && mode != NULL);
-  assert (mode[1] == '+' || mode[1] == '\0');
+  assert (mode[1] == '\0'
+          || (mode[1] == '+' && mode[2] == '\0')
+          || (mode[1] == 'b' && mode[2] == '\0')
+          || (mode[1] == 'b' && mode[2] == '+' && mode[3] == '\0'));
+
+  if (mode[1] == 'b')
+  {
+    modifier_position = 2;
+  }
 
   switch (mode[0])
   {
     case 'r':
     {
       may_read = true;
-      may_write = (mode[1] == '+');
+      may_write = (mode[modifier_position] == '+');
       break;
     }
     case 'w':
@@ -130,7 +139,7 @@ fopen (const char *path, /**< file path */
       may_write = true;
       truncate = true;
       create_if_not_exist = true;
-      may_read = (mode[1] == '+');
+      may_read = (mode[modifier_position] == '+');
       break;
     }
     case 'a':
@@ -138,7 +147,7 @@ fopen (const char *path, /**< file path */
       may_write = true;
       position_at_end = true;
       create_if_not_exist = true;
-      if (mode[1] == '+')
+      if (mode[modifier_position] == '+')
       {
         assert (false && "unsupported mode a+");
       }

@@ -26,308 +26,220 @@
  *
  * \addtogroup ecmahelpers Helpers for operations with ECMA data types
  * @{
- *
+ */
+
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+
+/**
  * \addtogroup ecmahelpersbigintegers Helpers for operations intermediate 128-bit integers
  * @{
  */
 
 /**
- * Check that parts of 128-bit integer are 32-bit.
+ * 128-bit integer type
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT(name) \
-{ \
-  JERRY_ASSERT (name[0] <= UINT32_MAX); \
-  JERRY_ASSERT (name[1] <= UINT32_MAX); \
-  JERRY_ASSERT (name[2] <= UINT32_MAX); \
-  JERRY_ASSERT (name[3] <= UINT32_MAX); \
-}
+typedef struct
+{
+  uint64_t lo; /**< low 64 bits */
+  uint64_t hi; /**< high 64 bits */
+} ecma_uint128_t;
 
 /**
- * Declare 128-bit integer.
+ * Round high part of 128-bit integer to uint64_t
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER(name) uint64_t name[4] = { 0, 0, 0, 0 }
-
-/**
- * Declare 128-bit in-out argument integer.
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARG(name) uint64_t name[4]
-
-/**
- * Initialize 128-bit integer with given 32-bit parts
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT(name, high, mid_high, mid_low, low) \
-{ \
-  name[3] = high; \
-  name[2] = mid_high; \
-  name[1] = mid_low; \
-  name[0] = low; \
- \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-}
-
-/**
- * Copy specified 128-bit integer
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_COPY(name_copy_to, name_copy_from) \
-{ \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_copy_to); \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_copy_from); \
-  \
-  name_copy_to[0] = name_copy_from[0]; \
-  name_copy_to[1] = name_copy_from[1]; \
-  name_copy_to[2] = name_copy_from[2]; \
-  name_copy_to[3] = name_copy_from[3]; \
-}
-
-/**
- * Copy high and middle parts of 128-bit integer to specified uint64_t variable
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_HIGH_AND_MIDDLE_TO_UINT64(name, uint64_var) \
-{ \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  uint64_var = ((name[3] << 32u) | (name[2])) + (((name[1] >> 31u) != 0 ? 1 : 0)); \
-}
-
-/**
- * Copy middle and low parts of 128-bit integer to specified uint64_t variable
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_MIDDLE_AND_LOW_TO_UINT64(name, uint64_var) \
-{ \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  uint64_var = (name[1] << 32u) | (name[0]); \
-}
-
-/**
- * Check if specified 128-bit integers are equal
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ARE_EQUAL(name1, name2) \
-  ((name1)[0] == (name2[0]) \
-   && (name1)[1] == (name2[1]) \
-   && (name1)[2] == (name2[2]) \
-   && (name1)[3] == (name2[3]))
-
-/**
- * Check if bits [lowest_bit, 128) are zero
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO(name, lowest_bit) \
-  ((lowest_bit) >= 96 ? ((name[3] >> ((lowest_bit) - 96)) == 0) : \
-   ((lowest_bit) >= 64 ? (name[3] == 0 \
-                          && ((name[2] >> ((lowest_bit) - 64)) == 0)) : \
-   ((lowest_bit) >= 32 ? (name[3] == 0 \
-                          && name[2] == 0 && ((name[1] >> ((lowest_bit) - 32)) == 0)) : \
-   (name[3] == 0 && name[2] == 0 && name[1] == 0 && ((name[0] >> (lowest_bit)) == 0)))))
-
-/**
- * Check if bits [0, highest_bit] are zero
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_LOW_BIT_MASK_ZERO(name, highest_bit) \
-  ((highest_bit >= 96) ? (name[2] == 0 && name[1] == 0 && name[0] == 0 \
-                          && (((uint32_t) name[3] << (127 - (highest_bit))) == 0)) : \
-   ((highest_bit >= 64) ? (name[1] == 0 && name[0] == 0 \
-                           && (((uint32_t) name[2] << (95 - (highest_bit))) == 0)) : \
-   ((highest_bit >= 32) ? (name[0] == 0 \
-                           && (((uint32_t) name[1] << (63 - (highest_bit))) == 0)) : \
-    (((uint32_t) name[0] << (31 - (highest_bit))) == 0))))
+#define ECMA_UINT128_ROUND_HIGH_TO_UINT64(name) \
+  (name.hi + (name.lo >> 63u))
 
 /**
  * Check if 128-bit integer is zero
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO(name) \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (name, 0)
+#define ECMA_UINT128_IS_ZERO(name) \
+  (name.hi == 0 && name.lo == 0)
 
 /**
- * Shift 128-bit integer one bit left
+ * Left shift 128-bit integer by max 63 bits
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT(name) \
+#define ECMA_UINT128_LEFT_SHIFT_MAX63(name, shift) \
 { \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  \
-  name[3] = (uint32_t) (name[3] << 1u); \
-  name[3] |= name[2] >> 31u; \
-  name[2] = (uint32_t) (name[2] << 1u); \
-  name[2] |= name[1] >> 31u; \
-  name[1] = (uint32_t) (name[1] << 1u); \
-  name[1] |= name[0] >> 31u; \
-  name[0] = (uint32_t) (name[0] << 1u); \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  name.hi = (name.hi << (shift)) | (name.lo >> (64 - (shift))); \
+  name.lo <<= (shift); \
 }
 
 /**
- * Shift 128-bit integer one bit right
+ * Right shift 128-bit integer by max 63 bits
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT(name) \
+#define ECMA_UINT128_RIGHT_SHIFT_MAX63(name, shift) \
 { \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  \
-  name[0] >>= 1u; \
-  name[0] |= (uint32_t) (name[1] << 31u); \
-  name[1] >>= 1u; \
-  name[1] |= (uint32_t) (name[2] << 31u); \
-  name[2] >>= 1u; \
-  name[2] |= (uint32_t) (name[3] << 31u); \
-  name[3] >>= 1u; \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-}
-
-/**
- * Increment 128-bit integer
- */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INC(name) \
-{ \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
-  \
-  name[0] += 1ull; \
-  name[1] += (name[0] >> 32u); \
-  name[0] = (uint32_t) name[0]; \
-  name[2] += (name[1] >> 32u); \
-  name[1] = (uint32_t) name[1]; \
-  name[3] += (name[2] >> 32u); \
-  name[2] = (uint32_t) name[2]; \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  name.lo = (name.lo >> (shift)) | (name.hi << (64 - (shift))); \
+  name.hi >>= (shift); \
 }
 
 /**
  * Add 128-bit integer
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD(name_add_to, name_to_add) \
+#define ECMA_UINT128_ADD(name_add_to, name_to_add) \
 { \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_to_add); \
-  \
-  name_add_to[0] += name_to_add[0]; \
-  name_add_to[1] += name_to_add[1]; \
-  name_add_to[2] += name_to_add[2]; \
-  name_add_to[3] += name_to_add[3]; \
-  \
-  name_add_to[1] += (name_add_to[0] >> 32u); \
-  name_add_to[0] = (uint32_t) name_add_to[0]; \
-  name_add_to[2] += (name_add_to[1] >> 32u); \
-  name_add_to[1] = (uint32_t) name_add_to[1]; \
-  name_add_to[3] += (name_add_to[2] >> 32u); \
-  name_add_to[2] = (uint32_t) name_add_to[2]; \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_add_to); \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name_to_add); \
+  name_add_to.hi += name_to_add.hi; \
+  name_add_to.lo += name_to_add.lo; \
+  if (name_add_to.lo < name_to_add.lo) \
+  { \
+    name_add_to.hi++; \
+  } \
 }
 
 /**
  * Multiply 128-bit integer by 10
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10(name) \
+#define ECMA_UINT128_MUL10(name) \
 { \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  ECMA_UINT128_LEFT_SHIFT_MAX63 (name, 1u); \
   \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (name); \
+  ecma_uint128_t name ## _tmp = name; \
   \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (name ## _tmp); \
+  ECMA_UINT128_LEFT_SHIFT_MAX63 (name ## _tmp, 2u); \
   \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_COPY (name ## _tmp, name); \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (name ## _tmp); \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (name ## _tmp); \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ADD (name, name ## _tmp); \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  ECMA_UINT128_ADD (name, name ## _tmp); \
 }
 
 /**
  * Divide 128-bit integer by 10
+ *
+ * N = N3 *2^96  + N2 *2^64  + N1 *2^32  + N0 *2^0     // 128-bit dividend
+ * T = T3 *2^-32 + T2 *2^-64 + T1 *2^-96 + T0 *2^-128  // 128-bit divisor reciprocal, 1/10 * 2^-128
+ *
+ * N * T    = N3*T3 *2^64 + N2*T3 *2^32 + N1*T3 *2^0 + N0*T3 *2^-32
+ *          +               N3*T2 *2^32 + N2*T2 *2^0 + N1*T2 *2^-32 + N0*T2 *2^-64
+ *          +                             N3*T1 *2^0 + N2*T1 *2^-32 + N1*T1 *2^-64 + N0*T1 *2^-96
+ *          +                                          N3*T0 *2^-32 + N2*T0 *2^-64 + N1*T0 *2^-96 + N0*T0 *2^-128
+ *
+ *  Q3=carry  Q2=^+carry    Q1=^+carry    Q0=^+carry   fraction=^...
+ *
+ * Q = Q3 *2^96  + Q2 *2^64  + Q1 *2^32  + Q0 *2^0     // 128-bit quotient
  */
-#define ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10(name) \
+#define ECMA_UINT128_DIV10(name) \
 { \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  /* estimation of reciprocal of 10, 128 bits right of the binary point (T1 == T2) */ \
+  const uint64_t tenth_l = 0x9999999aul; \
+  const uint64_t tenth_m = 0x99999999ul; \
+  const uint64_t tenth_h = 0x19999999ul; \
   \
-  /* estimation of reciprocal of 10 */ \
-  const uint64_t div10_p_low = 0x9999999aul; \
-  const uint64_t div10_p_mid = 0x99999999ul; \
-  const uint64_t div10_p_high = 0x19999999ul; \
+  uint64_t l0 = ((uint32_t) name.lo) * tenth_l; \
+  uint64_t l1 = (name.lo >> 32u) * tenth_l; \
+  uint64_t l2 = ((uint32_t) name.hi) * tenth_l; \
+  uint64_t l3 = (name.hi >> 32u) * tenth_l; \
+  uint64_t m0 = ((uint32_t) name.lo) * tenth_m; \
+  uint64_t m1 = (name.lo >> 32u) * tenth_m; \
+  uint64_t m2 = ((uint32_t) name.hi) * tenth_m; \
+  uint64_t m3 = (name.hi >> 32u) * tenth_m; \
+  uint64_t h0 = ((uint32_t) name.lo) * tenth_h; \
+  uint64_t h1 = (name.lo >> 32u) * tenth_h; \
+  uint64_t h2 = ((uint32_t) name.hi) * tenth_h; \
+  uint64_t h3 = (name.hi >> 32u) * tenth_h; \
   \
-  uint64_t intermediate[8] = { 0, 0, 0, 0, 0, 0, 0, 0 }; \
-  uint64_t l0, l1, l2, l3, m0, m1, m2, m3, h0, h1, h2, h3; \
-  l0 = name[0] * div10_p_low; \
-  l1 = name[1] * div10_p_low; \
-  l2 = name[2] * div10_p_low; \
-  l3 = name[3] * div10_p_low; \
-  m0 = name[0] * div10_p_mid; \
-  m1 = name[1] * div10_p_mid; \
-  m2 = name[2] * div10_p_mid; \
-  m3 = name[3] * div10_p_mid; \
-  h0 = name[0] * div10_p_high; \
-  h1 = name[1] * div10_p_high; \
-  h2 = name[2] * div10_p_high; \
-  h3 = name[3] * div10_p_high; \
-  intermediate[0] += (uint32_t) l0; \
-  intermediate[1] += l0 >> 32u; \
+  uint64_t q0 = l0 >> 32u; \
+  q0 += (uint32_t) l1; \
+  q0 += (uint32_t) m0; \
   \
-  intermediate[1] += (uint32_t) l1; \
-  intermediate[2] += l1 >> 32u; \
-  intermediate[1] += (uint32_t) m0; \
-  intermediate[2] += m0 >> 32u; \
+  q0 >>= 32u; \
+  q0 += l1 >> 32u; \
+  q0 += m0 >> 32u; \
+  q0 += (uint32_t) l2; \
+  q0 += (uint32_t) m1; \
+  q0 += (uint32_t) m0; \
   \
-  intermediate[2] += (uint32_t) l2; \
-  intermediate[3] += l2 >> 32u; \
-  intermediate[2] += (uint32_t) m1; \
-  intermediate[3] += m1 >> 32u; \
-  intermediate[2] += (uint32_t) m0; \
-  intermediate[3] += m0 >> 32u; \
+  q0 >>= 32u; \
+  q0 += l2 >> 32u; \
+  q0 += m1 >> 32u; \
+  q0 += m0 >> 32u; \
+  q0 += (uint32_t) l3; \
+  q0 += (uint32_t) m2; \
+  q0 += (uint32_t) m1; \
+  q0 += (uint32_t) h0; \
   \
-  intermediate[3] += (uint32_t) l3; \
-  intermediate[4] += l3 >> 32u; \
-  intermediate[3] += (uint32_t) m2; \
-  intermediate[4] += m2 >> 32u; \
-  intermediate[3] += (uint32_t) m1; \
-  intermediate[4] += m1 >> 32u; \
-  intermediate[3] += (uint32_t) h0; \
-  intermediate[4] += h0 >> 32u; \
+  q0 >>=32u; \
+  q0 += l3 >> 32u; \
+  q0 += m2 >> 32u; \
+  q0 += m1 >> 32u; \
+  q0 += h0 >> 32u; \
+  q0 += (uint32_t) m3; \
+  q0 += (uint32_t) m2; \
+  q0 += (uint32_t) h1; \
   \
-  intermediate[4] += (uint32_t) m3; \
-  intermediate[5] += m3 >> 32u; \
-  intermediate[4] += (uint32_t) m2; \
-  intermediate[5] += m2 >> 32u; \
-  intermediate[4] += (uint32_t) h1; \
-  intermediate[5] += h1 >> 32u; \
+  uint64_t q1 = q0 >> 32u; \
+  q1 += m3 >> 32u; \
+  q1 += m2 >> 32u; \
+  q1 += h1 >> 32u; \
+  q1 += (uint32_t) m3; \
+  q1 += (uint32_t) h2; \
   \
-  intermediate[5] += (uint32_t) m3; \
-  intermediate[6] += m3 >> 32u; \
-  intermediate[5] += (uint32_t) h2; \
-  intermediate[6] += h2 >> 32u; \
+  uint64_t q32 = q1 >> 32u; \
+  q32 += m3 >> 32u; \
+  q32 += h2 >> 32u; \
+  q32 += h3; \
   \
-  intermediate[6] += (uint32_t) h3; \
-  intermediate[7] += h3 >> 32u; \
-  \
-  intermediate[1] += intermediate[0] >> 32u; \
-  intermediate[0] = (uint32_t) intermediate[0]; \
-  intermediate[2] += intermediate[1] >> 32u; \
-  intermediate[1] = (uint32_t) intermediate[1]; \
-  intermediate[3] += intermediate[2] >> 32u; \
-  intermediate[2] = (uint32_t) intermediate[2]; \
-  intermediate[4] += intermediate[3] >> 32u; \
-  intermediate[3] = (uint32_t) intermediate[3]; \
-  intermediate[5] += intermediate[4] >> 32u; \
-  intermediate[4] = (uint32_t) intermediate[4]; \
-  intermediate[6] += intermediate[5] >> 32u; \
-  intermediate[5] = (uint32_t) intermediate[5]; \
-  intermediate[7] += intermediate[6] >> 32u; \
-  intermediate[6] = (uint32_t) intermediate[6]; \
-  \
-  name[0] = intermediate[4]; \
-  name[1] = intermediate[5]; \
-  name[2] = intermediate[6]; \
-  name[3] = intermediate[7]; \
-  \
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_CHECK_PARTS_ARE_32BIT (name); \
+  name.lo = (q1 << 32u) | ((uint32_t) q0); \
+  name.hi = q32; \
 }
 
-/**
- * Value of epsilon
- */
-#define EPSILON 0.0000001
+#if defined (__GNUC__) || defined (__clang__)
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+/**
+ * Count leading zeros in the topmost 64 bits of a 128-bit integer.
+ */
+#define ECMA_UINT128_CLZ_MAX63(name) \
+  __builtin_clzll (name.hi)
+
+/**
+ * Count leading zeros in the topmost 4 bits of a 128-bit integer.
+ */
+#define ECMA_UINT128_CLZ_MAX4(name) \
+  __builtin_clzll (name.hi)
+
+#else /* !__GNUC__ && !__clang__ */
+
+/**
+ * Count leading zeros in a 64-bit integer. The behaviour is undefined for 0.
+ *
+ * @return number of leading zeros.
+ */
+static inline int JERRY_ATTR_ALWAYS_INLINE
+ecma_uint64_clz (uint64_t n) /**< integer to count leading zeros in */
+{
+  JERRY_ASSERT (n != 0);
+
+  int cnt = 0;
+  uint64_t one = 0x8000000000000000ull;
+  while ((n & one) == 0)
+  {
+    cnt++;
+    one >>= 1;
+  }
+  return cnt;
+} /* ecma_uint64_clz */
+
+/**
+ * Number of leading zeros in 4-bit integers.
+ */
+static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/**
+ * Count leading zeros in the topmost 64 bits of a 128-bit integer.
+ */
+#define ECMA_UINT128_CLZ_MAX63(name) \
+  ecma_uint64_clz (name.hi)
+
+/**
+ * Count leading zeros in the topmost 4 bits of a 128-bit integer.
+ */
+#define ECMA_UINT128_CLZ_MAX4(name) \
+  ecma_uint4_clz[name.hi >> 60]
+
+#endif /* __GNUC__ || __clang__ */
+
+/**
+ * @}
+ */
+
 /**
  * Number.MAX_VALUE exponent part when using 64 bit float representation.
  */
@@ -336,7 +248,9 @@
  * Number.MIN_VALUE exponent part when using 64 bit float representation.
  */
 #define NUMBER_MIN_DECIMAL_EXPONENT -324
+
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+
 /**
  * Number.MAX_VALUE exponent part when using 32 bit float representation.
  */
@@ -345,11 +259,13 @@
  * Number.MIN_VALUE exponent part when using 32 bit float representation.
  */
 #define NUMBER_MIN_DECIMAL_EXPONENT -45
+
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
 
 /**
- * @}
+ * Value of epsilon
  */
+#define EPSILON 0.0000001
 
 /**
  * ECMA-defined conversion of string to Number.
@@ -653,30 +569,24 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
-  int32_t binary_exponent = 33;
-
   /*
    * 128-bit mantissa storage
    *
-   * Normalized: |4 bits zero|124-bit mantissa with highest bit set to 1 if mantissa is non-zero|
+   * Normalized: |4 bits zero|124-bit mantissa with highest bit set to 1|
    */
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER (fraction_uint128);
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_INIT (fraction_uint128,
-                                              0ull,
-                                              fraction_uint64 >> 32u,
-                                              (uint32_t) fraction_uint64,
-                                              0ull);
+  ecma_uint128_t fraction_uint128 = { 0, fraction_uint64 };
 
   /* Normalizing mantissa */
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124));
-
-  while (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 123))
+  int shift = 4 - ECMA_UINT128_CLZ_MAX63 (fraction_uint128);
+  if (shift < 0)
   {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
-    binary_exponent--;
-
-    JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
+    ECMA_UINT128_LEFT_SHIFT_MAX63 (fraction_uint128, -shift);
   }
+  else
+  {
+    ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
+  }
+  int32_t binary_exponent = 1 + shift;
 
   if (!e_sign)
   {
@@ -685,27 +595,17 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
     while (e > 0)
     {
-      JERRY_ASSERT (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124));
+      JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
 
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_MUL_10 (fraction_uint128);
+      ECMA_UINT128_MUL10 (fraction_uint128);
 
       e--;
 
       /* Normalizing mantissa */
-      while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
-
-        binary_exponent++;
-      }
-      while (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 123))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
-
-        binary_exponent--;
-
-        JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
-      }
+      shift = 4 - ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
+      JERRY_ASSERT (shift >= 0);
+      ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
+      binary_exponent += shift;
     }
   }
   else
@@ -715,68 +615,44 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
     while (e > 0)
     {
-      /* Denormalizing mantissa, moving highest 1 to 95-bit */
-      while (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 127))
-      {
-        ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
+      /* Denormalizing mantissa, moving highest 1 to bit 127 */
+      shift = ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
+      JERRY_ASSERT (shift <= 4);
+      ECMA_UINT128_LEFT_SHIFT_MAX63 (fraction_uint128, shift);
+      binary_exponent -= shift;
 
-        binary_exponent--;
+      JERRY_ASSERT (!ECMA_UINT128_IS_ZERO (fraction_uint128));
 
-        JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
-      }
-
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_DIV_10 (fraction_uint128);
+      ECMA_UINT128_DIV10 (fraction_uint128);
 
       e--;
     }
 
     /* Normalizing mantissa */
-    while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124))
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
+    shift = 4 - ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
+    JERRY_ASSERT (shift >= 0);
+    ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
+    binary_exponent += shift;
 
-      binary_exponent++;
-    }
-    while (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 123))
-    {
-      ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
-
-      binary_exponent--;
-
-      JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
-    }
+    JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
   }
 
-  JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 124));
+  JERRY_ASSERT (!ECMA_UINT128_IS_ZERO (fraction_uint128));
+  JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
 
   /*
    * Preparing mantissa for conversion to 52-bit representation, converting it to:
    *
-   * |12 zero bits|116 mantissa bits|
+   * |11 zero bits|1|116 mantissa bits|
    */
-  while (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 116 + 1))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_RIGHT_SHIFT (fraction_uint128);
+  ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, 7u);
+  binary_exponent += 7;
 
-    binary_exponent++;
-  }
-  while (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 116))
-  {
-    ECMA_NUMBER_CONVERSION_128BIT_INTEGER_LEFT_SHIFT (fraction_uint128);
+  JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 11);
 
-    binary_exponent--;
+  fraction_uint64 = ECMA_UINT128_ROUND_HIGH_TO_UINT64 (fraction_uint128);
 
-    JERRY_ASSERT (!ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_ZERO (fraction_uint128));
-  }
-
-  JERRY_ASSERT (ECMA_NUMBER_CONVERSION_128BIT_INTEGER_IS_HIGH_BIT_MASK_ZERO (fraction_uint128, 116 + 1));
-
-  ECMA_NUMBER_CONVERSION_128BIT_INTEGER_ROUND_HIGH_AND_MIDDLE_TO_UINT64 (fraction_uint128, fraction_uint64);
-
-  return ecma_number_make_from_sign_mantissa_and_exponent (sign,
-                                                           fraction_uint64,
-                                                           binary_exponent);
+  return ecma_number_make_from_sign_mantissa_and_exponent (sign, fraction_uint64, binary_exponent);
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
   /* Less precise conversion */
   ecma_number_t num = (ecma_number_t) (uint32_t) fraction_uint64;

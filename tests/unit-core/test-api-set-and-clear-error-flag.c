@@ -33,6 +33,15 @@ main (void)
   jerry_release_value (err_val);
 
   jerry_value_t value = jerry_create_number (42);
+  value = jerry_get_value_from_error (value, true);
+  jerry_release_value (value);
+
+  value = jerry_create_number (42);
+  jerry_value_t value2 = jerry_get_value_from_error (value, false);
+  jerry_release_value (value);
+  jerry_release_value (value2);
+
+  value = jerry_create_number (42);
   jerry_value_t error = jerry_create_error_from_value (value, true);
   error = jerry_create_error_from_value (error, true);
   jerry_release_value (error);

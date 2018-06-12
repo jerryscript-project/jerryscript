@@ -379,9 +379,9 @@ bool jerry_is_feature_enabled (const jerry_feature_t feature);
 /**
  * Error manipulation functions.
  */
-jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
+jerry_value_t jerry_create_abort_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_create_error_from_value (jerry_value_t value, bool release);
-void jerry_value_set_abort_flag (jerry_value_t *value_p);
+jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
 
 /**
  * Error object function(s).

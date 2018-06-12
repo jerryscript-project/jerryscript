@@ -222,7 +222,7 @@ jerry_process_handshake (int client_socket, /**< client socket */
   /* Buffer request text until the double newlines are received. */
   while (true)
   {
-    size_t length = request_buffer_size - 1u - (size_t) (request_end_p - request_buffer_p);
+    size_t length = request_buffer_size - 1U - (size_t) (request_end_p - request_buffer_p);
 
     if (length == 0)
     {

@@ -346,8 +346,8 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   }
   else
   {
-    uint32_t src_element_size = 1u << ecma_typedarray_get_element_size_shift (typedarray_p);
-    uint32_t dst_element_size = 1u << element_size_shift;
+    uint32_t src_element_size = 1U << ecma_typedarray_get_element_size_shift (typedarray_p);
+    uint32_t dst_element_size = 1U << element_size_shift;
 
     for (uint32_t i = 0; i < array_length; i++)
     {

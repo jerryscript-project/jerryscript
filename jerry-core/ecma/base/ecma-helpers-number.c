@@ -51,10 +51,10 @@ ecma_number_pack (bool sign, /**< sign */
                   uint32_t biased_exp, /**< biased exponent */
                   uint64_t fraction) /**< fraction */
 {
-  JERRY_ASSERT ((biased_exp & ~((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
+  JERRY_ASSERT ((biased_exp & ~((1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
   JERRY_ASSERT ((fraction & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
 
-  uint32_t packed_value = (((sign ? 1u : 0u) << ECMA_NUMBER_SIGN_POS) |
+  uint32_t packed_value = (((sign ? 1U : 0U) << ECMA_NUMBER_SIGN_POS) |
                            (biased_exp << ECMA_NUMBER_FRACTION_WIDTH) |
                            ((uint32_t) fraction));
 
@@ -95,12 +95,12 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
 
   if (biased_exp_p != NULL)
   {
-    *biased_exp_p = (((packed_value) & ~(1u << ECMA_NUMBER_SIGN_POS)) >> ECMA_NUMBER_FRACTION_WIDTH);
+    *biased_exp_p = (((packed_value) & ~(1U << ECMA_NUMBER_SIGN_POS)) >> ECMA_NUMBER_FRACTION_WIDTH);
   }
 
   if (fraction_p != NULL)
   {
-    *fraction_p = (packed_value & ((1u << ECMA_NUMBER_FRACTION_WIDTH) - 1));
+    *fraction_p = (packed_value & ((1U << ECMA_NUMBER_FRACTION_WIDTH) - 1));
   }
 } /* ecma_number_unpack */
 
@@ -130,7 +130,7 @@ ecma_number_pack (bool sign, /**< sign */
                            (((uint64_t) biased_exp) << ECMA_NUMBER_FRACTION_WIDTH) |
                            fraction);
 
-  JERRY_ASSERT ((biased_exp & ~((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
+  JERRY_ASSERT ((biased_exp & ~((1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
   JERRY_ASSERT ((fraction & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
 
   union
@@ -250,7 +250,7 @@ ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
   uint64_t fraction = ecma_number_get_fraction_field (num);
 
    /* IEEE-754 2008, 3.4, a */
-  bool is_nan_ieee754 = ((biased_exp == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+  bool is_nan_ieee754 = ((biased_exp == (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
                          && (fraction != 0));
 
   JERRY_ASSERT (is_nan == is_nan_ieee754);
@@ -268,8 +268,8 @@ ecma_number_t
 ecma_number_make_nan (void)
 {
   return ecma_number_pack (false,
-                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                           1u);
+                           (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1U,
+                           1U);
 } /* ecma_number_make_nan */
 
 /**
@@ -283,8 +283,8 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
                                            false - for positive Infinity */
 {
   return ecma_number_pack (sign,
-                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                           0u);
+                           (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1U,
+                           0U);
 } /* ecma_number_make_infinity */
 
 /**
@@ -342,7 +342,7 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
   uint64_t fraction = ecma_number_get_fraction_field (num);
 
   /* IEEE-754 2008, 3.4, b */
-  return ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+  return ((biased_exp  == (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
           && (fraction == 0));
 } /* ecma_number_is_infinity */
 
@@ -395,7 +395,7 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
     /* IEEE-754 2008, 3.4, c */
     exponent = (int32_t) biased_exp - ecma_number_exponent_bias;
 
-    JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+    JERRY_ASSERT (biased_exp > 0 && biased_exp < (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
     JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) == 0);
     fraction |= 1ull << ECMA_NUMBER_FRACTION_WIDTH;
   }
@@ -415,7 +415,7 @@ ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, 
                                                              int32_t exponent) /**< exponent */
 {
   uint32_t biased_exp = (uint32_t) (exponent + ecma_number_exponent_bias);
-  JERRY_ASSERT (biased_exp > 0 && biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  JERRY_ASSERT (biased_exp > 0 && biased_exp < (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
   JERRY_ASSERT ((fraction & ~((1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1)) - 1)) == 0);
   JERRY_ASSERT ((fraction & (1ull << ECMA_NUMBER_FRACTION_WIDTH)) != 0);
 
@@ -496,12 +496,12 @@ ecma_number_make_from_sign_mantissa_and_exponent (bool sign, /**< true - for neg
 
   uint32_t biased_exp = (uint32_t) biased_exp_signed;
 
-  if (biased_exp >= ((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1))
+  if (biased_exp >= ((1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1))
   {
     return ecma_number_make_infinity (sign);
   }
 
-  JERRY_ASSERT (biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  JERRY_ASSERT (biased_exp < (1U << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
   JERRY_ASSERT ((mantissa & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
 
   return ecma_number_pack (sign,

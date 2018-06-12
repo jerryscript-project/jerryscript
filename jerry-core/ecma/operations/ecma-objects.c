@@ -1463,9 +1463,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
       uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
-      if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
+      if ((own_names_hashes_bitmap[bitmap_row] & (1U << bitmap_column)) == 0)
       {
-        own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+        own_names_hashes_bitmap[bitmap_row] |= (1U << bitmap_column);
       }
     }
 
@@ -1508,7 +1508,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
             bool is_add = true;
 
-            if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
+            if ((own_names_hashes_bitmap[bitmap_row] & (1U << bitmap_column)) != 0)
             {
               ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
@@ -1527,7 +1527,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
             if (is_add)
             {
-              own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+              own_names_hashes_bitmap[bitmap_row] |= (1U << bitmap_column);
 
               ecma_append_to_values_collection (prop_names_p,
                                                 ecma_make_string_value (name_p),
@@ -1613,7 +1613,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           while (move_pos > insertion_pos)
           {
-            array_index_names_p[move_pos] = array_index_names_p[move_pos - 1u];
+            array_index_names_p[move_pos] = array_index_names_p[move_pos - 1U];
 
             move_pos--;
           }
@@ -1662,10 +1662,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
       uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
 
-      if ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) == 0)
+      if ((names_hashes_bitmap[bitmap_row] & (1U << bitmap_column)) == 0)
       {
         /* This hash has not been used before (for non-skipped). */
-        names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+        names_hashes_bitmap[bitmap_row] |= (1U << bitmap_column);
       }
       else
       {
@@ -1704,7 +1704,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       if (is_append)
       {
-        JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0);
+        JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1U << bitmap_column)) != 0);
 
         ecma_append_to_values_collection (ret_p, ecma_make_string_value (names_p[i]), 0);
       }

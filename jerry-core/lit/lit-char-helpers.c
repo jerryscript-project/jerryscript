@@ -436,7 +436,7 @@ lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with char
 
   for (lit_utf8_size_t i = 0; i < number_of_characters; i++)
   {
-    code_unit = (ecma_char_t) (code_unit << 4u);
+    code_unit = (ecma_char_t) (code_unit << 4U);
 
     if (*buf_p >= LIT_CHAR_ASCII_DIGITS_BEGIN
         && *buf_p <= LIT_CHAR_ASCII_DIGITS_END)

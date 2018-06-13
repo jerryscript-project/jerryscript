@@ -330,11 +330,7 @@ ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
 /**
- * [[Call]] implementation for Function objects,
- * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
- * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
- * and for built-in Function objects
- * from section 15 (ECMA_OBJECT_TYPE_FUNCTION).
+ * 15.3.5.3 implementation of [[HasInstance]] for Function objects
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -346,19 +342,15 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+  while (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-    /* 1. */
+    /* 1. 3. */
     ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
-    ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                         ext_function_p->u.bound_function.target_function);
-
-    /* 3. */
-    return ecma_op_object_has_instance (target_func_obj_p, value);
+    func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                  ext_function_p->u.bound_function.target_function);
   }
 
   JERRY_ASSERT (ecma_is_normal_or_arrow_function (ecma_get_object_type (func_obj_p))

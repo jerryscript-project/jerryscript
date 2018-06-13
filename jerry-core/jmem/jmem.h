@@ -106,6 +106,7 @@ void jmem_finalize (void);
 
 void *jmem_heap_alloc_block (const size_t size);
 void *jmem_heap_alloc_block_null_on_error (const size_t size);
+void *jmem_heap_realloc_block (void *ptr, const size_t old_size, const size_t new_size);
 void jmem_heap_free_block (void *ptr, const size_t size);
 
 #ifdef JMEM_STATS

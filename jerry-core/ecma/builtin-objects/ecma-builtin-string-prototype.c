@@ -238,7 +238,10 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
   /* No copy performed */
 
   /* 4 */
-  ecma_string_t *string_to_return = ecma_get_string_from_value (to_string_val);
+  ecma_string_t *init_string = ecma_get_string_from_value (to_string_val);
+  ecma_string_construct_buffer_t strbuf;
+  ecma_string_construct_buffer_initialize (&strbuf, init_string);
+  ecma_deref_ecma_string (init_string);
 
   /* 5 */
   for (uint32_t arg_index = 0;
@@ -249,12 +252,12 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
     ECMA_TRY_CATCH (get_arg_string,
                     ecma_op_to_string (argument_list_p[arg_index]),
                     ret_value);
-
-    string_to_return = ecma_concat_ecma_strings (string_to_return,
-                                                 ecma_get_string_from_value (get_arg_string));
+    ecma_string_construct_buffer_append (&strbuf, ecma_get_string_from_value (get_arg_string));
 
     ECMA_FINALIZE (get_arg_string);
   }
+
+  ecma_string_t *string_to_return = ecma_string_construct_buffer_finalize (&strbuf);
 
   /* 6 */
   if (ecma_is_value_empty (ret_value))
@@ -613,6 +616,8 @@ typedef struct
   /* Replace value string part. */
   ecma_string_t *replace_string_p; /**< replace string */
   lit_utf8_byte_t *replace_str_curr_p; /**< replace string iterator */
+
+  ecma_string_construct_buffer_t output_string_buffer; /**< output string construction buffer */
 } ecma_builtin_replace_search_ctx_t;
 
 /**
@@ -620,8 +625,8 @@ typedef struct
  *
  * @return the constructed string
  */
-static ecma_string_t *
-ecma_builtin_string_prototype_object_replace_append_substr (ecma_string_t *base_string_p, /**< base string */
+static void
+ecma_builtin_string_prototype_object_replace_append_substr (ecma_builtin_replace_search_ctx_t *ctx_p, /**< context */
                                                             ecma_string_t *appended_string_p, /**< appended string */
                                                             ecma_length_t start, /**< start position */
                                                             ecma_length_t end) /**< end position */
@@ -633,12 +638,10 @@ ecma_builtin_string_prototype_object_replace_append_substr (ecma_string_t *base_
   {
     ecma_string_t *substring_p = ecma_string_substr (appended_string_p, start, end);
 
-    base_string_p = ecma_concat_ecma_strings (base_string_p, substring_p);
+    ecma_string_construct_buffer_append (&ctx_p->output_string_buffer, substring_p);
 
     ecma_deref_ecma_string (substring_p);
   }
-
-  return base_string_p;
 } /* ecma_builtin_string_prototype_object_replace_append_substr */
 
 /**
@@ -804,7 +807,8 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
                       ecma_op_to_string (result_value),
                       ret_value);
 
-      ret_value = ecma_copy_value (to_string_value);
+      ecma_string_construct_buffer_append (&context_p->output_string_buffer,
+                                           ecma_get_string_from_value (to_string_value));
 
       ECMA_FINALIZE (to_string_value);
       ECMA_FINALIZE (result_value);
@@ -834,8 +838,6 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
      *
      * example: "<xy>".replace(/(x)y/, "$1,$2,$01,$12") === "<x,$2,x,x2>"
      */
-
-    ecma_string_t *result_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
     ecma_length_t previous_start = 0;
     ecma_length_t current_position = 0;
@@ -914,10 +916,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
       if (action != LIT_CHAR_NULL)
       {
-        result_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                      context_p->replace_string_p,
-                                                                                      previous_start,
-                                                                                      current_position);
+        ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                    context_p->replace_string_p,
+                                                                    previous_start,
+                                                                    current_position);
         replace_str_curr_p++;
         current_position++;
 
@@ -928,18 +930,18 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
         else if (action == LIT_CHAR_GRAVE_ACCENT)
         {
           ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
-          result_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                        input_string_p,
-                                                                                        0,
-                                                                                        context_p->match_start);
+          ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                      input_string_p,
+                                                                      0,
+                                                                      context_p->match_start);
         }
         else if (action == LIT_CHAR_SINGLE_QUOTE)
         {
           ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
-          result_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                        input_string_p,
-                                                                                        context_p->match_end,
-                                                                                        context_p->input_length);
+          ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                      input_string_p,
+                                                                      context_p->match_end,
+                                                                      context_p->input_length);
         }
         else
         {
@@ -982,7 +984,7 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
             JERRY_ASSERT (ecma_is_value_string (submatch_value));
             ecma_string_t *submatch_string_p = ecma_get_string_from_value (submatch_value);
 
-            result_string_p = ecma_concat_ecma_strings (result_string_p, submatch_string_p);
+            ecma_string_construct_buffer_append (&context_p->output_string_buffer, submatch_string_p);
           }
 
           ECMA_FINALIZE (submatch_value);
@@ -1005,12 +1007,10 @@ ecma_builtin_string_prototype_object_replace_get_string (ecma_builtin_replace_se
 
     if (ecma_is_value_empty (ret_value))
     {
-      result_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                    context_p->replace_string_p,
-                                                                                    previous_start,
-                                                                                    current_position);
-
-      ret_value = ecma_make_string_value (result_string_p);
+      ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                  context_p->replace_string_p,
+                                                                  previous_start,
+                                                                  current_position);
     }
   }
 
@@ -1033,7 +1033,6 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
   ecma_length_t previous_start = 0;
   bool continue_match = true;
 
-  ecma_string_t *result_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   ecma_string_t *input_string_p = ecma_get_string_from_value (context_p->input_string);
 
   while (continue_match)
@@ -1045,22 +1044,12 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
 
     if (!ecma_is_value_null (match_value))
     {
-      result_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                    input_string_p,
-                                                                                    previous_start,
-                                                                                    context_p->match_start);
+      ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                  input_string_p,
+                                                                  previous_start,
+                                                                  context_p->match_start);
 
-      ECMA_TRY_CATCH (string_value,
-                      ecma_builtin_string_prototype_object_replace_get_string (context_p, match_value),
-                      ret_value);
-
-      JERRY_ASSERT (ecma_is_value_string (string_value));
-
-      result_string_p = ecma_concat_ecma_strings (result_string_p,
-                                                  ecma_get_string_from_value (string_value));
-
-      ECMA_FINALIZE (string_value);
-
+      ret_value = ecma_builtin_string_prototype_object_replace_get_string (context_p, match_value);
       previous_start = context_p->match_end;
 
       if (context_p->is_global
@@ -1095,16 +1084,10 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
       if (!context_p->is_global || ecma_is_value_null (match_value))
       {
         /* No more matches */
-        ecma_string_t *appended_string_p;
-
-        ecma_ref_ecma_string (result_string_p);
-
-        appended_string_p = ecma_builtin_string_prototype_object_replace_append_substr (result_string_p,
-                                                                                        input_string_p,
-                                                                                        previous_start,
-                                                                                        context_p->input_length);
-
-        ret_value = ecma_make_string_value (appended_string_p);
+        ecma_builtin_string_prototype_object_replace_append_substr (context_p,
+                                                                    input_string_p,
+                                                                    previous_start,
+                                                                    context_p->input_length);
       }
       else
       {
@@ -1115,7 +1098,6 @@ ecma_builtin_string_prototype_object_replace_loop (ecma_builtin_replace_search_c
     ECMA_FINALIZE (match_value);
   }
 
-  ecma_deref_ecma_string (result_string_p);
   return ret_value;
 } /* ecma_builtin_string_prototype_object_replace_loop */
 
@@ -1248,7 +1230,17 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
 
     if (ecma_is_value_empty (ret_value))
     {
+      ecma_string_construct_buffer_initialize_empty (&context.output_string_buffer);
       ret_value = ecma_builtin_string_prototype_object_replace_main (&context, replace_value);
+
+      if (ecma_is_value_empty (ret_value))
+      {
+        ret_value = ecma_make_string_value (ecma_string_construct_buffer_finalize (&context.output_string_buffer));
+      }
+      else
+      {
+        ecma_string_construct_buffer_destroy (&context.output_string_buffer);
+      }
     }
 
     ECMA_FINALIZE (global_value);
@@ -1265,7 +1257,17 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_arg, /**< this a
     context.input_length = ecma_string_get_length (ecma_get_string_from_value (to_string_value));
     context.regexp_or_search_string = to_string_search_val;
 
+    ecma_string_construct_buffer_initialize_empty (&context.output_string_buffer);
     ret_value = ecma_builtin_string_prototype_object_replace_main (&context, replace_value);
+
+    if (ecma_is_value_empty (ret_value))
+    {
+      ret_value = ecma_make_string_value (ecma_string_construct_buffer_finalize (&context.output_string_buffer));
+    }
+    else
+    {
+      ecma_string_construct_buffer_destroy (&context.output_string_buffer);
+    }
 
     ECMA_FINALIZE (to_string_search_val);
   }

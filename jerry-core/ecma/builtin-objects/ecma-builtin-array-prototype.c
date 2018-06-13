@@ -161,25 +161,28 @@ ecma_builtin_array_prototype_object_to_locale_string (ecma_value_t this_arg) /**
                     ecma_builtin_helper_get_to_locale_string_at_index (obj_p, 0),
                     ret_value);
 
-    ecma_string_t *return_string_p = ecma_get_string_from_value (first_value);
-    ecma_ref_ecma_string (return_string_p);
+    ecma_string_construct_buffer_t strbuf;
+    ecma_string_construct_buffer_initialize (&strbuf, ecma_get_string_from_value (first_value));
 
     /* 9-10. */
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
       /* 4. Implementation-defined: set the separator to a single comma character. */
-      return_string_p = ecma_append_magic_string_to_string (return_string_p,
-                                                            LIT_MAGIC_STRING_COMMA_CHAR);
+      ecma_value_t comma_val = ecma_make_magic_string_value (LIT_MAGIC_STRING_COMMA_CHAR);
+      ecma_string_t *comma_string_p = ecma_get_string_from_value (comma_val);
+      ecma_string_construct_buffer_append (&strbuf, comma_string_p);
 
       ECMA_TRY_CATCH (next_string_value,
                       ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k),
                       ret_value);
 
       ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-      return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
+      ecma_string_construct_buffer_append (&strbuf, next_string_p);
 
       ECMA_FINALIZE (next_string_value);
     }
+
+    ecma_string_t *return_string_p = ecma_string_construct_buffer_finalize (&strbuf);
 
     if (ecma_is_value_empty (ret_value))
     {
@@ -387,14 +390,14 @@ ecma_builtin_array_prototype_join (ecma_value_t this_arg, /**< this argument */
                     ecma_op_array_get_to_string_at_index (obj_p, 0),
                     ret_value);
 
-    ecma_string_t *return_string_p = ecma_get_string_from_value (first_value);
-    ecma_ref_ecma_string (return_string_p);
+    ecma_string_construct_buffer_t strbuf;
+    ecma_string_construct_buffer_initialize (&strbuf, ecma_get_string_from_value (first_value));
 
     /* 9-10. */
     for (uint32_t k = 1; ecma_is_value_empty (ret_value) && (k < length); k++)
     {
       /* 10.a */
-      return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+      ecma_string_construct_buffer_append (&strbuf, separator_string_p);
 
       /* 10.b, 10.c */
       ECMA_TRY_CATCH (next_string_value,
@@ -403,18 +406,19 @@ ecma_builtin_array_prototype_join (ecma_value_t this_arg, /**< this argument */
 
       /* 10.d */
       ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-      return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
+      ecma_string_construct_buffer_append (&strbuf, next_string_p);
+
 
       ECMA_FINALIZE (next_string_value);
     }
 
     if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_make_string_value (return_string_p);
+      ret_value = ecma_make_string_value (ecma_string_construct_buffer_finalize (&strbuf));
     }
     else
     {
-      ecma_deref_ecma_string (return_string_p);
+      ecma_string_construct_buffer_destroy (&strbuf);
     }
 
     ECMA_FINALIZE (first_value);

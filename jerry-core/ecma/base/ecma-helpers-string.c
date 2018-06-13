@@ -2360,6 +2360,157 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 } /* ecma_string_trim */
 
 /**
+ * Initializes the construct buffer with the contents of an ecma string.
+ */
+void
+ecma_string_construct_buffer_initialize (ecma_string_construct_buffer_t *buf_p, /**< pointer to the construct buffer */
+                                         ecma_string_t *init_str_p) /**< pointer to an ecma string */
+{
+  const lit_utf8_size_t str_size = ecma_string_get_size (init_str_p);
+  const lit_utf8_size_t init_size = (lit_utf8_size_t) (str_size + sizeof (ecma_string_t));
+
+  buf_p->buffer_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (init_size);
+  buf_p->size = init_size;
+
+  ecma_string_to_utf8_bytes (init_str_p, buf_p->buffer_p + sizeof (ecma_string_t), str_size);
+
+#ifdef JMEM_STATS
+  jmem_stats_allocate_string_bytes (init_size);
+#endif /* JMEM_STATS */
+} /* ecma_string_construct_buffer_initialize */
+
+/**
+ * Initializes the construct buffer to an empty string.
+ */
+void
+ecma_string_construct_buffer_initialize_empty (ecma_string_construct_buffer_t *buf_p) /**< prt to the buffer */
+{
+  buf_p->buffer_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (sizeof (ecma_string_t));
+  buf_p->size = sizeof (ecma_string_t);
+
+#ifdef JMEM_STATS
+  jmem_stats_allocate_string_bytes (sizeof (ecma_string_t));
+#endif /* JMEM_STATS */
+} /* ecma_string_construct_buffer_initialize_empty */
+
+/**
+ * Initializes the construct buffer to NULL.
+ */
+void
+ecma_string_construct_buffer_initialize_null (ecma_string_construct_buffer_t *buf_p) /**< ptr to the construct buffer */
+{
+  buf_p->buffer_p = NULL;
+  buf_p->size = 0;
+} /* ecma_string_construct_buffer_initialize_null */
+
+/**
+ * Appends an ecma string to the construct buffer.
+ */
+void
+ecma_string_construct_buffer_append (ecma_string_construct_buffer_t *strbuf_p, /**< pointer to the construct buffer */
+                                     ecma_string_t *str_p) /**< pointer to an ecma string */
+{
+  const lit_utf8_size_t str_size = ecma_string_get_size (str_p);
+
+  if (!str_size)
+  {
+    return;
+  }
+
+  const lit_utf8_size_t current_size = strbuf_p->size;
+  const lit_utf8_size_t new_size = current_size + str_size;
+
+  strbuf_p->buffer_p = jmem_heap_realloc_block (strbuf_p->buffer_p, current_size, new_size);
+  lit_utf8_byte_t *current_p = strbuf_p->buffer_p + current_size;
+
+  ecma_string_to_utf8_bytes (str_p, current_p, str_size);
+  strbuf_p->size = new_size;
+
+#ifdef JMEM_STATS
+  jmem_stats_allocate_string_bytes (str_size);
+#endif /* JMEM_STATS */
+} /* ecma_string_construct_buffer_append */
+
+/**
+ * Saves the contents of the construct buffer to a new ecma string and returns it.
+ * After this call the construct buffer is in an undefined state, and will need to
+ * be initialized again before use.
+ *
+ * @return the resulting ecma string
+ */
+ecma_string_t *
+ecma_string_construct_buffer_finalize (ecma_string_construct_buffer_t *strbuf_p) /**< pointer to the construct buffer */
+{
+  const lit_utf8_byte_t *const string_p = strbuf_p->buffer_p + sizeof (ecma_string_t);
+  const lit_utf8_size_t string_size = (lit_utf8_size_t) (strbuf_p->size - sizeof (ecma_string_t));
+
+  JERRY_ASSERT (lit_is_valid_cesu8_string (string_p, string_size));
+  lit_magic_string_id_t magic_string_id = lit_is_utf8_string_magic (string_p, string_size);
+
+  if (magic_string_id != LIT_MAGIC_STRING__COUNT)
+  {
+    ecma_string_construct_buffer_destroy (strbuf_p);
+    return ecma_get_magic_string (magic_string_id);
+  }
+
+  JERRY_ASSERT (string_size > 0);
+
+  if (*string_p >= LIT_CHAR_0 && *string_p <= LIT_CHAR_9)
+  {
+    uint32_t array_index;
+
+    if (ecma_string_to_array_index (string_p, string_size, &array_index))
+    {
+      ecma_string_construct_buffer_destroy (strbuf_p);
+      return ecma_new_ecma_string_from_uint32 (array_index);
+    }
+  }
+
+  if (lit_get_magic_string_ex_count () > 0)
+  {
+    lit_magic_string_ex_id_t magic_string_ex_id = lit_is_ex_utf8_string_magic (string_p, string_size);
+
+    if (magic_string_ex_id < lit_get_magic_string_ex_count ())
+    {
+      ecma_string_construct_buffer_destroy (strbuf_p);
+      return ecma_new_ecma_string_from_magic_string_ex_id (magic_string_ex_id);
+    }
+  }
+
+  ecma_string_t *ret_p;
+  if (JERRY_LIKELY (string_size <= UINT16_MAX))
+  {
+    ecma_string_t *string_desc_p = (ecma_string_t *) strbuf_p->buffer_p;
+
+    string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
+    string_desc_p->u.common_uint32_field = 0;
+    string_desc_p->u.utf8_string.size = (uint16_t) string_size;
+    string_desc_p->u.utf8_string.length = (uint16_t) lit_utf8_string_length (string_p, string_size);
+    string_desc_p->hash = lit_utf8_string_calc_hash (string_p, string_size);
+
+    ret_p = string_desc_p;
+  }
+  else
+  {
+    ret_p = ecma_new_ecma_string_from_utf8 (string_p, string_size);
+    ecma_string_construct_buffer_destroy (strbuf_p);
+  }
+  return ret_p;
+} /* ecma_string_construct_buffer_finalize */
+
+/**
+ * Frees the construct buffer.
+ */
+void
+ecma_string_construct_buffer_destroy (ecma_string_construct_buffer_t *strbuf_p) /**< pointer to the construct buffer */
+{
+  jmem_heap_free_block (strbuf_p->buffer_p, strbuf_p->size);
+#ifdef JMEM_STATS
+  jmem_stats_free_string_bytes (strbuf_p->size);
+#endif /* JMEM_STATS */
+} /* ecma_string_construct_buffer_destroy */
+
+/**
  * @}
  * @}
  */

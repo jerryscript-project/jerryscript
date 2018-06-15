@@ -648,29 +648,145 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
 } /* ecma_builtin_typedarray_prototype_reverse */
 
 /**
+ * The %TypedArray%.prototype object's 'set' routine for a typedArray source
+ *
+ * See also:
+ *          ES2015, 22.2.3.22, 22.2.3.22.2
+ *
+ * @return ecma value of undefined if success, error otherwise.
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t arr_val, /**< typedarray object */
+                                        ecma_value_t offset_val) /**< offset value */
+{
+  /* 6.~ 8. targetOffset */
+  ecma_number_t target_offset_num;
+  if (!ecma_is_value_empty (ecma_get_number (offset_val, &target_offset_num)))
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
+  }
+
+  if (ecma_number_is_nan (target_offset_num))
+  {
+    target_offset_num = 0;
+  }
+
+  if (target_offset_num <= -1.0 || target_offset_num >= (ecma_number_t) UINT32_MAX + 0.5)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
+  }
+
+  ecma_object_t *target_typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *src_typedarray_p = ecma_get_object_from_value (arr_val);
+
+  /* 9. targetBuffer */
+  ecma_object_t *target_arraybuffer_p = ecma_typedarray_get_arraybuffer (target_typedarray_p);
+  lit_utf8_byte_t *target_buffer_p = ecma_typedarray_get_buffer (target_typedarray_p);
+
+  /* 11. targetLength */
+  ecma_length_t target_length = ecma_typedarray_get_length (target_typedarray_p);
+
+  /* 12. srcBuffer */
+  ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (src_typedarray_p);
+  lit_utf8_byte_t *src_buffer_p = ecma_typedarray_get_buffer (src_typedarray_p);
+
+  /* 15. targetType */
+  lit_magic_string_id_t target_class_id = ecma_object_get_class_name (target_typedarray_p);
+
+  /* 16. targetElementSize */
+  uint8_t target_shift = ecma_typedarray_get_element_size_shift (target_typedarray_p);
+  uint8_t target_element_size = (uint8_t) (1 << target_shift);
+
+  /* 17. targetByteOffset */
+  ecma_length_t target_byte_offset = ecma_typedarray_get_offset (target_typedarray_p);
+
+  /* 19. srcType */
+  lit_magic_string_id_t src_class_id = ecma_object_get_class_name (src_typedarray_p);
+
+  /* 20. srcElementSize */
+  uint8_t src_shift = ecma_typedarray_get_element_size_shift (src_typedarray_p);
+  uint8_t src_element_size = (uint8_t) (1 << src_shift);
+
+  /* 21. srcLength */
+  ecma_length_t src_length = ecma_typedarray_get_length (src_typedarray_p);
+  uint32_t src_length_uint32 = ecma_number_to_uint32 (src_length);
+
+  if ((ecma_number_t) src_length_uint32 != src_length)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid source length"));
+  }
+
+  /* 22. srcByteOffset */
+  ecma_length_t src_byte_offset = ecma_typedarray_get_offset (src_typedarray_p);
+
+  /* 23. */
+  uint32_t target_offset_uint32 = ecma_number_to_uint32 (target_offset_num);
+
+  if ((int64_t) src_length_uint32 + target_offset_uint32 > target_length)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid range of index"));
+  }
+
+  /* 24.d, 25. srcByteIndex */
+  ecma_length_t src_byte_index = 0;
+
+  if (src_arraybuffer_p != target_arraybuffer_p)
+  {
+    src_byte_index = src_byte_offset;
+  }
+
+  /* 26. targetByteIndex */
+  uint32_t target_byte_index = target_offset_uint32 * target_element_size + target_byte_offset;
+
+  /* 27. limit */
+  uint32_t limit = target_byte_index + target_element_size * src_length_uint32;
+
+  if (src_class_id == target_class_id)
+  {
+    memmove (target_buffer_p + target_byte_index, src_buffer_p + src_byte_index,
+             target_element_size * src_length_uint32);
+  }
+  else
+  {
+    while (target_byte_index < limit)
+    {
+      ecma_number_t elem_num = ecma_get_typedarray_element (src_buffer_p + src_byte_index, src_class_id);
+      ecma_set_typedarray_element (target_buffer_p + target_byte_index, elem_num, target_class_id);
+      src_byte_index += src_element_size;
+      target_byte_index += target_element_size;
+    }
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_op_typedarray_set_with_typedarray */
+
+/**
  * The %TypedArray%.prototype object's 'set' routine
  *
  * See also:
  *          ES2015, 22.2.3.22, 22.2.3.22.1
  *
- * @return ecma value of undefined.
+ * @return ecma value of undefined if success, error otherwise.
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
 ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t arr_val, /**< array object */
                                        ecma_value_t offset_val) /**< offset value */
 {
-  /* 1. */
-  if (ecma_is_typedarray (arr_val))
-  {
-    /* 22.2.3.22.2 %TypedArray%.prototype(typedArray [, offset ]) is not supported */
-    return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray.set(typedArray [,offset]) is not supported."));
-  }
-
   /* 2.~ 4. */
   if (!ecma_is_typedarray (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  /* 1. */
+  if (ecma_is_typedarray (arr_val))
+  {
+    /* 22.2.3.22.2 */
+    return ecma_op_typedarray_set_with_typedarray (this_arg, arr_val, offset_val);
   }
 
   /* 6.~ 8. targetOffset */

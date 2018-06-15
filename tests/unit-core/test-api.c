@@ -1014,7 +1014,7 @@ main (void)
   jerry_release_value (global_obj_val);
 
   /* Test: run gc. */
-  jerry_gc ();
+  jerry_gc (JERRY_GC_SEVERITY_LOW);
 
   /* Test: spaces */
   eval_code_src_p = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";

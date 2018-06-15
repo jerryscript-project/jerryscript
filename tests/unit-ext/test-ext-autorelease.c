@@ -57,7 +57,7 @@ main (void)
 
   native_free_cb_call_count = 0;
   test_autorelease_val ();
-  jerry_gc ();
+  jerry_gc (JERRY_GC_SEVERITY_HIGH);
   TEST_ASSERT (native_free_cb_call_count == 1);
 
   jerry_cleanup ();

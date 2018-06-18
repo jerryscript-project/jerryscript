@@ -30,7 +30,7 @@
  */
 JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 27
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
-                     && JERRY_DEBUGGER_VERSION == 3,
+                     && JERRY_DEBUGGER_VERSION == 4,
                      debugger_version_correlates_to_message_type_count);
 
 /**

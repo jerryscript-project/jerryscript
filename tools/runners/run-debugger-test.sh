@@ -37,6 +37,12 @@ sleep 1s
 RESULT_TEMP=`mktemp ${TEST_CASE}.out.XXXXXXXXXX`
 
 (cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) &> ${RESULT_TEMP}
+
+if [[ $TEST_CASE == *"restart"* ]]; then
+  CONTINUE_CASE=$(sed "s/restart/continue/g" <<< "$TEST_CASE")
+  (cat "${CONTINUE_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) &>> ${RESULT_TEMP}
+fi
+
 diff -U0 ${TEST_CASE}.expected ${RESULT_TEMP}
 STATUS_CODE=$?
 

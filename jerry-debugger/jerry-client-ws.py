@@ -28,7 +28,7 @@ import math
 import time
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 3
+JERRY_DEBUGGER_VERSION = 4
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -512,6 +512,12 @@ class DebuggerPrompt(Cmd):
         return
 
     do_ms = do_memstats
+
+    def do_restart(self, _):
+        """ Restart the engine's debug session """
+        self._send_string(JERRY_DEBUGGER_EVAL_ABORT + "\"r353t\"", JERRY_DEBUGGER_EVAL)
+
+    do_res = do_restart
 
     def store_client_sources(self, args):
         self.client_sources = args

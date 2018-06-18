@@ -26,7 +26,7 @@
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (3)
+#define JERRY_DEBUGGER_VERSION (4)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.

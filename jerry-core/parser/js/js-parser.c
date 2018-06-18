@@ -636,12 +636,6 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
                                                                          literal_p->prop.length);
             literal_pool_p[literal_p->prop.index] = lit_value;
           }
-
-          if (!context_p->is_show_opcodes
-              && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
-          {
-            jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
-          }
 #else /* !PARSER_DUMP_BYTE_CODE */
           if (!(literal_p->status_flags & LEXER_FLAG_UNUSED_IDENT))
           {
@@ -649,6 +643,14 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
           }
 #endif /* PARSER_DUMP_BYTE_CODE */
         }
+
+#ifdef PARSER_DUMP_BYTE_CODE
+        if (!context_p->is_show_opcodes
+            && !(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
+        {
+          jmem_heap_free_block ((void *) literal_p->u.char_p, literal_p->prop.length);
+        }
+#endif /* PARSER_DUMP_BYTE_CODE */
       }
       else if ((literal_p->type == LEXER_FUNCTION_LITERAL)
                || (literal_p->type == LEXER_REGEXP_LITERAL))

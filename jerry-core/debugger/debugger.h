@@ -376,6 +376,7 @@ typedef struct
 typedef struct
 {
   uint8_t type; /**< type of the message */
+  uint8_t min_depth[sizeof (uint32_t)]; /**< minimum depth*/
   uint8_t max_depth[sizeof (uint32_t)]; /**< maximum depth (0 - unlimited) */
 } jerry_debugger_receive_get_backtrace_t;
 

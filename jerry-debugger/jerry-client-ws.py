@@ -200,13 +200,14 @@ class JerryFunction(object):
 
 
 class DebuggerPrompt(Cmd):
-
+    # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, debugger):
         Cmd.__init__(self)
         self.debugger = debugger
         self.stop = False
         self.quit = False
         self.cont = True
+        self.min_depth = 0
         self.non_interactive = False
         self.client_sources = []
 
@@ -348,22 +349,36 @@ class DebuggerPrompt(Cmd):
     def do_backtrace(self, args):
         """ Get backtrace data from debugger """
         max_depth = 0
+        self.min_depth = 0
 
         if args:
+            args = args.split(" ")
             try:
-                max_depth = int(args)
-                if max_depth <= 0:
-                    print("Error: Positive integer number expected")
-                    return
+                if len(args) == 2:
+                    self.min_depth = int(args[0])
+                    max_depth = int(args[1])
+                    if max_depth <= 0 or self.min_depth < 0:
+                        print("Error: Positive integer number expected")
+                        return
+                    if self.min_depth > max_depth:
+                        print("Error: Start depth needs to be lower than or equal to max depth")
+                        return
+                else:
+                    max_depth = int(args[0])
+                    if max_depth <= 0:
+                        print("Error: Positive integer number expected")
+                        return
+
             except ValueError as val_errno:
                 print("Error: Positive integer number expected, %s" % (val_errno))
                 return
 
-        message = struct.pack(self.debugger.byte_order + "BBIB" + self.debugger.idx_format,
+        message = struct.pack(self.debugger.byte_order + "BBIB" + self.debugger.idx_format + self.debugger.idx_format,
                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 4,
+                              WEBSOCKET_FIN_BIT + 1 + 4 + 4,
                               0,
                               JERRY_DEBUGGER_GET_BACKTRACE,
+                              self.min_depth,
                               max_depth)
         self.debugger.send_message(message)
         self.stop = True
@@ -1193,7 +1208,10 @@ def main():
             exception_string += data[3:]
 
         elif buffer_type in [JERRY_DEBUGGER_BACKTRACE, JERRY_DEBUGGER_BACKTRACE_END]:
-            frame_index = 0
+            if prompt.min_depth != 0:
+                frame_index = prompt.min_depth
+            else:
+                frame_index = 0
 
             while True:
 

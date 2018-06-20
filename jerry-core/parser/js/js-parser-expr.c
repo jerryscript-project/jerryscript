@@ -430,7 +430,15 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
       lexer_next_token (context_p);
       parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
-      parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, literal_index);
+      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+      {
+        context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
+        context_p->last_cbc.value = literal_index;
+      }
+      else
+      {
+        parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, literal_index);
+      }
     }
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)

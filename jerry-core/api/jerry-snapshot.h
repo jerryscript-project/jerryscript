@@ -41,7 +41,7 @@ typedef struct
 /**
  * Jerry snapshot format version.
  */
-#define JERRY_SNAPSHOT_VERSION (13u)
+#define JERRY_SNAPSHOT_VERSION (14u)
 
 /**
  * Snapshot configuration flags.

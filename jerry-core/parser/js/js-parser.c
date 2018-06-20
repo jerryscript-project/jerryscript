@@ -1228,10 +1228,6 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   }
 
   byte_code_start_p += (unsigned int) (literal_end - register_end) * sizeof (ecma_value_t);
-  if (JERRY_UNLIKELY (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED))
-  {
-    byte_code_start_p += argument_end * sizeof (ecma_value_t);
-  }
 
   byte_code_end_p = byte_code_start_p + length;
   byte_code_p = byte_code_start_p;

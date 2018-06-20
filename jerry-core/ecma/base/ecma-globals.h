@@ -613,9 +613,8 @@ typedef enum
   /* Types between 0 - 12 are ecma_object_type_t which can have a built-in flag. */
 
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND = 14, /**< object-bound lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment
-                                                   *   with provideThis flag */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 14, /**< object-bound lexical environment
+                                                    *   with provideThis flag */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *    environment type */

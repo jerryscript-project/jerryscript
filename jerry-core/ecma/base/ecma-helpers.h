@@ -297,8 +297,7 @@ ecma_collection_iterator_next (ecma_value_t *iterator_p);
 /* ecma-helpers.c */
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);
 ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p);
-ecma_object_t *ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p,
-                                           bool provide_this);
+ecma_object_t *ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p);
 bool JERRY_ATTR_PURE ecma_is_lexical_environment (const ecma_object_t *object_p);
 bool JERRY_ATTR_PURE ecma_get_object_extensible (const ecma_object_t *object_p);
 void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
@@ -311,7 +310,6 @@ ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecm
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
 ecma_property_header_t JERRY_ATTR_PURE *ecma_get_property_list (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
-bool JERRY_ATTR_PURE ecma_get_lex_env_provide_this (const ecma_object_t *object_p);
 
 ecma_property_value_t *
 ecma_create_named_data_property (ecma_object_t *object_p, ecma_string_t *name_p, uint8_t prop_attributes,

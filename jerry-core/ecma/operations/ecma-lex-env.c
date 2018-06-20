@@ -41,7 +41,7 @@ ecma_init_global_lex_env (void)
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
-  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL, glob_obj_p, false);
+  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL, glob_obj_p);
 
   ecma_deref_object (glob_obj_p);
 } /* ecma_init_global_lex_env */
@@ -94,8 +94,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
@@ -136,8 +135,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
@@ -204,8 +202,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
@@ -218,10 +215,8 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     {
       return completion;
     }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_boolean (completion));
-    }
+
+    JERRY_ASSERT (ecma_is_value_boolean (completion));
   }
 
   return ECMA_VALUE_EMPTY;
@@ -252,8 +247,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
@@ -322,8 +316,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
@@ -351,20 +344,12 @@ ecma_op_implicit_this_value (ecma_object_t *lex_env_p) /**< lexical environment 
   }
   else
   {
-    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                  || ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
-    if (ecma_get_lex_env_provide_this (lex_env_p))
-    {
-      ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-      ecma_ref_object (binding_obj_p);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+    ecma_ref_object (binding_obj_p);
 
-      return ecma_make_object_value (binding_obj_p);
-    }
-    else
-    {
-      return ECMA_VALUE_UNDEFINED;
-    }
+    return ecma_make_object_value (binding_obj_p);
   }
 } /* ecma_op_implicit_this_value */
 

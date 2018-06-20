@@ -140,24 +140,14 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
  */
 ecma_object_t *
 ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
-                            ecma_object_t *binding_obj_p, /**< binding object */
-                            bool provide_this) /**< provideThis flag */
+                            ecma_object_t *binding_obj_p) /**< binding object */
 {
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  uint16_t type;
-
-  if (provide_this)
-  {
-    type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
-  }
-  else
-  {
-    type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND;
-  }
+  uint16_t type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
 
   new_lexical_environment_p->type_flags_refs = type;
 
@@ -359,23 +349,6 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 } /* ecma_get_property_list */
 
 /**
- * Get lexical environment's 'provideThis' property
- *
- * @return true  - if it has 'this' property
- *         false - otherwise
- */
-inline bool JERRY_ATTR_PURE
-ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound lexical environment */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (ecma_is_lexical_environment (object_p));
-  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-
-  return ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
-} /* ecma_get_lex_env_provide_this */
-
-/**
  * Get lexical environment's bound object.
  *
  * @return pointer to ecma object
@@ -385,8 +358,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
-  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                     object_p->property_list_or_bound_object_cp);

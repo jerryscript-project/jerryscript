@@ -2300,9 +2300,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           object_p = ecma_get_object_from_value (result);
 
-          with_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
-                                                   object_p,
-                                                   true);
+          with_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p, object_p);
 
           ecma_deref_object (object_p);
 

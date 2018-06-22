@@ -954,20 +954,19 @@ jerry_create_error_from_value (jerry_value_t value, /**< api value */
      * binary size rather than performance. */
     if (!jerry_value_is_abort (value))
     {
-      return (release ? value : jerry_acquire_value (value));
+      return release ? value : jerry_acquire_value (value);
     }
 
     value = jerry_get_value_from_error (value, release);
     release = true;
   }
 
-  jerry_value_t ret_val = ecma_create_error_reference (value, true);
-  if (release)
+  if (!release)
   {
-    jerry_release_value (value);
+    value = ecma_copy_value (value);
   }
 
-  return ret_val;
+  return ecma_create_error_reference (value, true);
 } /* jerry_create_error_from_value */
 
 /**

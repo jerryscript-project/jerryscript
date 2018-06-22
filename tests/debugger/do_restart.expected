@@ -1,0 +1,18 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_restart.js:23
+(jerry-debugger) n
+Stopped at tests/debugger/do_restart.js:24
+(jerry-debugger) n
+out: foo
+Stopped at tests/debugger/do_restart.js:25
+(jerry-debugger) n
+out: bar
+Stopped at tests/debugger/do_restart.js:24
+(jerry-debugger) restart
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_restart.js:23
+(jerry-debugger) continue
+out: foo
+out: bar
+out: foo
+out: bar

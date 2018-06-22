@@ -412,6 +412,25 @@ instance_alloc (size_t size,
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
+/**
+ * Inits the engine and the debugger
+ */
+static void
+init_engine (jerry_init_flag_t flags, /**< initialized flags for the engine */
+             bool debug_server, /**< enable the debugger init or not */
+             uint16_t debug_port) /**< the debugger port */
+{
+  jerry_init (flags);
+  if (debug_server)
+  {
+    jerry_debugger_init (debug_port);
+  }
+
+  register_js_function ("assert", jerryx_handler_assert);
+  register_js_function ("gc", jerryx_handler_gc);
+  register_js_function ("print", jerryx_handler_print);
+} /* init_engine */
+
 int
 main (int argc,
       char **argv)
@@ -591,15 +610,7 @@ main (int argc,
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
-  jerry_init (flags);
-  if (start_debug_server)
-  {
-    jerry_debugger_init (debug_port);
-  }
-
-  register_js_function ("assert", jerryx_handler_assert);
-  register_js_function ("gc", jerryx_handler_gc);
-  register_js_function ("print", jerryx_handler_print);
+  init_engine (flags, start_debug_server, debug_port);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
@@ -629,99 +640,139 @@ main (int argc,
     }
   }
 
-  if (!jerry_value_is_error (ret_value))
+  while (true)
   {
-    for (int i = 0; i < files_counter; i++)
+
+    if (!jerry_value_is_error (ret_value))
     {
-      size_t source_size;
-      const jerry_char_t *source_p = (jerry_char_t *) read_file (file_names[i], &source_size);
-
-      if (source_p == NULL)
+      for (int i = 0; i < files_counter; i++)
       {
-        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Source file load error");
-        break;
-      }
+        size_t source_size;
+        const jerry_char_t *source_p = (jerry_char_t *) read_file (file_names[i], &source_size);
 
-      if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_size))
-      {
-        ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) ("Input must be a valid UTF-8 string."));
-        break;
-      }
-
-      ret_value = jerry_parse ((jerry_char_t *) file_names[i],
-                               strlen (file_names[i]),
-                               source_p,
-                               source_size,
-                               JERRY_PARSE_NO_OPTS);
-
-      if (!jerry_value_is_error (ret_value) && !is_parse_only)
-      {
-        jerry_value_t func_val = ret_value;
-        ret_value = jerry_run (func_val);
-        jerry_release_value (func_val);
-      }
-
-      if (jerry_value_is_error (ret_value))
-      {
-        break;
-      }
-
-      jerry_release_value (ret_value);
-      ret_value = jerry_create_undefined ();
-    }
-  }
-
-  if (is_wait_mode)
-  {
-    is_repl_mode = false;
-
-    if (jerry_is_feature_enabled (JERRY_FEATURE_DEBUGGER))
-    {
-      while (true)
-      {
-        jerry_debugger_wait_for_source_status_t receive_status;
-
-        do
+        if (source_p == NULL)
         {
-          jerry_value_t run_result;
-
-          receive_status = jerry_debugger_wait_for_client_source (wait_for_source_callback,
-                                                                  NULL,
-                                                                  &run_result);
-
-          if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
-          {
-            ret_value = jerry_create_error (JERRY_ERROR_COMMON,
-                                            (jerry_char_t *) "Connection aborted before source arrived.");
-          }
-
-          if (receive_status == JERRY_DEBUGGER_SOURCE_END)
-          {
-            jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "No more client source.\n");
-          }
-
-          jerry_release_value (run_result);
+          ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) "Source file load error");
+          break;
         }
-        while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
 
-        if (receive_status != JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
+        if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_size))
+        {
+          ret_value = jerry_create_error (JERRY_ERROR_COMMON, (jerry_char_t *) ("Input must be a valid UTF-8 string."));
+          break;
+        }
+
+        ret_value = jerry_parse ((jerry_char_t *) file_names[i],
+                                 strlen (file_names[i]),
+                                 source_p,
+                                 source_size,
+                                 JERRY_PARSE_NO_OPTS);
+
+        if (!jerry_value_is_error (ret_value) && !is_parse_only)
+        {
+          jerry_value_t func_val = ret_value;
+          ret_value = jerry_run (func_val);
+          jerry_release_value (func_val);
+        }
+
+        if (jerry_value_is_error (ret_value))
         {
           break;
         }
 
-        jerry_cleanup ();
-
-        jerry_init (flags);
-        jerry_debugger_init (debug_port);
-
-        register_js_function ("assert", jerryx_handler_assert);
-        register_js_function ("gc", jerryx_handler_gc);
-        register_js_function ("print", jerryx_handler_print);
-
+        jerry_release_value (ret_value);
         ret_value = jerry_create_undefined ();
       }
     }
 
+    if (is_wait_mode)
+    {
+      is_repl_mode = false;
+
+      if (jerry_is_feature_enabled (JERRY_FEATURE_DEBUGGER))
+      {
+        while (true)
+        {
+          jerry_debugger_wait_for_source_status_t receive_status;
+
+          do
+          {
+            jerry_value_t run_result;
+
+            receive_status = jerry_debugger_wait_for_client_source (wait_for_source_callback,
+                                                                    NULL,
+                                                                    &run_result);
+
+            if (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED)
+            {
+              ret_value = jerry_create_error (JERRY_ERROR_COMMON,
+                                              (jerry_char_t *) "Connection aborted before source arrived.");
+            }
+
+            if (receive_status == JERRY_DEBUGGER_SOURCE_END)
+            {
+              jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "No more client source.\n");
+            }
+
+            if (jerry_value_is_abort (run_result))
+            {
+              ret_value = jerry_acquire_value (run_result);
+            }
+
+            jerry_release_value (run_result);
+          }
+          while (receive_status == JERRY_DEBUGGER_SOURCE_RECEIVED);
+
+          if (receive_status != JERRY_DEBUGGER_CONTEXT_RESET_RECEIVED)
+          {
+            break;
+          }
+
+          init_engine (flags, true, debug_port);
+
+          ret_value = jerry_create_undefined ();
+        }
+      }
+
+    }
+
+    bool restart = false;
+
+    if (jerry_is_feature_enabled (JERRY_FEATURE_DEBUGGER) && jerry_value_is_abort (ret_value))
+    {
+      jerry_value_t abort_value = jerry_get_value_from_error (ret_value, false);
+      if (jerry_value_is_string (abort_value))
+      {
+        jerry_char_t str_buf[5];
+        jerry_value_t str_val = jerry_value_to_string (abort_value);
+        jerry_size_t str_size = jerry_get_string_size (str_val);
+
+        if (str_size == 5)
+        {
+          jerry_string_to_char_buffer (str_val, str_buf, str_size);
+          if (memcmp ("r353t", (char *) (str_buf), 5) == 0)
+          {
+            jerry_release_value (ret_value);
+            restart = true;
+          }
+        }
+
+        jerry_release_value (str_val);
+      }
+
+      jerry_release_value (abort_value);
+    }
+
+    if (!restart)
+    {
+      break;
+    }
+
+    jerry_cleanup ();
+
+    init_engine (flags, true, debug_port);
+
+    ret_value = jerry_create_undefined ();
   }
 
   if (is_repl_mode)

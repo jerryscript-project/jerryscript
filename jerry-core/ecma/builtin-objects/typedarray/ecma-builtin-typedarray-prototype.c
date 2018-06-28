@@ -14,6 +14,7 @@
  */
 
 #include "ecma-builtin-helpers.h"
+#include "ecma-builtin-typedarray-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
@@ -985,6 +986,97 @@ ecma_builtin_typedarray_prototype_object_to_string (ecma_value_t this_arg) /**< 
 
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_object_to_string */
+
+/**
+ * The %TypedArray%.prototype object's 'subarray' routine.
+ *
+ * See also:
+ *          ES2015, 22.2.3.26
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this argument */
+                                            ecma_value_t begin, /**< begin */
+                                            ecma_value_t end) /**< end */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  /* 2.~ 4. */
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *src_typedarray_p = ecma_get_object_from_value (this_arg);
+
+  /* 5. buffer */
+  ecma_object_t *src_typedarray_arraybuffer_p = ecma_typedarray_get_arraybuffer (src_typedarray_p);
+
+  /* 6. srcLength */
+  ecma_length_t src_length = ecma_typedarray_get_length (src_typedarray_p);
+
+  /* 9. beginIndex, 12. endIndex */
+  uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
+
+  /* 7. relativeBegin */
+  ECMA_OP_TO_NUMBER_TRY_CATCH (relative_begin, begin, ret_value);
+  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, src_length);
+
+  if (ecma_is_value_undefined (end))
+  {
+    end_index_uint32 = (uint32_t) src_length;
+  }
+  else
+  {
+    /* 10. relativeEnd */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (relative_end, end, ret_value);
+
+    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, src_length);
+
+    ECMA_OP_TO_NUMBER_FINALIZE (relative_end);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (relative_begin);
+
+  if (!ecma_is_value_empty (ret_value))
+  {
+    return ret_value;
+  }
+
+  /* 13. newLength */
+  ecma_length_t subarray_length = 0;
+
+  if (end_index_uint32 > begin_index_uint32)
+  {
+    subarray_length = end_index_uint32 - begin_index_uint32;
+  }
+
+  /* 15. elementSize */
+  uint8_t shift = ecma_typedarray_get_element_size_shift (src_typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+
+  /* 16. srcByteOffset */
+  ecma_length_t src_byte_offset = ecma_typedarray_get_offset (src_typedarray_p);
+
+  /* 17. beginByteOffset */
+  ecma_length_t begin_byte_offset = src_byte_offset + begin_index_uint32 * element_size;
+
+  uint8_t src_builtin_id = ecma_typedarray_helper_get_builtin_id (src_typedarray_p);
+  ecma_value_t arguments_p[3] =
+  {
+    ecma_make_object_value (src_typedarray_arraybuffer_p),
+    ecma_make_uint32_value (begin_byte_offset),
+    ecma_make_uint32_value (subarray_length)
+  };
+
+  ret_value = ecma_typedarray_helper_dispatch_construct (arguments_p, 3, src_builtin_id);
+
+  ecma_free_value (arguments_p[1]);
+  ecma_free_value (arguments_p[2]);
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_subarray */
 
 /**
  * @}

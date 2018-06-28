@@ -904,35 +904,39 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 } /* jerry_is_feature_enabled */
 
 /**
- * Get the value from an error value.
+ * Create abort from an api value.
  *
- * Extract the api value from an error. If the second argument is true
- * it will release the input error value.
+ * Create abort value from an api value. If the second argument is true
+ * it will release the input api value.
  *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return jerry_value_t value
+ * @return api abort value
  */
 jerry_value_t
-jerry_get_value_from_error (jerry_value_t value, /**< api value */
-                            bool release) /**< release api value */
+jerry_create_abort_from_value (jerry_value_t value, /**< api value */
+                               bool release) /**< release api value */
 {
   jerry_assert_api_available ();
 
-  if (!ecma_is_value_error_reference (value))
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
-    return release ? value : ecma_copy_value (value);
+    /* This is a rare case so it is optimized for
+     * binary size rather than performance. */
+    if (jerry_value_is_abort (value))
+    {
+      return release ? value : jerry_acquire_value (value);
+    }
+
+    value = jerry_get_value_from_error (value, release);
+    release = true;
   }
 
-  jerry_value_t ret_val = jerry_acquire_value (ecma_get_error_reference_from_value (value)->value);
-
-  if (release)
+  if (!release)
   {
-    jerry_release_value (value);
+    value = ecma_copy_value (value);
   }
-  return ret_val;
-} /* jerry_get_value_from_error */
+
+  return ecma_create_error_reference (value, false);
+} /* jerry_create_abort_from_value */
 
 /**
  * Create error from an api value.
@@ -970,26 +974,35 @@ jerry_create_error_from_value (jerry_value_t value, /**< api value */
 } /* jerry_create_error_from_value */
 
 /**
- * Set both the abort and error flags if the value is not an error reference.
+ * Get the value from an error value.
+ *
+ * Extract the api value from an error. If the second argument is true
+ * it will release the input error value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return jerry_value_t value
  */
-void
-jerry_value_set_abort_flag (jerry_value_t *value_p) /**< api value */
+jerry_value_t
+jerry_get_value_from_error (jerry_value_t value, /**< api value */
+                            bool release) /**< release api value */
 {
   jerry_assert_api_available ();
 
-  if (JERRY_UNLIKELY (ecma_is_value_error_reference (*value_p)))
+  if (!ecma_is_value_error_reference (value))
   {
-    /* This is a rare case so it is optimized for
-     * binary size rather than performance. */
-    if (jerry_value_is_abort (*value_p))
-    {
-      return;
-    }
-    *value_p = ecma_clear_error_reference (*value_p, false);
+    return release ? value : ecma_copy_value (value);
   }
 
-  *value_p = ecma_create_error_reference (*value_p, false);
-} /* jerry_value_set_abort_flag */
+  jerry_value_t ret_val = jerry_acquire_value (ecma_get_error_reference_from_value (value)->value);
+
+  if (release)
+  {
+    jerry_release_value (value);
+  }
+  return ret_val;
+} /* jerry_get_value_from_error */
 
 /**
  * Return the type of the Error object if possible.

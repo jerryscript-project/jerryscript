@@ -61,6 +61,40 @@ main (void)
   compare_str (str, pterodactylus_p, pterodactylus_size);
   jerry_release_value (str);
 
+  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  error = jerry_create_abort_from_value (str, true);
+  str = jerry_get_value_from_error (error, true);
+
+  compare_str (str, pterodactylus_p, pterodactylus_size);
+  jerry_release_value (str);
+
+  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  error = jerry_create_abort_from_value (str, false);
+  jerry_release_value (str);
+  str = jerry_get_value_from_error (error, true);
+
+  compare_str (str, pterodactylus_p, pterodactylus_size);
+  jerry_release_value (str);
+
+  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  error = jerry_create_error_from_value (str, true);
+  error = jerry_create_abort_from_value (error, true);
+  JERRY_ASSERT (jerry_value_is_abort (error));
+  str = jerry_get_value_from_error (error, true);
+
+  compare_str (str, pterodactylus_p, pterodactylus_size);
+  jerry_release_value (str);
+
+  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  error = jerry_create_error_from_value (str, true);
+  jerry_value_t error2 = jerry_create_abort_from_value (error, false);
+  JERRY_ASSERT (jerry_value_is_abort (error2));
+  jerry_release_value (error);
+  str = jerry_get_value_from_error (error2, true);
+
+  compare_str (str, pterodactylus_p, pterodactylus_size);
+  jerry_release_value (str);
+
   double test_num = 3.1415926;
   jerry_value_t num = jerry_create_number (test_num);
   jerry_value_t num2 = jerry_create_error_from_value (num, false);
@@ -98,19 +132,40 @@ main (void)
   jerry_release_value (num2);
 
   num = jerry_create_number (test_num);
-  jerry_value_set_abort_flag (&num);
-  JERRY_ASSERT (jerry_value_is_abort (num));
-  num2 = jerry_create_error_from_value (num, true);
+  error = jerry_create_abort_from_value (num, true);
+  JERRY_ASSERT (jerry_value_is_abort (error));
+  num2 = jerry_create_error_from_value (error, true);
   JERRY_ASSERT (jerry_value_is_error (num2));
   num = jerry_get_value_from_error (num2, true);
   JERRY_ASSERT (jerry_get_number_value (num) == test_num);
   jerry_release_value (num);
 
   num = jerry_create_number (test_num);
-  jerry_value_set_abort_flag (&num);
-  JERRY_ASSERT (jerry_value_is_abort (num));
-  num2 = jerry_create_error_from_value (num, false);
+  error = jerry_create_abort_from_value (num, false);
   jerry_release_value (num);
+  JERRY_ASSERT (jerry_value_is_abort (error));
+  num2 = jerry_create_error_from_value (error, true);
+  JERRY_ASSERT (jerry_value_is_error (num2));
+  num = jerry_get_value_from_error (num2, true);
+  JERRY_ASSERT (jerry_get_number_value (num) == test_num);
+  jerry_release_value (num);
+
+  num = jerry_create_number (test_num);
+  error = jerry_create_abort_from_value (num, true);
+  JERRY_ASSERT (jerry_value_is_abort (error));
+  num2 = jerry_create_error_from_value (error, false);
+  jerry_release_value (error);
+  JERRY_ASSERT (jerry_value_is_error (num2));
+  num = jerry_get_value_from_error (num2, true);
+  JERRY_ASSERT (jerry_get_number_value (num) == test_num);
+  jerry_release_value (num);
+
+  num = jerry_create_number (test_num);
+  error = jerry_create_abort_from_value (num, false);
+  jerry_release_value (num);
+  JERRY_ASSERT (jerry_value_is_abort (error));
+  num2 = jerry_create_error_from_value (error, false);
+  jerry_release_value (error);
   JERRY_ASSERT (jerry_value_is_error (num2));
   num = jerry_get_value_from_error (num2, true);
   JERRY_ASSERT (jerry_get_number_value (num) == test_num);
@@ -131,8 +186,19 @@ main (void)
   jerry_release_value (error);
 
   value = jerry_create_number (42);
+  error = jerry_create_abort_from_value (value, true);
+  error = jerry_create_abort_from_value (error, true);
+  jerry_release_value (error);
+
+  value = jerry_create_number (42);
   error = jerry_create_error_from_value (value, true);
-  jerry_value_t error2 = jerry_create_error_from_value (error, false);
+  error2 = jerry_create_error_from_value (error, false);
+  jerry_release_value (error);
+  jerry_release_value (error2);
+
+  value = jerry_create_number (42);
+  error = jerry_create_abort_from_value (value, true);
+  error2 = jerry_create_abort_from_value (error, false);
   jerry_release_value (error);
   jerry_release_value (error2);
 

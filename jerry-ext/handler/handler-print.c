@@ -65,11 +65,11 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
       jerry_length_t substr_pos = 0;
       jerry_char_t substr_buf[256];
 
-      while ((substr_size = jerry_substring_to_char_buffer (str_val,
-                                                            substr_pos,
-                                                            substr_pos + 256,
-                                                            substr_buf,
-                                                            256)) != 0)
+      while ((substr_size = jerry_substring_to_utf8_char_buffer (str_val,
+                                                                 substr_pos,
+                                                                 substr_pos + 256,
+                                                                 substr_buf,
+                                                                 256)) != 0)
       {
 #ifdef JERRY_DEBUGGER
         jerry_debugger_send_output (substr_buf, substr_size, JERRY_DEBUGGER_OUTPUT_OK);

@@ -1195,6 +1195,88 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
 } /* ecma_builtin_typedarray_prototype_subarray */
 
 /**
+ * The %TypedArray%.prototype object's 'fill' routine.
+ *
+ * See also:
+ *          ES2015, 22.2.3.8, 22.1.3.6
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t value, /**< value */
+                                        ecma_value_t begin, /**< begin */
+                                        ecma_value_t end) /**< end */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_number_t value_num;
+  ecma_value_t ret_value = ecma_get_number (value, &value_num);
+
+  if (!ecma_is_value_empty (ret_value))
+  {
+    return ret_value;
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *typedarray_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  lit_utf8_byte_t *buffer_p = ecma_arraybuffer_get_buffer (typedarray_arraybuffer_p);
+  ecma_length_t length = ecma_typedarray_get_length (typedarray_p);
+
+  uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (relative_begin, begin, ret_value);
+  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, length);
+
+  if (ecma_is_value_undefined (end))
+  {
+    end_index_uint32 = (uint32_t) length;
+  }
+  else
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (relative_end, end, ret_value);
+
+    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, length);
+
+    ECMA_OP_TO_NUMBER_FINALIZE (relative_end);
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (relative_begin);
+
+  if (!ecma_is_value_empty (ret_value))
+  {
+    return ret_value;
+  }
+
+  ecma_length_t subarray_length = 0;
+
+  if (end_index_uint32 > begin_index_uint32)
+  {
+    subarray_length = end_index_uint32 - begin_index_uint32;
+  }
+
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  ecma_length_t byte_offset = ecma_typedarray_get_offset (typedarray_p);
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (typedarray_p);
+
+  uint8_t element_size = (uint8_t) (1 << shift);
+  uint32_t byte_index = byte_offset + begin_index_uint32 * element_size;
+  uint32_t limit = byte_index + subarray_length * element_size;
+
+  while (byte_index < limit)
+  {
+    ecma_set_typedarray_element (buffer_p + byte_index, value_num, class_id);
+    byte_index += element_size;
+  }
+
+  return ecma_copy_value (this_arg);
+} /* ecma_builtin_typedarray_prototype_fill */
+
+/**
  * @}
  * @}
  * @}

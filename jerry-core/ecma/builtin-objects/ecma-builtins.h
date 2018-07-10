@@ -96,6 +96,8 @@ bool
 ecma_builtin_is (ecma_object_t *obj_p, ecma_builtin_id_t builtin_id);
 ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id);
+ecma_object_t *
+ecma_builtin_get_global (void);
 bool
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p);
 

@@ -205,6 +205,22 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 } /* ecma_builtin_get */
 
 /**
+ * Get reference to the global object
+ *
+ * Note:
+ *   Does not increase the reference counter.
+ *
+ * @return pointer to the global object
+ */
+inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_builtin_get_global (void)
+{
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL] != NULL);
+
+  return JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL];
+} /* ecma_builtin_get_global */
+
+/**
  * Checks whether the given function is a built-in routine
  *
  * @return true - if the function object is a built-in routine

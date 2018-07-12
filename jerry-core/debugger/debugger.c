@@ -78,6 +78,8 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the recei
 {
   JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_backtrace_t, get_backtrace_p);
 
+  uint32_t min_depth;
+  memcpy (&min_depth, get_backtrace_p->min_depth, sizeof (uint32_t));
   uint32_t max_depth;
   memcpy (&max_depth, get_backtrace_p->max_depth, sizeof (uint32_t));
 
@@ -96,35 +98,45 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the recei
   const size_t max_frame_count = JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t);
   const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_frame_count, jerry_debugger_frame_t);
 
-  while (frame_ctx_p != NULL && max_depth > 0)
+  if (min_depth <= max_depth)
   {
-    if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+    uint32_t min_depth_offset = 0;
+
+    while (frame_ctx_p != NULL && min_depth_offset < min_depth)
     {
       frame_ctx_p = frame_ctx_p->prev_context_p;
-      continue;
+      min_depth_offset++;
     }
 
-    if (current_frame >= max_frame_count)
+    while (frame_ctx_p != NULL && min_depth_offset++ < max_depth)
     {
-      if (!jerry_debugger_send (max_message_size))
+      if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
       {
-        return;
+        frame_ctx_p = frame_ctx_p->prev_context_p;
+        continue;
       }
-      current_frame = 0;
+
+      if (current_frame >= max_frame_count)
+      {
+        if (!jerry_debugger_send (max_message_size))
+        {
+          return;
+        }
+        current_frame = 0;
+      }
+
+      jerry_debugger_frame_t *frame_p = backtrace_p->frames + current_frame;
+
+      jmem_cpointer_t byte_code_cp;
+      JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->bytecode_header_p);
+      memcpy (frame_p->byte_code_cp, &byte_code_cp, sizeof (jmem_cpointer_t));
+
+      uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
+      memcpy (frame_p->offset, &offset, sizeof (uint32_t));
+
+      frame_ctx_p = frame_ctx_p->prev_context_p;
+      current_frame++;
     }
-
-    jerry_debugger_frame_t *frame_p = backtrace_p->frames + current_frame;
-
-    jmem_cpointer_t byte_code_cp;
-    JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->bytecode_header_p);
-    memcpy (frame_p->byte_code_cp, &byte_code_cp, sizeof (jmem_cpointer_t));
-
-    uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
-    memcpy (frame_p->offset, &offset, sizeof (uint32_t));
-
-    frame_ctx_p = frame_ctx_p->prev_context_p;
-    current_frame++;
-    max_depth--;
   }
 
   size_t message_size = current_frame * sizeof (jerry_debugger_frame_t);

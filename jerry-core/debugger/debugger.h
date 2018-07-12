@@ -18,6 +18,7 @@
 
 #include "debugger-ws.h"
 #include "ecma-globals.h"
+#include "jerryscript-debugger-transport.h"
 
 #ifdef JERRY_DEBUGGER
 
@@ -34,22 +35,17 @@
 #define JERRY_DEBUGGER_MESSAGE_FREQUENCY 5
 
 /**
- * Sleep time in milliseconds between each jerry_debugger_receive call
+ * This constant represents that the string to be sent has no subtype.
  */
-#define JERRY_DEBUGGER_TIMEOUT 100
-
-/**
-  * This constant represents that the string to be sent has no subtype.
-  */
 #define JERRY_DEBUGGER_NO_SUBTYPE 0
 
 /**
  * Limited resources available for the engine, so it is important to
  * check the maximum buffer size. It needs to be between 64 and 256 bytes.
  */
-#if JERRY_DEBUGGER_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_MAX_BUFFER_SIZE > 256
+#if JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE > 256
 #error Please define the MAX_BUFFER_SIZE between 64 and 256 bytes.
-#endif /* JERRY_DEBUGGER_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_MAX_BUFFER_SIZE > 256 */
+#endif /* JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE > 256 */
 
 /**
  * Calculate the maximum number of items for a given type
@@ -227,6 +223,15 @@ typedef enum
 } jerry_debugger_output_subtype_t;
 
 /**
+ * Byte data for evaluating expressions and receiving client source.
+ */
+typedef struct
+{
+  uint32_t uint8_size; /**< total size of the client source */
+  uint32_t uint8_offset; /**< current offset in the client source */
+} jerry_debugger_uint8_data_t;
+
+/**
  * Delayed free of byte code data.
  */
 typedef struct
@@ -400,11 +405,8 @@ typedef struct
 
 void jerry_debugger_free_unreferenced_byte_code (void);
 
-void jerry_debugger_sleep (void);
+bool jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p);
 
-bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
-                                     bool *resume_exec_p, uint8_t *expected_message_p,
-                                     jerry_debugger_uint8_data_t **message_data_p);
 void jerry_debugger_breakpoint_hit (uint8_t message_type);
 
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);

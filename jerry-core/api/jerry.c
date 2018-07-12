@@ -35,6 +35,7 @@
 #include "ecma-typedarray-object.h"
 #include "jcontext.h"
 #include "jerryscript.h"
+#include "jerryscript-debugger-transport.h"
 #include "jmem.h"
 #include "js-parser.h"
 #include "re-compiler.h"
@@ -199,7 +200,7 @@ jerry_cleanup (void)
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
-    jerry_debugger_close_connection ();
+    jerry_debugger_transport_close ();
   }
 #endif /* JERRY_DEBUGGER */
 

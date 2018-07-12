@@ -16,6 +16,8 @@
 #include "debugger.h"
 #include "jcontext.h"
 #include "jerryscript.h"
+#include "debugger-tcp.h"
+#include "debugger-ws.h"
 
 /**
  * Checks whether the debugger is connected.
@@ -96,8 +98,14 @@ void
 jerry_debugger_init (uint16_t port) /**< server port number */
 {
 #ifdef JERRY_DEBUGGER
-  JERRY_CONTEXT (debugger_port) = port;
-  jerry_debugger_accept_connection ();
+  if (!jerry_debugger_tcp_create (port)
+      || !jerry_debugger_ws_create ())
+  {
+    jerry_debugger_transport_close ();
+    return;
+  }
+
+  jerry_debugger_transport_start ();
 #else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (port);
 #endif /* JERRY_DEBUGGER */
@@ -173,7 +181,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         }
       }
 
-      jerry_debugger_sleep ();
+      jerry_debugger_transport_sleep ();
     }
 
     JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE)

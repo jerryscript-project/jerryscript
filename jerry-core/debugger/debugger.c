@@ -20,9 +20,18 @@
 #include "ecma-eval.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
+#include "jerryscript-port.h"
 #include "lit-char-helpers.h"
 
 #ifdef JERRY_DEBUGGER
+
+/**
+ * Incoming message: next message of string data.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+} jerry_debugger_receive_uint8_data_part_t;
 
 /**
  * The number of message types in the debugger should reflect the
@@ -32,6 +41,12 @@ JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 27
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
                      && JERRY_DEBUGGER_VERSION == 4,
                      debugger_version_correlates_to_message_type_count);
+
+/**
+ * Waiting for data from the client.
+ */
+#define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
+  (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
 
 /**
  * Type cast the debugger send buffer into a specific type.
@@ -71,10 +86,27 @@ jerry_debugger_free_unreferenced_byte_code (void)
 } /* jerry_debugger_free_unreferenced_byte_code */
 
 /**
+ * Send data over an active connection.
+ *
+ * @return true - if the data was sent successfully
+ *         false - otherwise
+ */
+static bool
+jerry_debugger_send (size_t message_length) /**< message length in bytes */
+{
+  JERRY_ASSERT (message_length <= JERRY_CONTEXT (debugger_max_send_size));
+
+  jerry_debugger_transport_header_t *header_p = JERRY_CONTEXT (debugger_transport_header_p);
+  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer_payload_p);
+
+  return header_p->send (header_p, payload_p, message_length);
+} /* jerry_debugger_send */
+
+/**
  * Send backtrace.
  */
 static void
-jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the received data */
+jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the received data */
 {
   JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_backtrace_t, get_backtrace_p);
 
@@ -244,23 +276,13 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 } /* jerry_debugger_send_eval */
 
 /**
- * Suspend execution for a given time.
- * Note: If the platform does not have nanosleep or usleep, this function does not sleep at all.
- */
-void
-jerry_debugger_sleep (void)
-{
-  jerry_port_sleep (JERRY_DEBUGGER_TIMEOUT);
-} /* jerry_debugger_sleep */
-
-/**
  * Check received packet size.
  */
 #define JERRY_DEBUGGER_CHECK_PACKET_SIZE(type) \
   if (message_size != sizeof (type)) \
   { \
     JERRY_ERROR_MSG ("Invalid message size\n"); \
-    jerry_debugger_close_connection (); \
+    jerry_debugger_transport_close (); \
     return false; \
   }
 
@@ -270,8 +292,8 @@ jerry_debugger_sleep (void)
  * @return true - if message is processed successfully
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
-jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the received data */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to the received data */
                                 uint32_t message_size, /**< message size */
                                 bool *resume_exec_p, /**< pointer to the resume exec flag */
                                 uint8_t *expected_message_type_p, /**< message type */
@@ -283,7 +305,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
     JERRY_ERROR_MSG ("Message requires breakpoint mode\n");
-    jerry_debugger_close_connection ();
+    jerry_debugger_transport_close ();
     return false;
   }
 
@@ -298,7 +320,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Unexpected message\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -308,7 +330,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -320,7 +342,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -370,7 +392,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (byte_code_free_cp != JERRY_CONTEXT (debugger_byte_code_free_tail))
       {
         JERRY_ERROR_MSG ("Invalid byte code free order\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -531,7 +553,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_PARSER_WAIT_MODE))
       {
         JERRY_ERROR_MSG ("Not in parser wait mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -544,7 +566,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -558,7 +580,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
         if (eval_size != message_size - sizeof (jerry_debugger_receive_eval_first_t))
         {
           JERRY_ERROR_MSG ("Invalid message size\n");
-          jerry_debugger_close_connection ();
+          jerry_debugger_transport_close ();
           return false;
         }
 
@@ -594,14 +616,14 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (message_size <= sizeof (jerry_debugger_receive_client_source_first_t))
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -616,7 +638,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
           && client_source_size != message_size - header_size)
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -653,7 +675,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -671,7 +693,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -687,11 +709,74 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     default:
     {
       JERRY_ERROR_MSG ("Unexpected message.");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
   }
 } /* jerry_debugger_process_message */
+
+/**
+ * Receive message from the client.
+ *
+ * Note:
+ *   If the function returns with true, the value of
+ *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
+ *
+ * @return true - if execution should be resumed,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+{
+  JERRY_ASSERT (jerry_debugger_transport_is_connected ());
+
+  JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
+                                       : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
+
+  JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
+
+  bool resume_exec = false;
+  uint8_t expected_message_type = 0;
+
+  while (true)
+  {
+    jerry_debugger_transport_receive_context_t context;
+    if (!jerry_debugger_transport_receive (&context))
+    {
+      JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED));
+      return true;
+    }
+
+    if (context.message_p == NULL)
+    {
+      if (expected_message_type != 0)
+      {
+        jerry_debugger_transport_sleep ();
+        continue;
+      }
+
+      return resume_exec;
+    }
+
+    /* Only datagram packets are supported. */
+    JERRY_ASSERT (context.message_total_length > 0);
+
+    /* The jerry_debugger_process_message function is inlined
+     * so passing these arguments is essentially free. */
+    if (!jerry_debugger_process_message (context.message_p,
+                                         (uint32_t) context.message_length,
+                                         &resume_exec,
+                                         &expected_message_type,
+                                         message_data_p))
+    {
+      JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED));
+      return true;
+    }
+
+    jerry_debugger_transport_receive_completed (&context);
+  }
+} /* jerry_debugger_receive */
+
 
 #undef JERRY_DEBUGGER_CHECK_PACKET_SIZE
 
@@ -727,7 +812,7 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 
   while (!jerry_debugger_receive (&uint8_data))
   {
-    jerry_debugger_sleep ();
+    jerry_debugger_transport_sleep ();
   }
 
   if (uint8_data != NULL)

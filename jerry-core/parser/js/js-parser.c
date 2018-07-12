@@ -2897,7 +2897,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
         break;
       }
 
-      jerry_debugger_sleep ();
+      jerry_debugger_transport_sleep ();
     }
   }
 #endif /* JERRY_DEBUGGER */

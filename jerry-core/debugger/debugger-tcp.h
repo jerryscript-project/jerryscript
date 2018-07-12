@@ -13,21 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef DEBUGGER_WS_H
-#define DEBUGGER_WS_H
+#ifndef DEBUGGER_TCP_H
+#define DEBUGGER_TCP_H
 
 #include "jerryscript-debugger-transport.h"
 
 #ifdef JERRY_DEBUGGER
 
-/* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
-
-bool jerry_debugger_ws_create (void);
-
-void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
-                                  const uint8_t *input2, size_t input2_len,
-                                  uint8_t output[20]);
+bool jerry_debugger_tcp_create (uint16_t port);
 
 #endif /* JERRY_DEBUGGER */
 
-#endif /* !DEBUGGER_WS_H */
+#endif /* !DEBUGGER_TCP_H */

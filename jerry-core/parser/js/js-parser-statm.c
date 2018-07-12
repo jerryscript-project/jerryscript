@@ -1837,6 +1837,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         break;
       }
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      case LEXER_KEYW_CLASS:
+      {
+        parser_parse_class (context_p, true);
+        continue;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
       case LEXER_KEYW_FUNCTION:
       {
         parser_parse_function_statement (context_p);

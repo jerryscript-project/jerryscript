@@ -21,6 +21,10 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
+#if !defined (CONFIG_DISABLE_ES2015_CLASS) && (defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO))
+#include "jcontext.h"
+#endif /* !CONFIG_DISABLE_ES2015_CLASS && (JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO) */
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -352,6 +356,247 @@ parser_append_object_literal_item (parser_context_t *context_p, /**< context */
     context_p->stack_top_uint8 = PARSER_OBJECT_PROPERTY_BOTH_ACCESSORS;
   }
 } /* parser_append_object_literal_item */
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Parse class as an object literal.
+ */
+static void
+parser_parse_class_literal (parser_context_t *context_p, /**< context */
+                            lexer_literal_t *constructor_literal_p) /**< constructor literal */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
+  JERRY_ASSERT (constructor_literal_p->type == LEXER_UNUSED_LITERAL);
+
+  parser_emit_cbc (context_p, CBC_CREATE_OBJECT);
+
+  bool is_static = false;
+
+  while (true)
+  {
+    if (!is_static)
+    {
+      lexer_skip_empty_statements (context_p);
+    }
+
+    lexer_expect_object_literal_id (context_p, false);
+
+    if (context_p->token.type == LEXER_RIGHT_BRACE)
+    {
+      break;
+    }
+
+    if (context_p->token.type == LEXER_PROPERTY_GETTER || context_p->token.type == LEXER_PROPERTY_SETTER)
+    {
+      uint32_t status_flags;
+      cbc_ext_opcode_t opcode;
+      uint16_t literal_index, function_literal_index;
+
+      if (context_p->token.type == LEXER_PROPERTY_GETTER)
+      {
+        status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_GETTER;
+        opcode = is_static ? CBC_EXT_SET_STATIC_GETTER : CBC_EXT_SET_GETTER;
+      }
+      else
+      {
+        status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_SETTER;
+        opcode = is_static ? CBC_EXT_SET_STATIC_SETTER : CBC_EXT_SET_SETTER;
+      }
+
+      lexer_expect_object_literal_id (context_p, true);
+      literal_index = context_p->lit_object.index;
+
+      if (!is_static && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
+      {
+        parser_raise_error (context_p, PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR);
+      }
+
+      parser_flush_cbc (context_p);
+      function_literal_index = lexer_construct_function_object (context_p, status_flags);
+
+      parser_emit_cbc_literal (context_p,
+                               CBC_PUSH_LITERAL,
+                               literal_index);
+
+      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (opcode);
+      context_p->last_cbc.value = function_literal_index;
+
+      is_static = false;
+    }
+    else if (!is_static && context_p->token.type == LEXER_CLASS_CONSTRUCTOR)
+    {
+      if (constructor_literal_p->type == LEXER_FUNCTION_LITERAL)
+      {
+        /* 14.5.1 */
+        parser_raise_error (context_p, PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTOR);
+      }
+
+      parser_flush_cbc (context_p);
+      uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_CLASS_CONSTRUCTOR;
+      constructor_literal_p->u.bytecode_p = parser_parse_function (context_p, status_flags);
+      constructor_literal_p->type = LEXER_FUNCTION_LITERAL;
+    }
+    else if (!is_static && context_p->token.type == LEXER_KEYW_STATIC)
+    {
+      is_static = true;
+    }
+    else
+    {
+      if (is_static && lexer_compare_raw_identifier_to_current (context_p, "prototype", 9))
+      {
+        parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROPERTY_NAME_PROTOTYPE);
+      }
+
+      if (!lexer_check_left_paren (context_p))
+      {
+        lexer_next_token (context_p);
+        parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_EXPECTED);
+      }
+
+      parser_flush_cbc (context_p);
+
+      uint16_t literal_index = context_p->lit_object.index;
+      uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_FUNC_EXPRESSION | PARSER_IS_CLOSURE;
+      uint16_t function_literal_index = lexer_construct_function_object (context_p, status_flags);
+
+      parser_emit_cbc_literal (context_p,
+                               CBC_PUSH_LITERAL,
+                               function_literal_index);
+
+      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+
+      context_p->last_cbc.value = literal_index;
+
+      if (is_static)
+      {
+        context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_STATIC_PROPERTY);
+        is_static = false;
+      }
+      else
+      {
+        context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
+      }
+    }
+  }
+
+  if (constructor_literal_p->type == LEXER_UNUSED_LITERAL)
+  {
+    parser_flush_cbc (context_p);
+    constructor_literal_p->u.bytecode_p = parser_create_class_implicit_constructor (context_p);
+    constructor_literal_p->type = LEXER_FUNCTION_LITERAL;
+  }
+
+  JERRY_ASSERT (constructor_literal_p->type == LEXER_FUNCTION_LITERAL);
+} /* parser_parse_class_literal */
+
+/**
+ * Description of "prototype" literal string.
+ */
+static const lexer_lit_location_t lexer_prototype_literal =
+{
+  (const uint8_t *) "prototype", 9, LEXER_STRING_LITERAL, false
+};
+
+/**
+ * Parse class statement or expression.
+ */
+void
+parser_parse_class (parser_context_t *context_p, /**< context */
+                    bool is_statement) /**< true - if class is parsed as a statement
+                                        *   false - otherwise (as an expression) */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
+
+  uint16_t class_ident_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
+
+  if (is_statement)
+  {
+    /* Class statement must contain an identifier. */
+    lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+    JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                  && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+    class_ident_index = context_p->lit_object.index;
+    context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
+    lexer_next_token (context_p);
+  }
+  else
+  {
+    lexer_next_token (context_p);
+
+    /* Class expression may contain an identifier. */
+    if (context_p->token.type == LEXER_LITERAL && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+    {
+      /* NOTE: If 'Function.name' will be supported, the current literal object must be set to 'name' property. */
+      lexer_next_token (context_p);
+    }
+  }
+
+  /* Currently heritage is not supported so the next token must be left brace. */
+  if (context_p->token.type != LEXER_LEFT_BRACE)
+  {
+    parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
+  }
+
+  /* Create an empty literal for class constructor. */
+  if (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
+  {
+    parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
+  }
+
+  lexer_literal_t *constructor_literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
+  constructor_literal_p->type = LEXER_UNUSED_LITERAL;
+  constructor_literal_p->status_flags = 0;
+
+  parser_emit_cbc_literal (context_p, CBC_PUSH_LITERAL, context_p->literal_count);
+
+  context_p->literal_count++;
+
+  bool is_strict = context_p->status_flags & PARSER_IS_STRICT;
+
+  /* 14.5. A ClassBody is always strict code. */
+  context_p->status_flags |= PARSER_IS_STRICT | PARSER_IS_CLASS;
+
+  /* ClassDeclaration is parsed. Continue with class body. */
+  parser_parse_class_literal (context_p, constructor_literal_p);
+
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                constructor_literal_p->u.char_p,
+                                constructor_literal_p->prop.length);
+  }
+#endif /* JERRY_DEBUGGER */
+
+  JERRY_ASSERT (context_p->token.type == LEXER_RIGHT_BRACE);
+
+  lexer_construct_literal_object (context_p,
+                                  (lexer_lit_location_t *) &lexer_prototype_literal,
+                                  lexer_prototype_literal.type);
+
+  parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, context_p->lit_object.index);
+
+  if (is_statement)
+  {
+    parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, class_ident_index);
+  }
+
+  parser_flush_cbc (context_p);
+
+  context_p->status_flags &= (uint32_t) ~PARSER_IS_CLASS;
+
+  if (!is_strict)
+  {
+    /* Restore flag */
+    context_p->status_flags &= (uint32_t) ~PARSER_IS_STRICT;
+  }
+
+  lexer_next_token (context_p);
+} /* parser_parse_class */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
  * Parse object literal.
@@ -857,6 +1102,13 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
                                         PARSER_IS_FUNCTION | PARSER_IS_FUNC_EXPRESSION | PARSER_IS_CLOSURE);
       break;
     }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    case LEXER_KEYW_CLASS:
+    {
+      parser_parse_class (context_p, false);
+      return;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case LEXER_LEFT_BRACE:
     {
       parser_parse_object_literal (context_p);

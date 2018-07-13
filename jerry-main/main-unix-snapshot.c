@@ -426,6 +426,8 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
 typedef enum
 {
   OPT_MERGE_HELP,
+  OPT_MERGE_LITERAL_LIST,
+  OPT_MERGE_LITERAL_C,
   OPT_MERGE_OUT,
 } merge_opt_id_t;
 
@@ -436,6 +438,12 @@ static const cli_opt_t merge_opts[] =
 {
   CLI_OPT_DEF (.id = OPT_MERGE_HELP, .opt = "h", .longopt = "help",
                .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_MERGE_LITERAL_LIST, .longopt = "save-literals-list-format",
+               .meta = "FILE",
+               .help = "export literals found in parsed JS input (in list format)"),
+  CLI_OPT_DEF (.id = OPT_MERGE_LITERAL_C, .longopt = "save-literals-c-format",
+               .meta = "FILE",
+               .help = "export literals found in parsed JS input (in C source format)"),
   CLI_OPT_DEF (.id = OPT_MERGE_OUT, .opt = "o",
                .help = "specify output file name (default: js.snapshot)"),
   CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
@@ -461,6 +469,8 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
   JERRY_VLA (const uint32_t *, merge_buffers, argc);
   JERRY_VLA (size_t, merge_buffer_sizes, argc);
   uint32_t number_of_files = 0;
+  const char *save_literals_file_name_p = NULL;
+  bool is_save_literals_mode_in_c_format = false;
 
   for (int id = cli_consume_option (cli_state_p); id != CLI_OPT_END; id = cli_consume_option (cli_state_p))
   {
@@ -470,6 +480,18 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
       {
         cli_help (prog_name_p, "merge", merge_opts);
         return JERRY_STANDALONE_EXIT_CODE_OK;
+      }
+      case OPT_MERGE_LITERAL_LIST:
+      case OPT_MERGE_LITERAL_C:
+      {
+        if (save_literals_file_name_p != NULL)
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: literal file name already specified");
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+        is_save_literals_mode_in_c_format = (id == OPT_MERGE_LITERAL_C);
+        save_literals_file_name_p = cli_consume_string (cli_state_p);
+        break;
       }
       case OPT_MERGE_OUT:
       {
@@ -517,14 +539,31 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
 
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
+  uint32_t out_literals_p[JERRY_BUFFER_SIZE / 4];
+  size_t out_literals_size = 0;
 
-  const char *error_p;
+  const char *error_p = NULL;
   size_t size = jerry_merge_snapshots (merge_buffers,
                                        merge_buffer_sizes,
                                        number_of_files,
                                        output_buffer,
                                        JERRY_BUFFER_SIZE,
+                                       out_literals_p,
+                                       &out_literals_size,
+                                       is_save_literals_mode_in_c_format,
+                                       save_literals_file_name_p != NULL ? true : false,
                                        &error_p);
+
+  if (save_literals_file_name_p != NULL && size > 0)
+  {
+    FILE *file_p = fopen (save_literals_file_name_p, "w");
+
+    if (file_p != NULL)
+    {
+      fwrite (out_literals_p, sizeof (uint8_t), out_literals_size, file_p);
+      fclose (file_p);
+    }
+  }
 
   if (size == 0)
   {

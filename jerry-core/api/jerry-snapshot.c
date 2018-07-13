@@ -1198,157 +1198,6 @@ update_literal_offsets (uint8_t *buffer_p, /**< snapshot buffer start */
   while (buffer_p < buffer_end_p);
 } /* update_literal_offsets */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
-
-/**
- * Merge multiple snapshots into a single buffer
- *
- * @return length of merged snapshot file
- *         0 on error
- */
-size_t
-jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers to start of) input buffers */
-                       size_t *inp_buffer_sizes_p, /**< array of input buffer sizes */
-                       size_t number_of_snapshots, /**< number of snapshots */
-                       uint32_t *out_buffer_p, /**< output buffer */
-                       size_t out_buffer_size, /**< output buffer size */
-                       const char **error_p) /**< error description */
-{
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-  uint32_t number_of_funcs = 0;
-  uint32_t merged_global_flags = 0;
-  size_t functions_size = sizeof (jerry_snapshot_header_t);
-
-  if (number_of_snapshots < 2)
-  {
-    *error_p = "at least two snapshots must be passed";
-    return 0;
-  }
-
-  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
-
-  for (uint32_t i = 0; i < number_of_snapshots; i++)
-  {
-    if (inp_buffer_sizes_p[i] < sizeof (jerry_snapshot_header_t))
-    {
-      *error_p = "invalid snapshot file";
-      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
-      return 0;
-    }
-
-    const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) inp_buffers_p[i];
-
-    if (header_p->magic != JERRY_SNAPSHOT_MAGIC
-        || header_p->version != JERRY_SNAPSHOT_VERSION
-        || !snapshot_check_global_flags (header_p->global_flags))
-    {
-      *error_p = "invalid snapshot version or unsupported features present";
-      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
-      return 0;
-    }
-
-    merged_global_flags |= header_p->global_flags;
-
-    uint32_t start_offset = header_p->func_offsets[0];
-    const uint8_t *data_p = (const uint8_t *) inp_buffers_p[i];
-    const uint8_t *literal_base_p = (uint8_t *) (data_p + header_p->lit_table_offset);
-
-    JERRY_ASSERT (header_p->number_of_funcs > 0);
-
-    number_of_funcs += header_p->number_of_funcs;
-    functions_size += header_p->lit_table_offset - start_offset;
-
-    scan_snapshot_functions (data_p + start_offset,
-                             data_p + header_p->lit_table_offset,
-                             lit_pool_p,
-                             literal_base_p);
-  }
-
-  JERRY_ASSERT (number_of_funcs > 0);
-
-  functions_size += JERRY_ALIGNUP ((number_of_funcs - 1) * sizeof (uint32_t), JMEM_ALIGNMENT);
-
-  if (functions_size >= out_buffer_size)
-  {
-    *error_p = "output buffer is too small";
-    ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
-    return 0;
-  }
-
-  jerry_snapshot_header_t *header_p = (jerry_snapshot_header_t *) out_buffer_p;
-
-  header_p->magic = JERRY_SNAPSHOT_MAGIC;
-  header_p->version = JERRY_SNAPSHOT_VERSION;
-  header_p->global_flags = merged_global_flags;
-  header_p->lit_table_offset = (uint32_t) functions_size;
-  header_p->number_of_funcs = number_of_funcs;
-
-  lit_mem_to_snapshot_id_map_entry_t *lit_map_p;
-  uint32_t literals_num;
-
-  if (!ecma_save_literals_for_snapshot (lit_pool_p,
-                                        out_buffer_p,
-                                        out_buffer_size,
-                                        &functions_size,
-                                        &lit_map_p,
-                                        &literals_num))
-  {
-    *error_p = "buffer is too small";
-    return 0;
-  }
-
-  uint32_t *func_offset_p = header_p->func_offsets;
-  uint8_t *dst_p = ((uint8_t *) out_buffer_p) + sizeof (jerry_snapshot_header_t);
-  dst_p += JERRY_ALIGNUP ((number_of_funcs - 1) * sizeof (uint32_t), JMEM_ALIGNMENT);
-
-  for (uint32_t i = 0; i < number_of_snapshots; i++)
-  {
-    const jerry_snapshot_header_t *current_header_p = (const jerry_snapshot_header_t *) inp_buffers_p[i];
-
-    uint32_t start_offset = current_header_p->func_offsets[0];
-
-    memcpy (dst_p,
-            ((const uint8_t *) inp_buffers_p[i]) + start_offset,
-            current_header_p->lit_table_offset - start_offset);
-
-    update_literal_offsets (dst_p,
-                            dst_p + current_header_p->lit_table_offset - start_offset,
-                            lit_map_p);
-
-    uint32_t current_offset = (uint32_t) (dst_p - (uint8_t *) out_buffer_p) - start_offset;
-
-    for (uint32_t j = 0; j < current_header_p->number_of_funcs; j++)
-    {
-      /* Updating offset without changing any flags. */
-      *func_offset_p++ = current_header_p->func_offsets[j] + current_offset;
-    }
-
-    dst_p += current_header_p->lit_table_offset - start_offset;
-  }
-
-  JERRY_ASSERT ((uint32_t) (dst_p - (uint8_t *) out_buffer_p) == header_p->lit_table_offset);
-
-  if (lit_map_p != NULL)
-  {
-    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
-  }
-
-  *error_p = NULL;
-  return functions_size;
-#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
-  JERRY_UNUSED (inp_buffers_p);
-  JERRY_UNUSED (inp_buffer_sizes_p);
-  JERRY_UNUSED (number_of_snapshots);
-  JERRY_UNUSED (out_buffer_p);
-  JERRY_UNUSED (out_buffer_size);
-  JERRY_UNUSED (error_p);
-
-  *error_p = "snapshot merge not supported";
-  return 0;
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
-} /* jerry_merge_snapshots */
-
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
 
 /**
  * ====================== Functions for literal saving ==========================
@@ -1577,54 +1426,17 @@ ecma_string_is_valid_identifier (const ecma_string_t *string_p)
   return result;
 } /* ecma_string_is_valid_identifier */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
-
-/**
- * Copy certain string literals into the given buffer in a specified format,
- * which are valid identifiers and none of them are magic string.
- *
- * @return size of the literal-list in bytes, at most equal to the buffer size,
- *         if the source parsed successfully and the list of the literals isn't empty,
- *         0 - otherwise.
- */
-size_t
-jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source */
-                               size_t source_size, /**< script source size */
-                               bool is_strict, /**< strict mode */
-                               uint32_t *buffer_p, /**< [out] buffer to save literals to */
-                               size_t buffer_size, /**< the buffer's size */
-                               bool is_c_format) /**< format-flag */
+static size_t
+snapshot_get_literals (uint32_t *out_buffer_p, /**< output buffer */
+                        size_t out_buffer_size, /**< output buffer size */
+                        ecma_collection_header_t *lit_pool_p, /**< list of known values */
+                        bool is_c_format) /**< format-flag */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-  ecma_value_t parse_status;
-  ecma_compiled_code_t *bytecode_data_p;
-
-#ifdef JERRY_ENABLE_LINE_INFO
-  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ENABLE_LINE_INFO */
-
-  parse_status = parser_parse_script (NULL,
-                                      0,
-                                      source_p,
-                                      source_size,
-                                      is_strict,
-                                      &bytecode_data_p);
-
-  if (ECMA_IS_VALUE_ERROR (parse_status))
-  {
-    ecma_free_value (JERRY_CONTEXT (error_value));
-    return 0;
-  }
-
-  ecma_free_value (parse_status);
-
-  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
-  ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
-
-  ecma_bytecode_deref (bytecode_data_p);
-
-  lit_utf8_size_t literal_count = 0;
+  uint8_t *destination_p = (uint8_t *) out_buffer_p;
+  uint8_t *const buffer_start_p = destination_p;
+  uint8_t *const buffer_end_p = destination_p + out_buffer_size;
   ecma_value_t *iterator_p = ecma_collection_iterator_init (lit_pool_p);
+  lit_utf8_size_t literal_count = 0;
 
   /* Count the valid and non-magic identifiers in the list. */
   while (iterator_p != NULL)
@@ -1646,25 +1458,17 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
         literal_count++;
       }
     }
-
     iterator_p = ecma_collection_iterator_next (iterator_p);
   }
-
   if (literal_count == 0)
   {
     ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
     return 0;
   }
 
-  uint8_t *destination_p = (uint8_t *) buffer_p;
-
-  uint8_t *const buffer_start_p = destination_p;
-  uint8_t *const buffer_end_p = destination_p + buffer_size;
-
   JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
-  lit_utf8_size_t literal_idx = 0;
-
   iterator_p = ecma_collection_iterator_init (lit_pool_p);
+  lit_utf8_size_t literal_idx = 0;
 
   while (iterator_p != NULL)
   {
@@ -1685,11 +1489,8 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
         literal_array[literal_idx++] = literal_p;
       }
     }
-
     iterator_p = ecma_collection_iterator_next (iterator_p);
   }
-
-  ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
 
   /* Sort the strings by size at first, then lexicographically. */
   jerry_save_literals_sort (literal_array, literal_count);
@@ -1768,15 +1569,235 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 
     destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\n", 0);
   }
+  JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
 
   if (is_c_format)
   {
     destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, (const char *) "};\n", 0);
   }
 
-  JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
-
   return destination_p <= buffer_end_p ? (size_t) (destination_p - buffer_start_p) : 0;
+
+} /* snapshot_get_literals */
+
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+
+/**
+ * Merge multiple snapshots into a single buffer
+ *
+ * @return length of merged snapshot file
+ *         0 on error
+ */
+size_t
+jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers to start of) input buffers */
+                       size_t *inp_buffer_sizes_p, /**< array of input buffer sizes */
+                       size_t number_of_snapshots, /**< number of snapshots */
+                       uint32_t *out_buffer_p, /**< output buffer */
+                       size_t out_buffer_size, /**< output buffer size */
+                       uint32_t *out_literals_p, /** literals end pointer*/
+                       size_t *out_literals_size,
+                       bool is_c_format, /**< format-flag */
+                       bool get_literals, /** merge or generate*/
+                       const char **error_p) /**< error description */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  uint32_t number_of_funcs = 0;
+  uint32_t merged_global_flags = 0;
+  size_t functions_size = sizeof (jerry_snapshot_header_t);
+
+  if (number_of_snapshots < 2)
+  {
+    *error_p = "at least two snapshots must be passed";
+    return 0;
+  }
+
+  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
+
+  for (uint32_t i = 0; i < number_of_snapshots; i++)
+  {
+    if (inp_buffer_sizes_p[i] < sizeof (jerry_snapshot_header_t))
+    {
+      *error_p = "invalid snapshot file";
+      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+      return 0;
+    }
+
+    const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) inp_buffers_p[i];
+
+    if (header_p->magic != JERRY_SNAPSHOT_MAGIC
+        || header_p->version != JERRY_SNAPSHOT_VERSION
+        || !snapshot_check_global_flags (header_p->global_flags))
+    {
+      *error_p = "invalid snapshot version or unsupported features present";
+      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+      return 0;
+    }
+
+    merged_global_flags |= header_p->global_flags;
+
+    uint32_t start_offset = header_p->func_offsets[0];
+    const uint8_t *data_p = (const uint8_t *) inp_buffers_p[i];
+    const uint8_t *literal_base_p = (uint8_t *) (data_p + header_p->lit_table_offset);
+
+    JERRY_ASSERT (header_p->number_of_funcs > 0);
+
+    number_of_funcs += header_p->number_of_funcs;
+    functions_size += header_p->lit_table_offset - start_offset;
+
+    scan_snapshot_functions (data_p + start_offset,
+                             data_p + header_p->lit_table_offset,
+                             lit_pool_p,
+                             literal_base_p);
+  }
+
+  if (get_literals)
+  {
+    size_t literals_size = snapshot_get_literals (out_literals_p,
+                                                  out_buffer_size,
+                                                  lit_pool_p,
+                                                  is_c_format);
+    if (literals_size == 0)
+    {
+      return 0;
+    }
+    *out_literals_size = literals_size;
+  }
+
+  JERRY_ASSERT (number_of_funcs > 0);
+
+  functions_size += JERRY_ALIGNUP ((number_of_funcs - 1) * sizeof (uint32_t), JMEM_ALIGNMENT);
+
+  if (functions_size >= out_buffer_size)
+  {
+    *error_p = "output buffer is too small";
+    ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+    return 0;
+  }
+
+  jerry_snapshot_header_t *header_p = (jerry_snapshot_header_t *) out_buffer_p;
+
+  header_p->magic = JERRY_SNAPSHOT_MAGIC;
+  header_p->version = JERRY_SNAPSHOT_VERSION;
+  header_p->global_flags = merged_global_flags;
+  header_p->lit_table_offset = (uint32_t) functions_size;
+  header_p->number_of_funcs = number_of_funcs;
+
+  lit_mem_to_snapshot_id_map_entry_t *lit_map_p;
+  uint32_t literals_num;
+
+  if (!ecma_save_literals_for_snapshot (lit_pool_p,
+                                        out_buffer_p,
+                                        out_buffer_size,
+                                        &functions_size,
+                                        &lit_map_p,
+                                        &literals_num))
+  {
+    *error_p = "buffer is too small";
+    return 0;
+  }
+
+  uint32_t *func_offset_p = header_p->func_offsets;
+  uint8_t *dst_p = ((uint8_t *) out_buffer_p) + sizeof (jerry_snapshot_header_t);
+  dst_p += JERRY_ALIGNUP ((number_of_funcs - 1) * sizeof (uint32_t), JMEM_ALIGNMENT);
+
+  for (uint32_t i = 0; i < number_of_snapshots; i++)
+  {
+    const jerry_snapshot_header_t *current_header_p = (const jerry_snapshot_header_t *) inp_buffers_p[i];
+
+    uint32_t start_offset = current_header_p->func_offsets[0];
+
+    memcpy (dst_p,
+            ((const uint8_t *) inp_buffers_p[i]) + start_offset,
+            current_header_p->lit_table_offset - start_offset);
+
+    update_literal_offsets (dst_p,
+                            dst_p + current_header_p->lit_table_offset - start_offset,
+                            lit_map_p);
+
+    uint32_t current_offset = (uint32_t) (dst_p - (uint8_t *) out_buffer_p) - start_offset;
+
+    for (uint32_t j = 0; j < current_header_p->number_of_funcs; j++)
+    {
+      /* Updating offset without changing any flags. */
+      *func_offset_p++ = current_header_p->func_offsets[j] + current_offset;
+    }
+
+    dst_p += current_header_p->lit_table_offset - start_offset;
+  }
+
+  JERRY_ASSERT ((uint32_t) (dst_p - (uint8_t *) out_buffer_p) == header_p->lit_table_offset);
+
+  if (lit_map_p != NULL)
+  {
+    jmem_heap_free_block (lit_map_p, literals_num * sizeof (lit_mem_to_snapshot_id_map_entry_t));
+  }
+
+  *error_p = NULL;
+  return functions_size;
+#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+  JERRY_UNUSED (inp_buffers_p);
+  JERRY_UNUSED (inp_buffer_sizes_p);
+  JERRY_UNUSED (number_of_snapshots);
+  JERRY_UNUSED (out_buffer_p);
+  JERRY_UNUSED (out_buffer_size);
+  JERRY_UNUSED (get_literals);
+  JERRY_UNUSED (out_literals_p);
+  JERRY_UNUSED (out_literals_size);
+  JERRY_UNUSED (is_c_format);
+  JERRY_UNUSED (error_p);
+  *error_p = "snapshot merge not supported";
+  return 0;
+#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+} /* jerry_merge_snapshots */
+
+/**
+ * Copy certain string literals into the given buffer in a specified format,
+ * which are valid identifiers and none of them are magic string.
+ *
+ * @return size of the literal-list in bytes, at most equal to the buffer size,
+ *         if the source parsed successfully and the list of the literals isn't empty,
+ *         0 - otherwise.
+ */
+size_t
+jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source */
+                               size_t source_size, /**< script source size */
+                               bool is_strict, /**< strict mode */
+                               uint32_t *buffer_p, /**< [out] buffer to save literals to */
+                               size_t buffer_size, /**< the buffer's size */
+                               bool is_c_format) /**< format-flag */
+{
+#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+  ecma_value_t parse_status;
+  ecma_compiled_code_t *bytecode_data_p;
+
+#ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
+#endif /* JERRY_ENABLE_LINE_INFO */
+
+  parse_status = parser_parse_script (NULL,
+                                      0,
+                                      source_p,
+                                      source_size,
+                                      is_strict,
+                                      &bytecode_data_p);
+
+  if (ECMA_IS_VALUE_ERROR (parse_status))
+  {
+    ecma_free_value (JERRY_CONTEXT (error_value));
+    return 0;
+  }
+
+  ecma_free_value (parse_status);
+
+  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
+  ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
+
+  ecma_bytecode_deref (bytecode_data_p);
+  size_t retval = snapshot_get_literals (buffer_p, buffer_size, lit_pool_p, is_c_format);
+  ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+
+  return retval;
+
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);

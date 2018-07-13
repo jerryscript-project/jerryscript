@@ -79,6 +79,11 @@ typedef enum
   PARSER_ERR_MULTIPLE_DEFAULTS_NOT_ALLOWED,           /**< multiple default cases are not allowed */
   PARSER_ERR_DEFAULT_NOT_IN_SWITCH,                   /**< default statement is not in switch block */
   PARSER_ERR_CASE_NOT_IN_SWITCH,                      /**< case statement is not in switch block */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
+  PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
+  PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   PARSER_ERR_LEFT_PAREN_EXPECTED,                     /**< left paren expected */
   PARSER_ERR_LEFT_BRACE_EXPECTED,                     /**< left brace expected */
@@ -87,11 +92,6 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
   PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-  PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTOR,              /**< multiple class constructor */
-  PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
-  PARSER_ERR_CLASS_STATIC_PROPERTY_NAME_PROTOTYPE,    /**< static method name 'prototype' is not allowed */
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
   PARSER_ERR_COLON_EXPECTED,                          /**< colon expected */
   PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED,          /**< colon expected for conditional expression */
   PARSER_ERR_SEMICOLON_EXPECTED,                      /**< semicolon expected */

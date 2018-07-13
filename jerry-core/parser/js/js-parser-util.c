@@ -898,6 +898,20 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Case statement must be in a switch block.";
     }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS:
+    {
+      return "Multiple constructors are not allowed.";
+    }
+    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR:
+    {
+      return "Class constructor may not be an accessor.";
+    }
+    case PARSER_ERR_CLASS_STATIC_PROTOTYPE:
+    {
+      return "Classes may not have a static property called 'prototype'.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case PARSER_ERR_LEFT_PAREN_EXPECTED:
     {
       return "Expected '(' token.";
@@ -920,20 +934,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
       return "Expected '}' token.";
     }
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-    case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTOR:
-    {
-      return "Multiple constructors are not allowed.";
-    }
-    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR:
-    {
-      return "Class constructor may not be an accessor.";
-    }
-    case PARSER_ERR_CLASS_STATIC_PROPERTY_NAME_PROTOTYPE:
-    {
-      return "Classes may not have a static property called 'prototype'.";
-    }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case PARSER_ERR_COLON_EXPECTED:
     {
       return "Expected ':' token.";

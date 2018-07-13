@@ -286,9 +286,10 @@ lexer_skip_empty_statements (parser_context_t *context_p) /**< context */
 {
   lexer_skip_spaces (context_p);
 
-  while (*context_p->source_p == LIT_CHAR_SEMICOLON)
+  while (context_p->source_p < context_p->source_end_p
+         && *context_p->source_p == LIT_CHAR_SEMICOLON)
   {
-    lexer_next_token (context_p);
+    context_p->source_p++;
     lexer_skip_spaces (context_p);
   }
 } /* lexer_skip_empty_statements */
@@ -2268,7 +2269,9 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
   lexer_skip_spaces (context_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  bool is_static_method = (context_p->token.type == LEXER_KEYW_STATIC);
+  int is_class_method = ((context_p->status_flags & PARSER_IS_CLASS)
+                         && !must_be_identifier
+                         && (context_p->token.type != LEXER_KEYW_STATIC));
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   context_p->token.line = context_p->line;
@@ -2302,11 +2305,9 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
           }
         }
       }
+
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-      if ((context_p->status_flags & PARSER_IS_CLASS)
-          && !must_be_identifier
-          && !is_static_method
-          && context_p->token.lit_location.length == 6
+      if (is_class_method
           && lexer_compare_raw_identifier_to_current (context_p, "static", 6))
       {
         context_p->token.type = LEXER_KEYW_STATIC;
@@ -2349,9 +2350,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     }
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-    if ((context_p->status_flags & PARSER_IS_CLASS)
-        && !must_be_identifier
-        && !is_static_method
+    if (is_class_method
         && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
     {
       context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
@@ -2431,28 +2430,28 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
  */
 bool
 lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context */
-                                     const lexer_lit_location_t *right) /**< identifier */
+                                     const lexer_lit_location_t *right_ident_p) /**< identifier */
 {
-  lexer_lit_location_t *left = &context_p->token.lit_location;
+  lexer_lit_location_t *left_ident_p = &context_p->token.lit_location;
   const uint8_t *left_p;
   const uint8_t *right_p;
   size_t count;
 
-  JERRY_ASSERT (left->length > 0 && right->length > 0);
+  JERRY_ASSERT (left_ident_p->length > 0 && right_ident_p->length > 0);
 
-  if (left->length != right->length)
+  if (left_ident_p->length != right_ident_p->length)
   {
     return 0;
   }
 
-  if (!left->has_escape && !right->has_escape)
+  if (!left_ident_p->has_escape && !right_ident_p->has_escape)
   {
-    return memcmp (left->char_p, right->char_p, left->length) == 0;
+    return memcmp (left_ident_p->char_p, right_ident_p->char_p, left_ident_p->length) == 0;
   }
 
-  left_p = left->char_p;
-  right_p = right->char_p;
-  count = left->length;
+  left_p = left_ident_p->char_p;
+  right_p = right_ident_p->char_p;
+  count = left_ident_p->length;
 
   do
   {
@@ -2529,14 +2528,14 @@ lexer_compare_raw_identifier_to_current (parser_context_t *context_p, /**< conte
                                          const char *right_ident_p, /**< identifier */
                                          size_t right_ident_length) /**< identifier length */
 {
-  lexer_lit_location_t *left = &context_p->token.lit_location;
+  lexer_lit_location_t *left_ident_p = &context_p->token.lit_location;
 
-  if (left->length != right_ident_length || left->has_escape)
+  if (left_ident_p->length != right_ident_length || left_ident_p->has_escape)
   {
     return 0;
   }
 
-  return memcmp (left->char_p, right_ident_p, right_ident_length) == 0;
+  return memcmp (left_ident_p->char_p, right_ident_p, right_ident_length) == 0;
 } /* lexer_compare_raw_identifier_to_current */
 
 /**

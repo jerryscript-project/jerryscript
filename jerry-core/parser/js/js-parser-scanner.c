@@ -41,15 +41,15 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
   SCAN_MODE_ARROW_FUNCTION,                /**< arrow function might follows */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-  SCAN_MODE_CLASS_DECLARATION,              /**< scanning class declaration */
-  SCAN_MODE_CLASS_METHOD,                   /**< scanning class method */
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
   SCAN_MODE_POST_PRIMARY_EXPRESSION,       /**< scanning post primary expression */
   SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
   SCAN_MODE_STATEMENT,                     /**< scanning statement */
   SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
   SCAN_MODE_PROPERTY_NAME,                 /**< scanning property name */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  SCAN_MODE_CLASS_DECLARATION,             /**< scanning class declaration */
+  SCAN_MODE_CLASS_METHOD,                  /**< scanning class method */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } scan_modes_t;
 
 /**
@@ -71,7 +71,7 @@ typedef enum
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  SCAN_STACK_CLASS,                         /**< class language element */
+  SCAN_STACK_CLASS,                        /**< class language element */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } scan_stack_modes_t;
 
@@ -106,14 +106,6 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
       *mode = SCAN_MODE_FUNCTION_ARGUMENTS;
       break;
     }
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-    case LEXER_KEYW_CLASS:
-    {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
-      *mode = SCAN_MODE_CLASS_DECLARATION;
-      break;
-    }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case LEXER_LEFT_PAREN:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
@@ -164,6 +156,14 @@ parser_scan_primary_expression (parser_context_t *context_p, /**< context */
       *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
       break;
     }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    case LEXER_KEYW_CLASS:
+    {
+      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+      *mode = SCAN_MODE_CLASS_DECLARATION;
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case LEXER_RIGHT_SQUARE:
     {
       if (stack_top != SCAN_STACK_SQUARE_BRACKETED_EXPRESSION)
@@ -512,7 +512,7 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
           *mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
         }
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-        if (stack_top == SCAN_STACK_CLASS)
+        else if (stack_top == SCAN_STACK_CLASS)
         {
           *mode = SCAN_MODE_CLASS_METHOD;
         }
@@ -767,7 +767,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
                       || stack_top == SCAN_STACK_BLOCK_EXPRESSION
                       || stack_top == SCAN_STACK_CLASS
                       || stack_top == SCAN_STACK_BLOCK_PROPERTY);
-#else
+#else /* CONFIG_DISABLE_ES2015_CLASS */
         JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
                       || stack_top == SCAN_STACK_BLOCK_EXPRESSION
                       || stack_top == SCAN_STACK_BLOCK_PROPERTY);

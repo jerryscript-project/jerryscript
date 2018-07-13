@@ -454,7 +454,7 @@ bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, b
 void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
-bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right);
+bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
 bool lexer_compare_raw_identifier_to_current (parser_context_t *context_p, const char *right_ident_p,
                                               size_t right_ident_length);
 
@@ -468,6 +468,9 @@ bool lexer_compare_raw_identifier_to_current (parser_context_t *context_p, const
 /* Parser functions. */
 
 void parser_parse_expression (parser_context_t *context_p, int options);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+void parser_parse_class (parser_context_t *context_p, bool is_statement);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
  * @}
@@ -486,9 +489,6 @@ void parser_scan_until (parser_context_t *context_p, lexer_range_t *range_p, lex
  */
 
 void parser_parse_statements (parser_context_t *context_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-void parser_parse_class (parser_context_t *context_p, bool is_statement);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 void parser_free_jumps (parser_stack_iterator_t iterator);
 
 /**

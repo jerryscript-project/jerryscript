@@ -33,6 +33,28 @@
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
+/**
+ * Function type for command handling call
+ */
+typedef int (*command_function_t) (cli_state_t *cli_state_p, int argc, char *prog_name_p);
+/**
+ * Description for a command entries
+ */
+typedef struct
+{
+  /** Name of the command to be used */
+  const char *name;
+  /** Function to call for this command */
+  command_function_t function;
+} command_entry_t;
+
+/**
+ * Helper macros to register commands
+ */
+#define COMMAND(NAME) { #NAME, process_##NAME }
+#define COMMANDS_END { NULL, NULL }
+
+
 static uint8_t input_buffer[ JERRY_BUFFER_SIZE ];
 static uint32_t output_buffer[ JERRY_BUFFER_SIZE / 4 ];
 static const char *output_file_name_p = "js.snapshot";
@@ -524,14 +546,18 @@ static const cli_opt_t main_opts[] =
  * Print available commands.
  */
 static void
-print_commands (char *prog_name_p) /**< program name */
+print_commands (char *prog_name_p, /**< program name */
+                command_entry_t *commands) /** < array of available commands */
 {
+  assert (commands != NULL);
   cli_help (prog_name_p, NULL, main_opts);
 
-  printf ("\nAvailable commands:\n"
-          "  generate\n"
-          "  merge\n"
-          "\nPassing -h or --help after a command displays its help.\n");
+  printf ("\nAvailable commands:\n");
+  for (;commands != NULL && commands->name != NULL; commands++)
+  {
+    printf ("  %s\n", commands->name);
+  }
+  printf ("\nPassing -h or --help after a command displays its help.\n");
 } /* print_commands */
 
 /**
@@ -543,6 +569,12 @@ int
 main (int argc, /**< number of arguments */
       char **argv) /**< argument list */
 {
+  command_entry_t commands[] =
+  {
+    COMMAND (merge),
+    COMMAND (generate),
+    COMMANDS_END
+  };
   cli_state_t cli_state = cli_init (main_opts, argc - 1, argv + 1);
 
   for (int id = cli_consume_option (&cli_state); id != CLI_OPT_END; id = cli_consume_option (&cli_state))
@@ -563,17 +595,17 @@ main (int argc, /**< number of arguments */
           break;
         }
 
-        if (!strcmp ("merge", command_p))
+        for (command_entry_t *entry = commands; entry->name != NULL; entry++)
         {
-          return process_merge (&cli_state, argc, argv[0]);
-        }
-        else if (!strcmp ("generate", command_p))
-        {
-          return process_generate (&cli_state, argc, argv[0]);
+          if (!strcmp (entry->name, command_p))
+          {
+            assert (entry->function != NULL);
+            return entry->function (&cli_state, argc, argv[0]);
+          }
         }
 
         jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: unknown command: %s\n\n", command_p);
-        print_commands (argv[0]);
+        print_commands (argv[0], commands);
 
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
@@ -590,6 +622,6 @@ main (int argc, /**< number of arguments */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  print_commands (argv[0]);
+  print_commands (argv[0], commands);
   return JERRY_STANDALONE_EXIT_CODE_OK;
 } /* main */

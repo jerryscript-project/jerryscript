@@ -13,21 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef DEBUGGER_WS_H
-#define DEBUGGER_WS_H
+#include "jerryscript-ext/debugger.h"
+#include "jext-common.h"
 
-#include "jerryscript-debugger-transport.h"
-
+/**
+ * Must be called after the connection has been initialized.
+ */
+void
+jerryx_debugger_after_connect (bool success) /**< tells whether the connection
+                                              *   has been successfully established */
+{
 #ifdef JERRY_DEBUGGER
-
-/* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
-
-bool jerry_debugger_ws_create (void);
-
-void jerry_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
-                                  const uint8_t *input2, size_t input2_len,
-                                  uint8_t output[20]);
-
+  if (success)
+  {
+    jerry_debugger_transport_start ();
+  }
+  else
+  {
+    jerry_debugger_transport_close ();
+  }
+#else /* !JERRY_DEBUGGER */
+  JERRYX_UNUSED (success);
 #endif /* JERRY_DEBUGGER */
-
-#endif /* !DEBUGGER_WS_H */
+} /* jerryx_debugger_after_connect */

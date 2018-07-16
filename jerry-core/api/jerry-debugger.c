@@ -16,8 +16,6 @@
 #include "debugger.h"
 #include "jcontext.h"
 #include "jerryscript.h"
-#include "debugger-tcp.h"
-#include "debugger-ws.h"
 
 /**
  * Checks whether the debugger is connected.
@@ -90,26 +88,6 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
   JERRY_UNUSED (enable_stop_at_breakpoint);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_stop_at_breakpoint */
-
-/**
- * Debugger server initialization. Must be called after jerry_init.
- */
-void
-jerry_debugger_init (uint16_t port) /**< server port number */
-{
-#ifdef JERRY_DEBUGGER
-  if (!jerry_debugger_tcp_create (port)
-      || !jerry_debugger_ws_create ())
-  {
-    jerry_debugger_transport_close ();
-    return;
-  }
-
-  jerry_debugger_transport_start ();
-#else /* !JERRY_DEBUGGER */
-  JERRY_UNUSED (port);
-#endif /* JERRY_DEBUGGER */
-} /* jerry_debugger_init */
 
 /**
  * Sets whether the engine should wait and run a source.

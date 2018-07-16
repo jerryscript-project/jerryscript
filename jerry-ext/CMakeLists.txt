@@ -17,21 +17,25 @@ set(JERRY_EXT_NAME jerry-ext)
 project (${JERRY_EXT_NAME} C)
 
 # Include directories
-set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 if(FEATURE_INIT_FINI)
   set(DEFINES_EXT ${DEFINES_EXT} ENABLE_INIT_FINI)
 endif()
 
 # Source directories
-file(GLOB SOURCE_EXT_ARG      arg/*.c)
-file(GLOB SOURCE_EXT_MODULE   module/*.c)
-file(GLOB SOURCE_EXT_HANDLER  handler/*.c)
+file(GLOB SOURCE_EXT_ARG        arg/*.c)
+file(GLOB SOURCE_EXT_COMMON     common/*.c)
+file(GLOB SOURCE_EXT_DEBUGGER   debugger/*.c)
+file(GLOB SOURCE_EXT_HANDLER    handler/*.c)
+file(GLOB SOURCE_EXT_MODULE     module/*.c)
 
 set(SOURCE_EXT
     ${SOURCE_EXT_ARG}
-    ${SOURCE_EXT_MODULE}
-    ${SOURCE_EXT_HANDLER})
+    ${SOURCE_EXT_COMMON}
+    ${SOURCE_EXT_DEBUGGER}
+    ${SOURCE_EXT_HANDLER}
+    ${SOURCE_EXT_MODULE})
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 

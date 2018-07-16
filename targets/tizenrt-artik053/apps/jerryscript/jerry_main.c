@@ -19,6 +19,7 @@
 #include <tinyara/fs/fs_utils.h>
 
 #include "jerryscript.h"
+#include "jerryscript-ext/debugger.h"
 #include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
 #include "setjmp.h"
@@ -356,7 +357,8 @@ jerry_cmd_main (int argc, char *argv[])
 
   if (start_debug_server)
   {
-    jerry_debugger_init (debug_port);
+    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port)
+                                   && jerryx_debugger_ws_create ());
   }
 
   register_js_function ("assert", jerryx_handler_assert);

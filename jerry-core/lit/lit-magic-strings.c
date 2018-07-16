@@ -151,9 +151,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
        id < JERRY_CONTEXT (lit_magic_string_ex_count);
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
-    lit_utf8_size_t string_size = lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id));
-    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] == string_size);
-    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+    lit_utf8_size_t string_size = JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 
     /**
      * Check whether the strings are sorted by size and lexicographically,
@@ -163,6 +161,8 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
     {
       const lit_magic_string_ex_id_t prev_id = id - 1;
       const lit_utf8_size_t prev_string_size = lit_get_magic_string_ex_size (prev_id);
+      JERRY_ASSERT (lit_is_valid_cesu8_string (lit_get_magic_string_ex_utf8 (id),
+                                               string_size));
       JERRY_ASSERT (prev_string_size <= string_size);
 
       if (prev_string_size == string_size)

@@ -19,11 +19,6 @@
 #include "lit-globals.h"
 
 /**
- * Limit for magic string length
- */
-#define LIT_MAGIC_STRING_LENGTH_LIMIT 32
-
-/**
  * Identifiers of ECMA and implementation-defined magic string constants
  */
 typedef enum

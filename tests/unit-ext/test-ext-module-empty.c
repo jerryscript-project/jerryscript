@@ -39,6 +39,7 @@ main (int argc, char **argv)
   TEST_ASSERT (jerry_value_is_error (module));
 
   /* Retrieve the error message. */
+  module = jerry_get_value_from_error (module, true);
   jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "message");
   jerry_value_t prop = jerry_get_property (module, prop_name);
 

@@ -35,10 +35,14 @@ jerryx_module_create_error (jerry_error_t error_type, /**< the type of error to 
                             const jerry_value_t module_name) /**< the module name */
 {
   jerry_value_t ret = jerry_create_error (error_type, message);
+
+  jerry_value_t error_object = jerry_get_value_from_error (ret, false);
   jerry_value_t property_name = jerry_create_string (module_name_property_name);
 
-  jerry_release_value (jerry_set_property (ret, property_name, module_name));
+  jerry_release_value (jerry_set_property (error_object, property_name, module_name));
+
   jerry_release_value (property_name);
+  jerry_release_value (error_object);
   return ret;
 } /* jerryx_module_create_error */
 

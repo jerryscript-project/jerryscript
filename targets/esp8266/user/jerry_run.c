@@ -36,7 +36,7 @@ int js_eval (const char *source_p, const size_t source_size)
 {
   jerry_value_t res = jerry_eval ((jerry_char_t *) source_p,
                                   source_size,
-                                  false);
+                                  JERRY_PARSE_NO_OPTS);
   if (jerry_value_is_error (res)) {
     jerry_release_value (res);
     return -1;

@@ -80,6 +80,17 @@ typedef enum
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
+
+/**
+ * Option flags for script parsing.
+ */
+typedef enum
+{
+  ECMA_PARSE_NO_OPTS = 0, /**< no options passed */
+  ECMA_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+  ECMA_PARSE_DIRECT_EVAL = (1 << 1) /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
+} ecma_parse_opts_t;
+
 /**
  * Description of an ecma value
  *

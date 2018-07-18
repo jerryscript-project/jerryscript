@@ -169,7 +169,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
                                                 arguments_buffer_size,
                                                 function_body_buffer_p,
                                                 function_body_buffer_size,
-                                                false,
+                                                ECMA_PARSE_NO_OPTS,
                                                 &bytecode_data_p);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))

@@ -54,15 +54,23 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       break;
     }
     case VM_CONTEXT_CATCH:
+    {
+      JERRY_ASSERT (PARSER_TRY_CONTEXT_STACK_ALLOCATION > PARSER_WITH_CONTEXT_STACK_ALLOCATION);
+
+      const uint16_t size_diff = PARSER_TRY_CONTEXT_STACK_ALLOCATION - PARSER_WITH_CONTEXT_STACK_ALLOCATION;
+
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, size_diff);
+      vm_stack_top_p -= size_diff;
+      /* FALLTHRU */
+    }
     case VM_CONTEXT_WITH:
     {
-      ecma_deref_object (frame_ctx_p->lex_env_p);
-      frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+      ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+      frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+      ecma_deref_object (lex_env_p);
 
-      JERRY_ASSERT (PARSER_TRY_CONTEXT_STACK_ALLOCATION == PARSER_WITH_CONTEXT_STACK_ALLOCATION);
-
-      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_WITH_CONTEXT_STACK_ALLOCATION;
       break;
     }
     default:
@@ -218,8 +226,9 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
       else
       {
-        ecma_deref_object (frame_ctx_p->lex_env_p);
-        frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+        ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+        frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+        ecma_deref_object (lex_env_p);
 
         if (byte_code_p[0] == CBC_CONTEXT_END)
         {

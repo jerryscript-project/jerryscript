@@ -63,7 +63,7 @@ main (void)
 
     ENTRY (JERRY_TYPE_OBJECT, jerry_create_object ()),
     ENTRY (JERRY_TYPE_OBJECT, jerry_create_array (10)),
-    ENTRY (JERRY_TYPE_OBJECT, jerry_create_error (JERRY_ERROR_TYPE, (const jerry_char_t *) "error")),
+    ENTRY (JERRY_TYPE_ERROR, jerry_create_error (JERRY_ERROR_TYPE, (const jerry_char_t *) "error")),
 
     ENTRY (JERRY_TYPE_NULL, jerry_create_null ()),
 

@@ -854,6 +854,7 @@ main (void)
   jerry_release_value (val_t);
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -863,6 +864,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_error (res));
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -878,6 +880,7 @@ main (void)
   jerry_release_value (val_t);
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -887,6 +890,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_error (res));
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 

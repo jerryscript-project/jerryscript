@@ -367,6 +367,7 @@ typedef enum
   JERRY_TYPE_STRING,    /**< string type */
   JERRY_TYPE_OBJECT,    /**< object type */
   JERRY_TYPE_FUNCTION,  /**< function type */
+  JERRY_TYPE_ERROR,     /**< error/abort type */
 } jerry_type_t;
 
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
@@ -386,7 +387,7 @@ jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
 /**
  * Error object function(s).
  */
-jerry_error_t jerry_get_error_type (const jerry_value_t value);
+jerry_error_t jerry_get_error_type (jerry_value_t value);
 
 /**
  * Getter functions of 'jerry_value_t'.

@@ -1277,6 +1277,197 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
 } /* ecma_builtin_typedarray_prototype_fill */
 
 /**
+ * SortCompare abstract method
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< left value */
+                                                       ecma_value_t rhs, /**< right value */
+                                                       ecma_value_t compare_func) /**< compare function */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_number_t result = ECMA_NUMBER_ZERO;
+
+  if (ecma_is_value_undefined (compare_func))
+  {
+    /* Default comparison when no comparefn is passed. */
+    double lhs_value = (double) ecma_get_number_from_value (lhs);
+    double rhs_value = (double) ecma_get_number_from_value (rhs);
+
+    if (ecma_number_is_nan (lhs_value))
+    {
+      // Keep NaNs at the end of the array.
+      result = ECMA_NUMBER_ONE;
+    }
+    else if (ecma_number_is_nan (rhs_value))
+    {
+      // Keep NaNs at the end of the array.
+      result = ECMA_NUMBER_MINUS_ONE;
+    }
+    else if (lhs_value < rhs_value)
+    {
+      result = ECMA_NUMBER_MINUS_ONE;
+    }
+    else if (lhs_value > rhs_value)
+    {
+      result = ECMA_NUMBER_ONE;
+    }
+    else
+    {
+      result = ECMA_NUMBER_ZERO;
+    }
+
+    return ecma_make_number_value (result);
+  }
+
+  /*
+   * compare_func, if not undefined, will always contain a callable function object.
+   * We checked this previously, before this function was called.
+   */
+  JERRY_ASSERT (ecma_op_is_callable (compare_func));
+  ecma_object_t *comparefn_obj_p = ecma_get_object_from_value (compare_func);
+
+  ecma_value_t compare_args[] = { lhs, rhs };
+
+  ECMA_TRY_CATCH (call_value,
+                  ecma_op_function_call (comparefn_obj_p,
+                                         ECMA_VALUE_UNDEFINED,
+                                         compare_args,
+                                         2),
+                  ret_value);
+
+  if (!ecma_is_value_number (call_value))
+  {
+    ECMA_OP_TO_NUMBER_TRY_CATCH (ret_num, call_value, ret_value);
+    result = ret_num;
+    ECMA_OP_TO_NUMBER_FINALIZE (ret_num);
+
+    // If the coerced value can't be represented as a Number, compare them as equals.
+    if (ecma_number_is_nan (result))
+    {
+      result = ECMA_NUMBER_ZERO;
+    }
+  }
+  else
+  {
+    result = ecma_get_number_from_value (call_value);
+  }
+
+  ECMA_FINALIZE (call_value);
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ret_value = ecma_make_number_value (result);
+  }
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_sort_compare_helper */
+
+/**
+ * The %TypedArray%.prototype object's 'sort' routine.
+ *
+ * See also:
+ *          ES2015, 22.2.3.25, 22.1.3.24
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t compare_func) /**< comparator fn */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_is_value_undefined (compare_func) && !ecma_op_is_callable (compare_func))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_length_t typedarray_length = ecma_typedarray_get_length (typedarray_p);
+
+  if (!typedarray_length)
+  {
+    return ecma_copy_value (this_arg);
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  JMEM_DEFINE_LOCAL_ARRAY (values_buffer, typedarray_length, ecma_value_t);
+
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (typedarray_p);
+  lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+
+  uint32_t byte_index = 0, buffer_index = 0;
+  uint32_t limit = typedarray_length * element_size;
+
+  /* Copy unsorted array into a native c array. */
+  while (byte_index < limit)
+  {
+    JERRY_ASSERT (buffer_index < typedarray_length);
+    ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + byte_index,
+                                                             class_id);
+    ecma_value_t element_value = ecma_make_number_value (element_num);
+    values_buffer[buffer_index++] = element_value;
+    byte_index += element_size;
+  }
+
+  JERRY_ASSERT (buffer_index == typedarray_length);
+
+  const ecma_builtin_helper_sort_compare_fn_t sort_cb = &ecma_builtin_typedarray_prototype_sort_compare_helper;
+  ECMA_TRY_CATCH (sort_value,
+                  ecma_builtin_helper_array_heap_sort_helper (values_buffer,
+                                                              (uint32_t) (typedarray_length - 1),
+                                                              compare_func,
+                                                              sort_cb),
+                  ret_value);
+  ECMA_FINALIZE (sort_value);
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    byte_index = 0;
+    buffer_index = 0;
+    limit = typedarray_length * element_size;
+    /* Put sorted values from the native array back into the typedarray buffer. */
+    while (byte_index < limit)
+    {
+      JERRY_ASSERT (buffer_index < typedarray_length);
+      ecma_value_t element_value = values_buffer[buffer_index++];
+      ecma_number_t element_num = ecma_get_number_from_value (element_value);
+      ecma_set_typedarray_element (typedarray_buffer_p + byte_index, element_num, class_id);
+      byte_index += element_size;
+    }
+
+    JERRY_ASSERT (buffer_index == typedarray_length);
+  }
+
+  /* Free values that were copied to the local array. */
+  for (uint32_t index = 0; index < typedarray_length; index++)
+  {
+    ecma_free_value (values_buffer[index]);
+  }
+
+  JMEM_FINALIZE_LOCAL_ARRAY (values_buffer);
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ret_value = ecma_copy_value (this_arg);
+  }
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_sort */
+
+/**
  * @}
  * @}
  * @}

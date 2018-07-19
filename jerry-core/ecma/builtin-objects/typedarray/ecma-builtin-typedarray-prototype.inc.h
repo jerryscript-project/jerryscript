@@ -60,6 +60,7 @@ ROUTINE (LIT_MAGIC_STRING_REVERSE, ecma_builtin_typedarray_prototype_reverse, 0,
 ROUTINE (LIT_MAGIC_STRING_SET, ecma_builtin_typedarray_prototype_set, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_SUBARRAY, ecma_builtin_typedarray_prototype_subarray, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_FILL, ecma_builtin_typedarray_prototype_fill, 3, 1)
+ROUTINE (LIT_MAGIC_STRING_SORT, ecma_builtin_typedarray_prototype_sort, 1, 1)
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 

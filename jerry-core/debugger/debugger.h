@@ -16,7 +16,6 @@
 #ifndef DEBUGGER_H
 #define DEBUGGER_H
 
-#include "debugger-ws.h"
 #include "ecma-globals.h"
 #include "jerryscript-debugger-transport.h"
 

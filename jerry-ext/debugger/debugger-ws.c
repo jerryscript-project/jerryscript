@@ -14,7 +14,8 @@
  */
 
 #include "debugger-ws.h"
-#include "jrt.h"
+#include "jerryscript-ext/debugger.h"
+#include "jext-common.h"
 
 #ifdef JERRY_DEBUGGER
 
@@ -23,49 +24,49 @@
 /**
  * Last fragment of a Websocket package.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_FIN_BIT 0x80
+#define JERRYX_DEBUGGER_WEBSOCKET_FIN_BIT 0x80
 
 /**
  * Masking-key is available.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_MASK_BIT 0x80
+#define JERRYX_DEBUGGER_WEBSOCKET_MASK_BIT 0x80
 
 /**
  * Opcode type mask.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK 0x0fu
+#define JERRYX_DEBUGGER_WEBSOCKET_OPCODE_MASK 0x0fu
 
 /**
  * Packet length mask.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK 0x7fu
+#define JERRYX_DEBUGGER_WEBSOCKET_LENGTH_MASK 0x7fu
 
 /**
  * Size of websocket header size.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE 2
+#define JERRYX_DEBUGGER_WEBSOCKET_HEADER_SIZE 2
 
 /**
  * Payload mask size in bytes of a websocket package.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE 4
+#define JERRYX_DEBUGGER_WEBSOCKET_MASK_SIZE 4
 
 /**
  * Maximum message size with 1 byte size field.
  */
-#define JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX 125
+#define JERRYX_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX 125
 
 /**
  * WebSocket opcode types.
  */
 typedef enum
 {
-  JERRY_DEBUGGER_WEBSOCKET_TEXT_FRAME = 1, /**< text frame */
-  JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME = 2, /**< binary frame */
-  JERRY_DEBUGGER_WEBSOCKET_CLOSE_CONNECTION = 8, /**< close connection */
-  JERRY_DEBUGGER_WEBSOCKET_PING = 9, /**< ping (keep alive) frame */
-  JERRY_DEBUGGER_WEBSOCKET_PONG = 10, /**< reply to ping frame */
-} jerry_websocket_opcode_type_t;
+  JERRYX_DEBUGGER_WEBSOCKET_TEXT_FRAME = 1, /**< text frame */
+  JERRYX_DEBUGGER_WEBSOCKET_BINARY_FRAME = 2, /**< binary frame */
+  JERRYX_DEBUGGER_WEBSOCKET_CLOSE_CONNECTION = 8, /**< close connection */
+  JERRYX_DEBUGGER_WEBSOCKET_PING = 9, /**< ping (keep alive) frame */
+  JERRYX_DEBUGGER_WEBSOCKET_PONG = 10, /**< reply to ping frame */
+} jerryx_websocket_opcode_type_t;
 
 /**
  * Header for incoming packets.
@@ -75,7 +76,7 @@ typedef struct
   uint8_t ws_opcode; /**< websocket opcode */
   uint8_t size; /**< size of the message */
   uint8_t mask[4]; /**< mask bytes */
-} jerry_websocket_receive_header_t;
+} jerryx_websocket_receive_header_t;
 
 /**
  * Convert a 6-bit value to a Base64 character.
@@ -83,7 +84,7 @@ typedef struct
  * @return Base64 character
  */
 static uint8_t
-jerry_to_base64_character (uint8_t value) /**< 6-bit value */
+jerryx_to_base64_character (uint8_t value) /**< 6-bit value */
 {
   if (value < 26)
   {
@@ -106,35 +107,35 @@ jerry_to_base64_character (uint8_t value) /**< 6-bit value */
   }
 
   return (uint8_t) '/';
-} /* jerry_to_base64_character */
+} /* jerryx_to_base64_character */
 
 /**
  * Encode a byte sequence into Base64 string.
  */
 static void
-jerry_to_base64 (const uint8_t *source_p, /**< source data */
+jerryx_to_base64 (const uint8_t *source_p, /**< source data */
                  uint8_t *destination_p, /**< destination buffer */
                  size_t length) /**< length of source, must be divisible by 3 */
 {
   while (length >= 3)
   {
     uint8_t value = (source_p[0] >> 2);
-    destination_p[0] = jerry_to_base64_character (value);
+    destination_p[0] = jerryx_to_base64_character (value);
 
     value = (uint8_t) (((source_p[0] << 4) | (source_p[1] >> 4)) & 0x3f);
-    destination_p[1] = jerry_to_base64_character (value);
+    destination_p[1] = jerryx_to_base64_character (value);
 
     value = (uint8_t) (((source_p[1] << 2) | (source_p[2] >> 6)) & 0x3f);
-    destination_p[2] = jerry_to_base64_character (value);
+    destination_p[2] = jerryx_to_base64_character (value);
 
     value = (uint8_t) (source_p[2] & 0x3f);
-    destination_p[3] = jerry_to_base64_character (value);
+    destination_p[3] = jerryx_to_base64_character (value);
 
     source_p += 3;
     destination_p += 4;
     length -= 3;
   }
-} /* jerry_to_base64 */
+} /* jerryx_to_base64 */
 
 /**
  * Process WebSocket handshake.
@@ -143,7 +144,7 @@ jerry_to_base64 (const uint8_t *source_p, /**< source data */
  *         false - otherwise
  */
 static bool
-jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
+jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 {
   size_t request_buffer_size = 1024;
   uint8_t *request_end_p = request_buffer_p;
@@ -154,7 +155,7 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
     jerry_debugger_transport_receive_context_t context;
     if (!jerry_debugger_transport_receive (&context))
     {
-      JERRY_ASSERT (!jerry_debugger_transport_is_connected ());
+      JERRYX_ASSERT (!jerry_debugger_transport_is_connected ());
       return false;
     }
 
@@ -168,7 +169,7 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 
     if (length < context.message_length)
     {
-      JERRY_ERROR_MSG ("Handshake buffer too small.\n");
+      JERRYX_ERROR_MSG ("Handshake buffer too small.\n");
       return false;
     }
 
@@ -194,7 +195,7 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
   if ((size_t) (request_end_p - request_buffer_p) < text_len
       || memcmp (request_buffer_p, text_p, text_len) != 0)
   {
-    JERRY_ERROR_MSG ("Invalid handshake format.\n");
+    JERRYX_ERROR_MSG ("Invalid handshake format.\n");
     return false;
   }
 
@@ -207,7 +208,7 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
   {
     if ((size_t) (request_end_p - websocket_key_p) < text_len)
     {
-      JERRY_ERROR_MSG ("Sec-WebSocket-Key not found.\n");
+      JERRYX_ERROR_MSG ("Sec-WebSocket-Key not found.\n");
       return false;
     }
 
@@ -242,17 +243,17 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 
   const size_t sha1_length = 20;
 
-  jerry_debugger_compute_sha1 (websocket_key_p,
+  jerryx_debugger_compute_sha1 (websocket_key_p,
                                (size_t) (websocket_key_end_p - websocket_key_p),
                                (const uint8_t *) "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
                                36,
                                request_buffer_p);
 
-  /* The SHA-1 key is 20 bytes long but jerry_to_base64 expects
+  /* The SHA-1 key is 20 bytes long but jerryx_to_base64 expects
    * a length divisible by 3 so an extra 0 is appended at the end. */
   request_buffer_p[sha1_length] = 0;
 
-  jerry_to_base64 (request_buffer_p, request_buffer_p + sha1_length + 1, sha1_length + 1);
+  jerryx_to_base64 (request_buffer_p, request_buffer_p + sha1_length + 1, sha1_length + 1);
 
   /* Last value must be replaced by equal sign. */
 
@@ -266,18 +267,18 @@ jerry_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 
   text_p = "=\r\n\r\n";
   return jerry_debugger_transport_send ((const uint8_t *) text_p, strlen (text_p));
-} /* jerry_process_handshake */
+} /* jerryx_process_handshake */
 
 /**
  * Close a tcp connection.
  */
 static void
-jerry_debugger_ws_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
+jerryx_debugger_ws_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
 {
-  JERRY_ASSERT (jerry_debugger_transport_is_connected ());
+  JERRYX_ASSERT (jerry_debugger_transport_is_connected ());
 
   jerry_debugger_transport_free ((void *) header_p, sizeof (jerry_debugger_transport_header_t));
-} /* jerry_debugger_ws_close */
+} /* jerryx_debugger_ws_close */
 
 /**
  * Send data over a websocket connection.
@@ -286,24 +287,24 @@ jerry_debugger_ws_close (jerry_debugger_transport_header_t *header_p) /**< tcp i
  *         false - otherwise
  */
 static bool
-jerry_debugger_ws_send (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
-                        uint8_t *message_p, /**< message to be sent */
-                        size_t message_length) /**< message length in bytes */
+jerryx_debugger_ws_send (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
+                         uint8_t *message_p, /**< message to be sent */
+                         size_t message_length) /**< message length in bytes */
 {
-  JERRY_ASSERT (message_length <= JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
+  JERRYX_ASSERT (message_length <= JERRYX_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
 
-  message_p[-2] = JERRY_DEBUGGER_WEBSOCKET_FIN_BIT | JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME;
+  message_p[-2] = JERRYX_DEBUGGER_WEBSOCKET_FIN_BIT | JERRYX_DEBUGGER_WEBSOCKET_BINARY_FRAME;
   message_p[-1] = (uint8_t) message_length;
 
   return header_p->next_p->send (header_p->next_p, message_p - 2, message_length + 2);
-} /* jerry_debugger_ws_send */
+} /* jerryx_debugger_ws_send */
 
 /**
  * Receive data from a websocket connection.
  */
 static bool
-jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
-                           jerry_debugger_transport_receive_context_t *receive_context_p) /**< receive context */
+jerryx_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
+                            jerry_debugger_transport_receive_context_t *receive_context_p) /**< receive context */
 {
   if (!header_p->next_p->receive (header_p->next_p, receive_context_p))
   {
@@ -320,7 +321,7 @@ jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp
   if (message_total_length == 0)
   {
     /* Byte stream. */
-    if (receive_context_p->message_length < sizeof (jerry_websocket_receive_header_t))
+    if (receive_context_p->message_length < sizeof (jerryx_websocket_receive_header_t))
     {
       receive_context_p->message_p = NULL;
       return true;
@@ -329,32 +330,32 @@ jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp
   else
   {
     /* Datagram packet. */
-    JERRY_ASSERT (receive_context_p->message_length >= sizeof (jerry_websocket_receive_header_t));
+    JERRYX_ASSERT (receive_context_p->message_length >= sizeof (jerryx_websocket_receive_header_t));
   }
 
   uint8_t *message_p = receive_context_p->message_p;
 
-  if ((message_p[0] & ~JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_FIN_BIT
-      || (message_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK) > JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX
-      || !(message_p[1] & JERRY_DEBUGGER_WEBSOCKET_MASK_BIT))
+  if ((message_p[0] & ~JERRYX_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRYX_DEBUGGER_WEBSOCKET_FIN_BIT
+      || (message_p[1] & JERRYX_DEBUGGER_WEBSOCKET_LENGTH_MASK) > JERRYX_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX
+      || !(message_p[1] & JERRYX_DEBUGGER_WEBSOCKET_MASK_BIT))
   {
-    JERRY_ERROR_MSG ("Unsupported Websocket message.\n");
+    JERRYX_ERROR_MSG ("Unsupported Websocket message.\n");
     jerry_debugger_transport_close ();
     return false;
   }
 
-  if ((message_p[0] & JERRY_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRY_DEBUGGER_WEBSOCKET_BINARY_FRAME)
+  if ((message_p[0] & JERRYX_DEBUGGER_WEBSOCKET_OPCODE_MASK) != JERRYX_DEBUGGER_WEBSOCKET_BINARY_FRAME)
   {
-    JERRY_ERROR_MSG ("Unsupported Websocket opcode.\n");
+    JERRYX_ERROR_MSG ("Unsupported Websocket opcode.\n");
     jerry_debugger_transport_close ();
     return false;
   }
 
-  size_t message_length = (size_t) (message_p[1] & JERRY_DEBUGGER_WEBSOCKET_LENGTH_MASK);
+  size_t message_length = (size_t) (message_p[1] & JERRYX_DEBUGGER_WEBSOCKET_LENGTH_MASK);
 
   if (message_total_length == 0)
   {
-    size_t new_total_length = message_length + sizeof (jerry_websocket_receive_header_t);
+    size_t new_total_length = message_length + sizeof (jerryx_websocket_receive_header_t);
 
     /* Byte stream. */
     if (receive_context_p->message_length < new_total_length)
@@ -368,16 +369,16 @@ jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp
   else
   {
     /* Datagram packet. */
-    JERRY_ASSERT (receive_context_p->message_length == (message_length + sizeof (jerry_websocket_receive_header_t)));
+    JERRYX_ASSERT (receive_context_p->message_length == (message_length + sizeof (jerryx_websocket_receive_header_t)));
   }
 
-  message_p += sizeof (jerry_websocket_receive_header_t);
+  message_p += sizeof (jerryx_websocket_receive_header_t);
 
   receive_context_p->message_p = message_p;
   receive_context_p->message_length = message_length;
 
   /* Unmask data bytes. */
-  const uint8_t *mask_p = message_p - JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
+  const uint8_t *mask_p = message_p - JERRYX_DEBUGGER_WEBSOCKET_MASK_SIZE;
   const uint8_t *mask_end_p = message_p;
   const uint8_t *message_end_p = message_p + message_length;
 
@@ -391,12 +392,12 @@ jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp
 
     if (JERRY_UNLIKELY (mask_p >= mask_end_p))
     {
-      mask_p -= JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE;
+      mask_p -= JERRYX_DEBUGGER_WEBSOCKET_MASK_SIZE;
     }
   }
 
   return true;
-} /* jerry_debugger_ws_receive */
+} /* jerryx_debugger_ws_receive */
 
 /**
  * Initialize the websocket transportation layer.
@@ -405,7 +406,7 @@ jerry_debugger_ws_receive (jerry_debugger_transport_header_t *header_p, /**< tcp
  *         false - otherwise
  */
 bool
-jerry_debugger_ws_create (void)
+jerryx_debugger_ws_create (void)
 {
   bool is_handshake_ok = false;
 
@@ -417,7 +418,7 @@ jerry_debugger_ws_create (void)
     return false;
   }
 
-  is_handshake_ok = jerry_process_handshake (request_buffer_p);
+  is_handshake_ok = jerryx_process_handshake (request_buffer_p);
 
   jerry_debugger_transport_free ((void *) request_buffer_p, buffer_size);
 
@@ -435,17 +436,30 @@ jerry_debugger_ws_create (void)
     return false;
   }
 
-  header_p->close = jerry_debugger_ws_close;
-  header_p->send = jerry_debugger_ws_send;
-  header_p->receive = jerry_debugger_ws_receive;
+  header_p->close = jerryx_debugger_ws_close;
+  header_p->send = jerryx_debugger_ws_send;
+  header_p->receive = jerryx_debugger_ws_receive;
 
   jerry_debugger_transport_add (header_p,
-                                JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE,
-                                JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX,
-                                JERRY_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRY_DEBUGGER_WEBSOCKET_MASK_SIZE,
-                                JERRY_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
+                                JERRYX_DEBUGGER_WEBSOCKET_HEADER_SIZE,
+                                JERRYX_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX,
+                                JERRYX_DEBUGGER_WEBSOCKET_HEADER_SIZE + JERRYX_DEBUGGER_WEBSOCKET_MASK_SIZE,
+                                JERRYX_DEBUGGER_WEBSOCKET_ONE_BYTE_LEN_MAX);
 
   return true;
-} /* jerry_debugger_ws_create */
+} /* jerryx_debugger_ws_create */
+
+#else /* !JERRY_DEBUGGER */
+
+/**
+ * Dummy function when debugger is disabled.
+ *
+ * @return false
+ */
+bool
+jerryx_debugger_ws_create (void)
+{
+  return false;
+} /* jerryx_debugger_ws_create */
 
 #endif /* JERRY_DEBUGGER */

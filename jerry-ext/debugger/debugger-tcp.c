@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "debugger-tcp.h"
-#include "jrt.h"
+#include "jerryscript-debugger-transport.h"
+#include "jerryscript-ext/debugger.h"
+#include "jext-common.h"
 
 #ifdef JERRY_DEBUGGER
 
@@ -30,33 +31,33 @@ typedef struct
 {
   jerry_debugger_transport_header_t header; /**< transport header */
   int tcp_socket; /**< tcp socket */
-} jerry_debugger_transport_tcp_t;
+} jerryx_debugger_transport_tcp_t;
 
 /**
  * Log tcp error message.
  */
 static void
-jerry_debugger_tcp_log_error (void)
+jerryx_debugger_tcp_log_error (void)
 {
-  JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
-} /* jerry_debugger_tcp_log_error */
+  JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
+} /* jerryx_debugger_tcp_log_error */
 
 /**
  * Close a tcp connection.
  */
 static void
-jerry_debugger_tcp_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
+jerryx_debugger_tcp_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
 {
-  JERRY_ASSERT (jerry_debugger_transport_is_connected ());
+  JERRYX_ASSERT (jerry_debugger_transport_is_connected ());
 
-  jerry_debugger_transport_tcp_t *tcp_p = (jerry_debugger_transport_tcp_t *) header_p;
+  jerryx_debugger_transport_tcp_t *tcp_p = (jerryx_debugger_transport_tcp_t *) header_p;
 
-  JERRY_DEBUG_MSG ("TCP connection closed.\n");
+  JERRYX_DEBUG_MSG ("TCP connection closed.\n");
 
   close (tcp_p->tcp_socket);
 
-  jerry_debugger_transport_free ((void *) header_p, sizeof (jerry_debugger_transport_tcp_t));
-} /* jerry_debugger_tcp_close */
+  jerry_debugger_transport_free ((void *) header_p, sizeof (jerryx_debugger_transport_tcp_t));
+} /* jerryx_debugger_tcp_close */
 
 /**
  * Send data over a tcp connection.
@@ -65,13 +66,13 @@ jerry_debugger_tcp_close (jerry_debugger_transport_header_t *header_p) /**< tcp 
  *         false - otherwise
  */
 static bool
-jerry_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
-                         uint8_t *message_p, /**< message to be sent */
-                         size_t message_length) /**< message length in bytes */
+jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
+                          uint8_t *message_p, /**< message to be sent */
+                          size_t message_length) /**< message length in bytes */
 {
-  JERRY_ASSERT (jerry_debugger_transport_is_connected ());
+  JERRYX_ASSERT (jerry_debugger_transport_is_connected ());
 
-  jerry_debugger_transport_tcp_t *tcp_p = (jerry_debugger_transport_tcp_t *) header_p;
+  jerryx_debugger_transport_tcp_t *tcp_p = (jerryx_debugger_transport_tcp_t *) header_p;
 
   do
   {
@@ -84,7 +85,7 @@ jerry_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp i
         continue;
       }
 
-      jerry_debugger_tcp_log_error ();
+      jerryx_debugger_tcp_log_error ();
       jerry_debugger_transport_close ();
       return false;
     }
@@ -95,16 +96,16 @@ jerry_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp i
   while (message_length > 0);
 
   return true;
-} /* jerry_debugger_tcp_send */
+} /* jerryx_debugger_tcp_send */
 
 /**
  * Receive data from a tcp connection.
  */
 static bool
-jerry_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
-                            jerry_debugger_transport_receive_context_t *receive_context_p) /**< receive context */
+jerryx_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< tcp implementation */
+                             jerry_debugger_transport_receive_context_t *receive_context_p) /**< receive context */
 {
-  jerry_debugger_transport_tcp_t *tcp_p = (jerry_debugger_transport_tcp_t *) header_p;
+  jerryx_debugger_transport_tcp_t *tcp_p = (jerryx_debugger_transport_tcp_t *) header_p;
 
   uint8_t *buffer_p = receive_context_p->buffer_p + receive_context_p->received_length;
   size_t buffer_size = JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE - receive_context_p->received_length;
@@ -115,7 +116,7 @@ jerry_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< tc
   {
     if (errno != EWOULDBLOCK)
     {
-      jerry_debugger_tcp_log_error ();
+      jerryx_debugger_tcp_log_error ();
       jerry_debugger_transport_close ();
       return false;
     }
@@ -131,7 +132,7 @@ jerry_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< tc
   }
 
   return true;
-} /* jerry_debugger_tcp_receive */
+} /* jerryx_debugger_tcp_receive */
 
 /**
  * Create a tcp connection.
@@ -140,7 +141,7 @@ jerry_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< tc
  *         false otherwise
  */
 bool
-jerry_debugger_tcp_create (uint16_t port) /**< listening port */
+jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
 {
   int server_socket;
   struct sockaddr_in addr;
@@ -152,7 +153,7 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
 
   if ((server_socket = socket (AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
+    JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
@@ -161,25 +162,25 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
   if (setsockopt (server_socket, SOL_SOCKET, SO_REUSEADDR, &opt_value, sizeof (int)) == -1)
   {
     close (server_socket);
-    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
+    JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
   if (bind (server_socket, (struct sockaddr *)&addr, sizeof (struct sockaddr)) == -1)
   {
     close (server_socket);
-    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
+    JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
   if (listen (server_socket, 1) == -1)
   {
     close (server_socket);
-    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
+    JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
-  JERRY_DEBUG_MSG ("Waiting for client connection\n");
+  JERRYX_DEBUG_MSG ("Waiting for client connection\n");
 
   int tcp_socket = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
 
@@ -187,7 +188,7 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
 
   if (tcp_socket == -1)
   {
-    JERRY_ERROR_MSG ("Error: %s\n", strerror (errno));
+    JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
     return false;
   }
 
@@ -206,9 +207,9 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
     return false;
   }
 
-  JERRY_DEBUG_MSG ("Connected from: %s\n", inet_ntoa (addr.sin_addr));
+  JERRYX_DEBUG_MSG ("Connected from: %s\n", inet_ntoa (addr.sin_addr));
 
-  size_t size = sizeof (jerry_debugger_transport_tcp_t);
+  size_t size = sizeof (jerryx_debugger_transport_tcp_t);
 
   jerry_debugger_transport_header_t *header_p;
   header_p = (jerry_debugger_transport_header_t *) jerry_debugger_transport_malloc (size);
@@ -219,11 +220,11 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
     return false;
   }
 
-  header_p->close = jerry_debugger_tcp_close;
-  header_p->send = jerry_debugger_tcp_send;
-  header_p->receive = jerry_debugger_tcp_receive;
+  header_p->close = jerryx_debugger_tcp_close;
+  header_p->send = jerryx_debugger_tcp_send;
+  header_p->receive = jerryx_debugger_tcp_receive;
 
-  ((jerry_debugger_transport_tcp_t *) header_p)->tcp_socket = tcp_socket;
+  ((jerryx_debugger_transport_tcp_t *) header_p)->tcp_socket = tcp_socket;
 
   jerry_debugger_transport_add (header_p,
                                 0,
@@ -232,6 +233,20 @@ jerry_debugger_tcp_create (uint16_t port) /**< listening port */
                                 JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE);
 
   return true;
-} /* jerry_debugger_tcp_create */
+} /* jerryx_debugger_tcp_create */
+
+#else /* !JERRY_DEBUGGER */
+
+/**
+ * Dummy function when debugger is disabled.
+ *
+ * @return false
+ */
+bool
+jerryx_debugger_tcp_create (uint16_t port)
+{
+  JERRYX_UNUSED (port);
+  return false;
+} /* jerryx_debugger_tcp_create */
 
 #endif /* JERRY_DEBUGGER */

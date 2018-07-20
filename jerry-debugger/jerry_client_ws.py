@@ -24,7 +24,7 @@ import struct
 import sys
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 4
+JERRY_DEBUGGER_VERSION = 5
 JERRY_DEBUGGER_DATA_END = '\3'
 
 # Messages sent by the server to client.
@@ -47,13 +47,14 @@ JERRY_DEBUGGER_BREAKPOINT_HIT = 16
 JERRY_DEBUGGER_EXCEPTION_HIT = 17
 JERRY_DEBUGGER_EXCEPTION_STR = 18
 JERRY_DEBUGGER_EXCEPTION_STR_END = 19
-JERRY_DEBUGGER_BACKTRACE = 20
-JERRY_DEBUGGER_BACKTRACE_END = 21
-JERRY_DEBUGGER_EVAL_RESULT = 22
-JERRY_DEBUGGER_EVAL_RESULT_END = 23
-JERRY_DEBUGGER_WAIT_FOR_SOURCE = 24
-JERRY_DEBUGGER_OUTPUT_RESULT = 25
-JERRY_DEBUGGER_OUTPUT_RESULT_END = 26
+JERRY_DEBUGGER_BACKTRACE_TOTAL = 20
+JERRY_DEBUGGER_BACKTRACE = 21
+JERRY_DEBUGGER_BACKTRACE_END = 22
+JERRY_DEBUGGER_EVAL_RESULT = 23
+JERRY_DEBUGGER_EVAL_RESULT_END = 24
+JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25
+JERRY_DEBUGGER_OUTPUT_RESULT = 26
+JERRY_DEBUGGER_OUTPUT_RESULT_END = 27
 
 # Subtypes of eval
 JERRY_DEBUGGER_EVAL_EVAL = "\0"
@@ -276,6 +277,8 @@ class JerryDebugger(object):
         self.breakpoint_info = ''
         self.smessage = ''
         self.min_depth = 0
+        self.max_depth = 0
+        self.get_total = 0
 
         self.send_message(b"GET /jerry-debugger HTTP/1.1\r\n" +
                           b"Upgrade: websocket\r\n" +
@@ -451,36 +454,41 @@ class JerryDebugger(object):
         return DisplayData("delete", result)
 
     def backtrace(self, args):
-        max_depth = 0
         self.min_depth = 0
+        self.max_depth = 0
+        self.get_total = 0
 
         if args:
             args = args.split(" ")
             try:
+                if "t" in args:
+                    self.get_total = 1
+                    args = args[:-1]
                 if len(args) == 2:
                     self.min_depth = int(args[0])
-                    max_depth = int(args[1])
-                    if max_depth <= 0 or self.min_depth < 0:
+                    self.max_depth = int(args[1])
+                    if self.max_depth <= 0 or self.min_depth < 0:
                         return DisplayData("backtrace", "Error: Positive integer number expected")
-                    if self.min_depth > max_depth:
+                    if self.min_depth > self.max_depth:
                         return DisplayData("backtrace", "Error: Start depth needs to be lower than or equal to max" \
                                             " depth")
 
-                else:
-                    max_depth = int(args[0])
-                    if max_depth <= 0:
+                elif len(args) == 1:
+                    self.max_depth = int(args[0])
+                    if self.max_depth <= 0:
                         return DisplayData("backtrace", "Error: Positive integer number expected")
 
             except ValueError as val_errno:
                 return DisplayData("backtrace", "Error: Positive integer number expected, %s" % (val_errno))
 
-        message = struct.pack(self.byte_order + "BBIB" + self.idx_format + self.idx_format,
+        message = struct.pack(self.byte_order + "BBIB" + self.idx_format + self.idx_format  + "B",
                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 4 + 4,
+                              WEBSOCKET_FIN_BIT + 1 + 4 + 4 + 1,
                               0,
                               JERRY_DEBUGGER_GET_BACKTRACE,
                               self.min_depth,
-                              max_depth)
+                              self.max_depth,
+                              self.get_total)
         self.send_message(message)
 
     def eval(self, code):
@@ -776,16 +784,21 @@ class JerryDebugger(object):
             elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR_END:
                 exception_string += data[3:]
 
-            elif buffer_type in [JERRY_DEBUGGER_BACKTRACE, JERRY_DEBUGGER_BACKTRACE_END]:
+            elif buffer_type in [JERRY_DEBUGGER_BACKTRACE,
+                                 JERRY_DEBUGGER_BACKTRACE_END,
+                                 JERRY_DEBUGGER_BACKTRACE_TOTAL]:
                 if self.min_depth != 0:
                     frame_index = self.min_depth
                 else:
                     frame_index = 0
 
+                total_frames = 0
                 while True:
+                    if buffer_type == JERRY_DEBUGGER_BACKTRACE_TOTAL:
+                        total_frames = struct.unpack(self.byte_order + self.idx_format, data[3:7])[0]
 
                     buffer_pos = 3
-                    while buffer_size > 0:
+                    while buffer_size > 4:
                         breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format,
                                                         data[buffer_pos: buffer_pos + self.cp_size + 4])
 
@@ -800,6 +813,17 @@ class JerryDebugger(object):
                             result += '\n'
 
                     if buffer_type == JERRY_DEBUGGER_BACKTRACE_END:
+                        if self.get_total == 1:
+                            if self.max_depth > total_frames:
+                                self.max_depth = total_frames
+                            if self.max_depth == 0:
+                                result += ("\nTotal Frames: %d" % total_frames)
+                            elif self.min_depth != 0 and self.max_depth != 0 and \
+                                    (self.max_depth - self.min_depth) > 0:
+                                result += ("\nGetting %d frames. There are %d in total." %
+                                           ((self.max_depth - self.min_depth), total_frames))
+                            elif self.min_depth == 0 and self.max_depth != 0:
+                                result += ("\nGetting the first %d frames out of %d." % (self.max_depth, total_frames))
                         break
 
                     data = self.get_message(True)

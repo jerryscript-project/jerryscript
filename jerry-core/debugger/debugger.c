@@ -37,9 +37,9 @@ typedef struct
  * The number of message types in the debugger should reflect the
  * debugger versioning.
  */
-JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 27
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 28
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
-                     && JERRY_DEBUGGER_VERSION == 4,
+                     && JERRY_DEBUGGER_VERSION == 5,
                      debugger_version_correlates_to_message_type_count);
 
 /**
@@ -118,6 +118,23 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
   if (max_depth == 0)
   {
     max_depth = UINT32_MAX;
+  }
+
+  if (get_backtrace_p->get_total_frame_count != 0)
+  {
+    JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_backtrace_total_t, backtrace_total_p);
+    backtrace_total_p->type = JERRY_DEBUGGER_BACKTRACE_TOTAL;
+
+    vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+    uint32_t frame_count = 0;
+    while (iter_frame_ctx_p != NULL)
+    {
+      frame_count++;
+      iter_frame_ctx_p = iter_frame_ctx_p->prev_context_p;
+    }
+    memcpy (backtrace_total_p->frame_count, &frame_count, sizeof (frame_count));
+
+    jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + sizeof (frame_count));
   }
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_backtrace_t, backtrace_p);

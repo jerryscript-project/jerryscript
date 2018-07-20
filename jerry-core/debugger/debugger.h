@@ -26,7 +26,7 @@
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (4)
+#define JERRY_DEBUGGER_VERSION (5)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.
@@ -149,13 +149,14 @@ typedef enum
   JERRY_DEBUGGER_EXCEPTION_HIT = 17, /**< notify exception hit */
   JERRY_DEBUGGER_EXCEPTION_STR = 18, /**< exception string fragment */
   JERRY_DEBUGGER_EXCEPTION_STR_END = 19, /**< exception string last fragment */
-  JERRY_DEBUGGER_BACKTRACE = 20, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 21, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 22, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 23, /**< last part of eval result */
-  JERRY_DEBUGGER_WAIT_FOR_SOURCE = 24, /**< engine waiting for source code */
-  JERRY_DEBUGGER_OUTPUT_RESULT = 25, /**< output sent by the program to the debugger */
-  JERRY_DEBUGGER_OUTPUT_RESULT_END = 26, /**< last output result data */
+  JERRY_DEBUGGER_BACKTRACE_TOTAL = 20, /**< number of total frames */
+  JERRY_DEBUGGER_BACKTRACE = 21, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 22, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 23, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 24, /**< last part of eval result */
+  JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25, /**< engine waiting for source code */
+  JERRY_DEBUGGER_OUTPUT_RESULT = 26, /**< output sent by the program to the debugger */
+  JERRY_DEBUGGER_OUTPUT_RESULT_END = 27, /**< last output result data */
 
   JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT, /**< number of different type of output messages by the debugger */
 
@@ -357,6 +358,15 @@ typedef struct
 } jerry_debugger_send_backtrace_t;
 
 /**
+ * Outgoing message: number of total frames in backtrace.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t frame_count[sizeof (uint32_t)]; /**< total number of frames*/
+} jerry_debugger_send_backtrace_total_t;
+
+/**
  * Incoming message: set behaviour when exception occures.
  */
 typedef struct
@@ -382,6 +392,7 @@ typedef struct
   uint8_t type; /**< type of the message */
   uint8_t min_depth[sizeof (uint32_t)]; /**< minimum depth*/
   uint8_t max_depth[sizeof (uint32_t)]; /**< maximum depth (0 - unlimited) */
+  uint8_t get_total_frame_count; /**< non-zero: if total frame count is also requested */
 } jerry_debugger_receive_get_backtrace_t;
 
 /**

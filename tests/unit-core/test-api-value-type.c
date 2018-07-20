@@ -67,7 +67,9 @@ main (void)
 
     ENTRY (JERRY_TYPE_NULL, jerry_create_null ()),
 
-    ENTRY (JERRY_TYPE_FUNCTION, jerry_eval (test_eval_function, strlen ((char *) test_eval_function), false)),
+    ENTRY (JERRY_TYPE_FUNCTION, jerry_eval (test_eval_function,
+                                            strlen ((char *) test_eval_function),
+                                            JERRY_PARSE_NO_OPTS)),
     ENTRY (JERRY_TYPE_FUNCTION, jerry_create_external_function (test_ext_function)),
 
     ENTRY (JERRY_TYPE_STRING, jerry_create_string (test_eval_function)),

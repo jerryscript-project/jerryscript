@@ -192,7 +192,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
 
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
-  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 1, eval_string_size - 1, true, false);
+  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 1, eval_string_size - 1, ECMA_PARSE_DIRECT_EVAL);
   JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
 
   if (!ECMA_IS_VALUE_ERROR (result))

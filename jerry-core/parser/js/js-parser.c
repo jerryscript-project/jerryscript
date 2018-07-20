@@ -2224,7 +2224,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t source_size, /**< size of the source code */
-                     int strict_mode, /**< strict mode */
+                     uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      parser_error_location_t *error_location_p) /**< error location */
 {
   parser_context_t context;
@@ -2264,7 +2264,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
 
-  if (strict_mode)
+  if (parse_opts & ECMA_PARSE_STRICT_MODE)
   {
     context.status_flags |= PARSER_IS_STRICT;
   }
@@ -2867,7 +2867,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< source code */
                      size_t source_size, /**< size of the source code */
-                     bool is_strict, /**< strict mode */
+                     uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
 {
 #ifndef JERRY_DISABLE_JS_PARSER
@@ -2887,7 +2887,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                                           arg_list_size,
                                           source_p,
                                           source_size,
-                                          is_strict,
+                                          parse_opts,
                                           &parser_error);
 
   if (!*bytecode_data_p)
@@ -2959,7 +2959,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   JERRY_UNUSED (arg_list_size);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
-  JERRY_UNUSED (is_strict);
+  JERRY_UNUSED (parse_opts);
   JERRY_UNUSED (bytecode_data_p);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));

@@ -63,17 +63,13 @@ ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
   JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  bool is_direct_eval = vm_is_direct_eval_form_call ();
+  uint32_t parse_opts = vm_is_direct_eval_form_call () ? ECMA_PARSE_DIRECT_EVAL : ECMA_PARSE_NO_OPTS;
 
   /* See also: ECMA-262 v5, 10.1.1 */
-  bool is_called_from_strict_mode_code;
-  if (is_direct_eval)
+  if (parse_opts && vm_is_strict_mode ())
   {
-    is_called_from_strict_mode_code = vm_is_strict_mode ();
-  }
-  else
-  {
-    is_called_from_strict_mode_code = false;
+    JERRY_ASSERT (parse_opts & ECMA_PARSE_DIRECT_EVAL);
+    parse_opts |= ECMA_PARSE_STRICT_MODE;
   }
 
   if (!ecma_is_value_string (x))
@@ -85,8 +81,7 @@ ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
   {
     /* steps 2 to 8 */
     ret_value = ecma_op_eval (ecma_get_string_from_value (x),
-                              is_direct_eval,
-                              is_called_from_strict_mode_code);
+                              parse_opts);
   }
 
   return ret_value;

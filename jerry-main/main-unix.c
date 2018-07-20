@@ -809,7 +809,7 @@ main (int argc,
       if (len > 0)
       {
         /* Evaluate the line */
-        jerry_value_t ret_val_eval = jerry_eval (buffer, len, false);
+        jerry_value_t ret_val_eval = jerry_eval (buffer, len, JERRY_PARSE_NO_OPTS);
 
         if (!jerry_value_is_error (ret_val_eval))
         {

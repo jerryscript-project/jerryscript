@@ -79,7 +79,7 @@ test_read_with_offset (uint8_t offset) /**< offset for buffer read. */
                                         "array.buffer");
   jerry_value_t arraybuffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
                                           strlen (eval_arraybuffer_src_p),
-                                          true);
+                                          JERRY_PARSE_STRICT_MODE);
 
   TEST_ASSERT (!jerry_value_is_error (arraybuffer));
   TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
@@ -115,7 +115,7 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
   const char *eval_arraybuffer_src_p = "var array = new Uint8Array (15); array.buffer";
   jerry_value_t arraybuffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
                                           strlen (eval_arraybuffer_src_p),
-                                          true);
+                                          JERRY_PARSE_STRICT_MODE);
 
   TEST_ASSERT (!jerry_value_is_error (arraybuffer));
   TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
@@ -145,7 +145,7 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
       "assert (array[15] === undefined, 'ArrayBuffer out of bounds index should return undefined value');");
   jerry_value_t res = jerry_eval ((jerry_char_t *) eval_test_arraybuffer_p,
                                   strlen (eval_test_arraybuffer_p),
-                                  true);
+                                  JERRY_PARSE_STRICT_MODE);
   jerry_release_value (res);
   jerry_release_value (arraybuffer);
 } /* test_write_with_offset */
@@ -179,7 +179,7 @@ main (void)
     const char *eval_arraybuffer_src_p = "new ArrayBuffer (10)";
     jerry_value_t eval_arraybuffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
                                                  strlen (eval_arraybuffer_src_p),
-                                                 true);
+                                                 JERRY_PARSE_STRICT_MODE);
     TEST_ASSERT (!jerry_value_is_error (eval_arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (eval_arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (eval_arraybuffer) == 10);
@@ -300,7 +300,7 @@ main (void)
       "array.buffer");
     jerry_value_t buffer = jerry_eval ((jerry_char_t *) eval_arraybuffer_src_p,
                                         strlen (eval_arraybuffer_src_p),
-                                        true);
+                                        JERRY_PARSE_STRICT_MODE);
 
     TEST_ASSERT (!jerry_value_is_error (buffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (buffer));
@@ -335,7 +335,7 @@ main (void)
       "sum");
     jerry_value_t res = jerry_eval ((jerry_char_t *) eval_test_arraybuffer_p,
                                     strlen (eval_test_arraybuffer_p),
-                                    true);
+                                    JERRY_PARSE_STRICT_MODE);
     TEST_ASSERT (jerry_value_is_number (res));
     TEST_ASSERT (jerry_get_number_value (res) == sum);
     jerry_release_value (res);

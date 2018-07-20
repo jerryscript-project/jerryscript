@@ -391,7 +391,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
                                       0,
                                       source_p,
                                       source_size,
-                                      (parse_opts & JERRY_PARSE_STRICT_MODE) != 0,
+                                      parse_opts,
                                       &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -466,7 +466,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                                       arg_list_size,
                                       source_p,
                                       source_size,
-                                      (parse_opts & JERRY_PARSE_STRICT_MODE) != 0,
+                                      parse_opts,
                                       &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -544,14 +544,13 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
 jerry_value_t
 jerry_eval (const jerry_char_t *source_p, /**< source code */
             size_t source_size, /**< length of source code */
-            bool is_strict) /**< source must conform with strict mode */
+            uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
   jerry_assert_api_available ();
 
   return jerry_return (ecma_op_eval_chars_buffer ((const lit_utf8_byte_t *) source_p,
                                                   source_size,
-                                                  false,
-                                                  is_strict));
+                                                  parse_opts));
 } /* jerry_eval */
 
 /**

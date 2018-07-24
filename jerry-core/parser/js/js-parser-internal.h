@@ -68,8 +68,7 @@ typedef enum
   PARSER_ARROW_PARSE_ARGS = (1u << 19),       /**< parse the argument list of an arrow function */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  PARSER_IS_CLASS = (1u << 20),               /**< statements parsed inside class body */
-  PARSER_CLASS_CONSTRUCTOR = (1u << 21),      /**< a class constructor is parsed */
+  PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } parser_general_flags_t;
 
@@ -447,7 +446,7 @@ void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, bool propety_name);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
-void lexer_expect_object_literal_id (parser_context_t *context_p, bool must_be_identifier);
+void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);

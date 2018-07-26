@@ -63,6 +63,10 @@ passed=0
 
 UNITTEST_TEMP=`mktemp unittest-out.XXXXXXXXXX`
 
+TERM_NORMAL="\033[0m"
+TERM_RED="\033[1;31m"
+TERM_GREEN="\033[1;32m"
+
 for unit_test in $UNITTESTS
 do
     cmd_line="$RUNTIME ${unit_test#$ROOT_DIR}"
@@ -71,7 +75,7 @@ do
 
     if [ $status_code -ne 0 ]
     then
-        echo "[$tested/$total] $cmd_line: FAIL ($status_code)"
+        printf "[%4d/%4d] %bFAIL (%d): %s%b\n" "$tested" "$total" "$TERM_RED" "$status_code" "${unit_test#$ROOT_DIR}" "$TERM_NORMAL"
         cat $UNITTEST_TEMP
 
         echo "$status_code: $unit_test" >> $UNITTEST_ERROR
@@ -83,8 +87,7 @@ do
 
         failed=$((failed+1))
     else
-        test $VERBOSE && echo "[$tested/$total] $cmd_line: PASS"
-
+        test $VERBOSE && printf "[%4d/%4d] %bPASS: %s%b\n" "$tested" "$total" "$TERM_GREEN" "${unit_test#$ROOT_DIR}" "$TERM_NORMAL"
         echo "$unit_test" >> $UNITTEST_OK
 
         passed=$((passed+1))
@@ -96,8 +99,18 @@ done
 rm -f $UNITTEST_TEMP
 
 ratio=$(echo $passed*100/$total | bc)
+if [ $passed -eq $total ]
+then
+    success_color=$TERM_GREEN
+else
+    success_color=$TERM_RED
+fi
 
-echo "[summary] ${DIR#$ROOT_DIR}/unit-*: $passed PASS, $failed FAIL, $total total, $ratio% success"
+echo -e "\n[summary] ${DIR#$ROOT_DIR}/unit-*\n"
+echo -e "TOTAL: $total"
+echo -e "${TERM_GREEN}PASS: $passed${TERM_NORMAL}"
+echo -e "${TERM_RED}FAIL: $failed${TERM_NORMAL}\n"
+echo -e "${success_color}Success: $ratio%${TERM_NORMAL}\n"
 
 if [ $failed -ne 0 ]
 then

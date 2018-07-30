@@ -553,6 +553,11 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
+  if (len == 0)
+  {
+    return ecma_op_create_typedarray_with_type_and_length (obj_p, 0);
+  }
+
   JMEM_DEFINE_LOCAL_ARRAY (pass_value_list_p, len * element_size, lit_utf8_byte_t);
 
   lit_utf8_byte_t *pass_value_p = pass_value_list_p;
@@ -587,7 +592,6 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
     uint32_t pass_num = (uint32_t) ((pass_value_p - pass_value_list_p) >> shift);
 
     ret_value = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
-
 
     if (!ECMA_IS_VALUE_ERROR (ret_value))
     {

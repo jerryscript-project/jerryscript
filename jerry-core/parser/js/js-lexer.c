@@ -2264,13 +2264,13 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
  */
 void
 lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
-                                bool must_be_identifier) /**< only identifiers are accepted */
+                                uint32_t ident_opts) /**< lexer_obj_ident_opts_t option bits */
 {
   lexer_skip_spaces (context_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  int is_class_method = ((context_p->status_flags & PARSER_IS_CLASS)
-                         && !must_be_identifier
+  int is_class_method = ((ident_opts & LEXER_OBJ_IDENT_CLASS_METHOD)
+                         && !(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
                          && (context_p->token.type != LEXER_KEYW_STATIC));
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
@@ -2285,7 +2285,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     {
       lexer_parse_identifier (context_p, false);
 
-      if (!must_be_identifier
+      if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
           && context_p->token.lit_location.length == 3)
       {
         lexer_skip_spaces (context_p);
@@ -2323,7 +2323,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       lexer_parse_string (context_p);
       create_literal_object = true;
     }
-    else if (!must_be_identifier && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
+    else if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS) && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
     {
       context_p->token.type = LEXER_RIGHT_BRACE;
       context_p->source_p += 1;

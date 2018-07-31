@@ -37,9 +37,9 @@ typedef struct
  * Log tcp error message.
  */
 static void
-jerryx_debugger_tcp_log_error (void)
+jerryx_debugger_tcp_log_error (int err_val)
 {
-  JERRYX_ERROR_MSG ("Error: %s\n", strerror (errno));
+  JERRYX_ERROR_MSG ("TCP Error: %s\n", strerror (err_val));
 } /* jerryx_debugger_tcp_log_error */
 
 /**
@@ -76,6 +76,15 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
 
   do
   {
+    ssize_t is_err = recv (tcp_p->tcp_socket, NULL, 0, MSG_PEEK);
+
+    if (is_err == 0)
+    {
+      int err_val = errno;
+      jerry_debugger_transport_close ();
+      jerryx_debugger_tcp_log_error (err_val);
+      return false;
+    }
     ssize_t sent_bytes = send (tcp_p->tcp_socket, message_p, message_length, 0);
 
     if (sent_bytes < 0)
@@ -85,8 +94,9 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
         continue;
       }
 
-      jerryx_debugger_tcp_log_error ();
+      int err_val = errno;
       jerry_debugger_transport_close ();
+      jerryx_debugger_tcp_log_error (err_val);
       return false;
     }
 
@@ -112,12 +122,13 @@ jerryx_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< t
 
   ssize_t length = recv (tcp_p->tcp_socket, buffer_p, buffer_size, 0);
 
-  if (length < 0)
+  if (length <= 0)
   {
-    if (errno != EWOULDBLOCK)
+    if (errno != EWOULDBLOCK || length == 0)
     {
-      jerryx_debugger_tcp_log_error ();
+      int err_val = errno;
       jerry_debugger_transport_close ();
+      jerryx_debugger_tcp_log_error (err_val);
       return false;
     }
     length = 0;

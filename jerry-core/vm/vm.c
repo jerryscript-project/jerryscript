@@ -2642,7 +2642,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_length_t formal_params_number = 0;
 
-          if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+          if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_header_p))
           {
             if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
             {

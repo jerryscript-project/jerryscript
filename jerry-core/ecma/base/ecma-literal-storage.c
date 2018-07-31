@@ -286,7 +286,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
     const_literal_end = args_p->const_literal_end - register_end;
     literal_end = args_p->literal_end - register_end;
 
-    if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (compiled_code_p))
     {
       argument_end = args_p->argument_end;
     }
@@ -301,7 +301,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
     const_literal_end = args_p->const_literal_end - register_end;
     literal_end = args_p->literal_end - register_end;
 
-    if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (compiled_code_p))
     {
       argument_end = args_p->argument_end;
     }

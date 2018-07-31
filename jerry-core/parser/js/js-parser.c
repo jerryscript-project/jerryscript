@@ -1742,11 +1742,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_ARGUMENTS_NEEDED;
 
-    if (!(context_p->status_flags & PARSER_IS_STRICT))
-    {
-      compiled_code_p->status_flags |= CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED;
-    }
-
     /* Arguments is stored in the lexical environment. */
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
   }

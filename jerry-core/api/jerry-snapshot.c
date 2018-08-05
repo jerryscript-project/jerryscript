@@ -1640,8 +1640,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
        *      Save all of the literals in C format as well.
        */
       if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && (!is_c_format
-              || (is_c_format && ecma_string_is_valid_identifier (literal_p))))
+          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
       {
         literal_count++;
       }
@@ -1679,8 +1678,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
        *      Save all of the literals in C format as well.
        */
       if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && (!is_c_format
-              || (is_c_format && ecma_string_is_valid_identifier (literal_p))))
+          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
       {
         literal_array[literal_idx++] = literal_p;
       }

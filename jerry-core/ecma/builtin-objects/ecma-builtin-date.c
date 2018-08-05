@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
@@ -22,7 +24,6 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
-#include "math.h"
 
 #ifndef CONFIG_DISABLE_DATE_BUILTIN
 

@@ -218,7 +218,6 @@ typedef enum
   LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
 } lexer_obj_ident_opts_t;
 
-
 /**
  * Lexer literal object types.
  */

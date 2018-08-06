@@ -2375,7 +2375,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
  */
 void
 lexer_scan_identifier (parser_context_t *context_p, /**< context */
-                       bool propety_name) /**< property name */
+                       bool property_name) /**< property name */
 {
   lexer_skip_spaces (context_p);
   context_p->token.line = context_p->line;
@@ -2386,7 +2386,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
   {
     lexer_parse_identifier (context_p, false);
 
-    if (propety_name && context_p->token.lit_location.length == 3)
+    if (property_name && context_p->token.lit_location.length == 3)
     {
       lexer_skip_spaces (context_p);
 
@@ -2406,7 +2406,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
     return;
   }
 
-  if (propety_name)
+  if (property_name)
   {
     lexer_next_token (context_p);
 

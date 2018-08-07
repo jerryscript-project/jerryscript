@@ -218,7 +218,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
+static ecma_value_t
 ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
                            const lit_utf8_byte_t *msg_p) /**< error message */
 {
@@ -342,20 +342,6 @@ ecma_raise_common_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_COMMON, (const lit_utf8_byte_t *) msg_p);
 } /* ecma_raise_common_error */
-
-/**
- * Raise an EvalError with the given message.
- *
- * See also: ECMA-262 v5, 15.11.6.1
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_raise_eval_error (const char *msg_p) /**< error message */
-{
-  return ecma_raise_standard_error (ECMA_ERROR_EVAL, (const lit_utf8_byte_t *) msg_p);
-} /* ecma_raise_eval_error */
 
 /**
  * Raise a RangeError with the given message.

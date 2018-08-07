@@ -53,7 +53,7 @@ ecma_is_promise (ecma_object_t *obj_p) /**< points to object */
  * @return ecma value of the promise result.
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t
+static inline ecma_value_t
 ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
@@ -66,7 +66,7 @@ ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseResult of promise.
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
                          ecma_value_t result) /**< the result value */
 {
@@ -84,7 +84,7 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
  *
  * @return the state's enum value
  */
-inline uint8_t JERRY_ATTR_ALWAYS_INLINE
+static inline uint8_t JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_get_state (ecma_object_t *obj_p) /**< points to promise object */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
@@ -95,7 +95,7 @@ ecma_promise_get_state (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseState of promise.
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
                         uint8_t state) /**< the state */
 {

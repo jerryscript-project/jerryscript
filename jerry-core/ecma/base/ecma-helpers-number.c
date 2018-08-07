@@ -351,7 +351,7 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
  *
  * @return shift of dot in the fraction
  */
-int32_t
+static int32_t
 ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
                                        uint64_t *out_fraction_p, /**< [out] fraction of the number */
                                        int32_t *out_exponent_p) /**< [out] exponent of the number */
@@ -410,7 +410,7 @@ ecma_number_get_fraction_and_exponent (ecma_number_t num, /**< ecma-number */
  *
  * @return ecma-number
  */
-ecma_number_t
+static ecma_number_t
 ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, /**< fraction */
                                                              int32_t exponent) /**< exponent */
 {

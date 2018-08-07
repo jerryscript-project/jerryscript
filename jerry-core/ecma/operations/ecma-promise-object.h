@@ -86,10 +86,6 @@ typedef enum
 } ecma_promise_property_symbolic_constant_t;
 
 bool ecma_is_promise (ecma_object_t *obj_p);
-ecma_value_t ecma_promise_get_result (ecma_object_t *obj_p);
-void ecma_promise_set_result (ecma_object_t *obj_p, ecma_value_t result);
-uint8_t ecma_promise_get_state (ecma_object_t *obj_p);
-void ecma_promise_set_state (ecma_object_t *obj_p, uint8_t state);
 ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
 ecma_value_t ecma_promise_new_capability (void);

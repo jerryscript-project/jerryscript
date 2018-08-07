@@ -514,7 +514,6 @@ void parser_raise_error (parser_context_t *context_p, parser_error_t error);
 #ifdef JERRY_DEBUGGER
 
 void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_header_type_t type, uint32_t value);
-void parser_send_breakpoints (parser_context_t *context_p, jerry_debugger_header_type_t type);
 
 #endif /* JERRY_DEBUGGER */
 

@@ -1356,6 +1356,48 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
 #endif /* PARSER_DUMP_BYTE_CODE */
 
+#ifdef JERRY_DEBUGGER
+
+/**
+ * Send current breakpoint list.
+ */
+static void
+parser_send_breakpoints (parser_context_t *context_p, /**< context */
+                         jerry_debugger_header_type_t type) /**< message type */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+  JERRY_ASSERT (context_p->breakpoint_info_count > 0);
+
+  jerry_debugger_send_data (type,
+                            context_p->breakpoint_info,
+                            context_p->breakpoint_info_count * sizeof (parser_breakpoint_info_t));
+
+  context_p->breakpoint_info_count = 0;
+} /* parser_send_breakpoints */
+
+/**
+ * Append a breakpoint info.
+ */
+void
+parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
+                               jerry_debugger_header_type_t type, /**< message type */
+                               uint32_t value) /**< line or offset of the breakpoint */
+{
+  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
+
+  context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
+
+  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_breakpoint_info_t))
+  {
+    parser_send_breakpoints (context_p, type);
+  }
+
+  context_p->breakpoint_info[context_p->breakpoint_info_count].value = value;
+  context_p->breakpoint_info_count = (uint16_t) (context_p->breakpoint_info_count + 1);
+} /* parser_append_breakpoint_info */
+
+#endif /* JERRY_DEBUGGER */
+
 /**
  * Forward iterator: move to the next byte code
  *
@@ -2802,48 +2844,6 @@ parser_raise_error (parser_context_t *context_p, /**< context */
   /* Should never been reached. */
   JERRY_ASSERT (0);
 } /* parser_raise_error */
-
-#ifdef JERRY_DEBUGGER
-
-/**
- * Append a breakpoint info.
- */
-void
-parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
-                               jerry_debugger_header_type_t type, /**< message type */
-                               uint32_t value) /**< line or offset of the breakpoint */
-{
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-
-  context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
-
-  if (context_p->breakpoint_info_count >= JERRY_DEBUGGER_SEND_MAX (parser_breakpoint_info_t))
-  {
-    parser_send_breakpoints (context_p, type);
-  }
-
-  context_p->breakpoint_info[context_p->breakpoint_info_count].value = value;
-  context_p->breakpoint_info_count = (uint16_t) (context_p->breakpoint_info_count + 1);
-} /* parser_append_breakpoint_info */
-
-/**
- * Send current breakpoint list.
- */
-void
-parser_send_breakpoints (parser_context_t *context_p, /**< context */
-                         jerry_debugger_header_type_t type) /**< message type */
-{
-  JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
-  JERRY_ASSERT (context_p->breakpoint_info_count > 0);
-
-  jerry_debugger_send_data (type,
-                            context_p->breakpoint_info,
-                            context_p->breakpoint_info_count * sizeof (parser_breakpoint_info_t));
-
-  context_p->breakpoint_info_count = 0;
-} /* parser_send_breakpoints */
-
-#endif /* JERRY_DEBUGGER */
 
 #endif /* !JERRY_DISABLE_JS_PARSER */
 

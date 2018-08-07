@@ -176,6 +176,30 @@ ecma_string_get_chars_fast (const ecma_string_t *string_p, /**< ecma-string */
 } /* ecma_string_get_chars_fast */
 
 /**
+ * Allocate new ecma-string and fill it with reference to ECMA magic string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+static ecma_string_t *
+ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< identifier of externl magic string */
+{
+  JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
+
+  if (JERRY_LIKELY (id <= ECMA_DIRECT_STRING_MAX_IMM))
+  {
+    return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC_EX, (uintptr_t) id);
+  }
+
+  ecma_string_t *string_desc_p = ecma_alloc_string ();
+
+  string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_MAGIC_STRING_EX | ECMA_STRING_REF_ONE;
+  string_desc_p->hash = (lit_string_hash_t) (LIT_MAGIC_STRING__COUNT + id);
+  string_desc_p->u.magic_string_ex_id = id;
+
+  return string_desc_p;
+} /* ecma_new_ecma_string_from_magic_string_ex_id */
+
+/**
  * Allocate new ecma-string and fill it with characters from the utf8 string
  *
  * @return pointer to ecma-string descriptor
@@ -479,30 +503,6 @@ ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
   return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC, (uintptr_t) id);
 } /* ecma_get_magic_string */
-
-/**
- * Allocate new ecma-string and fill it with reference to ECMA magic string
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< identifier of externl magic string */
-{
-  JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
-
-  if (JERRY_LIKELY (id <= ECMA_DIRECT_STRING_MAX_IMM))
-  {
-    return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC_EX, (uintptr_t) id);
-  }
-
-  ecma_string_t *string_desc_p = ecma_alloc_string ();
-
-  string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_MAGIC_STRING_EX | ECMA_STRING_REF_ONE;
-  string_desc_p->hash = (lit_string_hash_t) (LIT_MAGIC_STRING__COUNT + id);
-  string_desc_p->u.magic_string_ex_id = id;
-
-  return string_desc_p;
-} /* ecma_new_ecma_string_from_magic_string_ex_id */
 
 /**
  * Append a cesu8 string after an ecma-string

@@ -27,8 +27,6 @@
 #define LIT_CHAR_ZWJ  ((ecma_char_t) 0x200D) /* zero width joiner */
 #define LIT_CHAR_BOM  ((ecma_char_t) 0xFEFF) /* byte order mark */
 
-bool lit_char_is_format_control (ecma_char_t c);
-
 /*
  * Whitespace characters (ECMA-262 v5, Table 2)
  */

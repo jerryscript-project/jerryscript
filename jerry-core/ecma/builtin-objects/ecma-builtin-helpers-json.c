@@ -100,7 +100,7 @@ ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, /**
  * @return pointer to ecma-string
  *         Returned value must be freed with ecma_deref_ecma_string.
  */
-ecma_string_t *
+static ecma_string_t *
 ecma_builtin_helper_json_create_separated_properties (ecma_collection_header_t *partial_p, /**< key-value pairs*/
                                                       ecma_string_t *separator_p) /**< separator*/
 {

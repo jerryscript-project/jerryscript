@@ -102,20 +102,6 @@ search_char_in_interval_array (ecma_char_t c,               /**< code unit */
 } /* search_char_in_interval_array */
 
 /**
- * Check if specified character is one of the Format-Control characters
- *
- * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 1,
- *         false - otherwise
- */
-bool
-lit_char_is_format_control (ecma_char_t c) /**< code unit */
-{
-  return (c == LIT_CHAR_ZWNJ
-          || c == LIT_CHAR_ZWJ
-          || c == LIT_CHAR_BOM);
-} /* lit_char_is_format_control */
-
-/**
  * Check if specified character is one of the Whitespace characters including those
  * that fall into "Space, Separator" ("Zs") Unicode character category.
  *

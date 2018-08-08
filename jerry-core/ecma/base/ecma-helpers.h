@@ -200,7 +200,6 @@ ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);
-ecma_string_t *ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id);
 ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
                                             const lit_utf8_byte_t *cesu8_string2_p,
                                             lit_utf8_size_t cesu8_string2_size,
@@ -268,10 +267,6 @@ bool ecma_number_is_nan (ecma_number_t num);
 bool ecma_number_is_negative (ecma_number_t num);
 bool ecma_number_is_zero (ecma_number_t num);
 bool ecma_number_is_infinity (ecma_number_t num);
-int32_t
-ecma_number_get_fraction_and_exponent (ecma_number_t num, uint64_t *out_fraction_p, int32_t *out_exponent_p);
-ecma_number_t
-ecma_number_make_normal_positive_from_fraction_and_exponent (uint64_t fraction, int32_t exponent);
 ecma_number_t
 ecma_number_make_from_sign_mantissa_and_exponent (bool sign, uint64_t mantissa, int32_t exponent);
 ecma_number_t ecma_number_get_prev (ecma_number_t num);

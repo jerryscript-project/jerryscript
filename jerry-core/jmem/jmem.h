@@ -151,7 +151,6 @@ typedef struct
   size_t free_iter_count; /**< Number of iterations required for inserting free blocks */
 } jmem_heap_stats_t;
 
-void jmem_stats_print (void);
 void jmem_stats_allocate_byte_code_bytes (size_t property_size);
 void jmem_stats_free_byte_code_bytes (size_t property_size);
 void jmem_stats_allocate_string_bytes (size_t string_size);

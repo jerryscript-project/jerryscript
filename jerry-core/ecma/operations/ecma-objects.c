@@ -312,7 +312,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t
+static ecma_property_t
 ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p, /**< property name */
                              ecma_property_ref_t *property_ref_p, /**< property reference */

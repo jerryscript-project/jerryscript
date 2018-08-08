@@ -81,7 +81,7 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
  *
  * @return magic string id
  */
-lit_magic_string_id_t
+static lit_magic_string_id_t
 lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string size */
 {
   static const lit_magic_string_id_t lit_magic_string_size_block_starts[] JERRY_CONST_DATA =

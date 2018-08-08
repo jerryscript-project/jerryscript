@@ -196,6 +196,13 @@ def get_arguments():
 
 BINARY_CACHE = {}
 
+TERM_NORMAL = '\033[0m'
+TERM_BLUE = '\033[1;34m'
+
+def report_command(cmd_type, cmd):
+    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, cmd_type, TERM_NORMAL))
+    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, (' \\%s\n\t%s' % (TERM_NORMAL, TERM_BLUE)).join(cmd), TERM_NORMAL))
+
 def create_binary(job, options):
     build_args = job.build_args[:]
     if options.buildoptions:
@@ -214,7 +221,7 @@ def create_binary(job, options):
     if options.toolchain:
         build_cmd.append('--toolchain=%s' % options.toolchain)
 
-    sys.stderr.write('Build command: %s\n' % ' '.join(build_cmd))
+    report_command('Build command:', build_cmd)
 
     binary_key = tuple(sorted(build_args))
     if binary_key in BINARY_CACHE:
@@ -273,7 +280,7 @@ def iterate_test_runner_jobs(jobs, options):
         yield job, ret_build, test_cmd
 
 def run_check(runnable):
-    sys.stderr.write('Test command: %s\n' % ' '.join(runnable))
+    report_command('Test command:', runnable)
 
     try:
         ret = subprocess.check_call(runnable)
@@ -391,11 +398,11 @@ def run_unittests(options):
         if ret_build:
             break
 
-        ret_test |= run_check([
-            settings.UNITTEST_RUNNER_SCRIPT,
-            os.path.join(build_dir_path, 'tests'),
-            "-q" if options.quiet else "",
-        ])
+        ret_test |= run_check(
+            [settings.UNITTEST_RUNNER_SCRIPT] +
+            [os.path.join(build_dir_path, 'tests')] +
+            (["-q"] if options.quiet else [])
+        )
 
     return ret_build | ret_test
 

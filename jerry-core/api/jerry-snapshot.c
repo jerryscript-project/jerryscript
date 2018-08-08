@@ -151,7 +151,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   if (globals_p->snapshot_buffer_write_offset > JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char *error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -291,7 +291,7 @@ static void
 static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< snapshot globals */
                                            ecma_value_t literal) /**< literal form the literal pool */
 {
-  const char *error_prefix_p = "Unsupported static snapshot literal: ";
+  const char * const error_prefix_p = "Unsupported static snapshot literal: ";
 
   ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) error_prefix_p,
                                                                    (lit_utf8_size_t) strlen (error_prefix_p));
@@ -329,7 +329,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
 
   if (globals_p->snapshot_buffer_write_offset >= JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char *error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -344,7 +344,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
     /* Regular expression literals are not supported. */
-    const char *error_message_p = "Regular expression literals are not supported.";
+    const char * const error_message_p = "Regular expression literals are not supported.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -355,7 +355,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    const char *error_message_p = "Snapshot buffer too small.";
+    const char * const error_message_p = "Snapshot buffer too small.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -808,7 +808,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
                                           &literals_num))
     {
       JERRY_ASSERT (lit_map_p == NULL);
-      const char *error_message_p = "Cannot allocate memory for literals.";
+      const char * const error_message_p = "Cannot allocate memory for literals.";
       return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) error_message_p);
     }
 
@@ -859,7 +859,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char *error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 
@@ -912,8 +912,8 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
     return ecma_create_error_reference_from_context ();
   }
 
-  static const char * const invalid_version_error_p = "Invalid snapshot version or unsupported features present";
-  static const char * const invalid_format_error_p = "Invalid snapshot format";
+  const char * const invalid_version_error_p = "Invalid snapshot version or unsupported features present";
+  const char * const invalid_format_error_p = "Invalid snapshot format";
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
 
   if (snapshot_size <= sizeof (jerry_snapshot_header_t))
@@ -1697,7 +1697,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     /* Save literal count. */
     destination_p = jerry_append_chars_to_buffer (destination_p,
                                                   buffer_end_p,
-                                                  (const char *) "jerry_length_t literal_count = ",
+                                                  "jerry_length_t literal_count = ",
                                                   0);
 
     destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
@@ -1727,7 +1727,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 
     destination_p = jerry_append_chars_to_buffer (destination_p,
                                                   buffer_end_p,
-                                                  (const char *) "};\n\njerry_length_t literal_sizes[",
+                                                  "};\n\njerry_length_t literal_sizes[",
                                                   0);
 
     destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
@@ -1769,7 +1769,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 
   if (is_c_format)
   {
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, (const char *) "};\n", 0);
+    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "};\n", 0);
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
@@ -1811,7 +1811,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char *error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 

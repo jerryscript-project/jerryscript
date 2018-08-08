@@ -84,7 +84,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
     if (ecma_string_is_empty (str_p))
     {
-      const char *unknown_str_p = "<unknown>:";
+      const char * const unknown_str_p = "<unknown>:";
       str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) unknown_str_p,
                                               (lit_utf8_size_t) strlen (unknown_str_p));
     }

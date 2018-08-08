@@ -44,7 +44,7 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
   (void) func_obj_val; /* unused */
   (void) this_p; /* unused */
 
-  static const char *null_str = "\\u0000";
+  const char * const null_str = "\\u0000";
 
   jerry_value_t ret_val = jerry_create_undefined ();
 

@@ -628,12 +628,12 @@ static ecma_value_t
 ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
                             const char *format_p) /**< format buffer */
 {
-  const char *day_names_p[8] =
+  static const char * const day_names_p[8] =
   {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
   };
 
-  const char *month_names_p[13] =
+  static const char * const month_names_p[13] =
   {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   };

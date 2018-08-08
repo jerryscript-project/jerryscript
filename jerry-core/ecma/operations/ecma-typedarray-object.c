@@ -916,7 +916,7 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
   JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (obj_p)));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-  lit_magic_string_id_t class_id = ext_object_p->u.pseudo_array.u1.class_id;
+  lit_magic_string_id_t class_id = (lit_magic_string_id_t) ext_object_p->u.pseudo_array.u1.class_id;
   ecma_object_t *proto_p;
   uint8_t element_size_shift = 0;
 

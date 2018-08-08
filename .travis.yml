@@ -170,6 +170,8 @@ matrix:
           packages: [gperf, dfu-util, device-tree-compiler, python3-ply, python3-pip]
 
   fast_finish: true
+  allow_failures:
+    - env: JOBNAME="ESP8266 Build Test"
 
 # The channel name "chat.freenode.net#jerryscript"
 # is encrypted against Samsung/jerryscript

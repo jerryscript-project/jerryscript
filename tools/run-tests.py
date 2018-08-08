@@ -120,6 +120,8 @@ JERRY_BUILDOPTIONS = [
             ['--lto=on']),
     Options('buildoption_test-error_messages',
             ['--error-messages=on']),
+    Options('buildoption_test-logging',
+            ['--logging=on']),
     Options('buildoption_test-all_in_one',
             ['--all-in-one=on']),
     Options('buildoption_test-valgrind',

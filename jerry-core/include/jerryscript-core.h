@@ -91,6 +91,7 @@ typedef enum
   JERRY_FEATURE_DATE, /**< Date support */
   JERRY_FEATURE_REGEXP, /**< Regexp support */
   JERRY_FEATURE_LINE_INFO, /**< line info available */
+  JERRY_FEATURE_LOGGING, /**< logging */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 

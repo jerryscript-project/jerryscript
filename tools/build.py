@@ -116,6 +116,8 @@ def get_arguments():
                          help='enable js-parser (%(choices)s)')
     coregrp.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='provide line info (%(choices)s)')
+    coregrp.add_argument('--logging', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable logging (%(choices)s)')
     coregrp.add_argument('--mem-heap', metavar='SIZE', type=int,
                          help='size of memory heap (in kilobytes)')
     coregrp.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -189,6 +191,7 @@ def generate_build_options(arguments):
     build_options_append('FEATURE_DEBUGGER', arguments.jerry_debugger)
     build_options_append('FEATURE_JS_PARSER', arguments.js_parser)
     build_options_append('FEATURE_LINE_INFO', arguments.line_info)
+    build_options_append('FEATURE_LOGGING', arguments.logging)
     build_options_append('MEM_HEAP_SIZE_KB', arguments.mem_heap)
     build_options_append('FEATURE_MEM_STATS', arguments.mem_stats)
     build_options_append('FEATURE_MEM_STRESS_TEST', arguments.mem_stress_test)

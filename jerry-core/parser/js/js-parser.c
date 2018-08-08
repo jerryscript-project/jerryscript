@@ -2575,9 +2575,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   if (context_p->is_show_opcodes)
   {
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-    bool is_constructor = context_p->status_flags & PARSER_CLASS_CONSTRUCTOR;
-    JERRY_DEBUG_MSG (is_constructor ? "\n--- Class constructor parsing start ---\n\n"
-                                    : "\n--- Function parsing start ---\n\n");
+    JERRY_DEBUG_MSG ("\n--- %s parsing start ---\n\n",
+                     (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR) ? "Class constructor"
+                                                                          : "Function");
 #else /* CONFIG_DISABLE_ES2015_CLASS */
     JERRY_DEBUG_MSG ("\n--- Function parsing start ---\n\n");
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
@@ -2679,9 +2679,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   if (context_p->is_show_opcodes)
   {
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-    bool is_constructor = context_p->status_flags & PARSER_CLASS_CONSTRUCTOR;
-    JERRY_DEBUG_MSG (is_constructor ? "\n--- Class constructor parsing end ---\n\n"
-                                    : "\n--- Function parsing end ---\n\n");
+    JERRY_DEBUG_MSG ("\n--- %s parsing end ---\n\n",
+                     (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR) ? "Class constructor"
+                                                                          : "Function");
 #else /* CONFIG_DISABLE_ES2015_CLASS */
     JERRY_DEBUG_MSG ("\n--- Function parsing end ---\n\n");
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */

@@ -17,7 +17,7 @@
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
-#include "debugger.h"
+#include "jerryscript-debugger.h"
 
 #ifndef DISABLE_EXTRA_API
 
@@ -91,10 +91,7 @@ jerry_port_log (jerry_log_level_t level, /**< message log level */
     vsnprintf (buffer, (size_t) length + 1, format, args);
 
     fprintf (stderr, "%s", buffer);
-    if (jerry_debugger_transport_is_connected ())
-    {
-      jerry_debugger_send_output ((jerry_char_t *) buffer, (jerry_size_t) length, (uint8_t) (level + 2));
-    }
+    jerry_debugger_send_log (level, (jerry_char_t *) buffer, (jerry_size_t) length);
 #else /* If jerry-debugger isn't defined, libc is turned on */
     vfprintf (stderr, format, args);
 #endif /* JERRY_DEBUGGER */

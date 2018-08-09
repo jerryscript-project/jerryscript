@@ -745,14 +745,16 @@ main (int argc,
       jerry_value_t abort_value = jerry_get_value_from_error (ret_value, false);
       if (jerry_value_is_string (abort_value))
       {
-        jerry_char_t str_buf[5];
+        static const char restart_str[] = "r353t";
+
         jerry_value_t str_val = jerry_value_to_string (abort_value);
         jerry_size_t str_size = jerry_get_string_size (str_val);
 
-        if (str_size == 5)
+        if (str_size == sizeof (restart_str) - 1)
         {
+          JERRY_VLA (jerry_char_t, str_buf, str_size);
           jerry_string_to_char_buffer (str_val, str_buf, str_size);
-          if (memcmp ("r353t", (char *) (str_buf), 5) == 0)
+          if (memcmp (restart_str, (char *) (str_buf), str_size) == 0)
           {
             jerry_release_value (ret_value);
             restart = true;

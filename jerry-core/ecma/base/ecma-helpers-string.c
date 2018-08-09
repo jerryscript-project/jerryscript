@@ -2052,7 +2052,7 @@ ecma_string_get_utf8_length (const ecma_string_t *string_p) /**< ecma-string */
         return (ecma_length_t) (long_string_p->long_utf8_string_length);
       }
 
-      return lit_get_utf8_length_of_cesu8_string ((const lit_utf8_byte_t *) (string_p + 1),
+      return lit_get_utf8_length_of_cesu8_string ((const lit_utf8_byte_t *) (long_string_p + 1),
                                                   (lit_utf8_size_t) string_p->u.long_utf8_string_size);
     }
     default:

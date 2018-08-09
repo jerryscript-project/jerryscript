@@ -261,8 +261,7 @@ jerry_debugger_transport_receive_completed (jerry_debugger_transport_receive_con
 } /* jerry_debugger_transport_receive_completed */
 
 /**
- * Suspend execution for a given time.
- * Note: If the platform does not have nanosleep or usleep, this function does not sleep at all.
+ * Suspend execution for a predefined time (JERRY_DEBUGGER_TRANSPORT_TIMEOUT ms).
  */
 void
 jerry_debugger_transport_sleep (void)

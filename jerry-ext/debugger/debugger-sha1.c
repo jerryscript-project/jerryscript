@@ -40,7 +40,7 @@
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
 
-#include "debugger-ws.h"
+#include "debugger-sha1.h"
 #include "jext-common.h"
 
 #ifdef JERRY_DEBUGGER

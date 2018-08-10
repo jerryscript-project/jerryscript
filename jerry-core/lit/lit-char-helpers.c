@@ -14,7 +14,7 @@
  */
 
 #include "lit-char-helpers.h"
-#include "lit/lit-unicode-ranges.inc.h"
+#include "lit-unicode-ranges.inc.h"
 #include "lit-strings.h"
 
 #ifndef CONFIG_DISABLE_UNICODE_CASE_CONVERSION

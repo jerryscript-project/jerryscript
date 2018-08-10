@@ -26,6 +26,16 @@ file(GLOB SOURCE_PORT_DEFAULT *.c)
 # (should only be necessary if we used compiler default libc but not checking that)
 set(DEFINES_PORT_DEFAULT _BSD_SOURCE _DEFAULT_SOURCE)
 
+# Sleep function availability check
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
+CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
+if(HAVE_TIME_H)
+  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_TIME_H)
+elseif(HAVE_UNISTD_H)
+  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_UNISTD_H)
+endif()
+
 # Default Jerry port implementation library variants:
 #   - default
 #   - default-minimal (no extra termination and log APIs)

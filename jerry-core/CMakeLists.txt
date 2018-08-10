@@ -211,16 +211,6 @@ if(FEATURE_DEBUGGER)
     message(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
   endif()
 
-  # Sleep function availability check
-  INCLUDE (CheckIncludeFiles)
-  CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
-  CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
-  if(HAVE_TIME_H)
-    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_TIME_H)
-  elseif(HAVE_UNISTD_H)
-    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_UNISTD_H)
-  endif()
-
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
 endif()
 

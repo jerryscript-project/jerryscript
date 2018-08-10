@@ -27,6 +27,7 @@ bool
 jerry_debugger_is_connected (void)
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED;
 #else /* !JERRY_DEBUGGER */
   return false;
@@ -40,6 +41,7 @@ void
 jerry_debugger_stop (void)
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -56,6 +58,7 @@ void
 jerry_debugger_continue (void)
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -72,6 +75,7 @@ void
 jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/disable stop at breakpoint */
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -105,6 +109,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
   *return_value = jerry_create_undefined ();
 
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -193,6 +198,7 @@ jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
                             jerry_size_t str_size) /**< string size */
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
@@ -215,6 +221,7 @@ jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics 
                          jerry_size_t str_size) /**< string size */
 {
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,

@@ -80,6 +80,11 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
                            uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
 #ifndef JERRY_DISABLE_JS_PARSER
+
+#if defined (JERRY_ENABLE_LINE_INFO) || !defined (CONFIG_DISABLE_ES2015_CLASS)
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* !JERRY_ENABLE_LINE_INFO && CONFIG_DISABLE_ES2015_CLASS */
+
   JERRY_ASSERT (code_p != NULL);
 
   ecma_compiled_code_t *bytecode_data_p;

@@ -69,6 +69,7 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
                     jmem_cpointer_t name_cp, /**< property name */
                     ecma_property_t *prop_p) /**< property */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_p != NULL && !ecma_is_property_lcached (prop_p));
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -124,6 +125,7 @@ inline ecma_property_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
                     const ecma_string_t *prop_name_p) /**< property's name */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
 
@@ -193,6 +195,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
                         jmem_cpointer_t name_cp, /**< property name */
                         ecma_property_t *prop_p) /**< property */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_p != NULL && ecma_is_property_lcached (prop_p));
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA

@@ -67,6 +67,7 @@ JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 28
 void
 jerry_debugger_free_unreferenced_byte_code (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jerry_debugger_byte_code_free_t *byte_code_free_p;
 
   byte_code_free_p = JMEM_CP_GET_POINTER (jerry_debugger_byte_code_free_t,
@@ -94,6 +95,7 @@ jerry_debugger_free_unreferenced_byte_code (void)
 static bool
 jerry_debugger_send (size_t message_length) /**< message length in bytes */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (message_length <= JERRY_CONTEXT (debugger_max_send_size));
 
   jerry_debugger_transport_header_t *header_p = JERRY_CONTEXT (debugger_transport_header_p);
@@ -108,6 +110,7 @@ jerry_debugger_send (size_t message_length) /**< message length in bytes */
 static void
 jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the received data */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_backtrace_t, get_backtrace_p);
 
   uint32_t min_depth;
@@ -205,6 +208,7 @@ static bool
 jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated string */
                           size_t eval_string_size) /**< evaluated string size */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
   JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
 
@@ -316,6 +320,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
                                 uint8_t *expected_message_type_p, /**< message type */
                                 jerry_debugger_uint8_data_t **message_data_p) /**< custom message data */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   /* Process the received message. */
 
   if (recv_buffer_p[0] >= JERRY_DEBUGGER_CONTINUE
@@ -745,6 +750,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
 bool
 jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (jerry_debugger_transport_is_connected ());
 
   JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
@@ -803,6 +809,7 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
 void
 jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_breakpoint_hit_t, breakpoint_hit_p);
@@ -849,6 +856,7 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 void
 jerry_debugger_send_type (jerry_debugger_header_type_t type) /**< message type */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
@@ -868,6 +876,7 @@ jerry_debugger_send_type (jerry_debugger_header_type_t type) /**< message type *
 bool
 jerry_debugger_send_configuration (uint8_t max_message_size) /**< maximum message size */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_configuration_t, configuration_p);
 
   /* Helper structure for endianness check. */
@@ -904,6 +913,7 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
                           const void *data, /**< raw data */
                           size_t size) /**< size of data */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (size <= JERRY_DEBUGGER_SEND_MAX (uint8_t));
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
@@ -926,6 +936,7 @@ jerry_debugger_send_string (uint8_t message_type, /**< message type */
                             const uint8_t *string_p, /**< string data */
                             size_t string_length) /**< length of string */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
@@ -978,6 +989,7 @@ bool
 jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, /**< message type */
                                  ecma_compiled_code_t *compiled_code_p) /**< byte code pointer */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_byte_code_cp_t, byte_code_cp_p);
@@ -1001,6 +1013,7 @@ bool
 jerry_debugger_send_parse_function (uint32_t line, /**< line */
                                     uint32_t column) /**< column */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_parse_function_t, message_parse_function_p);
@@ -1018,6 +1031,7 @@ jerry_debugger_send_parse_function (uint32_t line, /**< line */
 void
 jerry_debugger_send_memstats (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_memstats_t, memstats_p);
@@ -1153,6 +1167,7 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
 bool
 jerry_debugger_send_exception_string (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_string_t *string_p = NULL;
 
   ecma_value_t exception_value = JERRY_CONTEXT (error_value);

@@ -101,6 +101,7 @@ static const char * const wrong_args_msg_p = "wrong type of argument";
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_assert_api_available (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE);
 } /* jerry_assert_api_available */
 
@@ -110,6 +111,7 @@ jerry_assert_api_available (void)
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_make_api_available (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE;
 } /* jerry_make_api_available */
 
@@ -119,6 +121,7 @@ jerry_make_api_available (void)
 static inline void JERRY_ATTR_ALWAYS_INLINE
 jerry_make_api_unavailable (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_API_AVAILABLE;
 } /* jerry_make_api_unavailable */
 
@@ -156,6 +159,7 @@ jerry_throw (jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   /* This function cannot be called twice unless jerry_cleanup is called. */
   JERRY_ASSERT (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE));
 
@@ -177,6 +181,7 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 void
 jerry_cleanup (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jerry_assert_api_available ();
 
 #ifdef JERRY_DEBUGGER
@@ -228,6 +233,7 @@ jerry_cleanup (void)
 void *
 jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   void *ret = NULL;
   jerry_context_data_header_t *item_p;
 
@@ -366,6 +372,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
              uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
 #if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && resource_name_length > 0)
   {
@@ -436,6 +443,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                       uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
 #if defined JERRY_DEBUGGER && !defined JERRY_DISABLE_JS_PARSER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -2372,6 +2380,7 @@ jerry_objects_foreach (jerry_objects_foreach_t foreach_p, /**< function pointer 
   jerry_assert_api_available ();
 
   JERRY_ASSERT (foreach_p != NULL);
+  JERRY_DEFINE_CURRENT_CONTEXT ();
 
   for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
        iter_p != NULL;
@@ -2406,6 +2415,7 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
   JERRY_ASSERT (foreach_p != NULL);
 
   ecma_native_pointer_t *native_pointer_p;
+  JERRY_DEFINE_CURRENT_CONTEXT ();
 
   for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
        iter_p != NULL;
@@ -2551,6 +2561,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
     return true;
   }
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_free_value (JERRY_CONTEXT (error_value));
   return false;
 } /* jerry_foreach_object_property */
@@ -2736,6 +2747,7 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
     frequency = 1;
   }
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (vm_exec_stop_frequency) = frequency;
   JERRY_CONTEXT (vm_exec_stop_counter) = frequency;
   JERRY_CONTEXT (vm_exec_stop_user_p) = user_p;

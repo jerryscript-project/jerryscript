@@ -311,6 +311,9 @@ static void
 parser_parse_var_statement (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_VAR);
+#ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* !JERRY_DEBUGGER */
 
   while (true)
   {
@@ -331,6 +334,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     if (context_p->token.type == LEXER_ASSIGN)
     {
 #ifdef JERRY_DEBUGGER
+
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
           && ident_line_counter != context_p->last_breakpoint_line)
       {
@@ -414,6 +418,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
@@ -1713,6 +1718,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->last_statement.current_p == NULL);
   parser_stack_push_uint8 (context_p, PARSER_STATEMENT_START);
   parser_stack_iterator_init (context_p, &context_p->last_statement);
+
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
 
 #ifdef JERRY_DEBUGGER
   /* Set lexical enviroment for the debugger. */

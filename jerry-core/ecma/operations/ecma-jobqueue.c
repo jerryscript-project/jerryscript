@@ -54,6 +54,7 @@ typedef struct
  */
 void ecma_job_queue_init (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (job_queue_head_p) = NULL;
   JERRY_CONTEXT (job_queue_tail_p) = NULL;
 } /* ecma_job_queue_init */
@@ -179,6 +180,7 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   {
     if (ECMA_IS_VALUE_ERROR (handler_result))
     {
+      JERRY_DEFINE_CURRENT_CONTEXT ();
       handler_result = JERRY_CONTEXT (error_value);
     }
 
@@ -253,6 +255,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
 
   if (ECMA_IS_VALUE_ERROR (then_call_result))
   {
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     then_call_result = JERRY_CONTEXT (error_value);
 
     ret = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
@@ -281,6 +284,7 @@ ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
   item_p->handler = handler;
   item_p->next_p = NULL;
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (job_queue_head_p) == NULL)
   {
     JERRY_CONTEXT (job_queue_head_p) = item_p;
@@ -330,6 +334,7 @@ ecma_process_all_enqueued_jobs (void)
 {
   ecma_value_t ret = ECMA_VALUE_UNDEFINED;
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
   {
     ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
@@ -352,6 +357,7 @@ ecma_process_all_enqueued_jobs (void)
 void
 ecma_free_all_enqueued_jobs (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   while (JERRY_CONTEXT (job_queue_head_p) != NULL)
   {
     ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);

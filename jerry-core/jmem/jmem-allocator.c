@@ -31,6 +31,7 @@
 void
 jmem_stats_allocate_byte_code_bytes (size_t byte_code_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   heap_stats->byte_code_bytes += byte_code_size;
@@ -47,6 +48,7 @@ jmem_stats_allocate_byte_code_bytes (size_t byte_code_size)
 void
 jmem_stats_free_byte_code_bytes (size_t byte_code_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   JERRY_ASSERT (heap_stats->byte_code_bytes >= byte_code_size);
@@ -60,6 +62,7 @@ jmem_stats_free_byte_code_bytes (size_t byte_code_size)
 void
 jmem_stats_allocate_string_bytes (size_t string_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   heap_stats->string_bytes += string_size;
@@ -76,6 +79,7 @@ jmem_stats_allocate_string_bytes (size_t string_size)
 void
 jmem_stats_free_string_bytes (size_t string_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   JERRY_ASSERT (heap_stats->string_bytes >= string_size);
@@ -89,6 +93,7 @@ jmem_stats_free_string_bytes (size_t string_size)
 void
 jmem_stats_allocate_object_bytes (size_t object_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   heap_stats->object_bytes += object_size;
@@ -105,6 +110,7 @@ jmem_stats_allocate_object_bytes (size_t object_size)
 void
 jmem_stats_free_object_bytes (size_t object_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   JERRY_ASSERT (heap_stats->object_bytes >= object_size);
@@ -118,6 +124,7 @@ jmem_stats_free_object_bytes (size_t object_size)
 void
 jmem_stats_allocate_property_bytes (size_t property_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   heap_stats->property_bytes += property_size;
@@ -134,6 +141,7 @@ jmem_stats_allocate_property_bytes (size_t property_size)
 void
 jmem_stats_free_property_bytes (size_t property_size)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   JERRY_ASSERT (heap_stats->property_bytes >= property_size);
@@ -161,6 +169,7 @@ jmem_finalize (void)
   jmem_pools_finalize ();
 
 #ifdef JMEM_STATS
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
   {
     jmem_heap_stats_print ();
@@ -188,6 +197,9 @@ jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
 #if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
   JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* JERRY_SYSTEM_ALLOCATOR */
   const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
 
   uint_ptr -= heap_start;
@@ -221,6 +233,9 @@ jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompres
 #if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
   JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* JERRY_SYSTEM_ALLOCATOR */
   const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
 
   uint_ptr <<= JMEM_ALIGNMENT_LOG;
@@ -238,6 +253,7 @@ jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompres
 void
 jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   /* Currently only one callback is supported */
   JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == NULL);
 
@@ -250,6 +266,7 @@ jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t ca
 void
 jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   /* Currently only one callback is supported */
   JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == callback);
 
@@ -262,6 +279,7 @@ jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t 
 void
 jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (jmem_free_unused_memory_callback) != NULL)
   {
     JERRY_CONTEXT (jmem_free_unused_memory_callback) (severity);

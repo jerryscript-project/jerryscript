@@ -1428,6 +1428,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
                                             ecma_value_t arg1, /**< separator */
                                             ecma_value_t arg2) /**< limit */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1. */

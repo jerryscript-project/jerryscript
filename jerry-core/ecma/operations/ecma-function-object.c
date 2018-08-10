@@ -628,6 +628,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        const ecma_value_t *arguments_list_p, /**< arguments list */
                        ecma_length_t arguments_list_len) /**< length of arguments list */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
   JERRY_ASSERT (ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
@@ -801,7 +802,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       return ret_value;
     }
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
     JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 

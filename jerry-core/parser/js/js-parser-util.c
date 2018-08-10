@@ -396,6 +396,7 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
                        uint32_t line, /**< current line */
                        bool flush_cbc) /**< flush last byte code */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (JERRY_CONTEXT (resource_name) == ECMA_VALUE_UNDEFINED)
   {
     return;

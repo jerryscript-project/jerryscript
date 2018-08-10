@@ -27,6 +27,7 @@
 bool
 vm_is_strict_mode (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (vm_top_context_p) != NULL);
 
   return JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE;
@@ -47,6 +48,7 @@ vm_is_strict_mode (void)
 inline bool JERRY_ATTR_ALWAYS_INLINE
 vm_is_direct_eval_form_call (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0;
 } /* vm_is_direct_eval_form_call */
 
@@ -68,6 +70,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
     max_depth = UINT32_MAX;
   }
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
   ecma_object_t *array_p = ecma_get_object_from_value (result_array);
   uint32_t index = 0;

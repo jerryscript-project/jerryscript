@@ -479,6 +479,7 @@ static uint8_t
 re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
                            uint16_t flags) /**< flags */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   uint8_t free_idx = RE_CACHE_SIZE;
 
   for (uint8_t idx = 0u; idx < RE_CACHE_SIZE; idx++)
@@ -513,6 +514,7 @@ re_find_bytecode_in_cache (ecma_string_t *pattern_str_p, /**< pattern string */
 void
 re_cache_gc_run (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   for (uint32_t i = 0u; i < RE_CACHE_SIZE; i++)
   {
     const re_compiled_code_t *cached_bytecode_p = JERRY_CONTEXT (re_cache)[i];
@@ -540,6 +542,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
                      ecma_string_t *pattern_str_p, /**< pattern */
                      uint16_t flags) /**< flags */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   uint8_t cache_idx = re_find_bytecode_in_cache (pattern_str_p, flags);
 

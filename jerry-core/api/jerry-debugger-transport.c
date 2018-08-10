@@ -39,6 +39,7 @@ jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p, /**< 
                               size_t receive_message_header_size, /**< header bytes reserved for incoming messages */
                               size_t max_receive_message_size) /**< maximum number of bytes received in a message */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (max_send_message_size > JERRY_DEBUGGER_TRANSPORT_MIN_BUFFER_SIZE
                 && max_receive_message_size > JERRY_DEBUGGER_TRANSPORT_MIN_BUFFER_SIZE);
 
@@ -92,6 +93,7 @@ jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p, /**< 
 void
 jerry_debugger_transport_start (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   if (jerry_debugger_send_configuration (JERRY_CONTEXT (debugger_max_receive_size)))
@@ -110,6 +112,7 @@ jerry_debugger_transport_start (void)
 bool
 jerry_debugger_transport_is_connected (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED) != 0;
 } /* jerry_debugger_transport_is_connected */
 
@@ -119,6 +122,7 @@ jerry_debugger_transport_is_connected (void)
 void
 jerry_debugger_transport_close (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
   {
     return;
@@ -155,6 +159,7 @@ bool
 jerry_debugger_transport_send (const uint8_t *message_p, /**< message to be sent */
                                size_t message_length) /**< message length in bytes */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (jerry_debugger_transport_is_connected ());
   JERRY_ASSERT (message_length > 0);
 
@@ -195,6 +200,7 @@ bool
 jerry_debugger_transport_receive (jerry_debugger_transport_receive_context_t *context_p) /**< [out] receive
                                                                                           *   context */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (jerry_debugger_transport_is_connected ());
 
   context_p->buffer_p = JERRY_CONTEXT (debugger_receive_buffer);
@@ -215,6 +221,7 @@ void
 jerry_debugger_transport_receive_completed (jerry_debugger_transport_receive_context_t *context_p) /**< receive
                                                                                                     *   context */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (context_p->message_p != NULL);
   JERRY_ASSERT (context_p->buffer_p == JERRY_CONTEXT (debugger_receive_buffer));
 

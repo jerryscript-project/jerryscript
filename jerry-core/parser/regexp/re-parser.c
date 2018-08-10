@@ -903,6 +903,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       }
 
       JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
+      JERRY_DEFINE_CURRENT_CONTEXT ();
       ecma_free_value (JERRY_CONTEXT (error_value));
 
       parser_ctx_p->input_curr_p = input_curr_p;

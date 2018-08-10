@@ -139,6 +139,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     if (ECMA_IS_VALUE_ERROR (to_object))
     {
 #ifdef JERRY_ENABLE_ERROR_MESSAGES
+      JERRY_DEFINE_CURRENT_CONTEXT ();
       ecma_free_value (to_object);
       ecma_free_value (JERRY_CONTEXT (error_value));
 
@@ -244,6 +245,7 @@ ecma_value_t
 vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
              uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_value_t this_binding;
   ecma_object_t *lex_env_p;
 
@@ -443,6 +445,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   uint8_t opcode = frame_ctx_p->byte_code_p[0];
   uint32_t arguments_list_len;
 
@@ -635,6 +638,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
   uint16_t encoding_limit;
@@ -806,6 +810,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static ecma_value_t JERRY_ATTR_NOINLINE
 vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
   ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
@@ -3359,6 +3364,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
             const ecma_value_t *arg_p, /**< arguments list */
             ecma_length_t arg_list_len) /**< length of arguments list */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
   ecma_value_t completion_value;
   uint16_t argument_end;
@@ -3467,6 +3473,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         const ecma_value_t *arg_list_p, /**< arguments list */
         ecma_length_t arg_list_len) /**< length of arguments list */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_value_t *literal_p;
   vm_frame_ctx_t frame_ctx;
   uint32_t call_stack_size;

@@ -1390,6 +1390,7 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
 ecma_value_t
 ecma_create_error_reference_from_context (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return ecma_create_error_reference (JERRY_CONTEXT (error_value),
                                       (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION) != 0);
 } /* ecma_create_error_reference_from_context */
@@ -1450,6 +1451,7 @@ ecma_value_t
 ecma_clear_error_reference (ecma_value_t value, /**< error reference */
                             bool set_abort_flag) /**< set abort flag */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
 
   if (set_abort_flag)
@@ -1549,6 +1551,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     }
 
 #ifdef JERRY_DEBUGGER
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
         && !(bytecode_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
         && jerry_debugger_send_function_cp (JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP, bytecode_p))

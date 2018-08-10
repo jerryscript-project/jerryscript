@@ -739,6 +739,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   JERRY_UNUSED (resource_name_length);
 
 #ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
 #endif /* JERRY_ENABLE_LINE_INFO */
 

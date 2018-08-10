@@ -114,6 +114,7 @@ ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
 inline void
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (ecma_gc_objects_number)++;
   JERRY_CONTEXT (ecma_gc_new_objects)++;
 
@@ -507,6 +508,7 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 static void
 ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (object_p != NULL
                 && !ecma_gc_is_object_visited (object_p)
                 && object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
@@ -818,6 +820,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 void
 ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 
   ecma_object_t *white_gray_objects_p = JERRY_CONTEXT (ecma_gc_objects_p);
@@ -972,6 +975,7 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 void
 ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
 #ifdef JERRY_DEBUGGER
   while ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
          && JERRY_CONTEXT (debugger_byte_code_free_tail) != ECMA_NULL_POINTER)

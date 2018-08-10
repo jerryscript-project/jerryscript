@@ -39,6 +39,7 @@ jmem_pools_finalize (void)
 {
   jmem_pools_collect_empty ();
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (jmem_free_8_byte_chunk_p) == NULL);
 #ifdef JERRY_CPOINTER_32_BIT
   JERRY_ASSERT (JERRY_CONTEXT (jmem_free_16_byte_chunk_p) == NULL);
@@ -54,6 +55,7 @@ jmem_pools_finalize (void)
 inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_alloc (size_t size) /**< size of the chunk */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
 #ifdef JMEM_GC_BEFORE_EACH_ALLOC
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 #endif /* JMEM_GC_BEFORE_EACH_ALLOC */
@@ -113,6 +115,7 @@ inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
                  size_t size) /**< size of the chunk */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (chunk_p != NULL);
 
   jmem_pools_chunk_t *const chunk_to_free_p = (jmem_pools_chunk_t *) chunk_p;
@@ -149,6 +152,7 @@ jmem_pools_free (void *chunk_p, /**< pointer to the chunk */
 void
 jmem_pools_collect_empty (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   jmem_pools_chunk_t *chunk_p = JERRY_CONTEXT (jmem_free_8_byte_chunk_p);
   JERRY_CONTEXT (jmem_free_8_byte_chunk_p) = NULL;
 

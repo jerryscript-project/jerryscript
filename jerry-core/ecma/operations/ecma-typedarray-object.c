@@ -894,6 +894,7 @@ ecma_op_typedarray_set_index_prop (ecma_object_t *obj_p, /**< a TypedArray objec
 
   if (ECMA_IS_VALUE_ERROR (error))
   {
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     ecma_free_value (JERRY_CONTEXT (error_value));
     return false;
   }

@@ -177,6 +177,7 @@ bool
 ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
                  ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
@@ -200,6 +201,7 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
 ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
   if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL))
@@ -223,6 +225,7 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_get_global (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL] != NULL);
 
   return JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL];
@@ -410,6 +413,7 @@ ecma_instantiate_builtin_helper (ecma_builtin_id_t builtin_id, /**< built-in id 
                                  ecma_builtin_id_t object_prototype_builtin_id,  /**< built-in id of prototype */
                                  bool is_extensible) /**< value of object's [[Extensible]] property */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL);
 
   ecma_object_t *prototype_obj_p;
@@ -475,6 +479,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 void
 ecma_finalize_builtins (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   for (ecma_builtin_id_t id = (ecma_builtin_id_t) 0;
        id < ECMA_BUILTIN_ID__COUNT;
        id = (ecma_builtin_id_t) (id + 1))

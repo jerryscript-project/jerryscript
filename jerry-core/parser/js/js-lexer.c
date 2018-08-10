@@ -2181,6 +2181,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
 
   if (is_throw)
   {
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     ecma_free_value (JERRY_CONTEXT (error_value));
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
   }

@@ -236,6 +236,7 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
     error_obj_p = ecma_new_standard_error (error_type);
   }
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
   return ECMA_VALUE_ERROR;
@@ -324,6 +325,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
   ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
   ecma_deref_ecma_string (error_msg_p);
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (error_value) = ecma_make_object_value (error_obj_p);
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
   return ECMA_VALUE_ERROR;

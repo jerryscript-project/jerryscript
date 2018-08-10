@@ -331,6 +331,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   if (ECMA_IS_VALUE_ERROR (then))
   {
     /* 9. */
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     then = JERRY_CONTEXT (error_value);
     ecma_reject_promise (promise, then);
   }
@@ -552,6 +553,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   if (ECMA_IS_VALUE_ERROR (completion))
   {
     /* 10.a. */
+    JERRY_DEFINE_CURRENT_CONTEXT ();
     completion = JERRY_CONTEXT (error_value);
     status = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
                                     ECMA_VALUE_UNDEFINED,

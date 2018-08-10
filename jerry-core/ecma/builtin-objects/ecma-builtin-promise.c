@@ -125,6 +125,7 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
 inline static ecma_value_t
 ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject description */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
   ecma_value_t reason = JERRY_CONTEXT (error_value);
   ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
@@ -563,6 +564,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
                                   ecma_value_t array, /**< the items to be resolved */
                                   bool is_race) /**< indicates whether it is race function */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if (!ecma_is_value_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));

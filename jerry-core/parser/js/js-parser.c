@@ -1382,6 +1382,7 @@ static void
 parser_send_breakpoints (parser_context_t *context_p, /**< context */
                          jerry_debugger_header_type_t type) /**< message type */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
   JERRY_ASSERT (context_p->breakpoint_info_count > 0);
 
@@ -1400,6 +1401,7 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
                                jerry_debugger_header_type_t type, /**< message type */
                                uint32_t value) /**< line or offset of the breakpoint */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   context_p->status_flags |= PARSER_DEBUGGER_BREAKPOINT_APPENDED;
@@ -1456,6 +1458,9 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
 static ecma_compiled_code_t *
 parser_post_processing (parser_context_t *context_p) /**< context */
 {
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif  /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
   uint16_t literal_one_byte_limit;
   uint16_t ident_end;
   uint16_t uninitialized_var_end;
@@ -2288,6 +2293,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      parser_error_location_t *error_location_p) /**< error location */
 {
+#if defined (JERRY_DEBUGGER) || defined (PARSER_DUMP_BYTE_CODE)
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* JERRY_DEBUGGER || PARSER_DUMP_BYTE_CODE */
+
   parser_context_t context;
   ecma_compiled_code_t *compiled_code;
 
@@ -2466,6 +2475,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
 
 #ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
@@ -2556,6 +2566,9 @@ ecma_compiled_code_t *
 parser_parse_function (parser_context_t *context_p, /**< context */
                        uint32_t status_flags) /**< extra status flags */
 {
+#ifdef JERRY_DEBUGGER
+  JERRY_DEFINE_CURRENT_CONTEXT ();
+#endif /* JERRY_DEBUGGER */
   parser_saved_context_t saved_context;
   ecma_compiled_code_t *compiled_code_p;
 
@@ -2867,6 +2880,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
 #ifndef JERRY_DISABLE_JS_PARSER
   parser_error_location_t parser_error;
 

@@ -160,6 +160,7 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
 #ifdef JERRY_ENABLE_LINE_INFO
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
 #endif /* JERRY_ENABLE_LINE_INFO */
 

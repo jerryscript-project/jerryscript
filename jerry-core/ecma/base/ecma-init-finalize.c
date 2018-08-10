@@ -40,6 +40,7 @@ ecma_init (void)
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
 
 #ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */

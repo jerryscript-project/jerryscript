@@ -26,6 +26,7 @@
 inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 lit_get_magic_string_ex_count (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return JERRY_CONTEXT (lit_magic_string_ex_count);
 } /* lit_get_magic_string_ex_count */
 
@@ -114,6 +115,7 @@ lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string s
 const lit_utf8_byte_t *
 lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic string id */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count));
 
   return JERRY_CONTEXT (lit_magic_string_ex_array)[id];
@@ -127,6 +129,7 @@ lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic str
 lit_utf8_size_t
 lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic string id */
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   return JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 } /* lit_get_magic_string_ex_size */
 
@@ -143,6 +146,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t * const *ex_str_items, /**< char
   JERRY_ASSERT (count > 0);
   JERRY_ASSERT (ex_str_sizes != NULL);
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) == NULL);
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_count) == 0);
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes) == NULL);

@@ -57,6 +57,7 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 void
 ecma_finalize_lit_storage (void)
 {
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
   ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
 } /* ecma_finalize_lit_storage */
@@ -77,6 +78,7 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     return ecma_make_string_value (string_p);
   }
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
@@ -149,6 +151,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 
   JERRY_ASSERT (ecma_is_value_float_number (num));
 
+  JERRY_DEFINE_CURRENT_CONTEXT ();
   ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 

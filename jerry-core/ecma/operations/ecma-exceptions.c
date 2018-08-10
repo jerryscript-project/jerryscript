@@ -143,7 +143,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
 #ifdef JERRY_ENABLE_LINE_INFO
   /* The "stack" identifier is not a magic string. */
-  const char *stack_id_p = "stack";
+  const char * const stack_id_p = "stack";
 
   ecma_string_t *stack_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) stack_id_p, 5);
 

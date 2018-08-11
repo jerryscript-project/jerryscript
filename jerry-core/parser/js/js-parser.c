@@ -1857,7 +1857,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
 
     /* Storing the opcode */
-    *dst_p++ = opcode;
+    *dst_p++ = (uint8_t) opcode;
     real_offset++;
     PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
     flags = cbc_flags[opcode];
@@ -1879,7 +1879,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (ext_opcode);
 
       /* Storing the extended opcode */
-      *dst_p++ = ext_opcode;
+      *dst_p++ = (uint8_t) ext_opcode;
       opcode_p++;
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);

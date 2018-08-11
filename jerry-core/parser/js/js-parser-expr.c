@@ -203,7 +203,7 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
         break;
       }
     }
-    parser_emit_cbc (context_p, opcode);
+    parser_emit_cbc (context_p, (uint16_t) opcode);
   }
 } /* parser_emit_unary_lvalue_opcode */
 
@@ -1091,7 +1091,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         }
       }
 
-      parser_emit_cbc_literal_from_token (context_p, opcode);
+      parser_emit_cbc_literal_from_token (context_p, (uint16_t) opcode);
       break;
     }
     case LEXER_KEYW_FUNCTION:
@@ -1770,7 +1770,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       if (cbc_flags[opcode] & CBC_HAS_LITERAL_ARG)
       {
         uint16_t index = parser_stack_pop_uint16 (context_p);
-        parser_emit_cbc_literal (context_p, opcode, index);
+        parser_emit_cbc_literal (context_p, (uint16_t) opcode, index);
 
         if (opcode == CBC_ASSIGN_PROP_THIS_LITERAL
             && (context_p->stack_depth >= context_p->stack_limit))
@@ -1830,7 +1830,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         continue;
       }
     }
-    parser_emit_cbc (context_p, opcode);
+    parser_emit_cbc (context_p, (uint16_t) opcode);
   }
 } /* parser_process_binary_opcodes */
 
@@ -1916,7 +1916,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
           opcode = CBC_BRANCH_IF_TRUE_FORWARD;
         }
 
-        parser_emit_cbc_forward_branch (context_p, opcode, &cond_branch);
+        parser_emit_cbc_forward_branch (context_p, (uint16_t) opcode, &cond_branch);
 
         lexer_next_token (context_p);
         parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);

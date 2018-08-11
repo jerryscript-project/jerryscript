@@ -660,7 +660,7 @@ parser_parse_do_while_statement_end (parser_context_t *context_p) /**< context *
     parser_stack_iterator_skip (&iterator, sizeof (parser_loop_statement_t));
     parser_stack_iterator_read (&iterator, &do_while_statement, sizeof (parser_do_while_statement_t));
 
-    parser_emit_cbc_backward_branch (context_p, opcode, do_while_statement.start_offset);
+    parser_emit_cbc_backward_branch (context_p, (uint16_t) opcode, do_while_statement.start_offset);
   }
   else
   {
@@ -759,7 +759,7 @@ parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
   parser_stack_pop (context_p, NULL, 1 + sizeof (parser_loop_statement_t) + sizeof (parser_while_statement_t));
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 
-  parser_emit_cbc_backward_branch (context_p, opcode, while_statement.start_offset);
+  parser_emit_cbc_backward_branch (context_p, (uint16_t) opcode, while_statement.start_offset);
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
   parser_set_range (context_p, &range);
@@ -1027,7 +1027,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   parser_stack_pop (context_p, NULL, 1 + sizeof (parser_loop_statement_t) + sizeof (parser_for_statement_t));
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 
-  parser_emit_cbc_backward_branch (context_p, opcode, for_statement.start_offset);
+  parser_emit_cbc_backward_branch (context_p, (uint16_t) opcode, for_statement.start_offset);
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
   parser_set_range (context_p, &range);
@@ -1427,7 +1427,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
         if (lexer_compare_identifier_to_current (context_p, &label_statement.label_ident))
         {
           label_statement.break_list_p = parser_emit_cbc_forward_branch_item (context_p,
-                                                                              opcode,
+                                                                              (uint16_t) opcode,
                                                                               label_statement.break_list_p);
           parser_stack_iterator_write (&iterator, &label_statement, sizeof (parser_label_statement_t));
           lexer_next_token (context_p);
@@ -1470,7 +1470,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
       parser_stack_iterator_skip (&iterator, 1);
       parser_stack_iterator_read (&iterator, &loop, sizeof (parser_loop_statement_t));
       loop.branch_list_p = parser_emit_cbc_forward_branch_item (context_p,
-                                                                opcode,
+                                                                (uint16_t) opcode,
                                                                 loop.branch_list_p);
       parser_stack_iterator_write (&iterator, &loop, sizeof (parser_loop_statement_t));
       return;
@@ -1526,7 +1526,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
           parser_stack_iterator_skip (&loop_iterator, 1);
           parser_stack_iterator_read (&loop_iterator, &loop, sizeof (parser_loop_statement_t));
           loop.branch_list_p = parser_emit_cbc_forward_branch_item (context_p,
-                                                                    opcode,
+                                                                    (uint16_t) opcode,
                                                                     loop.branch_list_p);
           loop.branch_list_p->branch.offset |= CBC_HIGHEST_BIT_MASK;
           parser_stack_iterator_write (&loop_iterator, &loop, sizeof (parser_loop_statement_t));
@@ -1583,7 +1583,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       parser_stack_iterator_skip (&iterator, 1);
       parser_stack_iterator_read (&iterator, &loop, sizeof (parser_loop_statement_t));
       loop.branch_list_p = parser_emit_cbc_forward_branch_item (context_p,
-                                                                opcode,
+                                                                (uint16_t) opcode,
                                                                 loop.branch_list_p);
       loop.branch_list_p->branch.offset |= CBC_HIGHEST_BIT_MASK;
       parser_stack_iterator_write (&iterator, &loop, sizeof (parser_loop_statement_t));

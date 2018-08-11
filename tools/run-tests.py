@@ -260,7 +260,7 @@ def iterate_test_runner_jobs(jobs, options):
     for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
-            yield job, ret_build, build_dir_path, None
+            yield job, ret_build, None
 
         if build_dir_path in tested_paths:
             sys.stderr.write('(skipping: already tested with %s)\n' % build_dir_path)

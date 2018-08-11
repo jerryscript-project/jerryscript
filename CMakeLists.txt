@@ -246,14 +246,14 @@ endif()
 # Jerry's core
 add_subdirectory(jerry-core)
 
-# Jerry's default port implementation
-if(JERRY_PORT_DEFAULT)
-  add_subdirectory(jerry-port/default)
-endif()
-
 # Jerry's extension tools
 if(JERRY_EXT)
   add_subdirectory(jerry-ext)
+endif()
+
+# Jerry's default port implementation
+if(JERRY_PORT_DEFAULT)
+  add_subdirectory(jerry-port/default)
 endif()
 
 # Jerry command line tool

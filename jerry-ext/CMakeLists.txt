@@ -17,7 +17,8 @@ set(JERRY_EXT_NAME jerry-ext)
 project (${JERRY_EXT_NAME} C)
 
 # Include directories
-set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/common")
+set(INCLUDE_EXT_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_EXT_PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/common")
 
 if(FEATURE_INIT_FINI)
   set(DEFINES_EXT ${DEFINES_EXT} ENABLE_INIT_FINI)
@@ -39,9 +40,10 @@ set(SOURCE_EXT
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 
-target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT})
+target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT_PUBLIC})
+target_include_directories(${JERRY_EXT_NAME} PRIVATE ${INCLUDE_EXT_PRIVATE})
 target_compile_definitions(${JERRY_EXT_NAME} PUBLIC ${DEFINES_EXT})
 target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
 install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
-install(DIRECTORY ${INCLUDE_EXT}/ DESTINATION include)
+install(DIRECTORY ${INCLUDE_EXT_PUBLIC}/ DESTINATION include)

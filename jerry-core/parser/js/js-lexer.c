@@ -558,7 +558,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
           break;
         }
 
-        context_p->token.type = keyword_p->type;
+        context_p->token.type = (uint8_t) keyword_p->type;
         break;
       }
       keyword_p++;

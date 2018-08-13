@@ -297,8 +297,8 @@ ecma_builtin_init_object (ecma_builtin_id_t obj_builtin_id, /**< built-in ID */
     built_in_props_p = &((ecma_extended_object_t *) obj_p)->u.built_in;
   }
 
-  built_in_props_p->id = obj_builtin_id;
-  built_in_props_p->routine_id = obj_builtin_id;
+  built_in_props_p->id = (uint8_t) obj_builtin_id;
+  built_in_props_p->routine_id = (uint16_t) obj_builtin_id;
   built_in_props_p->instantiated_bitset[0] = 0;
 
   if (property_count > 32)
@@ -528,7 +528,7 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   JERRY_ASSERT (routine_id >= ECMA_BUILTIN_ID__COUNT);
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
-  ext_func_obj_p->u.built_in.id = builtin_id;
+  ext_func_obj_p->u.built_in.id = (uint8_t) builtin_id;
   ext_func_obj_p->u.built_in.routine_id = routine_id;
   ext_func_obj_p->u.built_in.instantiated_bitset[0] = 0;
 

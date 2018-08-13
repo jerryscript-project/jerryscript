@@ -900,7 +900,7 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
 
-  message_type_p->type = type;
+  message_type_p->type = (uint8_t) type;
   memcpy (message_type_p + 1, data, size);
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + size);

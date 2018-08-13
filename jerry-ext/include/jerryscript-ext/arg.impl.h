@@ -94,7 +94,7 @@ typedef struct
         func = jerryx_arg_transform_ ## type; \
       } \
     } \
-    const jerryx_arg_int_option_t int_option = { .round = round_flag, .clamp = clamp_flag }; \
+    const jerryx_arg_int_option_t int_option = { .round = (uint8_t) round_flag, .clamp = (uint8_t) clamp_flag }; \
     return (jerryx_arg_t) \
     { \
       .func = func, \

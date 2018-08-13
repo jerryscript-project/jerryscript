@@ -249,7 +249,7 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
                                                 ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.pseudo_array.u1.class_id = class_id;
+  ext_object_p->u.pseudo_array.u1.class_id = (uint16_t) class_id;
   ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY;
   ext_object_p->u.pseudo_array.extra_info = element_size_shift;
   ext_object_p->u.pseudo_array.u2.arraybuffer = new_arraybuffer_p;
@@ -285,7 +285,7 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
   ecma_object_t *object_p = ecma_create_object (proto_p, object_size, ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.pseudo_array.u1.class_id = class_id;
+  ext_object_p->u.pseudo_array.u1.class_id = (uint16_t) class_id;
   ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY;
   ext_object_p->u.pseudo_array.extra_info = element_size_shift;
   ext_object_p->u.pseudo_array.u2.arraybuffer = ecma_make_object_value (arraybuffer_p);

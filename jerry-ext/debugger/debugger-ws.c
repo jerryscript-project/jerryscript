@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "debugger-ws.h"
+#include "debugger-sha1.h"
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DEBUGGER_WS_H
-#define DEBUGGER_WS_H
+#ifndef DEBUGGER_SHA1_H
+#define DEBUGGER_SHA1_H
 
 #include "jerryscript-debugger-transport.h"
 
@@ -28,4 +28,4 @@ void jerryx_debugger_compute_sha1 (const uint8_t *input1, size_t input1_len,
 
 #endif /* JERRY_DEBUGGER */
 
-#endif /* !DEBUGGER_WS_H */
+#endif /* !DEBUGGER_SHA1_H */

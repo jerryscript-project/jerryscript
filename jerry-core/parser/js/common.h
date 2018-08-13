@@ -57,21 +57,21 @@ typedef enum
 
 /* Flags for status_flags. */
 
-/* Local identifier (var, function arg). */
+/** Local identifier (var, function arg). */
 #define LEXER_FLAG_VAR 0x01
-/* This local identifier cannot be stored in register. */
+/** This local identifier cannot be stored in register. */
 #define LEXER_FLAG_NO_REG_STORE 0x02
-/* This local identifier is initialized with a value. */
+/** This local identifier is initialized with a value. */
 #define LEXER_FLAG_INITIALIZED 0x04
-/* This local identifier has a reference to the function itself. */
+/** This local identifier has a reference to the function itself. */
 #define LEXER_FLAG_FUNCTION_NAME 0x08
-/* This local identifier is a function argument. */
+/** This local identifier is a function argument. */
 #define LEXER_FLAG_FUNCTION_ARGUMENT 0x10
-/* This local identifier is not used in the current context. */
+/** This local identifier is not used in the current context. */
 #define LEXER_FLAG_UNUSED_IDENT 0x20
-/* No space is allocated for this character literal. */
+/** No space is allocated for this character literal. */
 #define LEXER_FLAG_SOURCE_PTR 0x40
-/* Initialize this variable after the byte code is freed. */
+/** Initialize this variable after the byte code is freed. */
 #define LEXER_FLAG_LATE_INIT 0x80
 
 /**

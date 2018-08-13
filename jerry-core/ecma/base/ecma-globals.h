@@ -142,7 +142,9 @@ typedef int32_t ecma_integer_value_t;
  */
 #define ECMA_DIRECT_SHIFT 4
 
-/* ECMA make simple value */
+/**
+ * ECMA make simple value
+ */
 #define ECMA_MAKE_VALUE(value) \
   ((((ecma_value_t) (value)) << ECMA_DIRECT_SHIFT) | ECMA_DIRECT_TYPE_SIMPLE_VALUE)
 
@@ -171,25 +173,43 @@ enum
                                                                 *   a special "base" value for vm */
 };
 
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Maximum integer number for an ecma value
  */
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 #define ECMA_INTEGER_NUMBER_MAX         0x7fffff
+/**
+ * Maximum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
+ */
 #define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7fffff0
 #else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+/**
+ * Maximum integer number for an ecma value
+ */
 #define ECMA_INTEGER_NUMBER_MAX         0x7ffffff
+/**
+ * Maximum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
+ */
 #define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7ffffff0
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 /**
  * Minimum integer number for an ecma value
  */
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
 #define ECMA_INTEGER_NUMBER_MIN         -0x7fffff
+/**
+ * Minimum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
+ */
 #define ECMA_INTEGER_NUMBER_MIN_SHIFTED -0x7fffff0
 #else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+/**
+ * Minimum integer number for an ecma value
+ */
 #define ECMA_INTEGER_NUMBER_MIN         -0x8000000
+/**
+ * Minimum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
+ */
 #define ECMA_INTEGER_NUMBER_MIN_SHIFTED (-0x7fffffff - 1) /* -0x80000000 */
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
 
@@ -708,33 +728,33 @@ typedef struct
 {
   ecma_object_t object; /**< object header */
 
-  /*
-   * Description of extra fields. These extra fields depends on the object type.
+  /**
+   * Description of extra fields. These extra fields depend on the object type.
    */
   union
   {
     ecma_built_in_props_t built_in; /**< built-in object part */
 
-    /*
+    /**
      * Description of objects with class.
      */
     struct
     {
       uint16_t class_id; /**< class id of the object */
       uint16_t extra_info; /**< extra information for the object
-                                e.g. array buffer type info (external/internal) */
+                            *   e.g. array buffer type info (external/internal) */
 
-      /*
-       * Description of extra fields. These extra fields depends on the class_id.
+      /**
+       * Description of extra fields. These extra fields depend on the class_id.
        */
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
-        uint32_t length; /**< length related property  (e.g. length of ArrayBuffer) */
+        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
       } u;
     } class_prop;
 
-    /*
+    /**
      * Description of function objects.
      */
     struct
@@ -743,7 +763,7 @@ typedef struct
       ecma_value_t bytecode_cp; /**< function byte code */
     } function;
 
-    /*
+    /**
      * Description of array objects.
      */
     struct
@@ -752,14 +772,14 @@ typedef struct
       ecma_property_t length_prop; /**< length property */
     } array;
 
-    /*
+    /**
      * Description of pseudo array objects.
      */
     struct
     {
       uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray*/
-      uint8_t extra_info; /**< extra infomations about the object.
-                            *  e.g. element_width_shift for typed arrays */
+      uint8_t extra_info; /**< extra information about the object.
+                           *   e.g. element_width_shift for typed arrays */
       union
       {
         uint16_t length; /**< for arguments: length of names */
@@ -772,7 +792,7 @@ typedef struct
       } u2;
     } pseudo_array;
 
-    /*
+    /**
      * Description of bound function object.
      */
     struct
@@ -802,10 +822,10 @@ typedef struct
   uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */
   uint16_t refs;                    /**< reference counter for the byte code */
   uint16_t status_flags;            /**< various status flags:
-                                      *    CBC_CODE_FLAGS_FUNCTION flag tells whether
-                                      *    the byte code is function or regular expression.
-                                      *    If function, the other flags must be CBC_CODE_FLAGS...
-                                      *    If regexp, the other flags must be RE_FLAG... */
+                                     *   CBC_CODE_FLAGS_FUNCTION flag tells whether
+                                     *   the byte code is function or regular expression.
+                                     *   If function, the other flags must be CBC_CODE_FLAGS...
+                                     *   If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;
 
 #ifdef JERRY_ENABLE_SNAPSHOT_EXEC
@@ -902,6 +922,7 @@ typedef struct
  * Description of an ecma-number
  */
 typedef float ecma_number_t;
+
 #define DOUBLE_TO_ECMA_NUMBER_T(value) (ecma_number_t) (value)
 
 /**
@@ -937,6 +958,7 @@ typedef float ecma_number_t;
  * Description of an ecma-number
  */
 typedef double ecma_number_t;
+
 #define DOUBLE_TO_ECMA_NUMBER_T(value) value
 
 /**
@@ -994,21 +1016,28 @@ typedef double ecma_number_t;
  */
 #define ECMA_NUMBER_MINUS_ONE ((ecma_number_t) -1)
 
-/**
- * Minimum positive and maximum value of ecma-number
- */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+/**
+ * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
+ *
+ * See also: ECMA_262 v5, 15.7.3.3
+ */
 # define ECMA_NUMBER_MIN_VALUE (FLT_MIN)
+/**
+ * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
+ *
+ * See also: ECMA_262 v5, 15.7.3.2
+ */
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
 #elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
 /**
- * Number.MAX_VALUE
+ * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
  *
  * See also: ECMA_262 v5, 15.7.3.2
  */
 # define ECMA_NUMBER_MAX_VALUE ((ecma_number_t) 1.7976931348623157e+308)
 /**
- * Number.MIN_VALUE
+ * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
  *
  * See also: ECMA_262 v5, 15.7.3.3
  */

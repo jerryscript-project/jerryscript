@@ -122,7 +122,9 @@ typedef enum
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */
 } parser_error_t;
 
-/* Source code line counter type. */
+/**
+ * Source code line counter type.
+ */
 typedef uint32_t parser_line_counter_t;
 
 /**

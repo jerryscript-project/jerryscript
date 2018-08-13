@@ -56,6 +56,7 @@ typedef ecma_value_t (*ecma_builtin_dispatch_call_t)(const ecma_value_t argument
  */
 static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
 {
+/** @cond doxygen_suppress */
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
                         object_type, \
@@ -76,6 +77,7 @@ static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
 #include "ecma-builtins.inc.h"
 #undef BUILTIN
 #undef BUILTIN_ROUTINE
+/** @endcond */
 };
 
 /**
@@ -83,6 +85,7 @@ static const ecma_builtin_dispatch_routine_t ecma_builtin_routines[] =
  */
 static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
 {
+/** @cond doxygen_suppress */
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
                         object_type, \
@@ -93,6 +96,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
 #include "ecma-builtins.inc.h"
 #undef BUILTIN_ROUTINE
 #undef BUILTIN
+/** @endcond */
 };
 
 /**
@@ -100,6 +104,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_call_functions[] =
  */
 static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
 {
+/** @cond doxygen_suppress */
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
                         object_type, \
@@ -110,6 +115,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
 #include "ecma-builtins.inc.h"
 #undef BUILTIN_ROUTINE
 #undef BUILTIN
+/** @endcond */
 };
 
 /**
@@ -117,6 +123,7 @@ static const ecma_builtin_dispatch_call_t ecma_builtin_construct_functions[] =
  */
 static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_references[] =
 {
+/** @cond doxygen_suppress */
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
                         object_type, \
@@ -137,6 +144,7 @@ static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_r
 #include "ecma-builtins.inc.h"
 #undef BUILTIN_ROUTINE
 #undef BUILTIN
+/** @endcond */
 };
 
 /**
@@ -435,6 +443,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
   JERRY_ASSERT (id < ECMA_BUILTIN_ID__COUNT);
   switch (id)
   {
+/** @cond doxygen_suppress */
 #define BUILTIN(builtin_id, \
                 object_type, \
                 object_prototype_builtin_id, \
@@ -452,6 +461,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t id) /**< built-in id */
 #include "ecma-builtins.inc.h"
 #undef BUILTIN
 #undef BUILTIN_ROUTINE
+/** @endcond */
     default:
     {
       JERRY_UNREACHABLE (); /* The built-in is not implemented. */

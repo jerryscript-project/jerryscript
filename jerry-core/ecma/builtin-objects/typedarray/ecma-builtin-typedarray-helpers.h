@@ -22,7 +22,7 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup ecmabuiltinhelpers ECMA TypedArray helper operations
+ * \addtogroup ecmabuiltinhelpers ECMA builtin helper operations
  * @{
  */
 

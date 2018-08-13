@@ -23,12 +23,14 @@
  */
 typedef enum
 {
+/** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
 #define LIT_MAGIC_STRING_DEF(id, ascii_zt_string) \
      id,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+/** @endcond */
   LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**< number of non-internal magic strings */
   LIT_INTERNAL_MAGIC_STRING_PROMISE = LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**<  [[Promise]] of promise
                                                                              *    reject or resolve functions */

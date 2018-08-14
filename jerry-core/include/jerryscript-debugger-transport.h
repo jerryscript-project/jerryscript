@@ -16,7 +16,9 @@
 #ifndef JERRYSCRIPT_DEBUGGER_TRANSPORT_H
 #define JERRYSCRIPT_DEBUGGER_TRANSPORT_H
 
-#include "jerryscript-core.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"

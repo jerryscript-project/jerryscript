@@ -14,7 +14,7 @@
  */
 
 #include "jerryscript-ext/handler.h"
-#include "debugger.h"
+#include "jerryscript-debugger.h"
 
 /**
  * Provide a 'print' implementation for scripts.
@@ -72,7 +72,7 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
                                                                  256)) != 0)
       {
 #ifdef JERRY_DEBUGGER
-        jerry_debugger_send_output (substr_buf, substr_size, JERRY_DEBUGGER_OUTPUT_OK);
+        jerry_debugger_send_output (substr_buf, substr_size);
 #endif /* JERRY_DEBUGGER */
         for (jerry_size_t chr_index = 0; chr_index < substr_size; chr_index++)
         {

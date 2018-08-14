@@ -212,6 +212,10 @@ typedef enum
 
 /**
  * Subtypes of output_result.
+ *
+ * Note:
+ *      This enum has to be kept in sync with jerry_log_level_t with an offset
+ *      of +2.
  */
 typedef enum
 {

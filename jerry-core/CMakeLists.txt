@@ -96,7 +96,8 @@ message(STATUS "FEATURE_VM_EXEC_STOP        " ${FEATURE_VM_EXEC_STOP})
 message(STATUS "MEM_HEAP_SIZE_KB            " ${MEM_HEAP_SIZE_KB})
 
 # Include directories
-set(INCLUDE_CORE
+set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_CORE_PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/api"
     "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
@@ -104,7 +105,6 @@ set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/jcontext"
     "${CMAKE_CURRENT_SOURCE_DIR}/jmem"
     "${CMAKE_CURRENT_SOURCE_DIR}/jrt"
@@ -112,6 +112,9 @@ set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}/parser/js"
     "${CMAKE_CURRENT_SOURCE_DIR}/parser/regexp"
     "${CMAKE_CURRENT_SOURCE_DIR}/vm")
+
+set(INCLUDE_CORE_PUBLIC ${INCLUDE_CORE_PUBLIC} PARENT_SCOPE) # for jerry-port
+set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} PARENT_SCOPE) # for tests/unit-core
 
 # Sources
 # Jerry core
@@ -270,7 +273,7 @@ endif()
 # Valgrind
 if(FEATURE_VALGRIND)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND)
-  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+  set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
 endif()
 
 # Enable VM execution stopping
@@ -285,7 +288,8 @@ set(DEFINES_JERRY ${DEFINES_JERRY} CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZ
 add_library(${JERRY_CORE_NAME} ${SOURCE_CORE_FILES})
 
 target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
-target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
+target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE_PUBLIC})
+target_include_directories(${JERRY_CORE_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
 
 if(JERRY_LIBM)
   target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
@@ -301,4 +305,4 @@ foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
 endforeach()
 
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+install(DIRECTORY ${INCLUDE_CORE_PUBLIC}/ DESTINATION include)

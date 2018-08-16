@@ -149,9 +149,12 @@ matrix:
     - env: JOBNAME="RIOT/STM32F4 Build Test"
       install: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
       script: make -f ./targets/riot-stm32f4/Makefile.travis script
+      compiler: clang-3.9
       addons:
         apt:
-          packages: [gcc-arm-none-eabi, libnewlib-arm-none-eabi]
+          sources:
+            - sourceline: ppa:team-gcc-arm-embedded/ppa
+          packages: [clang-3.9, gcc-arm-embedded, gcc-multilib]
 
     - env: JOBNAME="Tizen RT/Artik053 Build Test"
       addons:

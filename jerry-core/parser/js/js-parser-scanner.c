@@ -463,7 +463,8 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
     {
       lexer_next_token (context_p);
       if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
-          && context_p->token.type != LEXER_SEMICOLON)
+          && context_p->token.type != LEXER_SEMICOLON
+          && context_p->token.type != LEXER_RIGHT_BRACE)
       {
         *mode = SCAN_MODE_PRIMARY_EXPRESSION;
       }

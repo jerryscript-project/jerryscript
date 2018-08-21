@@ -735,12 +735,12 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
     case ECMA_BUILTIN_PROPERTY_STRING:
     {
-      value = ecma_make_magic_string_value (curr_property_p->value);
+      value = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->value);
       break;
     }
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
-      value = ecma_make_object_value (ecma_builtin_get (curr_property_p->value));
+      value = ecma_make_object_value (ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value));
       break;
     }
     case ECMA_BUILTIN_PROPERTY_ROUTINE:
@@ -878,15 +878,15 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
         index = 0;
       }
 
-      ecma_string_t *name_p = ecma_get_magic_string (curr_property_p->magic_string_id);
+      ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 
       uint32_t bit_for_index = (uint32_t) 1u << index;
 
       if (!(*bitset_p & bit_for_index) || ecma_op_object_has_own_property (object_p, name_p))
       {
-        ecma_append_to_values_collection (for_non_enumerable_p,
-                                          ecma_make_magic_string_value (curr_property_p->magic_string_id),
-                                          0);
+        ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+
+        ecma_append_to_values_collection (for_non_enumerable_p, name, 0);
       }
 
       ecma_deref_ecma_string (name_p);

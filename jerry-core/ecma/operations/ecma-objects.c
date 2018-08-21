@@ -1775,7 +1775,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_CLASS:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      return ext_object_p->u.class_prop.class_id;
+      return (lit_magic_string_id_t) ext_object_p->u.class_prop.class_id;
     }
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
@@ -1787,7 +1787,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
         {
-          return ext_obj_p->u.pseudo_array.u1.class_id;
+          return (lit_magic_string_id_t) ext_obj_p->u.pseudo_array.u1.class_id;
         }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:

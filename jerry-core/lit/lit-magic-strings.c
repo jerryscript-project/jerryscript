@@ -204,7 +204,7 @@ lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
   while (first < last)
   {
     lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
-    int compare = memcmp (lit_get_magic_string_utf8 (middle), string_p, string_size);
+    int compare = memcmp (lit_get_magic_string_utf8 ((lit_magic_string_id_t) middle), string_p, string_size);
 
     if (compare == 0)
     {
@@ -249,7 +249,7 @@ lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first utf-
   while (first < last)
   {
     lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
-    const lit_utf8_byte_t *middle_string_p = lit_get_magic_string_utf8 (middle);
+    const lit_utf8_byte_t *middle_string_p = lit_get_magic_string_utf8 ((lit_magic_string_id_t) middle);
 
     int compare = memcmp (middle_string_p, string1_p, string1_size);
 

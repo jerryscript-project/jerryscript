@@ -54,10 +54,6 @@ macro(jerry_create_executable JERRY_NAME)
   install(TARGETS ${JERRY_NAME} DESTINATION bin)
 endmacro()
 
-if(JERRY_LIBC AND FEATURE_EXTERNAL_CONTEXT)
-  MESSAGE(FATAL_ERROR "This configuration is not supported for jerry-main. Please build against your system libc to enable the external context.")
-endif()
-
 # Jerry standalones
 if(JERRY_CMDLINE)
   jerry_create_executable("jerry" "main-unix.c" "cli.c")

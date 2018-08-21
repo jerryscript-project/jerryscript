@@ -75,7 +75,7 @@ JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-es5.1-debug-cpointer_32bit',
             OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--cpointer-32bit=on', '--mem-heap=1024']),
     Options('jerry_tests-es5.1-debug-external_context',
-            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--jerry-libc=off', '--external-context=on']),
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--external-context=on']),
     Options('jerry_tests-es2015_subset-debug',
             OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
 ]
@@ -111,7 +111,7 @@ TEST262_TEST_SUITE_OPTIONS = [
 # Test options for jerry-debugger
 DEBUGGER_TEST_OPTIONS = [
     Options('jerry_debugger_tests',
-            ['--debug', '--jerry-debugger=on', '--jerry-libc=off'])
+            ['--debug', '--jerry-debugger=on'])
 ]
 
 # Test options for buildoption-test
@@ -132,14 +132,12 @@ JERRY_BUILDOPTIONS = [
             ['--show-opcodes=on']),
     Options('buildoption_test-show_regexp_opcodes',
             ['--show-regexp-opcodes=on']),
-    Options('buildoption_test-compiler_default_libc',
-            ['--jerry-libc=off']),
     Options('buildoption_test-cpointer_32bit',
-            ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
+            ['--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
     Options('buildoption_test-external_context',
-            ['--jerry-libc=off', '--external-context=on']),
+            ['--external-context=on']),
     Options('buildoption_test-shared_libs',
-            ['--jerry-libc=off', '--shared-libs=on']),
+            ['--shared-libs=on']),
     Options('buildoption_test-cmdline_test',
             ['--jerry-cmdline-test=on']),
     Options('buildoption_test-cmdline_snapshot',

@@ -41,7 +41,6 @@ jerryscript/tools/build.py \
     --clean \
     --lto=OFF \
     --jerry-cmdline=OFF \
-    --jerry-libc=OFF \
     --jerry-libm=ON \
     --all-in-one=ON \
     --mem-heap=70 \

@@ -210,10 +210,6 @@ endif()
 
 # Enable debugger
 if(FEATURE_DEBUGGER)
-  if(JERRY_LIBC)
-    message(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
-  endif()
-
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
 endif()
 
@@ -239,10 +235,6 @@ if(EXISTS ${FEATURE_PROFILE})
   set(DEFINES_JERRY ${DEFINES_JERRY} ${PROFILE_SETTINGS})
 else()
   message(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
-endif()
-
-if(JERRY_LIBC AND FEATURE_SYSTEM_ALLOCATOR)
-  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the system allocator.")
 endif()
 
 # RegExp strict mode
@@ -293,10 +285,6 @@ target_include_directories(${JERRY_CORE_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
 
 if(JERRY_LIBM)
   target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
-endif()
-
-if(JERRY_LIBC)
-  target_link_libraries(${JERRY_CORE_NAME} jerry-libc)
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)

@@ -23,7 +23,6 @@ then
     ./tools/build.py --error-messages=on \
                      --jerry-cmdline-snapshot=on \
                      --jerry-debugger=on \
-                     --jerry-libc=off \
                      --line-info=on \
                      --mem-stats=on \
                      --profile=es2015-subset \
@@ -38,7 +37,6 @@ else
   ./tools/build.py --error-messages=on \
                    --jerry-cmdline-snapshot=on \
                    --jerry-debugger=on \
-                   --jerry-libc=off \
                    --line-info=on \
                    --mem-stats=on \
                    --profile=es2015-subset \

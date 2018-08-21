@@ -810,6 +810,12 @@ main (int argc,
 
       if (len > 0)
       {
+        if (!jerry_is_valid_utf8_string (buffer, (jerry_size_t) len))
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Input must be a valid UTF-8 string.\n");
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+
         /* Evaluate the line */
         jerry_value_t ret_val_eval = jerry_eval (buffer, len, JERRY_PARSE_NO_OPTS);
 

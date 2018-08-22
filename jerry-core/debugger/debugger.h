@@ -367,7 +367,7 @@ typedef struct
 typedef struct
 {
   uint8_t type; /**< type of the message */
-  uint8_t frame_count[sizeof (uint32_t)]; /**< total number of frames*/
+  uint8_t frame_count[sizeof (uint32_t)]; /**< total number of frames */
 } jerry_debugger_send_backtrace_total_t;
 
 /**

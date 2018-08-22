@@ -8,10 +8,10 @@ Breakpoint 2 at tests/debugger/do_delete_all.js:18
 Breakpoint 3 at tests/debugger/do_delete_all.js:21 (in delete_test() at line:20, col:1)
 (jerry-debugger) b do_delete_all:350
 No breakpoint found, do you want to add a pending breakpoint? (y or [n])
-Pending breakpoint at do_delete_all:350
+Pending breakpoint 4 at do_delete_all:350
 (jerry-debugger) b do_delete_all:37
 No breakpoint found, do you want to add a pending breakpoint? (y or [n])
-Pending breakpoint at do_delete_all:37
+Pending breakpoint 5 at do_delete_all:37
 (jerry-debugger) list
 === Active breakpoints  ===
  1: tests/debugger/do_delete_all.js:17

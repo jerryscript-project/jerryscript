@@ -2,10 +2,10 @@ Connecting to: localhost:5001
 Stopped at tests/debugger/do_pending_breakpoints.js:15
 (jerry-debugger) break :1
 No breakpoint found, do you want to add a pending breakpoint? (y or [n])
-Pending breakpoint at :1
+Pending breakpoint 1 at :1
 (jerry-debugger) break f
 No breakpoint found, do you want to add a pending breakpoint? (y or [n])
-Pending breakpoint at f()
+Pending breakpoint 2 at f()
 (jerry-debugger) list
 === Pending breakpoints ===
  1: :1 (pending)

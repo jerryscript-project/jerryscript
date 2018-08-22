@@ -18,6 +18,7 @@ out: break test
 out: var cat
 Stopped at breakpoint:1 tests/debugger/do_break.js:51
 (jerry-debugger) delete 1
+Breakpoint 1 deleted
 (jerry-debugger) list
 === Active breakpoints  ===
  2: tests/debugger/do_break.js:36 (in test() at line:20, col:1)

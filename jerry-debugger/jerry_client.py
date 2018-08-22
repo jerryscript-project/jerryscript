@@ -24,6 +24,9 @@ import logging
 import time
 import jerry_client_ws
 
+def write(string):
+    print(string, end='')
+
 class DebuggerPrompt(Cmd):
     # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(self, debugger):
@@ -31,8 +34,6 @@ class DebuggerPrompt(Cmd):
         self.debugger = debugger
         self.stop = False
         self.quit = False
-        self.backtrace = True
-        self.debugger.non_interactive = False
 
     def precmd(self, line):
         self.stop = False
@@ -60,54 +61,49 @@ class DebuggerPrompt(Cmd):
 
     def do_break(self, args):
         """ Insert breakpoints on the given lines or functions """
-        result = ""
-        result = self.debugger.set_break(args)
-        if self.debugger.not_empty(result):
-            print(result.get_data())
+        write(self.debugger.set_break(args))
     do_b = do_break
 
     def do_list(self, _):
         """ Lists the available breakpoints """
-        result = self.debugger.show_breakpoint_list()
-        print(result.get_data())
+        write(self.debugger.breakpoint_list())
 
     def do_delete(self, args):
         """ Delete the given breakpoint, use 'delete all|active|pending' to clear all the given breakpoints """
-        result = self.debugger.delete(args)
-        if self.debugger.not_empty(result):
-            print(result.get_data())
+        write(self.debugger.delete(args))
 
     def do_next(self, args):
         """ Next breakpoint in the same context """
         self.stop = True
-        if self.debugger.check_empty_data(args):
+        if not args:
             args = 0
             self.debugger.next()
-        else:
-            try:
-                args = int(args)
-                if args <= 0:
-                    raise ValueError(args)
-                else:
-                    while int(args) != 0:
-                        self.debugger.next()
-                        time.sleep(0.5)
-                        result = self.debugger.mainloop().get_data()
-                        if result.endswith('\n'):
-                            result = result.rstrip()
-                        if jerry_client_ws.JERRY_DEBUGGER_DATA_END in result:
-                            result = result.replace(jerry_client_ws.JERRY_DEBUGGER_DATA_END, '')
-                        if result:
-                            print(result)
-                            self.debugger.smessage = ''
-                        if self.debugger.display > 0:
-                            print(self.debugger.print_source(self.debugger.display,
-                                                             self.debugger.src_offset).get_data())
-                        args = int(args) - 1
-                    self.cmdloop()
-            except ValueError as val_errno:
-                print("Error: expected a positive integer: %s" % val_errno)
-                self.cmdloop()
+            return
+
+        try:
+            args = int(args)
+            if args <= 0:
+                raise ValueError(args)
+
+            while args > 0:
+                self.debugger.next()
+                time.sleep(0.1)
+
+                while True:
+                    result = self.debugger.process_messages()
+                    res_type = result.get_type()
+
+                    if res_type == result.END:
+                        self.quit = True
+                        return
+                    elif res_type == result.TEXT:
+                        write(result.get_text())
+                    elif res_type == result.PROMPT:
+                        break
+
+                args -= 1
+        except ValueError as val_errno:
+            print("Error: expected a positive integer: %s" % val_errno)
     do_n = do_next
 
     def do_step(self, _):
@@ -118,14 +114,8 @@ class DebuggerPrompt(Cmd):
 
     def do_backtrace(self, args):
         """ Get backtrace data from debugger """
-        result = self.debugger.backtrace(args)
-        if self.debugger.not_empty(result):
-            print(result.get_data())
-            self.stop = True
-            self.cmdloop()
-        else:
-            self.stop = True
-            self.backtrace = True
+        write(self.debugger.backtrace(args))
+        self.stop = True
     do_bt = do_backtrace
 
     def do_src(self, args):
@@ -133,7 +123,7 @@ class DebuggerPrompt(Cmd):
         if args:
             line_num = src_check_args(args)
             if line_num >= 0:
-                print(self.debugger.print_source(line_num, 0).get_data())
+                write(self.debugger.print_source(line_num, 0))
     do_source = do_src
 
     def do_scroll(self, _):
@@ -153,7 +143,7 @@ class DebuggerPrompt(Cmd):
         """ Continue execution """
         self.debugger.get_continue()
         self.stop = True
-        if self.debugger.check_empty_data(self.debugger.non_interactive):
+        if not self.debugger.non_interactive:
             print("Press enter to stop JavaScript execution.")
     do_c = do_continue
 
@@ -200,8 +190,7 @@ class DebuggerPrompt(Cmd):
 
     def do_exception(self, args):
         """ Config the exception handler module """
-        result = self.debugger.exception(args)
-        print(result.get_data())
+        write(self.debugger.exception(args))
 
 def _scroll_direction(debugger, direction):
     """ Helper function for do_scroll """
@@ -229,66 +218,41 @@ def main():
     args = jerry_client_ws.arguments_parse()
 
     debugger = jerry_client_ws.JerryDebugger(args.address)
+    debugger.non_interactive = args.non_interactive
 
     logging.debug("Connected to JerryScript on %d port", debugger.port)
 
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "
-    prompt.debugger.non_interactive = args.non_interactive
 
     if args.color:
         debugger.set_colors()
 
     if args.display:
-        prompt.debugger.display = args.display
+        debugger.display = args.display
         prompt.do_display(args.display)
     else:
         prompt.stop = False
-        if prompt.debugger.check_empty_data(args.client_source):
-            prompt.debugger.mainloop()
-            result = prompt.debugger.smessage
-            print(result)
-            prompt.debugger.smessage = ''
-            prompt.cmdloop()
 
-    if  prompt.debugger.not_empty(args.exception):
+    if args.exception is not None:
         prompt.do_exception(str(args.exception))
 
     if args.client_source:
-        prompt.debugger.store_client_sources(args.client_source)
+        debugger.store_client_sources(args.client_source)
 
     while True:
         if prompt.quit:
             break
 
-        result = prompt.debugger.mainloop().get_data()
+        result = debugger.process_messages()
+        res_type = result.get_type()
 
-        if prompt.debugger.check_empty_data(result) and prompt.backtrace is False:
+        if res_type == result.END:
             break
-
-        if prompt.debugger.wait_data(result):
-            continue
-
-        elif jerry_client_ws.JERRY_DEBUGGER_DATA_END in result:
-            result = result.replace(jerry_client_ws.JERRY_DEBUGGER_DATA_END, '')
-            if result.endswith('\n'):
-                result = result.rstrip()
-            if result:
-                print(result)
-                prompt.debugger.smessage = ''
-            if prompt.debugger.display > 0:
-                print(prompt.debugger.print_source(prompt.debugger.display, prompt.debugger.src_offset).get_data())
-            prompt.backtrace = False
-            break
-        else:
-            if result.endswith('\n'):
-                result = result.rstrip()
-            if result:
-                print(result)
-                prompt.debugger.smessage = ''
-            if prompt.debugger.display > 0:
-                print(prompt.debugger.print_source(prompt.debugger.display, prompt.debugger.src_offset).get_data())
-        prompt.cmdloop()
+        elif res_type == result.PROMPT:
+            prompt.cmdloop()
+        elif res_type == result.TEXT:
+            write(result.get_text())
         continue
 
 if __name__ == "__main__":

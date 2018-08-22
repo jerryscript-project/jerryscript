@@ -304,7 +304,7 @@ typedef struct
 } jerry_object_native_info_t;
 
 /**
- * A forward declaration of the JerryScript instance structure.
+ * An opaque declaration of the JerryScript instance structure.
  */
 typedef struct jerry_instance_t jerry_instance_t;
 

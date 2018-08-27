@@ -1992,7 +1992,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_KEYW_DEBUGGER:
       {
-        parser_emit_cbc_ext (context_p, CBC_EXT_DEBUGGER);
+#ifdef JERRY_DEBUGGER
+        /* This breakpoint location is not reported to the
+         * debugger, so it is impossible to disable it. */
+        if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+        {
+          parser_emit_cbc (context_p, CBC_BREAKPOINT_ENABLED);
+        }
+#endif /* JERRY_DEBUGGER */
         lexer_next_token (context_p);
         break;
       }

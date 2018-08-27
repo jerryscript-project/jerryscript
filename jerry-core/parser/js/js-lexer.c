@@ -2323,6 +2323,22 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       lexer_parse_string (context_p);
       create_literal_object = true;
     }
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+    else if (context_p->source_p[0] == LIT_CHAR_LEFT_SQUARE)
+    {
+      context_p->source_p += 1;
+      context_p->column++;
+
+      lexer_next_token (context_p);
+      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+      if (context_p->token.type != LEXER_RIGHT_SQUARE)
+      {
+        parser_raise_error (context_p, PARSER_ERR_RIGHT_SQUARE_EXPECTED);
+      }
+      return;
+    }
+#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
     else if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS) && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
     {
       context_p->token.type = LEXER_RIGHT_BRACE;
@@ -2349,17 +2365,17 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       }
     }
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-    if (is_class_method
-        && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
-    {
-      context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
-      return;
-    }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
     if (create_literal_object)
     {
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      if (is_class_method
+          && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
+      {
+        context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
+        return;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
       lexer_construct_literal_object (context_p,
                                       &context_p->token.lit_location,
                                       LEXER_STRING_LITERAL);

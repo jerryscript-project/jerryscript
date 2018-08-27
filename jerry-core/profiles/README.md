@@ -87,6 +87,8 @@ In JerryScript all of the features are enabled by default, so an empty profile f
   Disable the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
 * `CONFIG_DISABLE_ES2015_CLASS`:
   Disable the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
+* `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`:
+  Disable the [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
 * `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`:
   Disable the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`:

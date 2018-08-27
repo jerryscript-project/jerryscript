@@ -85,7 +85,7 @@ ecma_value_t
 opfunc_typeof (ecma_value_t left_value);
 
 void
-opfunc_set_accessor (bool is_getter, ecma_value_t object, ecma_value_t accessor_name, ecma_value_t accessor);
+opfunc_set_accessor (bool is_getter, ecma_value_t object, ecma_string_t *accessor_name_p, ecma_value_t accessor);
 
 ecma_value_t
 vm_op_delete_prop (ecma_value_t object, ecma_value_t property, bool is_strict);

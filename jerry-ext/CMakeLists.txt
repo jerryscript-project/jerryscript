@@ -16,6 +16,12 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_EXT_NAME jerry-ext)
 project (${JERRY_EXT_NAME} C)
 
+# Optional features
+set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+
+# Status messages
+message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
+
 # Include directories
 set(INCLUDE_EXT_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(INCLUDE_EXT_PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/common")

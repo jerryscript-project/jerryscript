@@ -25,7 +25,6 @@ import sys
 
 # Expected debugger protocol version.
 JERRY_DEBUGGER_VERSION = 5
-JERRY_DEBUGGER_DATA_END = '\3'
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -400,12 +399,12 @@ class JerryDebugger(object):
                 if int(args.split(':', 1)[1]) <= 0:
                     return "Error: Positive breakpoint index expected"
 
-                return _set_breakpoint(self, args, False)
+                return self._set_breakpoint(args, False)
 
             except ValueError as val_errno:
                 return "Error: Positive breakpoint index expected: %s" % (val_errno)
 
-        return _set_breakpoint(self, args, False)
+        return self._set_breakpoint(args, False)
 
     def delete(self, args):
         if not args:
@@ -749,7 +748,7 @@ class JerryDebugger(object):
                                JERRY_DEBUGGER_SOURCE_CODE_NAME_END,
                                JERRY_DEBUGGER_FUNCTION_NAME,
                                JERRY_DEBUGGER_FUNCTION_NAME_END]:
-                result = _parse_source(self, data)
+                result = self._parse_source(data)
                 if result:
                     return DebuggerAction(DebuggerAction.TEXT, result)
 
@@ -757,12 +756,12 @@ class JerryDebugger(object):
                 self.send_command(JERRY_DEBUGGER_PARSER_RESUME)
 
             elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
-                _release_function(self, data)
+                self._release_function(data)
 
             elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_HIT, JERRY_DEBUGGER_EXCEPTION_HIT]:
                 breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format, data[3:])
 
-                breakpoint = _get_breakpoint(self, breakpoint_data)
+                breakpoint = self._get_breakpoint(breakpoint_data)
                 self.last_breakpoint_hit = breakpoint[0]
 
                 if buffer_type == JERRY_DEBUGGER_EXCEPTION_HIT:
@@ -806,7 +805,7 @@ class JerryDebugger(object):
                     breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format,
                                                     data[buffer_pos: buffer_pos + self.cp_size + 4])
 
-                    breakpoint = _get_breakpoint(self, breakpoint_data)
+                    breakpoint = self._get_breakpoint(breakpoint_data)
 
                     result += "Frame %d: %s\n" % (frame_index, breakpoint[0])
 
@@ -926,253 +925,254 @@ class JerryDebugger(object):
         return msg
 
 
-# pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def _parse_source(debugger, data):
-    source_code = ""
-    source_code_name = ""
-    function_name = ""
-    stack = [{"line": 1,
-              "column": 1,
-              "name": "",
-              "lines": [],
-              "offsets": []}]
-    new_function_list = {}
+    # pylint: disable=too-many-branches,too-many-locals,too-many-statements
+    def _parse_source(self, data):
+        source_code = ""
+        source_code_name = ""
+        function_name = ""
+        stack = [{"line": 1,
+                  "column": 1,
+                  "name": "",
+                  "lines": [],
+                  "offsets": []}]
+        new_function_list = {}
 
-    while True:
-        if data is None:
-            return "Error: connection lost during source code receiving"
+        while True:
+            if data is None:
+                return "Error: connection lost during source code receiving"
 
-        buffer_type = ord(data[2])
-        buffer_size = ord(data[1]) - 1
+            buffer_type = ord(data[2])
+            buffer_size = ord(data[1]) - 1
 
-        logging.debug("Parser buffer type: %d, message size: %d", buffer_type, buffer_size)
+            logging.debug("Parser buffer type: %d, message size: %d", buffer_type, buffer_size)
 
-        if buffer_type == JERRY_DEBUGGER_PARSE_ERROR:
-            logging.error("Syntax error found")
-            return ""
+            if buffer_type == JERRY_DEBUGGER_PARSE_ERROR:
+                logging.error("Syntax error found")
+                return ""
 
-        elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE, JERRY_DEBUGGER_SOURCE_CODE_END]:
-            source_code += data[3:]
+            elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE, JERRY_DEBUGGER_SOURCE_CODE_END]:
+                source_code += data[3:]
 
-        elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE_NAME, JERRY_DEBUGGER_SOURCE_CODE_NAME_END]:
-            source_code_name += data[3:]
+            elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE_NAME, JERRY_DEBUGGER_SOURCE_CODE_NAME_END]:
+                source_code_name += data[3:]
 
-        elif buffer_type in [JERRY_DEBUGGER_FUNCTION_NAME, JERRY_DEBUGGER_FUNCTION_NAME_END]:
-            function_name += data[3:]
+            elif buffer_type in [JERRY_DEBUGGER_FUNCTION_NAME, JERRY_DEBUGGER_FUNCTION_NAME_END]:
+                function_name += data[3:]
 
-        elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
-            logging.debug("Source name: %s, function name: %s", source_code_name, function_name)
+            elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
+                logging.debug("Source name: %s, function name: %s", source_code_name, function_name)
 
-            position = struct.unpack(debugger.byte_order + debugger.idx_format + debugger.idx_format,
-                                     data[3: 3 + 4 + 4])
+                position = struct.unpack(self.byte_order + self.idx_format + self.idx_format,
+                                         data[3: 3 + 4 + 4])
 
-            stack.append({"source": source_code,
-                          "source_name": source_code_name,
-                          "line": position[0],
-                          "column": position[1],
-                          "name": function_name,
-                          "lines": [],
-                          "offsets": []})
-            function_name = ""
+                stack.append({"source": source_code,
+                              "source_name": source_code_name,
+                              "line": position[0],
+                              "column": position[1],
+                              "name": function_name,
+                              "lines": [],
+                              "offsets": []})
+                function_name = ""
 
-        elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_LIST, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST]:
-            name = "lines"
-            if buffer_type == JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST:
-                name = "offsets"
+            elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_LIST, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST]:
+                name = "lines"
+                if buffer_type == JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST:
+                    name = "offsets"
 
-            logging.debug("Breakpoint %s received", name)
+                logging.debug("Breakpoint %s received", name)
 
-            buffer_pos = 3
-            while buffer_size > 0:
-                line = struct.unpack(debugger.byte_order + debugger.idx_format,
-                                     data[buffer_pos: buffer_pos + 4])
-                stack[-1][name].append(line[0])
-                buffer_pos += 4
-                buffer_size -= 4
+                buffer_pos = 3
+                while buffer_size > 0:
+                    line = struct.unpack(self.byte_order + self.idx_format,
+                                         data[buffer_pos: buffer_pos + 4])
+                    stack[-1][name].append(line[0])
+                    buffer_pos += 4
+                    buffer_size -= 4
 
-        elif buffer_type == JERRY_DEBUGGER_BYTE_CODE_CP:
-            byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
-                                         data[3: 3 + debugger.cp_size])[0]
+            elif buffer_type == JERRY_DEBUGGER_BYTE_CODE_CP:
+                byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
+                                             data[3: 3 + self.cp_size])[0]
 
-            logging.debug("Byte code cptr received: {0x%x}", byte_code_cp)
+                logging.debug("Byte code cptr received: {0x%x}", byte_code_cp)
 
-            func_desc = stack.pop()
+                func_desc = stack.pop()
 
-            # We know the last item in the list is the general byte code.
-            if not stack:
-                func_desc["source"] = source_code
-                func_desc["source_name"] = source_code_name
+                # We know the last item in the list is the general byte code.
+                if not stack:
+                    func_desc["source"] = source_code
+                    func_desc["source_name"] = source_code_name
 
-            function = JerryFunction(stack,
-                                     byte_code_cp,
-                                     func_desc["source"],
-                                     func_desc["source_name"],
-                                     func_desc["line"],
-                                     func_desc["column"],
-                                     func_desc["name"],
-                                     func_desc["lines"],
-                                     func_desc["offsets"])
+                function = JerryFunction(stack,
+                                         byte_code_cp,
+                                         func_desc["source"],
+                                         func_desc["source_name"],
+                                         func_desc["line"],
+                                         func_desc["column"],
+                                         func_desc["name"],
+                                         func_desc["lines"],
+                                         func_desc["offsets"])
 
-            new_function_list[byte_code_cp] = function
+                new_function_list[byte_code_cp] = function
 
-            if not stack:
-                logging.debug("Parse completed.")
-                break
-
-        elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
-            # Redefined functions are dropped during parsing.
-            byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
-                                         data[3: 3 + debugger.cp_size])[0]
-
-            if byte_code_cp in new_function_list:
-                del new_function_list[byte_code_cp]
-                debugger.send_bytecode_cp(byte_code_cp)
-            else:
-                _release_function(debugger, data)
-
-        else:
-            logging.error("Parser error!")
-            raise Exception("Unexpected message")
-
-        data = debugger.get_message(True)
-
-    # Copy the ready list to the global storage.
-    debugger.function_list.update(new_function_list)
-
-    for function in new_function_list.values():
-        for line, breakpoint in function.lines.items():
-            debugger.line_list.insert(line, breakpoint)
-
-    # Try to set the pending breakpoints
-    if debugger.pending_breakpoint_list:
-        result = ""
-        logging.debug("Pending breakpoints list: %s", debugger.pending_breakpoint_list)
-        bp_list = debugger.pending_breakpoint_list
-
-        for breakpoint_index, breakpoint in bp_list.items():
-            source_lines = 0
-            for src in new_function_list.values():
-                if src.source_name == breakpoint.source_name:
-                    source_lines = len(src.source)
+                if not stack:
+                    logging.debug("Parse completed.")
                     break
 
-            if breakpoint.line:
-                if breakpoint.line <= source_lines:
-                    command = breakpoint.source_name + ":" + str(breakpoint.line)
-                    set_result = _set_breakpoint(debugger, command, True)
+            elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
+                # Redefined functions are dropped during parsing.
+                byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
+                                             data[3: 3 + self.cp_size])[0]
+
+                if byte_code_cp in new_function_list:
+                    del new_function_list[byte_code_cp]
+                    self.send_bytecode_cp(byte_code_cp)
+                else:
+                    self._release_function(data)
+
+            else:
+                logging.error("Parser error!")
+                raise Exception("Unexpected message")
+
+            data = self.get_message(True)
+
+        # Copy the ready list to the global storage.
+        self.function_list.update(new_function_list)
+
+        for function in new_function_list.values():
+            for line, breakpoint in function.lines.items():
+                self.line_list.insert(line, breakpoint)
+
+        # Try to set the pending breakpoints
+        if self.pending_breakpoint_list:
+            result = ""
+            logging.debug("Pending breakpoints list: %s", self.pending_breakpoint_list)
+            bp_list = self.pending_breakpoint_list
+
+            for breakpoint_index, breakpoint in bp_list.items():
+                source_lines = 0
+                for src in new_function_list.values():
+                    if src.source_name == breakpoint.source_name:
+                        source_lines = len(src.source)
+                        break
+
+                if breakpoint.line:
+                    if breakpoint.line <= source_lines:
+                        command = breakpoint.source_name + ":" + str(breakpoint.line)
+                        set_result = self._set_breakpoint(command, True)
+
+                        if set_result:
+                            result += set_result
+                            del bp_list[breakpoint_index]
+                elif breakpoint.function:
+                    command = breakpoint.function
+                    set_result = self._set_breakpoint(command, True)
 
                     if set_result:
                         result += set_result
                         del bp_list[breakpoint_index]
-            elif breakpoint.function:
-                command = breakpoint.function
-                set_result = _set_breakpoint(debugger, command, True)
 
-                if set_result:
-                    result += set_result
-                    del bp_list[breakpoint_index]
+            if not bp_list:
+                self.send_parser_config(0)
+            return result
 
-        if not bp_list:
-            debugger.send_parser_config(0)
+        logging.debug("No pending breakpoints")
+        return ""
+
+
+    def _release_function(self, data):
+        byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
+                                     data[3: 3 + self.cp_size])[0]
+
+        function = self.function_list[byte_code_cp]
+
+        for line, breakpoint in function.lines.items():
+            self.line_list.delete(line, breakpoint)
+            if breakpoint.active_index >= 0:
+                del self.active_breakpoint_list[breakpoint.active_index]
+
+        del self.function_list[byte_code_cp]
+        self.send_bytecode_cp(byte_code_cp)
+        logging.debug("Function {0x%x} byte-code released", byte_code_cp)
+
+
+    def _enable_breakpoint(self, breakpoint):
+        if isinstance(breakpoint, JerryPendingBreakpoint):
+            if self.breakpoint_pending_exists(breakpoint):
+                return "%sPending breakpoint%s already exists\n" % (self.yellow, self.nocolor)
+
+            self.next_breakpoint_index += 1
+            breakpoint.index = self.next_breakpoint_index
+            self.pending_breakpoint_list[self.next_breakpoint_index] = breakpoint
+            return ("%sPending breakpoint %d%s at %s\n" % (self.yellow,
+                                                           breakpoint.index,
+                                                           self.nocolor,
+                                                           breakpoint))
+
+        if breakpoint.active_index < 0:
+            self.next_breakpoint_index += 1
+            self.active_breakpoint_list[self.next_breakpoint_index] = breakpoint
+            breakpoint.active_index = self.next_breakpoint_index
+            self.send_breakpoint(breakpoint)
+
+        return "%sBreakpoint %d%s at %s\n" % (self.green,
+                                              breakpoint.active_index,
+                                              self.nocolor,
+                                              breakpoint)
+
+
+    def _set_breakpoint(self, string, pending):
+        line = re.match("(.*):(\\d+)$", string)
+        result = ""
+
+        if line:
+            source_name = line.group(1)
+            new_line = int(line.group(2))
+
+            for breakpoint in self.line_list.get(new_line):
+                func_source = breakpoint.function.source_name
+                if (source_name == func_source or
+                        func_source.endswith("/" + source_name) or
+                        func_source.endswith("\\" + source_name)):
+
+                    result += self._enable_breakpoint(breakpoint)
+
+        else:
+            for function in self.function_list.values():
+                if function.name == string:
+                    result += self._enable_breakpoint(function.lines[function.first_breakpoint_line])
+
+        if not result and not pending:
+            print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \
+                  (self.yellow, self.nocolor))
+
+            ans = sys.stdin.readline()
+            if ans in ['yes\n', 'y\n']:
+                if not self.pending_breakpoint_list:
+                    self.send_parser_config(1)
+
+                if line:
+                    breakpoint = JerryPendingBreakpoint(int(line.group(2)), line.group(1))
+                else:
+                    breakpoint = JerryPendingBreakpoint(function=string)
+                result += self._enable_breakpoint(breakpoint)
+
         return result
 
-    logging.debug("No pending breakpoints")
-    return ""
 
+    def _get_breakpoint(self, breakpoint_data):
+        function = self.function_list[breakpoint_data[0]]
+        offset = breakpoint_data[1]
 
-def _release_function(debugger, data):
-    byte_code_cp = struct.unpack(debugger.byte_order + debugger.cp_format,
-                                 data[3: 3 + debugger.cp_size])[0]
+        if offset in function.offsets:
+            return (function.offsets[offset], True)
 
-    function = debugger.function_list[byte_code_cp]
+        if offset < function.first_breakpoint_offset:
+            return (function.offsets[function.first_breakpoint_offset], False)
 
-    for line, breakpoint in function.lines.items():
-        debugger.line_list.delete(line, breakpoint)
-        if breakpoint.active_index >= 0:
-            del debugger.active_breakpoint_list[breakpoint.active_index]
+        nearest_offset = -1
 
-    del debugger.function_list[byte_code_cp]
-    debugger.send_bytecode_cp(byte_code_cp)
-    logging.debug("Function {0x%x} byte-code released", byte_code_cp)
+        for current_offset in function.offsets:
+            if current_offset <= offset and current_offset > nearest_offset:
+                nearest_offset = current_offset
 
-
-def _enable_breakpoint(debugger, breakpoint):
-    if isinstance(breakpoint, JerryPendingBreakpoint):
-        if debugger.breakpoint_pending_exists(breakpoint):
-            return "%sPending breakpoint%s already exists\n" % (debugger.yellow, debugger.nocolor)
-
-        debugger.next_breakpoint_index += 1
-        breakpoint.index = debugger.next_breakpoint_index
-        debugger.pending_breakpoint_list[debugger.next_breakpoint_index] = breakpoint
-        return ("%sPending breakpoint %d%s at %s\n" % (debugger.yellow,
-                                                       breakpoint.index,
-                                                       debugger.nocolor,
-                                                       breakpoint))
-    if breakpoint.active_index < 0:
-        debugger.next_breakpoint_index += 1
-        debugger.active_breakpoint_list[debugger.next_breakpoint_index] = breakpoint
-        breakpoint.active_index = debugger.next_breakpoint_index
-        debugger.send_breakpoint(breakpoint)
-
-    return "%sBreakpoint %d%s at %s\n" % (debugger.green,
-                                          breakpoint.active_index,
-                                          debugger.nocolor,
-                                          breakpoint)
-
-
-def _set_breakpoint(debugger, string, pending):
-    line = re.match("(.*):(\\d+)$", string)
-    result = ""
-
-    if line:
-        source_name = line.group(1)
-        new_line = int(line.group(2))
-
-        for breakpoint in debugger.line_list.get(new_line):
-            func_source = breakpoint.function.source_name
-            if (source_name == func_source or
-                    func_source.endswith("/" + source_name) or
-                    func_source.endswith("\\" + source_name)):
-
-                result += _enable_breakpoint(debugger, breakpoint)
-
-    else:
-        for function in debugger.function_list.values():
-            if function.name == string:
-                result += _enable_breakpoint(debugger, function.lines[function.first_breakpoint_line])
-
-    if not result and not pending:
-        print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \
-              (debugger.yellow, debugger.nocolor))
-
-        ans = sys.stdin.readline()
-        if ans in ['yes\n', 'y\n']:
-            if not debugger.pending_breakpoint_list:
-                debugger.send_parser_config(1)
-
-            if line:
-                breakpoint = JerryPendingBreakpoint(int(line.group(2)), line.group(1))
-            else:
-                breakpoint = JerryPendingBreakpoint(function=string)
-            result += _enable_breakpoint(debugger, breakpoint)
-
-    return result
-
-
-def _get_breakpoint(debugger, breakpoint_data):
-    function = debugger.function_list[breakpoint_data[0]]
-    offset = breakpoint_data[1]
-
-    if offset in function.offsets:
-        return (function.offsets[offset], True)
-
-    if offset < function.first_breakpoint_offset:
-        return (function.offsets[function.first_breakpoint_offset], False)
-
-    nearest_offset = -1
-
-    for current_offset in function.offsets:
-        if current_offset <= offset and current_offset > nearest_offset:
-            nearest_offset = current_offset
-
-    return (function.offsets[nearest_offset], False)
+        return (function.offsets[nearest_offset], False)

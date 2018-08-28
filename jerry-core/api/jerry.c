@@ -257,8 +257,8 @@ jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
  * Register external magic string array
  */
 void
-jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, /**< character arrays, representing
-                                                                       *   external magic strings' contents */
+jerry_register_magic_strings (const jerry_char_t **ex_str_items_p, /**< character arrays, representing
+                                                                    *   external magic strings' contents */
                               uint32_t count, /**< number of the strings */
                               const jerry_length_t *str_lengths_p) /**< lengths of all strings */
 {

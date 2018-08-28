@@ -414,7 +414,7 @@ lit_char_get_utf8_length (ecma_char_t chr) /**< EcmaScript character */
 bool
 lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
                              lit_utf8_size_t number_of_characters, /**< number of characters to be read */
-                             ecma_char_ptr_t out_code_unit_p) /**< [out] decoded result */
+                             ecma_char_t *out_code_unit_p) /**< [out] decoded result */
 {
   ecma_char_t code_unit = LIT_CHAR_NULL;
 

@@ -61,8 +61,8 @@ void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
 jerry_debugger_wait_for_source_status_t
 jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t callback_p,
                                        void *user_p, jerry_value_t *return_value);
-void jerry_debugger_send_output (jerry_char_t buffer[], jerry_size_t str_size);
-void jerry_debugger_send_log (jerry_log_level_t level, jerry_char_t buffer[], jerry_size_t str_size);
+void jerry_debugger_send_output (const jerry_char_t *buffer, jerry_size_t str_size);
+void jerry_debugger_send_log (jerry_log_level_t level, const jerry_char_t *buffer, jerry_size_t str_size);
 
 /**
  * @}

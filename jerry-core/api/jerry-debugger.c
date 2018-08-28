@@ -189,7 +189,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
  * Currently only sends print output.
  */
 void
-jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
+jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
                             jerry_size_t str_size) /**< string size */
 {
 #ifdef JERRY_DEBUGGER
@@ -211,7 +211,7 @@ jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
  */
 void
 jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics message */
-                         jerry_char_t buffer[], /**< buffer */
+                         const jerry_char_t *buffer, /**< buffer */
                          jerry_size_t str_size) /**< string size */
 {
 #ifdef JERRY_DEBUGGER

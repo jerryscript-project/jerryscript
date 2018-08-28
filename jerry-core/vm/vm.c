@@ -927,11 +927,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
       switch (VM_OC_GROUP_GET_INDEX (opcode_data))
       {
-        case VM_OC_NONE:
-        {
-          JERRY_ASSERT (opcode == CBC_EXT_DEBUGGER);
-          continue;
-        }
         case VM_OC_POP:
         {
           JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end);
@@ -1045,23 +1040,26 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_make_object_value (obj_p);
           continue;
         }
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        case VM_OC_SET_COMPUTED_PROPERTY:
+        {
+          /* Swap values. */
+          left_value ^= right_value;
+          right_value ^= left_value;
+          left_value ^= right_value;
+          /* FALLTHRU */
+        }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
         case VM_OC_SET_PROPERTY:
         {
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-          const int index = (byte_code_start_p[0] == CBC_EXT_OPCODE) ? -2 : -1;
-#else
-          const int index = -1;
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+          JERRY_STATIC_ASSERT (VM_OC_NON_STATIC_FLAG == VM_OC_BACKWARD_BRANCH,
+                               vm_oc_non_static_flag_must_be_equal_to_vm_oc_backward_branch);
 
-          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
-          ecma_string_t *prop_name_p;
-          ecma_property_t *property_p;
+          JERRY_ASSERT ((opcode_data >> VM_OC_NON_STATIC_SHIFT) <= 0x1);
 
-          if (ecma_is_value_string (right_value))
-          {
-            prop_name_p = ecma_get_string_from_value (right_value);
-          }
-          else
+          result = right_value;
+
+          if (JERRY_UNLIKELY (!ecma_is_value_string (right_value)))
           {
             result = ecma_op_to_string (right_value);
 
@@ -1069,11 +1067,30 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               goto error;
             }
-
-            prop_name_p = ecma_get_string_from_value (result);
           }
 
-          property_p = ecma_find_named_property (object_p, prop_name_p);
+          ecma_string_t *prop_name_p = ecma_get_string_from_value (result);
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+              && !(opcode_data & VM_OC_NON_STATIC_FLAG))
+          {
+            if (!ecma_is_value_string (right_value))
+            {
+              ecma_deref_ecma_string (prop_name_p);
+            }
+
+            result = ecma_raise_type_error (ECMA_ERR_MSG ("prototype property of a class is non-configurable"));
+            goto error;
+          }
+
+          const int index = (int) (opcode_data >> VM_OC_NON_STATIC_SHIFT) - 2;
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+          const int index = -1;
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
+          ecma_property_t *property_p = ecma_find_named_property (object_p, prop_name_p);
 
           if (property_p != NULL
               && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
@@ -1108,17 +1125,49 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SET_GETTER:
         case VM_OC_SET_SETTER:
         {
-          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE);
+          JERRY_ASSERT ((opcode_data >> VM_OC_NON_STATIC_SHIFT) <= 0x1);
+
+          result = left_value;
+
+          if (JERRY_UNLIKELY (!ecma_is_value_string (left_value)))
+          {
+            result = ecma_op_to_string (left_value);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+          }
+
+          ecma_string_t *prop_name_p = ecma_get_string_from_value (result);
+
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-          const int index = (byte_code_start_p[1] > CBC_EXT_SET_SETTER) ? -2 : -1;
-#else
+          if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+              && !(opcode_data & VM_OC_NON_STATIC_FLAG))
+          {
+            if (!ecma_is_value_string (left_value))
+            {
+              ecma_deref_ecma_string (prop_name_p);
+            }
+
+            result = ecma_raise_type_error (ECMA_ERR_MSG ("prototype property of a class is non-configurable"));
+            goto error;
+          }
+
+          const int index = (int) (opcode_data >> VM_OC_NON_STATIC_SHIFT) - 2;
+#else /* CONFIG_DISABLE_ES2015_CLASS */
           const int index = -1;
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
           opfunc_set_accessor (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_SET_GETTER,
                                stack_top_p[index],
-                               left_value,
+                               prop_name_p,
                                right_value);
+
+          if (!ecma_is_value_string (left_value))
+          {
+            ecma_deref_ecma_string (prop_name_p);
+          }
 
           goto free_both_values;
         }
@@ -2560,9 +2609,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
         }
+#ifdef JERRY_DEBUGGER
         case VM_OC_BREAKPOINT_ENABLED:
         {
-#ifdef JERRY_DEBUGGER
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
           {
             continue;
@@ -2580,12 +2629,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             result = ECMA_VALUE_ERROR;
             goto error;
           }
-#endif /* JERRY_DEBUGGER */
           continue;
         }
         case VM_OC_BREAKPOINT_DISABLED:
         {
-#ifdef JERRY_DEBUGGER
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
           {
             continue;
@@ -2634,9 +2681,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               goto error;
             }
           }
-#endif /* JERRY_DEBUGGER */
           continue;
         }
+#endif /* JERRY_DEBUGGER */
 #ifdef JERRY_ENABLE_LINE_INFO
         case VM_OC_RESOURCE_NAME:
         {
@@ -2685,6 +2732,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* JERRY_ENABLE_LINE_INFO */
         default:
         {
+          JERRY_ASSERT (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_NONE);
+
+          jerry_fatal (ERR_DISABLED_BYTE_CODE);
           JERRY_UNREACHABLE ();
         }
       }

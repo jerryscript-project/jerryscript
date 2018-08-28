@@ -101,12 +101,10 @@ opfunc_typeof (ecma_value_t left_value) /**< left value */
 void
 opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                      ecma_value_t object, /**< object value */
-                     ecma_value_t accessor_name, /**< accessor name value */
+                     ecma_string_t *accessor_name_p, /**< accessor name */
                      ecma_value_t accessor) /**< accessor value */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (object);
-  JERRY_ASSERT (ecma_is_value_string (accessor_name) || ecma_is_value_number (accessor_name));
-  ecma_string_t *accessor_name_p = ecma_get_string_from_value (ecma_op_to_string (accessor_name));
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
   if (property_p != NULL
@@ -153,8 +151,6 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                                              ECMA_PROPERTY_VALUE_PTR (property_p),
                                              setter_func_p);
   }
-
-  ecma_deref_ecma_string (accessor_name_p);
 } /* opfunc_set_accessor */
 
 /**

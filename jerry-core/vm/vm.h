@@ -41,7 +41,8 @@
  */
 
 /**
- * Branch argument is a backward branch
+ * If VM_OC_GET_ARGS_INDEX(opcode) == VM_OC_GET_BRANCH,
+ * this flag signals that the branch is a backward branch.
  */
 #define VM_OC_BACKWARD_BRANCH 0x4000
 
@@ -102,7 +103,6 @@ typedef enum
  */
 typedef enum
 {
-  VM_OC_NONE,                    /**< do nothing */
   VM_OC_POP,                     /**< pop from stack */
   VM_OC_POP_BLOCK,               /**< pop block */
   VM_OC_PUSH,                    /**< push one literal  */
@@ -121,6 +121,9 @@ typedef enum
   VM_OC_PUSH_LIT_NEG_BYTE,       /**< push literal and number between -1 and -256 */
   VM_OC_PUSH_OBJECT,             /**< push object */
   VM_OC_SET_PROPERTY,            /**< set property */
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+  VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
   VM_OC_SET_GETTER,              /**< set getter */
   VM_OC_SET_SETTER,              /**< set setter */
   VM_OC_PUSH_UNDEFINED_BASE,     /**< push undefined base */
@@ -206,11 +209,35 @@ typedef enum
   VM_OC_FINALLY,                 /**< finally */
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
+#ifdef JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
+#endif /* JERRY_DEBUGGER */
+#ifdef JERRY_ENABLE_LINE_INFO
   VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
   VM_OC_LINE,                    /**< line number of the next statement */
+#endif /* JERRY_ENABLE_LINE_INFO */
+  VM_OC_NONE,                    /**< a special opcode for  */
 } vm_oc_types;
+
+/**
+ * Unused opcodes, but required by byte-code types.
+ */
+typedef enum
+{
+#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+  VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
+#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+#ifndef JERRY_DEBUGGER
+  VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
+  VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
+#endif /* !JERRY_DEBUGGER */
+#ifndef JERRY_ENABLE_LINE_INFO
+  VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
+  VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
+#endif /* !JERRY_ENABLE_LINE_INFO */
+  VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
+} vm_oc_unused_types;
 
 /**
  * Decrement operator.
@@ -236,6 +263,16 @@ typedef enum
  * Branch optimized for logical and/or opcodes.
  */
 #define VM_OC_LOGICAL_BRANCH_FLAG 0x2
+
+/**
+ * Bit index shift for non-static property initializers.
+ */
+#define VM_OC_NON_STATIC_SHIFT 14
+
+/**
+ * This flag is set for static property initializers.
+ */
+#define VM_OC_NON_STATIC_FLAG (0x1 << VM_OC_NON_STATIC_SHIFT)
 
 /**
  * Position of "put result" opcode.

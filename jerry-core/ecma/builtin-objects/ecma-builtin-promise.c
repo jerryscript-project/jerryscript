@@ -558,6 +558,12 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_value_t capability = ecma_promise_new_capability ();
+
+  if (ECMA_IS_VALUE_ERROR (capability))
+  {
+    return capability;
+  }
+
   ecma_value_t ret = ECMA_VALUE_EMPTY;
 
   if (!ecma_is_value_object (array)

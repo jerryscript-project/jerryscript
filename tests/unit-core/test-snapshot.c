@@ -330,12 +330,18 @@ main (void)
 
     snapshot_buffers[0] = snapshot_buffer_0;
     snapshot_buffers[1] = snapshot_buffer_1;
+    uint32_t out_literals_p[SNAPSHOT_BUFFER_SIZE / 4];
+    size_t out_literals_size = 0;
 
     size_t merged_size = jerry_merge_snapshots (snapshot_buffers,
                                                 snapshot_sizes,
                                                 2,
                                                 merged_snapshot_buffer,
                                                 SNAPSHOT_BUFFER_SIZE,
+                                                out_literals_p,
+                                                &out_literals_size,
+                                                false,
+                                                false,
                                                 &error_p);
 
     jerry_cleanup ();

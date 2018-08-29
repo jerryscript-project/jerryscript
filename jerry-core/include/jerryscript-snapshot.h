@@ -64,7 +64,9 @@ jerry_value_t jerry_load_function_snapshot (const uint32_t *function_snapshot_p,
                                             size_t func_index, uint32_t exec_snapshot_opts);
 
 size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
-                              uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);
+                              uint32_t *out_buffer_p, size_t out_buffer_size, uint32_t *out_literals_p,
+                              size_t *out_literals_size, bool is_save_literals_mode_in_c_format, bool get_literals,
+                              const char **error_p);
 size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
                                       uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
 /**

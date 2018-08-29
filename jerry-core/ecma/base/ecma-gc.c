@@ -404,13 +404,9 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
  * Free the native handle/pointer by calling its free callback.
  */
 static void
-ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
-                             lit_magic_string_id_t id) /**< identifier of internal property */
+ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (property_p != NULL);
-
-  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-                || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
   ecma_native_pointer_t *native_pointer_p;
@@ -418,23 +414,13 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
   native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                       value_p->value);
 
-  if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
+  if (native_pointer_p->info_p != NULL)
   {
-    if (native_pointer_p->u.callback_p != NULL)
-    {
-      native_pointer_p->u.callback_p ((uintptr_t) native_pointer_p->data_p);
-    }
-  }
-  else
-  {
-    if (native_pointer_p->u.info_p != NULL)
-    {
-      ecma_object_native_free_callback_t free_cb = native_pointer_p->u.info_p->free_cb;
+    ecma_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
 
-      if (free_cb != NULL)
-      {
-        free_cb (native_pointer_p->data_p);
-      }
+    if (free_cb != NULL)
+    {
+      free_cb (native_pointer_p->data_p);
     }
   }
 } /* ecma_gc_free_native_pointer */
@@ -479,10 +465,9 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
         /* Call the native's free callback. */
         if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-                || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
+            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
         {
-          ecma_gc_free_native_pointer (property_p, (lit_magic_string_id_t) name_cp);
+          ecma_gc_free_native_pointer (property_p);
         }
 
         if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)

@@ -262,11 +262,6 @@ typedef ecma_value_t (*ecma_external_handler_t) (const ecma_value_t function_obj
                                                  const ecma_length_t args_count);
 
 /**
- * Native free callback of an object (deprecated).
- */
-typedef void (*ecma_object_free_callback_t) (const uintptr_t native_p);
-
-/**
  * Native free callback of an object.
  */
 typedef void (*ecma_object_native_free_callback_t) (void *native_p);
@@ -285,11 +280,7 @@ typedef struct
 typedef struct
 {
   void *data_p; /**< points to the data of the object */
-  union
-  {
-    ecma_object_free_callback_t callback_p; /**< callback */
-    ecma_object_native_info_t *info_p; /**< native info */
-  } u;
+  ecma_object_native_info_t *info_p; /**< native info */
 } ecma_native_pointer_t;
 
 /**

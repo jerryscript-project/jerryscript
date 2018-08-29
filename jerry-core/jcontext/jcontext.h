@@ -131,17 +131,13 @@ typedef struct
 #ifdef JMEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
 #endif /* JMEM_STATS */
-} jerry_context_t;
 
+  /* This must be at the end of the context for performance reasons */
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
-/**
- * Hash table for caching the last access of properties.
- */
-typedef struct
-{
-  ecma_lcache_hash_entry_t table[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
-} jerry_hash_table_t;
+  /** hash table for caching the last access of properties */
+  ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+} jerry_context_t;
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
@@ -173,9 +169,6 @@ struct jerry_instance_t
   jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
   uint32_t heap_size; /**< size of the heap */
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  uint8_t *lcache_p; /**< point to the entrance of the lcache in buffer */
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 };
 
 #define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->context.field)
@@ -199,18 +192,6 @@ jerry_context_get_current_heap (void)
 #define JMEM_HEAP_AREA_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size - JMEM_ALIGNMENT)
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-
-static inline jerry_hash_table_t * JERRY_ATTR_ALWAYS_INLINE
-jerry_context_get_current_lcache (void)
-{
-  return (jerry_hash_table_t *) (JERRY_GET_CURRENT_INSTANCE ()->lcache_p);
-} /* jerry_context_get_current_lcache */
-
-#define JERRY_HASH_TABLE_CONTEXT(field) (jerry_context_get_current_lcache ()->field)
-
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 #else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
@@ -253,15 +234,6 @@ extern jerry_context_t jerry_global_context;
 extern jmem_heap_t jerry_global_heap;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-
-/**
- * Global hash table.
- */
-extern jerry_hash_table_t jerry_global_hash_table;
-
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-
 /**
  * Provides a reference to a field in the current context.
  */
@@ -274,15 +246,6 @@ extern jerry_hash_table_t jerry_global_hash_table;
 #define JERRY_HEAP_CONTEXT(field) (jerry_global_heap.field)
 
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-
-/**
- * Provides a reference to the global hash table.
- */
-#define JERRY_HASH_TABLE_CONTEXT(field) (jerry_global_hash_table.field)
-
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 

@@ -17,7 +17,6 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
-#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-literal-storage.h"
 #include "jmem.h"
@@ -36,7 +35,6 @@
 void
 ecma_init (void)
 {
-  ecma_lcache_init ();
   ecma_init_global_lex_env ();
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);

@@ -2648,10 +2648,6 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
   total_size += heap_size;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  total_size += sizeof (jerry_hash_table_t);
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-
   total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
 
   jerry_instance_t *instance_p = (jerry_instance_t *) alloc (total_size, cb_data_p);
@@ -2672,11 +2668,6 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
   instance_p->heap_p = (jmem_heap_t *) byte_p;
   instance_p->heap_size = heap_size;
   byte_p += heap_size;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
-  instance_p->lcache_p = byte_p;
-  byte_p += sizeof (jerry_hash_table_t);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
   JERRY_ASSERT (byte_p <= ((uint8_t *) instance_p) + total_size);

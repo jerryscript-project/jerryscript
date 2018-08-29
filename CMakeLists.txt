@@ -56,9 +56,6 @@ set(BUILD_SHARED_LIBS  OFF CACHE BOOL "Build shared libraries?")
 set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
-# Optional features
-set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
-
 # Option overrides
 if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
@@ -112,7 +109,6 @@ message(STATUS "JERRY_EXT                   " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_LIBM                  " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
 message(STATUS "UNITTESTS                   " ${UNITTESTS})
 message(STATUS "DOCTESTS                    " ${DOCTESTS})
-message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
 
 # Setup directories
 # Note: This mimics a conventional file system layout in the build directory for

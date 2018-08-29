@@ -355,9 +355,8 @@ void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
 
 /* ecma-helpers-external-pointers.c */
-bool ecma_create_native_handle_property (ecma_object_t *obj_p, void *handle_p, void *free_cb);
 bool ecma_create_native_pointer_property (ecma_object_t *obj_p, void *native_p, void *info_p);
-ecma_native_pointer_t *ecma_get_native_pointer_value (ecma_object_t *obj_p, lit_magic_string_id_t id);
+ecma_native_pointer_t *ecma_get_native_pointer_value (ecma_object_t *obj_p);
 void ecma_free_native_pointer (ecma_property_t *prop_p);
 
 /* ecma-helpers-conversion.c */

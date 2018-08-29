@@ -2356,69 +2356,6 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
 } /* jerry_set_prototype */
 
 /**
- * Get native handle, associated with specified object.
- *
- * Note: This API is deprecated, please use jerry_get_object_native_pointer instaed.
- *
- * @return true - if there is an associated handle (handle is returned through out_handle_p),
- *         false - otherwise
- */
-bool
-jerry_get_object_native_handle (const jerry_value_t obj_val, /**< object to get handle from */
-                                uintptr_t *out_handle_p) /**< [out] handle value */
-{
-  jerry_assert_api_available ();
-
-  if (!ecma_is_value_object (obj_val))
-  {
-    return false;
-  }
-
-  ecma_native_pointer_t *native_pointer_p;
-  native_pointer_p = ecma_get_native_pointer_value (ecma_get_object_from_value (obj_val),
-                                                    LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE);
-
-  if (native_pointer_p == NULL)
-  {
-    return false;
-  }
-
-  *out_handle_p = (uintptr_t) native_pointer_p->data_p;
-  return true;
-} /* jerry_get_object_native_handle */
-
-/**
- * Set native handle and an optional free callback for the specified object.
- *
- * Note: This API is deprecated, please use jerry_set_object_native_pointer instaed.
- *
- * Note:
- *      If native handle was already set for the object, its value is updated.
- *
- * Note:
- *      If a non-NULL free callback is specified, it will be called
- *      by the garbage collector when the object is freed. The free
- *      callback always overwrites the previous value, so passing
- *      a NULL value deletes the current free callback.
- */
-void
-jerry_set_object_native_handle (const jerry_value_t obj_val, /**< object to set handle in */
-                                uintptr_t handle_p, /**< handle value */
-                                jerry_object_free_callback_t freecb_p) /**< object free callback or NULL */
-{
-  jerry_assert_api_available ();
-
-  if (ecma_is_value_object (obj_val))
-  {
-    ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
-
-    ecma_create_native_handle_property (object_p,
-                                        (void *) handle_p,
-                                        (void *) (ecma_external_pointer_t) freecb_p);
-  }
-} /* jerry_set_object_native_handle */
-
-/**
  * Traverse objects.
  *
  * @return true - traversal was interrupted by the callback.
@@ -2472,9 +2409,9 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
   {
     if (!ecma_is_lexical_environment (iter_p))
     {
-      native_pointer_p = ecma_get_native_pointer_value (iter_p, LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+      native_pointer_p = ecma_get_native_pointer_value (iter_p);
       if (native_pointer_p
-          && ((const jerry_object_native_info_t *) native_pointer_p->u.info_p) == native_info_p
+          && ((const jerry_object_native_info_t *) native_pointer_p->info_p) == native_info_p
           && !foreach_p (ecma_make_object_value (iter_p), native_pointer_p->data_p, user_data_p))
       {
         return true;
@@ -2509,8 +2446,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
   }
 
   ecma_native_pointer_t *native_pointer_p;
-  native_pointer_p = ecma_get_native_pointer_value (ecma_get_object_from_value (obj_val),
-                                                    LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+  native_pointer_p = ecma_get_native_pointer_value (ecma_get_object_from_value (obj_val));
 
   if (native_pointer_p == NULL)
   {
@@ -2524,7 +2460,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
 
   if (out_native_info_p != NULL)
   {
-    *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->u.info_p;
+    *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->info_p;
   }
 
   return true;

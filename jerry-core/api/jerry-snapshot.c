@@ -1705,7 +1705,7 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     /* Save the array of literals. */
     destination_p = jerry_append_chars_to_buffer (destination_p,
                                                   buffer_end_p,
-                                                  ";\n\njerry_char_ptr_t literals[",
+                                                  ";\n\njerry_char_t *literals[",
                                                   0);
 
     destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);

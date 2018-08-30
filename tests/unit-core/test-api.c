@@ -191,10 +191,10 @@ const jerry_length_t magic_string_lengths[] =
 #undef JERRY_MAGIC_STRING_DEF
 };
 
-const jerry_char_ptr_t magic_string_items[] =
+const jerry_char_t *magic_string_items[] =
 {
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
-    (const jerry_char_ptr_t) jerry_magic_string_ex_ ## NAME,
+    (const jerry_char_t *) jerry_magic_string_ex_ ## NAME,
 
   JERRY_MAGIC_STRING_ITEMS
 
@@ -1126,7 +1126,7 @@ main (void)
   /* External Magic String */
   jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-  uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_char_ptr_t));
+  uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_char_t *));
   jerry_register_magic_strings (magic_string_items,
                                 num_magic_string_items,
                                 magic_string_lengths);

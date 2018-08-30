@@ -26,16 +26,16 @@
 /**
  * Magic strings
  */
-static const jerry_char_ptr_t magic_strings[] =
+static const jerry_char_t *magic_strings[] =
 {
-  (const jerry_char_ptr_t) " ",
-  (const jerry_char_ptr_t) "a",
-  (const jerry_char_ptr_t) "b",
-  (const jerry_char_ptr_t) "c",
-  (const jerry_char_ptr_t) "from",
-  (const jerry_char_ptr_t) "func",
-  (const jerry_char_ptr_t) "string",
-  (const jerry_char_ptr_t) "snapshot"
+  (const jerry_char_t *) " ",
+  (const jerry_char_t *) "a",
+  (const jerry_char_t *) "b",
+  (const jerry_char_t *) "c",
+  (const jerry_char_t *) "from",
+  (const jerry_char_t *) "func",
+  (const jerry_char_t *) "string",
+  (const jerry_char_t *) "snapshot"
 };
 
 /**
@@ -371,11 +371,11 @@ main (void)
                                                                    literal_buffer_c,
                                                                    SNAPSHOT_BUFFER_SIZE,
                                                                    true);
-    TEST_ASSERT (literal_sizes_c_format == 203);
+    TEST_ASSERT (literal_sizes_c_format == 200);
 
     static const char *expected_c_format = (
                                             "jerry_length_t literal_count = 4;\n\n"
-                                            "jerry_char_ptr_t literals[4] =\n"
+                                            "jerry_char_t *literals[4] =\n"
                                             "{\n"
                                             "  \"Bb\",\n"
                                             "  \"aa\",\n"

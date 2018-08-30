@@ -79,11 +79,6 @@ typedef uint16_t ecma_char_t;
 typedef uint32_t ecma_length_t;
 
 /**
- * Description of an ecma-character pointer
- */
-typedef ecma_char_t *ecma_char_ptr_t;
-
-/**
  * Max bytes needed to represent a code unit (utf-16 char) via utf-8 encoding
  */
 #define LIT_UTF8_MAX_BYTES_IN_CODE_UNIT (3)

@@ -43,7 +43,7 @@ static uint8_t input_buffer[JERRY_BUFFER_SIZE];
 static uint32_t output_buffer[JERRY_BUFFER_SIZE / 4];
 static const char *output_file_name_p = "js.snapshot";
 static jerry_length_t magic_string_lengths[JERRY_LITERAL_LENGTH];
-static jerry_char_ptr_t magic_string_items[JERRY_LITERAL_LENGTH];
+static const jerry_char_t *magic_string_items[JERRY_LITERAL_LENGTH];
 
 /**
  * Check whether JerryScript has a requested feature enabled or not. If not,
@@ -337,7 +337,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
         jerry_length_t mstr_size = (jerry_length_t) strtol (sp_buffer_p, &sp_buffer_end_p, 10);
         if (mstr_size > 0)
         {
-          magic_string_items[num_of_lit] = (jerry_char_ptr_t) (sp_buffer_end_p + 1);
+          magic_string_items[num_of_lit] = (jerry_char_t *) (sp_buffer_end_p + 1);
           magic_string_lengths[num_of_lit] = mstr_size;
           num_of_lit++;
         }

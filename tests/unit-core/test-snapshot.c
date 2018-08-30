@@ -24,6 +24,11 @@
 #define SNAPSHOT_BUFFER_SIZE (256)
 
 /**
+ * Maximum size of literal buffer
+ */
+#define LITERAL_BUFFER_SIZE (256)
+
+/**
  * Magic strings
  */
 static const jerry_char_t *magic_strings[] =
@@ -370,16 +375,32 @@ main (void)
     /* C format generation */
     jerry_init (JERRY_INIT_EMPTY);
 
-    static uint32_t literal_buffer_c[SNAPSHOT_BUFFER_SIZE];
+    static jerry_char_t literal_buffer_c[LITERAL_BUFFER_SIZE];
+    static uint32_t literal_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
     static const char *code_for_c_format_p = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
 
-    size_t literal_sizes_c_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_c_format_p,
-                                                                   strlen (code_for_c_format_p),
-                                                                   false,
-                                                                   literal_buffer_c,
-                                                                   SNAPSHOT_BUFFER_SIZE,
-                                                                   true);
-    TEST_ASSERT (literal_sizes_c_format == 200);
+    jerry_value_t generate_result;
+    generate_result = jerry_generate_snapshot (NULL,
+                                               0,
+                                               (const jerry_char_t *) code_for_c_format_p,
+                                               strlen (code_for_c_format_p),
+                                               0,
+                                               literal_snapshot_buffer,
+                                               SNAPSHOT_BUFFER_SIZE);
+
+    TEST_ASSERT (!jerry_value_is_error (generate_result)
+                 && jerry_value_is_number (generate_result));
+
+    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
+    jerry_release_value (generate_result);
+    TEST_ASSERT (snapshot_size == 120);
+
+    const size_t lit_c_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
+                                                                  snapshot_size,
+                                                                  literal_buffer_c,
+                                                                  LITERAL_BUFFER_SIZE,
+                                                                  true);
+    TEST_ASSERT (lit_c_buf_sz == 200);
 
     static const char *expected_c_format = (
                                             "jerry_length_t literal_count = 4;\n\n"
@@ -399,24 +420,18 @@ main (void)
                                             "};\n"
                                             );
 
-    TEST_ASSERT (!strncmp ((char *) literal_buffer_c, expected_c_format, literal_sizes_c_format));
-    jerry_cleanup ();
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_c, expected_c_format, lit_c_buf_sz));
 
     /* List format generation */
-    jerry_init (JERRY_INIT_EMPTY);
+    static jerry_char_t literal_buffer_list[LITERAL_BUFFER_SIZE];
+    const size_t lit_list_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
+                                                                     snapshot_size,
+                                                                     literal_buffer_list,
+                                                                     LITERAL_BUFFER_SIZE,
+                                                                     false);
 
-    static uint32_t literal_buffer_list[SNAPSHOT_BUFFER_SIZE];
-    static const char *code_for_list_format_p = "var obj = { a:'aa', bb:'Bb' };";
-
-    size_t literal_sizes_list_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_list_format_p,
-                                                                      strlen (code_for_list_format_p),
-                                                                      false,
-                                                                      literal_buffer_list,
-                                                                      SNAPSHOT_BUFFER_SIZE,
-                                                                      false);
-
-    TEST_ASSERT (literal_sizes_list_format == 25);
-    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "1 a\n2 Bb\n2 aa\n2 bb\n3 obj\n", literal_sizes_list_format));
+    TEST_ASSERT (lit_list_buf_sz == 30);
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "2 Bb\n2 aa\n3 aaa\n4 fo o\n4 xzy0\n", lit_list_buf_sz));
 
     jerry_cleanup ();
   }

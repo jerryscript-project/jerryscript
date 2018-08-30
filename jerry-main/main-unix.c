@@ -401,15 +401,15 @@ check_usage (bool condition, /**< the condition that must hold */
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
 /**
- * The alloc function passed to jerry_create_instance
+ * The alloc function passed to jerry_create_context
  */
 static void *
-instance_alloc (size_t size,
-                void *cb_data_p)
+context_alloc (size_t size,
+               void *cb_data_p)
 {
   (void) cb_data_p; /* unused */
   return malloc (size);
-} /* instance_alloc */
+} /* context_alloc */
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
@@ -607,8 +607,8 @@ main (int argc,
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
-  jerry_instance_t *instance_p = jerry_create_instance (512*1024, instance_alloc, NULL);
-  jerry_port_default_set_instance (instance_p);
+  jerry_context_t *context_p = jerry_create_context (512*1024, context_alloc, NULL);
+  jerry_port_default_set_context (context_p);
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
@@ -873,7 +873,7 @@ main (int argc,
 
   jerry_cleanup ();
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
-  free (instance_p);
+  free (context_p);
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
   return ret_code;
 } /* main */

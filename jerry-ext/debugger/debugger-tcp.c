@@ -48,7 +48,7 @@ jerryx_debugger_tcp_log_error (int err_val)
 static void
 jerryx_debugger_tcp_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
 {
-  JERRYX_ASSERT (jerry_debugger_transport_is_connected ());
+  JERRYX_ASSERT (!jerry_debugger_transport_is_connected ());
 
   jerryx_debugger_transport_tcp_t *tcp_p = (jerryx_debugger_transport_tcp_t *) header_p;
 

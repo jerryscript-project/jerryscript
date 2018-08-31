@@ -20,7 +20,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-function-object.h"
-#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-string-object.h"
 #include "ecma-objects-arguments.h"

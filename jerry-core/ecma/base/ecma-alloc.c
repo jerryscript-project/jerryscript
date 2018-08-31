@@ -16,7 +16,6 @@
 #include "ecma-alloc.h"
 #include "ecma-globals.h"
 #include "ecma-gc.h"
-#include "ecma-lcache.h"
 #include "jrt.h"
 #include "jmem.h"
 

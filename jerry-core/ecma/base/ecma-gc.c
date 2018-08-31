@@ -21,7 +21,6 @@
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
-#include "ecma-lcache.h"
 #include "ecma-property-hashmap.h"
 #include "jcontext.h"
 #include "jrt.h"

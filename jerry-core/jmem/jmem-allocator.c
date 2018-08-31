@@ -26,15 +26,6 @@
 
 #ifdef JMEM_STATS
 /**
- * Print memory usage statistics
- */
-static void
-jmem_stats_print (void)
-{
-  jmem_heap_stats_print ();
-} /* jmem_stats_print */
-
-/**
  * Register byte code allocation.
  */
 void
@@ -172,7 +163,7 @@ jmem_finalize (void)
 #ifdef JMEM_STATS
   if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
   {
-    jmem_stats_print ();
+    jmem_heap_stats_print ();
   }
 #endif /* JMEM_STATS */
 

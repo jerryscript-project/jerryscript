@@ -25,13 +25,6 @@
  * @{
  */
 
-#ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
-/**
- * Size of heap
- */
-#define JMEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
-#endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
-
 /**
  * Logarithm of required alignment for allocated units/blocks
  */

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/**
+/*
  * Memory context for JerryScript
  */
 #ifndef JCONTEXT_H
@@ -34,11 +34,6 @@
  */
 
 /**
- * First member of the jerry context
- */
-#define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
-
-/**
  * User context item
  */
 typedef struct jerry_context_data_header
@@ -49,6 +44,11 @@ typedef struct jerry_context_data_header
 
 #define JERRY_CONTEXT_DATA_HEADER_USER_DATA(item_p) \
   ((uint8_t *) (item_p + 1))
+
+/**
+ * First member of the jerry context
+ */
+#define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
 
 /**
  * JerryScript context
@@ -141,23 +141,34 @@ typedef struct
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
-#ifndef JERRY_GET_CURRENT_INSTANCE
+/*
+ * This part is for JerryScript which uses external context.
+ */
 
+#ifndef JERRY_GET_CURRENT_INSTANCE
 /**
  * Default function if JERRY_GET_CURRENT_INSTANCE is not defined.
  */
 #define JERRY_GET_CURRENT_INSTANCE() (jerry_port_get_current_instance ())
-
 #endif /* !JERRY_GET_CURRENT_INSTANCE */
 
-/**
- * This part is for Jerry which enable external context.
- */
+#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->context.field)
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+
+#define JMEM_HEAP_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size)
+
+#define JMEM_HEAP_AREA_SIZE (JMEM_HEAP_SIZE - JMEM_ALIGNMENT)
+
 typedef struct
 {
   jmem_heap_free_t first; /**< first node in free region list */
   uint8_t area[]; /**< heap area */
 } jmem_heap_t;
+
+#define JERRY_HEAP_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->heap_p->field)
+
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 /**
  * Description of jerry instance which is the header of the context space.
@@ -171,33 +182,28 @@ struct jerry_instance_t
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 };
 
-#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->context.field)
+#else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
+
+/*
+ * This part is for JerryScript which uses default context.
+ */
+
+/**
+ * Global context.
+ */
+extern jerry_context_t jerry_global_context;
+
+/**
+ * Provides a reference to a field in the current context.
+ */
+#define JERRY_CONTEXT(field) (jerry_global_context.field)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 
-static inline jmem_heap_t * JERRY_ATTR_ALWAYS_INLINE
-jerry_context_get_current_heap (void)
-{
-  return JERRY_GET_CURRENT_INSTANCE ()->heap_p;
-} /* jerry_context_get_current_heap */
-
-#define JERRY_HEAP_CONTEXT(field) (jerry_context_get_current_heap ()->field)
-
-#ifdef JMEM_HEAP_SIZE
-#error "JMEM_HEAP_SIZE must not be defined if JERRY_ENABLE_EXTERNAL_CONTEXT is defined"
-#endif /* JMEM_HEAP_SIZE */
-
-#define JMEM_HEAP_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size)
-
-#define JMEM_HEAP_AREA_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size - JMEM_ALIGNMENT)
-
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-#else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
-
 /**
- * This part is for Jerry which use default context.
- */
+* Size of heap
+*/
+#define JMEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
 
 /**
  * Calculate heap area size, leaving space for a pointer to the free list
@@ -223,25 +229,12 @@ typedef struct
 } jmem_heap_t;
 
 /**
- * Global context.
- */
-extern jerry_context_t jerry_global_context;
-
-#ifndef JERRY_SYSTEM_ALLOCATOR
-/**
  * Global heap.
  */
 extern jmem_heap_t jerry_global_heap;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 /**
- * Provides a reference to a field in the current context.
- */
-#define JERRY_CONTEXT(field) (jerry_global_context.field)
-
-#ifndef JERRY_SYSTEM_ALLOCATOR
-/**
- * Provides a reference to the area field of the heap.
+ * Provides a reference to a field of the heap.
  */
 #define JERRY_HEAP_CONTEXT(field) (jerry_global_heap.field)
 

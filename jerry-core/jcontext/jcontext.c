@@ -20,10 +20,19 @@
  */
 
 #ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
+
 /**
  * Global context.
  */
 jerry_context_t jerry_global_context;
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+
+/**
+ * Check size of heap is corresponding to configuration
+ */
+JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
+                     size_of_mem_heap_must_be_less_than_or_equal_to_JMEM_HEAP_SIZE);
 
 /**
  * Jerry global heap section attribute.
@@ -34,11 +43,11 @@ jerry_context_t jerry_global_context;
 #define JERRY_GLOBAL_HEAP_SECTION JERRY_ATTR_SECTION (JERRY_HEAP_SECTION_ATTR)
 #endif /* !JERRY_HEAP_SECTION_ATTR */
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Global heap.
  */
 jmem_heap_t jerry_global_heap JERRY_ATTR_ALIGNED (JMEM_ALIGNMENT) JERRY_GLOBAL_HEAP_SECTION;
+
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */

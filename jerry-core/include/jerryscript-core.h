@@ -515,6 +515,12 @@ bool jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, jerry_size_t bu
 bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t buf_size);
 
 /*
+ * Dynamic memory management functions.
+ */
+void *jerry_heap_alloc (size_t size);
+void jerry_heap_free (void *mem_p, size_t size);
+
+/*
  * External context functions.
  */
 jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t alloc, void *cb_data_p);

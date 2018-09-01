@@ -56,7 +56,7 @@ jerryx_debugger_tcp_close (jerry_debugger_transport_header_t *header_p) /**< tcp
 
   close (tcp_p->tcp_socket);
 
-  jerry_debugger_transport_free ((void *) header_p, sizeof (jerryx_debugger_transport_tcp_t));
+  jerry_heap_free ((void *) header_p, sizeof (jerryx_debugger_transport_tcp_t));
 } /* jerryx_debugger_tcp_close */
 
 /**
@@ -223,7 +223,7 @@ jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
   size_t size = sizeof (jerryx_debugger_transport_tcp_t);
 
   jerry_debugger_transport_header_t *header_p;
-  header_p = (jerry_debugger_transport_header_t *) jerry_debugger_transport_malloc (size);
+  header_p = (jerry_debugger_transport_header_t *) jerry_heap_alloc (size);
 
   if (!header_p)
   {

@@ -30,28 +30,6 @@
 #define JERRY_DEBUGGER_TRANSPORT_TIMEOUT 100
 
 /**
- * Allocate memory for a connection.
- *
- * @return allocated memory on success
- *         NULL otherwise
- */
-void *
-jerry_debugger_transport_malloc (size_t size) /**< size of the memory block */
-{
-  return jmem_heap_alloc_block_null_on_error (size);
-} /* jerry_debugger_transport_malloc */
-
-/**
- * Free memory allocated for a connection.
- */
-void
-jerry_debugger_transport_free (void *mem_p, /**< value returned by jerry_debugger_transport_malloc() */
-                               size_t size) /**< same size passed to jerry_debugger_transport_malloc() */
-{
-  jmem_heap_free_block (mem_p, size);
-} /* jerry_debugger_transport_free */
-
-/**
  * Add a new transport layer.
  */
 void

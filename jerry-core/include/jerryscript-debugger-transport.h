@@ -83,8 +83,6 @@ typedef struct jerry_debugger_transport_interface_t
   struct jerry_debugger_transport_interface_t *next_p; /**< next transport layer */
 } jerry_debugger_transport_header_t;
 
-void * jerry_debugger_transport_malloc (size_t size);
-void jerry_debugger_transport_free (void *mem_p, size_t size);
 void jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p,
                                    size_t send_message_header_size, size_t max_send_message_size,
                                    size_t receive_message_header_size, size_t max_receive_message_size);

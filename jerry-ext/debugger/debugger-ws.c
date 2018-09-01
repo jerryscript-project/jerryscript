@@ -277,7 +277,7 @@ jerryx_debugger_ws_close (jerry_debugger_transport_header_t *header_p) /**< tcp 
 {
   JERRYX_ASSERT (!jerry_debugger_transport_is_connected ());
 
-  jerry_debugger_transport_free ((void *) header_p, sizeof (jerry_debugger_transport_header_t));
+  jerry_heap_free ((void *) header_p, sizeof (jerry_debugger_transport_header_t));
 } /* jerryx_debugger_ws_close */
 
 /**
@@ -411,7 +411,7 @@ jerryx_debugger_ws_create (void)
   bool is_handshake_ok = false;
 
   const size_t buffer_size = 1024;
-  uint8_t *request_buffer_p = (uint8_t *) jerry_debugger_transport_malloc (buffer_size);
+  uint8_t *request_buffer_p = (uint8_t *) jerry_heap_alloc (buffer_size);
 
   if (!request_buffer_p)
   {
@@ -420,7 +420,7 @@ jerryx_debugger_ws_create (void)
 
   is_handshake_ok = jerryx_process_handshake (request_buffer_p);
 
-  jerry_debugger_transport_free ((void *) request_buffer_p, buffer_size);
+  jerry_heap_free ((void *) request_buffer_p, buffer_size);
 
   if (!is_handshake_ok && jerry_debugger_transport_is_connected ())
   {
@@ -429,7 +429,7 @@ jerryx_debugger_ws_create (void)
 
   const size_t interface_size = sizeof (jerry_debugger_transport_header_t);
   jerry_debugger_transport_header_t *header_p;
-  header_p = (jerry_debugger_transport_header_t *) jerry_debugger_transport_malloc (interface_size);
+  header_p = (jerry_debugger_transport_header_t *) jerry_heap_alloc (interface_size);
 
   if (!header_p)
   {

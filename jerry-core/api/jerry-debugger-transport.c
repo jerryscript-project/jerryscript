@@ -146,6 +146,8 @@ jerry_debugger_transport_close (void)
     return;
   }
 
+  JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
+
   jerry_debugger_transport_header_t *current_p = JERRY_CONTEXT (debugger_transport_header_p);
 
   JERRY_ASSERT (current_p != NULL);
@@ -159,8 +161,6 @@ jerry_debugger_transport_close (void)
     current_p = next_p;
   }
   while (current_p != NULL);
-
-  JERRY_CONTEXT (debugger_flags) = JERRY_DEBUGGER_VM_IGNORE;
 
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
 

@@ -280,6 +280,8 @@ class JerryDebugger(object):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
         self.non_interactive = False
+        self.current_out = b""
+        self.current_log = b""
 
         self.send_message(b"GET /jerry-debugger HTTP/1.1\r\n" +
                           b"Upgrade: websocket\r\n" +
@@ -824,48 +826,8 @@ class JerryDebugger(object):
                                  JERRY_DEBUGGER_EVAL_RESULT_END,
                                  JERRY_DEBUGGER_OUTPUT_RESULT,
                                  JERRY_DEBUGGER_OUTPUT_RESULT_END]:
-                message = b""
-                msg_type = buffer_type
-                while True:
-                    if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
-                                       JERRY_DEBUGGER_OUTPUT_RESULT_END]:
-                        subtype = ord(data[-1])
-                        message += data[3:-1]
-                        break
-                    else:
-                        message += data[3:]
 
-                    data = self.get_message(True)
-                    buffer_type = ord(data[2])
-                    buffer_size = ord(data[1]) - 1
-                    # Checks if the next frame would be an invalid data frame.
-                    # If it is not the message type, or the end type of it, an exception is thrown.
-                    if buffer_type not in [msg_type, msg_type + 1]:
-                        raise Exception("Invalid data caught")
-
-                if not message.endswith("\n"):
-                    message += "\n"
-
-                # Subtypes of output
-                if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
-                    if subtype in [JERRY_DEBUGGER_OUTPUT_OK,
-                                   JERRY_DEBUGGER_OUTPUT_DEBUG]:
-                        result += "%sout: %s%s" % (self.blue, self.nocolor, message)
-                    elif subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
-                        result += "%swarning: %s%s" % (self.yellow, self.nocolor, message)
-                    elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
-                        result += "%serr: %s%s" % (self.red, self.nocolor, message)
-                    elif subtype == JERRY_DEBUGGER_OUTPUT_TRACE:
-                        result += "%strace: %s%s" % (self.blue, self.nocolor, message)
-                # Subtypes of eval
-                else:
-                    self.prompt = True
-
-                    if subtype == JERRY_DEBUGGER_EVAL_ERROR:
-                        result += "Uncaught exception: %s" % (message)
-                    else:
-                        result += message
-
+                result = self._process_incoming_text(buffer_type, data)
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type == JERRY_DEBUGGER_MEMSTATS_RECEIVE:
@@ -936,6 +898,7 @@ class JerryDebugger(object):
                   "lines": [],
                   "offsets": []}]
         new_function_list = {}
+        result = ""
 
         while True:
             if data is None:
@@ -1029,6 +992,10 @@ class JerryDebugger(object):
                 else:
                     self._release_function(data)
 
+            elif buffer_type in [JERRY_DEBUGGER_OUTPUT_RESULT,
+                                 JERRY_DEBUGGER_OUTPUT_RESULT_END]:
+                result += self._process_incoming_text(buffer_type, data)
+
             else:
                 logging.error("Parser error!")
                 raise Exception("Unexpected message")
@@ -1044,8 +1011,7 @@ class JerryDebugger(object):
 
         # Try to set the pending breakpoints
         if self.pending_breakpoint_list:
-            result = ""
-            logging.debug("Pending breakpoints list: %s", self.pending_breakpoint_list)
+            logging.debug("Pending breakpoints available")
             bp_list = self.pending_breakpoint_list
 
             for breakpoint_index, breakpoint in bp_list.items():
@@ -1076,7 +1042,7 @@ class JerryDebugger(object):
             return result
 
         logging.debug("No pending breakpoints")
-        return ""
+        return result
 
 
     def _release_function(self, data):
@@ -1176,3 +1142,62 @@ class JerryDebugger(object):
                 nearest_offset = current_offset
 
         return (function.offsets[nearest_offset], False)
+
+    def _process_incoming_text(self, buffer_type, data):
+        message = b""
+        msg_type = buffer_type
+        while True:
+            if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
+                               JERRY_DEBUGGER_OUTPUT_RESULT_END]:
+                subtype = ord(data[-1])
+                message += data[3:-1]
+                break
+            else:
+                message += data[3:]
+
+            data = self.get_message(True)
+            buffer_type = ord(data[2])
+            # Checks if the next frame would be an invalid data frame.
+            # If it is not the message type, or the end type of it, an exception is thrown.
+            if buffer_type not in [msg_type, msg_type + 1]:
+                raise Exception("Invalid data caught")
+
+        # Subtypes of output
+        if buffer_type == JERRY_DEBUGGER_OUTPUT_RESULT_END:
+            if subtype == JERRY_DEBUGGER_OUTPUT_OK:
+                log_type = "%sout:%s " % (self.blue, self.nocolor)
+
+                message = self.current_out + message
+                lines = message.split("\n")
+                self.current_out = lines.pop()
+
+                return "".join(["%s%s\n" % (log_type, line) for line in lines])
+
+            if subtype == JERRY_DEBUGGER_OUTPUT_DEBUG:
+                log_type = "%slog:%s " % (self.yellow, self.nocolor)
+
+                message = self.current_log + message
+                lines = message.split("\n")
+                self.current_log = lines.pop()
+
+                return "".join(["%s%s\n" % (log_type, line) for line in lines])
+
+            if not message.endswith("\n"):
+                message += "\n"
+
+            if subtype == JERRY_DEBUGGER_OUTPUT_WARNING:
+                return "%swarning: %s%s" % (self.yellow, self.nocolor, message)
+            elif subtype == JERRY_DEBUGGER_OUTPUT_ERROR:
+                return "%serr: %s%s" % (self.red, self.nocolor, message)
+            elif subtype == JERRY_DEBUGGER_OUTPUT_TRACE:
+                return "%strace: %s%s" % (self.blue, self.nocolor, message)
+
+        # Subtypes of eval
+        self.prompt = True
+
+        if not message.endswith("\n"):
+            message += "\n"
+
+        if subtype == JERRY_DEBUGGER_EVAL_ERROR:
+            return "Uncaught exception: %s" % (message)
+        return message

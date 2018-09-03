@@ -275,7 +275,7 @@ jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 static void
 jerryx_debugger_ws_close (jerry_debugger_transport_header_t *header_p) /**< tcp implementation */
 {
-  JERRYX_ASSERT (jerry_debugger_transport_is_connected ());
+  JERRYX_ASSERT (!jerry_debugger_transport_is_connected ());
 
   jerry_debugger_transport_free ((void *) header_p, sizeof (jerry_debugger_transport_header_t));
 } /* jerryx_debugger_ws_close */

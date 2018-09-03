@@ -41,6 +41,8 @@ TERM_NORMAL="\033[0m"
 TERM_RED="\033[1;31m"
 TERM_GREEN="\033[1;32m"
 
+trap 'exit' SIGINT
+
 VERBOSE=1
 if [[ "$1" == "-q" ]]
 then

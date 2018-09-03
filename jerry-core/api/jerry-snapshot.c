@@ -965,7 +965,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   }
   else
   {
-    const uint8_t *literal_base_p = (uint8_t *) (snapshot_data_p + header_p->lit_table_offset);
+    const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
     bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
                                               literal_base_p,
@@ -1055,7 +1055,78 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
 
   do
   {
-    ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
+    const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
+    uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+
+    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+    {
+      const ecma_value_t *literal_start_p;
+      uint32_t argument_end;
+      uint32_t const_literal_end;
+
+      if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+      {
+        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
+
+        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+      }
+      else
+      {
+        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
+
+        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+      }
+
+      for (uint32_t i = 0; i < const_literal_end; i++)
+      {
+        if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
+        {
+          ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
+          ecma_save_literals_append_value (lit_value, lit_pool_p);
+        }
+      }
+
+      if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
+      {
+        uint8_t *byte_p = (uint8_t *) bytecode_p;
+        byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+        literal_start_p = ((ecma_value_t *) byte_p) - argument_end;
+
+        for (uint32_t i = 0; i < argument_end; i++)
+        {
+          if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
+          {
+            ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
+            ecma_save_literals_append_value (lit_value, lit_pool_p);
+          }
+        }
+      }
+    }
+
+    buffer_p += code_size;
+  }
+  while (buffer_p < buffer_end_p);
+} /* scan_snapshot_functions */
+
+/**
+ * Update all literal offsets in a snapshot data.
+ */
+static void
+update_literal_offsets (uint8_t *buffer_p, /**< [in,out] snapshot buffer start */
+                        const uint8_t *buffer_end_p, /**< snapshot buffer end */
+                        const lit_mem_to_snapshot_id_map_entry_t *lit_map_p, /**< literal map */
+                        const uint8_t *literal_base_p) /**< start of literal data */
+{
+  JERRY_ASSERT (buffer_end_p > buffer_p);
+
+  do
+  {
+    const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
     if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
@@ -1087,81 +1158,9 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
         if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
         {
           ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
-          literal_start_p[i] = lit_value;
-          ecma_save_literals_append_value (lit_value, lit_pool_p);
-        }
-      }
+          const lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-      if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
-      {
-        uint8_t *byte_p = (uint8_t *) bytecode_p;
-        byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
-        literal_start_p = ((ecma_value_t *) byte_p) - argument_end;
-
-        for (uint32_t i = 0; i < argument_end; i++)
-        {
-          if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
-          {
-            ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
-            literal_start_p[i] = lit_value;
-            ecma_save_literals_append_value (lit_value, lit_pool_p);
-          }
-        }
-      }
-    }
-
-    buffer_p += code_size;
-  }
-  while (buffer_p < buffer_end_p);
-} /* scan_snapshot_functions */
-
-/**
- * Update all literal offsets in a snapshot data.
- */
-static void
-update_literal_offsets (uint8_t *buffer_p, /**< snapshot buffer start */
-                        const uint8_t *buffer_end_p, /**< snapshot buffer end */
-                        lit_mem_to_snapshot_id_map_entry_t *lit_map_p) /**< literal map */
-{
-  JERRY_ASSERT (buffer_end_p > buffer_p);
-
-  do
-  {
-    ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
-    uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
-
-    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
-        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
-    {
-      ecma_value_t *literal_start_p;
-      uint32_t argument_end;
-      uint32_t const_literal_end;
-
-      if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-      {
-        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
-
-        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
-        argument_end = args_p->argument_end;
-        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
-      }
-      else
-      {
-        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
-
-        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
-        argument_end = args_p->argument_end;
-        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
-      }
-
-      for (uint32_t i = 0; i < const_literal_end; i++)
-      {
-        if (ecma_is_value_string (literal_start_p[i])
-            || ecma_is_value_float_number (literal_start_p[i]))
-        {
-          lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
-
-          while (current_p->literal_id != literal_start_p[i])
+          while (current_p->literal_id != lit_value)
           {
             current_p++;
           }
@@ -1178,11 +1177,12 @@ update_literal_offsets (uint8_t *buffer_p, /**< snapshot buffer start */
 
         for (uint32_t i = 0; i < argument_end; i++)
         {
-          if (literal_start_p[i] != ECMA_VALUE_EMPTY)
+          if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
           {
-            lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
+            ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
+            const lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-            while (current_p->literal_id != literal_start_p[i])
+            while (current_p->literal_id != lit_value)
             {
               current_p++;
             }
@@ -1251,7 +1251,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
     uint32_t start_offset = header_p->func_offsets[0];
     const uint8_t *data_p = (const uint8_t *) inp_buffers_p[i];
-    const uint8_t *literal_base_p = (uint8_t *) (data_p + header_p->lit_table_offset);
+    const uint8_t *literal_base_p = data_p + header_p->lit_table_offset;
 
     JERRY_ASSERT (header_p->number_of_funcs > 0);
 
@@ -1311,9 +1311,11 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
             ((const uint8_t *) inp_buffers_p[i]) + start_offset,
             current_header_p->lit_table_offset - start_offset);
 
+    const uint8_t *literal_base_p = ((const uint8_t *) inp_buffers_p[i]) + current_header_p->lit_table_offset;
     update_literal_offsets (dst_p,
                             dst_p + current_header_p->lit_table_offset - start_offset,
-                            lit_map_p);
+                            lit_map_p,
+                            literal_base_p);
 
     uint32_t current_offset = (uint32_t) (dst_p - (uint8_t *) out_buffer_p) - start_offset;
 

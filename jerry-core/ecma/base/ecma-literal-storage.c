@@ -346,7 +346,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
  * Save literals to specified snapshot buffer.
  *
  * Note:
- *   Frees lit_pool_p regardless of success.
+ *      Frees 'lit_pool_p' regardless of success.
  *
  * @return true - if save was performed successfully (i.e. buffer size is sufficient),
  *         false - otherwise

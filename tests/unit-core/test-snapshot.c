@@ -286,7 +286,7 @@ main (void)
     size_t snapshot_sizes[2];
     static uint32_t merged_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-    const char *code_to_snapshot_p = "123";
+    const char *code_to_snapshot_p = "var a = 'hello'; 123";
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
@@ -305,7 +305,7 @@ main (void)
 
     jerry_cleanup ();
 
-    code_to_snapshot_p = "456";
+    code_to_snapshot_p = "var b = 'hello'; 456";
 
     jerry_init (JERRY_INIT_EMPTY);
     generate_result = jerry_generate_snapshot (NULL,
@@ -331,6 +331,12 @@ main (void)
     snapshot_buffers[0] = snapshot_buffer_0;
     snapshot_buffers[1] = snapshot_buffer_1;
 
+    static uint32_t snapshot_buffer_0_bck[SNAPSHOT_BUFFER_SIZE];
+    static uint32_t snapshot_buffer_1_bck[SNAPSHOT_BUFFER_SIZE];
+
+    memcpy (snapshot_buffer_0_bck, snapshot_buffer_0, SNAPSHOT_BUFFER_SIZE);
+    memcpy (snapshot_buffer_1_bck, snapshot_buffer_1, SNAPSHOT_BUFFER_SIZE);
+
     size_t merged_size = jerry_merge_snapshots (snapshot_buffers,
                                                 snapshot_sizes,
                                                 2,
@@ -340,6 +346,8 @@ main (void)
 
     jerry_cleanup ();
 
+    TEST_ASSERT (0 == memcmp (snapshot_buffer_0_bck, snapshot_buffer_0, SNAPSHOT_BUFFER_SIZE));
+    TEST_ASSERT (0 == memcmp (snapshot_buffer_1_bck, snapshot_buffer_1, SNAPSHOT_BUFFER_SIZE));
 
     jerry_init (JERRY_INIT_EMPTY);
 

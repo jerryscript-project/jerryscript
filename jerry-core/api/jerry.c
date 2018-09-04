@@ -2622,6 +2622,37 @@ jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string
 } /* jerry_is_valid_cesu8_string */
 
 /**
+ * Allocate memory on the engine's heap.
+ *
+ * Note:
+ *      This function may take away memory from the executed JavaScript code.
+ *      If any other dynamic memory allocation API is available (e.g., libc
+ *      malloc), it should be used instead.
+ *
+ * @return allocated memory on success
+ *         NULL otherwise
+ */
+void *
+jerry_heap_alloc (size_t size) /**< size of the memory block */
+{
+  jerry_assert_api_available ();
+
+  return jmem_heap_alloc_block_null_on_error (size);
+} /* jerry_heap_alloc */
+
+/**
+ * Free memory allocated on the engine's heap.
+ */
+void
+jerry_heap_free (void *mem_p, /**< value returned by jerry_heap_alloc */
+                 size_t size) /**< same size as passed to jerry_heap_alloc */
+{
+  jerry_assert_api_available ();
+
+  jmem_heap_free_block (mem_p, size);
+} /* jerry_heap_free */
+
+/**
  * Create an external engine context.
  *
  * @return the pointer to the context.

@@ -99,7 +99,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
     {
       ecma_property_types_t type = ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[i]);
 
-      if (type == ECMA_PROPERTY_TYPE_NAMEDDATA || type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+      if (type != ECMA_PROPERTY_TYPE_SPECIAL)
       {
         named_property_count++;
       }

@@ -162,12 +162,6 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
-          && property_pair_p->names_cp[index] >= LIT_NEED_MARK_MAGIC_STRING__COUNT)
-      {
-        break;
-      }
-
       ecma_value_t value = property_pair_p->values[index].value;
 
       if (ecma_is_value_object (value))
@@ -193,6 +187,12 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
       {
         ecma_gc_set_object_visited (setter_obj_p);
       }
+      break;
+    }
+    case ECMA_PROPERTY_TYPE_INTERNAL:
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
+                    && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
       break;
     }
     default:
@@ -422,6 +422,8 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
       free_cb (native_pointer_p->data_p);
     }
   }
+
+  jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
 } /* ecma_gc_free_native_pointer */
 
 /**
@@ -468,8 +470,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         {
           ecma_gc_free_native_pointer (property_p);
         }
-
-        if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
+        else if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
         {
           ecma_free_property (object_p, name_cp, property_p);
         }

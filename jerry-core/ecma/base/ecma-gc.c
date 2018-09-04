@@ -32,10 +32,13 @@
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 #include "ecma-typedarray-object.h"
-#endif
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 #include "ecma-promise-object.h"
-#endif
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+#include "ecma-map-object.h"
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
 /* TODO: Extract GC to a separate component */
 
@@ -206,6 +209,87 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
   }
 } /* ecma_gc_mark_property */
 
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+/**
+ * Mark objects referenced by Promise built-in.
+ */
+static void
+ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended object */
+{
+  /* Mark promise result. */
+  ecma_value_t result = ext_object_p->u.class_prop.u.value;
+
+  if (ecma_is_value_object (result))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (result));
+  }
+
+  /* Mark all reactions. */
+  ecma_value_t *ecma_value_p;
+  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
+
+  while (ecma_value_p != NULL)
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+  }
+
+  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
+
+  while (ecma_value_p != NULL)
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+  }
+} /* ecma_gc_mark_promise_object */
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+
+/**
+ * Mark objects referenced by Map built-in.
+ */
+static void
+ecma_gc_mark_map_object (ecma_extended_object_t *ext_object_p) /**< extended object */
+{
+  ecma_map_object_t *map_object_p = (ecma_map_object_t *) ext_object_p;
+
+  jmem_cpointer_t first_chunk_cp = map_object_p->first_chunk_cp;
+
+  if (JERRY_UNLIKELY (first_chunk_cp == ECMA_NULL_POINTER))
+  {
+    return;
+  }
+
+  ecma_value_t *item_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t, first_chunk_cp)->items;
+
+  while (true)
+  {
+    ecma_value_t item = *item_p++;
+
+    if (!ecma_is_value_pointer (item))
+    {
+      if (ecma_is_value_object (item))
+      {
+        ecma_gc_set_object_visited (ecma_get_object_from_value (item));
+      }
+    }
+    else
+    {
+      item_p = (ecma_value_t *) ecma_get_pointer_from_value (item);
+
+      if (item_p == NULL)
+      {
+        return;
+      }
+    }
+  }
+} /* ecma_gc_mark_map_object */
+
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+
 /**
  * Mark objects as visited starting from specified object as root
  */
@@ -243,43 +327,34 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     switch (ecma_get_object_type (object_p))
     {
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
       case ECMA_OBJECT_TYPE_CLASS:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_PROMISE_UL)
+        switch (ext_object_p->u.class_prop.class_id)
         {
-          /* Mark promise result. */
-          ecma_value_t result = ext_object_p->u.class_prop.u.value;
-
-          if (ecma_is_value_object (result))
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+          case LIT_MAGIC_STRING_PROMISE_UL:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (result));
+            ecma_gc_mark_promise_object (ext_object_p);
+            break;
           }
-
-          /* Mark all reactions. */
-          ecma_value_t *ecma_value_p;
-          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
-
-          while (ecma_value_p != NULL)
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+          case LIT_MAGIC_STRING_MAP_UL:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+            ecma_gc_mark_map_object (ext_object_p);
+            break;
           }
-
-          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
-
-          while (ecma_value_p != NULL)
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+          default:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+            break;
           }
         }
 
         break;
       }
-#endif /*! CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
       case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -582,6 +657,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+        case LIT_MAGIC_STRING_MAP_UL:
+        {
+          ecma_op_map_clear_map ((ecma_map_object_t *) object_p);
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
         default:
         {
           /* The undefined id represents an uninitialized class. */

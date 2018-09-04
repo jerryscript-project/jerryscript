@@ -2411,12 +2411,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           uint32_t index = context_top_p[-3];
 
-          JERRY_ASSERT (!ecma_is_value_collection_chunk (chunk_p->items[index]));
+          JERRY_ASSERT (!ecma_is_value_pointer (chunk_p->items[index]));
 
           *stack_top_p++ = chunk_p->items[index];
           index++;
 
-          if (JERRY_LIKELY (!ecma_is_value_collection_chunk (chunk_p->items[index])))
+          if (JERRY_LIKELY (!ecma_is_value_pointer (chunk_p->items[index])))
           {
             context_top_p[-3] = index;
             continue;
@@ -2424,7 +2424,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           context_top_p[-3] = 0;
 
-          ecma_collection_chunk_t *next_chunk_p = ecma_get_collection_chunk_from_value (chunk_p->items[index]);
+          ecma_collection_chunk_t *next_chunk_p;
+          next_chunk_p = (ecma_collection_chunk_t *) ecma_get_pointer_from_value (chunk_p->items[index]);
           ECMA_SET_INTERNAL_VALUE_ANY_POINTER (context_top_p[-2], next_chunk_p);
 
           jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));
@@ -2462,7 +2463,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             index++;
             ecma_value_t value = chunk_p->items[index];
 
-            if (JERRY_LIKELY (!ecma_is_value_collection_chunk (value)))
+            if (JERRY_LIKELY (!ecma_is_value_pointer (value)))
             {
               stack_top_p[-3] = index;
             }
@@ -2471,7 +2472,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               index = 0;
               stack_top_p[-3] = 0;
 
-              ecma_collection_chunk_t *next_chunk_p = ecma_get_collection_chunk_from_value (value);
+              ecma_collection_chunk_t *next_chunk_p;
+              next_chunk_p = (ecma_collection_chunk_t *) ecma_get_pointer_from_value (value);
               ECMA_SET_INTERNAL_VALUE_ANY_POINTER (stack_top_p[-2], next_chunk_p);
 
               jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));

@@ -312,9 +312,9 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_string */
 
 /**
- * Check if the value is direct_ecma-string.
+ * Check if the value is direct ecma-string.
  *
- * @return true - if the value contains ecma-string value,
+ * @return true - if the value contains direct ecma-string value,
  *         false - otherwise
  */
 inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
@@ -322,6 +322,18 @@ ecma_is_value_direct_string (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT_STRING);
 } /* ecma_is_value_direct_string */
+
+/**
+ * Check if the value is non-direct ecma-string.
+ *
+ * @return true - if the value contains non-direct ecma-string value,
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_is_value_non_direct_string (ecma_value_t value) /**< ecma value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_STRING);
+} /* ecma_is_value_non_direct_string */
 
 /**
  * Check if the value is object.
@@ -348,16 +360,16 @@ ecma_is_value_error_reference (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_error_reference */
 
 /**
- * Check if the value is collection chunk.
+ * Check if the value is an aligned pointer.
  *
- * @return true - if the value contains a collection chunk,
+ * @return true - if the value contains an aligned pointer,
  *         false - otherwise
  */
 inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
-ecma_is_value_collection_chunk (ecma_value_t value) /**< ecma value */
+ecma_is_value_pointer (ecma_value_t value) /**< ecma value */
 {
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_COLLECTION_CHUNK);
-} /* ecma_is_value_collection_chunk */
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_POINTER);
+} /* ecma_is_value_pointer */
 
 /**
  * Debug assertion that specified value's type is one of ECMA-defined
@@ -566,27 +578,27 @@ ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) /**<
 } /* ecma_make_error_reference_value */
 
 /**
- * Collection chunk constructor
+ * Create an ecma value from an aligned pointer
  *
- * @return ecma-value representation of the collection chunk
+ * @return ecma-value representation of the aligned pointer
  */
 inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p) /**< collection chunk */
+ecma_make_pointer_value (const void *any_p) /**< any aligned pointer */
 {
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
-  uintptr_t uint_ptr = (uintptr_t) collection_chunk_p;
+  uintptr_t uint_ptr = (uintptr_t) any_p;
   JERRY_ASSERT ((uint_ptr & ECMA_VALUE_TYPE_MASK) == 0);
-  return ((ecma_value_t) uint_ptr) | ECMA_TYPE_COLLECTION_CHUNK;
+  return ((ecma_value_t) uint_ptr) | ECMA_TYPE_POINTER;
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
   jmem_cpointer_t ptr_cp;
-  ECMA_SET_POINTER (ptr_cp, collection_chunk_p);
-  return (((ecma_value_t) ptr_cp) << ECMA_VALUE_SHIFT) | ECMA_TYPE_COLLECTION_CHUNK;
+  ECMA_SET_POINTER (ptr_cp, any_p);
+  return (((ecma_value_t) ptr_cp) << ECMA_VALUE_SHIFT) | ECMA_TYPE_POINTER;
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-} /* ecma_make_collection_chunk_value */
+} /* ecma_make_pointer_value */
 
 /**
  * Get integer value from an integer ecma value
@@ -675,21 +687,21 @@ ecma_get_error_reference_from_value (ecma_value_t value) /**< ecma value */
 } /* ecma_get_error_reference_from_value */
 
 /**
- * Get pointer to collection chunk from ecma value
+ * Get an aligned pointer from an ecma value
  *
- * @return the pointer
+ * @return pointer value
  */
-inline ecma_collection_chunk_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-ecma_get_collection_chunk_from_value (ecma_value_t value) /**< ecma value */
+inline void * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_get_pointer_from_value (ecma_value_t value) /**< ecma value */
 {
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_COLLECTION_CHUNK);
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_POINTER);
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
-  return (ecma_collection_chunk_t *) (uintptr_t) ((value) & ~ECMA_VALUE_TYPE_MASK);
+  return (void *) (uintptr_t) ((value) & ~ECMA_VALUE_TYPE_MASK);
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-  return ECMA_GET_POINTER (ecma_collection_chunk_t, value >> ECMA_VALUE_SHIFT);
+  return ECMA_GET_POINTER (void, value >> ECMA_VALUE_SHIFT);
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-} /* ecma_get_collection_chunk_from_value */
+} /* ecma_get_pointer_from_value */
 
 /**
  * Invert a boolean value

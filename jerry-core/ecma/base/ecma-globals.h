@@ -74,12 +74,11 @@ typedef enum
   ECMA_TYPE_FLOAT = 2, /**< pointer to a 64 or 32 bit floating point number */
   ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
   ECMA_TYPE_DIRECT_STRING = 5, /**< directly encoded string values */
-  ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference */
-  ECMA_TYPE_COLLECTION_CHUNK = ECMA_TYPE_ERROR, /**< pointer to description of a collection chunk */
+  ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference (only supported by C API) */
+  ECMA_TYPE_POINTER = ECMA_TYPE_ERROR, /**< a generic aligned pointer */
   ECMA_TYPE_SNAPSHOT_OFFSET = ECMA_TYPE_ERROR, /**< offset to a snapshot number/string */
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
-
 
 /**
  * Option flags for script parsing.
@@ -166,11 +165,11 @@ enum
   ECMA_VALUE_UNDEFINED = ECMA_MAKE_VALUE (4), /**< undefined value */
   ECMA_VALUE_NULL = ECMA_MAKE_VALUE (5), /**< null value */
   ECMA_VALUE_ARRAY_HOLE = ECMA_MAKE_VALUE (6), /**< array hole, used for
-                                                              *   initialization of an array literal */
+                                                *   initialization of an array literal */
   ECMA_VALUE_NOT_FOUND = ECMA_MAKE_VALUE (7), /**< a special value returned by
-                                                             *   ecma_op_object_find */
+                                               *   ecma_op_object_find */
   ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (8), /**< register reference,
-                                                                *   a special "base" value for vm */
+                                                  *   a special "base" value for vm */
 };
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
@@ -826,8 +825,8 @@ typedef struct
  */
 typedef struct
 {
-  ecma_extended_object_t header;
-  const ecma_compiled_code_t *bytecode_p;
+  ecma_extended_object_t header; /**< header part */
+  const ecma_compiled_code_t *bytecode_p; /**< real byte code pointer */
 } ecma_static_function_t;
 
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
@@ -859,6 +858,34 @@ typedef struct
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+
+/**
+ * Map item count of chunks
+ */
+#define ECMA_MAP_OBJECT_ITEM_COUNT 3
+
+/**
+ * Description of Map objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< header part */
+  jmem_cpointer_t first_chunk_cp; /**< first chunk of item list */
+  jmem_cpointer_t last_chunk_cp; /**< last chunk of item list */
+} ecma_map_object_t;
+
+/**
+ * Description of Map memory chunk.
+ */
+typedef struct
+{
+  ecma_value_t items[ECMA_MAP_OBJECT_ITEM_COUNT + 1]; /**< the last item is always a pointer to the next chunk,
+                                                       *   the rest can be ECMA_VALUE_ARRAY_HOLE or any valid value. */
+} ecma_map_object_chunk_t;
+
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
 /**
  * Description of ECMA property descriptor

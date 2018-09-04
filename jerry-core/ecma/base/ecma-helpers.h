@@ -155,9 +155,10 @@ bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_object (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_error_reference (ecma_value_t value);
-bool JERRY_ATTR_CONST ecma_is_value_collection_chunk (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_pointer (ecma_value_t value);
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
@@ -171,14 +172,14 @@ ecma_value_t JERRY_ATTR_PURE ecma_make_string_value (const ecma_string_t *ecma_s
 ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
 ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
 ecma_value_t JERRY_ATTR_PURE ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p);
-ecma_value_t JERRY_ATTR_PURE ecma_make_collection_chunk_value (const ecma_collection_chunk_t *collection_chunk_p);
+ecma_value_t JERRY_ATTR_PURE ecma_make_pointer_value (const void *any_p);
 ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_number_from_value (ecma_value_t value);
 ecma_string_t JERRY_ATTR_PURE *ecma_get_string_from_value (ecma_value_t value);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
 ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
-ecma_collection_chunk_t JERRY_ATTR_PURE *ecma_get_collection_chunk_from_value (ecma_value_t value);
+void * JERRY_ATTR_PURE ecma_get_pointer_from_value (ecma_value_t value);
 ecma_value_t JERRY_ATTR_CONST ecma_invert_boolean_value (ecma_value_t value);
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);

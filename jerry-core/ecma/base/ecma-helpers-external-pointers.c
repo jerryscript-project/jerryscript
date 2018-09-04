@@ -45,7 +45,9 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
   if (is_new)
   {
     ecma_property_value_t *value_p;
-    value_p = ecma_create_named_data_property (obj_p, name_p, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+    value_p = ecma_create_named_data_property (obj_p, name_p, ECMA_PROPERTY_FLAG_WRITABLE, &property_p);
+
+    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
 
     native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
 
@@ -69,7 +71,6 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
  *
  * Note:
  *      property identifier should be one of the following:
- *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
  *        - LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER
  *
  * @return native pointer data if property exists
@@ -90,20 +91,6 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p) /**< object to get property
 
   return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
 } /* ecma_get_native_pointer_value */
-
-/**
- * Free the allocated native package struct.
- */
-void
-ecma_free_native_pointer (ecma_property_t *prop_p) /**< native property */
-{
-  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
-
-  ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
-                                                                             value_p->value);
-
-  jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
-} /* ecma_free_native_pointer */
 
 /**
  * @}

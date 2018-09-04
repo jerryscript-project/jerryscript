@@ -326,10 +326,11 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_TYPE_SPECIAL, /**< internal property */
+  ECMA_PROPERTY_TYPE_SPECIAL, /**< special purpose property (deleted / hashmap) */
   ECMA_PROPERTY_TYPE_NAMEDDATA, /**< property is named data */
   ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< property is named accessor */
-  ECMA_PROPERTY_TYPE_VIRTUAL, /**< property is virtual */
+  ECMA_PROPERTY_TYPE_INTERNAL, /**< internal property with custom data field */
+  ECMA_PROPERTY_TYPE_VIRTUAL = ECMA_PROPERTY_TYPE_INTERNAL, /**< property is virtual data property */
 
   ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_VIRTUAL, /**< highest value for property types. */
 } ecma_property_types_t;
@@ -391,6 +392,12 @@ typedef enum
 #define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
 
 /**
+ * Convert data property to internal property.
+ */
+#define ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY(property_p) \
+   *(property_p) = (uint8_t) (*(property_p) + (ECMA_PROPERTY_TYPE_INTERNAL - ECMA_PROPERTY_TYPE_NAMEDDATA))
+
+/**
  * Special property identifiers.
  */
 typedef enum
@@ -401,7 +408,7 @@ typedef enum
   ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
 
   ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
-} ecma_internal_property_id_t;
+} ecma_special_property_id_t;
 
 /**
  * Define special property type.
@@ -418,15 +425,6 @@ typedef enum
  * Type of hash-map property.
  */
 #define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
-
-/**
- * Name constant of a deleted property.
- */
-#ifdef JERRY_CPOINTER_32_BIT
-#define ECMA_PROPERTY_DELETED_NAME 0xffffffffu
-#else /* !JERRY_CPOINTER_32_BIT */
-#define ECMA_PROPERTY_DELETED_NAME 0xffffu
-#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Type of property not found.
@@ -530,8 +528,7 @@ typedef struct
  * Returns true if the property pointer is a property pair.
  */
 #define ECMA_PROPERTY_IS_PROPERTY_PAIR(property_header_p) \
-  (ECMA_PROPERTY_GET_TYPE ((property_header_p)->types[0]) != ECMA_PROPERTY_TYPE_VIRTUAL \
-   && (property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
+  ((property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
 
 /**
  * Returns true if the property is named property.

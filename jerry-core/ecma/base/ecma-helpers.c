@@ -60,9 +60,6 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF | (ECMA_OBJECT_REF_ONE - 1)) == UINT16
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_TYPE_DELETED == (ECMA_DIRECT_STRING_MAGIC << ECMA_PROPERTY_NAME_TYPE_SHIFT),
                      ecma_property_type_deleted_must_have_magic_string_name_type);
 
-JERRY_STATIC_ASSERT (ECMA_PROPERTY_DELETED_NAME >= LIT_MAGIC_STRING__COUNT,
-                     ecma_property_deleted_name_must_not_be_valid_maigc_string_id);
-
 /**
  * Create an object with specified prototype object
  * (or NULL prototype if there is not prototype for the object)
@@ -468,7 +465,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   /* Just copy the previous value (no need to decompress, compress). */
   first_property_pair_p->header.next_property_cp = *property_list_head_p;
   first_property_pair_p->header.types[0] = ECMA_PROPERTY_TYPE_DELETED;
-  first_property_pair_p->names_cp[0] = ECMA_PROPERTY_DELETED_NAME;
+  first_property_pair_p->names_cp[0] = LIT_INTERNAL_MAGIC_STRING_DELETED;
 
   if (name_p == NULL)
   {
@@ -743,19 +740,11 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-          && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
-      {
-        ecma_free_native_pointer (property_p);
-        break;
-      }
-
       ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       break;
     }
-    default:
+    case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 #ifdef JERRY_CPOINTER_32_BIT
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
@@ -763,6 +752,13 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* JERRY_CPOINTER_32_BIT */
       break;
+    }
+    default:
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
+
+      /* Currently no internal property can reach this point. */
+      JERRY_UNREACHABLE ();
     }
   }
 
@@ -821,7 +817,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 
         ecma_free_property (object_p, prop_pair_p->names_cp[i], cur_prop_p->types + i);
         cur_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
-        prop_pair_p->names_cp[i] = ECMA_PROPERTY_DELETED_NAME;
+        prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
 
         JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
@@ -963,7 +959,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
           ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
           current_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
-          prop_pair_p->names_cp[i] = ECMA_PROPERTY_DELETED_NAME;
+          prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
         }
       }
     }
@@ -1254,7 +1250,8 @@ inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
   return (*property_p & ECMA_PROPERTY_FLAG_LCACHED) != 0;
 } /* ecma_is_property_lcached */
@@ -1267,7 +1264,8 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
                            bool is_lcached) /**< new value for lcached flag */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
   if (is_lcached)
   {

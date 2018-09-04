@@ -65,43 +65,43 @@ jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 } /* jmem_heap_get_region_end */
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
+/**
+ * @{
+ * JMEM_HEAP_STAT_xxx definitions
+ */
 #ifdef JMEM_STATS
 static void jmem_heap_stat_init (void);
 static void jmem_heap_stat_alloc (size_t num);
 static void jmem_heap_stat_free (size_t num);
+
+#define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
+#define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
+#define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 static void jmem_heap_stat_skip (void);
 static void jmem_heap_stat_nonskip (void);
 static void jmem_heap_stat_alloc_iter (void);
 static void jmem_heap_stat_free_iter (void);
+
+#define JMEM_HEAP_STAT_SKIP() jmem_heap_stat_skip ()
+#define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
+#define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
+#define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-/**
- * @{
- * JMEM_HEAP_STAT_xxx definitions
- */
-#  define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
-#  define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
-#  define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
-#  define JMEM_HEAP_STAT_SKIP() jmem_heap_stat_skip ()
-#  define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
-#  define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
-#  define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
-/** @} */
 #else /* !JMEM_STATS */
-/**
- * @{
- * JMEM_HEAP_STAT_xxx definitions
- */
-#  define JMEM_HEAP_STAT_INIT()
-#  define JMEM_HEAP_STAT_ALLOC(v1)
-#  define JMEM_HEAP_STAT_FREE(v1)
-#  define JMEM_HEAP_STAT_SKIP()
-#  define JMEM_HEAP_STAT_NONSKIP()
-#  define JMEM_HEAP_STAT_ALLOC_ITER()
-#  define JMEM_HEAP_STAT_FREE_ITER()
-/** @} */
+#define JMEM_HEAP_STAT_INIT()
+#define JMEM_HEAP_STAT_ALLOC(v1) JERRY_UNUSED (v1)
+#define JMEM_HEAP_STAT_FREE(v1) JERRY_UNUSED (v1)
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+#define JMEM_HEAP_STAT_SKIP()
+#define JMEM_HEAP_STAT_NONSKIP()
+#define JMEM_HEAP_STAT_ALLOC_ITER()
+#define JMEM_HEAP_STAT_FREE_ITER()
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 #endif /* JMEM_STATS */
+/** @} */
 
 /**
  * Startup initialization of heap
@@ -486,11 +486,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
 #else /* JERRY_SYSTEM_ALLOCATOR */
-#ifdef JMEM_STATS
   JMEM_HEAP_STAT_FREE (size);
-#else /* !JMEM_STATS */
-  JERRY_UNUSED (size);
-#endif /* JMEM_STATS */
   free (ptr);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_free_block */

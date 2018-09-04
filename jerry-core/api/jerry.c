@@ -159,8 +159,9 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
   /* This function cannot be called twice unless jerry_cleanup is called. */
   JERRY_ASSERT (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE));
 
-  /* Zero out all members. */
-  memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0, sizeof (jerry_context_t));
+  /* Zero out all non-external members. */
+  memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0,
+          sizeof (jerry_context_t) - offsetof (jerry_context_t, JERRY_CONTEXT_FIRST_MEMBER));
 
   JERRY_CONTEXT (jerry_init_flags) = flags;
 
@@ -2621,20 +2622,20 @@ jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, /**< CESU-8 string
 } /* jerry_is_valid_cesu8_string */
 
 /**
- * Create a jerry instance for external context.
+ * Create an external engine context.
  *
- * @return the pointer to the instance.
+ * @return the pointer to the context.
  */
-jerry_instance_t *
-jerry_create_instance (uint32_t heap_size, /**< the size of heap */
-                       jerry_instance_alloc_t alloc, /**< the alloc function */
-                       void *cb_data_p) /**< the cb_data for alloc function */
+jerry_context_t *
+jerry_create_context (uint32_t heap_size, /**< the size of heap */
+                      jerry_context_alloc_t alloc, /**< the alloc function */
+                      void *cb_data_p) /**< the cb_data for alloc function */
 {
   JERRY_UNUSED (heap_size);
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
-  size_t total_size = sizeof (jerry_instance_t) + JMEM_ALIGNMENT;
+  size_t total_size = sizeof (jerry_context_t) + JMEM_ALIGNMENT;
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
   heap_size = JERRY_ALIGNUP (heap_size, JMEM_ALIGNMENT);
@@ -2650,30 +2651,30 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
 
   total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
 
-  jerry_instance_t *instance_p = (jerry_instance_t *) alloc (total_size, cb_data_p);
+  jerry_context_t *context_p = (jerry_context_t *) alloc (total_size, cb_data_p);
 
-  if (instance_p == NULL)
+  if (context_p == NULL)
   {
     return NULL;
   }
 
-  memset (instance_p, 0, total_size);
+  memset (context_p, 0, total_size);
 
-  uintptr_t instance_ptr = ((uintptr_t) instance_p) + sizeof (jerry_instance_t);
-  instance_ptr = JERRY_ALIGNUP (instance_ptr, (uintptr_t) JMEM_ALIGNMENT);
+  uintptr_t context_ptr = ((uintptr_t) context_p) + sizeof (jerry_context_t);
+  context_ptr = JERRY_ALIGNUP (context_ptr, (uintptr_t) JMEM_ALIGNMENT);
 
-  uint8_t *byte_p = (uint8_t *) instance_ptr;
+  uint8_t *byte_p = (uint8_t *) context_ptr;
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  instance_p->heap_p = (jmem_heap_t *) byte_p;
-  instance_p->heap_size = heap_size;
+  context_p->heap_p = (jmem_heap_t *) byte_p;
+  context_p->heap_size = heap_size;
   byte_p += heap_size;
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-  JERRY_ASSERT (byte_p <= ((uint8_t *) instance_p) + total_size);
+  JERRY_ASSERT (byte_p <= ((uint8_t *) context_p) + total_size);
 
   JERRY_UNUSED (byte_p);
-  return instance_p;
+  return context_p;
 
 #else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
@@ -2683,7 +2684,7 @@ jerry_create_instance (uint32_t heap_size, /**< the size of heap */
   return NULL;
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
-} /* jerry_create_instance */
+} /* jerry_create_context */
 
 /**
  * If JERRY_VM_EXEC_STOP is defined the callback passed to this function is

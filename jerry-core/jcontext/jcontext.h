@@ -14,7 +14,7 @@
  */
 
 /*
- * Memory context for JerryScript
+ * Engine context for JerryScript
  */
 #ifndef JCONTEXT_H
 #define JCONTEXT_H
@@ -33,6 +33,22 @@
  * @{
  */
 
+ #ifndef JERRY_SYSTEM_ALLOCATOR
+/**
+ * Heap structure
+ *
+ * Memory blocks returned by the allocator must not start from the
+ * beginning of the heap area because offset 0 is reserved for
+ * JMEM_CP_NULL. This special constant is used in several places,
+ * e.g. it marks the end of the property chain list, so it cannot
+ * be eliminated from the project. Although the allocator cannot
+ * use the first 8 bytes of the heap, nothing prevents to use it
+ * for other purposes. Currently the free region start is stored
+ * there.
+ */
+typedef struct jmem_heap_t jmem_heap_t;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+
 /**
  * User context item
  */
@@ -46,7 +62,7 @@ typedef struct jerry_context_data_header
   ((uint8_t *) (item_p + 1))
 
 /**
- * First member of the jerry context
+ * First non-external member of the jerry context
  */
 #define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
 
@@ -56,9 +72,17 @@ typedef struct jerry_context_data_header
  * The purpose of this header is storing
  * all global variables for Jerry
  */
-typedef struct
+struct jerry_context_t
 {
-  /* Update JERRY_CONTEXT_FIRST_MEMBER if the first member changes */
+  /* The value of external context members must be preserved across initializations and cleanups. */
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
+  uint32_t heap_size; /**< size of the heap */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+
+  /* Update JERRY_CONTEXT_FIRST_MEMBER if the first non-external member changes */
   ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
@@ -137,7 +161,8 @@ typedef struct
   /** hash table for caching the last access of properties */
   ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-} jerry_context_t;
+};
+
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
@@ -145,42 +170,30 @@ typedef struct
  * This part is for JerryScript which uses external context.
  */
 
-#ifndef JERRY_GET_CURRENT_INSTANCE
+#ifndef JERRY_GET_CURRENT_CONTEXT
 /**
- * Default function if JERRY_GET_CURRENT_INSTANCE is not defined.
+ * Default function if JERRY_GET_CURRENT_CONTEXT is not defined.
  */
-#define JERRY_GET_CURRENT_INSTANCE() (jerry_port_get_current_instance ())
-#endif /* !JERRY_GET_CURRENT_INSTANCE */
+#define JERRY_GET_CURRENT_CONTEXT() (jerry_port_get_current_context ())
+#endif /* !JERRY_GET_CURRENT_CONTEXT */
 
-#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->context.field)
+#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_CONTEXT ()->field)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 
-#define JMEM_HEAP_SIZE (JERRY_GET_CURRENT_INSTANCE ()->heap_size)
+#define JMEM_HEAP_SIZE (JERRY_CONTEXT (heap_size))
 
 #define JMEM_HEAP_AREA_SIZE (JMEM_HEAP_SIZE - JMEM_ALIGNMENT)
 
-typedef struct
+struct jmem_heap_t
 {
   jmem_heap_free_t first; /**< first node in free region list */
   uint8_t area[]; /**< heap area */
-} jmem_heap_t;
-
-#define JERRY_HEAP_CONTEXT(field) (JERRY_GET_CURRENT_INSTANCE ()->heap_p->field)
-
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-
-/**
- * Description of jerry instance which is the header of the context space.
- */
-struct jerry_instance_t
-{
-  jerry_context_t context; /**< the context of the instance */
-#ifndef JERRY_SYSTEM_ALLOCATOR
-  jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
-  uint32_t heap_size; /**< size of the heap */
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
 };
+
+#define JERRY_HEAP_CONTEXT(field) (JERRY_CONTEXT (heap_p)->field)
+
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 #else /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
 
@@ -210,23 +223,11 @@ extern jerry_context_t jerry_global_context;
  */
 #define JMEM_HEAP_AREA_SIZE (JMEM_HEAP_SIZE - JMEM_ALIGNMENT)
 
-/**
- * Heap structure
- *
- * Memory blocks returned by the allocator must not start from the
- * beginning of the heap area because offset 0 is reserved for
- * JMEM_CP_NULL. This special constant is used in several places,
- * e.g. it marks the end of the property chain list, so it cannot
- * be eliminated from the project. Although the allocator cannot
- * use the first 8 bytes of the heap, nothing prevents to use it
- * for other purposes. Currently the free region start is stored
- * there.
- */
-typedef struct
+struct jmem_heap_t
 {
   jmem_heap_free_t first; /**< first node in free region list */
   uint8_t area[JMEM_HEAP_AREA_SIZE]; /**< heap area */
-} jmem_heap_t;
+};
 
 /**
  * Global heap.

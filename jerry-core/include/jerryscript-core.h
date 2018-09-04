@@ -281,9 +281,9 @@ typedef struct
 } jerry_context_data_manager_t;
 
 /**
- * Function type for allocating buffer for JerryScript instance.
+ * Function type for allocating buffer for JerryScript context.
  */
-typedef void *(*jerry_instance_alloc_t) (size_t size, void *cb_data_p);
+typedef void *(*jerry_context_alloc_t) (size_t size, void *cb_data_p);
 
 /**
  * Type information of a native pointer.
@@ -294,9 +294,9 @@ typedef struct
 } jerry_object_native_info_t;
 
 /**
- * An opaque declaration of the JerryScript instance structure.
+ * An opaque declaration of the JerryScript context structure.
  */
-typedef struct jerry_instance_t jerry_instance_t;
+typedef struct jerry_context_t jerry_context_t;
 
 /**
  * General engine functions.
@@ -517,7 +517,7 @@ bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t 
 /*
  * External context functions.
  */
-jerry_instance_t *jerry_create_instance (uint32_t heap_size, jerry_instance_alloc_t alloc, void *cb_data_p);
+jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t alloc, void *cb_data_p);
 
 /**
  * Miscellaneous functions.

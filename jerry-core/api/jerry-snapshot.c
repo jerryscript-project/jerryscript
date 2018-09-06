@@ -1259,7 +1259,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
     functions_size += header_p->lit_table_offset - start_offset;
 
     scan_snapshot_functions (data_p + start_offset,
-                             data_p + header_p->lit_table_offset,
+                             literal_base_p,
                              lit_pool_p,
                              literal_base_p);
   }
@@ -1582,48 +1582,44 @@ ecma_string_is_valid_identifier (const ecma_string_t *string_p)
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
 /**
- * Copy certain string literals into the given buffer in a specified format,
- * which are valid identifiers and none of them are magic string.
+ * Get the literals from a snapshot. Copies certain string literals into the given
+ * buffer in a specified format.
+ *
+ * Note:
+ *      Only valid identifiers are saved in C format.
  *
  * @return size of the literal-list in bytes, at most equal to the buffer size,
- *         if the source parsed successfully and the list of the literals isn't empty,
+ *         if the list of the literals isn't empty,
  *         0 - otherwise.
  */
 size_t
-jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source */
-                               size_t source_size, /**< script source size */
-                               bool is_strict, /**< strict mode */
-                               uint32_t *buffer_p, /**< [out] buffer to save literals to */
-                               size_t buffer_size, /**< the buffer's size */
-                               bool is_c_format) /**< format-flag */
+jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapshot buffer */
+                                  size_t snapshot_size, /**< size of the input snapshot buffer */
+                                  jerry_char_t *lit_buf_p, /**< [out] buffer to save literals to */
+                                  size_t lit_buf_size, /**< the buffer's size */
+                                  bool is_c_format) /**< format-flag */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-  ecma_value_t parse_status;
-  ecma_compiled_code_t *bytecode_data_p;
+  const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
+  const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
 
-#ifdef JERRY_ENABLE_LINE_INFO
-  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ENABLE_LINE_INFO */
-
-  parse_status = parser_parse_script (NULL,
-                                      0,
-                                      source_p,
-                                      source_size,
-                                      is_strict,
-                                      &bytecode_data_p);
-
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (snapshot_size <= sizeof (jerry_snapshot_header_t)
+      || header_p->magic != JERRY_SNAPSHOT_MAGIC
+      || header_p->version != JERRY_SNAPSHOT_VERSION
+      || !snapshot_check_global_flags (header_p->global_flags))
   {
-    ecma_free_value (JERRY_CONTEXT (error_value));
+    /* Invalid snapshot format */
     return 0;
   }
 
-  ecma_free_value (parse_status);
+  JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
+  const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
   ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
-  ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
-
-  ecma_bytecode_deref (bytecode_data_p);
+  scan_snapshot_functions (snapshot_data_p + header_p->func_offsets[0],
+                           literal_base_p,
+                           lit_pool_p,
+                           literal_base_p);
 
   lit_utf8_size_t literal_count = 0;
   ecma_value_t *iterator_p = ecma_collection_iterator_init (lit_pool_p);
@@ -1657,10 +1653,8 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     return 0;
   }
 
-  uint8_t *destination_p = (uint8_t *) buffer_p;
-
-  uint8_t *const buffer_start_p = destination_p;
-  uint8_t *const buffer_end_p = destination_p + buffer_size;
+  jerry_char_t *const buffer_start_p = lit_buf_p;
+  jerry_char_t *const buffer_end_p = lit_buf_p + lit_buf_size;
 
   JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
   lit_utf8_size_t literal_idx = 0;
@@ -1697,43 +1691,43 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
   if (is_c_format)
   {
     /* Save literal count. */
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  "jerry_length_t literal_count = ",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              "jerry_length_t literal_count = ",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
 
     /* Save the array of literals. */
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  ";\n\njerry_char_t *literals[",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              ";\n\njerry_char_t *literals[",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
 
     for (lit_utf8_size_t i = 0; i < literal_count; i++)
     {
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "  \"", 0);
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\"", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  \"", 0);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\"", 0);
 
       if (i < literal_count - 1)
       {
-        destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
       }
 
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\n", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
     }
 
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  "};\n\njerry_length_t literal_sizes[",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              "};\n\njerry_length_t literal_sizes[",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
   }
 
   /* Save the literal sizes respectively. */
@@ -1743,51 +1737,51 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 
     if (is_c_format)
     {
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "  ", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  ", 0);
     }
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, str_size);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, " ", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, str_size);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " ", 0);
 
     if (is_c_format)
     {
       /* Show the given string as a comment. */
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "/* ", 0);
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, " */", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "/* ", 0);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " */", 0);
 
       if (i < literal_count - 1)
       {
-        destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
       }
     }
     else
     {
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
     }
 
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
   }
 
   if (is_c_format)
   {
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "};\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "};\n", 0);
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
 
-  return destination_p <= buffer_end_p ? (size_t) (destination_p - buffer_start_p) : 0;
+  return lit_buf_p <= buffer_end_p ? (size_t) (lit_buf_p - buffer_start_p) : 0;
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
-  JERRY_UNUSED (source_p);
-  JERRY_UNUSED (source_size);
-  JERRY_UNUSED (is_strict);
-  JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (buffer_size);
+  JERRY_UNUSED (snapshot_p);
+  JERRY_UNUSED (snapshot_size);
+  JERRY_UNUSED (lit_buf_p);
+  JERRY_UNUSED (lit_buf_size);
   JERRY_UNUSED (is_c_format);
 
   return 0;
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
-} /* jerry_parse_and_save_literals */
+} /* jerry_get_literals_from_snapshot */
+
 
 /**
  * Generate snapshot function from specified source and arguments

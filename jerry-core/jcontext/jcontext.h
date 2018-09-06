@@ -170,14 +170,7 @@ struct jerry_context_t
  * This part is for JerryScript which uses external context.
  */
 
-#ifndef JERRY_GET_CURRENT_CONTEXT
-/**
- * Default function if JERRY_GET_CURRENT_CONTEXT is not defined.
- */
-#define JERRY_GET_CURRENT_CONTEXT() (jerry_port_get_current_context ())
-#endif /* !JERRY_GET_CURRENT_CONTEXT */
-
-#define JERRY_CONTEXT(field) (JERRY_GET_CURRENT_CONTEXT ()->field)
+#define JERRY_CONTEXT(field) (jerry_port_get_current_context ()->field)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 

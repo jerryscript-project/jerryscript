@@ -88,10 +88,6 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
         *buf_end_p++ = (arg_index < args_cnt - 1) ? ' ' : '\n';
       }
 
-#ifdef JERRY_DEBUGGER
-      jerry_char_t *debugger_start_p = substr_buf;
-#endif /* JERRY_DEBUGGER */
-
       for (jerry_char_t *buf_p = substr_buf; buf_p < buf_end_p; buf_p++)
       {
         char chr = (char) *buf_p;
@@ -106,24 +102,7 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
         {
           jerryx_port_handler_print_char (null_str[null_index]);
         }
-
-#ifdef JERRY_DEBUGGER
-        if (debugger_start_p < buf_p)
-        {
-          jerry_debugger_send_output (debugger_start_p, (jerry_size_t) (buf_p - debugger_start_p));
-        }
-
-        jerry_debugger_send_output ((jerry_char_t *) null_str, 6);
-        debugger_start_p = buf_p + 1;
-#endif /* JERRY_DEBUGGER */
       }
-
-#ifdef JERRY_DEBUGGER
-      if (debugger_start_p < buf_end_p)
-      {
-        jerry_debugger_send_output (debugger_start_p, (jerry_size_t) (buf_end_p - debugger_start_p));
-      }
-#endif /* JERRY_DEBUGGER */
     }
     while (substr_pos < length);
 
@@ -133,9 +112,6 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
   if (args_cnt == 0 || jerry_value_is_error (ret_val))
   {
     jerryx_port_handler_print_char ('\n');
-#ifdef JERRY_DEBUGGER
-    jerry_debugger_send_output ((jerry_char_t *) "\n", 1);
-#endif /* JERRY_DEBUGGER */
   }
 
   return ret_val;

@@ -52,20 +52,22 @@ main (void)
   jerry_release_value (callback_name);
   jerry_release_value (global);
 
-  const char *inf_loop_code_src_p = ("while(true) {\n"
-                                     "  with ({}) {\n"
-                                     "    try {\n"
-                                     "      callback();\n"
-                                     "    } catch (e) {\n"
-                                     "    } finally {\n"
-                                     "    }\n"
-                                     "  }\n"
-                                     "}");
+  const jerry_char_t inf_loop_code_src1[] = TEST_STRING_LITERAL (
+    "while(true) {\n"
+    "  with ({}) {\n"
+    "    try {\n"
+    "      callback();\n"
+    "    } catch (e) {\n"
+    "    } finally {\n"
+    "    }\n"
+    "  }\n"
+    "}"
+  );
 
   jerry_value_t parsed_code_val = jerry_parse (NULL,
                                                0,
-                                               (jerry_char_t *) inf_loop_code_src_p,
-                                               strlen (inf_loop_code_src_p),
+                                               inf_loop_code_src1,
+                                               sizeof (inf_loop_code_src1) - 1,
                                                JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
@@ -76,29 +78,31 @@ main (void)
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
 
-  inf_loop_code_src_p = ("function f() {"
-                         "  while(true) {\n"
-                         "    with ({}) {\n"
-                         "      try {\n"
-                         "        callback();\n"
-                         "      } catch (e) {\n"
-                         "      } finally {\n"
-                         "      }\n"
-                         "    }\n"
-                         "  }"
-                         "}\n"
-                         "function g() {\n"
-                         "  for (a in { x:5 })\n"
-                         "    f();\n"
-                         "}\n"
-                          "\n"
-                         "with({})\n"
-                         " f();\n");
+  const jerry_char_t inf_loop_code_src2[] = TEST_STRING_LITERAL (
+    "function f() {"
+    "  while(true) {\n"
+    "    with ({}) {\n"
+    "      try {\n"
+    "        callback();\n"
+    "      } catch (e) {\n"
+    "      } finally {\n"
+    "      }\n"
+    "    }\n"
+    "  }"
+    "}\n"
+    "function g() {\n"
+    "  for (a in { x:5 })\n"
+    "    f();\n"
+    "}\n"
+    "\n"
+    "with({})\n"
+    " f();\n"
+  );
 
   parsed_code_val = jerry_parse (NULL,
                                  0,
-                                 (jerry_char_t *) inf_loop_code_src_p,
-                                 strlen (inf_loop_code_src_p),
+                                 inf_loop_code_src2,
+                                 sizeof (inf_loop_code_src2) - 1,
                                  JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));

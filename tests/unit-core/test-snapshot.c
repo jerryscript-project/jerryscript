@@ -63,17 +63,17 @@ static void test_function_snapshot (void)
   const jerry_init_flag_t flags = JERRY_INIT_EMPTY;
   static uint32_t function_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-  const char *args_p = "a, b";
-  const char *code_to_snapshot_p = "return a + b";
+  const jerry_char_t func_args[] = "a, b";
+  const jerry_char_t code_to_snapshot[] = "return a + b";
 
   jerry_init (flags);
   jerry_value_t generate_result;
   generate_result = jerry_generate_function_snapshot (NULL,
                                                       0,
-                                                      (const jerry_char_t *) code_to_snapshot_p,
-                                                      strlen (code_to_snapshot_p),
-                                                      (jerry_char_t *) args_p,
-                                                      strlen (args_p),
+                                                      code_to_snapshot,
+                                                      sizeof (code_to_snapshot) - 1,
+                                                      func_args,
+                                                      sizeof (func_args) - 1,
                                                       0,
                                                       function_snapshot_buffer,
                                                       SNAPSHOT_BUFFER_SIZE);
@@ -135,20 +135,22 @@ static void test_function_arguments_snapshot (void)
   {
     static uint32_t arguments_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-    const char *code_to_snapshot_p = ("function f(a,b,c) {"
-                                      "  arguments[0]++;"
-                                      "  arguments[1]++;"
-                                      "  arguments[2]++;"
-                                      "  return a + b + c;"
-                                      "}"
-                                      "f(3,4,5);");
+    const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
+      "function f(a,b,c) {"
+      "  arguments[0]++;"
+      "  arguments[1]++;"
+      "  arguments[2]++;"
+      "  return a + b + c;"
+      "}"
+      "f(3,4,5);"
+    );
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                0,
                                                arguments_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -201,14 +203,14 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
+    const jerry_char_t code_to_snapshot[] = "(function () { return 'string from snapshot'; }) ();";
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                0,
                                                snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -247,11 +249,13 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    const char *code_to_snapshot_p = ("function func(a, b, c) {"
-                                      "  c = 'snapshot';"
-                                      "  return arguments[0] + ' ' + b + ' ' + arguments[2];"
-                                      "};"
-                                      "func('string', 'from');");
+    const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
+      "function func(a, b, c) {"
+      "  c = 'snapshot';"
+      "  return arguments[0] + ' ' + b + ' ' + arguments[2];"
+      "};"
+      "func('string', 'from');"
+    );
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_register_magic_strings (magic_strings,
@@ -261,8 +265,8 @@ main (void)
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                JERRY_SNAPSHOT_SAVE_STATIC,
                                                snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -291,14 +295,14 @@ main (void)
     size_t snapshot_sizes[2];
     static uint32_t merged_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-    const char *code_to_snapshot_p = "var a = 'hello'; 123";
+    const jerry_char_t code_to_snapshot1[] = "var a = 'hello'; 123";
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot1,
+                                               sizeof (code_to_snapshot1) - 1,
                                                0,
                                                snapshot_buffer_0,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -310,13 +314,13 @@ main (void)
 
     jerry_cleanup ();
 
-    code_to_snapshot_p = "var b = 'hello'; 456";
+    const jerry_char_t code_to_snapshot2[] = "var b = 'hello'; 456";
 
     jerry_init (JERRY_INIT_EMPTY);
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot2,
+                                               sizeof (code_to_snapshot2) - 1,
                                                0,
                                                snapshot_buffer_1,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -377,13 +381,13 @@ main (void)
 
     static jerry_char_t literal_buffer_c[LITERAL_BUFFER_SIZE];
     static uint32_t literal_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-    static const char *code_for_c_format_p = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
+    static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
 
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_for_c_format_p,
-                                               strlen (code_for_c_format_p),
+                                               code_for_c_format,
+                                               sizeof (code_for_c_format) - 1,
                                                0,
                                                literal_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);

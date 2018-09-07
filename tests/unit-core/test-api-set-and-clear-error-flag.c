@@ -17,7 +17,7 @@
 #include "test-common.h"
 
 static void
-compare_str (jerry_value_t value, const char *str_p, size_t str_len)
+compare_str (jerry_value_t value, const jerry_char_t *str_p, size_t str_len)
 {
   jerry_size_t size = jerry_get_string_size (value);
   JERRY_ASSERT (str_len == size);
@@ -43,56 +43,56 @@ main (void)
   jerry_release_value (err_val);
   jerry_release_value (obj_val);
 
-  const char *pterodactylus_p = "Pterodactylus";
-  const size_t pterodactylus_size = strlen (pterodactylus_p);
+  const jerry_char_t pterodactylus[] = "Pterodactylus";
+  const size_t pterodactylus_size = sizeof (pterodactylus) - 1;
 
-  jerry_value_t str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  jerry_value_t str = jerry_create_string (pterodactylus);
   jerry_value_t error = jerry_create_error_from_value (str, true);
   str = jerry_get_value_from_error (error, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
-  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  str = jerry_create_string (pterodactylus);
   error = jerry_create_error_from_value (str, false);
   jerry_release_value (str);
   str = jerry_get_value_from_error (error, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
-  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  str = jerry_create_string (pterodactylus);
   error = jerry_create_abort_from_value (str, true);
   str = jerry_get_value_from_error (error, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
-  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  str = jerry_create_string (pterodactylus);
   error = jerry_create_abort_from_value (str, false);
   jerry_release_value (str);
   str = jerry_get_value_from_error (error, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
-  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  str = jerry_create_string (pterodactylus);
   error = jerry_create_error_from_value (str, true);
   error = jerry_create_abort_from_value (error, true);
   JERRY_ASSERT (jerry_value_is_abort (error));
   str = jerry_get_value_from_error (error, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
-  str = jerry_create_string ((jerry_char_t *) pterodactylus_p);
+  str = jerry_create_string (pterodactylus);
   error = jerry_create_error_from_value (str, true);
   jerry_value_t error2 = jerry_create_abort_from_value (error, false);
   JERRY_ASSERT (jerry_value_is_abort (error2));
   jerry_release_value (error);
   str = jerry_get_value_from_error (error2, true);
 
-  compare_str (str, pterodactylus_p, pterodactylus_size);
+  compare_str (str, pterodactylus, pterodactylus_size);
   jerry_release_value (str);
 
   double test_num = 3.1415926;

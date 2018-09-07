@@ -19,22 +19,22 @@
 #include "test-common.h"
 
 
-const char *test_source = (
-                           "var p1 = create_promise1();"
-                           "var p2 = create_promise2();"
-                           "p1.then(function(x) { "
-                           "  assert(x==='resolved'); "
-                           "}); "
-                           "p2.catch(function(x) { "
-                           "  assert(x==='rejected'); "
-                           "}); "
-                           );
+static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+  "var p1 = create_promise1();"
+  "var p2 = create_promise2();"
+  "p1.then(function(x) { "
+  "  assert(x==='resolved'); "
+  "}); "
+  "p2.catch(function(x) { "
+  "  assert(x==='rejected'); "
+  "}); "
+);
 
 static int count_in_assert = 0;
 static jerry_value_t my_promise1;
 static jerry_value_t my_promise2;
-const jerry_char_t s1[] = "resolved";
-const jerry_char_t s2[] = "rejected";
+static const jerry_char_t s1[] = "resolved";
+static const jerry_char_t s2[] = "rejected";
 
 static jerry_value_t
 create_promise1_handler (const jerry_value_t func_obj_val, /**< function object */
@@ -131,8 +131,8 @@ main (void)
 
   jerry_value_t parsed_code_val = jerry_parse (NULL,
                                                0,
-                                               (jerry_char_t *) test_source,
-                                               strlen (test_source),
+                                               test_source,
+                                               sizeof (test_source) - 1,
                                                JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 

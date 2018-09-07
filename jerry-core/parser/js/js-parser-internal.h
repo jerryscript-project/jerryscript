@@ -68,7 +68,12 @@ typedef enum
   PARSER_ARROW_PARSE_ARGS = (1u << 19),       /**< parse the argument list of an arrow function */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed */
+  /* These three status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
+  PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed (this value must be kept in
+                                               *   in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
+  PARSER_CLASS_HAS_SUPER = (1u << 21),        /**< class has super reference */
+  PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
+  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } parser_general_flags_t;
 
@@ -84,6 +89,54 @@ typedef enum
   PARSE_EXPR_HAS_LITERAL = (1u << 3),         /**< a primary literal is provided by a
                                                *   CBC_PUSH_LITERAL instruction  */
 } parser_expression_flags_t;
+
+/**
+ * Mask for strict mode code
+ */
+#define PARSER_STRICT_MODE_MASK 0x1
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Offset between PARSER_CLASS_CONSTRUCTOR and ECMA_PARSE_CLASS_CONSTRUCTOR
+ */
+#define PARSER_CLASS_PARSE_OPTS_OFFSET \
+  (JERRY_LOG2 (PARSER_CLASS_CONSTRUCTOR) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR))
+
+/**
+ * Count of ecma_parse_opts_t class parsing options related bits
+ */
+#define PARSER_CLASS_PARSE_OPTS_COUNT \
+  (JERRY_LOG2 (ECMA_PARSE_HAS_STATIC_SUPER) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR))
+
+/**
+ * Mask for get class option bits from ecma_parse_opts_t
+ */
+#define PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK \
+  (((1 << PARSER_CLASS_PARSE_OPTS_COUNT) - 1) << JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR))
+
+/**
+ * Get class option bits from ecma_parse_opts_t
+ */
+#define PARSER_GET_CLASS_PARSER_OPTS(opts) \
+  (((opts) & PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK) << PARSER_CLASS_PARSE_OPTS_OFFSET)
+
+/**
+ * Get class option bits from parser_general_flags_t
+ */
+#define PARSER_GET_CLASS_ECMA_PARSE_OPTS(opts) \
+  ((uint16_t) (((opts) >> PARSER_CLASS_PARSE_OPTS_OFFSET) & PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK))
+
+/**
+ * Class constructor with heritage context representing bits
+ */
+#define PARSER_CLASS_CONSTRUCTOR_SUPER (PARSER_CLASS_CONSTRUCTOR | PARSER_CLASS_HAS_SUPER)
+
+/**
+ * Check the scope is a class constructor with heritage context
+ */
+#define PARSER_IS_CLASS_CONSTRUCTOR_SUPER(flag) \
+  (((flag) & PARSER_CLASS_CONSTRUCTOR_SUPER) == PARSER_CLASS_CONSTRUCTOR_SUPER)
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /* The maximum of PARSER_CBC_STREAM_PAGE_SIZE is 127. */
 #define PARSER_CBC_STREAM_PAGE_SIZE \
@@ -434,9 +487,8 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
 /* Lexer functions */
 
 void lexer_next_token (parser_context_t *context_p);
-bool lexer_check_colon (parser_context_t *context_p);
+bool lexer_check_next_character (parser_context_t *context_p, lit_utf8_byte_t character);
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-bool lexer_check_left_paren (parser_context_t *context_p);
 void lexer_skip_empty_statements (parser_context_t *context_p);
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
@@ -469,6 +521,8 @@ bool lexer_compare_raw_identifier_to_current (parser_context_t *context_p, const
 void parser_parse_expression (parser_context_t *context_p, int options);
 #ifndef CONFIG_DISABLE_ES2015_CLASS
 void parser_parse_class (parser_context_t *context_p, bool is_statement);
+void parser_parse_super_class_context_start (parser_context_t *context_p);
+void parser_parse_super_class_context_end (parser_context_t *context_p, bool is_statement);
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
@@ -501,9 +555,6 @@ ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
 ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_compiled_code_t *parser_create_class_implicit_constructor (parser_context_t *context_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /* Error management. */
 

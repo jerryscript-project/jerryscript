@@ -453,11 +453,164 @@ ecma_op_function_has_construct_flag (const ecma_value_t *arguments_list_p) /**< 
 {
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   return (((uintptr_t) arguments_list_p) & ECMA_CLASS_CONSTRUCT_FLAG);
-#else
+#else /* CONFIG_DISABLE_ES2015_CLASS */
   JERRY_UNUSED (arguments_list_p);
   return false;
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } /* ecma_op_function_has_construct_flag */
+
+#ifndef CONFIG_DISABLE_ES2015
+/**
+ * Returns the closest declarative lexical enviroment to the super object bound lexical enviroment.
+ *
+ * @return the found lexical enviroment
+ */
+static ecma_object_t *
+ecma_op_find_super_declerative_lex_env (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
+{
+  JERRY_ASSERT (lex_env_p);
+  JERRY_ASSERT (ecma_op_resolve_super_reference_value (lex_env_p));
+  JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) != ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+
+  while (true)
+  {
+    ecma_object_t *lex_env_outer_p = ecma_get_lex_env_outer_reference (lex_env_p);
+
+    JERRY_ASSERT (lex_env_outer_p);
+
+    if (ecma_get_lex_env_type (lex_env_outer_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    {
+      JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+      return lex_env_p;
+    }
+
+    lex_env_p = lex_env_outer_p;
+  }
+} /* ecma_op_find_super_declerative_lex_env */
+
+/**
+ * Returns with the current class this_binding property
+ *
+ * @return NULL - if the property was not found
+ *         the found property - otherwise
+ */
+static ecma_property_t *
+ecma_op_get_class_this_binding_property (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
+{
+  JERRY_ASSERT (lex_env_p);
+  JERRY_ASSERT (ecma_is_lexical_environment (lex_env_p));
+
+  lex_env_p = ecma_op_find_super_declerative_lex_env (lex_env_p);
+  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_THIS_BINDING);
+  return ecma_find_named_property (lex_env_p, name_p);
+} /* ecma_op_get_class_this_binding_property */
+
+/**
+ * Checks whether the 'super(...)' has been called.
+ *
+ * @return true  - if the 'super (...)' has been called
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_PURE
+ecma_op_is_super_called (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
+{
+  ecma_property_t *property_p = ecma_op_get_class_this_binding_property (lex_env_p);
+
+  JERRY_ASSERT (property_p);
+  return (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+} /* ecma_op_is_super_called */
+
+/**
+ * Sets the value of 'super(...)' has been called.
+ */
+inline void
+ecma_op_set_super_called (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
+{
+  ecma_property_t *property_p = ecma_op_get_class_this_binding_property (lex_env_p);
+
+  JERRY_ASSERT (property_p);
+
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
+  ECMA_CONVERT_INTERNAL_PROPERTY_TO_DATA_PROPERTY (property_p);
+} /* ecma_op_set_super_called */
+
+/**
+ * Sets the class context this_binding value.
+ */
+void
+ecma_op_set_class_this_binding (ecma_object_t *lex_env_p, /**< starting lexical enviroment */
+                                ecma_value_t this_binding) /**< 'this' argument's value */
+{
+  JERRY_ASSERT (ecma_is_value_object (this_binding));
+  ecma_property_t *property_p = ecma_op_get_class_this_binding_property (lex_env_p);
+
+  ecma_property_value_t *value_p;
+
+  if (property_p)
+  {
+    JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+    value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  }
+  else
+  {
+    ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_THIS_BINDING);
+    value_p = ecma_create_named_data_property (lex_env_p, name_p, ECMA_PROPERTY_FLAG_WRITABLE, &property_p);
+    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+  }
+
+  value_p->value = this_binding;
+} /* ecma_op_set_class_this_binding */
+
+/**
+ * Gets the class context this binding value.
+ *
+ * @return the class context this binding value
+ */
+ecma_value_t
+ecma_op_get_class_this_binding (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
+{
+  ecma_property_t *property_p = ecma_op_get_class_this_binding_property (lex_env_p);
+
+  JERRY_ASSERT (property_p);
+
+  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+  JERRY_ASSERT (ecma_is_value_object (value_p->value));
+  return value_p->value;
+} /* ecma_op_get_class_this_binding */
+
+/**
+ * Dummy external function for implicit constructor call.
+ *
+ * @return ECMA_VALUE_ERROR - TypeError
+ */
+ecma_value_t
+ecma_op_function_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< the function itself */
+                                                  const ecma_value_t this_val, /**< this_arg of the function */
+                                                  const ecma_value_t args_p[], /**< argument list */
+                                                  const ecma_length_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+} /* ecma_op_function_implicit_constructor_handler_cb */
+
+/**
+ * Sets the completion value [[Prototype]] based on the this_arg value
+ */
+void
+ecma_op_set_class_prototype (ecma_value_t completion_value, /**< completion_value */
+                             ecma_value_t this_arg) /**< this argument*/
+{
+  JERRY_ASSERT (ecma_is_value_object (completion_value));
+  JERRY_ASSERT (ecma_is_value_object (this_arg));
+
+  ecma_object_t *completion_obj_p = ecma_get_object_from_value (completion_value);
+  ecma_object_t *prototype_obj_p = ecma_get_object_prototype (ecma_get_object_from_value (this_arg));
+
+  JERRY_ASSERT (prototype_obj_p);
+  ECMA_SET_POINTER (completion_obj_p->prototype_or_outer_reference_cp, prototype_obj_p);
+} /* ecma_op_set_class_prototype */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
  * [[Call]] implementation for Function objects,
@@ -484,6 +637,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     ecma_object_type_t func_type = ecma_get_object_type (func_obj_p);
 
     JERRY_ASSERT (func_type == ECMA_OBJECT_TYPE_FUNCTION
+                  || func_type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
+                  || func_type == ECMA_OBJECT_TYPE_BOUND_FUNCTION
                   || !ecma_op_function_has_construct_flag (arguments_list_p));
 
     if (func_type == ECMA_OBJECT_TYPE_FUNCTION)
@@ -507,21 +662,20 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       /* 8. */
       ecma_value_t this_binding = this_arg_value;
       bool free_this_binding = false;
-      bool is_strict;
-      bool is_no_lex_env;
 
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR &&
-          !ecma_op_function_has_construct_flag (arguments_list_p))
+      bool is_class_constructor = bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR;
+
+      if (is_class_constructor && !ecma_op_function_has_construct_flag (arguments_list_p))
       {
         return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
       }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
-      is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
-      is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
+      bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? true : false;
+      bool is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) ? true : false;
 
       /* 1. */
       if (!is_strict)
@@ -561,6 +715,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                            arguments_list_len,
                                            bytecode_data_p);
         }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+        if (JERRY_UNLIKELY (is_class_constructor))
+        {
+          ecma_op_set_class_this_binding (local_env_p, this_binding);
+        }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
       }
 
       ecma_value_t ret_value = vm_run (bytecode_data_p,
@@ -658,7 +818,26 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
     if (!ecma_is_value_integer_number (args_len_or_this))
     {
-      this_arg_value = args_len_or_this;
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      if (JERRY_UNLIKELY (args_len_or_this == ECMA_VALUE_IMPLICIT_CONSTRUCTOR))
+      {
+        if (!ecma_op_function_has_construct_flag (arguments_list_p))
+        {
+          return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+        }
+        if (ecma_get_object_is_builtin (target_func_obj_p))
+        {
+          arguments_list_p = ecma_op_function_clear_construct_flag (arguments_list_p);
+        }
+      }
+      else
+      {
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+        this_arg_value = args_len_or_this;
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
       args_length = 1;
     }
     else
@@ -675,6 +854,11 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       continue;
     }
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    arguments_list_p = ecma_op_function_clear_construct_flag (arguments_list_p);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+    JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
     args_length--;
 
     ecma_length_t merged_args_list_len = args_length + arguments_list_len;
@@ -721,12 +905,13 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_ASSERT (ecma_is_value_object (this_arg_value)
                 || this_arg_value == ECMA_VALUE_UNDEFINED);
 
+  ecma_object_t *target_func_obj_p = NULL;
+
   while (JERRY_UNLIKELY (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION))
   {
     /* 1-3. */
     ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
-    ecma_object_t *target_func_obj_p;
     target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                          ext_function_p->u.bound_function.target_function);
 
@@ -742,9 +927,15 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     JERRY_ASSERT (args_length > 0);
 
+    /* 5. */
     if (args_length == 1)
     {
-      /* 5. */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      if (args_len_or_this == ECMA_VALUE_IMPLICIT_CONSTRUCTOR && ecma_is_value_undefined (this_arg_value))
+      {
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
       func_obj_p = target_func_obj_p;
       continue;
     }
@@ -787,9 +978,18 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor."));
     }
 
-    return ecma_builtin_dispatch_construct (func_obj_p,
-                                            arguments_list_p,
-                                            arguments_list_len);
+    ecma_value_t ret_value = ecma_builtin_dispatch_construct (func_obj_p,
+                                                              arguments_list_p,
+                                                              arguments_list_len);
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    if (!ecma_is_value_undefined (this_arg_value) && !ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      ecma_op_set_class_prototype (ret_value, this_arg_value);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+    return ret_value;
   }
 
   ecma_object_t *new_this_obj_p = NULL;
@@ -843,9 +1043,32 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                                          arguments_list_len);
       break;
     }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
+      JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
+      JERRY_ASSERT (target_func_obj_p != NULL);
+
+      ret_value = ecma_op_function_construct (target_func_obj_p,
+                                              this_arg_value,
+                                              arguments_list_p,
+                                              arguments_list_len);
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
     default:
     {
       JERRY_ASSERT (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+
+      if (ext_func_obj_p->u.external_handler_cb == ecma_op_function_implicit_constructor_handler_cb)
+      {
+        ret_value = ECMA_VALUE_UNDEFINED;
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
       ret_value = ecma_op_function_call (func_obj_p,
                                          this_arg_value,

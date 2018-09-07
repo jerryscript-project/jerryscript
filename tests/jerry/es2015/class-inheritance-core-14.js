@@ -13,28 +13,41 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+class A {
+  constructor () {
+    this.a = 5;
+  }
 
-#include "ecma-globals.h"
-#include "jrt.h"
+  f () {
+    return 10;
+  }
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+  super () {
+    this.super = 10;
+    return 15;
+  }
+}
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+class B extends A {
+  constructor () {
+    super ();
+    assert (super.f === A.prototype.f);
+    super.f = 8;
+    assert (this.f === 8);
+    assert (super.f === A.prototype.f);
 
-/**
- * @}
- * @}
- */
+    assert (this.a === 5);
+    super.a = 10;
+    assert (this.a === 10);
 
-#endif /* !ECMA_REFERENCE_H */
+    assert (super.super () === 15);
+    assert (this.super === 10);
+    super.super = 20;
+    assert (this.super === 20);
+    assert (super.super () === 15);
+  }
+}
+
+var b = new B;
+assert (b.f === 8);
+assert (b.a === 10);

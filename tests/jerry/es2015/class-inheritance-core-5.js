@@ -13,28 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+ class A extends Array {
+   constructor (a, b, c) {
+     eval ("eval ('super (a, b, c)')");
+     eval ("eval ('this.f = 5;')");
+   }
+ }
 
-#include "ecma-globals.h"
-#include "jrt.h"
+ class B extends A { }
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
-
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
-/**
- * @}
- * @}
- */
-
-#endif /* !ECMA_REFERENCE_H */
+ var b = new B (1, 2, 3, 4);
+ assert (b.f === 5);
+ assert (b.length === 3);

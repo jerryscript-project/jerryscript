@@ -13,28 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+ order = 0;
 
-#include "ecma-globals.h"
-#include "jrt.h"
+ var Mixin1 = (superclass) => class extends superclass {
+   foo () {
+     assert (order++ == 1)
+     if (super.foo) {
+       super.foo ();
+     }
+   }
+ };
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+ var Mixin2 = (superclass) => class extends superclass {
+   foo () {
+     assert (order++ == 2)
+     if (super.foo) {
+       assert (super.foo () === 5);
+     }
+   }
+ };
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+ class S {
+   foo () {
+     assert (order++ == 3)
+     return 5;
+   }
+ }
 
-/**
- * @}
- * @}
- */
+ class C extends Mixin1 (Mixin2 (S)) {
+   foo () {
+     assert (order++ == 0)
+     super.foo ();
+   }
+ }
 
-#endif /* !ECMA_REFERENCE_H */
+ new C ().foo ()

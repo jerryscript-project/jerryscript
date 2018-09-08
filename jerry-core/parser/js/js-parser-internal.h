@@ -433,10 +433,15 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
 
 /* Lexer functions */
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+bool lexer_is_identifier_keyword (parser_context_t *context_p);
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 void lexer_next_token (parser_context_t *context_p);
 bool lexer_check_colon (parser_context_t *context_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if !defined (CONFIG_DISABLE_ES2015_CLASS) || !defined (CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER)
 bool lexer_check_left_paren (parser_context_t *context_p);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS || !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
 void lexer_skip_empty_statements (parser_context_t *context_p);
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION

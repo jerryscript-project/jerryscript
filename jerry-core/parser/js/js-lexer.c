@@ -448,6 +448,45 @@ static const keyword_string_t * const keyword_string_list[9] =
 #undef LEXER_KEYWORD
 #undef LEXER_KEYWORD_END
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+/**
+ * Checks if current identifier is a keyword or reserved word.
+ *
+ * @return true - if the current identifier is a keyword or reserved word
+ *         false - otherwise
+ */
+bool
+lexer_is_identifier_keyword (parser_context_t *context_p) /**< context */
+{
+  lexer_lit_location_t *literal_p = &context_p->token.lit_location;
+
+  JERRY_ASSERT (literal_p->type == LEXER_IDENT_LITERAL);
+  JERRY_ASSERT (literal_p->length <= PARSER_MAXIMUM_IDENT_LENGTH);
+
+  if (literal_p->has_escape || literal_p->length < 2 || literal_p->length > 10)
+  {
+    return false;
+  }
+
+  const keyword_string_t *keyword_p = keyword_string_list[literal_p->length - 2];
+
+  do
+  {
+    if (literal_p->char_p[0] == keyword_p->keyword_p[0]
+        && literal_p->char_p[1] == keyword_p->keyword_p[1]
+        && memcmp (literal_p->char_p, keyword_p->keyword_p, literal_p->length) == 0)
+    {
+      return true;
+    }
+
+    keyword_p++;
+  }
+  while (keyword_p->type != LEXER_EOS);
+
+  return false;
+} /* lexer_is_identifier_keyword */
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
 /**
  * Parse identifier.
  */
@@ -1326,7 +1365,7 @@ lexer_check_colon (parser_context_t *context_p) /**< context */
           && context_p->source_p[0] == (uint8_t) LIT_CHAR_COLON);
 } /* lexer_check_colon */
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if !defined (CONFIG_DISABLE_ES2015_CLASS) || !defined (CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER)
 /**
  * Checks whether the next token is a left parenthesis.
  *
@@ -1343,7 +1382,7 @@ lexer_check_left_paren (parser_context_t *context_p) /**< context */
   return (context_p->source_p < context_p->source_end_p
           && context_p->source_p[0] == (uint8_t) LIT_CHAR_LEFT_PAREN);
 } /* lexer_check_left_paren */
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS || !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
 
@@ -2271,6 +2310,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   int is_class_method = ((ident_opts & LEXER_OBJ_IDENT_CLASS_METHOD)
                          && !(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
+                         && !(ident_opts & LEXER_OBJ_IDENT_OBJ_METHOD)
                          && (context_p->token.type != LEXER_KEYW_STATIC));
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
@@ -2290,8 +2330,18 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       {
         lexer_skip_spaces (context_p);
 
-        if (context_p->source_p < context_p->source_end_p
-            && context_p->source_p[0] != LIT_CHAR_COLON)
+        bool not_end_of_literal = (context_p->source_p < context_p->source_end_p
+                                   && context_p->source_p[0] != LIT_CHAR_COLON);
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        not_end_of_literal = (not_end_of_literal
+                               && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+                               && context_p->source_p[0] != LIT_CHAR_COMMA
+                               /* Shorthand notation allows methods named `get` and allows getters. */
+                               && !lexer_check_left_paren (context_p));
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+        if (not_end_of_literal)
         {
           if (lexer_compare_raw_identifier_to_current (context_p, "get", 3))
           {
@@ -2346,6 +2396,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       context_p->column++;
       return;
     }
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+    else if (context_p->source_p[0] == LIT_CHAR_LEFT_PAREN)
+    {
+      create_literal_object = true;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
     else
     {
       const uint8_t *char_p = context_p->source_p;
@@ -2364,6 +2420,16 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         return;
       }
     }
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+    if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
+        && (ident_opts & LEXER_OBJ_IDENT_OBJ_METHOD)
+        && context_p->source_p[0] == LIT_CHAR_LEFT_PAREN)
+    {
+      context_p->token.type = LEXER_PROPERTY_METHOD;
+      return;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
     if (create_literal_object)
     {

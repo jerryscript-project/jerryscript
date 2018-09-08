@@ -260,7 +260,6 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
   }
 } /* parser_parse_array_literal */
 
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
 /**
  * Object literal item types.
  */
@@ -357,7 +356,6 @@ parser_append_object_literal_item (parser_context_t *context_p, /**< context */
     context_p->stack_top_uint8 = PARSER_OBJECT_PROPERTY_BOTH_ACCESSORS;
   }
 } /* parser_append_object_literal_item */
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
 
@@ -649,41 +647,58 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 
   while (true)
   {
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+    lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_OBJ_METHOD);
+#else /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
     lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_NO_OPTS);
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
       break;
     }
 
-    if (context_p->token.type == LEXER_PROPERTY_GETTER
-        || context_p->token.type == LEXER_PROPERTY_SETTER)
+    bool token_type_is_method = (context_p->token.type == LEXER_PROPERTY_GETTER
+                                 || context_p->token.type == LEXER_PROPERTY_SETTER);
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+    token_type_is_method = token_type_is_method || context_p->token.type == LEXER_PROPERTY_METHOD;
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+    if (token_type_is_method)
     {
       uint32_t status_flags;
-      cbc_ext_opcode_t opcode;
+      uint16_t opcode;
       uint16_t literal_index, function_literal_index;
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
       parser_object_literal_item_types_t item_type;
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+      lexer_token_type_t token_type = context_p->token.type;
 
-      if (context_p->token.type == LEXER_PROPERTY_GETTER)
+      if (token_type == LEXER_PROPERTY_GETTER)
       {
         status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_GETTER;
-        opcode = CBC_EXT_SET_GETTER;
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_GETTER);
         item_type = PARSER_OBJECT_PROPERTY_GETTER;
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
       }
-      else
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+      else if (token_type == LEXER_PROPERTY_METHOD)
+      {
+        status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_FUNC_EXPRESSION;
+        opcode = CBC_SET_LITERAL_PROPERTY;
+        item_type = PARSER_OBJECT_PROPERTY_VALUE;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+      else /* token_type == LEXER_PROPERTY_SETTER */
       {
         status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_SETTER;
-        opcode = CBC_EXT_SET_SETTER;
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_SETTER);
         item_type = PARSER_OBJECT_PROPERTY_SETTER;
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
       }
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJ_METHOD);
+#else /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
       lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
       /* This assignment is a nop for computed getters/setters. */
       literal_index = context_p->lit_object.index;
@@ -693,6 +708,11 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
       {
         opcode = ((opcode == CBC_EXT_SET_GETTER) ? CBC_EXT_SET_COMPUTED_GETTER
                                                  : CBC_EXT_SET_COMPUTED_SETTER);
+      }
+
+      if (opcode == CBC_SET_LITERAL_PROPERTY)
+      {
+        parser_append_object_literal_item (context_p, literal_index, item_type);
       }
 #else /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
       parser_append_object_literal_item (context_p, literal_index, item_type);
@@ -706,6 +726,13 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
       {
         literal_index = function_literal_index;
       }
+      /* Property methods aren't extended opcodes, so swap the values here. */
+      else if (opcode == CBC_SET_LITERAL_PROPERTY)
+      {
+        literal_index ^= function_literal_index;
+        function_literal_index ^= literal_index;
+        literal_index ^= function_literal_index;
+      }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
       parser_emit_cbc_literal (context_p,
@@ -713,7 +740,7 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
                                literal_index);
 
       JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
-      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (opcode);
+      context_p->last_cbc_opcode = opcode;
       context_p->last_cbc.value = function_literal_index;
 
       lexer_next_token (context_p);
@@ -751,13 +778,35 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 #endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
       lexer_next_token (context_p);
-      if (context_p->token.type != LEXER_COLON)
+
+      if (context_p->token.type == LEXER_COLON)
+      {
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+      }
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+      else if (context_p->token.type == LEXER_COMMA
+               || context_p->token.type == LEXER_RIGHT_BRACE)
+      {
+        // TODO somehow clean this up -- is it possible to parse and check for keywords by this step?
+        lexer_lit_location_t prop_name_literal = context_p->token.lit_location;
+
+        if (prop_name_literal.type != LEXER_IDENT_LITERAL || lexer_is_identifier_keyword (context_p))
+        {
+          parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
+        }
+
+        lexer_construct_literal_object (context_p,
+                                        &context_p->token.lit_location,
+                                        context_p->token.lit_location.type);
+        parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+      }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+      else
       {
         parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
       }
-
-      lexer_next_token (context_p);
-      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {

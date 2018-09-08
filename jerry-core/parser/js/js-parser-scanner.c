@@ -763,16 +763,16 @@ parser_scan_until (parser_context_t *context_p, /**< context */
       }
       case SCAN_MODE_FUNCTION_ARGUMENTS:
       {
+        const bool correct_stack_top = (stack_top == SCAN_STACK_BLOCK_STATEMENT
+                                         || stack_top == SCAN_STACK_BLOCK_EXPRESSION
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-        JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
-                      || stack_top == SCAN_STACK_BLOCK_EXPRESSION
-                      || stack_top == SCAN_STACK_CLASS
-                      || stack_top == SCAN_STACK_BLOCK_PROPERTY);
-#else /* CONFIG_DISABLE_ES2015_CLASS */
-        JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
-                      || stack_top == SCAN_STACK_BLOCK_EXPRESSION
-                      || stack_top == SCAN_STACK_BLOCK_PROPERTY);
+                                         || stack_top == SCAN_STACK_CLASS
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZERS
+                                         || stack_top == SCAN_STACK_OBJECT_LITERAL
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZERS */
+                                         || stack_top == SCAN_STACK_BLOCK_PROPERTY);
+        JERRY_ASSERT (correct_stack_top);
 
         if (context_p->token.type == LEXER_LITERAL
             && (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
@@ -834,7 +834,8 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         }
 
         if (context_p->token.type == LEXER_PROPERTY_GETTER
-            || context_p->token.type == LEXER_PROPERTY_SETTER)
+            || context_p->token.type == LEXER_PROPERTY_SETTER
+            || context_p->token.type == LEXER_PROPERTY_METHOD)
         {
           parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
           mode = SCAN_MODE_FUNCTION_ARGUMENTS;
@@ -842,7 +843,16 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         }
 
         lexer_next_token (context_p);
-        if (context_p->token.type != LEXER_COLON)
+
+        bool not_end_of_property_name = context_p->token.type != LEXER_COLON;
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        not_end_of_property_name = (not_end_of_property_name
+                                     && context_p->token.type != LEXER_RIGHT_BRACE
+                                     && context_p->token.type != LEXER_COMMA);
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+        if (not_end_of_property_name)
         {
           parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
         }

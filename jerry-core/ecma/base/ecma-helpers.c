@@ -580,12 +580,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
 
-  ecma_property_t *property_p = ecma_lcache_lookup (obj_p, name_p);
+  ecma_property_t *property_p = NULL;
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  property_p = ecma_lcache_lookup (obj_p, name_p);
   if (property_p != NULL)
   {
     return property_p;
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_p);
 
@@ -597,11 +600,13 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
                                              name_p,
                                              &property_real_name_cp);
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
     if (property_p != NULL
         && !ecma_is_property_lcached (property_p))
     {
       ecma_lcache_insert (obj_p, property_real_name_cp, property_p);
     }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
     return property_p;
   }
@@ -693,11 +698,13 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     ecma_property_hashmap_create (obj_p);
   }
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   if (property_p != NULL
       && !ecma_is_property_lcached (property_p))
   {
     ecma_lcache_insert (obj_p, property_name_cp, property_p);
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   return property_p;
 } /* ecma_find_named_property */
@@ -762,10 +769,12 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     }
   }
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   if (ecma_is_property_lcached (property_p))
   {
     ecma_lcache_invalidate (object_p, name_cp, property_p);
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_PTR)
   {
@@ -1241,6 +1250,8 @@ ecma_set_property_configurable_attr (ecma_property_t *property_p, /**< [in,out] 
   }
 } /* ecma_set_property_configurable_attr */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
 /**
  * Check whether the property is registered in LCache
  *
@@ -1276,6 +1287,8 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
     *property_p = (uint8_t) (*property_p & ~ECMA_PROPERTY_FLAG_LCACHED);
   }
 } /* ecma_set_property_lcached */
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Construct empty property descriptor, i.e.:

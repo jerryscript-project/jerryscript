@@ -53,7 +53,6 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 {
   if (ecma_is_value_object (object))
   {
-    ecma_object_t *object_p = ecma_get_object_from_value (object);
     ecma_string_t *property_name_p = NULL;
 
     if (ecma_is_value_integer_number (property))
@@ -73,6 +72,8 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 
     if (property_name_p != NULL)
     {
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+      ecma_object_t *object_p = ecma_get_object_from_value (object);
       ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
       if (property_p != NULL &&
@@ -80,6 +81,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       {
         return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
       /* There is no need to free the name. */
       return ecma_op_object_get (ecma_get_object_from_value (object), property_name_p);

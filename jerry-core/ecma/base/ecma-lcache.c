@@ -61,8 +61,6 @@ ecma_lcache_row_index (jmem_cpointer_t object_cp, /**< compressed pointer to obj
   return (size_t) ((name_hash ^ object_cp) & ECMA_LCACHE_HASH_MASK);
 } /* ecma_lcache_row_index */
 
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
-
 /**
  * Insert an entry into LCache
  */
@@ -77,7 +75,6 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
                 || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
                 || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
   jmem_cpointer_t object_cp;
 
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
@@ -115,9 +112,6 @@ ecma_lcache_insert (ecma_object_t *object_p, /**< object */
   entry_p->prop_p = prop_p;
 
   ecma_set_property_lcached (entry_p->prop_p, true);
-#else  /* CONFIG_ECMA_LCACHE_DISABLE */
-  JERRY_UNUSED (name_cp);
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_insert */
 
 /**
@@ -133,7 +127,6 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_name_p != NULL);
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
@@ -188,7 +181,6 @@ ecma_lcache_lookup (ecma_object_t *object_p, /**< object */
 
     entry_p++;
   }
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   return NULL;
 } /* ecma_lcache_lookup */
@@ -206,7 +198,6 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
                 || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);
 
@@ -228,10 +219,9 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
     }
     entry_p++;
   }
-#else  /* CONFIG_ECMA_LCACHE_DISABLE */
-  JERRY_UNUSED (name_cp);
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 } /* ecma_lcache_invalidate */
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * @}

@@ -87,6 +87,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
       ecma_property_t *property_p = ecma_lcache_lookup (binding_obj_p, name_p);
 
       if (property_p != NULL)
@@ -110,6 +111,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
         ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
         return ecma_op_function_call (getter_p, base_value, NULL, 0);
       }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
       ecma_value_t prop_value = ecma_op_object_find (binding_obj_p, name_p);
 

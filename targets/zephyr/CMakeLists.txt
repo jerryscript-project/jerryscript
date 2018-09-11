@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+cmake_minimum_required(VERSION 3.8)
 
 include($ENV{ZEPHYR_BASE}/cmake/app/boilerplate.cmake NO_POLICY_SCOPE)
 project(NONE)
@@ -27,7 +28,7 @@ set_target_properties(jerry-ext PROPERTIES IMPORTED_LOCATION
                       ${CMAKE_CURRENT_BINARY_DIR}/../obj/lib/libjerry-ext.a)
 set_target_properties(jerry-ext PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                       ${CMAKE_CURRENT_SOURCE_DIR}/../../jerry-ext/include)
-target_link_libraries(app jerry-core jerry-ext)
+target_link_libraries(app PUBLIC jerry-core jerry-ext)
 
 zephyr_get_include_directories_for_lang_as_string(C includes)
 zephyr_get_system_include_directories_for_lang_as_string(C system_includes)

@@ -229,7 +229,7 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
   ecma_value_t *ecma_value_p;
   ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
 
-  while (ecma_value_p != NULL)
+  while (ecma_value_p != NULL && ecma_is_value_object (*ecma_value_p))
   {
     ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
@@ -237,7 +237,7 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
   ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
 
-  while (ecma_value_p != NULL)
+  while (ecma_value_p != NULL && ecma_is_value_object (*ecma_value_p))
   {
     ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);

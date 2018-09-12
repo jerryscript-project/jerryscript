@@ -33,7 +33,7 @@
  * @{
  */
 
- #ifndef JERRY_SYSTEM_ALLOCATOR
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Heap structure
  *

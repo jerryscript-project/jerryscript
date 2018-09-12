@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
- #if !defined (_XOPEN_SOURCE) || _XOPEN_SOURCE < 500
- #undef _XOPEN_SOURCE
- /* Required macro for sleep functions (nanosleep or usleep) */
- #define _XOPEN_SOURCE 500
- #endif
+#if !defined (_XOPEN_SOURCE) || _XOPEN_SOURCE < 500
+#undef _XOPEN_SOURCE
+/* Required macro for sleep functions (nanosleep or usleep) */
+#define _XOPEN_SOURCE 500
+#endif
 
 #ifdef HAVE_TIME_H
 #include <time.h>

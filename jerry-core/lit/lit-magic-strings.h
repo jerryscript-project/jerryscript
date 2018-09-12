@@ -37,10 +37,20 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED, /**< [[AlreadyResolved]] of promise reject or resolve functions */
   LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION, /**< the resolve funtion of the promise object */
   LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION, /**< the reject function of the promise object */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE, /**< [[Promise]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE, /**< [[Resolve]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT, /**< [[Reject]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY, /**< [[Capability]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_HANDLER, /**< [[Handler]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_ALREADY_CALLED, /**< [[AlreadyCalled]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX, /**< [[Index]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE, /**< [[Values]] property */
+  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT, /**< [[RemainingElement]] property */
   LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT,  /**< number of internal magic strings which will be used as
                                               *   property names, and their values need to be marked during gc. */
   LIT_INTERNAL_MAGIC_STRING_DELETED = LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT, /**< special value for
                                                                                  *   deleted properties */
+
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;

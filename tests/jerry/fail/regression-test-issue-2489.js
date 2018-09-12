@@ -13,4 +13,13 @@
 // limitations under the License.
 
 Object.defineProperty(Object.prototype, 0, {'get': function() { throw $ }});
+/**
+ * The below line is added becase the patch #2526 introduces internal properties for promises.
+ * The Reference Error this issue produced can still be reproduced by calling this line.
+ * The reason it was present before is that Promise's 0th property was Promise which could be modified
+ * with the above line, and the engine getting that property for internal purposes got the `throw $` instead.
+ * Thanks to internal properties, it can't be modified anymore from JS side, therefore Promise won't trigger the error.
+ * To keep this issue's output as it was before, the `Array.prototype[0];` line is added.
+ */
+Array.prototype[0];
 Promise.all();

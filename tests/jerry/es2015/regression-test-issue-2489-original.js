@@ -12,5 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.prototype[1] = 0;
+// This test case should not throw an error anymore.
+Object.defineProperty(Object.prototype, 0, {'get': function() { throw $ }});
 Promise.all();

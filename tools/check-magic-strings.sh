@@ -20,13 +20,17 @@ MAGIC_STRINGS_TEMP=`mktemp lit-magic-strings.inc.h.XXXXXXXXXX`
 
 cp $MAGIC_STRINGS_INC_H $MAGIC_STRINGS_TEMP
 $MAGIC_STRINGS_GEN
-diff -q $MAGIC_STRINGS_INC_H $MAGIC_STRINGS_TEMP
 DIFF_RESULT=$?
-mv $MAGIC_STRINGS_TEMP $MAGIC_STRINGS_INC_H
 
-if [ $DIFF_RESULT -ne 0 ]
+if [ $DIFF_RESULT -eq 0 ]
 then
-  echo -e "\e[1;33m$MAGIC_STRINGS_INC_H must be re-generated. Run $MAGIC_STRINGS_GEN\e[0m"
+  diff -q $MAGIC_STRINGS_INC_H $MAGIC_STRINGS_TEMP
+  DIFF_RESULT=$?
+  if [ $DIFF_RESULT -ne 0 ]
+  then
+    echo -e "\e[1;33m$MAGIC_STRINGS_INC_H must be re-generated. Run $MAGIC_STRINGS_GEN\e[0m"
+  fi
 fi
+mv $MAGIC_STRINGS_TEMP $MAGIC_STRINGS_INC_H
 
 exit $DIFF_RESULT

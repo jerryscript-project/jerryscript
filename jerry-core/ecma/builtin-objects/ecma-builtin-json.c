@@ -923,13 +923,16 @@ static ecma_value_t ecma_builtin_json_str_helper (const ecma_value_t arg1, /**< 
                                                   empty_str_p,
                                                   arg1,
                                                   false);
-  JERRY_ASSERT (ecma_is_value_true (put_comp_val));
-  ecma_free_value (put_comp_val);
-  ECMA_TRY_CATCH (str_val,
-                  ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
-                  ret_value);
-  ret_value = ecma_copy_value (str_val);
-  ECMA_FINALIZE (str_val);
+
+  if (ecma_is_value_true (put_comp_val))
+  {
+    ret_value = ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context);
+  }
+  else
+  {
+    ret_value = ECMA_VALUE_UNDEFINED;
+  }
+
   ecma_free_value (put_comp_val);
   ecma_deref_ecma_string (empty_str_p);
   ecma_deref_object (obj_wrapper_p);

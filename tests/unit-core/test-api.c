@@ -18,46 +18,46 @@
 
 #include "test-common.h"
 
-const char *test_source = (
-                           "function assert (arg) { "
-                           "  if (!arg) { "
-                           "    throw Error('Assert failed');"
-                           "  } "
-                           "} "
-                           "this.t = 1; "
-                           "function f () { "
-                           "return this.t; "
-                           "} "
-                           "this.foo = f; "
-                           "this.bar = function (a) { "
-                           "return a + t; "
-                           "}; "
-                           "function A () { "
-                           "this.t = 12; "
-                           "} "
-                           "this.A = A; "
-                           "this.a = new A (); "
-                           "function call_external () { "
-                           "  return this.external ('1', true); "
-                           "} "
-                           "function call_throw_test() { "
-                           "  var catched = false; "
-                           "  try { "
-                           "    this.throw_test(); "
-                           "  } catch (e) { "
-                           "    catched = true; "
-                           "    assert(e.name == 'TypeError'); "
-                           "    assert(e.message == 'error'); "
-                           "  } "
-                           "  assert(catched); "
-                           "} "
-                           "function throw_reference_error() { "
-                           " throw new ReferenceError ();"
-                           "} "
-                           "p = {'alpha':32, 'bravo':false, 'charlie':{}, 'delta':123.45, 'echo':'foobar'};"
-                           "np = {}; Object.defineProperty (np, 'foxtrot', { "
-                           "get: function() { throw 'error'; }, enumerable: true }) "
-                           );
+const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+  "function assert (arg) { "
+  "  if (!arg) { "
+  "    throw Error('Assert failed');"
+  "  } "
+  "} "
+  "this.t = 1; "
+  "function f () { "
+  "return this.t; "
+  "} "
+  "this.foo = f; "
+  "this.bar = function (a) { "
+  "return a + t; "
+  "}; "
+  "function A () { "
+  "this.t = 12; "
+  "} "
+  "this.A = A; "
+  "this.a = new A (); "
+  "function call_external () { "
+  "  return this.external ('1', true); "
+  "} "
+  "function call_throw_test() { "
+  "  var catched = false; "
+  "  try { "
+  "    this.throw_test(); "
+  "  } catch (e) { "
+  "    catched = true; "
+  "    assert(e.name == 'TypeError'); "
+  "    assert(e.message == 'error'); "
+  "  } "
+  "  assert(catched); "
+  "} "
+  "function throw_reference_error() { "
+  " throw new ReferenceError ();"
+  "} "
+  "p = {'alpha':32, 'bravo':false, 'charlie':{}, 'delta':123.45, 'echo':'foobar'};"
+  "np = {}; Object.defineProperty (np, 'foxtrot', { "
+  "get: function() { throw 'error'; }, enumerable: true }) "
+);
 
 bool test_api_is_free_callback_was_called = false;
 
@@ -322,21 +322,14 @@ static bool
 strict_equals (jerry_value_t a,
                jerry_value_t b)
 {
-  bool is_strict_equal;
-  const char *is_equal_src;
-  jerry_value_t args[2];
-  jerry_value_t is_equal_fn_val;
-  jerry_value_t res;
-
-  is_equal_src = "var isEqual = function(a, b) { return (a === b); }; isEqual";
-  is_equal_fn_val = jerry_eval ((jerry_char_t *) is_equal_src, strlen (is_equal_src), JERRY_PARSE_NO_OPTS);
+  const jerry_char_t is_equal_src[] = "var isEqual = function(a, b) { return (a === b); }; isEqual";
+  jerry_value_t is_equal_fn_val = jerry_eval (is_equal_src, sizeof (is_equal_src) - 1, JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (is_equal_fn_val));
-  args[0] = a;
-  args[1] = b;
-  res = jerry_call_function (is_equal_fn_val, jerry_create_undefined (), args, 2);
+  jerry_value_t args[2] = {a, b};
+  jerry_value_t res = jerry_call_function (is_equal_fn_val, jerry_create_undefined (), args, 2);
   TEST_ASSERT (!jerry_value_is_error (res));
   TEST_ASSERT (jerry_value_is_boolean (res));
-  is_strict_equal = jerry_get_boolean_value (res);
+  bool is_strict_equal = jerry_get_boolean_value (res);
   jerry_release_value (res);
   jerry_release_value (is_equal_fn_val);
   return is_strict_equal;
@@ -367,8 +360,8 @@ main (void)
 
   parsed_code_val = jerry_parse (NULL,
                                  0,
-                                 (jerry_char_t *) test_source,
-                                 strlen (test_source),
+                                 test_source,
+                                 sizeof (test_source) - 1,
                                  JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
@@ -1000,8 +993,8 @@ main (void)
   jerry_release_value (obj_val);
 
   /* Test: eval */
-  const char *eval_code_src_p = "(function () { return 123; })";
-  val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), JERRY_PARSE_STRICT_MODE);
+  const jerry_char_t eval_code_src1[] = "(function () { return 123; })";
+  val_t = jerry_eval (eval_code_src1, sizeof (eval_code_src1) - 1, JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_is_error (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
   TEST_ASSERT (jerry_value_is_function (val_t));
@@ -1021,8 +1014,8 @@ main (void)
   jerry_gc (JERRY_GC_SEVERITY_LOW);
 
   /* Test: spaces */
-  eval_code_src_p = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";
-  val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), JERRY_PARSE_STRICT_MODE);
+  const jerry_char_t eval_code_src2[] = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";
+  val_t = jerry_eval (eval_code_src2, sizeof (eval_code_src2) - 1, JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_is_error (val_t));
   TEST_ASSERT (jerry_value_is_number (val_t)
                && jerry_get_number_value (val_t) == 4321.0);
@@ -1045,16 +1038,16 @@ main (void)
   jerry_release_value (val_t);
 
   /* Test: create function */
-  const char *func_resource = "unknown";
-  const char *func_arg_list = "a , b,c";
-  const char *func_src = "  return 5 +  a+\nb+c";
+  const jerry_char_t func_resource[] = "unknown";
+  const jerry_char_t func_arg_list[] = "a , b,c";
+  const jerry_char_t func_src[] = "  return 5 +  a+\nb+c";
 
-  jerry_value_t func_val = jerry_parse_function ((const jerry_char_t *) func_resource,
-                                                 strlen (func_resource),
-                                                 (const jerry_char_t *) func_arg_list,
-                                                 strlen (func_arg_list),
-                                                 (const jerry_char_t *) func_src,
-                                                 strlen (func_src),
+  jerry_value_t func_val = jerry_parse_function (func_resource,
+                                                 sizeof (func_resource) - 1,
+                                                 func_arg_list,
+                                                 sizeof (func_arg_list) - 1,
+                                                 func_src,
+                                                 sizeof (func_src) - 1,
                                                  JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_is_error (func_val));
@@ -1101,11 +1094,11 @@ main (void)
   {
     jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-    const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
+    const jerry_char_t parser_err_src[] = "b = 'hello';\nvar a = (;";
     parsed_code_val = jerry_parse (NULL,
                                    0,
-                                   (jerry_char_t *) parser_err_src_p,
-                                   strlen (parser_err_src_p),
+                                   parser_err_src,
+                                   sizeof (parser_err_src) - 1,
                                    JERRY_PARSE_NO_OPTS);
     TEST_ASSERT (jerry_value_is_error (parsed_code_val));
     parsed_code_val = jerry_get_value_from_error (parsed_code_val, true);
@@ -1131,11 +1124,11 @@ main (void)
                                 num_magic_string_items,
                                 magic_string_lengths);
 
-  const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
+  const jerry_char_t ms_code_src[] = "var global = {}; var console = [1]; var process = 1;";
   parsed_code_val = jerry_parse (NULL,
                                  0,
-                                 (jerry_char_t *) ms_code_src_p,
-                                 strlen (ms_code_src_p),
+                                 ms_code_src,
+                                 sizeof (ms_code_src) - 1,
                                  JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
@@ -1160,9 +1153,9 @@ main (void)
 
   jerry_release_value (args[0]);
 
-  const char *test_magic_str_access_src_p = "'console'.charAt(6) == 'e'";
-  res = jerry_eval ((const jerry_char_t *) test_magic_str_access_src_p,
-                    strlen (test_magic_str_access_src_p),
+  const jerry_char_t test_magic_str_access_src[] = "'console'.charAt(6) == 'e'";
+  res = jerry_eval (test_magic_str_access_src,
+                    sizeof (test_magic_str_access_src) - 1,
                     JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (jerry_value_is_boolean (res));
   TEST_ASSERT (jerry_get_boolean_value (res) == true);
@@ -1183,22 +1176,20 @@ main (void)
 
   {
     /*json parser check*/
-    char data_check[]="John";
+    const char data_check[]="John";
     jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
-    const char *data = "{\"name\": \"John\", \"age\": 5}";
-    jerry_size_t str_length = (jerry_size_t) strlen (data);
-    jerry_value_t parsed_json = jerry_json_parse ((jerry_char_t *) data, str_length);
+    const jerry_char_t data[] = "{\"name\": \"John\", \"age\": 5}";
+    jerry_value_t parsed_json = jerry_json_parse (data, sizeof (data) - 1);
     jerry_value_t has_prop_js = jerry_has_property (parsed_json, key);
     TEST_ASSERT (jerry_get_boolean_value (has_prop_js));
     jerry_release_value (has_prop_js);
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
     TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
-    jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
     char buff[jerry_get_string_length (parsed_data)];
-    jerry_char_t *buff_p = (jerry_char_t *) buff;
-    jerry_string_to_char_buffer (parsed_data, buff_p, buff_size);
+    jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
+    jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
     buff[buff_size] = '\0';
-    TEST_ASSERT (strcmp ((const char *) data_check, (const char *) buff) == false);
+    TEST_ASSERT (strcmp (data_check, buff) == false);
     jerry_release_value (parsed_json);
     jerry_release_value (key);
     jerry_release_value (parsed_data);

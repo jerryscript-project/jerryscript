@@ -50,4 +50,12 @@ do \
   srand ((unsigned) jerry_port_get_current_time ()); \
 } while (0)
 
+/**
+ * Dummy macro to enable the breaking of long string literals into multiple
+ * substrings on separate lines. (Style checker doesn't allow it without putting
+ * the whole literal into parentheses but the compiler warns about parenthesized
+ * string constants.)
+ */
+#define TEST_STRING_LITERAL(x) x
+
 #endif /* !TEST_COMMON_H */

@@ -189,11 +189,11 @@ jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
   }
 
   /* Check protocol. */
-  const char *text_p = "GET /jerry-debugger";
-  size_t text_len = strlen (text_p);
+  const char get_text[] = "GET /jerry-debugger";
+  size_t text_len = sizeof (get_text) - 1;
 
   if ((size_t) (request_end_p - request_buffer_p) < text_len
-      || memcmp (request_buffer_p, text_p, text_len) != 0)
+      || memcmp (request_buffer_p, get_text, text_len) != 0)
   {
     JERRYX_ERROR_MSG ("Invalid handshake format.\n");
     return false;
@@ -201,8 +201,8 @@ jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 
   uint8_t *websocket_key_p = request_buffer_p + text_len;
 
-  text_p = "Sec-WebSocket-Key:";
-  text_len = strlen (text_p);
+  const char key_text[] = "Sec-WebSocket-Key:";
+  text_len = sizeof (key_text) - 1;
 
   while (true)
   {
@@ -215,7 +215,7 @@ jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
     if (websocket_key_p[0] == 'S'
         && websocket_key_p[-1] == '\n'
         && websocket_key_p[-2] == '\r'
-        && memcmp (websocket_key_p, text_p, text_len) == 0)
+        && memcmp (websocket_key_p, key_text, text_len) == 0)
     {
       websocket_key_p += text_len;
       break;
@@ -257,16 +257,17 @@ jerryx_process_handshake (uint8_t *request_buffer_p) /**< temporary buffer */
 
   /* Last value must be replaced by equal sign. */
 
-  text_p = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
+  const uint8_t response_prefix[] =
+  "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 
-  if (!jerry_debugger_transport_send ((const uint8_t *) text_p, strlen (text_p))
+  if (!jerry_debugger_transport_send (response_prefix, sizeof (response_prefix) - 1)
       || !jerry_debugger_transport_send (request_buffer_p + sha1_length + 1, 27))
   {
     return false;
   }
 
-  text_p = "=\r\n\r\n";
-  return jerry_debugger_transport_send ((const uint8_t *) text_p, strlen (text_p));
+  const uint8_t response_suffix[] = "=\r\n\r\n";
+  return jerry_debugger_transport_send (response_suffix, sizeof (response_suffix) - 1);
 } /* jerryx_process_handshake */
 
 /**

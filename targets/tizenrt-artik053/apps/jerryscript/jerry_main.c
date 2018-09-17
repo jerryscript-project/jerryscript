@@ -371,9 +371,8 @@ jerry_cmd_main (int argc, char *argv[])
   {
     printf ("No input files, running a hello world demo:\n");
     const jerry_char_t script[] = "var str = 'Hello World'; print(str + ' from JerryScript')";
-    size_t script_size = strlen ((const char *) script);
 
-    ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
+    ret_value = jerry_parse (NULL, 0, script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
 
     if (!jerry_value_is_error (ret_value))
     {

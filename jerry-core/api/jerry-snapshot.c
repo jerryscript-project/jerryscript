@@ -291,10 +291,9 @@ static void
 static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< snapshot globals */
                                            ecma_value_t literal) /**< literal form the literal pool */
 {
-  const char * const error_prefix_p = "Unsupported static snapshot literal: ";
+  const lit_utf8_byte_t error_prefix[] = "Unsupported static snapshot literal: ";
 
-  ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) error_prefix_p,
-                                                                   (lit_utf8_size_t) strlen (error_prefix_p));
+  ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 (error_prefix, sizeof (error_prefix) - 1);
 
   literal = ecma_op_to_string (literal);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (literal));

@@ -46,7 +46,7 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_char_t test_eval_function[] = "function demo(a) { return a + 1; }; demo";
+  const jerry_char_t test_eval_function[] = "function demo(a) { return a + 1; }; demo";
 
   test_entry_t entries[] =
   {
@@ -68,7 +68,7 @@ main (void)
     ENTRY (JERRY_TYPE_NULL, jerry_create_null ()),
 
     ENTRY (JERRY_TYPE_FUNCTION, jerry_eval (test_eval_function,
-                                            strlen ((char *) test_eval_function),
+                                            sizeof (test_eval_function) - 1,
                                             JERRY_PARSE_NO_OPTS)),
     ENTRY (JERRY_TYPE_FUNCTION, jerry_create_external_function (test_ext_function)),
 

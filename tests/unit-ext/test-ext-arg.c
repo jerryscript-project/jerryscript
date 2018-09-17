@@ -17,49 +17,47 @@
  * Unit test for jerry-ext/args.
  */
 
+#include <string.h>
 #include "jerryscript.h"
 #include "jerryscript-ext/arg.h"
 #include "test-common.h"
 
-#include <string.h>
-#include <jerryscript-ext/arg.h>
-
-const char *test_source = (
-                           "var arg1 = true;"
-                           "var arg2 = 10.5;"
-                           "var arg3 = 'abc';"
-                           "var arg4 = function foo() {};"
-                           "test_validator1(arg1, arg2, arg3, arg4);"
-                           "arg1 = new Boolean(true);"
-                           "arg3 = new String('abc');"
-                           "test_validator1(arg1, arg2, arg3);"
-                           "test_validator1(arg1, arg2, '');"
-                           "arg2 = new Number(10.5);"
-                           "test_validator1(arg1, arg2, arg3);"
-                           "test_validator1(arg1, 10.5, 'abcdef');"
-                           "var obj_a = new MyObjectA();"
-                           "var obj_b = new MyObjectB();"
-                           "test_validator2.call(obj_a, 5);"
-                           "test_validator2.call(obj_b, 5);"
-                           "test_validator2.call(obj_a, 1);"
-                           "var obj1 = {prop1:true, prop2:'1.5'};"
-                           "test_validator_prop1(obj1);"
-                           "test_validator_prop2(obj1);"
-                           "test_validator_prop2();"
-                           "var obj2 = {prop1:true};"
-                           "Object.defineProperty(obj2, 'prop2', {"
-                           "  get: function() { throw new TypeError('prop2 error') }"
-                           "});"
-                           "test_validator_prop3(obj2);"
-                           "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
-                           "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
-                           "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
-                           "test_validator_int3(NaN);"
-                           "var arr = [1, 2];"
-                           "test_validator_array1(arr);"
-                           "test_validator_array1();"
-                           "test_validator_array2(arr);"
-                           );
+static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+  "var arg1 = true;"
+  "var arg2 = 10.5;"
+  "var arg3 = 'abc';"
+  "var arg4 = function foo() {};"
+  "test_validator1(arg1, arg2, arg3, arg4);"
+  "arg1 = new Boolean(true);"
+  "arg3 = new String('abc');"
+  "test_validator1(arg1, arg2, arg3);"
+  "test_validator1(arg1, arg2, '');"
+  "arg2 = new Number(10.5);"
+  "test_validator1(arg1, arg2, arg3);"
+  "test_validator1(arg1, 10.5, 'abcdef');"
+  "var obj_a = new MyObjectA();"
+  "var obj_b = new MyObjectB();"
+  "test_validator2.call(obj_a, 5);"
+  "test_validator2.call(obj_b, 5);"
+  "test_validator2.call(obj_a, 1);"
+  "var obj1 = {prop1:true, prop2:'1.5'};"
+  "test_validator_prop1(obj1);"
+  "test_validator_prop2(obj1);"
+  "test_validator_prop2();"
+  "var obj2 = {prop1:true};"
+  "Object.defineProperty(obj2, 'prop2', {"
+  "  get: function() { throw new TypeError('prop2 error') }"
+  "});"
+  "test_validator_prop3(obj2);"
+  "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
+  "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
+  "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
+  "test_validator_int3(NaN);"
+  "var arr = [1, 2];"
+  "test_validator_array1(arr);"
+  "test_validator_array1();"
+  "test_validator_array2(arr);"
+);
 
 static const jerry_object_native_info_t thing_a_info =
 {
@@ -569,7 +567,7 @@ test_utf8_string (void)
   /* test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
   jerry_value_t str = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
   char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
-  size_t buf_len = strlen (expect_utf8_buf);
+  size_t buf_len = sizeof (expect_utf8_buf) - 1;
   char buf[buf_len+1];
 
   jerryx_arg_t mapping[] =
@@ -662,8 +660,8 @@ main (void)
 
   jerry_value_t parsed_code_val = jerry_parse (NULL,
                                                0,
-                                               (jerry_char_t *) test_source,
-                                               strlen (test_source),
+                                               test_source,
+                                               sizeof (test_source) - 1,
                                                JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 

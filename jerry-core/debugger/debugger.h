@@ -26,7 +26,7 @@
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (5)
+#define JERRY_DEBUGGER_VERSION (6)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.
@@ -192,6 +192,14 @@ typedef enum
 } jerry_debugger_header_type_t;
 
 /**
+ * Debugger option flags.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_LITTLE_ENDIAN = 1u << 0, /**< little endian */
+} jerry_debugger_configuration_flags_t;
+
+/**
  * Subtypes of eval.
  */
 typedef enum
@@ -250,10 +258,10 @@ typedef struct
 typedef struct
 {
   uint8_t type; /**< type of the message */
+  uint8_t configuration; /**< configuration option bits */
+  uint8_t version[sizeof (uint32_t)]; /**< debugger version */
   uint8_t max_message_size; /**< maximum incoming message size */
   uint8_t cpointer_size; /**< size of compressed pointers */
-  uint8_t little_endian; /**< little endian machine */
-  uint8_t version; /**< debugger version */
 } jerry_debugger_send_configuration_t;
 
 /**

@@ -39,7 +39,7 @@ typedef struct
  */
 JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 28
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
-                     && JERRY_DEBUGGER_VERSION == 5,
+                     && JERRY_DEBUGGER_VERSION == 6,
                      debugger_version_correlates_to_message_type_count);
 
 /**
@@ -880,10 +880,18 @@ jerry_debugger_send_configuration (uint8_t max_message_size) /**< maximum messag
   endian_data.uint16_value = 1;
 
   configuration_p->type = JERRY_DEBUGGER_CONFIGURATION;
+  configuration_p->configuration = 0;
+
+  if (endian_data.uint8_value[0] == 1)
+  {
+    configuration_p->configuration |= (uint8_t) JERRY_DEBUGGER_LITTLE_ENDIAN;
+  }
+
+  uint32_t version = JERRY_DEBUGGER_VERSION;
+  memcpy (configuration_p->version, &version, sizeof (uint32_t));
+
   configuration_p->max_message_size = max_message_size;
   configuration_p->cpointer_size = sizeof (jmem_cpointer_t);
-  configuration_p->little_endian = (endian_data.uint8_value[0] == 1);
-  configuration_p->version = JERRY_DEBUGGER_VERSION;
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_configuration_t));
 } /* jerry_debugger_send_configuration */

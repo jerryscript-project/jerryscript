@@ -196,7 +196,8 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (prop_p != NULL && ecma_is_property_lcached (prop_p));
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
   jmem_cpointer_t object_cp;
   ECMA_SET_NON_NULL_POINTER (object_cp, object_p);

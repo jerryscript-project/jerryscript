@@ -1119,7 +1119,19 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
                                     0);
 
   const ecma_compiled_code_t *bytecode_data_p;
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARROW_FUNCTION)
+  {
+    bytecode_data_p = ecma_op_arrow_function_get_compiled_code ((ecma_arrow_function_t *) object_p);
+  }
+  else
+  {
+    bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+  }
+#else /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
   {

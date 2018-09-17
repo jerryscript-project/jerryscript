@@ -545,7 +545,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         {
           ecma_gc_free_native_pointer (property_p);
         }
-        else if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
+
+        if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
         {
           ecma_free_property (object_p, name_cp, property_p);
         }

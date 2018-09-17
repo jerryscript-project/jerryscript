@@ -764,8 +764,10 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
     {
       JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
-      /* Currently no internal property can reach this point. */
-      JERRY_UNREACHABLE ();
+      /* Must be a native pointer. */
+      JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+                    && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER));
+      break;
     }
   }
 

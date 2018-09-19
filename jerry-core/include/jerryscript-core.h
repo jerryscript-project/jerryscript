@@ -303,7 +303,8 @@ typedef struct jerry_context_t jerry_context_t;
  */
 void jerry_init (jerry_init_flag_t flags);
 void jerry_cleanup (void);
-void jerry_register_magic_strings (const jerry_char_t **ex_str_items_p, uint32_t count,
+void jerry_register_magic_strings (const jerry_char_t * const *ex_str_items_p,
+                                   uint32_t count,
                                    const jerry_length_t *str_lengths_p);
 void jerry_gc (jerry_gc_mode_t mode);
 void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);

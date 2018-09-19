@@ -58,7 +58,8 @@ lit_utf8_size_t lit_get_magic_string_size (lit_magic_string_id_t id);
 const lit_utf8_byte_t *lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id);
 lit_utf8_size_t lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id);
 
-void lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, uint32_t count,
+void lit_magic_strings_ex_set (const lit_utf8_byte_t * const *ex_str_items,
+                               uint32_t count,
                                const lit_utf8_size_t *ex_str_sizes);
 
 lit_magic_string_id_t lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size);

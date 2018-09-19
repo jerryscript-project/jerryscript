@@ -94,7 +94,7 @@ struct jerry_context_t
   jmem_pools_chunk_t *jmem_free_16_byte_chunk_p; /**< list of free sixteen byte pool chunks */
 #endif /* JERRY_CPOINTER_32_BIT */
   jmem_free_unused_memory_callback_t jmem_free_unused_memory_callback; /**< Callback for freeing up memory. */
-  const lit_utf8_byte_t **lit_magic_string_ex_array; /**< array of external magic strings */
+  const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */

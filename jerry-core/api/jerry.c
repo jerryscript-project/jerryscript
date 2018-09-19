@@ -258,14 +258,16 @@ jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
  * Register external magic string array
  */
 void
-jerry_register_magic_strings (const jerry_char_t **ex_str_items_p, /**< character arrays, representing
-                                                                    *   external magic strings' contents */
+jerry_register_magic_strings (const jerry_char_t * const *ex_str_items_p, /**< character arrays, representing
+                                                                           *   external magic strings' contents */
                               uint32_t count, /**< number of the strings */
                               const jerry_length_t *str_lengths_p) /**< lengths of all strings */
 {
   jerry_assert_api_available ();
 
-  lit_magic_strings_ex_set ((const lit_utf8_byte_t **) ex_str_items_p, count, (const lit_utf8_size_t *) str_lengths_p);
+  lit_magic_strings_ex_set ((const lit_utf8_byte_t * const *) ex_str_items_p,
+                            count,
+                            (const lit_utf8_size_t *) str_lengths_p);
 } /* jerry_register_magic_strings */
 
 /**

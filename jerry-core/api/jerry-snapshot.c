@@ -768,6 +768,8 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
     return ecma_create_error_reference (JERRY_CONTEXT (error_value), true);
   }
 
+  JERRY_ASSERT (bytecode_data_p != NULL);
+
   if (generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STATIC)
   {
     static_snapshot_add_compiled_code (bytecode_data_p, (uint8_t *) buffer_p, buffer_size, &globals);
@@ -779,6 +781,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
 
   if (!ecma_is_value_empty (globals.snapshot_error))
   {
+    ecma_bytecode_deref (bytecode_data_p);
     return globals.snapshot_error;
   }
 
@@ -808,6 +811,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
     {
       JERRY_ASSERT (lit_map_p == NULL);
       const char * const error_message_p = "Cannot allocate memory for literals.";
+      ecma_bytecode_deref (bytecode_data_p);
       return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) error_message_p);
     }
 

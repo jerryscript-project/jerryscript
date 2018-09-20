@@ -24,7 +24,7 @@ import struct
 import sys
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 5
+JERRY_DEBUGGER_VERSION = 6
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -54,6 +54,9 @@ JERRY_DEBUGGER_EVAL_RESULT_END = 24
 JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25
 JERRY_DEBUGGER_OUTPUT_RESULT = 26
 JERRY_DEBUGGER_OUTPUT_RESULT_END = 27
+
+# Debugger option flags
+JERRY_DEBUGGER_LITTLE_ENDIAN = 0x1
 
 # Subtypes of eval
 JERRY_DEBUGGER_EVAL_EVAL = "\0"
@@ -308,14 +311,14 @@ class JerryDebugger(object):
         else:
             result = b""
 
-        len_expected = 7
+        len_expected = 10
         # Network configurations, which has the following struct:
         # header [2] - opcode[1], size[1]
         # type [1]
+        # configuration [1]
+        # version [4]
         # max_message_size [1]
         # cpointer_size [1]
-        # little_endian [1]
-        # version [1]
 
         while len(result) < len_expected:
             result += self.client_socket.recv(1024)
@@ -324,21 +327,15 @@ class JerryDebugger(object):
 
         expected = struct.pack("BBB",
                                WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                               5,
+                               8,
                                JERRY_DEBUGGER_CONFIGURATION)
 
         if result[0:3] != expected:
             raise Exception("Unexpected configuration")
 
-        self.max_message_size = ord(result[3])
-        self.cp_size = ord(result[4])
-        self.little_endian = ord(result[5])
-        self.version = ord(result[6])
-
-        if self.version != JERRY_DEBUGGER_VERSION:
-            raise Exception("Incorrect debugger version from target: %d expected: %d" %
-                            (self.version, JERRY_DEBUGGER_VERSION))
-
+        self.little_endian = ord(result[3]) & JERRY_DEBUGGER_LITTLE_ENDIAN
+        self.max_message_size = ord(result[8])
+        self.cp_size = ord(result[9])
 
         if self.little_endian:
             self.byte_order = "<"
@@ -353,6 +350,11 @@ class JerryDebugger(object):
             self.cp_format = "I"
 
         self.idx_format = "I"
+
+        self.version = struct.unpack(self.byte_order + self.idx_format, result[4:8])[0]
+        if self.version != JERRY_DEBUGGER_VERSION:
+            raise Exception("Incorrect debugger version from target: %d expected: %d" %
+                            (self.version, JERRY_DEBUGGER_VERSION))
 
         logging.debug("Compressed pointer size: %d", self.cp_size)
 

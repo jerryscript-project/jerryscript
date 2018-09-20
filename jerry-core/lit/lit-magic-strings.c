@@ -134,8 +134,8 @@ lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic s
  * Register external magic strings
  */
 void
-lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character arrays, representing
-                                                                 *   external magic strings' contents */
+lit_magic_strings_ex_set (const lit_utf8_byte_t * const *ex_str_items, /**< character arrays, representing
+                                                                        *   external magic strings' contents */
                           uint32_t count,                       /**< number of the strings */
                           const lit_utf8_size_t *ex_str_sizes)  /**< sizes of the strings */
 {

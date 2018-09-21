@@ -78,7 +78,7 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
   {
     ssize_t is_err = recv (tcp_p->tcp_socket, NULL, 0, MSG_PEEK);
 
-    if (is_err == 0)
+    if (is_err == 0 && errno != EWOULDBLOCK)
     {
       int err_val = errno;
       jerry_debugger_transport_close ();

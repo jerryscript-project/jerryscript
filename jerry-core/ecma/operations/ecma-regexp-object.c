@@ -249,22 +249,10 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
  */
 ecma_value_t
 ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
-                              ecma_string_t *flags_str_p) /**< flags */
+                              uint16_t flags) /**< flags */
 {
   JERRY_ASSERT (pattern_p != NULL);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  uint16_t flags = 0;
-
-  if (flags_str_p != NULL)
-  {
-    ECMA_TRY_CATCH (empty, re_parse_regexp_flags (flags_str_p, &flags), ret_value);
-    ECMA_FINALIZE (empty);
-
-    if (!ecma_is_value_empty (ret_value))
-    {
-      return ret_value;
-    }
-  }
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 

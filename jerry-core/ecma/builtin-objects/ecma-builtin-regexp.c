@@ -110,9 +110,15 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
       ECMA_FINALIZE (flags_str_value);
     }
 
+    uint16_t flags = 0;
+    if (ecma_is_value_empty (ret_value) && (flags_string_p != NULL))
+    {
+      ret_value = re_parse_regexp_flags (flags_string_p, &flags);
+    }
+
     if (ecma_is_value_empty (ret_value))
     {
-      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
+      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags);
     }
 
     if (pattern_string_p != NULL)

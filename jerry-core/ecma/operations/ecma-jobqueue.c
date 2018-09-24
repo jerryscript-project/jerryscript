@@ -145,10 +145,10 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   ecma_job_promise_reaction_t *job_p = (ecma_job_promise_reaction_t *) obj_p;
   ecma_object_t *reaction_p = ecma_get_object_from_value (job_p->reaction);
 
-  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *handler_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
-  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *handler_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_HANDLER);
+  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
   /* 2. */
   ecma_value_t capability = ecma_op_object_get (reaction_p, capability_str_p);

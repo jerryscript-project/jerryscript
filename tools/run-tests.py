@@ -154,6 +154,8 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-cmdline-test=on']),
     Options('buildoption_test-cmdline_snapshot',
             ['--jerry-cmdline-snapshot=on']),
+    Options('buildoption_test-regexp_recursion_limit',
+            ['--regexp-recursion-limit=1000']),
 ]
 
 def get_arguments():

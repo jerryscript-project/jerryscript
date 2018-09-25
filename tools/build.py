@@ -126,6 +126,8 @@ def get_arguments():
                          help='specify profile file')
     coregrp.add_argument('--regexp-strict-mode', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable regexp strict mode (%(choices)s)'))
+    coregrp.add_argument('--regexp-recursion-limit', metavar='N', type=int,
+                         help='regexp recursion depth limit')
     coregrp.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable parser byte-code dumps (%(choices)s)'))
     coregrp.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -194,6 +196,7 @@ def generate_build_options(arguments):
     build_options_append('FEATURE_MEM_STRESS_TEST', arguments.mem_stress_test)
     build_options_append('FEATURE_PROFILE', arguments.profile)
     build_options_append('FEATURE_REGEXP_STRICT_MODE', arguments.regexp_strict_mode)
+    build_options_append('REGEXP_RECURSION_LIMIT', arguments.regexp_recursion_limit)
     build_options_append('FEATURE_PARSER_DUMP', arguments.show_opcodes)
     build_options_append('FEATURE_REGEXP_DUMP', arguments.show_regexp_opcodes)
     build_options_append('FEATURE_SNAPSHOT_EXEC', arguments.snapshot_exec)

@@ -39,6 +39,7 @@ set(FEATURE_SYSTEM_ALLOCATOR   OFF     CACHE BOOL   "Enable system allocator?")
 set(FEATURE_VALGRIND           OFF     CACHE BOOL   "Enable Valgrind support?")
 set(FEATURE_VM_EXEC_STOP       OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(MEM_HEAP_SIZE_KB           "512"   CACHE STRING "Size of memory heap, in kilobytes")
+set(REGEXP_RECURSION_LIMIT     "0"     CACHE STRING "Limit of regexp recursion depth")
 
 # Option overrides
 if(USING_MSVC)
@@ -94,6 +95,7 @@ message(STATUS "FEATURE_SYSTEM_ALLOCATOR    " ${FEATURE_SYSTEM_ALLOCATOR})
 message(STATUS "FEATURE_VALGRIND            " ${FEATURE_VALGRIND})
 message(STATUS "FEATURE_VM_EXEC_STOP        " ${FEATURE_VM_EXEC_STOP})
 message(STATUS "MEM_HEAP_SIZE_KB            " ${MEM_HEAP_SIZE_KB})
+message(STATUS "REGEXP_RECURSION_LIMIT      " ${REGEXP_RECURSION_LIMIT})
 
 # Include directories
 set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -226,6 +228,11 @@ endif()
 # RegExp strict mode
 if(FEATURE_REGEXP_STRICT_MODE)
   set(DEFINES_JERRY ${DEFINES_JERRY} ENABLE_REGEXP_STRICT_MODE)
+endif()
+
+# RegExp recursion depth limit
+if(REGEXP_RECURSION_LIMIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} REGEXP_RECURSION_LIMIT=${REGEXP_RECURSION_LIMIT})
 endif()
 
 # RegExp byte-code dumps

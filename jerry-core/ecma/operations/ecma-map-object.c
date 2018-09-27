@@ -124,7 +124,7 @@ ecma_builtin_map_search (jmem_cpointer_t first_chunk_cp, /**< first chunk */
                                                                 first_chunk_cp);
 
   bool is_direct = true;
-  const ecma_string_t *key_str_p = NULL;
+  ecma_string_t *key_str_p = NULL;
   ecma_number_t key_float = 0;
 
   if (ecma_is_value_non_direct_string (key))
@@ -471,7 +471,7 @@ ecma_op_map_delete (ecma_value_t this_arg, /**< this argument */
                                                                 map_object_p->first_chunk_cp);
 
   bool is_direct = true;
-  const ecma_string_t *key_str_p = NULL;
+  ecma_string_t *key_str_p = NULL;
   ecma_number_t key_float = 0;
 
   if (ecma_is_value_non_direct_string (key_arg))

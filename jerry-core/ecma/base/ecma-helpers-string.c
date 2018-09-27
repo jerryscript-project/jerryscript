@@ -267,7 +267,7 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
     data_p = (lit_utf8_byte_t *) (long_string_desc_p + 1);
   }
 
-  string_desc_p->hash = lit_utf8_string_calc_hash (string_p, string_size);
+  string_desc_p->hash = 0; // lazy
   memcpy (data_p, string_p, string_size);
   return string_desc_p;
 } /* ecma_new_ecma_string_from_utf8 */
@@ -355,7 +355,6 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
       data_p = (lit_utf8_byte_t *) (long_string_desc_p + 1);
     }
 
-    const lit_utf8_byte_t *const begin_data_p = data_p;
     pos = 0;
 
     while (pos < string_size)
@@ -381,8 +380,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
     }
 
     JERRY_ASSERT (pos == string_size);
-
-    string_desc_p->hash = lit_utf8_string_calc_hash (begin_data_p, converted_string_size);
+    string_desc_p->hash = 0; // lazy
   }
 
   return string_desc_p;
@@ -478,7 +476,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
   ecma_string_t *string_desc_p = ecma_alloc_string_buffer (sizeof (ecma_string_t) + str_size);
 
   string_desc_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
-  string_desc_p->hash = lit_utf8_string_calc_hash (str_buf, str_size);
+  string_desc_p->hash = 0; // lazy
   string_desc_p->u.common_uint32_field = 0;
   string_desc_p->u.utf8_string.size = (uint16_t) str_size;
   string_desc_p->u.utf8_string.length = (uint16_t) str_size;
@@ -502,6 +500,28 @@ ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);
   return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC, (uintptr_t) id);
 } /* ecma_get_magic_string */
+
+
+
+/**
+ * Calculate the hash of a non-direct string, if not yet set
+ */
+void
+ecma_string_calc_hash_maybe (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string_p != NULL);
+
+  if (ECMA_IS_DIRECT_STRING (string_p) || string_p->hash != 0)
+  {
+    return;
+  }
+
+  lit_utf8_size_t size = ecma_string_get_size (string_p);
+  lit_utf8_byte_t *data_p = JERRY_LIKELY (size <= UINT16_MAX)
+                          ? (lit_utf8_byte_t *) (string_p + 1)
+                          : (lit_utf8_byte_t *) ((ecma_long_string_t *) (string_p) + 1);
+  string_p->hash = lit_utf8_string_calc_hash (data_p, size);
+} /* ecma_string_calc_hash_maybe */
 
 /**
  * Append a cesu8 string after an ecma-string
@@ -706,6 +726,8 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
   else
   {
     JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (string1_p));
+
+    ecma_string_calc_hash_maybe (string1_p);
     hash_start = string1_p->hash;
   }
 
@@ -1678,7 +1700,7 @@ ecma_string_get_property_index (ecma_property_t property, /**< property name typ
 inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_compare_to_property_name (ecma_property_t property, /**< property name type */
                                       jmem_cpointer_t prop_name_cp, /**< property name compressed pointer */
-                                      const ecma_string_t *string_p) /**< other string */
+                                      ecma_string_t *string_p) /**< other string */
 {
   if (ECMA_PROPERTY_GET_NAME_TYPE (property) != ECMA_DIRECT_STRING_PTR)
   {
@@ -1744,8 +1766,8 @@ ecma_compare_ecma_strings_longpath (const ecma_string_t *string1_p, /**< ecma-st
  *         false - otherwise
  */
 inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
-                           const ecma_string_t *string2_p) /**< ecma-string */
+ecma_compare_ecma_strings (ecma_string_t *string1_p, /**< ecma-string */
+                           ecma_string_t *string2_p) /**< ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
 
@@ -1761,6 +1783,8 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
     return false;
   }
 
+  ecma_string_calc_hash_maybe (string1_p);
+  ecma_string_calc_hash_maybe (string2_p);
   if (string1_p->hash != string2_p->hash)
   {
     return false;
@@ -1788,8 +1812,8 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
  *         false - otherwise
  */
 inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-string */
-                                      const ecma_string_t *string2_p) /**< ecma-string */
+ecma_compare_ecma_non_direct_strings (ecma_string_t *string1_p, /**< ecma-string */
+                                      ecma_string_t *string2_p) /**< ecma-string */
 {
   JERRY_ASSERT (string1_p != NULL && string2_p != NULL);
   JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (string1_p) && !ECMA_IS_DIRECT_STRING (string2_p));
@@ -1800,6 +1824,8 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
     return true;
   }
 
+  ecma_string_calc_hash_maybe (string1_p);
+  ecma_string_calc_hash_maybe (string2_p);
   if (string1_p->hash != string2_p->hash)
   {
     return false;
@@ -1831,8 +1857,8 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
  *         false - otherwise
  */
 bool
-ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, /**< ecma-string */
-                                      const ecma_string_t *string2_p) /**< ecma-string */
+ecma_compare_ecma_strings_relational (ecma_string_t *string1_p, /**< ecma-string */
+                                      ecma_string_t *string2_p) /**< ecma-string */
 {
   if (ecma_compare_ecma_strings (string1_p,
                                  string2_p))

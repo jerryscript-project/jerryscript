@@ -275,8 +275,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 
         error_msg_p = ecma_append_chars_to_string (error_msg_p,
                                                    chars_p,
-                                                   chars_size,
-                                                   lit_utf8_string_length (chars_p, chars_size));
+                                                   chars_size);
       }
 
       /* Convert an argument to string without side effects. */
@@ -315,8 +314,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 
     error_msg_p = ecma_append_chars_to_string (error_msg_p,
                                                chars_p,
-                                               chars_size,
-                                               lit_utf8_string_length (chars_p, chars_size));
+                                               chars_size);
   }
 
   ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);

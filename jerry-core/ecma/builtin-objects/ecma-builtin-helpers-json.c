@@ -172,12 +172,12 @@ ecma_builtin_helper_json_create_formatted_json (lit_utf8_byte_t left_bracket, /*
   ecma_deref_ecma_string (properties_str_p);
 
   chars[0] = LIT_CHAR_LF;
-  final_str_p = ecma_append_chars_to_string (final_str_p, chars, 1, 1);
+  final_str_p = ecma_append_chars_to_string (final_str_p, chars, 1);
 
   final_str_p = ecma_concat_ecma_strings (final_str_p, stepback_p);
 
   chars[0] = right_bracket;
-  final_str_p = ecma_append_chars_to_string (final_str_p, chars, 1, 1);
+  final_str_p = ecma_append_chars_to_string (final_str_p, chars, 1);
 
   return ecma_make_string_value (final_str_p);
 } /* ecma_builtin_helper_json_create_formatted_json */
@@ -218,7 +218,7 @@ ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket
 
   lit_utf8_byte_t chars[1] = { right_bracket };
 
-  result_str_p = ecma_append_chars_to_string (result_str_p, chars, 1, 1);
+  result_str_p = ecma_append_chars_to_string (result_str_p, chars, 1);
 
   return ecma_make_string_value (result_str_p);
 } /* ecma_builtin_helper_json_create_non_formatted_json */

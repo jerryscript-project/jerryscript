@@ -232,8 +232,7 @@ ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);
 ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
                                             const lit_utf8_byte_t *cesu8_string2_p,
-                                            lit_utf8_size_t cesu8_string2_size,
-                                            lit_utf8_size_t cesu8_string2_length);
+                                            lit_utf8_size_t cesu8_string2_size);
 ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 ecma_string_t *ecma_append_magic_string_to_string (ecma_string_t *string1_p, lit_magic_string_id_t string2_id);
 void ecma_ref_ecma_string (ecma_string_t *string_p);
@@ -246,24 +245,24 @@ ecma_string_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p,
                                   lit_utf8_byte_t *buffer_p,
                                   lit_utf8_size_t buffer_size);
 lit_utf8_size_t JERRY_ATTR_WARN_UNUSED_RESULT
-ecma_string_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
+ecma_string_copy_to_utf8_buffer (ecma_string_t *string_desc_p,
                                  lit_utf8_byte_t *buffer_p,
                                  lit_utf8_size_t buffer_size);
 lit_utf8_size_t
-ecma_substring_copy_to_cesu8_buffer (const ecma_string_t *string_desc_p,
+ecma_substring_copy_to_cesu8_buffer (ecma_string_t *string_desc_p,
                                      ecma_length_t start_pos,
                                      ecma_length_t end_pos,
                                      lit_utf8_byte_t *buffer_p,
                                      lit_utf8_size_t buffer_size);
 lit_utf8_size_t
-ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
+ecma_substring_copy_to_utf8_buffer (ecma_string_t *string_desc_p,
                                     ecma_length_t start_pos,
                                     ecma_length_t end_pos,
                                     lit_utf8_byte_t *buffer_p,
                                     lit_utf8_size_t buffer_size);
 void ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p,
                                 lit_utf8_size_t buffer_size);
-const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, uint8_t *flags_p);
+const lit_utf8_byte_t *ecma_string_get_chars (ecma_string_t *string_p, lit_utf8_size_t *size_p, uint8_t *flags_p);
 bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);
 bool ecma_string_is_empty (const ecma_string_t *string_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);
@@ -278,17 +277,17 @@ bool ecma_string_compare_to_property_name (ecma_property_t property, jmem_cpoint
 bool ecma_compare_ecma_strings (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
 bool ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
 bool ecma_compare_ecma_strings_relational (const ecma_string_t *string1_p, const ecma_string_t *string2_p);
-ecma_length_t ecma_string_get_length (const ecma_string_t *string_p);
-ecma_length_t ecma_string_get_utf8_length (const ecma_string_t *string_p);
+ecma_length_t ecma_string_get_length (ecma_string_t *string_p);
+ecma_length_t ecma_string_get_utf8_length (ecma_string_t *string_p);
 lit_utf8_size_t ecma_string_get_size (const ecma_string_t *string_p);
 lit_utf8_size_t ecma_string_get_utf8_size (const ecma_string_t *string_p);
-ecma_char_t ecma_string_get_char_at_pos (const ecma_string_t *string_p, ecma_length_t index);
+ecma_char_t ecma_string_get_char_at_pos (ecma_string_t *string_p, ecma_length_t index);
 
 lit_magic_string_id_t ecma_get_string_magic (const ecma_string_t *string_p);
 
 lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
-ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, ecma_length_t start_pos, ecma_length_t end_pos);
-ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
+ecma_string_t *ecma_string_substr (ecma_string_t *string_p, ecma_length_t start_pos, ecma_length_t end_pos);
+ecma_string_t *ecma_string_trim (ecma_string_t *string_p);
 
 /* ecma-helpers-number.c */
 ecma_number_t ecma_number_make_nan (void);

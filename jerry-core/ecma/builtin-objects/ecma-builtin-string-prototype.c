@@ -1501,7 +1501,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
         ECMA_FINALIZE (separator_to_string_val);
       }
 
-      const ecma_string_t *this_to_string_p = ecma_get_string_from_value (this_to_string_val);
+      ecma_string_t *this_to_string_p = ecma_get_string_from_value (this_to_string_val);
 
       /* 11. */
       if (ecma_string_is_empty (this_to_string_p) && ecma_is_value_empty (ret_value))

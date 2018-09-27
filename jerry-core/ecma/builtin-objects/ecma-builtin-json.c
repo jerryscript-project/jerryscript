@@ -851,7 +851,7 @@ ecma_builtin_json_parse (ecma_value_t this_arg, /**< 'this' argument */
                   ecma_op_to_string (arg1),
                   ret_value);
 
-  const ecma_string_t *string_p = ecma_get_string_from_value (string);
+  ecma_string_t *string_p = ecma_get_string_from_value (string);
 
   ECMA_STRING_TO_UTF8_STRING (string_p, str_start_p, string_size);
 

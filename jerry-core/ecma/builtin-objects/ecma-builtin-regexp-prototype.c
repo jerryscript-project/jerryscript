@@ -382,7 +382,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
     }
 
     lit_utf8_size_t size = (lit_utf8_size_t) (flags_p - flags);
-    output_str_p = ecma_append_chars_to_string (output_str_p, flags, size, size);
+    output_str_p = ecma_append_chars_to_string (output_str_p, flags, size);
 
     ret_value = ecma_make_string_value (output_str_p);
 

@@ -128,7 +128,7 @@
 /**
  * Several opcodes (mostly call and assignment opcodes) have
  * two forms: one which does not push a return value onto
- * the stack, and another which does. The reasion is that
+ * the stack, and another which does. The reason is that
  * the return value of these opcodes are often not used
  * and the first form provides smaller byte code.
  *

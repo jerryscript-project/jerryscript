@@ -39,11 +39,6 @@ typedef struct
 #define JERRY_SNAPSHOT_MAGIC (0x5952524Au)
 
 /**
- * Jerry snapshot format version.
- */
-#define JERRY_SNAPSHOT_VERSION (18u)
-
-/**
  * Snapshot configuration flags.
  */
 typedef enum

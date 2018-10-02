@@ -24,11 +24,6 @@
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
 
 /**
- * JerryScript debugger protocol version.
- */
-#define JERRY_DEBUGGER_VERSION (6)
-
-/**
  * Frequency of calling jerry_debugger_receive() by the VM.
  */
 #define JERRY_DEBUGGER_MESSAGE_FREQUENCY 5

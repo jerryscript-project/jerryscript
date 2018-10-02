@@ -3315,6 +3315,9 @@ error:
           }
 
           ecma_object_t *catch_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
+#ifdef JERRY_DEBUGGER
+          catch_env_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_NON_CLOSURE;
+#endif /* JERRY_DEBUGGER */
 
           ecma_string_t *catch_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_op_create_mutable_binding (catch_env_p, catch_name_p, false);

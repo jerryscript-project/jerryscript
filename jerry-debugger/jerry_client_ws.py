@@ -24,7 +24,7 @@ import struct
 import sys
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 6
+JERRY_DEBUGGER_VERSION = 7
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -54,6 +54,10 @@ JERRY_DEBUGGER_EVAL_RESULT_END = 24
 JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25
 JERRY_DEBUGGER_OUTPUT_RESULT = 26
 JERRY_DEBUGGER_OUTPUT_RESULT_END = 27
+JERRY_DEBUGGER_SCOPE_CHAIN = 28
+JERRY_DEBUGGER_SCOPE_CHAIN_END = 29
+JERRY_DEBUGGER_SCOPE_VARIABLES = 30
+JERRY_DEBUGGER_SCOPE_VARIABLES_END = 31
 
 # Debugger option flags
 JERRY_DEBUGGER_LITTLE_ENDIAN = 0x1
@@ -94,11 +98,28 @@ JERRY_DEBUGGER_FINISH = 15
 JERRY_DEBUGGER_GET_BACKTRACE = 16
 JERRY_DEBUGGER_EVAL = 17
 JERRY_DEBUGGER_EVAL_PART = 18
+JERRY_DEBUGGER_GET_SCOPE_CHAIN = 19
+JERRY_DEBUGGER_GET_SCOPE_VARIABLES = 20
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
 WEBSOCKET_FIN_BIT = 0x80
 
+JERRY_DEBUGGER_SCOPE_WITH = 1
+JERRY_DEBUGGER_SCOPE_LOCAL = 2
+JERRY_DEBUGGER_SCOPE_CLOSURE = 3
+JERRY_DEBUGGER_SCOPE_GLOBAL = 4
+JERRY_DEBUGGER_SCOPE_NON_CLOSURE = 5
+
+JERRY_DEBUGGER_VALUE_NONE = 1
+JERRY_DEBUGGER_VALUE_UNDEFINED = 2
+JERRY_DEBUGGER_VALUE_NULL = 3
+JERRY_DEBUGGER_VALUE_BOOLEAN = 4
+JERRY_DEBUGGER_VALUE_NUMBER = 5
+JERRY_DEBUGGER_VALUE_STRING = 6
+JERRY_DEBUGGER_VALUE_FUNCTION = 7
+JERRY_DEBUGGER_VALUE_ARRAY = 8
+JERRY_DEBUGGER_VALUE_OBJECT = 9
 
 def arguments_parse():
     parser = argparse.ArgumentParser(description="JerryScript debugger client")
@@ -264,6 +285,8 @@ class JerryDebugger(object):
         self.source_name = ''
         self.exception_string = ''
         self.frame_index = 0
+        self.scope_vars = ""
+        self.scopes = ""
         self.client_sources = []
         self.last_breakpoint_hit = None
         self.next_breakpoint_index = 0
@@ -394,6 +417,10 @@ class JerryDebugger(object):
         self.prompt = False
         self._exec_command(JERRY_DEBUGGER_MEMSTATS)
 
+    def scope_chain(self):
+        self.prompt = False
+        self._exec_command(JERRY_DEBUGGER_GET_SCOPE_CHAIN)
+
     def set_break(self, args):
         if not args:
             return "Error: Breakpoint index expected"
@@ -496,6 +523,28 @@ class JerryDebugger(object):
                               min_depth,
                               max_depth,
                               get_total)
+        self.send_message(message)
+        self.prompt = False
+        return ""
+
+    def scope_variables(self, args):
+        index = 0
+        if args:
+            try:
+                index = int(args)
+                if index < 0:
+                    print ("Error: A non negative integer number expected")
+                    return
+
+            except ValueError as val_errno:
+                return "Error: Non negative integer number expected, %s\n" % (val_errno)
+
+        message = struct.pack(self.byte_order + "BBIB" + self.idx_format,
+                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
+                              WEBSOCKET_FIN_BIT + 1 + 4,
+                              0,
+                              JERRY_DEBUGGER_GET_SCOPE_VARIABLES,
+                              index)
         self.send_message(message)
         self.prompt = False
         return ""
@@ -724,7 +773,6 @@ class JerryDebugger(object):
 
         while True:
             data = self.get_message(False)
-
             if not self.non_interactive:
                 if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                     sys.stdin.readline()
@@ -848,6 +896,29 @@ class JerryDebugger(object):
 
             elif buffer_type == JERRY_DEBUGGER_WAIT_FOR_SOURCE:
                 self.send_client_source()
+
+            elif buffer_type in [JERRY_DEBUGGER_SCOPE_CHAIN, JERRY_DEBUGGER_SCOPE_CHAIN_END]:
+                self.scopes = data[3:]
+
+                if buffer_type == JERRY_DEBUGGER_SCOPE_CHAIN_END:
+                    result = self.process_scopes()
+                    self.scopes = ""
+
+                    self.prompt = True
+
+                return DebuggerAction(DebuggerAction.TEXT, result)
+
+            elif buffer_type in [JERRY_DEBUGGER_SCOPE_VARIABLES, JERRY_DEBUGGER_SCOPE_VARIABLES_END]:
+                self.scope_vars += "".join(data[3:])
+
+                if buffer_type == JERRY_DEBUGGER_SCOPE_VARIABLES_END:
+                    result = self.process_scope_variables()
+                    self.scope_vars = ""
+
+                    self.prompt = True
+
+                return DebuggerAction(DebuggerAction.TEXT, result)
+
             else:
                 raise Exception("Unknown message")
 
@@ -1203,3 +1274,79 @@ class JerryDebugger(object):
         if subtype == JERRY_DEBUGGER_EVAL_ERROR:
             return "Uncaught exception: %s" % (message)
         return message
+
+    def process_scope_variables(self):
+        buff_size = len(self.scope_vars)
+        buff_pos = 0
+
+        table = [['name', 'type', 'value']]
+
+        while buff_pos != buff_size:
+            # Process name
+            name_length = ord(self.scope_vars[buff_pos:buff_pos + 1])
+            buff_pos += 1
+            name = self.scope_vars[buff_pos:buff_pos + name_length]
+            buff_pos += name_length
+
+            # Process type
+            value_type = ord(self.scope_vars[buff_pos:buff_pos + 1])
+
+            buff_pos += 1
+
+            value_length = ord(self.scope_vars[buff_pos:buff_pos + 1])
+            buff_pos += 1
+            value = self.scope_vars[buff_pos: buff_pos + value_length]
+            buff_pos += value_length
+
+            if value_type == JERRY_DEBUGGER_VALUE_UNDEFINED:
+                table.append([name, 'undefined', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_NULL:
+                table.append([name, 'Null', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_BOOLEAN:
+                table.append([name, 'Boolean', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_NUMBER:
+                table.append([name, 'Number', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_STRING:
+                table.append([name, 'String', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_FUNCTION:
+                table.append([name, 'Function', value])
+            elif value_type == JERRY_DEBUGGER_VALUE_ARRAY:
+                table.append([name, 'Array', '[' + value + ']'])
+            elif value_type == JERRY_DEBUGGER_VALUE_OBJECT:
+                table.append([name, 'Object', value])
+
+        result = self.form_table(table)
+
+        return result
+
+    def process_scopes(self):
+        result = ""
+        table = [['level', 'type']]
+
+        for i, level in enumerate(self.scopes):
+            if ord(level) == JERRY_DEBUGGER_SCOPE_WITH:
+                table.append([str(i), 'with'])
+            elif ord(level) == JERRY_DEBUGGER_SCOPE_GLOBAL:
+                table.append([str(i), 'global'])
+            elif ord(level) == JERRY_DEBUGGER_SCOPE_NON_CLOSURE:
+                # Currently it is only marks the catch closure.
+                table.append([str(i), 'catch'])
+            elif ord(level) == JERRY_DEBUGGER_SCOPE_LOCAL:
+                table.append([str(i), 'local'])
+            elif ord(level) == JERRY_DEBUGGER_SCOPE_CLOSURE:
+                table.append([str(i), 'closure'])
+            else:
+                raise Exception("Unexpected scope chain element")
+
+        result = self.form_table(table)
+
+        return result
+
+    def form_table(self, table):
+        result = ""
+        col_width = [max(len(x) for x in col) for col in zip(*table)]
+        for line in table:
+            result += " | ".join("{:{}}".format(x, col_width[i])
+                                 for i, x in enumerate(line)) + " \n"
+
+        return result

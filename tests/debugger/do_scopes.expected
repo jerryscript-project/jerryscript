@@ -1,0 +1,63 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_scopes.js:15
+(jerry-debugger) scopes
+level | type   
+0     | global 
+(jerry-debugger) b do_scopes.js:22
+Breakpoint 1 at tests/debugger/do_scopes.js:22 (in f() at line:17, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: error
+Stopped at tests/debugger/do_scopes.js:19 (in f() at line:17, col:1)
+(jerry-debugger) scopes
+level | type   
+0     | local  
+1     | global 
+(jerry-debugger) c
+Stopped at breakpoint:1 tests/debugger/do_scopes.js:22 (in f() at line:17, col:1)
+(jerry-debugger) scopes
+level | type   
+0     | catch  
+1     | local  
+2     | global 
+(jerry-debugger) b do_scopes.js:28
+Breakpoint 2 at tests/debugger/do_scopes.js:28 (in function() at line:27, col:4)
+(jerry-debugger) c
+Stopped at breakpoint:2 tests/debugger/do_scopes.js:28 (in function() at line:27, col:4)
+(jerry-debugger) scopes
+level | type    
+0     | local   
+1     | closure 
+2     | global  
+(jerry-debugger) b do_scopes.js:31
+Breakpoint 3 at tests/debugger/do_scopes.js:31 (in function() at line:27, col:4)
+(jerry-debugger) c
+Stopped at breakpoint:3 tests/debugger/do_scopes.js:31 (in function() at line:27, col:4)
+(jerry-debugger) scopes
+level | type    
+0     | with    
+1     | local   
+2     | closure 
+3     | global  
+(jerry-debugger) b do_scopes.js:33
+Breakpoint 4 at tests/debugger/do_scopes.js:33 (in function() at line:27, col:4)
+(jerry-debugger) c
+Stopped at breakpoint:4 tests/debugger/do_scopes.js:33 (in function() at line:27, col:4)
+(jerry-debugger) scopes
+level | type    
+0     | with    
+1     | with    
+2     | local   
+3     | closure 
+4     | global  
+(jerry-debugger) b do_scopes.js:35
+Breakpoint 5 at tests/debugger/do_scopes.js:35 (in function() at line:27, col:4)
+(jerry-debugger) c
+Stopped at breakpoint:5 tests/debugger/do_scopes.js:35 (in function() at line:27, col:4)
+(jerry-debugger) scopes
+level | type    
+0     | with    
+1     | local   
+2     | closure 
+3     | global  
+(jerry-debugger) c

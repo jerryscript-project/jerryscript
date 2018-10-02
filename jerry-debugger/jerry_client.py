@@ -118,6 +118,11 @@ class DebuggerPrompt(Cmd):
         self.stop = True
     do_bt = do_backtrace
 
+    def do_variables(self, args):
+        """ Get scope variables from debugger """
+        write(self.debugger.scope_variables(args))
+        self.stop = True
+
     def do_src(self, args):
         """ Get current source code """
         if args:
@@ -171,6 +176,11 @@ class DebuggerPrompt(Cmd):
         self.debugger.memstats()
         self.stop = True
     do_ms = do_memstats
+
+    def do_scopes(self, _):
+        """ Memory statistics """
+        self.debugger.scope_chain()
+        self.stop = True
 
     def do_abort(self, args):
         """ Throw an exception """

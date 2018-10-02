@@ -152,7 +152,10 @@ typedef enum
   JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25, /**< engine waiting for source code */
   JERRY_DEBUGGER_OUTPUT_RESULT = 26, /**< output sent by the program to the debugger */
   JERRY_DEBUGGER_OUTPUT_RESULT_END = 27, /**< last output result data */
-
+  JERRY_DEBUGGER_SCOPE_CHAIN = 28, /**< scope chain */
+  JERRY_DEBUGGER_SCOPE_CHAIN_END = 29, /**< last output of scope chain */
+  JERRY_DEBUGGER_SCOPE_VARIABLES = 30, /**< scope variables */
+  JERRY_DEBUGGER_SCOPE_VARIABLES_END = 31, /**< last output of scope variables */
   JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT, /**< number of different type of output messages by the debugger */
 
   /* Messages sent by the client to server. */
@@ -182,7 +185,8 @@ typedef enum
   JERRY_DEBUGGER_GET_BACKTRACE = 16, /**< get backtrace */
   JERRY_DEBUGGER_EVAL = 17, /**< first message of evaluating a string */
   JERRY_DEBUGGER_EVAL_PART = 18, /**< next message of evaluating a string */
-
+  JERRY_DEBUGGER_GET_SCOPE_CHAIN = 19, /**< get type names of the scope chain */
+  JERRY_DEBUGGER_GET_SCOPE_VARIABLES = 20, /**< get variables of a scope */
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
 } jerry_debugger_header_type_t;
 
@@ -228,6 +232,34 @@ typedef enum
   JERRY_DEBUGGER_OUTPUT_DEBUG = 4, /**< output result, debug */
   JERRY_DEBUGGER_OUTPUT_TRACE = 5, /**< output result, trace */
 } jerry_debugger_output_subtype_t;
+
+/**
+ * Types of scopes.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_SCOPE_WITH = 1, /**< with */
+  JERRY_DEBUGGER_SCOPE_LOCAL = 2, /**< local */
+  JERRY_DEBUGGER_SCOPE_CLOSURE = 3, /**< closure */
+  JERRY_DEBUGGER_SCOPE_GLOBAL = 4, /**< global */
+  JERRY_DEBUGGER_SCOPE_NON_CLOSURE = 5 /**< non closure */
+} jerry_debugger_scope_chain_type_t;
+
+/**
+ * Type of scope variables.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_VALUE_NONE = 1,
+  JERRY_DEBUGGER_VALUE_UNDEFINED = 2,
+  JERRY_DEBUGGER_VALUE_NULL = 3,
+  JERRY_DEBUGGER_VALUE_BOOLEAN = 4,
+  JERRY_DEBUGGER_VALUE_NUMBER = 5,
+  JERRY_DEBUGGER_VALUE_STRING = 6,
+  JERRY_DEBUGGER_VALUE_FUNCTION = 7,
+  JERRY_DEBUGGER_VALUE_ARRAY = 8,
+  JERRY_DEBUGGER_VALUE_OBJECT = 9
+} jerry_debugger_scope_variable_type_t;
 
 /**
  * Byte data for evaluating expressions and receiving client source.
@@ -365,6 +397,15 @@ typedef struct
 } jerry_debugger_send_backtrace_t;
 
 /**
+ * Outgoing message: scope chain.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t scope_types[]; /**< scope types */
+} jerry_debugger_send_scope_chain_t;
+
+/**
  * Outgoing message: number of total frames in backtrace.
  */
 typedef struct
@@ -410,6 +451,15 @@ typedef struct
   uint8_t type; /**< type of the message */
   uint8_t eval_size[sizeof (uint32_t)]; /**< total size of the message */
 } jerry_debugger_receive_eval_first_t;
+
+/**
+ * Incoming message: get scope variables
+*/
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t chain_index[sizeof (uint32_t)]; /**< index element of the scope */
+} jerry_debugger_receive_get_scope_variables_t;
 
 /**
  * Incoming message: first message of client source.

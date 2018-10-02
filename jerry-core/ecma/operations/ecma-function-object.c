@@ -700,86 +700,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_call */
 
 /**
- * [[Construct]] implementation for Function objects (13.2.2),
- * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION) and
- * externally defined (host) functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION).
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-static ecma_value_t
-ecma_op_function_construct_ecma_or_external (ecma_object_t *func_obj_p, /**< Function object */
-                                             const ecma_value_t *arguments_list_p, /**< arguments list */
-                                             ecma_length_t arguments_list_len) /**< length of arguments list */
-{
-  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-  /* 5. */
-  ecma_value_t prototype_prop_value = ecma_op_object_get_by_magic_id (func_obj_p,
-                                                                      LIT_MAGIC_STRING_PROTOTYPE);
-
-  if (ECMA_IS_VALUE_ERROR (prototype_prop_value))
-  {
-    return prototype_prop_value;
-  }
-
-  /* 1., 2., 4. */
-  ecma_object_t *obj_p;
-  if (ecma_is_value_object (prototype_prop_value))
-  {
-    /* 6. */
-    obj_p = ecma_create_object (ecma_get_object_from_value (prototype_prop_value),
-                                0,
-                                ECMA_OBJECT_TYPE_GENERAL);
-  }
-  else
-  {
-    /* 7. */
-    ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-
-    obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
-
-    ecma_deref_object (prototype_p);
-  }
-
-  ecma_free_value (prototype_prop_value);
-
-  /* 3. */
-  /*
-   * [[Class]] property of ECMA_OBJECT_TYPE_GENERAL type objects
-   * without ECMA_INTERNAL_PROPERTY_CLASS internal property
-   * is "Object".
-   *
-   * See also: ecma_object_get_class_name.
-   */
-
-  /* 8. */
-  ecma_value_t this_obj = ecma_make_object_value (obj_p);
-  ecma_value_t ret_value;
-
-  if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
-  {
-    arguments_list_p = ecma_op_function_set_construct_flag (arguments_list_p);
-  }
-
-  ret_value = ecma_op_function_call (func_obj_p,
-                                     this_obj,
-                                     arguments_list_p,
-                                     arguments_list_len);
-
-  /* 9. */
-  if (ECMA_IS_VALUE_ERROR (ret_value) || ecma_is_value_object (ret_value))
-  {
-    ecma_deref_object (obj_p);
-    return ret_value;
-  }
-
-  ecma_fast_free_value (ret_value);
-  return this_obj;
-} /* ecma_op_function_construct_ecma_or_external */
-
-/**
  * [[Construct]] implementation:
  *   13.2.2 - for Function objects, created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION),
  *            and externally defined host functions (ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
@@ -790,51 +710,19 @@ ecma_op_function_construct_ecma_or_external (ecma_object_t *func_obj_p, /**< Fun
  */
 ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
+                            ecma_value_t this_arg_value, /**< optional 'this' object value
+                                                          *   or ECMA_VALUE_UNDEFINED */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
-  while (true)
+  JERRY_ASSERT (ecma_is_value_object (this_arg_value)
+                || this_arg_value == ECMA_VALUE_UNDEFINED);
+
+  while (JERRY_UNLIKELY (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION))
   {
-    switch (ecma_get_object_type (func_obj_p))
-    {
-      case ECMA_OBJECT_TYPE_FUNCTION:
-      {
-        if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)))
-        {
-          if (ecma_builtin_function_is_routine (func_obj_p))
-          {
-            return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor."));
-          }
-
-          return ecma_builtin_dispatch_construct (func_obj_p,
-                                                  arguments_list_p,
-                                                  arguments_list_len);
-        }
-        /* FALLTHRU */
-      }
-      case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-      {
-        return ecma_op_function_construct_ecma_or_external (func_obj_p,
-                                                            arguments_list_p,
-                                                            arguments_list_len);
-      }
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
-      case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
-      {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Arrow functions have no constructor."));
-      }
-#endif /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-      default:
-      {
-        break;
-      }
-    }
-
-    JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
-
     /* 1-3. */
     ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
 
@@ -874,6 +762,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     /* 5. */
     ret_value = ecma_op_function_construct (target_func_obj_p,
+                                            this_arg_value,
                                             merged_args_list_p,
                                             merged_args_list_len);
 
@@ -881,6 +770,109 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
     return ret_value;
   }
+
+  ecma_object_type_t type = ecma_get_object_type (func_obj_p);
+
+#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+  if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_ARROW_FUNCTION))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Arrow functions have no constructor."));
+  }
+#endif /* CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+
+  if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_get_object_is_builtin (func_obj_p)))
+  {
+    if (ecma_builtin_function_is_routine (func_obj_p))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor."));
+    }
+
+    return ecma_builtin_dispatch_construct (func_obj_p,
+                                            arguments_list_p,
+                                            arguments_list_len);
+  }
+
+  ecma_object_t *new_this_obj_p = NULL;
+
+  if (JERRY_LIKELY (this_arg_value == ECMA_VALUE_UNDEFINED))
+  {
+    /* 5. */
+    ecma_value_t prototype_prop_value = ecma_op_object_get_by_magic_id (func_obj_p,
+                                                                        LIT_MAGIC_STRING_PROTOTYPE);
+
+    if (ECMA_IS_VALUE_ERROR (prototype_prop_value))
+    {
+      return prototype_prop_value;
+    }
+
+    /* 1., 2., 4. */
+    if (ecma_is_value_object (prototype_prop_value))
+    {
+      /* 6. */
+      new_this_obj_p = ecma_create_object (ecma_get_object_from_value (prototype_prop_value),
+                                           0,
+                                           ECMA_OBJECT_TYPE_GENERAL);
+    }
+    else
+    {
+      /* 7. */
+      ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+
+      new_this_obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+
+      ecma_deref_object (prototype_p);
+    }
+
+    ecma_free_value (prototype_prop_value);
+
+    this_arg_value = ecma_make_object_value (new_this_obj_p);
+  }
+
+  /* 8. */
+  ecma_value_t ret_value;
+
+  switch (type)
+  {
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      arguments_list_p = ecma_op_function_set_construct_flag (arguments_list_p);
+
+      ret_value = ecma_op_function_call (func_obj_p,
+                                         this_arg_value,
+                                         arguments_list_p,
+                                         arguments_list_len);
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+      ret_value = ecma_op_function_call (func_obj_p,
+                                         this_arg_value,
+                                         arguments_list_p,
+                                         arguments_list_len);
+      break;
+    }
+  }
+
+  /* 9. */
+  if (ECMA_IS_VALUE_ERROR (ret_value) || ecma_is_value_object (ret_value))
+  {
+    if (new_this_obj_p != NULL)
+    {
+      ecma_deref_object (new_this_obj_p);
+    }
+    return ret_value;
+  }
+
+  ecma_fast_free_value (ret_value);
+
+  if (JERRY_UNLIKELY (new_this_obj_p == NULL))
+  {
+    ecma_ref_object (ecma_get_object_from_value (this_arg_value));
+  }
+
+  return this_arg_value;
 } /* ecma_op_function_construct */
 
 /**

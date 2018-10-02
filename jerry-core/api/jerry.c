@@ -2213,6 +2213,7 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
     JERRY_ASSERT (jerry_value_is_constructor (func_obj_val));
 
     return jerry_return (ecma_op_function_construct (ecma_get_object_from_value (func_obj_val),
+                                                     ECMA_VALUE_UNDEFINED,
                                                      args_p,
                                                      args_count));
   }

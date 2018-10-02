@@ -494,6 +494,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor_value);
 
     completion_value = ecma_op_function_construct (constructor_obj_p,
+                                                   ECMA_VALUE_UNDEFINED,
                                                    stack_top_p,
                                                    arguments_list_len);
   }

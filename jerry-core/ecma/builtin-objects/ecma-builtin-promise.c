@@ -231,6 +231,13 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
     ecma_value_t array_item = ecma_op_object_get (array_p, index_to_str_p);
     ecma_deref_ecma_string (index_to_str_p);
 
+    /* f. */
+    if (ECMA_IS_VALUE_ERROR (array_item))
+    {
+      ret = array_item;
+      break;
+    }
+
     /* h. */
     ecma_value_t next_promise = ecma_builtin_promise_resolve (ctor, array_item);
     ecma_free_value (array_item);

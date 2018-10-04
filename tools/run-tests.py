@@ -199,8 +199,11 @@ BINARY_CACHE = {}
 TERM_NORMAL = '\033[0m'
 TERM_BLUE = '\033[1;34m'
 
-def report_command(cmd_type, cmd):
+def report_command(cmd_type, cmd, env=None):
     sys.stderr.write('%s%s%s\n' % (TERM_BLUE, cmd_type, TERM_NORMAL))
+    if env is not None:
+        sys.stderr.write(''.join('%s%s=%r \\%s\n' % (TERM_BLUE, var, val, TERM_NORMAL)
+                                 for var, val in sorted(env.items())))
     sys.stderr.write('%s%s%s\n' % (TERM_BLUE, (' \\%s\n\t%s' % (TERM_NORMAL, TERM_BLUE)).join(cmd), TERM_NORMAL))
 
 def create_binary(job, options):
@@ -279,15 +282,17 @@ def iterate_test_runner_jobs(jobs, options):
 
         yield job, ret_build, test_cmd
 
-def run_check(runnable):
-    report_command('Test command:', runnable)
+def run_check(runnable, env=None):
+    report_command('Test command:', runnable, env=env)
 
-    try:
-        ret = subprocess.check_call(runnable)
-    except subprocess.CalledProcessError as err:
-        return err.returncode
+    if env is not None:
+        full_env = dict(os.environ)
+        full_env.update(env)
+        env = full_env
 
-    return ret
+    proc = subprocess.Popen(runnable, env=env)
+    proc.wait()
+    return proc.returncode
 
 def run_jerry_debugger_tests(options):
     ret_build = ret_test = 0
@@ -341,7 +346,7 @@ def run_jerry_tests(options):
         if job.test_args:
             test_cmd.extend(job.test_args)
 
-        ret_test |= run_check(test_cmd)
+        ret_test |= run_check(test_cmd, env=dict(TZ='UTC'))
 
     return ret_build | ret_test
 
@@ -387,7 +392,7 @@ def run_test262_test_suite(options):
         if job.test_args:
             test_cmd.extend(job.test_args)
 
-        ret_test |= run_check(test_cmd)
+        ret_test |= run_check(test_cmd, env=dict(TZ='America/Los_Angeles'))
 
     return ret_build | ret_test
 

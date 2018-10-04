@@ -155,8 +155,6 @@ ecma_promise_trigger_reactions (ecma_collection_header_t *reactions, /**< lists 
     ecma_enqueue_promise_reaction_job (*ecma_value_p, value);
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
-
-  ecma_free_values_collection (reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
 } /* ecma_promise_trigger_reactions */
 
 /**
@@ -180,12 +178,15 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
      first and creating a new one might cause a heap after use event. */
   ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
   ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+
+  /* Fulfill reactions will never be triggered. */
+  ecma_promise_trigger_reactions (reject_reactions, reason);
+
   promise_p->reject_reactions = ecma_new_values_collection ();
   promise_p->fulfill_reactions = ecma_new_values_collection ();
 
-  /* Fulfill reactions will never be triggered. */
+  ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
   ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_promise_trigger_reactions (reject_reactions, reason);
 } /* ecma_reject_promise */
 
 /**
@@ -209,12 +210,15 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
      first and creating a new one might cause a heap after use event. */
   ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
   ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+
+  /* Reject reactions will never be triggered. */
+  ecma_promise_trigger_reactions (fulfill_reactions, value);
+
   promise_p->reject_reactions = ecma_new_values_collection ();
   promise_p->fulfill_reactions = ecma_new_values_collection ();
 
-  /* Reject reactions will never be triggered. */
   ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_promise_trigger_reactions (fulfill_reactions, value);
+  ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
 } /* ecma_fulfill_promise */
 
 /**

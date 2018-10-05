@@ -42,9 +42,6 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 
   uint32_t flags = 0;
 
-#ifdef JERRY_CPOINTER_32_BIT
-  flags |= JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER;
-#endif /* JERRY_CPOINTER_32_BIT */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */

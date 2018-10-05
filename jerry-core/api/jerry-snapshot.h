@@ -52,7 +52,7 @@ typedef enum
   JERRY_SNAPSHOT_HAS_REGEX_LITERAL = (1u << 0), /**< byte code has regex literal */
   JERRY_SNAPSHOT_HAS_CLASS_LITERAL = (1u << 1), /**< byte code has class literal */
   /* 24 bits are reserved for compile time features */
-  JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER = (1u << 8) /**< compressed pointers are four byte long */
+  JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER = (1u << 8) /**< deprecated, an unused placeholder now */
 } jerry_snapshot_global_flags_t;
 
 #endif /* !JERRY_SNAPSHOT_H */

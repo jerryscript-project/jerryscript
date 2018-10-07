@@ -26,10 +26,10 @@ static jerry_context_t *current_context_p = NULL;
  * Set the current_context_p as the passed pointer.
  */
 void
-jerry_port_default_set_context (jerry_context_t *context_p) /**< points to the created context */
+jerry_port_default_set_current_context (jerry_context_t *context_p) /**< points to the created context */
 {
   current_context_p = context_p;
-} /* jerry_port_default_set_context */
+} /* jerry_port_default_set_current_context */
 
 /**
  * Get the current context.

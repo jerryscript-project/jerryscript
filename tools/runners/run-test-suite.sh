@@ -85,7 +85,7 @@ if [ -d $TESTS ]
 then
     TESTS_DIR=$TESTS
 
-    ( cd $TESTS; find . -name "[^N]*.js" ) | sort > $TEST_FILES
+    ( cd $TESTS; find . -name "*.js" ) | sort > $TEST_FILES
 elif [ -f $TESTS ]
 then
     TESTS_DIR=`dirname $TESTS`

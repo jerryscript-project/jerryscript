@@ -20,14 +20,18 @@ import argparse
 import collections
 import hashlib
 import os
+import platform
 import subprocess
 import sys
 import settings
 
 OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
-Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args'])
-Options.__new__.__defaults__ = ([], [])
+Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args', 'skip'])
+Options.__new__.__defaults__ = ([], [], False)
+
+def skip_if(condition, desc):
+    return desc if condition else False
 
 OPTIONS_PROFILE_MIN = ['--profile=minimal']
 OPTIONS_PROFILE_ES51 = [] # NOTE: same as ['--profile=es5.1']
@@ -133,7 +137,11 @@ JERRY_BUILDOPTIONS = [
     Options('buildoption_test-show_regexp_opcodes',
             ['--show-regexp-opcodes=on']),
     Options('buildoption_test-cpointer_32bit',
-            ['--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
+            ['--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on'],
+            skip=skip_if(
+                platform.system() != 'Linux' or (platform.machine() != 'i386' and platform.machine() != 'x86_64'),
+                '-m32 is only supported on x86[-64]-linux')
+           ),
     Options('buildoption_test-external_context',
             ['--external-context=on']),
     Options('buildoption_test-shared_libs',
@@ -197,6 +205,7 @@ def get_arguments():
 BINARY_CACHE = {}
 
 TERM_NORMAL = '\033[0m'
+TERM_YELLOW = '\033[1;33m'
 TERM_BLUE = '\033[1;34m'
 
 def report_command(cmd_type, cmd, env=None):
@@ -205,6 +214,12 @@ def report_command(cmd_type, cmd, env=None):
         sys.stderr.write(''.join('%s%s=%r \\%s\n' % (TERM_BLUE, var, val, TERM_NORMAL)
                                  for var, val in sorted(env.items())))
     sys.stderr.write('%s%s%s\n' % (TERM_BLUE, (' \\%s\n\t%s' % (TERM_NORMAL, TERM_BLUE)).join(cmd), TERM_NORMAL))
+
+def report_skip(job):
+    sys.stderr.write('%sSkipping: %s' % (TERM_YELLOW, job.name))
+    if job.skip:
+        sys.stderr.write(' (%s)' % job.skip)
+    sys.stderr.write('%s\n' % TERM_NORMAL)
 
 def create_binary(job, options):
     build_args = job.build_args[:]
@@ -413,6 +428,10 @@ def run_unittests(options):
 
 def run_buildoption_test(options):
     for job in JERRY_BUILDOPTIONS:
+        if job.skip:
+            report_skip(job)
+            continue
+
         ret, _ = create_binary(job, options)
         if ret:
             break

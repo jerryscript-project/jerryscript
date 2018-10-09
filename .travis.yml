@@ -72,7 +72,6 @@ matrix:
     - env:
         - JOBNAME="Conformance Tests"
         - OPTS="--test262"
-        - TZ=America/Los_Angeles
 
     - env:
         - JOBNAME="ASAN Tests"

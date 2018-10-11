@@ -48,8 +48,6 @@ ecma_op_map_create (const ecma_value_t *arguments_list_p, /**< arguments list */
                                                 sizeof (ecma_map_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (prototype_obj_p);
-
   ecma_map_object_t *map_object_p = (ecma_map_object_t *) object_p;
   map_object_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_MAP_UL;
   map_object_p->header.u.class_prop.extra_info = 0;

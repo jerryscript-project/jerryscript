@@ -44,8 +44,6 @@ ecma_init_global_lex_env (void)
   JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL,
                                                                       glob_obj_p,
                                                                       ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-
-  ecma_deref_object (glob_obj_p);
 } /* ecma_init_global_lex_env */
 
 /**

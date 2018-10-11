@@ -303,8 +303,6 @@ ecma_builtin_function_prototype_object_bind (ecma_value_t this_arg, /**< this ar
       ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
     }
 
-    ecma_deref_object (prototype_obj_p);
-
     /*
      * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
      *

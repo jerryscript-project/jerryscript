@@ -155,6 +155,7 @@ static const ecma_builtin_property_list_reference_t ecma_builtin_property_list_r
 static size_t
 ecma_builtin_get_property_count (ecma_builtin_id_t builtin_id) /**< built-in ID */
 {
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
   const ecma_builtin_property_descriptor_t *property_list_p = ecma_builtin_property_list_references[builtin_id];
 
   const ecma_builtin_property_descriptor_t *curr_property_p = property_list_p;
@@ -180,20 +181,16 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
   JERRY_ASSERT (obj_p != NULL && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL)
-  {
-    /* If a built-in object is not instantiated,
-     * the specified object cannot be the built-in object */
-    return false;
-  }
-  else
-  {
-    return (obj_p == JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]);
-  }
+  /* If a built-in object is not instantiated, its value is NULL,
+     hence it cannot be equal to a valid object. */
+  return (obj_p == JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]);
 } /* ecma_builtin_is */
 
 /**
  * Get reference to specified built-in object
+ *
+ * Note:
+ *   Does not increase the reference counter.
  *
  * @return pointer to the object's instance
  */
@@ -206,8 +203,6 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
   {
     ecma_instantiate_builtin (builtin_id);
   }
-
-  ecma_ref_object (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]);
 
   return JERRY_CONTEXT (ecma_builtin_objects)[builtin_id];
 } /* ecma_builtin_get */
@@ -521,8 +516,6 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
                                                   ext_object_size,
                                                   ECMA_OBJECT_TYPE_FUNCTION);
 
-  ecma_deref_object (prototype_obj_p);
-
   ecma_set_object_is_builtin (func_obj_p);
 
   JERRY_ASSERT (routine_id >= ECMA_BUILTIN_ID__COUNT);
@@ -740,7 +733,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     }
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
-      value = ecma_make_object_value (ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value));
+      ecma_object_t *builtin_object_p = ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value);
+      ecma_ref_object (builtin_object_p);
+      value = ecma_make_object_value (builtin_object_p);
       break;
     }
     case ECMA_BUILTIN_PROPERTY_ROUTINE:

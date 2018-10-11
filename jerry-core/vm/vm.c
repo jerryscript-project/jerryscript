@@ -222,17 +222,14 @@ static const uint16_t vm_decode_table[] JERRY_CONST_DATA =
 ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+  ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
 
-  ecma_value_t ret_value = vm_run (bytecode_p,
-                                   ecma_make_object_value (glob_obj_p),
-                                   ecma_get_global_environment (),
-                                   false,
-                                   NULL,
-                                   0);
-
-  ecma_deref_object (glob_obj_p);
-  return ret_value;
+  return vm_run (bytecode_p,
+                 ecma_make_object_value (glob_obj_p),
+                 ecma_get_global_environment (),
+                 false,
+                 NULL,
+                 0);
 } /* vm_run_global */
 
 /**
@@ -275,7 +272,9 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   }
   else
   {
-    this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+    ecma_object_t *global_obj_p = ecma_builtin_get_global ();
+    ecma_ref_object (global_obj_p);
+    this_binding = ecma_make_object_value (global_obj_p);
     lex_env_p = ecma_get_global_environment ();
   }
 
@@ -1107,12 +1106,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_OBJECT:
         {
-          ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-          ecma_object_t *obj_p = ecma_create_object (prototype_p,
+          ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
                                                      0,
                                                      ECMA_OBJECT_TYPE_GENERAL);
 
-          ecma_deref_object (prototype_p);
           *stack_top_p++ = ecma_make_object_value (obj_p);
           continue;
         }
@@ -1398,9 +1395,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p,
                                                               sizeof (ecma_extended_object_t),
                                                               ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-
-          ecma_deref_object (prototype_obj_p);
 
           ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
           ext_func_obj_p->u.external_handler_cb = ecma_op_function_implicit_constructor_handler_cb;

@@ -62,11 +62,7 @@ ecma_op_create_object_object_noarg (void)
   ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
   /* 3., 4., 6., 7. */
-  ecma_object_t *obj_p = ecma_op_create_object_object_noarg_and_set_prototype (object_prototype_p);
-
-  ecma_deref_object (object_prototype_p);
-
-  return obj_p;
+  return ecma_op_create_object_object_noarg_and_set_prototype (object_prototype_p);
 } /* ecma_op_create_object_object_noarg */
 
 /**

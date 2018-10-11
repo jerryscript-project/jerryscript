@@ -492,8 +492,6 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
 
-  ecma_deref_object (prototype_obj_p);
-
   if (arguments_list_len == 0)
   {
     ECMA_TRY_CATCH (parse_res_value,

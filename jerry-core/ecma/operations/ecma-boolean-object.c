@@ -53,8 +53,6 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (prototype_obj_p);
-
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
   ext_object_p->u.class_prop.u.value = ecma_make_boolean_value (boolean_value);

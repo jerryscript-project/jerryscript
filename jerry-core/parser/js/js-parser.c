@@ -204,6 +204,8 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
         if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
         {
           jmem_heap_free_block ((void *) char_p, literal_p->prop.length);
+          /* This literal should not be freed even if an error is encountered later. */
+          literal_p->status_flags |= LEXER_FLAG_SOURCE_PTR;
         }
       }
     }

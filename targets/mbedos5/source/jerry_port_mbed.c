@@ -46,17 +46,15 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 #endif /* JSMBED_OVERRIDE_JERRY_PORT_LOG */
 
 /**
- * Implementation of jerry_port_get_time_zone.
+ * Implementation of jerry_port_get_local_time_zone_adjustment.
  *
- * @return true - if success
+ * @return 0, as we live in UTC.
  */
-bool
-jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< timezone pointer */
+double
+jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 {
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
-  return true;
-} /* jerry_port_get_time_zone */
+  return 0;
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Implementation of jerry_port_get_current_time.

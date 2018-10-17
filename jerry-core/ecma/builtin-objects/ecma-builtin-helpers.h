@@ -100,7 +100,7 @@ ecma_number_t ecma_date_year_from_time (ecma_number_t time);
 ecma_number_t ecma_date_month_from_time (ecma_number_t time);
 ecma_number_t ecma_date_date_from_time (ecma_number_t time);
 ecma_number_t ecma_date_week_day (ecma_number_t time);
-ecma_number_t ecma_date_local_time_zone (ecma_number_t time);
+ecma_number_t ecma_date_local_time_zone_adjustment (ecma_number_t time);
 ecma_number_t ecma_date_utc (ecma_number_t time);
 ecma_number_t ecma_date_hour_from_time (ecma_number_t time);
 ecma_number_t ecma_date_min_from_time (ecma_number_t time);

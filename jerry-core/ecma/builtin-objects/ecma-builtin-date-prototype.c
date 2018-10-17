@@ -600,7 +600,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
     if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
     {
-      this_num += ecma_date_local_time_zone (this_num);
+      this_num += ecma_date_local_time_zone_adjustment (this_num);
     }
 
     if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)

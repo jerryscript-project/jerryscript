@@ -302,83 +302,32 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
 } /* ecma_date_week_day */
 
 /**
- * Helper function to get local time zone adjustment.
+ * Helper function to get the local time zone offset at a given UTC timestamp.
+ * You can add this number to the given UTC timestamp to get local time.
  *
  * See also:
- *          ECMA-262 v5, 15.9.1.7
+ *          ECMA-262 v5, 15.9.1.9
  *
  * @return local time zone adjustment
  */
-static inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_local_tza (jerry_time_zone_t *tz) /**< time zone information */
-{
-  return tz->offset * -ECMA_DATE_MS_PER_MINUTE;
-} /* ecma_date_local_tza */
-
-/**
- * Helper function to get the daylight saving time adjustment.
- *
- * See also:
- *          ECMA-262 v5, 15.9.1.8
- *
- * @return daylight saving time adjustment
- */
-static inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_daylight_saving_ta (jerry_time_zone_t *tz, /**< time zone information */
-                              ecma_number_t time) /**< time value */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (time));
-
-  /*
-   * TODO: Fix daylight saving calculation.
-   *       https://github.com/jerryscript-project/jerryscript/issues/1661
-   */
-  return tz->daylight_saving_time * ECMA_DATE_MS_PER_HOUR;
-} /* ecma_date_daylight_saving_ta */
-
-/**
- * Helper function to get local time from UTC.
- *
- * See also:
- *          ECMA-262 v5, 15.9.1.9
- *
- * @return local time
- */
 inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_local_time_zone (ecma_number_t time) /**< time value */
+ecma_date_local_time_zone_adjustment (ecma_number_t time) /**< time value */
 {
-  jerry_time_zone_t tz;
-
-  if (ecma_number_is_nan (time)
-      || !jerry_port_get_time_zone (&tz))
-  {
-    return ecma_number_make_nan ();
-  }
-
-  return ecma_date_local_tza (&tz) + ecma_date_daylight_saving_ta (&tz, time);
-} /* ecma_date_local_time_zone */
+  return jerry_port_get_local_time_zone_adjustment (time, true);
+} /* ecma_date_local_time_zone_adjustment */
 
 /**
- * Helper function to get utc from local time.
+ * Helper function to get UTC time from local time.
  *
  * See also:
  *          ECMA-262 v5, 15.9.1.9
  *
- * @return utc time
+ * @return UTC time
  */
 ecma_number_t
 ecma_date_utc (ecma_number_t time) /**< time value */
 {
-  jerry_time_zone_t tz;
-
-  if (ecma_number_is_nan (time)
-      || !jerry_port_get_time_zone (&tz))
-  {
-    return ecma_number_make_nan ();
-  }
-
-  ecma_number_t simple_utc_time = time - ecma_date_local_tza (&tz);
-  return simple_utc_time - ecma_date_daylight_saving_ta (&tz, simple_utc_time);
+  return time - jerry_port_get_local_time_zone_adjustment (time, false);
 } /* ecma_date_utc */
 
 /**
@@ -615,7 +564,7 @@ ecma_date_timezone_offset (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  return (-ecma_date_local_time_zone (time)) / ECMA_DATE_MS_PER_MINUTE;
+  return (-ecma_date_local_time_zone_adjustment (time)) / ECMA_DATE_MS_PER_MINUTE;
 } /* ecma_date_timezone_offset */
 
 /**
@@ -724,7 +673,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       case LIT_CHAR_LOWERCASE_Z: /* Time zone minutes part. */
       {
-        int32_t time_zone = (int32_t) ecma_date_local_time_zone (datetime_number);
+        int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
 
         if (time_zone >= 0)
         {
@@ -744,7 +693,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       {
         JERRY_ASSERT (*format_p == LIT_CHAR_UPPERCASE_Z); /* Time zone seconds part. */
 
-        int32_t time_zone = (int32_t) ecma_date_local_time_zone (datetime_number);
+        int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
 
         if (time_zone < 0)
         {
@@ -805,7 +754,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
 ecma_value_t
 ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
 {
-  datetime_number += ecma_date_local_time_zone (datetime_number);
+  datetime_number += ecma_date_local_time_zone_adjustment (datetime_number);
   return ecma_date_to_string_format (datetime_number, "$W $M $D $Y $h:$m:$s GMT$z:$Z");
 } /* ecma_date_value_to_string */
 

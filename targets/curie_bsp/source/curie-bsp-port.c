@@ -52,16 +52,13 @@ void jerry_port_fatal (jerry_fatal_code_t code)
 } /* jerry_port_fatal */
 
 /**
- * Curie BSP implementation of jerry_port_get_time_zone.
+ * Curie BSP implementation of jerry_port_get_local_time_zone_adjustment.
  */
-bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+double jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 {
   //EMPTY implementation
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
-
-  return true;
-} /* jerry_port_get_time_zone */
+  return 0;
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Curie BSP implementation of jerry_port_get_current_time.

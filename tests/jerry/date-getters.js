@@ -24,8 +24,7 @@ assert (d.getUTCDate() == 9);
 assert (d.getDay() == 4);
 assert (d.getUTCDay() == 4);
 assert (d.getHours() == 12);
-// FIXME: Missing timezone adjustment.
-//assert (d.getUTCHours() == (12 + d.getTimezoneOffset() / 60));
+assert (d.getUTCHours() == (12 + d.getTimezoneOffset() / 60));
 assert (d.getMinutes() == 13);
 assert (d.getUTCMinutes() == 13);
 assert (d.getSeconds() == 14);
@@ -44,9 +43,8 @@ assert (d.getDate() == 9);
 assert (d.getUTCDate() == 9);
 assert (d.getDay() == 4);
 assert (d.getUTCDay() == 4);
-// FIXME: Missing timezone adjustment.
-//assert (d.getHours() == 12);
-//assert (d.getUTCHours() == (12 + d.getTimezoneOffset() / 60));
+assert (d.getHours() == Math.floor(12 - 1.5 + d.getTimezoneOffset() / 60));
+assert (d.getUTCHours() == Math.floor(12 - 1.5));
 assert (d.getMinutes() == 43);
 assert (d.getUTCMinutes() == 43);
 assert (d.getSeconds() == 14);
@@ -65,8 +63,7 @@ assert (d.getDate() == 1);
 assert (d.getUTCDate() == 1);
 assert (d.getDay() == 4);
 assert (d.getUTCDay() == 4);
-// FIXME: Missing timezone adjustment.
-// assert (d.getHours() == 0 - (d.getTimezoneOffset() / 60));
+assert (d.getHours() == 0 - (d.getTimezoneOffset() / 60));
 assert (d.getUTCHours() == 0);
 assert (d.getMinutes() == 0);
 assert (d.getUTCMinutes() == 0);

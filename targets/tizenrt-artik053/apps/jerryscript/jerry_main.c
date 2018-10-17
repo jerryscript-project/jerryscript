@@ -474,19 +474,16 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 } /* jerry_port_log */
 
 /**
- * Dummy function to get the time zone.
+ * Dummy function to get the time zone adjustment.
  *
- * @return true
+ * @return 0
  */
-bool
-jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+double
+jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 {
   /* We live in UTC. */
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
-
-  return true;
-} /* jerry_port_get_time_zone */
+  return 0;
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Dummy function to get the current time.

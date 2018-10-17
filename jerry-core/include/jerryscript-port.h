@@ -111,27 +111,37 @@ void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_port_log (jerry_log_level_t level, c
  */
 
 /**
- * Jerry time zone structure
- */
-typedef struct
-{
-  int offset;                /**< minutes from west */
-  int daylight_saving_time;  /**< daylight saving time (1 - DST applies, 0 - not on DST) */
-} jerry_time_zone_t;
-
-/**
- * Get timezone and daylight saving data
+ * Get local time zone adjustment, in milliseconds, for the given timestamp.
+ * The timestamp can be specified in either UTC or local time, depending on
+ * the value of is_utc. Adding the value returned from this function to
+ * a timestamp in UTC time should result in local time for the current time
+ * zone, and subtracting it from a timestamp in local time should result in
+ * UTC time.
+ *
+ * Ideally, this function should satisfy the stipulations applied to LocalTZA
+ * in section 20.3.1.7 of the ECMAScript version 9.0 spec.
+ *
+ * See Also:
+ *          ECMA-262 v9, 20.3.1.7
  *
  * Note:
  *      This port function is called by jerry-core when
  *      CONFIG_DISABLE_DATE_BUILTIN is _not_ defined. Otherwise this function is
  *      not used.
  *
- * @param[out] tz_p time zone structure to fill.
- * @return true  - if success
- *         false - otherwise
+ * @param unix_ms The unix timestamp we want an offset for, given in
+ *                millisecond precision (could be now, in the future,
+ *                or in the past). As with all unix timestamps, 0 refers to
+ *                1970-01-01, a day is exactly 86 400 000 milliseconds, and
+ *                leap seconds cause the same second to occur twice.
+ * @param is_utc Is the given timestamp in UTC time? If false, it is in local
+ *               time.
+ *
+ * @return milliseconds between local time and UTC for the given timestamp,
+ *         if available
+ *.        0 if not available / we are in UTC.
  */
-bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
+double jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc);
 
 /**
  * Get system time

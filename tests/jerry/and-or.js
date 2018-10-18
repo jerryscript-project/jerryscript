@@ -21,12 +21,27 @@ if (false && fail()) {
   assert (0);
 }
 
+if (!(false && fail()) != true)
+{
+  assert (0);
+}
+
 if (true && false && fail()) {
+  assert (0);
+}
+
+if ((true && false &&fail()) != false)
+{
   assert (0);
 }
 
 if (true || fail()) {
 } else {
+  assert (0);
+}
+
+if((true || fail()) != true)
+{
   assert (0);
 }
 

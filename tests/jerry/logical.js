@@ -14,12 +14,39 @@
 
 assert((!false) === true);
 
+assert (false === false);
+assert (true === true);
+
+assert (true !== false);
+assert (true !== undefined);
+assert (false !== undefined);
+
 assert((true || true) === true);
 assert((false || true) === true);
 assert((false || false) === false);
 assert((true || false) === true);
 
+assert ((true || true) !== false);
+assert ((false || true) !== false);
+assert ((false || false) !== true);
+assert ((true || false) !== false);
+
+assert ((true || true) !== undefined);
+assert ((false || true) !== undefined);
+assert ((false || false) !== undefined);
+assert ((true || false) !== undefined);
+
 assert((true && true) === true);
 assert((true && false) === false);
 assert((false && true) === false);
 assert((false && false) === false);
+
+assert ((true && true) !== false);
+assert ((true && false) !== true);
+assert ((false && true) !== true);
+assert ((false && false) !== true);
+
+assert ((true && true) !== undefined);
+assert ((true && false) !== undefined);
+assert ((false && true) !== undefined);
+assert ((false && false) !== undefined);

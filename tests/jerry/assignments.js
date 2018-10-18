@@ -15,7 +15,31 @@
 var b = 5;
 
 assert((b += 10) == 15);
+
+assert (b != 14);
+assert (b != 16);
+assert (!(b >16 || b < 14))
+
 assert((b -= 3) == 12);
+
+assert (b != 11);
+assert (b != 13);
+assert (!(b > 13 || b < 11));
+
 assert((b *= 10) == 120);
+
+assert (b != 119);
+assert (b != 121);
+assert (!(b > 121 || b < 119));
+
 assert((b /= 10) == 12);
+
+assert (b != 11);
+assert (b != 13);
+assert (!(b > 13 || b < 11));
+
 assert((b %= 10) == 2);
+
+assert (b != 1);
+assert (b != 3);
+assert (!(b > 3 || b < 1));

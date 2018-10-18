@@ -18,13 +18,37 @@ assert (cars[0] === "Saab");
 assert (cars[1] === "Volvo");
 assert (cars[2] === "BMW");
 
+assert (cars[0] !== undefined);
+assert (cars[1] !== undefined);
+assert (cars[2] !== undefined);
+
+assert (cars[0] !== "Volvo");
+assert (cars[2] !== "Volvo");
+
+assert (cars[0] !== "BMW");
+assert (cars[1] !== "BMW");
+
+assert (cars[1] !== "Saab");
+assert (cars[2] !== "Saab");
+
 var cars1 = new Array("Saab", "Volvo", "BMW");
 assert (cars[0] === cars1[0]);
 assert (cars[1] === cars1[1]);
 assert (cars[2] === cars1[2]);
 
+assert (cars[0] !== cars1[1]);
+assert (cars[1] !== cars1[2]);
+assert (cars[2] !== cars1[0]);
+
 var a = new Array();
 assert (typeof (a) === "object");
+
+assert (typeof (a) !== "undefined");
+assert (typeof (a) !== "boolean");
+assert (typeof (a) !== "number");
+assert (typeof (a) !== "string");
+assert (typeof (a) !== "function");
+
 assert (Array.isArray (a));
 assert (Array.isArray ([1, 2, 3]));
 
@@ -77,6 +101,9 @@ assert (c[0] === 0);
 assert (c[1] === undefined);
 assert (c[2] === undefined);
 assert (c[3] === '3');
+
+assert (c[0] !== undefined);
+assert (c[3] !== undefined);
 
 b[0] = 1;
 c[0] += b[0];
@@ -151,6 +178,9 @@ var arr = [
 for (i = 0; i < 1024; i++)
 {
   assert (arr[i] === i + 1);
+
+  assert (arr[i] !== i + 0);
+  assert (arr[i] !== i + 2);
 }
 
 var elision = [0,,2 ,3];

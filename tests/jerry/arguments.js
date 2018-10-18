@@ -18,6 +18,9 @@ function f_arg (arguments)
 }
 assert (f_arg (1) === 1);
 
+assert (f_arg (1) !== 2);
+assert (f_arg (1) !== 0);
+
 function f (a, b, c)
 {
   return arguments;
@@ -25,6 +28,7 @@ function f (a, b, c)
 
 args = f();
 assert (args[0] === undefined);
+assert (!(args[0] !== undefined));
 
 args = f (1, 2, 3, 4, 5);
 assert (args[0] === 1);
@@ -33,6 +37,18 @@ assert (args[2] === 3);
 assert (args[3] === 4);
 assert (args[4] === 5);
 assert (args[5] === undefined);
+
+assert (args[0] !== 2);
+assert (args[1] !== 3);
+assert (args[2] !== 4);
+assert (args[3] !== 5);
+assert (args[4] !== 6);
+
+assert (args[0] !== 0);
+assert (args[1] !== 1);
+assert (args[2] !== 2);
+assert (args[3] !== 3);
+assert (args[4] !== 4);
 
 assert (args.callee === f);
 assert (typeof args.caller === 'undefined');
@@ -51,6 +67,14 @@ function g (a, b, c)
   assert (arguments[1] === 'b');
   assert (arguments[2] === 'c');
 
+  assert (arguments[0] !== 'b');
+  assert (arguments[1] !== 'c');
+  assert (arguments[2] !== 'd');
+
+  assert (arguments[0] !== '`');
+  assert (arguments[1] !== 'a');
+  assert (arguments[2] !== 'b');
+
   arguments [0] = 1;
   arguments [1] = 2;
   arguments [2] = 3;
@@ -59,9 +83,21 @@ function g (a, b, c)
   assert (b === 2);
   assert (c === 3);
 
+  assert (a !== 2);
+  assert (b !== 3);
+  assert (c !== 4);
+
+  assert (a !== 0);
+  assert (b !== 1);
+  assert (c !== 2);
+
   delete arguments [0];
   arguments[0] = 'new value';
   assert (a === 1);
+
+  assert (a !== 0);
+
+  assert (a !== 2);
 
   a = 'a';
   b = 'b';

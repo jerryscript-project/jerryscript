@@ -82,6 +82,7 @@ assert (d.getUTCSeconds() == 1);
 assert (d.getUTCMilliseconds() == 1);
 
 /* 15.9.5.34 Date.prototype.setHours (hour [, min [, sec [, ms ] ] ] ) */
+<<<<<<< HEAD
 d.setTime(0);
 assert (d.setHours(1) == hour + d.getTimezoneOffset() * 60000);
 assert (d.getHours() == 1);
@@ -95,6 +96,21 @@ assert (d.getHours() == 1);
 assert (d.getMinutes() == 1);
 assert (d.getSeconds() == 1);
 d.setTime(0);
+=======
+d.setTime (0);
+assert (d.setHours(1) == hour + d.getTimezoneOffset() * 60000);
+assert (d.getHours() == 1);
+d.setTime (0);
+assert (d.setHours(1, 1) == hour + min + d.getTimezoneOffset() * 60000);
+assert (d.getHours() == 1);
+assert (d.getMinutes() == 1);
+d.setTime (0);
+assert (d.setHours(1, 1, 1) == hour + min + sec + d.getTimezoneOffset() * 60000);
+assert (d.getHours() == 1);
+assert (d.getMinutes() == 1);
+assert (d.getSeconds() == 1)
+d.setTime (0);
+>>>>>>> Uncomment the already fixed test cases, and added some negative tests to improve the test coverage
 assert (d.setHours(1, 1, 1, 1) == hour + min + sec + ms + d.getTimezoneOffset() * 60000);
 assert (d.getHours() == 1);
 assert (d.getMinutes() == 1);

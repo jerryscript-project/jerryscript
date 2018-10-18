@@ -27,3 +27,59 @@ assert(typeof('abcd') === "string");
 assert(typeof("1.1") === "string");
 assert(typeof(this) === "object");
 assert(typeof(f) === "function");
+
+assert (typeof (null) !== "undefined");
+assert (typeof (false) !== "undefined");
+assert (typeof (true) !== "undefined");
+assert (typeof (1) !== "undefined");
+assert (typeof (1.1) !== "undefined");
+assert (typeof ('abcd') !== "undefined");
+assert (typeof ("1.1") !== "undefined");
+assert (typeof (this) !== "undefined");
+assert (typeof (f) !== "undefined");
+
+assert (typeof (a) !== "object");
+assert (typeof (false) !== "object");
+assert (typeof (true) !== "object");
+assert (typeof (1) !== "object");
+assert (typeof (1.1) !== "object");
+assert (typeof ('abcd') !== "object");
+assert (typeof ("1.1") !== "object");
+assert (typeof (f) !== "object");
+
+assert (typeof (a) !== "boolean");
+assert (typeof (null) !== "boolean");
+assert (typeof (1) !== "boolean");
+assert (typeof (1.1) !== "boolean");
+assert (typeof ('abcd') !== "boolean");
+assert (typeof ("1.1") !== "boolean");
+assert (typeof (this) !== "boolean");
+assert (typeof (f) !== "boolean");
+
+assert (typeof (a) !== "number");
+assert (typeof (null) !== "number");
+assert (typeof (false) !== "number");
+assert (typeof (true) !== "number");
+assert (typeof ('abcd') !== "number");
+assert (typeof ("1.1") !== "number");
+assert (typeof (this) !== "number");
+assert (typeof (f) !== "number");
+
+assert (typeof (a) !== "string");
+assert (typeof (null) !== "string");
+assert (typeof (false) !== "string");
+assert (typeof (true) !== "string");
+assert (typeof (1) !== "string");
+assert (typeof (1.1) !== "string");
+assert (typeof (this) !== "string");
+assert (typeof (f) !== "string");
+
+assert (typeof (a) !== "function");
+assert (typeof (null) !== "function");
+assert (typeof (false) !== "function");
+assert (typeof (true) !== "function");
+assert (typeof (1) !== "function");
+assert (typeof (1.1) !== "function");
+assert (typeof ('abcd') !== "function");
+assert (typeof ("1.1") !== "function");
+assert (typeof (this) !== "function");

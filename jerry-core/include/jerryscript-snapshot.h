@@ -28,6 +28,11 @@ extern "C"
  */
 
 /**
+ * Jerry snapshot format version.
+ */
+#define JERRY_SNAPSHOT_VERSION (18u)
+
+/**
  * Flags for jerry_generate_snapshot and jerry_generate_function_snapshot.
  */
 typedef enum

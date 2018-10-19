@@ -2427,6 +2427,9 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_LITERAL
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        || context_p->token.type == LEXER_LEFT_SQUARE
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
         || context_p->token.type == LEXER_RIGHT_BRACE)
     {
       return;

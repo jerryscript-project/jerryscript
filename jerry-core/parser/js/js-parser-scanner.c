@@ -67,6 +67,9 @@ typedef enum
   SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
   SCAN_STACK_BLOCK_EXPRESSION,             /**< block expression group */
   SCAN_STACK_BLOCK_PROPERTY,               /**< block property group */
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+  SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
@@ -372,9 +375,41 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
     return false;
   }
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+  if (context_p->token.type == LEXER_RIGHT_SQUARE && stack_top == SCAN_STACK_COMPUTED_PROPERTY)
+  {
+    lexer_next_token (context_p);
+
+    parser_stack_pop_uint8 (context_p);
+    stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
+
+    if (stack_top == SCAN_STACK_BLOCK_PROPERTY)
+    {
+      if (context_p->token.type != LEXER_LEFT_PAREN)
+      {
+        parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIST_EXPECTED);
+      }
+
+      *mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+      return true;
+    }
+
+    JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL);
+
+    if (context_p->token.type != LEXER_COLON)
+    {
+      parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
+    }
+
+    *mode = SCAN_MODE_PRIMARY_EXPRESSION;
+    return false;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
   /* Check whether we can enter to statement mode. */
   if (stack_top != SCAN_STACK_BLOCK_STATEMENT
       && stack_top != SCAN_STACK_BLOCK_EXPRESSION
+      && stack_top != SCAN_STACK_BLOCK_PROPERTY
 #ifndef CONFIG_DISABLE_ES2015_CLASS
       && stack_top != SCAN_STACK_CLASS
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
@@ -776,6 +811,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
 
         if (context_p->token.type == LEXER_LITERAL
             && (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+                || context_p->token.lit_location.type == LEXER_STRING_LITERAL
                 || context_p->token.lit_location.type == LEXER_NUMBER_LITERAL))
         {
           lexer_next_token (context_p);
@@ -826,6 +862,15 @@ parser_scan_until (parser_context_t *context_p, /**< context */
 
         lexer_scan_identifier (context_p, true);
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        if (context_p->token.type == LEXER_LEFT_SQUARE)
+        {
+          parser_stack_push_uint8 (context_p, SCAN_STACK_COMPUTED_PROPERTY);
+          mode = SCAN_MODE_PRIMARY_EXPRESSION;
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
         if (context_p->token.type == LEXER_RIGHT_BRACE)
         {
           parser_stack_pop_uint8 (context_p);
@@ -836,9 +881,26 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         if (context_p->token.type == LEXER_PROPERTY_GETTER
             || context_p->token.type == LEXER_PROPERTY_SETTER)
         {
+          lexer_next_token (context_p);
+
           parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+          if (context_p->token.type == LEXER_LEFT_SQUARE)
+          {
+            parser_stack_push_uint8 (context_p, SCAN_STACK_COMPUTED_PROPERTY);
+            mode = SCAN_MODE_PRIMARY_EXPRESSION;
+            break;
+          }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+          if (context_p->token.type != LEXER_LITERAL)
+          {
+            parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+          }
+
           mode = SCAN_MODE_FUNCTION_ARGUMENTS;
-          break;
+          continue;
         }
 
         lexer_next_token (context_p);

@@ -64,13 +64,29 @@
 
 #define CBC_HAS_POP_STACK_BYTE_ARG (CBC_HAS_BYTE_ARG | CBC_POP_STACK_BYTE_ARG)
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Checks whether the current opcode is a super constructor call
+ */
+#define CBC_SUPER_CALL_OPERATION(opcode) \
+  ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL) \
+    && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL_BLOCK))
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+/**
+ * Checks whether the current opcode is a super constructor call
+ */
+#define CBC_SUPER_CALL_OPERATION(opcode) false
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
 /* Debug macro. */
 #define CBC_ARGS_EQ(op, types) \
   ((cbc_flags[op] & CBC_ARG_TYPES) == (types))
 
 /* Debug macro. */
 #define CBC_SAME_ARGS(op1, op2) \
-  ((cbc_flags[op1] & CBC_ARG_TYPES) == (cbc_flags[op2] & CBC_ARG_TYPES))
+  (CBC_SUPER_CALL_OPERATION (op1) ? ((cbc_ext_flags[PARSER_GET_EXT_OPCODE (op1)] & CBC_ARG_TYPES) \
+                                      == (cbc_ext_flags[PARSER_GET_EXT_OPCODE (op2)] & CBC_ARG_TYPES)) \
+                                  : ((cbc_flags[op1] & CBC_ARG_TYPES) == (cbc_flags[op2] & CBC_ARG_TYPES)))
 
 #define CBC_UNARY_OPERATION(name, group) \
   CBC_OPCODE (name, CBC_NO_FLAG, 0, \
@@ -143,15 +159,14 @@
  * Hence CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode)
  * cannot be true for an opcode which has a result
  */
-
 #define CBC_NO_RESULT_OPERATION(opcode) \
-  ((opcode) >= CBC_PRE_INCR && (opcode) < CBC_END)
+  (((opcode) >= CBC_PRE_INCR && (opcode) < CBC_END) || CBC_SUPER_CALL_OPERATION ((opcode)))
 
 #define CBC_NO_RESULT_BLOCK(opcode) \
-  ((opcode) >= CBC_PRE_INCR && (opcode) < CBC_ASSIGN_ADD)
+  (((opcode) >= CBC_PRE_INCR && (opcode) < CBC_ASSIGN_ADD) || CBC_SUPER_CALL_OPERATION ((opcode)))
 
 #define CBC_NO_RESULT_COMPOUND_ASSIGMENT(opcode) \
-  ((opcode) >= CBC_ASSIGN_ADD && (opcode) < CBC_END)
+  ((opcode) >= CBC_ASSIGN_ADD && (opcode) < CBC_END && !CBC_SUPER_CALL_OPERATION ((opcode)))
 
 /**
  * Branch instructions are organized in group of 8 opcodes.
@@ -203,6 +218,8 @@
 #define PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION 4
 /* PARSER_WITH_CONTEXT_STACK_ALLOCATION must be <= 4 */
 #define PARSER_WITH_CONTEXT_STACK_ALLOCATION 1
+/* PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION must be <= 4 */
+#define PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION 1
 /* PARSER_TRY_CONTEXT_STACK_ALLOCATION must be <= 3 */
 #define PARSER_TRY_CONTEXT_STACK_ALLOCATION 2
 
@@ -537,6 +554,10 @@
               VM_OC_PUSH_UNDEFINED_BASE | VM_OC_PUT_STACK) \
   CBC_FORWARD_BRANCH (CBC_EXT_FINALLY, 0, \
                       VM_OC_FINALLY) \
+  CBC_OPCODE (CBC_EXT_CLASS_EXPR_CONTEXT_END, CBC_NO_FLAG, 0, \
+              VM_OC_CLASS_EXPR_CONTEXT_END) \
+  CBC_FORWARD_BRANCH (CBC_EXT_SUPER_CLASS_CREATE_CONTEXT, \
+                      -1 + PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION, VM_OC_CLASS_HERITAGE) \
   \
   /* Basic opcodes. */ \
   CBC_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0, CBC_HAS_LITERAL_ARG, 2, \
@@ -569,6 +590,40 @@
               VM_OC_SET_GETTER | VM_OC_GET_STACK_LITERAL) \
   CBC_OPCODE (CBC_EXT_SET_STATIC_COMPUTED_SETTER, CBC_HAS_LITERAL_ARG, -1, \
               VM_OC_SET_SETTER | VM_OC_GET_STACK_LITERAL) \
+  \
+  /* Class opcodes */ \
+  CBC_OPCODE (CBC_EXT_INHERIT_AND_SET_CONSTRUCTOR, CBC_NO_FLAG, 0, \
+              VM_OC_CLASS_INHERITANCE) \
+  CBC_OPCODE (CBC_EXT_PUSH_CLASS_CONSTRUCTOR, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_CLASS_CONSTRUCTOR | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_IMPLICIT_CONSTRUCTOR_CALL, CBC_NO_FLAG, 0, \
+              VM_OC_PUSH_IMPL_CONSTRUCTOR) \
+  CBC_OPCODE (CBC_EXT_SET_CLASS_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_SET_CLASS_CONSTRUCTOR | VM_OC_GET_LITERAL) \
+  CBC_OPCODE (CBC_EXT_CLASS_EVAL, CBC_HAS_BYTE_ARG, 0, \
+              VM_OC_CLASS_EVAL) \
+  CBC_OPCODE (CBC_EXT_SUPER_CALL, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SUPER_CALL) \
+  CBC_OPCODE (CBC_EXT_SUPER_CALL_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
+              VM_OC_SUPER_CALL | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_SUPER_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SUPER_CALL | VM_OC_PUT_BLOCK) \
+  CBC_OPCODE (CBC_EXT_PUSH_CONSTRUCTOR_SUPER, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_CONSTRUCTOR_SUPER | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_CONSTRUCTOR_SUPER | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_PUSH_SUPER, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_SUPER | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_PUSH_STATIC_SUPER, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_SUPER | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_PUSH_CONSTRUCTOR_THIS, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_CONSTRUCTOR_THIS | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_SUPER_PROP_CALL, CBC_NO_FLAG, 0, \
+              VM_OC_SUPER_PROP_REFERENCE) \
+  CBC_OPCODE (CBC_EXT_SUPER_PROP_ASSIGN, CBC_NO_FLAG, 0, \
+              VM_OC_SUPER_PROP_REFERENCE) \
+  CBC_OPCODE (CBC_EXT_CONSTRUCTOR_RETURN, CBC_NO_FLAG, -1, \
+              VM_OC_CONSTRUCTOR_RET | VM_OC_GET_STACK) \
   \
   /* Binary compound assignment opcodes with pushing the result. */ \
   CBC_EXT_BINARY_LVALUE_OPERATION (CBC_EXT_ASSIGN_ADD, \

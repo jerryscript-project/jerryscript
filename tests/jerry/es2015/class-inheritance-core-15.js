@@ -13,28 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+ class A extends Array {
+   constructor () {
+     super ();
+     return;
+   }
+ };
 
-#include "ecma-globals.h"
-#include "jrt.h"
-
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
-
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
-/**
- * @}
- * @}
- */
-
-#endif /* !ECMA_REFERENCE_H */
+ var a = new A;
+ assert (a.length === 0);
+ assert (a instanceof Array);
+ assert (a instanceof A);
+ assert (JSON.stringify (a) === "[]");

@@ -83,6 +83,7 @@ typedef enum
   PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
   PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
   PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
+  PARSER_ERR_UNEXPECTED_SUPER_REFERENCE,              /**< unexpected super keyword */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   PARSER_ERR_LEFT_PAREN_EXPECTED,                     /**< left paren expected */

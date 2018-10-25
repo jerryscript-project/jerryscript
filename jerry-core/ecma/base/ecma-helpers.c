@@ -127,7 +127,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
 /**
  * Create a object lexical environment with specified outer lexical environment
- * (or NULL if the environment is not nested), binding object and provideThis flag.
+ * (or NULL if the environment is not nested), binding object and provided type flag.
  *
  * See also: ECMA-262 v5, 10.2.1.2
  *
@@ -137,16 +137,22 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
  */
 ecma_object_t *
 ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
-                            ecma_object_t *binding_obj_p) /**< binding object */
+                            ecma_object_t *binding_obj_p, /**< binding object */
+                            ecma_lexical_environment_type_t type) /**< type of the new lexical environment */
 {
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
+                || type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  uint16_t type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
-
-  new_lexical_environment_p->type_flags_refs = type;
+  new_lexical_environment_p->type_flags_refs = (uint16_t) (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | type);
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -355,7 +361,12 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
+#ifndef CONFIG_DISABLE_ES2015
+  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
+                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+#else /* CONFIG_DISABLE_ES2015 */
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#endif /* !CONFIG_DISABLE_ES2015 */
 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                     object_p->property_list_or_bound_object_cp);
@@ -766,7 +777,7 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
 
       /* Must be a native pointer. */
       JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-                    && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER));
+                    && name_cp >= LIT_FIRST_INTERNAL_MAGIC_STRING);
       break;
     }
   }

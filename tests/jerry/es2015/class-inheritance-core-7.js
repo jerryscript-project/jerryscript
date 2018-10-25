@@ -13,28 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+ class C extends Array {
+   constructor () {
+     var a = eval ('super (1, 2); 5');
+     assert (a === 5);
+   }
+ }
 
-#include "ecma-globals.h"
-#include "jrt.h"
+ class D extends C {
+   constructor () {
+      var a = eval ("eval ('super (1, 2); 3')");
+      assert (a === 3);
+   }
+ }
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+ var d = new D;
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
-/**
- * @}
- * @}
- */
-
-#endif /* !ECMA_REFERENCE_H */
+ assert (JSON.stringify (d) === "[1,2]");

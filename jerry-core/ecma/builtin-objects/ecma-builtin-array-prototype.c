@@ -223,7 +223,20 @@ ecma_builtin_array_prototype_object_concat (ecma_value_t this_arg, /**< this arg
                   ret_value);
 
   /* 2. */
-  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (new_array))
+  {
+    ecma_free_value (obj_this);
+    return new_array;
+  }
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
   uint32_t new_length = 0;
 
@@ -825,7 +838,20 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
 
   JERRY_ASSERT (start <= len && end <= len);
 
-  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (new_array))
+  {
+    ecma_free_value (len_value);
+    ecma_free_value (obj_this);
+    return new_array;
+  }
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   /* 9. */
@@ -1178,7 +1204,20 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
 
   const uint32_t len = ecma_number_to_uint32 (len_number);
 
-  ecma_value_t new_array = ecma_op_create_array_object (0, 0, false);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (new_array))
+  {
+    ecma_free_value (len_value);
+    ecma_free_value (obj_this);
+    return new_array;
+  }
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   uint32_t start = 0;
@@ -1973,8 +2012,20 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
     /* 5. arg2 is simply used as T */
 
     /* 6. */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (new_array))
+    {
+      ecma_free_value (len_value);
+      ecma_free_value (obj_this);
+      return new_array;
+    }
+#else /* CONFIG_DISABLE_ES2015_CLASS */
     ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
     ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* 7-8. */
@@ -2080,8 +2131,20 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
     ecma_object_t *func_object_p;
 
     /* 6. */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (new_array))
+    {
+      ecma_free_value (len_value);
+      ecma_free_value (obj_this);
+      return new_array;
+    }
+#else /* CONFIG_DISABLE_ES2015_CLASS */
     ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
     ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
     /* We already checked that arg1 is callable, so it will always be an object. */

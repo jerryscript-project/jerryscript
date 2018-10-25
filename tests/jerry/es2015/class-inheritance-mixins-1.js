@@ -13,28 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+var calculatorMixin = Base => class extends Base {
+  f () {
+    return 1;
+  }
+};
 
-#include "ecma-globals.h"
-#include "jrt.h"
+var randomizerMixin = Base => class extends Base {
+  g () {
+    return 2;
+  }
+};
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+class A {
+  constructor () { }
+}
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+class B extends calculatorMixin (randomizerMixin (A)) {
 
-/**
- * @}
- * @}
- */
+}
 
-#endif /* !ECMA_REFERENCE_H */
+var b = new B ();
+assert (b.f () === 1)
+assert (b.g () === 2);

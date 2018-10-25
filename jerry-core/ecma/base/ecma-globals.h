@@ -82,12 +82,19 @@ typedef enum
 
 /**
  * Option flags for script parsing.
+ * Note:
+ *      The enum members must be kept in sync with parser_general_flags_t
  */
 typedef enum
 {
   ECMA_PARSE_NO_OPTS = 0, /**< no options passed */
-  ECMA_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
-  ECMA_PARSE_DIRECT_EVAL = (1 << 1) /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
+  ECMA_PARSE_STRICT_MODE = (1u << 0), /**< enable strict mode */
+  ECMA_PARSE_DIRECT_EVAL = (1u << 1), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
+  /* These three status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
+  ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 2), /**< a class constructor is being parsed (this value must be kept in
+                                             *   in sync with PARSER_CLASS_CONSTRUCTOR) */
+  ECMA_PARSE_HAS_SUPER = (1u << 3), /**< the current context has super reference */
+  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 4), /**< the current context is a static class method */
 } ecma_parse_opts_t;
 
 /**
@@ -170,6 +177,7 @@ enum
                                                *   ecma_op_object_find */
   ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (8), /**< register reference,
                                                   *   a special "base" value for vm */
+  ECMA_VALUE_IMPLICIT_CONSTRUCTOR = ECMA_MAKE_VALUE (9), /**< special value for bound class constructors */
 };
 
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
@@ -396,6 +404,12 @@ typedef enum
  */
 #define ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY(property_p) \
    *(property_p) = (uint8_t) (*(property_p) + (ECMA_PROPERTY_TYPE_INTERNAL - ECMA_PROPERTY_TYPE_NAMEDDATA))
+
+/**
+ * Convert internal property to data property.
+ */
+#define ECMA_CONVERT_INTERNAL_PROPERTY_TO_DATA_PROPERTY(property_p) \
+   *(property_p) = (uint8_t) (*(property_p) - (ECMA_PROPERTY_TYPE_INTERNAL - ECMA_PROPERTY_TYPE_NAMEDDATA))
 
 /**
  * Special property identifiers.
@@ -633,11 +647,41 @@ typedef enum
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 14, /**< object-bound lexical environment
                                                     *   with provideThis flag */
+  ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND = 15, /**< object-bound lexical environment
+                                                     *   with provided super reference */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
-                                                                               *    environment type */
-  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND /**< maximum value */
+                                                                               *   environment type */
+  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
+
+/**
+ * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
+ */
+#define ECMA_SUPER_EVAL_OPTS_OFFSET (32 - 8)
+
+/**
+ * Set JERRY_CONTEXT (status_flags) top 8 bits to the specified 'opts'.
+ */
+#define ECMA_SET_SUPER_EVAL_PARSER_OPTS(opts) \
+  do \
+  { \
+    JERRY_CONTEXT (status_flags) |= ((uint32_t) opts << ECMA_SUPER_EVAL_OPTS_OFFSET) | ECMA_STATUS_DIRECT_EVAL; \
+  } while (0)
+
+/**
+ * Get JERRY_CONTEXT (status_flags) top 8 bits.
+ */
+#define ECMA_GET_SUPER_EVAL_PARSER_OPTS() (JERRY_CONTEXT (status_flags) >> ECMA_SUPER_EVAL_OPTS_OFFSET)
+
+/**
+ * Clear JERRY_CONTEXT (status_flags) top 8 bits.
+ */
+#define ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS() \
+  do \
+  { \
+    JERRY_CONTEXT (status_flags) &= ((1 << ECMA_SUPER_EVAL_OPTS_OFFSET) - 1); \
+  } while (0)
 
 /**
  * Ecma object type mask for getting the object type.

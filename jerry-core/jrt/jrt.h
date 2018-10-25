@@ -151,4 +151,13 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 #define JERRY_MIN(v1, v2) (((v1) < (v2)) ? (v1) : (v2))
 #define JERRY_MAX(v1, v2) (((v1) < (v2)) ? (v2) : (v1))
 
+/**
+ * Calculate the index of the first non-zero bit of a 32 bit integer value
+ */
+#define JERRY__LOG2_1(n) (((n) >= 2) ? 1 : 0)
+#define JERRY__LOG2_2(n) (((n) >= 1 << 2) ? (2 + JERRY__LOG2_1 ((n) >> 2)) : JERRY__LOG2_1 (n))
+#define JERRY__LOG2_4(n) (((n) >= 1 << 4) ? (4 + JERRY__LOG2_2 ((n) >> 4)) : JERRY__LOG2_2 (n))
+#define JERRY__LOG2_8(n) (((n) >= 1 << 8) ? (8 + JERRY__LOG2_4 ((n) >> 8)) : JERRY__LOG2_4 (n))
+#define JERRY_LOG2(n) (((n) >= 1 << 16) ? (16 + JERRY__LOG2_8 ((n) >> 16)) : JERRY__LOG2_8 (n))
+
 #endif /* !JRT_H */

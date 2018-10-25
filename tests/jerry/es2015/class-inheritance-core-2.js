@@ -13,28 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+ class C {
+   static a () {
+     return 5;
+   }
+ }
 
-#include "ecma-globals.h"
-#include "jrt.h"
+ class D extends C {
+   constructor () {
+     super ();
+   }
+ }
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+ assert (D.a () === 5);
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+ C.a = function () {
+   return 6;
+ }
 
-/**
- * @}
- * @}
- */
+ assert (D.a () === 6);
 
-#endif /* !ECMA_REFERENCE_H */
+ C = 5;
+
+ assert (D.a () === 6);

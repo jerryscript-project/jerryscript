@@ -22,6 +22,14 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
+JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) PARSER_IS_STRICT,
+                     ecma_parse_strict_mode_must_be_equal_to_parser_is_strict);
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+JERRY_STATIC_ASSERT ((ECMA_PARSE_CLASS_CONSTRUCTOR << PARSER_CLASS_PARSE_OPTS_OFFSET) == PARSER_CLASS_CONSTRUCTOR,
+                     ecma_class_parse_options_must_be_able_to_be_shifted_to_ecma_general_flags);
+#endif /* !CONFIG_DISABLE_ES2015 */
+
 /** \addtogroup parser Parser
  * @{
  *
@@ -1210,6 +1218,13 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   }
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
+  {
+    JERRY_DEBUG_MSG (",constructor");
+  }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   JERRY_DEBUG_MSG ("]\n");
 
   JERRY_DEBUG_MSG ("  Argument range end: %d\n", (int) argument_end);
@@ -1545,6 +1560,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       flags = cbc_ext_flags[ext_opcode];
       PARSER_NEXT_BYTE (page_p, offset);
       length++;
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      if (ext_opcode == CBC_EXT_CONSTRUCTOR_RETURN)
+      {
+        last_opcode = CBC_RETURN;
+      }
+#endif /* !CONFIG_DISABLE_ES2015 */
 
 #ifdef JERRY_ENABLE_LINE_INFO
       if (ext_opcode == CBC_EXT_LINE)
@@ -2302,11 +2324,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.stack_limit = 0;
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
+  context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
 
-  if (parse_opts & ECMA_PARSE_STRICT_MODE)
-  {
-    context.status_flags |= PARSER_IS_STRICT;
-  }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   context.token.flags = 0;
   context.line = 1;
@@ -2525,38 +2547,6 @@ parser_restore_context (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
 } /* parser_restore_context */
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-/**
- * Parse default constructor code
- *
- * @return compiled code
- */
-ecma_compiled_code_t *
-parser_create_class_implicit_constructor (parser_context_t *context_p) /**< context */
-{
-  parser_saved_context_t saved_context;
-  parser_save_context (context_p, &saved_context);
-
-#ifdef JERRY_DEBUGGER
-  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && jerry_debugger_send_parse_function (context_p->token.line, context_p->token.column))
-  {
-    /* This option has a high memory and performance costs,
-     * but it is necessary for executing eval operations by the debugger. */
-    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
-  }
-#endif /* JERRY_DEBUGGER */
-
-  context_p->status_flags |= PARSER_CLASS_CONSTRUCTOR;
-
-  ecma_compiled_code_t *compiled_code_p = parser_post_processing (context_p);
-
-  parser_restore_context (context_p, &saved_context);
-
-  return compiled_code_p;
-} /* parser_create_class_implicit_constructor */
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
 /**
  * Parse function code
  *
@@ -2674,6 +2664,13 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   }
 
   lexer_next_token (context_p);
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  if ((context_p->status_flags & PARSER_CLASS_CONSTRUCTOR_SUPER) == PARSER_CLASS_CONSTRUCTOR_SUPER)
+  {
+    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
   parser_parse_statements (context_p);
   compiled_code_p = parser_post_processing (context_p);
 
@@ -2713,6 +2710,9 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
                  && (status_flags & PARSER_IS_ARROW_FUNCTION));
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= status_flags | PARSER_ARGUMENTS_NOT_NEEDED;
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  context_p->status_flags |= saved_context.status_flags & PARSER_CLASS_HAS_SUPER;
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 #ifdef PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)

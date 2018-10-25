@@ -13,28 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef ECMA_REFERENCE_H
-#define ECMA_REFERENCE_H
+var g = Array.bind (0, 1, 2, 3)
+g.prototype = Array.prototype;
 
-#include "ecma-globals.h"
-#include "jrt.h"
+class C extends g {}
 
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup references ECMA-Reference
- * @{
- */
+class D extends C {
+  constructor () {
+    super (4, 5);
+  }
+}
 
-ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
-/**
- * @}
- * @}
- */
-
-#endif /* !ECMA_REFERENCE_H */
+var d = new D;
+assert (Object.getPrototypeOf (d) == D.prototype);

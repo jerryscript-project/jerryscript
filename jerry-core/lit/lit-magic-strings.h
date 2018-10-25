@@ -52,6 +52,9 @@ typedef enum
                                                                                  *   deleted properties */
 
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */
+  LIT_FIRST_INTERNAL_MAGIC_STRING = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER,  /**< first index of internal
+                                                                                *   magic strings */
+  LIT_INTERNAL_MAGIC_STRING_CLASS_THIS_BINDING, /**< the this binding of the class constructor */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;
 

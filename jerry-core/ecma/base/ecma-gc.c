@@ -195,7 +195,7 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
     case ECMA_PROPERTY_TYPE_INTERNAL:
     {
       JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
-                    && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+                    && property_pair_p->names_cp[index] >= LIT_FIRST_INTERNAL_MAGIC_STRING);
       break;
     }
     default:

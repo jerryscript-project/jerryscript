@@ -156,6 +156,8 @@ def get_arguments():
                         help='Add a comma separated list of patterns of the excluded JS-tests')
     parser.add_argument('--outdir', metavar='DIR', default=OUTPUT_DIR,
                         help='Specify output directory (default: %(default)s)')
+    parser.add_argument('--generate-tests', action='store_true',
+                        help='Generate tests')
     parser.add_argument('--check-signed-off', metavar='TYPE', nargs='?',
                         choices=['strict', 'tolerant', 'travis'], const='strict',
                         help='Run signed-off check (%(choices)s; default type if not given: %(const)s)')
@@ -281,6 +283,11 @@ def iterate_test_runner_jobs(jobs, options):
         test_cmd = [settings.TEST_RUNNER_SCRIPT, bin_path]
 
         yield job, ret_build, test_cmd
+
+def generate_tests(options):
+    for filename in os.listdir("./tests/jerry/generators/"):
+        if filename.endswith(".py"):
+            execfile("./tests/jerry/generators/" + str(filename))
 
 def run_check(runnable, env=None):
     report_command('Test command:', runnable, env=env)
@@ -423,6 +430,7 @@ Check = collections.namedtuple('Check', ['enabled', 'runner', 'arg'])
 
 def main(options):
     checks = [
+        Check(options.generate_tests, generate_tests, options),
         Check(options.check_signed_off, run_check, [settings.SIGNED_OFF_SCRIPT]
               + {'tolerant': ['--tolerant'], 'travis': ['--travis']}.get(options.check_signed_off, [])),
         Check(options.check_cppcheck, run_check, [settings.CPPCHECK_SCRIPT]),

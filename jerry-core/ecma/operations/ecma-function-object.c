@@ -666,7 +666,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-      bool is_class_constructor = bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR;
+      bool is_class_constructor = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR) ? true : false;
 
       if (is_class_constructor && !ecma_op_function_has_construct_flag (arguments_list_p))
       {

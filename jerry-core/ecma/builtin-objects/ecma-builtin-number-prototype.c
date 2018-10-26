@@ -650,7 +650,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_value_t this_arg, /**< this 
                                                                    num_digits + 1,
                                                                    exponent + frac_digits,
                                                                    &exponent,
-                                                                   ecma_number_is_zero (this_num) ? true : false);
+                                                                   ecma_number_is_zero (this_num));
 
           /* Buffer that is used to construct the string. */
           int buffer_size = (exponent > 0) ? exponent + frac_digits + 2 : frac_digits + 3;

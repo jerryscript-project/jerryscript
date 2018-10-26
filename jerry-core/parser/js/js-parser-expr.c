@@ -633,6 +633,30 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 } /* parser_parse_class */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+/**
+ * Parse object initializer method definition.
+ *
+ * See also: ES2015 14.3
+ */
+static void
+parser_parse_object_method (parser_context_t *context_p) /**< context */
+{
+  parser_flush_cbc (context_p);
+
+  context_p->source_p--;
+  context_p->column--;
+  uint16_t function_literal_index = lexer_construct_function_object (context_p,
+                                                                     PARSER_IS_FUNCTION | PARSER_IS_CLOSURE);
+
+  parser_emit_cbc_literal (context_p,
+                           CBC_PUSH_LITERAL,
+                           function_literal_index);
+
+  lexer_next_token (context_p);
+} /* parser_parse_object_method */
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
 /**
  * Parse object literal.
  */
@@ -651,122 +675,151 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
   {
     lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_NO_OPTS);
 
-    if (context_p->token.type == LEXER_RIGHT_BRACE)
+    switch (context_p->token.type)
     {
-      break;
-    }
-
-    if (context_p->token.type == LEXER_PROPERTY_GETTER
-        || context_p->token.type == LEXER_PROPERTY_SETTER)
-    {
-      uint32_t status_flags;
-      cbc_ext_opcode_t opcode;
-      uint16_t literal_index, function_literal_index;
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-      parser_object_literal_item_types_t item_type;
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
-
-      if (context_p->token.type == LEXER_PROPERTY_GETTER)
+      case LEXER_RIGHT_BRACE:
       {
-        status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_GETTER;
-        opcode = CBC_EXT_SET_GETTER;
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-        item_type = PARSER_OBJECT_PROPERTY_GETTER;
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+        break;
       }
-      else
+      case LEXER_PROPERTY_GETTER:
+      case LEXER_PROPERTY_SETTER:
       {
-        status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_SETTER;
-        opcode = CBC_EXT_SET_SETTER;
+        uint32_t status_flags;
+        cbc_ext_opcode_t opcode;
+        uint16_t literal_index, function_literal_index;
 #ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-        item_type = PARSER_OBJECT_PROPERTY_SETTER;
+        parser_object_literal_item_types_t item_type;
 #endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
-      }
 
-      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+        if (context_p->token.type == LEXER_PROPERTY_GETTER)
+        {
+          status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_GETTER;
+          opcode = CBC_EXT_SET_GETTER;
+#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+          item_type = PARSER_OBJECT_PROPERTY_GETTER;
+#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+        }
+        else
+        {
+          status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | PARSER_IS_PROPERTY_SETTER;
+          opcode = CBC_EXT_SET_SETTER;
+#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+          item_type = PARSER_OBJECT_PROPERTY_SETTER;
+#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+        }
 
-      /* This assignment is a nop for computed getters/setters. */
-      literal_index = context_p->lit_object.index;
+        lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+
+        /* This assignment is a nop for computed getters/setters. */
+        literal_index = context_p->lit_object.index;
 
 #ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-      if (context_p->token.type == LEXER_RIGHT_SQUARE)
-      {
-        opcode = ((opcode == CBC_EXT_SET_GETTER) ? CBC_EXT_SET_COMPUTED_GETTER
-                                                 : CBC_EXT_SET_COMPUTED_SETTER);
-      }
+        if (context_p->token.type == LEXER_RIGHT_SQUARE)
+        {
+          opcode = ((opcode == CBC_EXT_SET_GETTER) ? CBC_EXT_SET_COMPUTED_GETTER
+                                                   : CBC_EXT_SET_COMPUTED_SETTER);
+        }
 #else /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
-      parser_append_object_literal_item (context_p, literal_index, item_type);
+        parser_append_object_literal_item (context_p, literal_index, item_type);
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
-      parser_flush_cbc (context_p);
-      function_literal_index = lexer_construct_function_object (context_p, status_flags);
+        parser_flush_cbc (context_p);
+        function_literal_index = lexer_construct_function_object (context_p, status_flags);
 
 #ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-      if (opcode >= CBC_EXT_SET_COMPUTED_GETTER)
-      {
-        literal_index = function_literal_index;
-      }
+        if (opcode >= CBC_EXT_SET_COMPUTED_GETTER)
+        {
+          literal_index = function_literal_index;
+        }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
-      parser_emit_cbc_literal (context_p,
-                               CBC_PUSH_LITERAL,
-                               literal_index);
+        parser_emit_cbc_literal (context_p,
+                                 CBC_PUSH_LITERAL,
+                                 literal_index);
 
-      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
-      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (opcode);
-      context_p->last_cbc.value = function_literal_index;
+        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+        context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (opcode);
+        context_p->last_cbc.value = function_literal_index;
 
-      lexer_next_token (context_p);
-    }
+        lexer_next_token (context_p);
+        break;
+      }
 #ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-    else if (context_p->token.type == LEXER_RIGHT_SQUARE)
-    {
-      lexer_next_token (context_p);
-      if (context_p->token.type != LEXER_COLON)
+      case LEXER_RIGHT_SQUARE:
       {
-        parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
-      }
+        lexer_next_token (context_p);
 
-      lexer_next_token (context_p);
-      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+        if (context_p->token.type == LEXER_LEFT_PAREN)
+        {
+          parser_parse_object_method (context_p);
 
-      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
-      {
-        context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_COMPUTED_PROPERTY_LITERAL);
+          JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+          context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_COMPUTED_PROPERTY_LITERAL);
+          break;
+        }
+
+        if (context_p->token.type != LEXER_COLON)
+        {
+          parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
+        }
+
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+        if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+        {
+          context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_COMPUTED_PROPERTY_LITERAL);
+        }
+        else
+        {
+          parser_emit_cbc_ext (context_p, CBC_EXT_SET_COMPUTED_PROPERTY);
+        }
+        break;
       }
-      else
-      {
-        parser_emit_cbc_ext (context_p, CBC_EXT_SET_COMPUTED_PROPERTY);
-      }
-    }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
-    else
-    {
-      uint16_t literal_index = context_p->lit_object.index;
+      default:
+      {
+        uint16_t literal_index = context_p->lit_object.index;
 
 #ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-      parser_append_object_literal_item (context_p,
-                                         literal_index,
-                                         PARSER_OBJECT_PROPERTY_VALUE);
+        parser_append_object_literal_item (context_p,
+                                           literal_index,
+                                           PARSER_OBJECT_PROPERTY_VALUE);
 #endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
-      lexer_next_token (context_p);
-      if (context_p->token.type != LEXER_COLON)
-      {
-        parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
-      }
+        lexer_next_token (context_p);
 
-      lexer_next_token (context_p);
-      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        if (context_p->token.type == LEXER_LEFT_PAREN)
+        {
+          parser_parse_object_method (context_p);
 
-      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
-      {
-        context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
-        context_p->last_cbc.value = literal_index;
-      }
-      else
-      {
-        parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, literal_index);
+          JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+          context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
+          context_p->last_cbc.value = literal_index;
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+        if (context_p->token.type != LEXER_COLON)
+        {
+          parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
+        }
+
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+        if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+        {
+          context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
+          context_p->last_cbc.value = literal_index;
+        }
+        else
+        {
+          parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, literal_index);
+        }
+
+        break;
       }
     }
 

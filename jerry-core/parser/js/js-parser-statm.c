@@ -2055,7 +2055,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
         bool return_with_literal = (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-        return_with_literal &= !PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags);
+        return_with_literal = return_with_literal && !PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags);
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
         if (return_with_literal)

@@ -403,6 +403,13 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
 
     JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL);
 
+    if (context_p->token.type == LEXER_LEFT_PAREN)
+    {
+      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+      *mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+      return true;
+    }
+
     if (context_p->token.type != LEXER_COLON)
     {
       parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
@@ -916,6 +923,16 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         }
 
         lexer_next_token (context_p);
+
+#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+        if (context_p->token.type == LEXER_LEFT_PAREN)
+        {
+          parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+          mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+          continue;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
         if (context_p->token.type != LEXER_COLON)
         {
           parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);

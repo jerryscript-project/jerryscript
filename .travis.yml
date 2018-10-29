@@ -7,7 +7,7 @@ sudo: false
 
 # Default dependency installation step: nop intentionally.
 # Jobs can add their own dependencies by redefinig the 'install' stage in the matrix below.
-install: true
+install: skip
 
 # Default job task: run tests as defined in the $OPT environment variable.
 # Jobs can redefine the 'script' stage in the matrix below.
@@ -16,27 +16,27 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - env:
-        - JOBNAME="Checks"
+    - name: "Checks"
+      env:
         - OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
       install: pip install --user pylint==1.6.5
       addons:
         apt:
           packages: [doxygen, cppcheck, vera++]
 
-    - env:
-        - JOBNAME="Linux/x86-64 Build & Correctness Tests"
+    - name: "Linux/x86-64 Build & Correctness Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite"
 
-    - env:
-        - JOBNAME="Linux/x86 (cpointer-32bit) Build & Correctness Tests"
+    - name: "Linux/x86 (cpointer-32bit) Build & Correctness Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-m32,--cpointer-32bit=on"
       addons:
         apt:
           packages: [gcc-multilib]
 
-    - env:
-        - JOBNAME="Linux/ARM Build & Correctness Tests"
+    - name: "Linux/ARM Build & Correctness Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_armv7l.cmake --buildoptions=--linker-flag=-static"
         - RUNTIME=qemu-arm-static
         - TIMEOUT=300
@@ -44,37 +44,37 @@ matrix:
         apt:
           packages: [gcc-arm-linux-gnueabihf, libc6-dev-armhf-cross, qemu-user-static]
 
-    - env:
-        - JOBNAME="OSX/x86-64 Build, Correctness & Unit Tests"
+    - name: "OSX/x86-64 Build, Correctness & Unit Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --unittests"
       os: osx
       install: tools/brew-install-deps.sh
 
-    - env:
-        - JOBNAME="Build Tests"
+    - name: "Build Tests"
+      env:
         - OPTS="--buildoption-test"
       addons:
         apt:
           packages: [gcc-multilib]
 
-    - env:
-        - JOBNAME="Unit Tests"
+    - name: "Unit Tests"
+      env:
         - OPTS="--unittests"
 
-    - env:
-        - JOBNAME="Unit Tests (INIT_FINI)"
+    - name: "Unit Tests (INIT_FINI)"
+      env:
         - OPTS="--unittests --buildoptions=--cmake-param=-DFEATURE_INIT_FINI=ON"
 
-    - env:
-        - JOBNAME="Debugger Tests"
+    - name: "Debugger Tests"
+      env:
         - OPTS="--jerry-debugger"
 
-    - env:
-        - JOBNAME="Conformance Tests"
+    - name: "Conformance Tests"
+      env:
         - OPTS="--test262"
 
-    - env:
-        - JOBNAME="ASAN Tests"
+    - name: "ASAN Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js,parser-oom2.js --buildoptions=--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
         - ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
         - TIMEOUT=600
@@ -84,8 +84,8 @@ matrix:
           sources: ubuntu-toolchain-r-test
           packages: [gcc-5, gcc-5-multilib]
 
-    - env:
-        - JOBNAME="UBSAN Tests"
+    - name: "UBSAN Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js,parser-oom2.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
         - UBSAN_OPTIONS=print_stacktrace=1
         - TIMEOUT=600
@@ -95,8 +95,8 @@ matrix:
           sources: ubuntu-toolchain-r-test
           packages: [gcc-5, gcc-5-multilib]
 
-    - env:
-        - JOBNAME="Coverity Scan"
+    - name: "Coverity Scan"
+      env:
         # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
         # "travis encrypt" command using the project repo's public key.
         - secure: "V7BdXv3FCVkFGEfKfWto6I+Sytou1zTCGyn49xurkBfKNsG/3vbkXfsbK1m6lCZxmY7W/1odpfjixpAPZgy2L4FgPZK6/UyVvC8pIFjDOubcEniN48haleSvm/ZFPLDifxDL2+VVFtK1oRYPtDBzzSoUCcfwovgk+Wy+tSBnhnyRLqO/WaI6PqFof7ECYMTRlJVjioZARVP4YmkBruIPmGDdR/3EvwowlxfuiFoPheix61ug4x3tpTBW2qWgvFjDyCZXFz4pJrBQPTAIbyKMxHcBykJjl9eR+dWAOsvE1Uw48tFOJxjKDfUttVQUPsyKFllmcCVS0fDYB5pzZOmRUPxJmox1jt8J1FY85Ri1PGY0THBPM2H7to4Yf2418Y3539epbN8p+79dwaM7e2OiJ2owukbWI7PoNqIz5DV5zxpIKsOQfeWuNLJOgsBePEIU7lz133Si/2d5W/7If46B1d+hZRBJfSYksgDqDU6G/voZkPf0K5bKe2O2BxiIW1DYk4yQ1ecZAkqGjZ8jG3zYGMG3mSF4VyuU4UGFG1Pg8fw7Ap5zuHxSVY1H9dtu4T6JQG3aj/x1omlzfw48DjgkwxVhf7Xvl3yfR7pzydYheLX3MZYtcVo7rWnglZFZoUjWDK1StbmzsvPftvwWtoDTWlzo4xeSXhahSJvJyc4U8Wc="
@@ -108,9 +108,9 @@ matrix:
           notification_email: rsipka.uszeged@partner.samsung.com
           build_command: "tools/build.py --clean"
           branch_pattern: master
-      script: true # Changed to nop, Coverity Scan has already built the project by the time 'script' stage is reached.
+      script: skip # Changed to nop, Coverity Scan has already built the project by the time 'script' stage is reached.
 
-    - env: JOBNAME="SonarQube"
+    - name: "SonarQube"
       addons:
         sonarcloud:
           organization: "jerryscript-project"
@@ -121,7 +121,7 @@ matrix:
         directories:
           - '${HOME}/.sonar/cache'
 
-    - env: JOBNAME="ESP8266 Build Test"
+    - name: "ESP8266 Build Test"
       cache: ccache
       install: make -f ./targets/esp8266/Makefile.travis install-noapt
       script: make -f ./targets/esp8266/Makefile.travis script
@@ -129,7 +129,7 @@ matrix:
         apt:
           packages: [gperf, texinfo, wget]
 
-    - env: JOBNAME="Mbed OS 5/K64F Build Test"
+    - name: "Mbed OS 5/K64F Build Test"
       addons:
         apt:
           sources:
@@ -138,14 +138,14 @@ matrix:
       install: make -f ./targets/mbedos5/Makefile.travis install
       script: make -f ./targets/mbedos5/Makefile.travis script
 
-    - env: JOBNAME="NuttX/STM32F4 Build Test"
+    - name: "NuttX/STM32F4 Build Test"
       install: make -f targets/nuttx-stm32f4/Makefile.travis install-noapt
       script: make -f targets/nuttx-stm32f4/Makefile.travis script
       addons:
         apt:
           packages: [gcc-arm-none-eabi, libnewlib-arm-none-eabi, gperf]
 
-    - env: JOBNAME="RIOT/STM32F4 Build Test"
+    - name: "RIOT/STM32F4 Build Test"
       install: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
       script: make -f ./targets/riot-stm32f4/Makefile.travis script
       compiler: clang-3.9
@@ -155,7 +155,7 @@ matrix:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
           packages: [clang-3.9, gcc-arm-embedded, gcc-multilib]
 
-    - env: JOBNAME="Tizen RT/Artik053 Build Test"
+    - name: "Tizen RT/Artik053 Build Test"
       addons:
         apt:
           sources:
@@ -164,7 +164,7 @@ matrix:
       install: make -f ./targets/tizenrt-artik053/Makefile.travis install
       script: make -f ./targets/tizenrt-artik053/Makefile.travis script
 
-    - env: JOBNAME="Zephyr/Arduino 101 Build Test"
+    - name: "Zephyr/Arduino 101 Build Test"
       install: make -f ./targets/zephyr/Makefile.travis install-noapt
       script: make -f ./targets/zephyr/Makefile.travis script
       addons:

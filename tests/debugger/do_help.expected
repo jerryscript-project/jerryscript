@@ -4,9 +4,9 @@ Stopped at tests/debugger/do_help.js:15
 
 Documented commands (type help <topic>):
 ========================================
-abort      bt        display  exception  list      next     s       step 
-b          c         dump     f          memstats  quit     scroll  throw
-backtrace  continue  e        finish     ms        res      source
-break      delete    eval     help       n         restart  src   
+abort      bt        display  exception  list      next     s       src      
+b          c         dump     f          memstats  quit     scopes  step     
+backtrace  continue  e        finish     ms        res      scroll  throw    
+break      delete    eval     help       n         restart  source  variables
 
 (jerry-debugger) quit

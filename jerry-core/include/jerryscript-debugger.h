@@ -31,7 +31,7 @@ extern "C"
 /**
  * JerryScript debugger protocol version.
  */
-#define JERRY_DEBUGGER_VERSION (6)
+#define JERRY_DEBUGGER_VERSION (7)
 
 /**
  * Types for the client source wait and run method.

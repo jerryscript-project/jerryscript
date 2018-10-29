@@ -18,6 +18,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-eval.h"
+#include "ecma-function-object.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
 #include "jerryscript-port.h"
@@ -37,9 +38,9 @@ typedef struct
  * The number of message types in the debugger should reflect the
  * debugger versioning.
  */
-JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 28
-                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
-                     && JERRY_DEBUGGER_VERSION == 6,
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 32
+                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 21
+                     && JERRY_DEBUGGER_VERSION == 7,
                      debugger_version_correlates_to_message_type_count);
 
 /**
@@ -194,6 +195,332 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + message_size);
 } /* jerry_debugger_send_backtrace */
+
+/**
+ * Send the scope chain types.
+ */
+static void
+jerry_debugger_send_scope_chain (void)
+{
+  vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+
+  const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
+  const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_byte_count, uint8_t);
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_type_p);
+  message_type_p->type = JERRY_DEBUGGER_SCOPE_CHAIN;
+
+  size_t buffer_pos = 0;
+  bool next_func_is_local = true;
+  ecma_object_t *lex_env_p = iter_frame_ctx_p->lex_env_p;
+
+  while (true)
+  {
+    JERRY_ASSERT (ecma_is_lexical_environment (lex_env_p));
+
+    if (buffer_pos == max_byte_count)
+    {
+      if (!jerry_debugger_send (max_message_size))
+      {
+        return;
+      }
+
+      buffer_pos = 0;
+    }
+
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+    {
+      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_NON_CLOSURE) != 0)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_NON_CLOSURE;
+      }
+      else if (next_func_is_local)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_LOCAL;
+        next_func_is_local = false;
+      }
+      else
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_CLOSURE;
+      }
+    }
+    else if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
+    {
+      if (ecma_get_lex_env_outer_reference (lex_env_p) == NULL)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_GLOBAL;
+        break;
+      }
+      else
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_WITH;
+      }
+    }
+
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+  }
+
+  message_type_p->type = JERRY_DEBUGGER_SCOPE_CHAIN_END;
+
+  jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + buffer_pos);
+} /* jerry_debugger_send_scope_chain */
+
+/**
+ * Get type of the scope variable property.
+ */
+static jerry_debugger_scope_variable_type_t
+jerry_debugger_get_variable_type (ecma_value_t value) /**< input ecma value */
+{
+  jerry_debugger_scope_variable_type_t ret_value = JERRY_DEBUGGER_VALUE_NONE;
+
+  if (ecma_is_value_undefined (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_UNDEFINED;
+  }
+  else if (ecma_is_value_null (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_NULL;
+  }
+  else if (ecma_is_value_boolean (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_BOOLEAN;
+  }
+  else if (ecma_is_value_number (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_NUMBER;
+  }
+  else if (ecma_is_value_string (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_STRING;
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_value_object (value));
+
+    if (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL)
+    {
+      ret_value = JERRY_DEBUGGER_VALUE_ARRAY;
+    }
+    else
+    {
+      ret_value = ecma_op_is_callable (value) ? JERRY_DEBUGGER_VALUE_FUNCTION : JERRY_DEBUGGER_VALUE_OBJECT;
+    }
+  }
+
+  JERRY_ASSERT (ret_value != JERRY_DEBUGGER_VALUE_NONE);
+
+  return ret_value;
+} /* jerry_debugger_get_variable_type */
+
+/**
+ * Helper function for jerry_debugger_send_scope_variables.
+ *
+ * It will copies the given scope values type, length and value into the outgoing message string.
+ *
+ * @return true - if the copy was successfully
+ *         false - otherwise
+ */
+static bool
+jerry_debugger_copy_variables_to_string_message (jerry_debugger_scope_variable_type_t variable_type, /**< type */
+                                                 ecma_string_t *value_str, /**< property name or value string */
+                                                 jerry_debugger_send_string_t *message_string_p, /**< msg pointer */
+                                                 size_t *buffer_pos) /**< string data position of the message */
+{
+  const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
+  const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_byte_count, uint8_t);
+
+  ECMA_STRING_TO_UTF8_STRING (value_str, str_buff, str_buff_size);
+
+  size_t str_size = 0;
+  size_t str_limit = 255;
+  bool result = true;
+
+  bool type_processed = false;
+
+  while (true)
+  {
+    if (*buffer_pos == max_byte_count)
+    {
+      if (!jerry_debugger_send (max_message_size))
+      {
+        result = false;
+        break;
+      }
+
+      *buffer_pos = 0;
+    }
+
+    if (!type_processed)
+    {
+      if (variable_type != JERRY_DEBUGGER_VALUE_NONE)
+      {
+        message_string_p->string[*buffer_pos] = variable_type;
+        *buffer_pos += 1;
+      }
+      type_processed = true;
+      continue;
+    }
+
+    if (variable_type == JERRY_DEBUGGER_VALUE_FUNCTION)
+    {
+      str_size = 0; // do not copy function values
+    }
+    else
+    {
+      str_size = (str_buff_size > str_limit) ? str_limit : str_buff_size;
+    }
+
+    message_string_p->string[*buffer_pos] = (uint8_t) str_size;
+    *buffer_pos += 1;
+    break;
+  }
+
+  if (result)
+  {
+    size_t free_bytes = max_byte_count - *buffer_pos;
+    const uint8_t *string_p = str_buff;
+
+    while (str_size > free_bytes)
+    {
+      memcpy (message_string_p->string + *buffer_pos, string_p, free_bytes);
+
+      if (!jerry_debugger_send (max_message_size))
+      {
+        result = false;
+        break;
+      }
+
+      string_p += free_bytes;
+      str_size -= free_bytes;
+      free_bytes = max_byte_count;
+      *buffer_pos = 0;
+    }
+
+    if (result)
+    {
+      memcpy (message_string_p->string + *buffer_pos, string_p, str_size);
+      *buffer_pos += str_size;
+    }
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (str_buff, str_buff_size);
+
+  return result;
+} /* jerry_debugger_copy_variables_to_string_message */
+
+/**
+ * Send variables of the given scope chain level.
+ */
+static void
+jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer to the received data */
+{
+  JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_scope_variables_t, get_scope_variables_p);
+
+  uint32_t chain_index;
+  memcpy (&chain_index, get_scope_variables_p->chain_index, sizeof (uint32_t));
+
+  vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+  ecma_object_t *lex_env_p = iter_frame_ctx_p->lex_env_p;
+
+  while (chain_index != 0)
+  {
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+
+    if (JERRY_UNLIKELY (lex_env_p == NULL))
+    {
+      jerry_debugger_send_type (JERRY_DEBUGGER_SCOPE_VARIABLES_END);
+      return;
+    }
+
+    if ((ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
+        || (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE))
+    {
+      chain_index--;
+    }
+  }
+
+  ecma_property_header_t *prop_iter_p;
+
+  if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+  {
+    prop_iter_p = ecma_get_property_list (lex_env_p);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+    prop_iter_p =  ecma_get_property_list (binding_obj_p);
+  }
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_string_p);
+  message_string_p->type = JERRY_DEBUGGER_SCOPE_VARIABLES;
+
+  size_t buffer_pos = 0;
+
+  while (prop_iter_p != NULL)
+  {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[i]))
+      {
+        if (ECMA_PROPERTY_GET_NAME_TYPE (prop_iter_p->types[i]) == ECMA_DIRECT_STRING_MAGIC
+            && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+        {
+          continue;
+        }
+
+        ecma_string_t *prop_name = ecma_string_from_property_name (prop_iter_p->types[i],
+                                                                   prop_pair_p->names_cp[i]);
+
+        if (!jerry_debugger_copy_variables_to_string_message (JERRY_DEBUGGER_VALUE_NONE,
+                                                              prop_name,
+                                                              message_string_p,
+                                                              &buffer_pos))
+        {
+          ecma_deref_ecma_string (prop_name);
+          return;
+        }
+
+        ecma_deref_ecma_string (prop_name);
+
+        ecma_property_value_t prop_value_p = prop_pair_p->values[i];
+        ecma_value_t property_value;
+
+        jerry_debugger_scope_variable_type_t variable_type = jerry_debugger_get_variable_type (prop_value_p.value);
+
+        if (variable_type == JERRY_DEBUGGER_VALUE_OBJECT)
+        {
+          property_value = ecma_builtin_json_string_from_object (prop_value_p.value);
+        }
+        else
+        {
+          property_value = ecma_op_to_string (prop_value_p.value);
+        }
+
+        if (!jerry_debugger_copy_variables_to_string_message (variable_type,
+                                                              ecma_get_string_from_value (property_value),
+                                                              message_string_p,
+                                                              &buffer_pos))
+        {
+          ecma_free_value (property_value);
+          return;
+        }
+
+        ecma_free_value (property_value);
+      }
+    }
+
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
+
+  message_string_p->type = JERRY_DEBUGGER_SCOPE_VARIABLES_END;
+  jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + buffer_pos);
+} /* jerry_debugger_send_scope_variables */
 
 /**
  * Send result of evaluated expression or throw an error.
@@ -522,6 +849,24 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_get_backtrace_t);
 
       jerry_debugger_send_backtrace (recv_buffer_p);
+      return true;
+    }
+
+    case JERRY_DEBUGGER_GET_SCOPE_CHAIN:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
+
+      jerry_debugger_send_scope_chain ();
+
+      return true;
+    }
+
+    case JERRY_DEBUGGER_GET_SCOPE_VARIABLES:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_get_scope_variables_t);
+
+      jerry_debugger_send_scope_variables (recv_buffer_p);
+
       return true;
     }
 

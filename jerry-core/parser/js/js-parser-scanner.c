@@ -76,6 +76,9 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   SCAN_STACK_CLASS,                        /**< class language element */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+  SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
 } scan_stack_modes_t;
 
 /**
@@ -405,6 +408,22 @@ parser_scan_primary_expression_end (parser_context_t *context_p, /**< context */
     return false;
   }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+  if (context_p->token.type == LEXER_RIGHT_PAREN && stack_top == SCAN_STACK_FUNCTION_PARAMETERS)
+  {
+    lexer_next_token (context_p);
+
+    parser_stack_pop_uint8 (context_p);
+
+    if (context_p->token.type != LEXER_LEFT_BRACE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
+    }
+    *mode = SCAN_MODE_STATEMENT;
+    return false;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
 
   /* Check whether we can enter to statement mode. */
   if (stack_top != SCAN_STACK_BLOCK_STATEMENT
@@ -841,6 +860,15 @@ parser_scan_until (parser_context_t *context_p, /**< context */
             lexer_next_token (context_p);
           }
         }
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+        if (context_p->token.type == LEXER_ASSIGN)
+        {
+          parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
+          mode = SCAN_MODE_PRIMARY_EXPRESSION;
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)
         {

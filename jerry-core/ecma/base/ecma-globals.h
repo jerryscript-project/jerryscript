@@ -80,10 +80,18 @@ typedef enum
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
+#ifdef JERRY_DEBUGGER
+/**
+ * Shift for scope chain index part in ecma_parse_opts
+ */
+#define ECMA_PARSE_CHAIN_INDEX_SHIFT 16
+#endif
+
 /**
  * Option flags for script parsing.
  * Note:
  *      The enum members must be kept in sync with parser_general_flags_t
+ *      The last 16 bits are reserved for scope chain index
  */
 typedef enum
 {

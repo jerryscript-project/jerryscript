@@ -24,7 +24,7 @@ import struct
 import sys
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 7
+JERRY_DEBUGGER_VERSION = 8
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -553,6 +553,10 @@ class JerryDebugger(object):
         self._send_string(JERRY_DEBUGGER_EVAL_EVAL + code, JERRY_DEBUGGER_EVAL)
         self.prompt = False
 
+    def eval_at(self, code, index):
+        self._send_string(JERRY_DEBUGGER_EVAL_EVAL + code, JERRY_DEBUGGER_EVAL, index)
+        self.prompt = False
+
     def throw(self, code):
         self._send_string(JERRY_DEBUGGER_EVAL_THROW + code, JERRY_DEBUGGER_EVAL)
         self.prompt = False
@@ -587,12 +591,18 @@ class JerryDebugger(object):
 
         return "Stop at exception disabled\n"
 
-    def _send_string(self, args, message_type):
-        size = len(args)
+    def _send_string(self, args, message_type, index=0):
 
         # 1: length of type byte
         # 4: length of an uint32 value
         message_header = 1 + 4
+
+        # Add scope chain index
+        if message_type == JERRY_DEBUGGER_EVAL:
+            args = struct.pack(self.byte_order + "I", index) + args
+
+        size = len(args)
+
         max_fragment = min(self.max_message_size - message_header, size)
 
         message = struct.pack(self.byte_order + "BBIBI",
@@ -601,6 +611,7 @@ class JerryDebugger(object):
                               0,
                               message_type,
                               size)
+
         if size == max_fragment:
             self.send_message(message + args)
             return

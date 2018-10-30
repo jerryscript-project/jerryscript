@@ -252,6 +252,26 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   {
     this_binding = ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->this_binding);
     lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
+
+#ifdef JERRY_DEBUGGER
+    uint32_t chain_index = parse_opts >> ECMA_PARSE_CHAIN_INDEX_SHIFT;
+
+    while (chain_index != 0)
+    {
+      lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+
+      if (JERRY_UNLIKELY (lex_env_p == NULL))
+      {
+        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid scope chain index for eval"));
+      }
+
+      if ((ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
+          || (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE))
+      {
+        chain_index--;
+      }
+    }
+#endif
   }
   else
   {

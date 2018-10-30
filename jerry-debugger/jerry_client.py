@@ -171,6 +171,29 @@ class DebuggerPrompt(Cmd):
         self.stop = True
     do_e = do_eval
 
+    def do_eval_at(self, args):
+        """ Evaluate JavaScript source code at a scope chain level """
+
+        code = ''
+        index = 0
+        try:
+            args = args.split(" ", 1)
+
+            index = int(args[0])
+
+            if len(args) == 2:
+                code = args[1]
+
+            if index < 0 or index > 65535:
+                raise ValueError("Invalid scope chain index: %d (must be between 0 and 65535)" % index)
+
+        except ValueError as val_errno:
+            print("Error: %s" % (val_errno))
+            return
+
+        self.debugger.eval_at(code, index)
+        self.stop = True
+
     def do_memstats(self, _):
         """ Memory statistics """
         self.debugger.memstats()

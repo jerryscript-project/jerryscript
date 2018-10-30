@@ -2177,6 +2177,11 @@ static void
 parser_parse_function_arguments (parser_context_t *context_p, /**< context */
                                  lexer_token_type_t end_type) /**< expected end type */
 {
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+  bool duplicated_argument_names = false;
+  bool initializer_found = false;
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
+
   if (context_p->token.type == end_type)
   {
     return;
@@ -2218,6 +2223,14 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     {
       lexer_literal_t *literal_p;
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+      if (initializer_found)
+      {
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
+      }
+      duplicated_argument_names = true;
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
+
       if (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
       {
         parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
@@ -2253,6 +2266,29 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     }
 
     lexer_next_token (context_p);
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+    if (context_p->token.type == LEXER_ASSIGN)
+    {
+      parser_branch_t skip_init;
+
+      if (duplicated_argument_names)
+      {
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
+      }
+      initializer_found = true;
+
+      /* LEXER_ASSIGN does not overwrite lit_object. */
+      parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
+      parser_emit_cbc_literal (context_p, CBC_STRICT_EQUAL_RIGHT_LITERAL, context_p->lit_object.index);
+      parser_emit_cbc_forward_branch (context_p, CBC_BRANCH_IF_FALSE_FORWARD, &skip_init);
+
+      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+      parser_parse_expression (context_p, PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
+
+      parser_set_branch_to_current_position (context_p, &skip_init);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
 
     if (context_p->token.type != LEXER_COMMA)
     {

@@ -324,8 +324,6 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
-    parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_ASSIGN)
@@ -334,18 +332,10 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
           && ident_line_counter != context_p->last_breakpoint_line)
       {
-        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
-
-        cbc_argument_t last_cbc = context_p->last_cbc;
-        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
-
         parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
         parser_flush_cbc (context_p);
 
         parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
-
-        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
-        context_p->last_cbc = last_cbc;
 
         context_p->last_breakpoint_line = ident_line_counter;
       }
@@ -358,15 +348,9 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       }
 #endif /* JERRY_ENABLE_LINE_INFO */
 
+      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
       parser_parse_expression (context_p,
                                PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
-    }
-    else
-    {
-      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
-                    && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
-      /* We don't need to assign anything to this variable. */
-      context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
     }
 
     if (context_p->token.type != LEXER_COMMA)

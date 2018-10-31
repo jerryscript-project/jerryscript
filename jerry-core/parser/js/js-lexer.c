@@ -309,37 +309,35 @@ typedef struct
  * Keyword defines
  */
 #define LEXER_KEYWORD(name, type) { (const uint8_t *) (name), (type) }
-#define LEXER_KEYWORD_END()       { (const uint8_t *) NULL, LEXER_EOS }
+#define LEXER_KEYWORD_LIST_LENGTH(name) (const uint8_t) (sizeof ((name)) / sizeof ((name)[0]))
 /** @} */
 
 /**
  * Keywords with 2 characters.
  */
-static const keyword_string_t keyword_length_2[4] =
+static const keyword_string_t keywords_with_length_2[] =
 {
   LEXER_KEYWORD ("do", LEXER_KEYW_DO),
   LEXER_KEYWORD ("if", LEXER_KEYW_IF),
   LEXER_KEYWORD ("in", LEXER_KEYW_IN),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 3 characters.
  */
-static const keyword_string_t keyword_length_3[6] =
+static const keyword_string_t keywords_with_length_3[] =
 {
   LEXER_KEYWORD ("for", LEXER_KEYW_FOR),
   LEXER_KEYWORD ("let", LEXER_KEYW_LET),
   LEXER_KEYWORD ("new", LEXER_KEYW_NEW),
   LEXER_KEYWORD ("try", LEXER_KEYW_TRY),
   LEXER_KEYWORD ("var", LEXER_KEYW_VAR),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 4 characters.
  */
-static const keyword_string_t keyword_length_4[9] =
+static const keyword_string_t keywords_with_length_4[] =
 {
   LEXER_KEYWORD ("case", LEXER_KEYW_CASE),
   LEXER_KEYWORD ("else", LEXER_KEYW_ELSE),
@@ -349,22 +347,12 @@ static const keyword_string_t keyword_length_4[9] =
   LEXER_KEYWORD ("true", LEXER_LIT_TRUE),
   LEXER_KEYWORD ("void", LEXER_KEYW_VOID),
   LEXER_KEYWORD ("with", LEXER_KEYW_WITH),
-  LEXER_KEYWORD_END ()
 };
-
-#ifndef CONFIG_DISABLE_ES2015
-/**
- * Number of keywords with 5 characters.
- */
-#define KEYWORD_LENGTH_COUNT 11
-#else /* CONFIG_DISABLE_ES2015 */
-#define KEYWORD_LENGTH_COUNT 10
-#endif /* !CONFIG_DISABLE_ES2015 */
 
 /**
  * Keywords with 5 characters.
  */
-static const keyword_string_t keyword_length_5[KEYWORD_LENGTH_COUNT] =
+static const keyword_string_t keywords_with_length_5[] =
 {
 #ifndef CONFIG_DISABLE_ES2015
   LEXER_KEYWORD ("await", LEXER_KEYW_AWAIT),
@@ -378,13 +366,12 @@ static const keyword_string_t keyword_length_5[KEYWORD_LENGTH_COUNT] =
   LEXER_KEYWORD ("throw", LEXER_KEYW_THROW),
   LEXER_KEYWORD ("while", LEXER_KEYW_WHILE),
   LEXER_KEYWORD ("yield", LEXER_KEYW_YIELD),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 6 characters.
  */
-static const keyword_string_t keyword_length_6[9] =
+static const keyword_string_t keywords_with_length_6[] =
 {
   LEXER_KEYWORD ("delete", LEXER_KEYW_DELETE),
   LEXER_KEYWORD ("export", LEXER_KEYW_EXPORT),
@@ -394,71 +381,82 @@ static const keyword_string_t keyword_length_6[9] =
   LEXER_KEYWORD ("static", LEXER_KEYW_STATIC),
   LEXER_KEYWORD ("switch", LEXER_KEYW_SWITCH),
   LEXER_KEYWORD ("typeof", LEXER_KEYW_TYPEOF),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 7 characters.
  */
-static const keyword_string_t keyword_length_7[6] =
+static const keyword_string_t keywords_with_length_7[] =
 {
   LEXER_KEYWORD ("default", LEXER_KEYW_DEFAULT),
   LEXER_KEYWORD ("extends", LEXER_KEYW_EXTENDS),
   LEXER_KEYWORD ("finally", LEXER_KEYW_FINALLY),
   LEXER_KEYWORD ("package", LEXER_KEYW_PACKAGE),
   LEXER_KEYWORD ("private", LEXER_KEYW_PRIVATE),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 8 characters.
  */
-static const keyword_string_t keyword_length_8[4] =
+static const keyword_string_t keywords_with_length_8[] =
 {
   LEXER_KEYWORD ("continue", LEXER_KEYW_CONTINUE),
   LEXER_KEYWORD ("debugger", LEXER_KEYW_DEBUGGER),
   LEXER_KEYWORD ("function", LEXER_KEYW_FUNCTION),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 9 characters.
  */
-static const keyword_string_t keyword_length_9[3] =
+static const keyword_string_t keywords_with_length_9[] =
 {
   LEXER_KEYWORD ("interface", LEXER_KEYW_INTERFACE),
   LEXER_KEYWORD ("protected", LEXER_KEYW_PROTECTED),
-  LEXER_KEYWORD_END ()
 };
 
 /**
  * Keywords with 10 characters.
  */
-static const keyword_string_t keyword_length_10[3] =
+static const keyword_string_t keywords_with_length_10[] =
 {
   LEXER_KEYWORD ("implements", LEXER_KEYW_IMPLEMENTS),
   LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF),
-  LEXER_KEYWORD_END ()
 };
 
 /**
- * List to the keywords.
+ * List of the keyword groups.
  */
-static const keyword_string_t * const keyword_string_list[9] =
+static const keyword_string_t * const keyword_strings_list[] =
 {
-  keyword_length_2,
-  keyword_length_3,
-  keyword_length_4,
-  keyword_length_5,
-  keyword_length_6,
-  keyword_length_7,
-  keyword_length_8,
-  keyword_length_9,
-  keyword_length_10
+  keywords_with_length_2,
+  keywords_with_length_3,
+  keywords_with_length_4,
+  keywords_with_length_5,
+  keywords_with_length_6,
+  keywords_with_length_7,
+  keywords_with_length_8,
+  keywords_with_length_9,
+  keywords_with_length_10
+};
+
+/**
+ * List of the keyword groups length.
+ */
+static const uint8_t keyword_lengths_list[] =
+{
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_2),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_3),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_4),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_5),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_6),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_7),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_8),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_9),
+  LEXER_KEYWORD_LIST_LENGTH (keywords_with_length_10)
 };
 
 #undef LEXER_KEYWORD
-#undef LEXER_KEYWORD_END
+#undef LEXER_KEYWORD_LIST_LENGTH
 
 /**
  * Parse identifier.
@@ -551,31 +549,52 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
       && !context_p->token.lit_location.has_escape
       && (length >= 2 && length <= 10))
   {
-    const keyword_string_t *keyword_p = keyword_string_list[length - 2];
+    const keyword_string_t *keyword_list_p = keyword_strings_list[length - 2];
+
+    int start = 0;
+    int end = keyword_lengths_list[length - 2];
+    int middle = end / 2;
 
     do
     {
-      if (ident_start_p[0] == keyword_p->keyword_p[0]
-          && ident_start_p[1] == keyword_p->keyword_p[1]
-          && memcmp (ident_start_p, keyword_p->keyword_p, length) == 0)
+      const keyword_string_t *keyword_p = keyword_list_p + middle;
+      int compare_result = ident_start_p[0] - keyword_p->keyword_p[0];
+
+      if (compare_result == 0)
       {
-        if (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD)
+        compare_result = memcmp (ident_start_p, keyword_p->keyword_p, length);
+
+        if (compare_result == 0)
         {
-          if (context_p->status_flags & PARSER_IS_STRICT)
+          if (JERRY_UNLIKELY (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD))
           {
-            parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
+            if (context_p->status_flags & PARSER_IS_STRICT)
+            {
+              parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
+            }
+
+            context_p->token.literal_is_reserved = true;
+            break;
           }
 
-          context_p->token.literal_is_reserved = true;
+          context_p->token.type = (uint8_t) keyword_p->type;
           break;
         }
-
-        context_p->token.type = (uint8_t) keyword_p->type;
-        break;
       }
-      keyword_p++;
+
+      if (compare_result > 0)
+      {
+        start = middle + 1;
+      }
+      else
+      {
+        JERRY_ASSERT (compare_result < 0);
+        end = middle;
+      }
+
+      middle = (start + end) / 2;
     }
-    while (keyword_p->type != LEXER_EOS);
+    while (start < end);
   }
 
   if (context_p->token.type == LEXER_LITERAL)

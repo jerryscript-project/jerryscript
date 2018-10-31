@@ -1159,18 +1159,14 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   ecma_builtin_helper_def_prop (array_obj_p,
                                 ecma_get_magic_string (LIT_MAGIC_STRING_INDEX),
                                 ecma_make_int32_value (index),
-                                true, /* Writable */
-                                true, /* Enumerable */
-                                true, /* Configurable */
+                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                 true); /* Failure handling */
 
   /* Set input property of the result array */
   ecma_builtin_helper_def_prop (array_obj_p,
                                 ecma_get_magic_string (LIT_MAGIC_STRING_INPUT),
                                 ecma_make_string_value (input_str_p),
-                                true, /* Writable */
-                                true, /* Enumerable */
-                                true, /* Configurable */
+                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                 true); /* Failure handling */
 
   /* Set length property of the result array */

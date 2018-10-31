@@ -543,9 +543,7 @@ ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object 
   ecma_value_t completion_value = ecma_builtin_helper_def_prop (obj_p,
                                                                 property_name_p,
                                                                 value,
-                                                                true, /* Writable */
-                                                                true, /* Enumerable */
-                                                                true, /* Configurable */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                 false); /* Failure handling */
 
   JERRY_ASSERT (ecma_is_value_boolean (completion_value));
@@ -685,9 +683,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
         ecma_value_t completion = ecma_builtin_helper_def_prop (array_p,
                                                                 index_str_p,
                                                                 value,
-                                                                true, /* Writable */
-                                                                true, /* Enumerable */
-                                                                true, /* Configurable */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                 false); /* Failure handling */
 
         JERRY_ASSERT (ecma_is_value_true (completion));

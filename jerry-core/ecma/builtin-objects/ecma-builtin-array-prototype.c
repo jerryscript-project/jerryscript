@@ -876,10 +876,8 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t this_arg, /**< 'this' ar
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                             to_idx_str_p,
                                                             get_value,
-                                                            true, /* Writable */
-                                                            true, /* Enumerable */
-                                                            true, /* Configurable */
-                                                            false);
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            false); /* Failure handling */
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_deref_ecma_string (to_idx_str_p);
@@ -1297,10 +1295,8 @@ ecma_builtin_array_prototype_object_splice (ecma_value_t this_arg, /**< this arg
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                             idx_str_new_p,
                                                             get_value,
-                                                            true, /* Writable */
-                                                            true, /* Enumerable */
-                                                            true, /* Configurable */
-                                                            false);
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            false); /* Failure handling */
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_deref_ecma_string (idx_str_new_p);
@@ -2052,10 +2048,8 @@ ecma_builtin_array_prototype_object_map (ecma_value_t this_arg, /**< this argume
         ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                               index_str_p,
                                                               mapped_value,
-                                                              true, /* Writable */
-                                                              true, /* Enumerable */
-                                                              true, /* Configurable */
-                                                              false);
+                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                              false); /* Failure handling */
         JERRY_ASSERT (ecma_is_value_true (put_comp));
 
         ECMA_FINALIZE (mapped_value);
@@ -2181,10 +2175,8 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t this_arg, /**< this arg
           ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                                 to_index_string_p,
                                                                 get_value,
-                                                                true, /* Writable */
-                                                                true, /* Enumerable */
-                                                                true, /* Configurable */
-                                                                false);
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                false); /* Failure handling */
           JERRY_ASSERT (ecma_is_value_true (put_comp));
 
           ecma_deref_ecma_string (to_index_string_p);

@@ -121,9 +121,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     ecma_builtin_helper_def_prop (object_p,
                                   item_name_string_p,
                                   array_items_p[index],
-                                  true, /* Writable */
-                                  true, /* Enumerable */
-                                  true, /* Configurable */
+                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                   false); /* Failure handling */
 
     ecma_deref_ecma_string (item_name_string_p);

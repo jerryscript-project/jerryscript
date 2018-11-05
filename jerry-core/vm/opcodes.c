@@ -256,7 +256,8 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-  ecma_collection_header_t *prop_names_coll_p = ecma_op_object_get_property_names (obj_p, false, true, true);
+  ecma_collection_header_t *prop_names_coll_p;
+  prop_names_coll_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
   if (prop_names_coll_p->item_count != 0)
   {

@@ -197,10 +197,9 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
 
   uint32_t index = 0;
 
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p,
-                                                                         false,
-                                                                         only_enumerable_properties,
-                                                                         false);
+  ecma_collection_header_t *props_p;
+  props_p = ecma_op_object_get_property_names (obj_p,
+                                               only_enumerable_properties ? ECMA_LIST_ENUMERABLE : ECMA_LIST_NO_OPTS);
 
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 

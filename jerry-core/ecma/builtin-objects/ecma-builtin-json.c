@@ -737,7 +737,7 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (value_get);
 
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, false, true, false);
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE);
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
@@ -1579,7 +1579,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   {
     property_keys_p = ecma_new_values_collection ();
 
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, true, false);
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE);
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 

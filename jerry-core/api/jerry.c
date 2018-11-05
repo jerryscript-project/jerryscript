@@ -2520,7 +2520,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
-  ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, false, true, true);
+  ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (names_p);
 
   ecma_value_t property_value = ECMA_VALUE_EMPTY;

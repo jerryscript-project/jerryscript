@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 /**
  * Implementation of transport over tcp/ip.

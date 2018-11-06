@@ -46,7 +46,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_strin
                                        ecma_length_t start_pos, ecma_length_t *ret_index_p);
 ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *index_p, ecma_value_t value,
-                              bool writable, bool enumerable, bool configurable, bool is_throw);
+                              uint32_t opts, bool is_throw);
 
 #ifndef CONFIG_DISABLE_DATE_BUILTIN
 

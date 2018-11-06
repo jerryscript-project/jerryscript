@@ -157,9 +157,8 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     completion = ecma_builtin_helper_def_prop (binding_obj_p,
                                                name_p,
                                                ECMA_VALUE_UNDEFINED,
-                                               true, /* Writable */
-                                               true, /* Enumerable */
-                                               is_deletable, /* Configurable */
+                                               is_deletable ? ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE
+                                                            : ECMA_PROPERTY_ENUMERABLE_WRITABLE,
                                                true); /* Failure handling */
 
     if (ECMA_IS_VALUE_ERROR (completion))

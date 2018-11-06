@@ -947,10 +947,8 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           return ecma_builtin_helper_def_prop (object_p,
                                                property_name_p,
                                                value,
-                                               true, /* Writable */
-                                               true, /* Enumerable */
-                                               true, /* Configurable */
-                                               is_throw); /* Failure handling */
+                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                               true); /* Failure handling */
         }
       }
 

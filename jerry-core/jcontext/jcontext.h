@@ -139,6 +139,8 @@ struct jerry_context_t
   jerry_debugger_transport_header_t *debugger_transport_header_p; /**< head of transport protocol chain */
   uint8_t *debugger_send_buffer_payload_p; /**< start where the outgoing message can be written */
   vm_frame_ctx_t *debugger_stop_context; /**< stop only if the current context is equal to this context */
+  uint8_t *debugger_exception_byte_code_p; /**< Location of the currently executed byte code if an
+                                            *   error occours while the vm_loop is suspended */
   jmem_cpointer_t debugger_byte_code_free_head; /**< head of byte code free linked list */
   jmem_cpointer_t debugger_byte_code_free_tail; /**< tail of byte code free linked list */
   uint32_t debugger_flags; /**< debugger flags */

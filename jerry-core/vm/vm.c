@@ -401,6 +401,15 @@ vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value
   return false;
 } /* vm_get_implicit_this_value */
 
+/**
+ * Special bytecode sequence for error handling while the vm_loop
+ * is preserved for an execute operation
+ */
+static const uint8_t vm_error_byte_code_p[] =
+{
+  CBC_EXT_OPCODE, CBC_EXT_ERROR
+};
+
 #ifndef CONFIG_DISABLE_ES2015_CLASS
 /**
  * 'super(...)' function call handler.
@@ -411,7 +420,9 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_SUPER_CALL);
   JERRY_ASSERT (frame_ctx_p->byte_code_p[0] == CBC_EXT_OPCODE);
 
-  uint32_t arguments_list_len = frame_ctx_p->byte_code_p[2];
+  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 3;
+  uint8_t opcode = byte_code_p[-2];
+  uint32_t arguments_list_len = byte_code_p[-1];
 
   ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
 
@@ -444,13 +455,35 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_fast_free_value (stack_top_p[i]);
   }
 
-  ecma_free_value (stack_top_p[-1]);
-  stack_top_p[-1] = completion_value;
+  if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
+  {
+#ifdef JERRY_DEBUGGER
+    JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
+#endif /* JERRY_DEBUGGER */
+    frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
+  }
+  else
+  {
+    frame_ctx_p->byte_code_p = byte_code_p;
+    ecma_free_value (*(--stack_top_p));
+    uint32_t opcode_data = vm_decode_table[(CBC_END + 1) + opcode];
+
+    if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
+    {
+      ecma_fast_free_value (completion_value);
+    }
+    else if (opcode_data & VM_OC_PUT_STACK)
+    {
+      *stack_top_p++ = completion_value;
+    }
+    else
+    {
+      ecma_fast_free_value (frame_ctx_p->block_result);
+      frame_ctx_p->block_result = completion_value;
+    }
+  }
 
   frame_ctx_p->stack_top_p = stack_top_p;
-
-  /* 'super (...)' call continues as a normal 'Function call' */
-  frame_ctx_p->call_operation = VM_EXEC_CALL;
 } /* vm_super_call */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
@@ -462,7 +495,8 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
-  uint8_t opcode = frame_ctx_p->byte_code_p[0];
+  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
+  uint8_t opcode = byte_code_p[-1];
   uint32_t arguments_list_len;
 
   if (opcode >= CBC_CALL0)
@@ -471,7 +505,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   }
   else
   {
-    arguments_list_len = frame_ctx_p->byte_code_p[1];
+    arguments_list_len = *byte_code_p++;
   }
 
   bool is_call_prop = ((opcode - CBC_CALL) % 6) >= 3;
@@ -509,8 +543,33 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_free_value (*(--stack_top_p));
   }
 
-  ecma_free_value (stack_top_p[-1]);
-  stack_top_p[-1] = completion_value;
+  if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
+  {
+#ifdef JERRY_DEBUGGER
+    JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
+#endif /* JERRY_DEBUGGER */
+    frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
+  }
+  else
+  {
+    frame_ctx_p->byte_code_p = byte_code_p;
+    ecma_free_value (*(--stack_top_p));
+    uint32_t opcode_data = vm_decode_table[opcode];
+
+    if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
+    {
+      ecma_fast_free_value (completion_value);
+    }
+    else if (opcode_data & VM_OC_PUT_STACK)
+    {
+      *stack_top_p++ = completion_value;
+    }
+    else
+    {
+      ecma_fast_free_value (frame_ctx_p->block_result);
+      frame_ctx_p->block_result = completion_value;
+    }
+  }
 
   frame_ctx_p->stack_top_p = stack_top_p;
 } /* opfunc_call */
@@ -523,7 +582,8 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
-  uint8_t opcode = frame_ctx_p->byte_code_p[0];
+  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
+  uint8_t opcode = byte_code_p[-1];
   unsigned int arguments_list_len;
 
   if (opcode >= CBC_NEW0)
@@ -532,7 +592,7 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   }
   else
   {
-    arguments_list_len = frame_ctx_p->byte_code_p[1];
+    arguments_list_len = *byte_code_p++;
   }
 
   ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
@@ -559,8 +619,19 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_fast_free_value (stack_top_p[i]);
   }
 
-  ecma_free_value (stack_top_p[-1]);
-  stack_top_p[-1] = completion_value;
+  if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
+  {
+#ifdef JERRY_DEBUGGER
+    JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
+#endif /* JERRY_DEBUGGER */
+    frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
+  }
+  else
+  {
+    ecma_free_value (stack_top_p[-1]);
+    frame_ctx_p->byte_code_p = byte_code_p;
+    stack_top_p[-1] = completion_value;
+  }
 
   frame_ctx_p->stack_top_p = stack_top_p;
 } /* opfunc_construct */
@@ -822,7 +893,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t left_value;
   ecma_value_t right_value;
   ecma_value_t result = ECMA_VALUE_EMPTY;
-  ecma_value_t block_result = ECMA_VALUE_UNDEFINED;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
 
   /* Prepare for byte code execution. */
@@ -992,8 +1062,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_POP_BLOCK:
         {
-          ecma_fast_free_value (block_result);
-          block_result = *(--stack_top_p);
+          ecma_fast_free_value (frame_ctx_p->block_result);
+          frame_ctx_p->block_result = *(--stack_top_p);
           continue;
         }
         case VM_OC_PUSH:
@@ -1241,41 +1311,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
         case VM_OC_SUPER_CALL:
         {
-          if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
-          {
-            frame_ctx_p->call_operation = VM_EXEC_SUPER_CALL;
-            frame_ctx_p->byte_code_p = byte_code_start_p;
-            frame_ctx_p->stack_top_p = stack_top_p;
-            frame_ctx_p->call_block_result = block_result;
-            return ECMA_VALUE_UNDEFINED;
-          }
-
-          byte_code_p++;
-          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
-
-          result = *(--stack_top_p);
-          block_result = frame_ctx_p->call_block_result;
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
-          {
-            ecma_fast_free_value (result);
-          }
-          else if (opcode_data & VM_OC_PUT_STACK)
-          {
-            *stack_top_p++ = result;
-          }
-          else
-          {
-            ecma_fast_free_value (block_result);
-            block_result = result;
-          }
-
-          continue;
+          frame_ctx_p->call_operation = VM_EXEC_SUPER_CALL;
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
         }
         case VM_OC_CLASS_HERITAGE:
         {
@@ -1754,8 +1793,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                 }
                 else if (opcode_data & VM_OC_PUT_BLOCK)
                 {
-                  ecma_free_value (block_result);
-                  block_result = result;
+                  ecma_free_value (frame_ctx_p->block_result);
+                  frame_ctx_p->block_result = result;
                   opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK;
                 }
               }
@@ -1817,8 +1856,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             }
             else if (opcode_data & VM_OC_PUT_BLOCK)
             {
-              ecma_free_value (block_result);
-              block_result = ecma_copy_value (result);
+              ecma_free_value (frame_ctx_p->block_result);
+              frame_ctx_p->block_result = ecma_copy_value (result);
               opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK;
             }
           }
@@ -1862,8 +1901,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (opcode == CBC_RETURN_WITH_BLOCK)
           {
-            left_value = block_result;
-            block_result = ECMA_VALUE_UNDEFINED;
+            left_value = frame_ctx_p->block_result;
+            frame_ctx_p->block_result = ECMA_VALUE_UNDEFINED;
           }
 
           result = left_value;
@@ -1892,73 +1931,27 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_CALL:
         {
-          if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
-          {
-            frame_ctx_p->call_operation = VM_EXEC_CALL;
-            frame_ctx_p->byte_code_p = byte_code_start_p;
-            frame_ctx_p->stack_top_p = stack_top_p;
-            frame_ctx_p->call_block_result = block_result;
-            return ECMA_VALUE_UNDEFINED;
-          }
-
-          if (opcode < CBC_CALL0)
-          {
-            byte_code_p++;
-          }
-
-          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
-
-          result = *(--stack_top_p);
-          block_result = frame_ctx_p->call_block_result;
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          if (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)))
-          {
-            ecma_fast_free_value (result);
-          }
-          else if (opcode_data & VM_OC_PUT_STACK)
-          {
-            *stack_top_p++ = result;
-          }
-          else
-          {
-            ecma_fast_free_value (block_result);
-            block_result = result;
-          }
-          continue;
+          frame_ctx_p->call_operation = VM_EXEC_CALL;
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
         }
         case VM_OC_NEW:
         {
-          if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
-          {
-            frame_ctx_p->call_operation = VM_EXEC_CONSTRUCT;
-            frame_ctx_p->byte_code_p = byte_code_start_p;
-            frame_ctx_p->stack_top_p = stack_top_p;
-            frame_ctx_p->call_block_result = block_result;
-            return ECMA_VALUE_UNDEFINED;
-          }
+          frame_ctx_p->call_operation = VM_EXEC_CONSTRUCT;
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
+        }
+        case VM_OC_ERROR:
+        {
+          JERRY_ASSERT (frame_ctx_p->byte_code_p[1] == CBC_EXT_ERROR);
+#ifdef JERRY_DEBUGGER
+          frame_ctx_p->byte_code_p = JERRY_CONTEXT (debugger_exception_byte_code_p);
+#endif /* JERRY_DEBUGGER */
 
-          if (opcode < CBC_NEW0)
-          {
-            byte_code_p++;
-          }
-
-          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
-
-          result = *(--stack_top_p);
-          block_result = frame_ctx_p->call_block_result;
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          *stack_top_p++ = result;
-          continue;
+          result = ECMA_VALUE_ERROR;
+          goto error;
         }
         case VM_OC_RESOLVE_BASE_FOR_CALL:
         {
@@ -3203,8 +3196,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       }
       else if (opcode_data & VM_OC_PUT_BLOCK)
       {
-        ecma_fast_free_value (block_result);
-        block_result = result;
+        ecma_fast_free_value (frame_ctx_p->block_result);
+        frame_ctx_p->block_result = result;
       }
 
 free_both_values:
@@ -3275,7 +3268,8 @@ error:
     {
       /* In most cases there is no context. */
 
-      ecma_fast_free_value (block_result);
+      ecma_fast_free_value (frame_ctx_p->block_result);
+      frame_ctx_p->call_operation = VM_NO_EXEC_OP;
       return result;
     }
 
@@ -3352,7 +3346,9 @@ error:
       while (frame_ctx_p->context_depth > 0);
     }
 
-    ecma_free_value (block_result);
+    ecma_free_value (frame_ctx_p->block_result);
+    frame_ctx_p->call_operation = VM_NO_EXEC_OP;
+
     return result;
   }
 } /* vm_loop */
@@ -3424,45 +3420,49 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   {
     completion_value = vm_loop (frame_ctx_p);
 
-    if (frame_ctx_p->call_operation == VM_NO_EXEC_OP)
+    switch (frame_ctx_p->call_operation)
     {
-      break;
-    }
-
-    if (frame_ctx_p->call_operation == VM_EXEC_CALL)
-    {
-      opfunc_call (frame_ctx_p);
-    }
+      case VM_EXEC_CALL:
+      {
+        opfunc_call (frame_ctx_p);
+        break;
+      }
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-    else if (frame_ctx_p->call_operation == VM_EXEC_SUPER_CALL)
-    {
-      vm_super_call (frame_ctx_p);
-    }
+      case VM_EXEC_SUPER_CALL:
+      {
+        vm_super_call (frame_ctx_p);
+        break;
+      }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
-    else
-    {
-      JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_CONSTRUCT);
-      opfunc_construct (frame_ctx_p);
-    }
-  }
+      case VM_EXEC_CONSTRUCT:
+      {
+        opfunc_construct (frame_ctx_p);
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (frame_ctx_p->call_operation == VM_NO_EXEC_OP);
 
-  /* Free arguments and registers */
-  for (uint32_t i = 0; i < register_end; i++)
-  {
-    ecma_fast_free_value (frame_ctx_p->registers_p[i]);
-  }
+        /* Free arguments and registers */
+        for (uint32_t i = 0; i < register_end; i++)
+        {
+          ecma_fast_free_value (frame_ctx_p->registers_p[i]);
+        }
 
 #ifdef JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p))
-  {
-    /* The engine will stop when the next breakpoint is reached. */
-    JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP);
-    JERRY_CONTEXT (debugger_stop_context) = NULL;
-  }
+        if (JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p))
+        {
+          /* The engine will stop when the next breakpoint is reached. */
+          JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP);
+          JERRY_CONTEXT (debugger_stop_context) = NULL;
+        }
 #endif /* JERRY_DEBUGGER */
 
-  JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p->prev_context_p;
-  return completion_value;
+        JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p->prev_context_p;
+        return completion_value;
+      }
+    }
+  }
 } /* vm_execute */
 
 /**
@@ -3509,13 +3509,13 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.lex_env_p = lex_env_p;
   frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx.this_binding = this_binding_value;
+  frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
 #ifdef JERRY_ENABLE_LINE_INFO
   frame_ctx.resource_name = ECMA_VALUE_UNDEFINED;
   frame_ctx.current_line = 0;
 #endif /* JERRY_ENABLE_LINE_INFO */
   frame_ctx.context_depth = 0;
   frame_ctx.is_eval_code = parse_opts & ECMA_PARSE_DIRECT_EVAL;
-  frame_ctx.call_operation = VM_NO_EXEC_OP;
 
   /* Use JERRY_MAX() to avoid array declaration with size 0. */
   JERRY_VLA (ecma_value_t, stack, JERRY_MAX (call_stack_size, 1));

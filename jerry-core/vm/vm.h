@@ -159,6 +159,7 @@ typedef enum
   VM_OC_CALL,                    /**< call */
   VM_OC_NEW,                     /**< new */
   VM_OC_RESOLVE_BASE_FOR_CALL,   /**< resolve base value before call */
+  VM_OC_ERROR,                   /**< error while the vm_loop is suspended */
 
   VM_OC_JUMP,                    /**< jump */
   VM_OC_BRANCH_IF_STRICT_EQUAL,  /**< branch if stric equal */

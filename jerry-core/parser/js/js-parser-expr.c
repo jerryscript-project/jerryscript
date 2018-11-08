@@ -1286,14 +1286,10 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       if (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags))
       {
         parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
-      }
-      else
-      {
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-        parser_emit_cbc (context_p, CBC_PUSH_THIS);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+        break;
       }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+      parser_emit_cbc (context_p, CBC_PUSH_THIS);
       break;
     }
     case LEXER_LIT_TRUE:
@@ -1320,7 +1316,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_SUPER:
     {
       if ((lexer_check_next_character (context_p, LIT_CHAR_DOT)
-            || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
+           || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
           && context_p->status_flags & (PARSER_CLASS_HAS_SUPER | PARSER_IS_ARROW_FUNCTION))
       {
         if (!LEXER_IS_BINARY_OP_TOKEN (context_p->stack_top_uint8))
@@ -1374,6 +1370,24 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
   }
   lexer_next_token (context_p);
 } /* parser_parse_unary_expression */
+
+/**
+ * Push an eval opcode.
+ */
+static inline void
+parser_emit_eval (parser_context_t *context_p) /**< context */
+{
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  if (context_p->status_flags & PARSER_CLASS_HAS_SUPER)
+  {
+    uint8_t data_byte = (uint8_t) PARSER_GET_CLASS_ECMA_PARSE_OPTS (context_p->status_flags);
+    parser_emit_cbc_ext_byte (context_p, CBC_EXT_CLASS_EVAL, data_byte);
+    return;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+  parser_emit_cbc (context_p, CBC_EVAL);
+} /* parser_emit_eval */
 
 /**
  * Parse the postfix part of unary operators, and
@@ -1557,20 +1571,7 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
 
         if (is_eval)
         {
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-          if (context_p->status_flags & PARSER_CLASS_HAS_SUPER)
-          {
-            parser_flush_cbc (context_p);
-            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_CLASS_EVAL);
-            context_p->last_cbc.value = PARSER_GET_CLASS_ECMA_PARSE_OPTS (context_p->status_flags);
-          }
-          else
-          {
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-            parser_emit_cbc (context_p, CBC_EVAL);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-          }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+          parser_emit_eval (context_p);
         }
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
@@ -1813,13 +1814,14 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
         parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
         parser_stack_push_uint8 (context_p, CBC_ASSIGN_PROP_LITERAL);
         context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
+
 #ifndef CONFIG_DISABLE_ES2015_CLASS
         if (context_p->status_flags & PARSER_CLASS_SUPER_PROP_REFERENCE)
         {
+          context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
           parser_emit_cbc_ext (context_p, CBC_EXT_SUPER_PROP_ASSIGN);
           parser_flush_cbc (context_p);
         }
-        context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
       }
       else

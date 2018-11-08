@@ -297,15 +297,14 @@ parser_emit_cbc_literal_from_token (parser_context_t *context_p, /**< context */
 } /* parser_emit_cbc_literal_from_token */
 
 /**
- * Append a byte code with a call argument
+ * Append a byte code with a byte argument
  */
 void
-parser_emit_cbc_call (parser_context_t *context_p, /**< context */
+parser_emit_cbc_byte (parser_context_t *context_p, /**< context */
                       uint16_t opcode, /**< opcode */
-                      size_t call_arguments) /**< number of arguments */
+                      uint8_t data_byte) /**< data byte */
 {
   JERRY_ASSERT (PARSER_ARGS_EQ (opcode, CBC_HAS_BYTE_ARG));
-  JERRY_ASSERT (call_arguments <= CBC_MAXIMUM_BYTE_VALUE);
 
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
@@ -313,7 +312,20 @@ parser_emit_cbc_call (parser_context_t *context_p, /**< context */
   }
 
   context_p->last_cbc_opcode = opcode;
-  context_p->last_cbc.value = (uint16_t) call_arguments;
+  context_p->last_cbc.value = data_byte;
+} /* parser_emit_cbc_byte */
+
+/**
+ * Append a byte code with a call argument
+ */
+void
+parser_emit_cbc_call (parser_context_t *context_p, /**< context */
+                      uint16_t opcode, /**< opcode */
+                      size_t call_arguments) /**< number of arguments */
+{
+  JERRY_ASSERT (call_arguments <= CBC_MAXIMUM_BYTE_VALUE);
+
+  parser_emit_cbc_byte (context_p, opcode, (uint8_t) call_arguments);
 } /* parser_emit_cbc_call */
 
 /**

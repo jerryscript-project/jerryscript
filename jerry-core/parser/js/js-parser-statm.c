@@ -2024,14 +2024,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           {
             parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
             parser_emit_cbc (context_p, CBC_RETURN);
-          }
-          else
-          {
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-            parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+            break;
           }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+          parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
           break;
         }
 

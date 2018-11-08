@@ -319,7 +319,7 @@ static const keyword_string_t keywords_with_length_2[] =
 {
   LEXER_KEYWORD ("do", LEXER_KEYW_DO),
   LEXER_KEYWORD ("if", LEXER_KEYW_IF),
-  LEXER_KEYWORD ("in", LEXER_KEYW_IN),
+  LEXER_KEYWORD ("in", LEXER_KEYW_IN)
 };
 
 /**
@@ -331,7 +331,7 @@ static const keyword_string_t keywords_with_length_3[] =
   LEXER_KEYWORD ("let", LEXER_KEYW_LET),
   LEXER_KEYWORD ("new", LEXER_KEYW_NEW),
   LEXER_KEYWORD ("try", LEXER_KEYW_TRY),
-  LEXER_KEYWORD ("var", LEXER_KEYW_VAR),
+  LEXER_KEYWORD ("var", LEXER_KEYW_VAR)
 };
 
 /**
@@ -346,7 +346,7 @@ static const keyword_string_t keywords_with_length_4[] =
   LEXER_KEYWORD ("this", LEXER_KEYW_THIS),
   LEXER_KEYWORD ("true", LEXER_LIT_TRUE),
   LEXER_KEYWORD ("void", LEXER_KEYW_VOID),
-  LEXER_KEYWORD ("with", LEXER_KEYW_WITH),
+  LEXER_KEYWORD ("with", LEXER_KEYW_WITH)
 };
 
 /**
@@ -365,7 +365,7 @@ static const keyword_string_t keywords_with_length_5[] =
   LEXER_KEYWORD ("super", LEXER_KEYW_SUPER),
   LEXER_KEYWORD ("throw", LEXER_KEYW_THROW),
   LEXER_KEYWORD ("while", LEXER_KEYW_WHILE),
-  LEXER_KEYWORD ("yield", LEXER_KEYW_YIELD),
+  LEXER_KEYWORD ("yield", LEXER_KEYW_YIELD)
 };
 
 /**
@@ -380,7 +380,7 @@ static const keyword_string_t keywords_with_length_6[] =
   LEXER_KEYWORD ("return", LEXER_KEYW_RETURN),
   LEXER_KEYWORD ("static", LEXER_KEYW_STATIC),
   LEXER_KEYWORD ("switch", LEXER_KEYW_SWITCH),
-  LEXER_KEYWORD ("typeof", LEXER_KEYW_TYPEOF),
+  LEXER_KEYWORD ("typeof", LEXER_KEYW_TYPEOF)
 };
 
 /**
@@ -392,7 +392,7 @@ static const keyword_string_t keywords_with_length_7[] =
   LEXER_KEYWORD ("extends", LEXER_KEYW_EXTENDS),
   LEXER_KEYWORD ("finally", LEXER_KEYW_FINALLY),
   LEXER_KEYWORD ("package", LEXER_KEYW_PACKAGE),
-  LEXER_KEYWORD ("private", LEXER_KEYW_PRIVATE),
+  LEXER_KEYWORD ("private", LEXER_KEYW_PRIVATE)
 };
 
 /**
@@ -402,7 +402,7 @@ static const keyword_string_t keywords_with_length_8[] =
 {
   LEXER_KEYWORD ("continue", LEXER_KEYW_CONTINUE),
   LEXER_KEYWORD ("debugger", LEXER_KEYW_DEBUGGER),
-  LEXER_KEYWORD ("function", LEXER_KEYW_FUNCTION),
+  LEXER_KEYWORD ("function", LEXER_KEYW_FUNCTION)
 };
 
 /**
@@ -411,7 +411,7 @@ static const keyword_string_t keywords_with_length_8[] =
 static const keyword_string_t keywords_with_length_9[] =
 {
   LEXER_KEYWORD ("interface", LEXER_KEYW_INTERFACE),
-  LEXER_KEYWORD ("protected", LEXER_KEYW_PROTECTED),
+  LEXER_KEYWORD ("protected", LEXER_KEYW_PROTECTED)
 };
 
 /**
@@ -420,7 +420,7 @@ static const keyword_string_t keywords_with_length_9[] =
 static const keyword_string_t keywords_with_length_10[] =
 {
   LEXER_KEYWORD ("implements", LEXER_KEYW_IMPLEMENTS),
-  LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF),
+  LEXER_KEYWORD ("instanceof", LEXER_KEYW_INSTANCEOF)
 };
 
 /**

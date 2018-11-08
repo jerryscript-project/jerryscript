@@ -39,41 +39,41 @@
  */
 typedef enum
 {
-  PARSER_IS_STRICT = (1u << 0),               /**< strict mode code */
-  PARSER_IS_FUNCTION = (1u << 1),             /**< function body is parsed */
-  PARSER_IS_CLOSURE = (1u << 2),              /**< function body is encapsulated in {} block */
-  PARSER_IS_FUNC_EXPRESSION = (1u << 3),      /**< a function expression is parsed */
-  PARSER_IS_PROPERTY_GETTER = (1u << 4),      /**< a property getter function is parsed */
-  PARSER_IS_PROPERTY_SETTER = (1u << 5),      /**< a property setter function is parsed */
-  PARSER_NAMED_FUNCTION_EXP = (1u << 6),      /**< a function expression has a name binding */
-  PARSER_HAS_NON_STRICT_ARG = (1u << 7),      /**< the function has arguments which
-                                               *   are not supported in strict mode */
-  PARSER_ARGUMENTS_NEEDED = (1u << 8),        /**< arguments object must be created */
-  PARSER_ARGUMENTS_NOT_NEEDED = (1u << 9),    /**< arguments object must NOT be created */
-  PARSER_LEXICAL_ENV_NEEDED = (1u << 10),     /**< lexical environment object must be created */
-  PARSER_NO_REG_STORE = (1u << 11),           /**< all local variables must be stored
-                                               *   in the lexical environment object */
-  PARSER_INSIDE_WITH = (1u << 12),            /**< code block is inside a with statement */
-  PARSER_RESOLVE_BASE_FOR_CALLS = (1u << 13), /**< the this object must be resolved when
-                                               *   a function without a base object is called */
-  PARSER_HAS_INITIALIZED_VARS = (1u << 14),   /**< a CBC_INITIALIZE_VARS instruction must be emitted */
-  PARSER_HAS_LATE_LIT_INIT = (1u << 15),      /**< allocate memory for this string after
-                                               *   the local parser data is freed */
-  PARSER_NO_END_LABEL = (1u << 16),           /**< return instruction must be inserted
-                                               *   after the last byte code */
-  PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 17), /**< pending (unsent) breakpoint
-                                                     *   info is available */
+  PARSER_IS_STRICT = (1u << 0),                      /**< strict mode code */
+  PARSER_IS_FUNCTION = (1u << 1),                    /**< function body is parsed */
+  PARSER_IS_CLOSURE = (1u << 2),                     /**< function body is encapsulated in {} block */
+  PARSER_IS_FUNC_EXPRESSION = (1u << 3),             /**< a function expression is parsed */
+  PARSER_IS_PROPERTY_GETTER = (1u << 4),             /**< a property getter function is parsed */
+  PARSER_IS_PROPERTY_SETTER = (1u << 5),             /**< a property setter function is parsed */
+  PARSER_NAMED_FUNCTION_EXP = (1u << 6),             /**< a function expression has a name binding */
+  PARSER_HAS_NON_STRICT_ARG = (1u << 7),             /**< the function has arguments which
+                                                      *   are not supported in strict mode */
+  PARSER_ARGUMENTS_NEEDED = (1u << 8),               /**< arguments object must be created */
+  PARSER_ARGUMENTS_NOT_NEEDED = (1u << 9),           /**< arguments object must NOT be created */
+  PARSER_LEXICAL_ENV_NEEDED = (1u << 10),            /**< lexical environment object must be created */
+  PARSER_NO_REG_STORE = (1u << 11),                  /**< all local variables must be stored
+                                                      *   in the lexical environment object */
+  PARSER_INSIDE_WITH = (1u << 12),                   /**< code block is inside a with statement */
+  PARSER_RESOLVE_BASE_FOR_CALLS = (1u << 13),        /**< the this object must be resolved when
+                                                      *   a function without a base object is called */
+  PARSER_HAS_INITIALIZED_VARS = (1u << 14),          /**< a CBC_INITIALIZE_VARS instruction must be emitted */
+  PARSER_HAS_LATE_LIT_INIT = (1u << 15),             /**< allocate memory for this string after
+                                                      *   the local parser data is freed */
+  PARSER_NO_END_LABEL = (1u << 16),                  /**< return instruction must be inserted
+                                                      *   after the last byte code */
+  PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 17),  /**< pending (unsent) breakpoint
+                                                      *   info is available */
 #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
-  PARSER_IS_ARROW_FUNCTION = (1u << 18),      /**< an arrow function is parsed */
-  PARSER_ARROW_PARSE_ARGS = (1u << 19),       /**< parse the argument list of an arrow function */
+  PARSER_IS_ARROW_FUNCTION = (1u << 18),             /**< an arrow function is parsed */
+  PARSER_ARROW_PARSE_ARGS = (1u << 19),              /**< parse the argument list of an arrow function */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   /* These three status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
-  PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed (this value must be kept in
-                                               *   in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
-  PARSER_CLASS_HAS_SUPER = (1u << 21),        /**< class has super reference */
-  PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
-  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
+  PARSER_CLASS_CONSTRUCTOR = (1u << 20),             /**< a class constructor is parsed (this value must be
+                                                      *   kept in in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
+  PARSER_CLASS_HAS_SUPER = (1u << 21),               /**< class has super reference */
+  PARSER_CLASS_STATIC_FUNCTION = (1u << 22),         /**< this function is a static class method */
+  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),    /**< super property call or assignment */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } parser_general_flags_t;
 
@@ -455,6 +455,7 @@ void parser_flush_cbc (parser_context_t *context_p);
 void parser_emit_cbc (parser_context_t *context_p, uint16_t opcode);
 void parser_emit_cbc_literal (parser_context_t *context_p, uint16_t opcode, uint16_t literal_index);
 void parser_emit_cbc_literal_from_token (parser_context_t *context_p, uint16_t opcode);
+void parser_emit_cbc_byte (parser_context_t *context_p, uint16_t opcode, uint8_t data_byte);
 void parser_emit_cbc_call (parser_context_t *context_p, uint16_t opcode, size_t call_arguments);
 void parser_emit_cbc_push_number (parser_context_t *context_p, bool is_negative_number);
 void parser_emit_cbc_forward_branch (parser_context_t *context_p, uint16_t opcode, parser_branch_t *branch_p);
@@ -470,6 +471,8 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
   parser_emit_cbc ((context_p), PARSER_TO_EXT_OPCODE (opcode))
 #define parser_emit_cbc_ext_literal(context_p, opcode, literal_index) \
   parser_emit_cbc_literal ((context_p), PARSER_TO_EXT_OPCODE (opcode), (literal_index))
+#define parser_emit_cbc_ext_byte(context_p, opcode, data) \
+  parser_emit_cbc_byte ((context_p), PARSER_TO_EXT_OPCODE (opcode), (data))
 #define parser_emit_cbc_ext_call(context_p, opcode, call_arguments) \
   parser_emit_cbc_call ((context_p), PARSER_TO_EXT_OPCODE (opcode), (call_arguments))
 #define parser_emit_cbc_ext_forward_branch(context_p, opcode, branch_p) \

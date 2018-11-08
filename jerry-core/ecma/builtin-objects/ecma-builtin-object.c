@@ -296,11 +296,40 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg, /**< '
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
     /* 2-5. */
-    ret_value = ecma_builtin_helper_object_get_properties (obj_p, false);
+    ret_value = ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_NO_OPTS);
   }
 
   return ret_value;
 } /* ecma_builtin_object_object_get_own_property_names */
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * The Object object's 'getOwnPropertySymbols' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 19.1.2.7
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_get_own_property_symbols (ecma_value_t this_arg, /**< 'this' argument */
+                                                     ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNUSED (this_arg);
+
+  if (!ecma_is_value_object (arg))
+  {
+    /* 1. */
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+  }
+
+  /* 2 - 5. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+
+  return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS);
+} /* ecma_builtin_object_object_get_own_property_symbols */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
 /**
  * The Object object's 'seal' routine
@@ -643,7 +672,7 @@ ecma_builtin_object_object_keys (ecma_value_t this_arg, /**< 'this' argument */
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
     /* 3-6. */
-    ret_value = ecma_builtin_helper_object_get_properties (obj_p, true);
+    ret_value = ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_ENUMERABLE);
   }
 
   return ret_value;
@@ -669,18 +698,17 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /
   /* 1. */
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
-    return ret_value;
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+  }
+
+  ecma_string_t *name_str_p = ecma_op_to_prop_name (arg2);
+
+  if (JERRY_UNLIKELY (name_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
-
-  /* 2. */
-  ECMA_TRY_CATCH (name_str_value,
-                  ecma_op_to_string (arg2),
-                  ret_value);
-
-  ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
 
   /* 3. */
   ecma_property_descriptor_t prop_desc;
@@ -699,7 +727,7 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_value_t this_arg, /
     ret_value = ECMA_VALUE_UNDEFINED;
   }
 
-  ECMA_FINALIZE (name_str_value);
+  ecma_deref_ecma_string (name_str_p);
 
   return ret_value;
 } /* ecma_builtin_object_object_get_own_property_descriptor */
@@ -886,38 +914,37 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg, /**< 'this' a
 
   if (!ecma_is_value_object (arg1))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
   }
-  else
+
+  ecma_string_t *name_str_p = ecma_op_to_prop_name (arg2);
+
+  if (JERRY_UNLIKELY (name_str_p == NULL))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
-
-    ECMA_TRY_CATCH (name_str_value,
-                    ecma_op_to_string (arg2),
-                    ret_value);
-
-    ecma_string_t *name_str_p = ecma_get_string_from_value (name_str_value);
-
-    ecma_property_descriptor_t prop_desc;
-
-    ECMA_TRY_CATCH (conv_result,
-                    ecma_op_to_property_descriptor (arg3, &prop_desc),
-                    ret_value);
-
-    ECMA_TRY_CATCH (define_own_prop_ret,
-                    ecma_op_object_define_own_property (obj_p,
-                                                        name_str_p,
-                                                        &prop_desc,
-                                                        true),
-                    ret_value);
-
-    ret_value = ecma_copy_value (arg1);
-
-    ECMA_FINALIZE (define_own_prop_ret);
-    ecma_free_property_descriptor (&prop_desc);
-    ECMA_FINALIZE (conv_result);
-    ECMA_FINALIZE (name_str_value);
+    return ECMA_VALUE_ERROR;
   }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
+
+  ecma_property_descriptor_t prop_desc;
+
+  ECMA_TRY_CATCH (conv_result,
+                  ecma_op_to_property_descriptor (arg3, &prop_desc),
+                  ret_value);
+
+  ECMA_TRY_CATCH (define_own_prop_ret,
+                  ecma_op_object_define_own_property (obj_p,
+                                                      name_str_p,
+                                                      &prop_desc,
+                                                      true),
+                  ret_value);
+
+  ret_value = ecma_copy_value (arg1);
+
+  ECMA_FINALIZE (define_own_prop_ret);
+  ecma_free_property_descriptor (&prop_desc);
+  ECMA_FINALIZE (conv_result);
+  ecma_deref_ecma_string (name_str_p);
 
   return ret_value;
 } /* ecma_builtin_object_object_define_property */

@@ -162,14 +162,12 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   }
   JERRY_ASSERT (check_coercible == ECMA_VALUE_EMPTY);
 
-  ecma_value_t str_name_value = ecma_op_to_string (property);
-  if (ECMA_IS_VALUE_ERROR (str_name_value))
-  {
-    return str_name_value;
-  }
+  ecma_string_t *name_string_p = ecma_op_to_prop_name (property);
 
-  JERRY_ASSERT (ecma_is_value_string (str_name_value));
-  ecma_string_t *name_string_p = ecma_get_string_from_value (str_name_value);
+  if (JERRY_UNLIKELY (name_string_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   ecma_value_t obj_value = ecma_op_to_object (object);
   /* The ecma_op_check_object_coercible call already checked the op_to_object error cases. */
@@ -180,8 +178,8 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
 
   ecma_value_t delete_op_ret = ecma_op_object_delete (obj_p, name_string_p, is_strict);
   JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || (is_strict == true && ECMA_IS_VALUE_ERROR (delete_op_ret)));
-  ecma_free_value (obj_value);
-  ecma_free_value (str_name_value);
+  ecma_deref_object (obj_p);
+  ecma_deref_ecma_string (name_string_p);
 
   return delete_op_ret;
 } /* vm_op_delete_prop */

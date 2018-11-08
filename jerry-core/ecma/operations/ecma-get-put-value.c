@@ -96,6 +96,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
 
   JERRY_ASSERT (ecma_is_value_boolean (base_value)
                 || ecma_is_value_number (base_value)
+                || ECMA_ASSERT_VALUE_IS_SYMBOL (base_value)
                 || ecma_is_value_string (base_value));
 
   ecma_value_t object_base = ecma_op_to_object (base_value);

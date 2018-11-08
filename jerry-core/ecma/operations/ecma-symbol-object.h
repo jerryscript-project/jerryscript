@@ -13,14 +13,41 @@
  * limitations under the License.
  */
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
+#ifndef ECMA_SYMBOL_H
+#define ECMA_SYMBOL_H
+
 #ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
-#undef SYMBOL_VALUE
+#include "ecma-globals.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmasymbolobject ECMA Symbol object related routines
+ * @{
+ */
+
+ecma_value_t
+ecma_op_create_symbol (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+
+ecma_value_t
+ecma_op_create_symbol_object (const ecma_value_t value);
+
+bool
+ecma_prop_name_is_symbol (ecma_string_t *string_p);
+
+ecma_string_t *
+ecma_get_symbol_description (ecma_string_t *symbol_p);
+
+ecma_value_t
+ecma_symbol_to_string_helper (ecma_value_t this_arg, bool is_to_string);
+
+ecma_value_t
+ecma_get_symbol_descriptive_string (ecma_value_t symbol_value);
+
 #endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ROUTINE_CONFIGURABLE_ONLY
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+/**
+ * @}
+ * @}
+ */
+
+#endif /* !ECMA_SYMBOL_H */

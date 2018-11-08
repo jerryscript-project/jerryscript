@@ -73,6 +73,7 @@ typedef enum
   ECMA_TYPE_STRING = 1, /**< pointer to description of a string */
   ECMA_TYPE_FLOAT = 2, /**< pointer to a 64 or 32 bit floating point number */
   ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
+  ECMA_TYPE_SYMBOL = 4, /**< pointer to description of a symbol */
   ECMA_TYPE_DIRECT_STRING = 5, /**< directly encoded string values */
   ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference (only supported by C API) */
   ECMA_TYPE_POINTER = ECMA_TYPE_ERROR, /**< a generic aligned pointer */
@@ -361,6 +362,9 @@ typedef enum
                                        *   that are not indices */
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties only */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 } ecma_list_properties_options_t;
 
 /**
@@ -1328,6 +1332,8 @@ typedef enum
                                              stored locally in the string's descriptor */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
 
+  ECMA_STRING_CONTAINER_SYMBOL, /**< the ecma-string is a symbol */
+
   ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
                                *   so no string processing function supports this type except
                                *   the ecma_deref_ecma_string function. */
@@ -1398,6 +1404,7 @@ typedef struct
     uint32_t magic_string_ex_id; /**< identifier of an external magic string (lit_magic_string_ex_id_t) */
     ecma_value_t lit_number; /**< number (see ECMA_STRING_LITERAL_NUMBER) */
     uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
+    ecma_value_t symbol_descriptor; /**< symbol descriptor string-value */
   } u;
 } ecma_string_t;
 
@@ -1535,6 +1542,26 @@ typedef struct
 } ecma_extended_typedarray_object_t;
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+/**
+ * Flag for indicating whether the symbol is a well known symbol
+ *
+ * See also: 6.1.5.1
+ */
+#define ECMA_GLOBAL_SYMBOL_FLAG 0x01
+
+/**
+ * Bitshift index for indicating whether the symbol is a well known symbol
+ *
+ * See also: 6.1.5.1
+ */
+#define ECMA_GLOBAL_SYMBOL_SHIFT 1
+
+/**
+ * Bitshift index for the symbol hash property
+ */
+#define ECMA_SYMBOL_HASH_SHIFT 2
+
 /**
  * @}
  * @}

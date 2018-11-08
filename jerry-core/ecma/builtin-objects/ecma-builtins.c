@@ -653,6 +653,16 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (string_p);
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (string_p)))
+  {
+    if (string_p->hash & ECMA_GLOBAL_SYMBOL_FLAG)
+    {
+      magic_string_id = (string_p->hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
+    }
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
   if (magic_string_id == LIT_MAGIC_STRING__COUNT)
   {
     return NULL;
@@ -772,6 +782,25 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->value);
       break;
     }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    case ECMA_BUILTIN_PROPERTY_SYMBOL:
+    {
+      lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
+
+      ecma_string_t *symbol_desc_p;
+      symbol_desc_p = ecma_append_magic_string_to_string (ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL),
+                                                          symbol_desc_id);
+
+      ecma_value_t symbol_desc_value = ecma_make_string_value (symbol_desc_p);
+
+      ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (symbol_desc_value);
+      lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->value;
+      symbol_p->hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
+
+      value = ecma_make_symbol_value (symbol_p);
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
       ecma_object_t *builtin_object_p = ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value);

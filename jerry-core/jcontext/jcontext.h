@@ -97,6 +97,9 @@ struct jerry_context_t
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  ecma_lit_storage_item_t *symbol_list_first_p; /**< first item of the global symbol list */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */

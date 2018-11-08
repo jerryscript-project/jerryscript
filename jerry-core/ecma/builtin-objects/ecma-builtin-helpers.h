@@ -31,7 +31,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg);
 ecma_value_t
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, uint32_t index);
 ecma_value_t
-ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, bool only_enumerable_properties);
+ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, uint32_t opts);
 ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, uint32_t *length_p, ecma_value_t value);
 uint32_t

@@ -47,6 +47,7 @@
  assert (c.g () === 5);
  assert (c.h () === 5);
 
+/* TODO: Enable these tests after Symbol has been implemented
  // Test built-in Array prototype methods
  var mapped = c.map ((x) => x * 2);
  isInstanceofArray (mapped);
@@ -114,3 +115,4 @@
  } catch (e) {
    assert (e instanceof TypeError);
  }
+*/

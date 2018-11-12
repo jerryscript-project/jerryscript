@@ -186,6 +186,7 @@ jerryx_arg_transform_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
 
 /* Helper functions for transform functions. */
 jerry_value_t jerryx_arg_js_iterator_pop (jerryx_arg_js_iterator_t *js_arg_iter_p);
+jerry_value_t jerryx_arg_js_iterator_restore (jerryx_arg_js_iterator_t *js_arg_iter_p);
 jerry_value_t jerryx_arg_js_iterator_peek (jerryx_arg_js_iterator_t *js_arg_iter_p);
 jerry_length_t jerryx_arg_js_iterator_index (jerryx_arg_js_iterator_t *js_arg_iter_p);
 

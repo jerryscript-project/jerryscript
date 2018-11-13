@@ -36,6 +36,8 @@ install-zephyr:
 	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.13.0
 	pip3 install --user -U pip
 	pip3 install --user -U setuptools
+	# FIXME: It's temporary workaround to make Travis CI happy for Zephry v1.13.0.
+	pip3 install --user pyocd==0.12.0
 	pip3 install --user -r ../zephyr/scripts/requirements.txt
 
 # Perform all the necessary (JerryScript-independent) installation steps.

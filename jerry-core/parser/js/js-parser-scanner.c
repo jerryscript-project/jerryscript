@@ -959,6 +959,18 @@ parser_scan_until (parser_context_t *context_p, /**< context */
           mode = SCAN_MODE_FUNCTION_ARGUMENTS;
           continue;
         }
+
+        if (context_p->token.type == LEXER_COMMA)
+        {
+          continue;
+        }
+
+        if (context_p->token.type == LEXER_RIGHT_BRACE)
+        {
+          parser_stack_pop_uint8 (context_p);
+          mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+          break;
+        }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
         if (context_p->token.type != LEXER_COLON)

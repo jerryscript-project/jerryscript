@@ -788,6 +788,9 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         parser_append_object_literal_item (context_p,
                                            literal_index,
                                            PARSER_OBJECT_PROPERTY_VALUE);
+#else /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+        parser_line_counter_t start_line = context_p->token.line;
+        parser_line_counter_t start_column = context_p->token.column;
 #endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
 
         lexer_next_token (context_p);
@@ -800,6 +803,35 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
           JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
           context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
           context_p->last_cbc.value = literal_index;
+          break;
+        }
+
+        if (context_p->token.type == LEXER_RIGHT_BRACE
+            || context_p->token.type == LEXER_COMMA)
+        {
+          /* Re-parse the literal as common identifier. */
+          context_p->source_p = context_p->token.lit_location.char_p;
+          context_p->line = start_line;
+          context_p->column = start_column;
+
+          lexer_next_token (context_p);
+
+          if (context_p->token.type != LEXER_LITERAL
+              || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+          {
+            parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+          }
+
+          lexer_construct_literal_object (context_p,
+                                          &context_p->token.lit_location,
+                                          context_p->token.lit_location.type);
+
+          parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+
+          context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
+          context_p->last_cbc.value = literal_index;
+
+          lexer_next_token (context_p);
           break;
         }
 #endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */

@@ -1,0 +1,44 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_eval_at.js:15
+(jerry-debugger) eval_at 0
+undefined
+(jerry-debugger) eval_at 0 b
+undefined
+(jerry-debugger) n
+Stopped at tests/debugger/do_eval_at.js:23
+(jerry-debugger) eval_at 0 b
+2
+(jerry-debugger) b do_eval_at.js:20
+Breakpoint 1 at tests/debugger/do_eval_at.js:20 (in f() at line:17, col:1)
+(jerry-debugger) n
+Stopped at breakpoint:1 tests/debugger/do_eval_at.js:20 (in f() at line:17, col:1)
+(jerry-debugger) scopes
+level | type   
+0     | local  
+1     | global 
+(jerry-debugger) eval_at 0 b
+6
+(jerry-debugger) eval_at 1 b
+2
+(jerry-debugger) eval_at 0 b=20
+20
+(jerry-debugger) eval_at 1 b=100
+100
+(jerry-debugger) n
+Stopped at tests/debugger/do_eval_at.js:25
+(jerry-debugger) eval_at 0 a
+23
+(jerry-debugger) scopes
+level | type   
+0     | global 
+(jerry-debugger) eval_at 0 b
+100
+(jerry-debugger) eval_at -1 b
+Error: Invalid scope chain index: -1 (must be between 0 and 65535)
+(jerry-debugger) eval_at 65536 b
+Error: Invalid scope chain index: 65536 (must be between 0 and 65535)
+(jerry-debugger) eval_at b
+Error: invalid literal for int() with base 10: 'b'
+(jerry-debugger) eval_at 200
+Uncaught exception: Error
+(jerry-debugger) c

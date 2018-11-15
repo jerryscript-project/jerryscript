@@ -119,10 +119,10 @@ name | type      | value
 h    | undefined | undefined 
 a    | Array     | [1,2,3]   
 (jerry-debugger) variables 2
-name | type    | value                    
-b    | Number  | 10                       
-x    | Boolean | true                     
-user | Object  | {"name":"John","age":30} 
-m    | Null    | null                     
-c    | Number  | 10                       
+name | type    | value           
+b    | Number  | 10              
+x    | Boolean | true            
+user | Object  | [object Object] 
+m    | Null    | null            
+c    | Number  | 10              
 (jerry-debugger) c

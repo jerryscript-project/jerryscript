@@ -492,14 +492,7 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
 
         jerry_debugger_scope_variable_type_t variable_type = jerry_debugger_get_variable_type (prop_value_p.value);
 
-        if (variable_type == JERRY_DEBUGGER_VALUE_OBJECT)
-        {
-          property_value = ecma_builtin_json_string_from_object (prop_value_p.value);
-        }
-        else
-        {
-          property_value = ecma_op_to_string (prop_value_p.value);
-        }
+        property_value = ecma_op_to_string (prop_value_p.value);
 
         if (!jerry_debugger_copy_variables_to_string_message (variable_type,
                                                               ecma_get_string_from_value (property_value),

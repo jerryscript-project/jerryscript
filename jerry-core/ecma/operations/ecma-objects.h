@@ -45,8 +45,7 @@ bool ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, ecma_s
                                                  ecma_property_descriptor_t *prop_desc_p);
 ecma_value_t ecma_op_object_has_instance (ecma_object_t *obj_p, ecma_value_t value);
 bool ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
-ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *obj_p, bool is_array_indices_only,
-                                                              bool is_enumerable_only, bool is_with_prototype_chain);
+ecma_collection_header_t * ecma_op_object_get_property_names (ecma_object_t *obj_p, uint32_t opts);
 
 lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
 bool ecma_object_class_is (ecma_object_t *object_p, uint32_t class_id);

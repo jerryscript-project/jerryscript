@@ -1050,7 +1050,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
 
   uint32_t len = ecma_number_to_uint32 (len_number);
 
-  ecma_collection_header_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, true, false, false);
+  ecma_collection_header_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ARRAY_INDICES);
 
   uint32_t defined_prop_count = 0;
   uint32_t copied_num = 0;

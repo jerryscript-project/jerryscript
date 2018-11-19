@@ -116,6 +116,16 @@ typedef enum
 } jerry_gc_mode_t;
 
 /**
+ * Jerry regexp flags.
+ */
+typedef enum
+{
+  JERRY_REGEXP_FLAG_GLOBAL = (1u << 1),      /**< Globally scan string */
+  JERRY_REGEXP_FLAG_IGNORE_CASE = (1u << 2), /**< Ignore case */
+  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3)    /**< Multiline string scan */
+} jerry_regexp_flags_t;
+
+/**
  * Character type of JerryScript.
  */
 typedef uint8_t jerry_char_t;
@@ -448,6 +458,9 @@ jerry_value_t jerry_create_number_nan (void);
 jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
 jerry_value_t jerry_create_promise (void);
+jerry_value_t jerry_create_regexp (const jerry_char_t *pattern, jerry_regexp_flags_t flags);
+jerry_value_t jerry_create_regexp_sz (const jerry_char_t *pattern, jerry_size_t pattern_size,
+                                      jerry_regexp_flags_t flags);
 jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);

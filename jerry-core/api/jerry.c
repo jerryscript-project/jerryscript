@@ -31,6 +31,7 @@
 #include "ecma-literal-storage.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-regexp-object.h"
 #include "ecma-promise-object.h"
 #include "ecma-typedarray-object.h"
 #include "jcontext.h"
@@ -58,6 +59,13 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
                      && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
+
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
+                     && (int) RE_FLAG_MULTILINE == (int) JERRY_REGEXP_FLAG_MULTILINE
+                     && (int) RE_FLAG_IGNORE_CASE == (int) JERRY_REGEXP_FLAG_IGNORE_CASE,
+                     re_flags_t_must_be_equal_to_jerry_regexp_flags_t);
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
 
 #if defined JERRY_DISABLE_JS_PARSER && !defined JERRY_ENABLE_SNAPSHOT_EXEC
 #error JERRY_ENABLE_SNAPSHOT_EXEC must be defined if JERRY_DISABLE_JS_PARSER is defined!
@@ -1483,6 +1491,52 @@ jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
                                                               (lit_utf8_size_t) str_size);
   return ecma_make_string_value (ecma_str_p);
 } /* jerry_create_string_sz */
+
+/**
+ * Calculates the size of the given pattern and creates a RegExp object.
+ *
+ * @return value of the constructed RegExp object.
+ */
+jerry_value_t
+jerry_create_regexp (const jerry_char_t *pattern_p, /**< zero-terminated UTF-8 string as RegExp pattern */
+                     jerry_regexp_flags_t flags) /**< optional RegExp flags */
+{
+  return jerry_create_regexp_sz (pattern_p, lit_zt_utf8_string_size (pattern_p), flags);
+} /* jerry_create_regexp */
+
+/**
+ * Creates a RegExp object with the given pattern and flags.
+ *
+ * @return value of the constructed RegExp object.
+ */
+jerry_value_t
+jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-8 string as RegExp pattern */
+                        jerry_size_t pattern_size, /**< length of the pattern */
+                        jerry_regexp_flags_t flags) /**< optional RegExp flags */
+{
+  jerry_assert_api_available ();
+
+#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+  if (!lit_is_valid_utf8_string (pattern_p, pattern_size))
+  {
+    return jerry_throw (ecma_raise_common_error (ECMA_ERR_MSG ("Input must be a valid utf8 string")));
+  }
+
+  ecma_string_t *ecma_pattern = ecma_new_ecma_string_from_utf8 (pattern_p, pattern_size);
+
+  jerry_value_t ret_val = ecma_op_create_regexp_object (ecma_pattern, flags);
+
+  ecma_deref_ecma_string (ecma_pattern);
+  return ret_val;
+
+#else /* CONFIG_DISABLE_REGEXP_BUILTIN */
+  JERRY_UNUSED (pattern_p);
+  JERRY_UNUSED (pattern_size);
+  JERRY_UNUSED (flags);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("RegExp is not supported.")));
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+} /* jerry_create_regexp_sz */
 
 /**
  * Get length of an array object

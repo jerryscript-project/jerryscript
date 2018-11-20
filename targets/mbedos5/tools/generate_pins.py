@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Generate pins.js for a specified target, using target definitions from the
+Generate pins.cpp for a specified target, using target definitions from the
 mbed OS source tree.
 
 It's expecting to be run from the targets/mbedos5 directory.
@@ -28,9 +28,8 @@ import ast
 import sys
 import os
 
-from simpleeval import SimpleEval, DEFAULT_OPERATORS
 from pycparserext.ext_c_parser import GnuCParser
-from pycparser import parse_file, c_ast, c_generator
+from pycparser import parse_file, c_ast
 
 # import mbed tools
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'mbed-os'))
@@ -113,27 +112,7 @@ class TypeDeclVisitor(c_ast.NodeVisitor):
         Visit a node.
         """
         if node.declname in self.names:
-            c_gen = c_generator.CGenerator()
-            pins = {}
-
-            operators = DEFAULT_OPERATORS
-            operators[ast.BitOr] = lambda a, b: a | b
-            operators[ast.LShift] = lambda a, b: a << b
-            operators[ast.RShift] = lambda a, b: a << b
-            evaluator = SimpleEval(DEFAULT_OPERATORS)
-
-            for pin in node.type.values.enumerators:
-                expr = c_gen.visit(pin.value)
-
-                if "(int)" in expr:
-                    expr = expr.replace('(int)', '')
-
-                if expr in pins:
-                    pins[pin.name] = pins[expr]
-                else:
-                    pins[pin.name] = evaluator.eval(expr.strip())
-
-            return pins
+            return [pin.name for pin in node.type.values.enumerators]
 
 
 def enumerate_pins(c_source_file, include_dirs, definitions):
@@ -158,39 +137,39 @@ def enumerate_pins(c_source_file, include_dirs, definitions):
     return visitor.visit(parsed_ast)
 
 
-def write_pins_to_files(pins, out_js_file, out_cpp_file):
+def write_pins_to_file(pins, pins_file, out_cpp_file):
     """
-    Write the generated pins for a specified mbed board into the output JS and C++ files.
+    Write the generated pins for a specified mbed board into the output C++ file.
     """
-    out_js = '\r\n'.join(['var %s = %s;' % pin for pin in pins])
-    out_js_file.write(out_js)
+
+    include = '\n#include "../{}"'.format(pins_file)
 
     count = '''
 unsigned int jsmbed_js_magic_string_count = {};
     '''.format(len(pins))
 
-    lengths = ',\n    '.join(str(len(pin[0])) for pin in pins)
+    lengths = ',\n    '.join(str(len(pin)) for pin in pins)
     lenghts_source = '''
 unsigned int jsmbed_js_magic_string_lengths[] = {
     %s
 };
     ''' % lengths
 
-    magic_values = ',\n    '.join(str(pin[1]) for pin in pins)
+    magic_values = ',\n    '.join(pins)
     magic_source = '''
 unsigned int jsmbed_js_magic_string_values[] = {
     %s
 };
     ''' % magic_values
 
-    magic_strings = ',\n    '.join('"' + pin[0] + '"' for pin in pins)
+    magic_strings = ',\n    '.join('"' + pin + '"' for pin in pins)
     magic_string_source = '''
 const char * jsmbed_js_magic_strings[] = {
     %s
 };
     ''' % magic_strings
 
-    out_cpp_file.write(LICENSE + count + lenghts_source + magic_source + magic_string_source)
+    out_cpp_file.write(LICENSE + include + count + lenghts_source + magic_source + magic_string_source)
 
 
 def main():
@@ -203,17 +182,13 @@ def main():
         sys.exit(1)
 
     description = """
-    Generate pins.js for a specified mbed board, using target definitions from the
+    Generate pins.cpp for a specified mbed board, using target definitions from the
     mbed OS source tree.
     """
 
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument('board', help='mbed board name')
-    parser.add_argument('-o',
-                        help='Output JavaScript file (default: %(default)s)',
-                        default='js/pins.js',
-                        type=argparse.FileType('w'))
     parser.add_argument('-c',
                         help='Output C++ file (default: %(default)s)',
                         default='source/pins.cpp',
@@ -237,10 +212,9 @@ def main():
     pins = enumerate_pins(pins_file, ['./tools'] + list(includes), defines)
 
     # first sort alphabetically, then by length.
-    pins = [(x, pins[x]) for x in pins]  # turn dict into tuples, which can be sorted
-    pins = sorted(pins, key=lambda x: (len(x[0]), x[0].lower()))
+    pins = sorted(pins, key=lambda x: (len(x), x.lower()))
 
-    write_pins_to_files(pins, args.o, args.c)
+    write_pins_to_file(pins, pins_file, args.c)
 
 
 if __name__ == "__main__":

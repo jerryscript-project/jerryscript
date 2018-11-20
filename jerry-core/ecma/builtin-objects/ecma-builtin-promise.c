@@ -478,6 +478,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
 
     if (ECMA_IS_VALUE_ERROR (put_ret))
     {
+      ecma_free_value (array_item);
       ret = put_ret;
       break;
     }

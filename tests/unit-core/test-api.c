@@ -937,7 +937,7 @@ main (void)
     jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
     jerry_value_t value = jerry_create_string ((const jerry_char_t *) "John");
     jerry_set_property (obj, key, value);
-    jerry_value_t stringified = jerry_json_stringfy (obj);
+    jerry_value_t stringified = jerry_json_stringify (obj);
     TEST_ASSERT (jerry_value_is_string (stringified));
     char buff[jerry_get_string_length (stringified)];
     jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff,

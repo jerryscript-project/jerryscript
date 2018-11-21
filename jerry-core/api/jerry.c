@@ -3406,7 +3406,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
  * @return json formated jerry_value_t or an error massage
  */
 jerry_value_t
-jerry_json_stringfy (const jerry_value_t object_to_stringify) /**< a jerry_object_t to stringify */
+jerry_json_stringify (const jerry_value_t object_to_stringify) /**< a jerry_object_t to stringify */
 {
   jerry_assert_api_available ();
 #ifndef CONFIG_DISABLE_JSON_BUILTIN
@@ -3423,7 +3423,7 @@ jerry_json_stringfy (const jerry_value_t object_to_stringify) /**< a jerry_objec
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
 #endif /* !CONFIG_DISABLE_JSON_BUILTIN */
-} /* jerry_json_stringfy */
+} /* jerry_json_stringify */
 
 /**
  * @}

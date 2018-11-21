@@ -130,7 +130,10 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
     uint32_t frame_count = 0;
     while (iter_frame_ctx_p != NULL)
     {
-      frame_count++;
+      if (!(iter_frame_ctx_p->bytecode_header_p->status_flags & (CBC_CODE_FLAGS_STATIC_FUNCTION)))
+      {
+        frame_count++;
+      }
       iter_frame_ctx_p = iter_frame_ctx_p->prev_context_p;
     }
     memcpy (backtrace_total_p->frame_count, &frame_count, sizeof (frame_count));
@@ -160,7 +163,8 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
 
     while (frame_ctx_p != NULL && min_depth_offset++ < max_depth)
     {
-      if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+      if (frame_ctx_p->bytecode_header_p->status_flags
+          & (CBC_CODE_FLAGS_DEBUGGER_IGNORE | CBC_CODE_FLAGS_STATIC_FUNCTION))
       {
         frame_ctx_p = frame_ctx_p->prev_context_p;
         continue;

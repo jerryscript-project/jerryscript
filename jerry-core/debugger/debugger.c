@@ -160,7 +160,8 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
 
     while (frame_ctx_p != NULL && min_depth_offset++ < max_depth)
     {
-      if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+      if (frame_ctx_p->bytecode_header_p->status_flags
+          & (CBC_CODE_FLAGS_DEBUGGER_IGNORE | CBC_CODE_FLAGS_STATIC_FUNCTION))
       {
         frame_ctx_p = frame_ctx_p->prev_context_p;
         continue;

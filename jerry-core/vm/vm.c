@@ -1660,6 +1660,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
+        case VM_OC_PROP_GET:
+        {
+          result = vm_op_get_value (left_value, right_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          goto free_both_values;
+        }
         case VM_OC_PROP_REFERENCE:
         {
           /* Forms with reference requires preserving the base and offset. */
@@ -1684,7 +1696,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           /* FALLTHRU */
         }
-        case VM_OC_PROP_GET:
         case VM_OC_PROP_PRE_INCR:
         case VM_OC_PROP_PRE_DECR:
         case VM_OC_PROP_POST_INCR:
@@ -1693,23 +1704,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           result = vm_op_get_value (left_value,
                                     right_value);
 
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            if (opcode >= CBC_PUSH_PROP_REFERENCE && opcode < CBC_PRE_INCR)
-            {
-              left_value = ECMA_VALUE_UNDEFINED;
-              right_value = ECMA_VALUE_UNDEFINED;
-            }
-            goto error;
-          }
-
           if (opcode < CBC_PRE_INCR)
           {
-            if (opcode >= CBC_PUSH_PROP_REFERENCE)
+            left_value = ECMA_VALUE_UNDEFINED;
+            right_value = ECMA_VALUE_UNDEFINED;
+
+            if (ECMA_IS_VALUE_ERROR (result))
             {
-              left_value = ECMA_VALUE_UNDEFINED;
-              right_value = ECMA_VALUE_UNDEFINED;
+              goto error;
             }
+
             break;
           }
 

@@ -1500,7 +1500,7 @@ jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
  */
 jerry_value_t
 jerry_create_regexp (const jerry_char_t *pattern_p, /**< zero-terminated UTF-8 string as RegExp pattern */
-                     jerry_regexp_flags_t flags) /**< optional RegExp flags */
+                     uint16_t flags) /**< optional RegExp flags */
 {
   return jerry_create_regexp_sz (pattern_p, lit_zt_utf8_string_size (pattern_p), flags);
 } /* jerry_create_regexp */
@@ -1513,7 +1513,7 @@ jerry_create_regexp (const jerry_char_t *pattern_p, /**< zero-terminated UTF-8 s
 jerry_value_t
 jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-8 string as RegExp pattern */
                         jerry_size_t pattern_size, /**< length of the pattern */
-                        jerry_regexp_flags_t flags) /**< optional RegExp flags */
+                        uint16_t flags) /**< optional RegExp flags */
 {
   jerry_assert_api_available ();
 

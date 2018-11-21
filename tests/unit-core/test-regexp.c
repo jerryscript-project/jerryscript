@@ -26,7 +26,7 @@ main (void)
   jerry_value_t global_obj_val = jerry_get_global_object ();
 
   jerry_char_t pattern[] = "[^.]+";
-  jerry_regexp_flags_t flags = JERRY_REGEXP_FLAG_GLOBAL | JERRY_REGEXP_FLAG_MULTILINE;
+  uint16_t flags = JERRY_REGEXP_FLAG_GLOBAL | JERRY_REGEXP_FLAG_MULTILINE;
   jerry_value_t regex_obj = jerry_create_regexp (pattern, flags);
   TEST_ASSERT (jerry_value_is_object (regex_obj));
 

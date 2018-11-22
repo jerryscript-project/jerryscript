@@ -27,3 +27,39 @@ default:
 
 assert(o.func() === 244);
 assert(o.ab() === 446);
+
+switch (1) {
+default:
+  var ab = 5;
+  var cd = 6;
+  o = {
+    ab,
+    cd: 8,
+    cd
+  }
+}
+
+assert(o.ab === 5);
+assert(o.cd === 6);
+
+function exception_expected(str) {
+  try {
+    eval(str);
+    assert(false);
+  } catch (e) {
+    assert(e instanceof SyntaxError);
+  }
+}
+
+// These forms are invalid.
+exception_expected('({ true })');
+exception_expected('({ 13 })');
+exception_expected('({ "x" })');
+
+switch (1) {
+default:
+  // These forms are valid.
+  ({ true: true });
+  ({ 13: 13 });
+  ({ "x": "x" });
+}

@@ -601,7 +601,7 @@ jerry_value_t jerry_get_typedarray_buffer (jerry_value_t value,
                                            jerry_length_t *byte_offset,
                                            jerry_length_t *byte_length);
 jerry_value_t jerry_json_parse (const jerry_char_t *string_p, jerry_size_t string_size);
-jerry_value_t jerry_json_stringfy (const jerry_value_t object_to_stringify);
+jerry_value_t jerry_json_stringify (const jerry_value_t object_to_stringify);
 
 /**
  * @}

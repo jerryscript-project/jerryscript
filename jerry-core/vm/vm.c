@@ -1050,6 +1050,27 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           branch_offset = -branch_offset;
         }
+
+        if (opcode_data & VM_OC_BRANCH_GET_STACK)
+        {
+          JERRY_ASSERT (ecma_is_value_boolean (stack_top_p[-1]));
+          result = (*(--stack_top_p) == ECMA_VALUE_TRUE);
+
+          uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
+
+          if ((opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG) ^ result)
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+            if (opcode_flags & VM_OC_LOGICAL_BRANCH_FLAG)
+            {
+              /* "Push" the value back to the stack. */
+              ++stack_top_p;
+            }
+          }
+
+          /* No need to free the result, because it's a simple value */
+          continue;
+        }
       }
 
       switch (VM_OC_GROUP_GET_INDEX (opcode_data))
@@ -2033,24 +2054,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_free_value (value);
           continue;
         }
-        case VM_OC_BRANCH_IF_TRUE:
-        case VM_OC_BRANCH_IF_FALSE:
-        case VM_OC_BRANCH_IF_LOGICAL_TRUE:
-        case VM_OC_BRANCH_IF_LOGICAL_FALSE:
+        case VM_OC_BOOL_AND_BRANCH:
         {
+          result = ecma_op_to_boolean (left_value);
+          /* Skip the current bytecode */
+          byte_code_start_p++;
+
+          /* Decode the next opcode as a normal brach opcode */
+          opcode = *byte_code_p++;
+          opcode_data = (uint32_t) (vm_decode_table[opcode]);
           uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_BRANCH_IF_TRUE;
-          ecma_value_t value = *(--stack_top_p);
+          branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (opcode);
 
-          bool boolean_value = ecma_op_to_boolean (value);
-
-          if (opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG)
+          if ((opcode_flags & VM_OC_BRANCH_IF_FALSE_FLAG) ^ result)
           {
-            boolean_value = !boolean_value;
-          }
-
-          if (boolean_value)
-          {
-            byte_code_p = byte_code_start_p + branch_offset;
+            branch_offset = (int32_t) vm_decode_branch_offset (byte_code_p, CBC_BRANCH_OFFSET_LENGTH (opcode));
+            byte_code_p = byte_code_start_p + ((opcode_data & VM_OC_BACKWARD_BRANCH) ? - branch_offset : branch_offset);
             if (opcode_flags & VM_OC_LOGICAL_BRANCH_FLAG)
             {
               /* "Push" the value back to the stack. */
@@ -2058,8 +2077,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               continue;
             }
           }
+          else
+          {
+            /* Skip the current branch opcode since it has just been executed */
+            byte_code_p += branch_offset_length;
+          }
 
-          ecma_fast_free_value (value);
+          ecma_free_value (*stack_top_p);
           continue;
         }
         case VM_OC_PLUS:

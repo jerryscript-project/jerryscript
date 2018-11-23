@@ -123,7 +123,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  *
  * @return branch offset
  */
-static uint32_t
+inline uint32_t
 vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte code */
                          uint32_t length) /**< length of the branch */
 {

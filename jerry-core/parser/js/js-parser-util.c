@@ -456,6 +456,12 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
   uint8_t flags;
   uint32_t extra_byte_code_increase;
 
+  if (!PARSER_OPCODE_HAS_BOOLEAN_RESULT (context_p->last_cbc_opcode)
+      && PARSER_IS_BRANCH_IF_EQUAL_OPCODE (opcode))
+  {
+    parser_emit_cbc (context_p, CBC_BOOL_AND_BRANCH);
+  }
+
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
     parser_flush_cbc (context_p);
@@ -562,6 +568,12 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 #ifdef PARSER_DUMP_BYTE_CODE
   const char *name;
 #endif /* PARSER_DUMP_BYTE_CODE */
+
+  if (!PARSER_OPCODE_HAS_BOOLEAN_RESULT (context_p->last_cbc_opcode)
+      && PARSER_IS_BRANCH_IF_EQUAL_OPCODE (opcode))
+  {
+    parser_emit_cbc (context_p, CBC_BOOL_AND_BRANCH);
+  }
 
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {

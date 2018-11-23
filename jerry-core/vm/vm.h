@@ -169,6 +169,7 @@ typedef enum
   VM_OC_BRANCH_IF_FALSE,         /**< branch if false */
   VM_OC_BRANCH_IF_LOGICAL_TRUE,  /**< branch if logical true */
   VM_OC_BRANCH_IF_LOGICAL_FALSE, /**< branch if logical false */
+  VM_OC_BOOL_AND_BRANCH,         /**< convert to bool then execute branch if */
 
   VM_OC_PLUS,                    /**< unary plus */
   VM_OC_MINUS,                   /**< unary minus */
@@ -325,6 +326,12 @@ typedef enum
  * Checks whether the result is stored somewhere.
  */
 #define VM_OC_HAS_PUT_RESULT(V) ((V) & (VM_OC_PUT_RESULT_MASK << VM_OC_PUT_RESULT_SHIFT))
+
+/**
+ * Special flag for branch optimization. After decoding the branch offset, pop an ecma-boolean
+ * from the stack and execute the branch instruction in place.
+ */
+#define VM_OC_BRANCH_GET_STACK VM_OC_PUT_STACK
 
 /**
  * Specify where the result is stored

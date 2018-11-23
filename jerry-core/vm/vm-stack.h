@@ -64,6 +64,7 @@ typedef enum
 } vm_stack_context_type_t;
 
 ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
+uint32_t vm_decode_branch_offset (uint8_t *branch_offset_p,  uint32_t length);
 bool vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_ref_p,
                             vm_stack_context_type_t finally_type, uint32_t search_limit);
 

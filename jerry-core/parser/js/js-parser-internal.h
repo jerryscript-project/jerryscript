@@ -200,6 +200,21 @@ typedef struct
   ((PARSER_GET_FLAGS (op) & CBC_ARG_TYPES) == (types))
 
 /**
+ * Check whether the opcode creates boolean result
+ */
+#define PARSER_OPCODE_HAS_BOOLEAN_RESULT(op) \
+  ((op) == CBC_PUSH_TRUE \
+   || (op) == CBC_PUSH_FALSE \
+   || (op) == CBC_LOGICAL_NOT \
+   || ((op) >= CBC_EQUAL && (op) <= CBC_IN))
+
+/**
+ * Check whether the opcode is a branch if equal opcode
+ */
+#define PARSER_IS_BRANCH_IF_EQUAL_OPCODE(op) \
+  (((op) >= CBC_BRANCH_IF_TRUE_FORWARD && (op) <= CBC_BRANCH_IF_LOGICAL_FALSE_3) && ((op) % 0x04 != 0))
+
+/**
  * All data allocated by the parser is
  * stored in parser_data_pages in the memory.
  */

@@ -418,7 +418,7 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
       JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
 
       cbc_ext_opcode_t opcode;
-      bool is_static = (bool) (status_flags & PARSER_CLASS_STATIC_FUNCTION);
+      bool is_static = (status_flags & PARSER_CLASS_STATIC_FUNCTION) != 0;
 
       if (is_computed)
       {
@@ -1366,7 +1366,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
           break;
         }
 
-        bool is_static = (bool) (context_p->status_flags & PARSER_CLASS_STATIC_FUNCTION);
+        bool is_static = (context_p->status_flags & PARSER_CLASS_STATIC_FUNCTION) != 0;
         parser_emit_cbc_ext (context_p, is_static ? CBC_EXT_PUSH_STATIC_SUPER : CBC_EXT_PUSH_SUPER);
         break;
       }

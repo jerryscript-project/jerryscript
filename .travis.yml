@@ -14,10 +14,12 @@ matrix:
     - name: "Checks"
       env:
         - OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
-      install: pip install --user pylint==1.6.5
+      install:
+        - pip install --user pylint==1.6.5
+        - pip install --user pybluez
       addons:
         apt:
-          packages: [doxygen, cppcheck, vera++]
+          packages: [doxygen, cppcheck, vera++, libbluetooth-dev, python-dev]
 
     - name: "Linux/x86-64 Build & Correctness Tests"
       env:

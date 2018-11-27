@@ -316,6 +316,7 @@ typedef enum
   OPT_SHOW_OP,
   OPT_SHOW_RE_OP,
   OPT_DEBUG_SERVER,
+  OPT_DEBUG_SERVER_TYPE,
   OPT_DEBUG_PORT,
   OPT_DEBUGGER_WAIT_SOURCE,
   OPT_EXEC_SNAP,
@@ -324,6 +325,13 @@ typedef enum
   OPT_ABORT_ON_FAIL,
   OPT_NO_PROMPT
 } main_opt_id_t;
+
+/**
+ * Definition of jerryx debugger layer create function pointer
+ */
+typedef bool (*jerryx_debugger_transport_create_t) (uint16_t port);
+
+static jerryx_debugger_transport_create_t debugger_layer_create_cb = jerryx_debugger_tcp_create;
 
 /**
  * Command line options
@@ -344,6 +352,9 @@ static const cli_opt_t main_opts[] =
                .help = "dump regexp byte-code"),
   CLI_OPT_DEF (.id = OPT_DEBUG_SERVER, .longopt = "start-debug-server",
                .help = "start debug server and wait for a connecting client"),
+  CLI_OPT_DEF (.id = OPT_DEBUG_SERVER_TYPE, .longopt = "debug-server-type", .meta = "TYPE",
+               .help = "choose a server type (choices : tcp or bluetooth) \
+               (default: tcp)"),
   CLI_OPT_DEF (.id = OPT_DEBUG_PORT, .longopt = "debug-port", .meta = "NUM",
                .help = "debug server port (default: 5001)"),
   CLI_OPT_DEF (.id = OPT_DEBUGGER_WAIT_SOURCE, .longopt = "debugger-wait-source",
@@ -419,14 +430,15 @@ context_alloc (size_t size,
 static void
 init_engine (jerry_init_flag_t flags, /**< initialized flags for the engine */
              bool debug_server, /**< enable the debugger init or not */
+             jerryx_debugger_transport_create_t layer_inited, /**< choose which type or server create */
              uint16_t debug_port) /**< the debugger port */
 {
   jerry_init (flags);
   if (debug_server)
   {
-    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port)
-                                   && jerryx_debugger_ws_create ());
+    jerryx_debugger_after_connect (layer_inited (debug_port) && jerryx_debugger_ws_create ());
   }
+
 
   register_js_function ("assert", jerryx_handler_assert);
   register_js_function ("gc", jerryx_handler_gc);
@@ -508,6 +520,20 @@ main (int argc,
         if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
         {
           start_debug_server = true;
+        }
+        break;
+      }
+      case OPT_DEBUG_SERVER_TYPE:
+      {
+        if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
+        {
+          const char *temp = cli_consume_string (&cli_state);
+          if (strcmp (temp, "bluetooth") == 0)
+          {
+            debug_port = 1;
+            debugger_layer_create_cb = jerryx_debugger_bt_create;
+          }
+
         }
         break;
       }
@@ -612,7 +638,7 @@ main (int argc,
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
-  init_engine (flags, start_debug_server, debug_port);
+  init_engine (flags, start_debug_server, debugger_layer_create_cb, debug_port);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
@@ -730,7 +756,7 @@ main (int argc,
             break;
           }
 
-          init_engine (flags, true, debug_port);
+          init_engine (flags, true, debugger_layer_create_cb, debug_port);
 
           ret_value = jerry_create_undefined ();
         }
@@ -774,7 +800,7 @@ main (int argc,
 
     jerry_cleanup ();
 
-    init_engine (flags, true, debug_port);
+    init_engine (flags, true, debugger_layer_create_cb, debug_port);
 
     ret_value = jerry_create_undefined ();
   }

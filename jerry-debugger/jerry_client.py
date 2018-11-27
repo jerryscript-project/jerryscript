@@ -18,10 +18,10 @@ from __future__ import print_function
 from cmd import Cmd
 from pprint import pprint
 import math
-import socket
 import sys
 import logging
 import time
+import re
 import jerry_client_ws
 
 def write(string):
@@ -291,8 +291,14 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except socket.error as error_msg:
+    except IOError as error_msg:
         ERRNO = error_msg.errno
+        if not ERRNO:
+            # if there is no ERRNO then try to get it from the error arguments
+            MATCH = re.search(r"(\d+)", error_msg.args[0])
+            if MATCH:
+                ERRNO = int(MATCH.group(1))
+
         MSG = str(error_msg)
         if ERRNO == 111:
             sys.exit("Failed to connect to the JerryScript debugger.")

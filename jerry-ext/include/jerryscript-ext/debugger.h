@@ -31,6 +31,8 @@ void jerryx_debugger_after_connect (bool success);
  */
 bool jerryx_debugger_tcp_create (uint16_t port);
 
+bool jerryx_debugger_bt_create (uint16_t port);
+
 /*
  * Message encoding interfaces.
  */

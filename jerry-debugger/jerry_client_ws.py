@@ -266,15 +266,24 @@ class DebuggerAction(object):
 
 
 class JerryDebugger(object):
-    # pylint: disable=too-many-instance-attributes,too-many-statements,too-many-public-methods,no-self-use
+    # pylint: disable=too-many-instance-attributes,too-many-statements,too-many-public-methods,no-self-use,too-many-branches
     def __init__(self, address):
-
+        temp = address.split(":")
         if ":" not in address:
             self.host = address
             self.port = 5001  # use default port
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        elif len(temp) == 2:
+            self.host = temp[0]
+            self.port = int(temp[1])
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        elif len(temp) == 6:
+            import bluetooth
+            self.host = address
+            self.port = 1 # use default port
+            self.client_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         else:
-            self.host, self.port = address.split(":")
-            self.port = int(self.port)
+            raise Exception("Wrong address type")
 
         print("Connecting to: %s:%s" % (self.host, self.port))
 
@@ -303,7 +312,6 @@ class JerryDebugger(object):
         self.nocolor = ''
         self.src_offset = 0
         self.src_offset_diff = 0
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.host, self.port))
         self.non_interactive = False
         self.current_out = b""
@@ -385,7 +393,11 @@ class JerryDebugger(object):
             self.message_data = result[len_expected:]
 
     def __del__(self):
-        self.client_socket.close()
+        try:
+            self.client_socket.close()
+        except AttributeError:
+            pass
+
 
     def _exec_command(self, command_id):
         self.send_command(command_id)

@@ -18,9 +18,13 @@ project (${JERRY_EXT_NAME} C)
 
 # Optional features
 set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+set(FEATURE_BT_DEBUGGER        OFF     CACHE BOOL   "Enable JerryScript bluetooth?")
+
 
 # Status messages
 message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
+message(STATUS "FEATURE_BT_DEBUGGER         " ${FEATURE_BT_DEBUGGER})
+
 
 # Include directories
 set(INCLUDE_EXT_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -30,6 +34,10 @@ set(INCLUDE_EXT_PUBLIC ${INCLUDE_EXT_PUBLIC} PARENT_SCOPE) # for jerry-port
 
 if(FEATURE_INIT_FINI)
   set(DEFINES_EXT ${DEFINES_EXT} ENABLE_INIT_FINI)
+endif()
+
+if(FEATURE_BT_DEBUGGER AND FEATURE_DEBUGGER)
+  set(DEFINES_EXT ${DEFINES_EXT} JERRY_BT_DEBUGGER)
 endif()
 
 # Source directories
@@ -49,3 +57,7 @@ target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
 install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
 install(DIRECTORY ${INCLUDE_EXT_PUBLIC}/ DESTINATION include)
+
+if(FEATURE_BT_DEBUGGER)
+  target_link_libraries(${JERRY_EXT_NAME} -lbluetooth)
+endif()

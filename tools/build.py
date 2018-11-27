@@ -110,6 +110,8 @@ def get_arguments():
                          help='enable external context (%(choices)s)')
     coregrp.add_argument('--jerry-debugger', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='enable the jerry debugger (%(choices)s)')
+    coregrp.add_argument('--jerry-bt-debugger', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable the jerry bluetooth debugger (%(choices)s)')
     coregrp.add_argument('--js-parser', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='enable js-parser (%(choices)s)')
     coregrp.add_argument('--line-info', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -186,6 +188,7 @@ def generate_build_options(arguments):
     build_options_append('FEATURE_ERROR_MESSAGES', arguments.error_messages)
     build_options_append('FEATURE_EXTERNAL_CONTEXT', arguments.external_context)
     build_options_append('FEATURE_DEBUGGER', arguments.jerry_debugger)
+    build_options_append('FEATURE_BT_DEBUGGER', arguments.jerry_bt_debugger)
     build_options_append('FEATURE_JS_PARSER', arguments.js_parser)
     build_options_append('FEATURE_LINE_INFO', arguments.line_info)
     build_options_append('FEATURE_LOGGING', arguments.logging)

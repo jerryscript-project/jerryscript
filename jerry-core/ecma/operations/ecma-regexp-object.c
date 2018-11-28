@@ -218,8 +218,6 @@ ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**<
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (re_prototype_obj_p);
-
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
   /* Set the internal [[Class]] property */
@@ -259,9 +257,6 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
   ecma_object_t *object_p = ecma_create_object (re_prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
-
-  ecma_deref_object (re_prototype_obj_p);
-
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
 

@@ -103,7 +103,6 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
   const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (builtin_id);
   const lit_magic_string_id_t class_id = ecma_typedarray_helper_get_magic_string (builtin_id);
 
-  ecma_deref_object (proto_p);
 
   return ecma_op_typedarray_from (source,
                                   map_fn,

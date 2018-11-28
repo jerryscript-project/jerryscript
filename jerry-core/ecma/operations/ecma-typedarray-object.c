@@ -991,7 +991,6 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
       || !ecma_is_value_object (constructor_value)
       || !ecma_is_constructor (constructor_value))
   {
-    ecma_deref_object (proto_p);
     ecma_free_value (constructor_value);
     return ecma_raise_type_error (ECMA_ERR_MSG ("object.constructor is not a constructor."));
   }
@@ -1004,7 +1003,6 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
 
   if (ECMA_IS_VALUE_ERROR (constructor_prototype))
   {
-    ecma_deref_object (proto_p);
     return constructor_prototype;
   }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
@@ -1013,8 +1011,6 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
                                                                     proto_p,
                                                                     element_size_shift,
                                                                     class_id);
-
-  ecma_deref_object (proto_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   ecma_object_t *constructor_prototype_object_p = ecma_get_object_from_value (constructor_prototype);

@@ -169,14 +169,12 @@ ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< referenc
     else
     {
       /* 3.b. */
-      ecma_object_t *global_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+      ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
       ecma_value_t completion = ecma_op_object_put (global_object_p,
                                                     var_name_string_p,
                                                     value,
                                                     false);
-
-      ecma_deref_object (global_object_p);
 
       JERRY_ASSERT (ecma_is_value_boolean (completion));
 

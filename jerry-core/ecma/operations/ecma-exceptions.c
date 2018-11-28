@@ -137,8 +137,6 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
                                                        sizeof (ecma_extended_object_t),
                                                        ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (prototype_obj_p);
-
   ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
 
 #ifdef JERRY_ENABLE_LINE_INFO

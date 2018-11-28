@@ -222,8 +222,6 @@ ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p,
                                                 ecma_typedarray_helper_get_shift_size (builtin_id),
                                                 ecma_typedarray_helper_get_magic_string (builtin_id));
 
-  ecma_deref_object (prototype_obj_p);
-
   return val;
 } /* ecma_typedarray_helper_dispatch_construct */
 

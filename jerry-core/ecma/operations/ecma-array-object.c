@@ -95,8 +95,6 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_deref_object (array_prototype_object_p);
-
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_ARRAY type.
    *

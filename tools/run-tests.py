@@ -142,6 +142,8 @@ JERRY_BUILDOPTIONS = [
                 platform.system() != 'Linux' or (platform.machine() != 'i386' and platform.machine() != 'x86_64'),
                 '-m32 is only supported on x86[-64]-linux')
            ),
+    Options('buildoption_test-no_lcache_prophashmap',
+            ['--compile-flag=-DCONFIG_ECMA_LCACHE_DISABLE', '--compile-flag=-DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE']),
     Options('buildoption_test-external_context',
             ['--external-context=on']),
     Options('buildoption_test-shared_libs',

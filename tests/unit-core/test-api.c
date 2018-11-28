@@ -646,48 +646,6 @@ main (void)
   jerry_release_value (v_und);
   jerry_release_value (array_obj_val);
 
-  /* Test: init property descriptor */
-  jerry_property_descriptor_t prop_desc;
-  jerry_init_property_descriptor_fields (&prop_desc);
-  TEST_ASSERT (prop_desc.is_value_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable_defined == false);
-  TEST_ASSERT (prop_desc.is_writable == false);
-  TEST_ASSERT (prop_desc.is_enumerable_defined == false);
-  TEST_ASSERT (prop_desc.is_enumerable == false);
-  TEST_ASSERT (prop_desc.is_configurable_defined == false);
-  TEST_ASSERT (prop_desc.is_configurable == false);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-
-  /* Test: define own properties */
-  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "my_defined_property");
-  prop_desc.is_value_defined = true;
-  prop_desc.value = jerry_acquire_value (prop_name);
-  res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (!jerry_value_is_error (res));
-  TEST_ASSERT (jerry_value_is_boolean (res));
-  TEST_ASSERT (jerry_get_boolean_value (res));
-  jerry_release_value (res);
-  jerry_free_property_descriptor_fields (&prop_desc);
-
-  /* Test: get own property descriptor */
-  is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (is_ok);
-  TEST_ASSERT (prop_desc.is_value_defined == true);
-  TEST_ASSERT (jerry_value_is_string (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable == false);
-  TEST_ASSERT (prop_desc.is_enumerable == false);
-  TEST_ASSERT (prop_desc.is_configurable == false);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_release_value (prop_name);
-  jerry_free_property_descriptor_fields (&prop_desc);
-
   /* Test: object keys */
   res = jerry_get_object_keys (global_obj_val);
   TEST_ASSERT (!jerry_value_is_error (res));

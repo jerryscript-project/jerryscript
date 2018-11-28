@@ -666,7 +666,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-      bool is_class_constructor = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR);
+      bool is_class_constructor = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR) != 0;
 
       if (is_class_constructor && !ecma_op_function_has_construct_flag (arguments_list_p))
       {
@@ -674,8 +674,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
-      bool is_strict = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE);
-      bool is_no_lex_env = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED);
+      bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+      bool is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) != 0;
 
       /* 1. */
       if (!is_strict)
@@ -775,7 +775,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
 
-      is_no_lex_env = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED);
+      is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) != 0;
 
       ecma_object_t *local_env_p = scope_p;
 

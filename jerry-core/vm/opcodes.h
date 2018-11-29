@@ -79,9 +79,6 @@ ecma_value_t
 opfunc_instanceof (ecma_value_t left_value, ecma_value_t right_value);
 
 ecma_value_t
-opfunc_logical_not (ecma_value_t left_value);
-
-ecma_value_t
 opfunc_typeof (ecma_value_t left_value);
 
 void

@@ -2080,14 +2080,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_NOT:
         {
-          result = opfunc_logical_not (left_value);
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          *stack_top_p++ = result;
+          *stack_top_p++ = ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
+          JERRY_ASSERT (ecma_is_value_boolean (stack_top_p[-1]));
           goto free_left_value;
         }
         case VM_OC_BIT_NOT:

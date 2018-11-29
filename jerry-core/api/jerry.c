@@ -1811,7 +1811,7 @@ jerry_has_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_string (prop_name_val))
   {
-    return ecma_make_boolean_value (false);
+    return ECMA_VALUE_FALSE;
   }
 
   bool has_property = ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
@@ -1835,7 +1835,7 @@ jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_string (prop_name_val))
   {
-    return ecma_make_boolean_value (false);
+    return ECMA_VALUE_FALSE;
   }
 
   bool has_property = ecma_op_object_has_own_property (ecma_get_object_from_value (obj_val),

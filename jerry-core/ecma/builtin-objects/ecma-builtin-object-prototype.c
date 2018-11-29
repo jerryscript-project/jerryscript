@@ -192,7 +192,7 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**
   ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
 
   bool is_prototype_of = ecma_op_object_is_prototype_of (obj_p, v_obj_p);
-  return_value = is_prototype_of ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  return_value = ecma_make_boolean_value (is_prototype_of);
   ECMA_FINALIZE (v_obj_value);
 
   ECMA_FINALIZE (obj_value);

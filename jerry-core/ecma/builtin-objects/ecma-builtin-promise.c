@@ -341,7 +341,7 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   /* 3. */
   ecma_op_object_put (function_p,
                       already_called_str_p,
-                      ecma_make_boolean_value (true),
+                      ECMA_VALUE_TRUE,
                       false);
 
   ecma_string_t *str_index_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX);
@@ -500,7 +500,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
     /* l. */
     ecma_op_object_put (res_ele_p,
                         already_called_str_p,
-                        ecma_make_boolean_value (false),
+                        ECMA_VALUE_FALSE,
                         false);
     /* m. */
     ecma_op_object_put (res_ele_p,

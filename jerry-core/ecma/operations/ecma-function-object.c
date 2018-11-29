@@ -373,7 +373,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
   JERRY_ASSERT (prototype_obj_p != NULL);
 
-  bool result = false;
+  ecma_value_t result = ECMA_VALUE_FALSE;
 
   while (true)
   {
@@ -386,13 +386,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (v_obj_p == prototype_obj_p)
     {
-      result = true;
+      result = ECMA_VALUE_TRUE;
       break;
     }
   }
 
   ecma_deref_object (prototype_obj_p);
-  return ecma_make_boolean_value (result);
+  return result;
 } /* ecma_op_function_has_instance */
 
 

@@ -119,7 +119,7 @@ ecma_get_already_resolved_bool_value (ecma_value_t already_resolved) /**< the al
 
   JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL);
 
-  return ext_object_p->u.class_prop.u.value == ecma_make_boolean_value (true);
+  return ext_object_p->u.class_prop.u.value == ECMA_VALUE_TRUE;
 } /* ecma_get_already_resolved_bool_value */
 
 /**
@@ -421,7 +421,7 @@ ecma_promise_resolving_functions_t *
 ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promise object */
 {
   /* 1. */
-  ecma_value_t already_resolved = ecma_op_create_boolean_object (ecma_make_boolean_value (false));
+  ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
 
   ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
   ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
@@ -670,13 +670,13 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   /* 3. boolean true indicates "indentity" */
   if (!ecma_op_is_callable (on_fulfilled))
   {
-    on_fulfilled = ecma_make_boolean_value (true);
+    on_fulfilled = ECMA_VALUE_TRUE;
   }
 
   /* 4. boolean false indicates "thrower" */
   if (!ecma_op_is_callable (on_rejected))
   {
-    on_rejected = ecma_make_boolean_value (false);
+    on_rejected = ECMA_VALUE_FALSE;
   }
 
   /* 5-6. */

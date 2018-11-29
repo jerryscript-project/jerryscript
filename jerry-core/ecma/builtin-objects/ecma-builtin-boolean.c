@@ -66,7 +66,7 @@ ecma_builtin_boolean_dispatch_call (const ecma_value_t *arguments_list_p, /**< a
     arg_value = arguments_list_p[0];
   }
 
-  return ecma_op_to_boolean (arg_value) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  return ecma_make_boolean_value (ecma_op_to_boolean (arg_value));
 } /* ecma_builtin_boolean_dispatch_call */
 
 /**

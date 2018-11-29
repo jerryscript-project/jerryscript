@@ -1556,6 +1556,8 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
                                        CBC_PUSH_IDENT_REFERENCE,
                                        context_p->last_cbc.third_literal_index);
             }
+
+            parser_emit_cbc_ext (context_p, CBC_EXT_RESOLVE_BASE);
           }
         }
 

@@ -476,26 +476,8 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   bool is_call_prop = ((opcode - CBC_CALL) % 6) >= 3;
 
-  ecma_value_t this_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
-
-  if (is_call_prop)
-  {
-    this_value = stack_top_p[-3];
-
-    if (this_value == ECMA_VALUE_REGISTER_REF)
-    {
-      /* Lexical environment cannot be 'this' value. */
-      stack_top_p[-2] = ECMA_VALUE_UNDEFINED;
-      this_value = ECMA_VALUE_UNDEFINED;
-    }
-    else if (vm_get_implicit_this_value (&this_value))
-    {
-      ecma_free_value (stack_top_p[-3]);
-      stack_top_p[-3] = this_value;
-    }
-  }
-
+  ecma_value_t this_value = is_call_prop ? stack_top_p[-3] : ECMA_VALUE_UNDEFINED;
   ecma_value_t func_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
@@ -1976,6 +1958,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           *stack_top_p++ = result;
+          continue;
+        }
+        case VM_OC_RESOLVE_BASE_FOR_CALL:
+        {
+          ecma_value_t this_value = stack_top_p[-3];
+
+          if (this_value == ECMA_VALUE_REGISTER_REF)
+          {
+            /* Lexical environment cannot be 'this' value. */
+            stack_top_p[-2] = ECMA_VALUE_UNDEFINED;
+            stack_top_p[-3] = ECMA_VALUE_UNDEFINED;
+          }
+          else if (vm_get_implicit_this_value (&this_value))
+          {
+            ecma_free_value (stack_top_p[-3]);
+            stack_top_p[-3] = this_value;
+          }
+
           continue;
         }
         case VM_OC_PROP_DELETE:

@@ -286,12 +286,18 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1., 2. */
-  ECMA_TRY_CATCH (prim_first_converted_value,
-                  ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NUMBER),
-                  ret_value);
-  ECMA_TRY_CATCH (prim_second_converted_value,
-                  ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NUMBER),
-                  ret_value);
+  ecma_value_t prim_first_converted_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NUMBER);
+  if (ECMA_IS_VALUE_ERROR (prim_first_converted_value))
+  {
+    return prim_first_converted_value;
+  }
+
+  ecma_value_t prim_second_converted_value = ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NUMBER);
+  if (ECMA_IS_VALUE_ERROR (prim_second_converted_value))
+  {
+    ecma_free_value (prim_first_converted_value);
+    return prim_second_converted_value;
+  }
 
   const ecma_value_t px = left_first ? prim_first_converted_value : prim_second_converted_value;
   const ecma_value_t py = left_first ? prim_second_converted_value : prim_first_converted_value;
@@ -393,8 +399,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ret_value = ecma_make_boolean_value (is_px_less);
   }
 
-  ECMA_FINALIZE (prim_second_converted_value);
-  ECMA_FINALIZE (prim_first_converted_value);
+  ecma_free_value (prim_second_converted_value);
+  ecma_free_value (prim_first_converted_value);
 
   return ret_value;
 } /* ecma_op_abstract_relational_compare */

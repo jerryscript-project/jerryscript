@@ -250,7 +250,6 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
                               uint16_t flags) /**< flags */
 {
   JERRY_ASSERT (pattern_p != NULL);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
@@ -264,22 +263,20 @@ ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
 
   /* Compile bytecode. */
   const re_compiled_code_t *bc_p = NULL;
-  ECMA_TRY_CATCH (empty, re_compile_bytecode (&bc_p, pattern_p, flags), ret_value);
+  ecma_value_t ret_value = re_compile_bytecode (&bc_p, pattern_p, flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ecma_deref_object (object_p);
+    return ret_value;
+  }
+
+  JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
   /* Set [[Class]] and bytecode internal properties. */
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bc_p);
 
-  ret_value = ecma_make_object_value (object_p);
-
-  ECMA_FINALIZE (empty);
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    ecma_deref_object (object_p);
-  }
-
-  return ret_value;
+  return ecma_make_object_value (object_p);
 } /* ecma_op_create_regexp_object */
 
 /**
@@ -1280,7 +1277,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   const lit_utf8_byte_t *sub_str_p = NULL;
   uint8_t *bc_start_p = (uint8_t *) (bc_p + 1);
 
-  while (ecma_is_value_empty (ret_value))
+  while (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     if (index < 0 || index > (int32_t) input_str_len)
     {
@@ -1297,13 +1294,13 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     }
     else
     {
-      ECMA_TRY_CATCH (match_value, re_match_regexp (&re_ctx,
-                                                    bc_start_p,
-                                                    input_curr_p,
-                                                    &sub_str_p),
-                                                    ret_value);
+      ret_value = re_match_regexp (&re_ctx, bc_start_p, input_curr_p, &sub_str_p);
+      if (ECMA_IS_VALUE_ERROR (ret_value))
+      {
+        break;
+      }
 
-      if (ecma_is_value_true (match_value))
+      if (ecma_is_value_true (ret_value))
       {
         is_match = true;
         break;
@@ -1314,8 +1311,6 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
         lit_utf8_incr (&input_curr_p);
       }
       index++;
-
-      ECMA_FINALIZE (match_value);
     }
   }
 
@@ -1341,7 +1336,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   }
 
   /* 3. Fill the result array or return with 'undefiend' */
-  if (ecma_is_value_empty (ret_value))
+  if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     if (is_match)
     {

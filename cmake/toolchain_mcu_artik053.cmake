@@ -16,7 +16,9 @@ set(CMAKE_SYSTEM_NAME TizenRT)
 set(CMAKE_SYSTEM_PROCESSOR armv7l)
 set(CMAKE_SYSTEM_VERSION ARTIK053)
 
-set(FLAGS_COMMON_ARCH -mcpu=cortex-r4 -mfpu=vfpv3 -fno-builtin -fno-strict-aliasing -fomit-frame-pointer -fno-strength-reduce -Wall -Werror -Wshadow -Wno-error=conversion)
+set(FLAGS_COMMON_ARCH -mcpu=cortex-r4 -mthumb -mfpu=vfpv3
+                      -fno-builtin -fno-strict-aliasing -fomit-frame-pointer -fno-strength-reduce
+                      -Wall -Werror -Wshadow -Wno-error=conversion)
 
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
 set(CMAKE_C_COMPILER_WORKS TRUE)

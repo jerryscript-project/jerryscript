@@ -512,17 +512,15 @@ ecma_builtin_object_frozen_or_sealed_helper (ecma_value_t this_arg, /**< 'this' 
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg);
 
-    bool is_sealed_or_frozen;
-
     /* 3. */
     if (ecma_get_object_extensible (obj_p))
     {
-      is_sealed_or_frozen = false;
+      ret_value = ECMA_VALUE_FALSE;
     }
     else
     {
       /* the value can be updated in the loop below */
-      is_sealed_or_frozen = true;
+      ret_value = ECMA_VALUE_TRUE;
 
       /* 2. */
       ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
@@ -545,23 +543,20 @@ ecma_builtin_object_frozen_or_sealed_helper (ecma_value_t this_arg, /**< 'this' 
             && ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR
             && ecma_is_property_writable (property))
         {
-          is_sealed_or_frozen = false;
+          ret_value = ECMA_VALUE_FALSE;
           break;
         }
 
         /* 2.b for isSealed, 2.c for isFrozen */
         if (ecma_is_property_configurable (property))
         {
-          is_sealed_or_frozen = false;
+          ret_value = ECMA_VALUE_FALSE;
           break;
         }
       }
 
       ecma_free_values_collection (props_p, 0);
     }
-
-    /* 4. */
-    ret_value = is_sealed_or_frozen ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
   }
 
   return ret_value;
@@ -613,22 +608,14 @@ ecma_builtin_object_object_is_extensible (ecma_value_t this_arg, /**< 'this' arg
                                           ecma_value_t arg) /**< routine's argument */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (!ecma_is_value_object (arg))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
-  }
-  else
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-
-    bool extensible = ecma_get_object_extensible (obj_p);
-
-    ret_value = extensible ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
   }
 
-  return ret_value;
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg);
+  return ecma_make_boolean_value (ecma_get_object_extensible (obj_p));
 } /* ecma_builtin_object_object_is_extensible */
 
 /**

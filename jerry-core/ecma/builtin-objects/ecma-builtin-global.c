@@ -532,9 +532,7 @@ ecma_builtin_global_object_is_nan (ecma_value_t this_arg, /**< this argument */
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  bool is_nan = ecma_number_is_nan (arg_num);
-
-  ret_value = is_nan ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  ret_value = ecma_make_boolean_value (ecma_number_is_nan (arg_num));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -561,8 +559,7 @@ ecma_builtin_global_object_is_finite (ecma_value_t this_arg, /**< this argument 
 
   bool is_finite = !(ecma_number_is_nan (arg_num)
                      || ecma_number_is_infinity (arg_num));
-
-  ret_value = is_finite ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  ret_value = ecma_make_boolean_value (is_finite);
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 

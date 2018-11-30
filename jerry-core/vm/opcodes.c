@@ -68,20 +68,6 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 } /* vm_var_decl */
 
 /**
- * 'Logical NOT Operator' opcode handler.
- *
- * See also: ECMA-262 v5, 11.4.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-opfunc_logical_not (ecma_value_t left_value) /**< left value */
-{
-  return ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
-} /* opfunc_logical_not */
-
-/**
  * 'typeof' opcode handler.
  *
  * See also: ECMA-262 v5, 11.4.3

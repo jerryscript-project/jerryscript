@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 
 #include "debugger.h"
 #include "ecma-alloc.h"

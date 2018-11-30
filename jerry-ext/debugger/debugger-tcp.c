@@ -19,11 +19,11 @@
 
 #ifdef JERRY_DEBUGGER
 
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/socket.h>
+//#include <arpa/inet.h>
+//#include <errno.h>
+//#include <fcntl.h>
+//#include <unistd.h>
+//#include <sys/socket.h>
 
 /**
  * Implementation of transport over tcp/ip.

@@ -16,7 +16,8 @@
 #ifndef CLI_H
 #define CLI_H
 
-#include <string.h>
+//#include <string.h>
+#include "jerryscript-libc.h"
 
 /**
  * Command line option definition.

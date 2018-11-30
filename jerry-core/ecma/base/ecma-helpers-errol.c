@@ -36,7 +36,7 @@
  *   SOFTWARE.
  */
 
-#include <math.h>
+//#include <math.h>
 
 #include "ecma-helpers.h"
 

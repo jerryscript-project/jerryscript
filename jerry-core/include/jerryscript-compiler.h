@@ -16,6 +16,8 @@
 #ifndef JERRYSCRIPT_COMPILER_H
 #define JERRYSCRIPT_COMPILER_H
 
+#include "jerryscript-libc.h"
+
 #ifdef __cplusplus
 extern "C"
 {

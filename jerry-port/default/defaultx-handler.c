@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 
 #include "jerryscript-ext/handler.h"
 

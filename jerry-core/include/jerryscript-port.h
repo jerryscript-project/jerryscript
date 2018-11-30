@@ -16,9 +16,9 @@
 #ifndef JERRYSCRIPT_PORT_H
 #define JERRYSCRIPT_PORT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
+//#include <stdbool.h>
+//#include <stdint.h>
+//#include <stdio.h>
 
 #include "jerryscript-compiler.h"
 

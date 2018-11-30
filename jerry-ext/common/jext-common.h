@@ -16,8 +16,8 @@
 #ifndef JEXT_COMMON_H
 #define JEXT_COMMON_H
 
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 
 #include "jerryscript.h"
 #include "jerryscript-port.h"

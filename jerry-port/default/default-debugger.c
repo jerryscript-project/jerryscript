@@ -19,11 +19,11 @@
 #define _XOPEN_SOURCE 500
 #endif
 
-#ifdef HAVE_TIME_H
-#include <time.h>
-#elif defined (HAVE_UNISTD_H)
-#include <unistd.h>
-#endif /* HAVE_TIME_H */
+//#ifdef HAVE_TIME_H
+//#include <time.h>
+//#elif defined (HAVE_UNISTD_H)
+//#include <unistd.h>
+//#endif /* HAVE_TIME_H */
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"

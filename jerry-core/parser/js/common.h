@@ -16,12 +16,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <inttypes.h>
-//#include <setjmp.h>
-
 /** \addtogroup parser Parser
  * @{
  *

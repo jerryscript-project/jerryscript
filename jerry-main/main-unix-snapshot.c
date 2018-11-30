@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-//#include <assert.h>
-//#include <stdlib.h>
-//#include <string.h>
-
 #include "jerryscript.h"
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"

@@ -36,8 +36,6 @@
  *   SOFTWARE.
  */
 
-//#include <math.h>
-
 #include "ecma-helpers.h"
 
 /** \addtogroup ecma ECMA

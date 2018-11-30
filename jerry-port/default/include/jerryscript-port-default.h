@@ -16,8 +16,6 @@
 #ifndef JERRYSCRIPT_PORT_DEFAULT_H
 #define JERRYSCRIPT_PORT_DEFAULT_H
 
-//#include <stdbool.h>
-
 #include "jerryscript.h"
 #include "jerryscript-port.h"
 

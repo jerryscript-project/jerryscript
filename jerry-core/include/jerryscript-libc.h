@@ -3,7 +3,6 @@
 
 #if defined JERRY_USING_LIBDL && JERRY_USING_LIBDL
 
-//TODO
 //#define LIBC(sym) jerry_syms[JERY_SYM_##sym];
 #define LIBC(sym) sym
 

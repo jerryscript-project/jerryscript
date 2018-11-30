@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-//#include <math.h>
-
 #include "jerryscript-ext/arg.h"
 #include "jerryscript.h"
 

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-//#include <string.h>
 #include "jerryscript.h"
 #include "jerryscript-ext/module.h"
 

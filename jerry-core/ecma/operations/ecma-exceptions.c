@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-//#include <stdarg.h>
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"

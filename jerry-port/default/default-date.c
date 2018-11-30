@@ -13,13 +13,6 @@
  * limitations under the License.
  */
 
-//#ifdef HAVE_TM_GMTOFF
-//#include <time.h>
-//#endif /* HAVE_TM_GMTOFF */
-//#ifdef __GNUC__
-//#include <sys/time.h>
-//#endif /* __GNUC__ */
-
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 

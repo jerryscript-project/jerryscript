@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-//#include <math.h>
-
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"

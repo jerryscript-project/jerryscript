@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-//#include <math.h>
-
 #include "ecma-typedarray-object.h"
 #include "ecma-arraybuffer-object.h"
 #include "ecma-function-object.h"

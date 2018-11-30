@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-//#include <stdarg.h>
-
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 #include "jerryscript-debugger.h"

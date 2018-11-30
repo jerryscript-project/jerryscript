@@ -16,7 +16,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-property-hashmap.h"
-#include "jrt-libc-includes.h"
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA

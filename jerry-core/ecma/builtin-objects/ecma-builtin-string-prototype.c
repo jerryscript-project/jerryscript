@@ -28,7 +28,6 @@
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN

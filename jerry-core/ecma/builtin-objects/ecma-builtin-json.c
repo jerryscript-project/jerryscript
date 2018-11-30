@@ -27,7 +27,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "lit-globals.h"
 

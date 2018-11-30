@@ -20,7 +20,6 @@
 #include "jcontext.h"
 #include "jmem.h"
 #include "jrt-bit-fields.h"
-#include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"

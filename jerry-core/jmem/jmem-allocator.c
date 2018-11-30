@@ -19,7 +19,6 @@
 #include "ecma-globals.h"
 #include "jcontext.h"
 #include "jmem.h"
-#include "jrt-libc-includes.h"
 
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"

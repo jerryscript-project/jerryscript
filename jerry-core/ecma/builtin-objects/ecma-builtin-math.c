@@ -25,7 +25,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_DISABLE_MATH_BUILTIN
 

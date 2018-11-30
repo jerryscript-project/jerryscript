@@ -22,7 +22,6 @@
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
-#include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
 

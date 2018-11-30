@@ -24,7 +24,6 @@
 #include "ecma-property-hashmap.h"
 #include "jcontext.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
 #include "re-compiler.h"
 #include "vm-defines.h"

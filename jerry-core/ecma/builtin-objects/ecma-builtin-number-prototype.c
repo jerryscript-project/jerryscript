@@ -24,7 +24,6 @@
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 
 #ifndef CONFIG_DISABLE_NUMBER_BUILTIN
 

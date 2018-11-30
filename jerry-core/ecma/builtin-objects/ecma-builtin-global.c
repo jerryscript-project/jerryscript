@@ -27,7 +27,6 @@
 #include "lit-magic-strings.h"
 #include "lit-strings.h"
 #include "vm.h"
-#include "jrt-libc-includes.h"
 #include "jrt-bit-fields.h"
 
 #define ECMA_BUILTINS_INTERNAL

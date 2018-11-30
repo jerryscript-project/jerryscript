@@ -26,7 +26,6 @@
 #include "ecma-arraybuffer-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 #include "ecma-gc.h"
 #include "jmem.h"
 

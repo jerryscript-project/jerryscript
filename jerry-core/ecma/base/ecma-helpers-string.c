@@ -18,7 +18,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"
 

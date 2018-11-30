@@ -18,7 +18,6 @@
  */
 
 #include "jrt.h"
-#include "jrt-libc-includes.h"
 
 /*
  * Exit with specified status code.

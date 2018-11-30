@@ -20,7 +20,6 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "opcodes.h"
-#include "jrt-libc-includes.h"
 
 /** \addtogroup vm Virtual machine
  * @{

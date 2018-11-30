@@ -15,8 +15,6 @@
 
 #include "lit-strings.h"
 
-#include "jrt-libc-includes.h"
-
 /**
  * Validate utf-8 string
  *

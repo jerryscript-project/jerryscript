@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#ifndef JERRYSCRIPT_LIBC_H
+#ifndef JERRYSCRIPT_LIBC_H //{
 #define JERRYSCRIPT_LIBC_H
 
 #if defined JERRY_USING_LIBDL && JERRY_USING_LIBDL
@@ -65,4 +65,5 @@
 #endif /* __GNUC__ */
 
 #endif//JERRY_USING_LIBDL
-#endif//JERRYSCRIPT_LIBC_H
+
+#endif //} JERRYSCRIPT_LIBC_H

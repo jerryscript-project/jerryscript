@@ -958,13 +958,12 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   }
   else
   {
-    do
+    while (source_p < source_end_p
+           && source_p[0] >= LIT_CHAR_0
+           && source_p[0] <= LIT_CHAR_9)
     {
       source_p++;
     }
-    while (source_p < source_end_p
-           && source_p[0] >= LIT_CHAR_0
-           && source_p[0] <= LIT_CHAR_9);
 
     can_be_float = true;
   }

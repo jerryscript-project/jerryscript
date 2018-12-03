@@ -1472,6 +1472,74 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
 } /* ecma_builtin_typedarray_prototype_sort */
 
 /**
+ * The %TypedArray%.prototype object's 'find' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_find (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t predicate, /**< callback function */
+                                        ecma_value_t predicate_this_arg) /**< this argument for
+                                                                          *   invoke predicate */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  if (!ecma_op_is_callable (predicate))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  JERRY_ASSERT (ecma_is_value_object (predicate));
+  ecma_object_t *func_object_p = ecma_get_object_from_value (predicate);
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  uint32_t typedarray_length = ecma_typedarray_get_length (typedarray_p);
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (typedarray_p);
+  lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+
+  uint32_t buffer_index = 0;
+  uint32_t limit = typedarray_length * element_size;
+
+  for (uint32_t byte_index = 0;  byte_index < limit; byte_index += element_size)
+  {
+    JERRY_ASSERT (buffer_index < typedarray_length);
+    ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + byte_index, class_id);
+    ecma_value_t element_value = ecma_make_number_value (element_num);
+
+    ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index++), this_arg };
+
+    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
+    {
+      ecma_free_value (element_value);
+      return call_value;
+    }
+
+    bool call_result = ecma_op_to_boolean (call_value);
+    ecma_free_value (call_value);
+
+    if (call_result)
+    {
+      return element_value;
+    }
+
+    ecma_free_value (element_value);
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_builtin_typedarray_prototype_find */
+
+/**
  * @}
  * @}
  * @}

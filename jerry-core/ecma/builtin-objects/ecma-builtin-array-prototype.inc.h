@@ -60,6 +60,9 @@ ROUTINE (LIT_MAGIC_STRING_MAP, ecma_builtin_array_prototype_object_map, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_array_prototype_object_filter, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_REDUCE, ecma_builtin_array_prototype_object_reduce, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_reduce_right, NON_FIXED, 1)
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_array_prototype_object_find, 2, 1)
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
 
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 

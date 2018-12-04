@@ -369,6 +369,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+          case ECMA_PSEUDO_ARRAY_ITERATOR:
+          {
+            break;
+          }
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
           default:
           {
             JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
@@ -762,6 +768,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+        case ECMA_PSEUDO_ARRAY_ITERATOR:
+        {
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
         default:
         {
           JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);

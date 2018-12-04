@@ -664,8 +664,9 @@ typedef enum
   ECMA_PSEUDO_ARRAY_ARGUMENTS = 0, /**< Arguments object (10.6) */
   ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
   ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
+  ECMA_PSEUDO_ARRAY_ITERATOR = 3, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
 
-  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO /**< maximum value */
+  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_ARRAY_ITERATOR /**< maximum value */
 } ecma_pseudo_array_type_t;
 
 /**
@@ -685,6 +686,18 @@ typedef enum
                                                                                *   environment type */
   ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
+
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+/**
+ * Types of array iterators.
+ */
+typedef enum
+{
+  ECMA_ARRAY_ITERATOR_KEYS, /**< List only key indices */
+  ECMA_ARRAY_ITERATOR_VALUES, /**< List only key values */
+  ECMA_ARRAY_ITERATOR_KEYS_VALUES, /**< List key indices and values */
+} ecma_array_iterator_type_t;
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
 
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
@@ -846,18 +859,21 @@ typedef struct
      */
     struct
     {
-      uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray*/
+      uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray, ArrayIterator */
       uint8_t extra_info; /**< extra information about the object.
-                           *   e.g. element_width_shift for typed arrays */
+                           *   e.g. element_width_shift for typed arrays,
+                           *        [[IterationKind]] property for %Iterator% */
       union
       {
         uint16_t length; /**< for arguments: length of names */
         uint16_t class_id; /**< for typedarray: the specific class name */
+        uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
       } u1;
       union
       {
         ecma_value_t lex_env_cp; /**< for arguments: lexical environment */
         ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
+        ecma_value_t iterated_value_cp; /**< for %Iterator%: [[IteratedObject]] property */
       } u2;
     } pseudo_array;
 

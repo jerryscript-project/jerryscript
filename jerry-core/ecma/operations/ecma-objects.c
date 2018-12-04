@@ -1829,6 +1829,10 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE)
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 #else /* JERRY_NDEBUG */
@@ -1871,6 +1875,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           return (lit_magic_string_id_t) ext_obj_p->u.pseudo_array.u1.class_id;
         }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+        case ECMA_PSEUDO_ARRAY_ITERATOR:
+        {
+          return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
         default:
         {
           JERRY_ASSERT (ext_obj_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);

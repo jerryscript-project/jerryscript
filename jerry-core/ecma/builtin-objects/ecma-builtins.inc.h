@@ -458,6 +458,21 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYMBOL,
                  symbol)
 
 #endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+/* The %IteratorPrototype% object (ECMA-262 v6, 25.1.2) */
+BUILTIN (ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         iterator_prototype)
+
+/* The %ArrayIteratorPrototype% object (ECMA-262 v6, 22.1.5.2) */
+BUILTIN (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         true,
+         array_iterator_prototype)
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
 
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,

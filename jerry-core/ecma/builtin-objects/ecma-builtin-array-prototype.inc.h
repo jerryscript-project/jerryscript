@@ -63,6 +63,12 @@ ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_array_prototype_object_r
 #ifndef CONFIG_DISABLE_ES2015_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_array_prototype_object_find, 2, 1)
 #endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_array_prototype_entries, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_array_prototype_values, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_array_prototype_keys, 0, 0)
+ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_array_prototype_symbol_iterator, 0, 0)
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
 
 #endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
 

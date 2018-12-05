@@ -224,7 +224,8 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
 
-  return vm_run (bytecode_p,
+  return vm_run (NULL,
+                 bytecode_p,
                  ecma_make_object_value (glob_obj_p),
                  ecma_get_global_environment (),
                  false,
@@ -288,7 +289,8 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     lex_env_p = strict_lex_env_p;
   }
 
-  ecma_value_t completion_value = vm_run (bytecode_data_p,
+  ecma_value_t completion_value = vm_run (NULL,
+                                          bytecode_data_p,
                                           this_binding,
                                           lex_env_p,
                                           parse_opts,
@@ -733,8 +735,16 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           else
           {
             is_immutable_binding = (self_reference == literal_start_p[value_index]);
-            lit_value = vm_construct_literal_object (frame_ctx_p,
-                                                     literal_start_p[value_index]);
+            if (is_immutable_binding)
+            {
+              lit_value = ecma_make_object_value ((ecma_object_t *) frame_ctx_p->func_obj_p);
+              ecma_ref_object ((ecma_object_t *) frame_ctx_p->func_obj_p);
+            }
+            else
+            {
+              lit_value = vm_construct_literal_object (frame_ctx_p,
+                                                       literal_start_p[value_index]);
+            }
           }
 
           if (literal_index < register_end)
@@ -3471,7 +3481,8 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  * @return ecma value
  */
 ecma_value_t
-vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data header */
+vm_run (const ecma_extended_object_t *func_obj_p, /**< function object */
+        const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data header */
         ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
         ecma_object_t *lex_env_p, /**< lexical environment to use */
         uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
@@ -3502,7 +3513,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
     frame_ctx.literal_start_p = literal_p;
     literal_p += args_p->literal_end;
   }
-
+  frame_ctx.func_obj_p = func_obj_p;
   frame_ctx.bytecode_header_p = bytecode_header_p;
   frame_ctx.byte_code_p = (uint8_t *) literal_p;
   frame_ctx.byte_code_start_p = (uint8_t *) literal_p;

@@ -716,7 +716,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
       }
 
-      ecma_value_t ret_value = vm_run (bytecode_data_p,
+      ecma_value_t ret_value = vm_run (ext_func_p,
+                                       bytecode_data_p,
                                        this_binding,
                                        local_env_p,
                                        ECMA_PARSE_NO_OPTS,
@@ -779,7 +780,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         JERRY_ASSERT (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED));
       }
 
-      ecma_value_t ret_value = vm_run (bytecode_data_p,
+      ecma_value_t ret_value = vm_run (NULL,
+                                       bytecode_data_p,
                                        arrow_func_p->this_binding,
                                        local_env_p,
                                        ECMA_PARSE_NO_OPTS,

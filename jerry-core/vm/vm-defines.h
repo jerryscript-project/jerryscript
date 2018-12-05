@@ -45,6 +45,7 @@ typedef const uint8_t *vm_instr_counter_t;
  */
 typedef struct vm_frame_ctx_t
 {
+  const ecma_extended_object_t *func_obj_p;           /**< currently executed fucntion */
   const ecma_compiled_code_t *bytecode_header_p;      /**< currently executed byte-code data */
   uint8_t *byte_code_p;                               /**< current byte code pointer */
   uint8_t *byte_code_start_p;                         /**< byte code start pointer */

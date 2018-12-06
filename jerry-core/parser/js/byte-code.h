@@ -626,6 +626,8 @@
               VM_OC_SUPER_PROP_REFERENCE) \
   CBC_OPCODE (CBC_EXT_CONSTRUCTOR_RETURN, CBC_NO_FLAG, -1, \
               VM_OC_CONSTRUCTOR_RET | VM_OC_GET_STACK) \
+  CBC_OPCODE (CBC_EXT_ERROR, CBC_NO_FLAG, 0, \
+              VM_OC_ERROR) \
   \
   /* Binary compound assignment opcodes with pushing the result. */ \
   CBC_EXT_BINARY_LVALUE_OPERATION (CBC_EXT_ASSIGN_ADD, \

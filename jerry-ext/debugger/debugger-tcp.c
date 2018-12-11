@@ -77,6 +77,7 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
 
   do
   {
+#ifdef __linux__
     ssize_t is_err = recv (tcp_p->tcp_socket, NULL, 0, MSG_PEEK);
 
     if (is_err == 0 && errno != EWOULDBLOCK)
@@ -86,6 +87,8 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
       jerryx_debugger_tcp_log_error (err_val);
       return false;
     }
+#endif /* __linux__ */
+
     ssize_t sent_bytes = send (tcp_p->tcp_socket, message_p, message_length, 0);
 
     if (sent_bytes < 0)

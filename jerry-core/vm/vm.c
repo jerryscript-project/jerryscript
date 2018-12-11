@@ -3240,7 +3240,8 @@ error:
                                   | JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
 
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-          && !(frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+          && !(frame_ctx_p->bytecode_header_p->status_flags
+               & (CBC_CODE_FLAGS_DEBUGGER_IGNORE | CBC_CODE_FLAGS_STATIC_FUNCTION))
           && !(JERRY_CONTEXT (debugger_flags) & dont_stop))
       {
         /* Save the error to a local value, because the engine enters breakpoint mode after,

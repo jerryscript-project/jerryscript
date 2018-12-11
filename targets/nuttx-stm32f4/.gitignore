@@ -1,0 +1,7 @@
+# Files generated / copied by the NuttX build
+.built
+.depend
+Make.dep
+*.c.obj
+*.o
+*.a

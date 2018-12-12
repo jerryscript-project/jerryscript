@@ -2404,6 +2404,106 @@ ecma_builtin_array_prototype_object_reduce_right (ecma_value_t this_arg, /**< th
   return ecma_builtin_array_reduce_from (this_arg, args, args_number, false);
 } /* ecma_builtin_array_prototype_object_reduce_right */
 
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+/**
+ * The Array.prototype object's 'find' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_find (ecma_value_t this_arg, /**< this argument */
+                                          ecma_value_t predicate, /**< callback function */
+                                          ecma_value_t predicate_this_arg) /**< this argument for
+                                                                            *   invoke predicate */
+{
+  /* 1. */
+  ecma_value_t obj_this = ecma_op_to_object (this_arg);
+
+  /* 2. */
+  if (ECMA_IS_VALUE_ERROR (obj_this))
+  {
+    return obj_this;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
+
+  /* 3 - 4. */
+  ecma_value_t len_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
+
+  if (ECMA_IS_VALUE_ERROR (len_value))
+  {
+    ecma_free_value (obj_this);
+    return len_value;
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
+
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
+  /* 5. */
+  if (!ecma_op_is_callable (predicate))
+  {
+    ecma_free_value (len_value);
+    ecma_free_value (obj_this);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  /* We already checked that predicate is callable, so it will always be an object. */
+  JERRY_ASSERT (ecma_is_value_object (predicate));
+  ecma_object_t *func_object_p = ecma_get_object_from_value (predicate);
+
+  /* 7 - 8. */
+  for (uint32_t index = 0; index < len && ecma_is_value_empty (ret_value); index++)
+  {
+    /* 8.a */
+    ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
+
+    /* 8.b - 8.c */
+    ECMA_TRY_CATCH (get_value, ecma_op_object_find (obj_p, index_str_p), ret_value);
+
+    if (ecma_is_value_found (get_value))
+    {
+      /* 8.d - 8.e */
+      uint32_t current_index = ecma_make_uint32_value (index);
+
+      ecma_value_t call_args[] = { get_value, current_index, obj_this };
+
+      ECMA_TRY_CATCH (call_value, ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3), ret_value);
+
+      if (ecma_op_to_boolean (call_value))
+      {
+        /* 8.f */
+        ret_value = ecma_copy_value (get_value);
+      }
+
+      ECMA_FINALIZE (call_value);
+    }
+
+    ECMA_FINALIZE (get_value);
+
+    ecma_deref_ecma_string (index_str_p);
+  }
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    /* 9. */
+    ret_value = ECMA_VALUE_UNDEFINED;
+  }
+
+  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
+  ecma_free_value (len_value);
+  ecma_free_value (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_prototype_object_find */
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
 /**
  * @}
  * @}

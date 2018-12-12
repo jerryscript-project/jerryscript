@@ -121,6 +121,8 @@ ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
 {
+  JERRY_ASSERT (ecma_is_lexical_environment (scope_p));
+
   /* 1., 4., 13. */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 

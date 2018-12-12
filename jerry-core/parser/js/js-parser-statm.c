@@ -413,7 +413,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   if (name_p->status_flags & LEXER_FLAG_INITIALIZED)
   {
-    if (!(name_p->status_flags & (LEXER_FLAG_FUNCTION_NAME | LEXER_FLAG_FUNCTION_ARGUMENT)))
+    if (!(name_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
     {
       /* Overwrite the previous initialization. */
       ecma_compiled_code_t *compiled_code_p;

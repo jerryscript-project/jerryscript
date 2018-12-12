@@ -889,6 +889,52 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
   uint16_t literal1 = 0;
   uint16_t literal2 = 0;
   uint16_t function_literal_index;
+  int32_t function_name_index = -1;
+
+  if (status_flags & PARSER_IS_FUNC_EXPRESSION)
+  {
+#ifdef JERRY_DEBUGGER
+    parser_line_counter_t debugger_line = context_p->token.line;
+    parser_line_counter_t debugger_column = context_p->token.column;
+#endif /* JERRY_DEBUGGER */
+
+    if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+    {
+      lexer_next_token (context_p);
+
+      if (context_p->token.type != LEXER_LITERAL
+          || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+      {
+        parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+      }
+
+      parser_flush_cbc (context_p);
+
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+
+#ifdef JERRY_DEBUGGER
+      if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      {
+        jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
+                                    JERRY_DEBUGGER_NO_SUBTYPE,
+                                    context_p->lit_object.literal_p->u.char_p,
+                                    context_p->lit_object.literal_p->prop.length);
+
+        /* Reset token position for the function. */
+        context_p->token.line = debugger_line;
+        context_p->token.column = debugger_column;
+      }
+#endif /* JERRY_DEBUGGER */
+
+      if (context_p->token.literal_is_reserved
+          || context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
+      {
+        status_flags |= PARSER_HAS_NON_STRICT_ARG;
+      }
+
+      function_name_index = context_p->lit_object.index;
+    }
+  }
 
   if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
   {
@@ -930,6 +976,12 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
     parser_emit_cbc_literal (context_p,
                              CBC_PUSH_LITERAL,
                              function_literal_index);
+
+    if (function_name_index != -1)
+    {
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_NAMED_FUNC_EXPRESSION);
+      context_p->last_cbc.value = (uint16_t) function_name_index;
+    }
   }
 
   context_p->last_cbc.literal_type = LEXER_FUNCTION_LITERAL;

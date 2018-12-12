@@ -232,17 +232,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
           if (literal_p->status_flags & LEXER_FLAG_INITIALIZED)
           {
-            if (literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME)
-            {
-              JERRY_ASSERT (literal_p == PARSER_GET_LITERAL (0));
-
-              status_flags |= PARSER_NAMED_FUNCTION_EXP;
-              context_p->status_flags = status_flags;
-
-              literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
-              context_p->literal_count++;
-            }
-
             if (literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
             {
               if ((status_flags & PARSER_ARGUMENTS_NEEDED)
@@ -460,14 +449,11 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       init_index = literal_index;
       literal_index++;
 
-      if (!(literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME))
-      {
-        lexer_literal_t *func_literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator);
+      lexer_literal_t *func_literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator);
 
-        JERRY_ASSERT (func_literal_p != NULL
-                      && func_literal_p->type == LEXER_FUNCTION_LITERAL);
-        func_literal_p->prop.index = init_index;
-      }
+      JERRY_ASSERT (func_literal_p != NULL
+                    && func_literal_p->type == LEXER_FUNCTION_LITERAL);
+      func_literal_p->prop.index = init_index;
     }
 
     /* A CBC_INITIALIZE_VAR instruction or part of a CBC_INITIALIZE_VARS instruction. */
@@ -547,7 +533,6 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
                               ecma_value_t *literal_pool_p, /**< start of literal pool */
                               uint16_t uninitialized_var_end, /**< end of the uninitialized var group */
                               uint16_t initialized_var_end, /**< end of the initialized var group */
-                              uint16_t const_literal_end, /**< end of the const literal group */
                               uint16_t literal_one_byte_limit) /**< maximum value of a literal
                                                                 *   encoded in one byte */
 {
@@ -599,12 +584,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
         literal_p->status_flags = (uint8_t) (literal_p->status_flags & ~LEXER_FLAG_INITIALIZED);
 
-
-        if (literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME)
-        {
-          init_index = const_literal_end;
-        }
-        else if (literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
+        if (literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
         {
           init_index = (uint16_t) (argument_count - 1);
         }
@@ -691,11 +671,7 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
 
       JERRY_ASSERT (literal_p->type == LEXER_IDENT_LITERAL);
 
-      if (literal_p->status_flags & LEXER_FLAG_FUNCTION_NAME)
-      {
-        init_index = const_literal_end;
-      }
-      else if (literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
+      if (literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
       {
         init_index = (uint16_t) (argument_count - 1);
 
@@ -1840,7 +1816,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
                                         literal_pool_p,
                                         uninitialized_var_end,
                                         initialized_var_end,
-                                        const_literal_end,
                                         literal_one_byte_limit);
 
   JERRY_ASSERT (dst_p == byte_code_p + initializers_length);
@@ -2132,12 +2107,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     resource_name_p[-1] = JERRY_CONTEXT (resource_name);
   }
 #endif /* JERRY_ENABLE_LINE_INFO */
-
-  if (context_p->status_flags & PARSER_NAMED_FUNCTION_EXP)
-  {
-    ECMA_SET_INTERNAL_VALUE_POINTER (literal_pool_p[const_literal_end],
-                                     compiled_code_p);
-  }
 
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -2613,56 +2582,16 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #endif /* PARSER_DUMP_BYTE_CODE */
 
 #ifdef JERRY_DEBUGGER
-  parser_line_counter_t debugger_line = context_p->token.line;
-  parser_line_counter_t debugger_column = context_p->token.column;
-#endif /* JERRY_DEBUGGER */
-
-  lexer_next_token (context_p);
-
-  if (context_p->status_flags & PARSER_IS_FUNC_EXPRESSION
-      && context_p->token.type == LEXER_LITERAL
-      && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
-  {
-    lexer_construct_literal_object (context_p,
-                                    &context_p->token.lit_location,
-                                    LEXER_IDENT_LITERAL);
-
-#ifdef JERRY_DEBUGGER
-    if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-    {
-      jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
-                                  JERRY_DEBUGGER_NO_SUBTYPE,
-                                  context_p->lit_object.literal_p->u.char_p,
-                                  context_p->lit_object.literal_p->prop.length);
-    }
-#endif /* JERRY_DEBUGGER */
-
-    /* The arguments object is created later than the binding to the
-     * function expression name, so there is no need to assign special flags. */
-    if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ARGUMENTS)
-    {
-      uint8_t lexer_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | LEXER_FLAG_FUNCTION_NAME;
-      context_p->lit_object.literal_p->status_flags |= lexer_flags;
-    }
-
-    if (context_p->token.literal_is_reserved
-        || context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
-    {
-      context_p->status_flags |= PARSER_HAS_NON_STRICT_ARG;
-    }
-
-    lexer_next_token (context_p);
-  }
-
-#ifdef JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && jerry_debugger_send_parse_function (debugger_line, debugger_column))
+      && jerry_debugger_send_parse_function (context_p->token.line, context_p->token.column))
   {
     /* This option has a high memory and performance costs,
      * but it is necessary for executing eval operations by the debugger. */
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
   }
 #endif /* JERRY_DEBUGGER */
+
+  lexer_next_token (context_p);
 
   if (context_p->token.type != LEXER_LEFT_PAREN)
   {

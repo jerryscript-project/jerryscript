@@ -63,13 +63,12 @@ typedef enum
   LEXER_FLAG_VAR = (1 << 0), /**< local identifier (var, function arg) */
   LEXER_FLAG_NO_REG_STORE = (1 << 1), /**< this local identifier cannot be stored in register */
   LEXER_FLAG_INITIALIZED = (1 << 2), /**< this local identifier is initialized with a value */
-  LEXER_FLAG_FUNCTION_NAME = (1 << 3), /**< this local identifier has a reference to the function itself */
-  LEXER_FLAG_FUNCTION_ARGUMENT = (1 << 4), /**< this local identifier is a function argument */
-  LEXER_FLAG_UNUSED_IDENT = (1 << 5), /**< this identifier is referenced by sub-functions,
+  LEXER_FLAG_FUNCTION_ARGUMENT = (1 << 3), /**< this local identifier is a function argument */
+  LEXER_FLAG_UNUSED_IDENT = (1 << 4), /**< this identifier is referenced by sub-functions,
                                        *   but not referenced by the currently parsed function */
-  LEXER_FLAG_SOURCE_PTR = (1 << 6), /**< the literal is directly referenced in the source code
+  LEXER_FLAG_SOURCE_PTR = (1 << 5), /**< the literal is directly referenced in the source code
                                      *   (no need to allocate memory) */
-  LEXER_FLAG_LATE_INIT = (1 << 7), /**< initialize this variable after the byte code is freed */
+  LEXER_FLAG_LATE_INIT = (1 << 6), /**< initialize this variable after the byte code is freed */
 } lexer_literal_status_flags_t;
 
 /**

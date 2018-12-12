@@ -120,6 +120,7 @@ typedef enum
   VM_OC_PUSH_LIT_POS_BYTE,       /**< push literal and number between 1 and 256 */
   VM_OC_PUSH_LIT_NEG_BYTE,       /**< push literal and number between -1 and -256 */
   VM_OC_PUSH_OBJECT,             /**< push object */
+  VM_OC_PUSH_NAMED_FUNC_EXPR,    /**< push named function expression */
   VM_OC_SET_PROPERTY,            /**< set property */
 #ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */

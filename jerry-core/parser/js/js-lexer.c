@@ -1742,34 +1742,32 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
   context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
 
-  if (literal_type == LEXER_IDENT_LITERAL)
+  if (literal_type == LEXER_IDENT_LITERAL
+      && (context_p->status_flags & PARSER_INSIDE_WITH)
+      && context_p->lit_object.literal_p->type == LEXER_IDENT_LITERAL)
   {
-    if ((context_p->status_flags & PARSER_INSIDE_WITH)
-        && context_p->lit_object.literal_p->type == LEXER_IDENT_LITERAL)
+    context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
+  }
+
+  if (literal_p->length == 4
+      && source_p[0] == LIT_CHAR_LOWERCASE_E
+      && source_p[3] == LIT_CHAR_LOWERCASE_L
+      && source_p[1] == LIT_CHAR_LOWERCASE_V
+      && source_p[2] == LIT_CHAR_LOWERCASE_A)
+  {
+    context_p->lit_object.type = LEXER_LITERAL_OBJECT_EVAL;
+  }
+
+  if (literal_p->length == 9
+      && source_p[0] == LIT_CHAR_LOWERCASE_A
+      && source_p[8] == LIT_CHAR_LOWERCASE_S
+      && memcmp (source_p + 1, "rgument", 7) == 0)
+  {
+    context_p->lit_object.type = LEXER_LITERAL_OBJECT_ARGUMENTS;
+    if (!(context_p->status_flags & PARSER_ARGUMENTS_NOT_NEEDED))
     {
+      context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED;
       context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
-    }
-
-    if (literal_p->length == 4
-        && source_p[0] == LIT_CHAR_LOWERCASE_E
-        && source_p[3] == LIT_CHAR_LOWERCASE_L
-        && source_p[1] == LIT_CHAR_LOWERCASE_V
-        && source_p[2] == LIT_CHAR_LOWERCASE_A)
-    {
-      context_p->lit_object.type = LEXER_LITERAL_OBJECT_EVAL;
-    }
-
-    if (literal_p->length == 9
-        && source_p[0] == LIT_CHAR_LOWERCASE_A
-        && source_p[8] == LIT_CHAR_LOWERCASE_S
-        && memcmp (source_p + 1, "rgument", 7) == 0)
-    {
-      context_p->lit_object.type = LEXER_LITERAL_OBJECT_ARGUMENTS;
-      if (!(context_p->status_flags & PARSER_ARGUMENTS_NOT_NEEDED))
-      {
-        context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED;
-        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
-      }
     }
   }
 

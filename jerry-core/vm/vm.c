@@ -714,17 +714,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   uint16_t register_end;
   ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
   bool is_strict = ((frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0);
-  ecma_value_t self_reference;
-
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
-  self_reference = 0;
-  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
-  {
-    ECMA_SET_INTERNAL_VALUE_POINTER (self_reference, bytecode_header_p);
-  }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
-  ECMA_SET_INTERNAL_VALUE_POINTER (self_reference, bytecode_header_p);
-#endif
 
   /* Prepare. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
@@ -793,7 +782,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t value_index;
           ecma_value_t lit_value;
-          bool is_immutable_binding = false;
 
           READ_LITERAL_INDEX (value_index);
 
@@ -803,7 +791,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            is_immutable_binding = (self_reference == literal_start_p[value_index]);
             lit_value = vm_construct_literal_object (frame_ctx_p,
                                                      literal_start_p[value_index]);
           }
@@ -816,29 +803,22 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-            if (JERRY_LIKELY (!is_immutable_binding))
+            vm_var_decl (frame_ctx_p, name_p);
+
+            ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
+
+            ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+                                                                            name_p,
+                                                                            is_strict,
+                                                                            lit_value);
+
+            JERRY_ASSERT (ecma_is_value_boolean (put_value_result)
+                          || ecma_is_value_empty (put_value_result)
+                          || ECMA_IS_VALUE_ERROR (put_value_result));
+
+            if (ECMA_IS_VALUE_ERROR (put_value_result))
             {
-              vm_var_decl (frame_ctx_p, name_p);
-
-              ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
-
-              ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
-                                                                              name_p,
-                                                                              is_strict,
-                                                                              lit_value);
-
-              JERRY_ASSERT (ecma_is_value_boolean (put_value_result)
-                            || ecma_is_value_empty (put_value_result)
-                            || ECMA_IS_VALUE_ERROR (put_value_result));
-
-              if (ECMA_IS_VALUE_ERROR (put_value_result))
-              {
-                ecma_free_value (JERRY_CONTEXT (error_value));
-              }
-            }
-            else
-            {
-              ecma_op_create_immutable_binding (frame_ctx_p->lex_env_p, name_p, lit_value);
+              ecma_free_value (JERRY_CONTEXT (error_value));
             }
 
             if (value_index >= register_end)
@@ -1163,6 +1143,28 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      ECMA_OBJECT_TYPE_GENERAL);
 
           *stack_top_p++ = ecma_make_object_value (obj_p);
+          continue;
+        }
+        case VM_OC_PUSH_NAMED_FUNC_EXPR:
+        {
+          ecma_object_t *func_p = ecma_get_object_from_value (left_value);
+
+          JERRY_ASSERT (ecma_get_object_type (func_p) == ECMA_OBJECT_TYPE_FUNCTION);
+
+          ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
+
+          JERRY_ASSERT (frame_ctx_p->lex_env_p == ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                                   ext_func_p->u.function.scope_cp));
+
+          ecma_object_t *name_lex_env = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
+
+          ecma_op_create_immutable_binding (name_lex_env, ecma_get_string_from_value (right_value), left_value);
+
+          ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.scope_cp, name_lex_env);
+
+          ecma_free_value (right_value);
+          ecma_deref_object (name_lex_env);
+          *stack_top_p++ = left_value;
           continue;
         }
 #ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER

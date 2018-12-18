@@ -1152,6 +1152,17 @@ lexer_next_token (parser_context_t *context_p) /**< context */
         return;
       }
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+      if (length >= 3
+          && context_p->source_p[1] == LIT_CHAR_DOT
+          && context_p->source_p[2] == LIT_CHAR_DOT)
+      {
+        context_p->token.type = LEXER_THREE_DOTS;
+        length = 3;
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
       context_p->token.type = LEXER_DOT;
       length = 1;
       break;

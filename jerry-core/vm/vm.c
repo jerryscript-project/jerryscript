@@ -3428,6 +3428,10 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   frame_ctx_p->stack_top_p = frame_ctx_p->registers_p + register_end;
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  uint32_t function_call_argument_count = arg_list_len;
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
   if (arg_list_len > argument_end)
   {
     arg_list_len = argument_end;
@@ -3449,6 +3453,19 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       *stack_p++ = ECMA_VALUE_UNDEFINED;
     }
   }
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_REST_PARAMETER)
+  {
+    JERRY_ASSERT (function_call_argument_count >= arg_list_len);
+    ecma_value_t new_array = ecma_op_create_array_object (arg_p + arg_list_len,
+                                                          function_call_argument_count - arg_list_len,
+                                                          false);
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+    frame_ctx_p->registers_p[argument_end] = new_array;
+    arg_list_len++;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 

@@ -1044,6 +1044,16 @@ parser_error_to_string (parser_error_t error) /**< error code */
       return "Duplicated function argument names are not allowed here.";
     }
 #endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+    case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
+    {
+      return "Rest parameter must be last formal parameter.";
+    }
+    case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
+    {
+      return "Rest parameter may not have a default initializer.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
     case PARSER_ERR_OBJECT_PROPERTY_REDEFINED:
     {
       return "Property of object literal redefined.";

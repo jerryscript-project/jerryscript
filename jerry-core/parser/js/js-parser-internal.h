@@ -45,6 +45,9 @@ typedef enum
   PARSER_IS_FUNC_EXPRESSION = (1u << 3),      /**< a function expression is parsed */
   PARSER_IS_PROPERTY_GETTER = (1u << 4),      /**< a property getter function is parsed */
   PARSER_IS_PROPERTY_SETTER = (1u << 5),      /**< a property setter function is parsed */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 6), /**< function has rest parameter */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
   PARSER_HAS_NON_STRICT_ARG = (1u << 7),      /**< the function has arguments which
                                                *   are not supported in strict mode */
   PARSER_ARGUMENTS_NEEDED = (1u << 8),        /**< arguments object must be created */

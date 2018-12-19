@@ -933,8 +933,6 @@ typedef struct
 
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
-#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
-
 /**
  * Map item count of chunks
  */
@@ -958,8 +956,6 @@ typedef struct
   ecma_value_t items[ECMA_MAP_OBJECT_ITEM_COUNT + 1]; /**< the last item is always a pointer to the next chunk,
                                                        *   the rest can be ECMA_VALUE_ARRAY_HOLE or any valid value. */
 } ecma_map_object_chunk_t;
-
-#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
 /**
  * Description of ECMA property descriptor
@@ -1535,6 +1531,21 @@ typedef struct
 } ecma_extended_typedarray_object_t;
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+
+/**
+ * Set item count of chunks
+ */
+#define ECMA_SET_OBJECT_ITEM_COUNT 5
+
+/**
+ * Description of Set objects.
+ */
+typedef ecma_map_object_t ecma_set_object_t;
+
+/**
+ * Description of Set memory chunk.
+ */
+typedef ecma_collection_chunk_t ecma_set_object_chunk_t;
 /**
  * @}
  * @}

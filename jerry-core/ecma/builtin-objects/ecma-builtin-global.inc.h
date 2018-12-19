@@ -205,6 +205,13 @@ OBJECT_VALUE (LIT_MAGIC_STRING_MAP_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 #endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
+#ifndef CONFIG_DISABLE_ES2015_SET_BUILTIN
+/* ECMA-262 v6, 23.2.1.1 */
+OBJECT_VALUE (LIT_MAGIC_STRING_SET_UL,
+              ECMA_BUILTIN_ID_SET,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+#endif /* !CONFIG_DISABLE_ES2015_SET_BUILTIN */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

@@ -441,6 +441,24 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_MAP,
 
 #endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
+#ifndef CONFIG_DISABLE_ES2015_SET_BUILTIN
+
+/* The Set prototype object (23.2.2.1) */
+BUILTIN (ECMA_BUILTIN_ID_SET_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         set_prototype)
+
+/* The Set routine (ECMA-262 v6, 23.2.1) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SET,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 set)
+
+#endif /* !CONFIG_DISABLE_ES2015_SET_BUILTIN */
+
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,

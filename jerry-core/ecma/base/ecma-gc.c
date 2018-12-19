@@ -39,6 +39,9 @@
 #ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
 #include "ecma-map-object.h"
 #endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_SET_BUILTIN
+#include "ecma-set-object.h"
+#endif /* !CONFIG_DISABLE_ES2015_SET_BUILTIN */
 
 /* TODO: Extract GC to a separate component */
 
@@ -667,6 +670,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_SET_BUILTIN
+        case LIT_MAGIC_STRING_SET_UL:
+        {
+          ecma_op_set_clear_set ((ecma_set_object_t *) object_p);
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SET_BUILTIN */
         default:
         {
           /* The undefined id represents an uninitialized class. */

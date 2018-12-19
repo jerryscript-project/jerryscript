@@ -29,11 +29,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_MAP,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-/* ECMA-262 v6, 23.1.3 */
-STRING_VALUE (LIT_MAGIC_STRING_NAME,
-              LIT_MAGIC_STRING_MAP_UL,
-              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
-
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_CLEAR, ecma_builtin_map_prototype_object_clear, 0, 0)

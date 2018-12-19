@@ -72,3 +72,11 @@ assert(m.size == 3);
 assert(m.get(1) === 8);
 assert(m.get(2) === 8);
 assert(m.get(3) === 8);
+
+var mapNameDesc = Object.getOwnPropertyDescriptor (Map, 'name');
+assert(mapNameDesc.value === "Map");
+assert(mapNameDesc.writable === false);
+assert(mapNameDesc.enumerable === false);
+assert(mapNameDesc.configurable === true);
+
+assert(Map.prototype.name === undefined);

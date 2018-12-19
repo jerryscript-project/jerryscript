@@ -29,6 +29,11 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_FIXED)
 
+/* ECMA-262 v6, 23.1 */
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_MAP_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 /* Object properties:
  *  (property name, object pointer getter) */
 

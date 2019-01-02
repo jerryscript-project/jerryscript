@@ -915,19 +915,15 @@ static ecma_value_t ecma_builtin_json_str_helper (const ecma_value_t arg1, /**< 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_object_t *obj_wrapper_p = ecma_op_create_object_object_noarg ();
   ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-  ecma_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
-                                                  empty_str_p,
-                                                  arg1,
-                                                  false);
+  ecma_value_t put_comp_val = ecma_builtin_helper_def_prop (obj_wrapper_p,
+                                                            empty_str_p,
+                                                            arg1,
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            false);
 
-  if (ecma_is_value_true (put_comp_val))
-  {
-    ret_value = ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context);
-  }
-  else
-  {
-    ret_value = ECMA_VALUE_UNDEFINED;
-  }
+  JERRY_ASSERT (ecma_is_value_true (put_comp_val));
+
+  ret_value = ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context);
 
   ecma_free_value (put_comp_val);
   ecma_deref_ecma_string (empty_str_p);

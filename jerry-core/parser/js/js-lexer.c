@@ -1764,7 +1764,8 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
       && memcmp (source_p + 1, "rgument", 7) == 0)
   {
     context_p->lit_object.type = LEXER_LITERAL_OBJECT_ARGUMENTS;
-    if (!(context_p->status_flags & PARSER_ARGUMENTS_NOT_NEEDED))
+    if (!(context_p->status_flags & PARSER_ARGUMENTS_NOT_NEEDED)
+        && literal_type == LEXER_IDENT_LITERAL)
     {
       context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED;
       context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;

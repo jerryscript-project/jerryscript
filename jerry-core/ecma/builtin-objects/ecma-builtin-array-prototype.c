@@ -1058,7 +1058,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
 
   /* Count properties with name that is array index less than len */
-  while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
+  while (ecma_value_p != NULL)
   {
     ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);

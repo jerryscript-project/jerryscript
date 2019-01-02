@@ -1725,12 +1725,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             left_value = ECMA_VALUE_UNDEFINED;
             right_value = ECMA_VALUE_UNDEFINED;
+          }
 
-            if (ECMA_IS_VALUE_ERROR (result))
-            {
-              goto error;
-            }
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
 
+          if (opcode < CBC_PRE_INCR)
+          {
             break;
           }
 

@@ -3112,7 +3112,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_NONE);
 
           jerry_fatal (ERR_DISABLED_BYTE_CODE);
-          JERRY_UNREACHABLE ();
         }
       }
 

@@ -118,34 +118,20 @@ set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} PARENT_SCOPE) # for tests/unit-
 
 # Sources
 # Jerry core
-file(GLOB SOURCE_CORE_API                       api/*.c)
-file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
-file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
-file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
-file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
-file(GLOB SOURCE_CORE_ECMA_OPERATIONS           ecma/operations/*.c)
-file(GLOB SOURCE_CORE_JCONTEXT                  jcontext/*.c)
-file(GLOB SOURCE_CORE_JMEM                      jmem/*.c)
-file(GLOB SOURCE_CORE_JRT                       jrt/*.c)
-file(GLOB SOURCE_CORE_LIT                       lit/*.c)
-file(GLOB SOURCE_CORE_PARSER_JS                 parser/js/*.c)
-file(GLOB SOURCE_CORE_PARSER_REGEXP             parser/regexp/*.c)
-file(GLOB SOURCE_CORE_VM                        vm/*.c)
-
-set(SOURCE_CORE_FILES
-    ${SOURCE_CORE_API}
-    ${SOURCE_CORE_DEBUGGER}
-    ${SOURCE_CORE_ECMA_BASE}
-    ${SOURCE_CORE_ECMA_BUILTINS}
-    ${SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY}
-    ${SOURCE_CORE_ECMA_OPERATIONS}
-    ${SOURCE_CORE_JCONTEXT}
-    ${SOURCE_CORE_JMEM}
-    ${SOURCE_CORE_JRT}
-    ${SOURCE_CORE_LIT}
-    ${SOURCE_CORE_PARSER_JS}
-    ${SOURCE_CORE_PARSER_REGEXP}
-    ${SOURCE_CORE_VM})
+file(GLOB SOURCE_CORE_FILES
+     api/*.c
+     debugger/*.c
+     ecma/base/*.c
+     ecma/builtin-objects/*.c
+     ecma/builtin-objects/typedarray/*.c
+     ecma/operations/*.c
+     jcontext/*.c
+     jmem/*.c
+     jrt/*.c
+     lit/*.c
+     parser/js/*.c
+     parser/regexp/*.c
+     vm/*.c)
 
 # All-in-one build
 if(ENABLE_ALL_IN_ONE)

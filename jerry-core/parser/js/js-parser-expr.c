@@ -560,6 +560,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
+  context_p->status_flags &= (uint32_t) ~PARSER_CLASS_HAS_SUPER;
+
   uint16_t class_ident_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
   if (is_statement)

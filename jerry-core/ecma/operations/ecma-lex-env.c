@@ -96,12 +96,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   }
   else
   {
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-    JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
-                  || lex_env_type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
-#else /* CONFIG_DISABLE_ES2015_CLASS */
     JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 

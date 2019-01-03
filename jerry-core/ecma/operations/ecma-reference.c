@@ -48,6 +48,14 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 
   while (lex_env_iter_p != NULL)
   {
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    if (ecma_get_lex_env_type (lex_env_iter_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    {
+      lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
+      JERRY_ASSERT (lex_env_iter_p != NULL);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
     if (ecma_op_has_binding (lex_env_iter_p, name_p))
     {
       return lex_env_iter_p;

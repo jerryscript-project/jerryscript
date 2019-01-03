@@ -1407,7 +1407,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
             || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
           && context_p->status_flags & (PARSER_CLASS_HAS_SUPER | PARSER_IS_ARROW_FUNCTION))
       {
-        if (!LEXER_IS_BINARY_OP_TOKEN (context_p->stack_top_uint8))
+        if (!LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8))
         {
           context_p->status_flags |= PARSER_CLASS_SUPER_PROP_REFERENCE;
         }

@@ -262,7 +262,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       ret_value = next_token_result;
       break;
     }
-    JERRY_ASSERT (next_token_result == ECMA_VALUE_EMPTY);
+    JERRY_ASSERT (ecma_is_value_empty (next_token_result));
 
     uint32_t new_atom_start_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 

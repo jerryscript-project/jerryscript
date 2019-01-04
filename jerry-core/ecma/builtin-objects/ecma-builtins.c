@@ -949,6 +949,32 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
                                ecma_length_t arguments_list_len) /**< length of arguments' list */
 {
   JERRY_ASSERT (builtin_object_id < ECMA_BUILTIN_ID__COUNT);
+
+  ecma_value_t padded_arguments_list_p[3] = { ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED };
+
+  if (arguments_list_len <= 2)
+  {
+    switch (arguments_list_len)
+    {
+      case 2:
+      {
+        padded_arguments_list_p[1] = arguments_list_p[1];
+        /* FALLTHRU */
+      }
+      case 1:
+      {
+        padded_arguments_list_p[0] = arguments_list_p[0];
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (arguments_list_len == 0);
+      }
+    }
+
+    arguments_list_p = padded_arguments_list_p;
+  }
+
   return ecma_builtin_routines[builtin_object_id] (builtin_routine_id,
                                                    this_arg_value,
                                                    arguments_list_p,

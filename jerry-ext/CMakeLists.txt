@@ -33,18 +33,12 @@ if(FEATURE_INIT_FINI)
 endif()
 
 # Source directories
-file(GLOB SOURCE_EXT_ARG        arg/*.c)
-file(GLOB SOURCE_EXT_COMMON     common/*.c)
-file(GLOB SOURCE_EXT_DEBUGGER   debugger/*.c)
-file(GLOB SOURCE_EXT_HANDLER    handler/*.c)
-file(GLOB SOURCE_EXT_MODULE     module/*.c)
-
-set(SOURCE_EXT
-    ${SOURCE_EXT_ARG}
-    ${SOURCE_EXT_COMMON}
-    ${SOURCE_EXT_DEBUGGER}
-    ${SOURCE_EXT_HANDLER}
-    ${SOURCE_EXT_MODULE})
+file(GLOB SOURCE_EXT
+     arg/*.c
+     common/*.c
+     debugger/*.c
+     handler/*.c
+     module/*.c)
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 

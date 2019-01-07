@@ -976,6 +976,21 @@ ecma_free_value_if_not_object (ecma_value_t value) /**< value description */
 } /* ecma_free_value_if_not_object */
 
 /**
+ * Free an ecma-value number
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_free_number (ecma_value_t value) /**< value description */
+{
+  JERRY_ASSERT (ecma_is_value_number (value));
+
+  if (ecma_is_value_float_number (value))
+  {
+    ecma_number_t *number_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+    ecma_dealloc_number (number_p);
+  }
+} /* ecma_free_number */
+
+/**
  * Get the literal id associated with the given ecma_value type.
  * This operation is equivalent to the JavaScript 'typeof' operator.
  *

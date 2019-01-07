@@ -507,6 +507,7 @@ void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only
 bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
 bool lexer_compare_raw_identifier_to_current (parser_context_t *context_p, const char *right_ident_p,
                                               size_t right_ident_length);
+uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 
 /**
  * @}

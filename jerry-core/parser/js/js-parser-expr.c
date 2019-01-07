@@ -49,12 +49,7 @@ static const uint8_t parser_binary_precedence_table[36] =
 static inline void
 parser_push_result (parser_context_t *context_p) /**< context */
 {
-  if (CBC_NO_RESULT_COMPOUND_ASSIGMENT (context_p->last_cbc_opcode))
-  {
-    context_p->last_cbc_opcode = (uint16_t) PARSER_TO_BINARY_OPERATION_WITH_RESULT (context_p->last_cbc_opcode);
-    parser_flush_cbc (context_p);
-  }
-  else if (CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode))
+  if (CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode))
   {
     JERRY_ASSERT (CBC_SAME_ARGS (context_p->last_cbc_opcode, context_p->last_cbc_opcode + 1));
 
@@ -2100,15 +2095,10 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
     }
     else if (LEXER_IS_BINARY_LVALUE_TOKEN (token))
     {
-      opcode = LEXER_BINARY_LVALUE_OP_TOKEN_TO_OPCODE (token);
-
-      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
-      {
-        JERRY_ASSERT (CBC_ARGS_EQ (opcode + CBC_BINARY_LVALUE_WITH_LITERAL,
-                                   CBC_HAS_LITERAL_ARG));
-        context_p->last_cbc_opcode = (uint16_t) (opcode + CBC_BINARY_LVALUE_WITH_LITERAL);
-        continue;
-      }
+      parser_stack_push_uint8 (context_p, CBC_ASSIGN);
+      parser_stack_push_uint8 (context_p, LEXER_ASSIGN);
+      parser_stack_push_uint8 (context_p, lexer_convert_binary_lvalue_token_to_binary (token));
+      continue;
     }
     else if (token == LEXER_LOGICAL_OR || token == LEXER_LOGICAL_AND)
     {
@@ -2304,12 +2294,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
   }
   else if (options & PARSE_EXPR_BLOCK)
   {
-    if (CBC_NO_RESULT_COMPOUND_ASSIGMENT (context_p->last_cbc_opcode))
-    {
-      context_p->last_cbc_opcode = PARSER_TO_BINARY_OPERATION_WITH_BLOCK (context_p->last_cbc_opcode);
-      parser_flush_cbc (context_p);
-    }
-    else if (CBC_NO_RESULT_BLOCK (context_p->last_cbc_opcode))
+    if (CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode))
     {
       JERRY_ASSERT (CBC_SAME_ARGS (context_p->last_cbc_opcode, context_p->last_cbc_opcode + 2));
       PARSER_PLUS_EQUAL_U16 (context_p->last_cbc_opcode, 2);
@@ -2317,11 +2302,6 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
     }
     else
     {
-      if (CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode))
-      {
-        JERRY_ASSERT (CBC_SAME_ARGS (context_p->last_cbc_opcode, context_p->last_cbc_opcode + 1));
-        context_p->last_cbc_opcode++;
-      }
       parser_emit_cbc (context_p, CBC_POP_BLOCK);
     }
   }

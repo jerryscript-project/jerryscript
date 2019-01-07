@@ -2568,6 +2568,47 @@ lexer_compare_raw_identifier_to_current (parser_context_t *context_p, /**< conte
 } /* lexer_compare_raw_identifier_to_current */
 
 /**
+ * Convert binary lvalue token to binary token
+ * e.g. += -> +
+ *      ^= -> ^
+ *
+ * @return binary token
+ */
+uint8_t
+lexer_convert_binary_lvalue_token_to_binary (uint8_t token) /**< binary lvalue token */
+{
+  JERRY_ASSERT (LEXER_IS_BINARY_LVALUE_TOKEN (token));
+  JERRY_ASSERT (token != LEXER_ASSIGN);
+
+  if (token <= LEXER_ASSIGN_MODULO)
+  {
+    return (uint8_t) (LEXER_ADD + (token - LEXER_ASSIGN_ADD));
+  }
+
+  if (token <= LEXER_ASSIGN_UNS_RIGHT_SHIFT)
+  {
+    return (uint8_t) (LEXER_LEFT_SHIFT + (token - LEXER_ASSIGN_LEFT_SHIFT));
+  }
+
+  switch (token)
+  {
+    case LEXER_ASSIGN_BIT_AND:
+    {
+      return LEXER_BIT_AND;
+    }
+    case LEXER_ASSIGN_BIT_OR:
+    {
+      return LEXER_BIT_OR;
+    }
+    default:
+    {
+      JERRY_ASSERT (token == LEXER_ASSIGN_BIT_XOR);
+      return LEXER_BIT_XOR;
+    }
+  }
+} /* lexer_convert_binary_lvalue_token_to_binary */
+
+/**
  * @}
  * @}
  * @}

@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libjerry-ext
+Description: JerryScript: lightweight JavaScript engine (extensions library)
+URL: https://github.com/pando-project/jerryscript
+Version: 1.0
+Requires.private: libjerry-core
+Libs: -L${libdir} -ljerry-ext
+Libs.private: @JERRY_EXT_PKGCONFIG_LIBS@
+Cflags: -I${includedir}

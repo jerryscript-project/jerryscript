@@ -47,9 +47,15 @@ target_include_directories(${JERRY_EXT_NAME} PRIVATE ${INCLUDE_EXT_PRIVATE})
 target_compile_definitions(${JERRY_EXT_NAME} PUBLIC ${DEFINES_EXT})
 target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
+set(JERRY_EXT_PKGCONFIG_LIBS)
+
 if(USING_MSVC AND FEATURE_DEBUGGER)
   target_link_libraries(${JERRY_EXT_NAME} ws2_32)
+  set(JERRY_EXT_PKGCONFIG_LIBS -lws2_32)
 endif()
 
+configure_file(libjerry-ext.pc.in libjerry-ext.pc @ONLY)
+
 install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-ext.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_EXT_PUBLIC}/ DESTINATION include)

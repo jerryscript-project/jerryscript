@@ -269,14 +269,22 @@ target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
 target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE_PUBLIC})
 target_include_directories(${JERRY_CORE_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
 
+set(JERRY_CORE_PKGCONFIG_REQUIRES)
+set(JERRY_CORE_PKGCONFIG_LIBS)
+
 if(JERRY_LIBM)
   target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
+  set(JERRY_CORE_PKGCONFIG_REQUIRES libjerry-libm)
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)
 foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
   target_link_libraries(${JERRY_CORE_NAME} ${EXT_LIB})
+  set(JERRY_CORE_PKGCONFIG_LIBS "${JERRY_CORE_PKGCONFIG_LIBS} -l${EXT_LIB}")
 endforeach()
 
+configure_file(libjerry-core.pc.in libjerry-core.pc @ONLY)
+
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-core.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_CORE_PUBLIC}/ DESTINATION include)

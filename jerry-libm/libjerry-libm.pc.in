@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include/jerry-libm
+
+Name: libjerry-libm
+Description: JerryScript: lightweight JavaScript engine (minimal math library)
+URL: https://github.com/pando-project/jerryscript
+Version: 1.0
+Libs: -L${libdir} -ljerry-libm
+Cflags: -I${includedir}

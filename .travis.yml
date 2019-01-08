@@ -1,13 +1,8 @@
 language: c
 
-# Default environment: Container-based (sudo-less) Ubuntu Trusty 14.04.
+# Default environment: Ubuntu Trusty 14.04.
 os: linux
 dist: trusty
-sudo: false
-
-# Default dependency installation step: nop intentionally.
-# Jobs can add their own dependencies by redefinig the 'install' stage in the matrix below.
-install: skip
 
 # Default job task: run tests as defined in the $OPT environment variable.
 # Jobs can redefine the 'script' stage in the matrix below.
@@ -48,7 +43,9 @@ matrix:
       env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --unittests"
       os: osx
-      install: tools/brew-install-deps.sh
+      addons:
+        homebrew:
+          packages: [cmake, cppcheck, vera++]
 
     - name: "Build Tests"
       env:

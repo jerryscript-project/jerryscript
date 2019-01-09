@@ -86,3 +86,39 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+// Checking behavior when values are unable to find
+var a = [undefined, undefined, undefined, undefined, undefined];
+for (var i = 0; i < a.length; i++) {
+  delete a[i];
+}
+a.indexOf("bar");
+
+// Checking behavior when this value is not coercible to object
+try {
+  Array.prototype.indexOf.call(null, "asd");
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// Checking behavior when length is not a number
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function () { throw new ReferenceError ("foo"); } });
+  var a = { length : o };
+  Array.prototype.indexOf.call(a, function () { });
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+}
+
+// Checking behavior when unable to get the first element
+try {
+  var a = [0, 1, 2, 3, 4];
+  Object.defineProperty(a, '0', { 'get' : function () { throw new ReferenceError; } });
+  Array.prototype.indexOf.call(a, "bar");
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+}

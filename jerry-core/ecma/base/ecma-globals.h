@@ -98,11 +98,12 @@ typedef enum
   ECMA_PARSE_NO_OPTS = 0, /**< no options passed */
   ECMA_PARSE_STRICT_MODE = (1u << 0), /**< enable strict mode */
   ECMA_PARSE_DIRECT_EVAL = (1u << 1), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
-  /* These three status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
+  /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
   ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 2), /**< a class constructor is being parsed (this value must be kept in
                                              *   in sync with PARSER_CLASS_CONSTRUCTOR) */
   ECMA_PARSE_HAS_SUPER = (1u << 3), /**< the current context has super reference */
-  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 4), /**< the current context is a static class method */
+  ECMA_PARSE_HAS_IMPL_SUPER = (1u << 4), /**< the current context has implicit parent class */
+  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 5), /**< the current context is a static class method */
 } ecma_parse_opts_t;
 
 /**

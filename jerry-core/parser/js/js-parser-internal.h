@@ -67,12 +67,13 @@ typedef enum
   PARSER_ARROW_PARSE_ARGS = (1u << 19),       /**< parse the argument list of an arrow function */
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-  /* These three status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
+  /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
   PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed (this value must be kept in
                                                *   in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
   PARSER_CLASS_HAS_SUPER = (1u << 21),        /**< class has super reference */
-  PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
-  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
+  PARSER_CLASS_IMPLICIT_SUPER = (1u << 22),   /**< class has implicit parent class */
+  PARSER_CLASS_STATIC_FUNCTION = (1u << 23),  /**< this function is a static class method */
+  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 24),  /**< super property call or assignment */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 } parser_general_flags_t;
 

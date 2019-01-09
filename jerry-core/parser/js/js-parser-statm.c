@@ -606,16 +606,25 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 void
 parser_parse_super_class_context_start (parser_context_t *context_p) /**< context */
 {
-  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXTENDS);
-
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXTENDS
+                || (context_p->status_flags & PARSER_CLASS_HAS_SUPER));
   parser_with_statement_t with_statement;
 
-  lexer_next_token (context_p);
+  if (context_p->token.type == LEXER_KEYW_EXTENDS)
+  {
+    lexer_next_token (context_p);
 
-  /* NOTE: Currently there is no proper way to check whether the currently parsed expression
-     is a valid lefthand-side expression or not, so we do not throw syntax error and parse
-     the class extending value as an expression. */
-  parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_NO_COMMA);
+    /* NOTE: Currently there is no proper way to check whether the currently parsed expression
+       is a valid lefthand-side expression or not, so we do not throw syntax error and parse
+       the class extending value as an expression. */
+    parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_NO_COMMA);
+  }
+  else
+  {
+    JERRY_ASSERT (context_p->status_flags & PARSER_CLASS_HAS_SUPER);
+    parser_emit_cbc (context_p, CBC_PUSH_NULL);
+    context_p->status_flags |= PARSER_CLASS_IMPLICIT_SUPER;
+  }
 
 #ifndef JERRY_NDEBUG
   PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
@@ -2022,7 +2031,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
           if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
           {
-            parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
+            {
+              parser_emit_cbc (context_p, CBC_PUSH_THIS);
+            }
+            else
+            {
+              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            }
             parser_emit_cbc (context_p, CBC_RETURN);
           }
           else
@@ -2164,7 +2180,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
           if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
           {
-            parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
+            {
+              parser_emit_cbc (context_p, CBC_PUSH_THIS);
+            }
+            else
+            {
+              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            }
             parser_emit_cbc (context_p, CBC_RETURN);
             parser_flush_cbc (context_p);
           }

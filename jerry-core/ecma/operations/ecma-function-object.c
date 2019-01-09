@@ -1053,7 +1053,7 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       /* Catch the special case when a the class extends value in null
          and the class has no explicit constructor to raise TypeError.*/
       JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
-      JERRY_ASSERT (ecma_get_object_prototype (func_obj_p) == NULL);
+      JERRY_ASSERT (ecma_get_object_prototype (func_obj_p) == ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Super constructor null is not a constructor."));
       break;

@@ -458,9 +458,8 @@ jerry_value_t jerry_create_number_nan (void);
 jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
 jerry_value_t jerry_create_promise (void);
-jerry_value_t jerry_create_regexp (const jerry_char_t *pattern, jerry_regexp_flags_t flags);
-jerry_value_t jerry_create_regexp_sz (const jerry_char_t *pattern, jerry_size_t pattern_size,
-                                      jerry_regexp_flags_t flags);
+jerry_value_t jerry_create_regexp (const jerry_char_t *pattern, uint16_t flags);
+jerry_value_t jerry_create_regexp_sz (const jerry_char_t *pattern, jerry_size_t pattern_size, uint16_t flags);
 jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);

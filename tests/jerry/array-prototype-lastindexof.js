@@ -69,3 +69,51 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+// Checking behavior when there are no arguments except "this"
+var a = "This is a sample text string to test this function";
+assert(Array.prototype.lastIndexOf.call(a) == -1);
+
+
+// Checking behavior when value is null
+try {
+  Array.prototype.lastIndexOf.call(null, "asd");
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// Checking behavior when length is 0
+assert(Array.prototype.lastIndexOf.call("", "chocolate cake") == -1);
+
+// Checking behavior when length is not a number
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function () { throw new ReferenceError ("foo"); } });
+  var a = { length : o };
+  Array.prototype.lastIndexOf.call(a, function () { });
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "foo");
+}
+
+// Checking behavior when the 3rd argument (start index) is not a number
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function () { throw new ReferenceError ("foo"); } });
+  Array.prototype.lastIndexOf.call("foo", "foo", o);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "foo");
+}
+
+// Checking behavior when the 3rd argument (start index) is greater than the length of the first argument
+assert(Array.prototype.lastIndexOf.call("foo", "foo", 999) == -1);
+
+// Checking behavior when the starting index is out of the range of the original array, so it points
+// to an empty space, as we modified the length of the array before
+var a = [1, 2, 3];
+Object.defineProperty(a, "length", {value: 10});
+assert(Array.prototype.lastIndexOf.call(a, "", 6) == -1);

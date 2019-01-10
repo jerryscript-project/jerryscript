@@ -110,9 +110,7 @@ matrix:
     - name: "SonarQube"
       addons:
         sonarcloud:
-          organization: "jerryscript-project"
-          token:
-            secure: "C1QD99nllAQndSDj4uIQPWCK0jBYrC5P0IrpdhfG7li7uvdzphUM++z3zkhYeeTJR3flw/cr8d9saYlbMjGw2eZ7AdJPFy4FJ1doBXD2amIuepaG1e829SLnJner9VA+d/8j28m7lZNtvZF5efbrS4KOicijNixmJy2PKG0K2035fs6MHLdywF8cJhyMaoRiMvYahIZEjXMvPBSgG1m4+A3PpzyN8XijwOT47cVtCLav4L21Mc7LcHsrc3LeyhtEJ+cs7Lx9WDQDwXX9iCRTA5ByqrXsS4rBV/N3lJI5M9p68Yj94Qy2OvVeCmUZ4ezwuuwkX00vBUk2f4eZx3oFAp973ekA8EGm/5qEvHVcbjHoHLbfUxsAKQHVoExXGdM5r1KeVgxLDT2FSQnBZLoxIrtGOUqFEOL4WX5YaQNoUKvYFO+CNvsMQkNg65QzLinRfqcH20KjzAsVeFwVI/j87J2VjooM8910savpw53iVBNPqmO/lG3kzFL7L2p1FeOuyEg9ANAbMhAXt3SL2srT0xni+ysg4Iwq+IkU+hkQWsvM8Voz+QJmiotFsi1Pzakcu3IOlT8lVVyn5q0z59YVDht/6if7acqkZ3X5vldeNIZYkImmYhMebScxVhzAa8AS6/81A+zJ8lW1+RWJQtP3uPM1+Dq18iFkPrCEMZwtoXI="
+          organization: "pando-project"
       script: tools/check-sonarqube.sh
       cache:
         directories:

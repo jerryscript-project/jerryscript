@@ -43,3 +43,99 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.8.1
+   Checking behavior when null is passed to the function */
+try {
+  Array.prototype.reverse.call(null);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.8.3.
+   Checking behavior when length is not a number */
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function () { throw new ReferenceError ("foo"); } });
+  var a = { length : o};
+  Array.prototype.reverse.call(a);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "foo");
+}
+
+/* ES v5.1 15.4.4.8.6.e.
+   Checking behavior when unable to get the last element */
+var obj = { reverse : Array.prototype.reverse, length : 4 };
+Object.defineProperty(obj, '3', { 'get' : function () {throw new ReferenceError ("foo"); } });
+
+try {
+  obj.reverse();
+  assert(false);
+} catch (e) {
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
+}
+
+/* ES v5.1 15.4.4.8.6.h.i.
+   Checking behavior when first 3 elements are not writable */
+try {
+  var arr = [0, 1, 2, 3, 4, 5, 6,,,,,,,,,0, 1, 2, 3, 4, 5, 6];
+  Object.defineProperty(arr, '0', { writable : false });
+  Object.defineProperty(arr, '1', { writable : false });
+  Object.defineProperty(arr, '2', { writable : false });
+  Array.prototype.reverse.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.8.6.h.ii.
+   Checking behavior when last 3 elements are not writable */
+try {
+  var arr = [0, 1, 2, 3, 4, 5, 6,,,,,,,,,0, 1, 2, 3, 4, 5, 6];
+  Object.defineProperty(arr, '20', { writable : false });
+  Object.defineProperty(arr, '21', { writable : false });
+  Object.defineProperty(arr, '22', { writable : false });
+  Array.prototype.reverse.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.8.6.i.i.
+   Checking behavior when first elements do not exist and the array is freezed */
+try {
+  var arr = [,,,,,,,,,,,,,,,,0, 1, 2, 3, 4, 5, 6];
+  arr = Object.freeze(arr);
+  Array.prototype.reverse.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.8.6.i.ii.
+   Checking behavior when unable to get the first 2 elements */
+var obj = { reverse : Array.prototype.reverse, length : 4 };
+Object.defineProperty(obj, '2', { value : 0 });
+Object.defineProperty(obj, '3', { value : 0 });
+try {
+  obj.reverse();
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.8.6.j.i.
+   Checking behavior when unable to get the last 2 elements */
+var obj = { reverse : Array.prototype.reverse, length : 4 };
+Object.defineProperty(obj, '0', { value : 0 });
+Object.defineProperty(obj, '1', { value : 0 });
+try {
+  obj.reverse();
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

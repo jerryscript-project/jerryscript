@@ -2172,8 +2172,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            result = ecma_make_int32_value ((int32_t) (left_integer + right_integer));
-            break;
+            *stack_top_p++ = ecma_make_int32_value ((int32_t) (left_integer + right_integer));
+            continue;
           }
 
           if (ecma_is_value_float_number (left_value)
@@ -2182,9 +2182,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = (ecma_get_float_from_value (left_value) +
                                        ecma_get_number_from_value (right_value));
 
-            result = ecma_update_float_number (left_value, new_value);
-            left_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (left_value, new_value);
+            ecma_free_number (right_value);
+            continue;
           }
 
           if (ecma_is_value_float_number (right_value)
@@ -2193,9 +2193,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) +
                                        ecma_get_float_from_value (right_value));
 
-            result = ecma_update_float_number (right_value, new_value);
-            right_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (right_value, new_value);
+            continue;
           }
 
           result = opfunc_addition (left_value, right_value);
@@ -2204,7 +2203,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_SUB:
         {
@@ -2219,8 +2220,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            result = ecma_make_int32_value ((int32_t) (left_integer - right_integer));
-            break;
+            *stack_top_p++ = ecma_make_int32_value ((int32_t) (left_integer - right_integer));
+            continue;
           }
 
           if (ecma_is_value_float_number (left_value)
@@ -2229,9 +2230,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = (ecma_get_float_from_value (left_value) -
                                        ecma_get_number_from_value (right_value));
 
-            result = ecma_update_float_number (left_value, new_value);
-            left_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (left_value, new_value);
+            ecma_free_number (right_value);
+            continue;
           }
 
           if (ecma_is_value_float_number (right_value)
@@ -2240,9 +2241,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) -
                                        ecma_get_float_from_value (right_value));
 
-            result = ecma_update_float_number (right_value, new_value);
-            right_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (right_value, new_value);
+            continue;
           }
 
           result = do_number_arithmetic (NUMBER_ARITHMETIC_SUBSTRACTION,
@@ -2253,7 +2253,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_MUL:
         {
@@ -2276,13 +2278,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                 && left_value != 0
                 && right_value != 0)
             {
-              result = ecma_integer_multiply (left_integer, right_integer);
-              break;
+              *stack_top_p++ = ecma_integer_multiply (left_integer, right_integer);
+              continue;
             }
 
             ecma_number_t multiply = (ecma_number_t) left_integer * (ecma_number_t) right_integer;
-            result = ecma_make_number_value (multiply);
-            break;
+            *stack_top_p++ = ecma_make_number_value (multiply);
+            continue;
           }
 
           if (ecma_is_value_float_number (left_value)
@@ -2291,9 +2293,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = (ecma_get_float_from_value (left_value) *
                                        ecma_get_number_from_value (right_value));
 
-            result = ecma_update_float_number (left_value, new_value);
-            left_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (left_value, new_value);
+            ecma_free_number (right_value);
+            continue;
           }
 
           if (ecma_is_value_float_number (right_value)
@@ -2302,9 +2304,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) *
                                        ecma_get_float_from_value (right_value));
 
-            result = ecma_update_float_number (right_value, new_value);
-            right_value = ECMA_VALUE_UNDEFINED;
-            break;
+            *stack_top_p++ = ecma_update_float_number (right_value, new_value);
+            continue;
           }
 
           result = do_number_arithmetic (NUMBER_ARITHMETIC_MULTIPLICATION,
@@ -2315,7 +2316,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_DIV:
         {
@@ -2330,7 +2333,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_MOD:
         {
@@ -2348,8 +2353,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
               if (mod_result != 0 || left_integer >= 0)
               {
-                result = ecma_make_integer_value (mod_result);
-                break;
+                *stack_top_p++ = ecma_make_integer_value (mod_result);
+                continue;
               }
             }
           }
@@ -2362,7 +2367,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_EQUAL:
         {
@@ -2413,8 +2420,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
-            result = left_value | right_value;
-            break;
+            *stack_top_p++ = left_value | right_value;
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_OR,
@@ -2425,7 +2432,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_BIT_XOR:
         {
@@ -2434,8 +2443,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
-            result = (left_value ^ right_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
-            break;
+            *stack_top_p++ = (left_value ^ right_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_XOR,
@@ -2446,7 +2455,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_BIT_AND:
         {
@@ -2455,8 +2466,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
-            result = left_value & right_value;
-            break;
+            *stack_top_p++ = left_value & right_value;
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_LOGIC_AND,
@@ -2467,7 +2478,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_LEFT_SHIFT:
         {
@@ -2478,8 +2491,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            result = ecma_make_int32_value ((int32_t) (left_integer << (right_integer & 0x1f)));
-            break;
+            *stack_top_p++ = ecma_make_int32_value ((int32_t) (left_integer << (right_integer & 0x1f)));
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_LEFT,
@@ -2490,7 +2503,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_RIGHT_SHIFT:
         {
@@ -2501,8 +2516,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            result = ecma_make_integer_value (left_integer >> (right_integer & 0x1f));
-            break;
+            *stack_top_p++ = ecma_make_integer_value (left_integer >> (right_integer & 0x1f));
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_RIGHT,
@@ -2513,7 +2528,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_UNS_RIGHT_SHIFT:
         {
@@ -2524,8 +2541,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             uint32_t left_uint32 = (uint32_t) ecma_get_integer_from_value (left_value);
             ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
-            result = ecma_make_uint32_value (left_uint32 >> (right_integer & 0x1f));
-            break;
+            *stack_top_p++ = ecma_make_uint32_value (left_uint32 >> (right_integer & 0x1f));
+            continue;
           }
 
           result = do_number_bitwise_logic (NUMBER_BITWISE_SHIFT_URIGHT,
@@ -2536,7 +2553,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             goto error;
           }
-          break;
+
+          *stack_top_p++ = result;
+          goto free_both_values;
         }
         case VM_OC_LESS:
         {

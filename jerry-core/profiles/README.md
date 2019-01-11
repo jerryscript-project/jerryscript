@@ -32,6 +32,7 @@ Alternatively, if you want to use a custom profile at
 # Turn off every ES2015 feature EXCEPT the arrow functions
 CONFIG_DISABLE_ES2015_BUILTIN
 CONFIG_DISABLE_ES2015_CLASS
+CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
 CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
 CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
 CONFIG_DISABLE_ES2015_MAP_BUILTIN
@@ -92,6 +93,8 @@ In JerryScript all of the features are enabled by default, so an empty profile f
   Disable the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
 * `CONFIG_DISABLE_ES2015_CLASS`:
   Disable the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
+* `CONFIG_DISABLE_ES2015_EXTENDED_LITERALS`:
+  Disable the [extended literals](https://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-mv) language element.
 * `CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER`:
   Disable the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
 * `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`:
@@ -111,5 +114,5 @@ In JerryScript all of the features are enabled by default, so an empty profile f
 * `CONFIG_DISABLE_ES2015`: Disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
   (equivalent to `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_CLASS`,
   `CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER`, `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`,
-  `CONFIG_DISABLE_ES2015_MAP_BUILTIN`, `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`,
+  `CONFIG_DISABLE_ES2015_EXTENDED_LITERALS`, `CONFIG_DISABLE_ES2015_MAP_BUILTIN`, `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`,
   `CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN`, `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`, `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`, and `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`).

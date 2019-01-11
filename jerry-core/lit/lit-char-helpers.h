@@ -214,6 +214,9 @@ bool lit_char_is_identifier_part_character (ecma_char_t chr);
 bool lit_char_is_octal_digit (ecma_char_t c);
 bool lit_char_is_decimal_digit (ecma_char_t c);
 bool lit_char_is_hex_digit (ecma_char_t c);
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+bool lit_char_is_binary_digit (ecma_char_t c);
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
 uint32_t lit_char_hex_to_int (ecma_char_t c);
 size_t lit_char_to_utf8_bytes (uint8_t *dst_p, ecma_char_t chr);
 size_t lit_char_get_utf8_length (ecma_char_t chr);

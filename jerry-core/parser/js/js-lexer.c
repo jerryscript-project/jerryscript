@@ -33,6 +33,9 @@
  * @{
  */
 
+JERRY_STATIC_ASSERT (LEXER_NUMBER_BINARY > LEXER_NUMBER_OCTAL,
+                     lexer_number_binary_must_be_greater_than_lexer_number_octal);
+
 /**
  * Check whether the UTF-8 intermediate is an octet or not
  */
@@ -902,6 +905,12 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   if (source_p[0] == LIT_CHAR_0
       && source_p + 1 < source_end_p)
   {
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+    bool is_extended_octal_literal = LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_O;
+#else /* CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
+    bool is_extended_octal_literal = false;
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
+
     if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_X)
     {
       context_p->token.extra_value = LEXER_NUMBER_HEXADECIMAL;
@@ -920,15 +929,31 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       while (source_p < source_end_p
              && lit_char_is_hex_digit (source_p[0]));
     }
-    else if (source_p[1] >= LIT_CHAR_0
-             && source_p[1] <= LIT_CHAR_7)
+    else if ((source_p[1] >= LIT_CHAR_0
+              && source_p[1] <= LIT_CHAR_7)
+             || is_extended_octal_literal)
     {
       context_p->token.extra_value = LEXER_NUMBER_OCTAL;
 
-      if (context_p->status_flags & PARSER_IS_STRICT)
+      if ((context_p->status_flags & PARSER_IS_STRICT) && !is_extended_octal_literal)
       {
         parser_raise_error (context_p, PARSER_ERR_OCTAL_NUMBER_NOT_ALLOWED);
       }
+
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+      if (is_extended_octal_literal)
+      {
+        context_p->source_p++;
+        context_p->token.lit_location.char_p++;
+        source_p += 2;
+
+        if (source_p >= source_end_p
+            || !lit_char_is_octal_digit (source_p[0]))
+        {
+          parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
+        }
+      }
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
 
       do
       {
@@ -950,6 +975,26 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     {
       parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
     }
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+    else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_B)
+    {
+      context_p->token.extra_value = LEXER_NUMBER_BINARY;
+      source_p += 2;
+
+      if (source_p >= source_end_p
+          || !lit_char_is_binary_digit (source_p[0]))
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_BIN_DIGIT);
+      }
+
+      do
+      {
+        source_p++;
+      }
+      while (source_p < source_end_p
+             && lit_char_is_binary_digit (source_p[0]));
+    }
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
     else
     {
       can_be_float = true;
@@ -1813,7 +1858,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   uint32_t literal_index = 0;
   prop_length_t length = context_p->token.lit_location.length;
 
-  if (context_p->token.extra_value != LEXER_NUMBER_OCTAL)
+  if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
   {
     num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
                                       length);
@@ -1822,12 +1867,21 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   {
     const uint8_t *src_p = context_p->token.lit_location.char_p;
     const uint8_t *src_end_p = src_p + length - 1;
+    ecma_number_t multiplier = 8;
+
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+    if (context_p->token.extra_value == LEXER_NUMBER_BINARY)
+    {
+      multiplier = 2;
+      src_p++;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
 
     num = 0;
     do
     {
       src_p++;
-      num = num * 8 + (ecma_number_t) (*src_p - LIT_CHAR_0);
+      num = num * multiplier + (ecma_number_t) (*src_p - LIT_CHAR_0);
     }
     while (src_p < src_end_p);
   }

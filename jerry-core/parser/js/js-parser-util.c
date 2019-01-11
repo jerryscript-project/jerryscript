@@ -774,6 +774,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid hexadecimal digit.";
     }
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+    case PARSER_ERR_INVALID_BIN_DIGIT:
+    {
+      return "Invalid binary digit.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
     case PARSER_ERR_INVALID_ESCAPE_SEQUENCE:
     {
       return "Invalid escape sequence.";

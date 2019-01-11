@@ -43,6 +43,9 @@ typedef enum
 
   PARSER_ERR_INVALID_CHARACTER,                       /**< unexpected character */
   PARSER_ERR_INVALID_HEX_DIGIT,                       /**< invalid hexadecimal digit */
+#ifndef CONFIG_DISABLE_ES2015_EXTENDED_LITERALS
+  PARSER_ERR_INVALID_BIN_DIGIT,                       /**< invalid binary digit */
+#endif /* !CONFIG_DISABLE_ES2015_EXTENDED_LITERALS */
   PARSER_ERR_INVALID_ESCAPE_SEQUENCE,                 /**< invalid escape sequence */
   PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE,         /**< invalid unicode escape sequence */
   PARSER_ERR_INVALID_IDENTIFIER_START,                /**< character cannot be start of an identifier */

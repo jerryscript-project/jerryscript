@@ -54,7 +54,7 @@ updateobjs:
 cleanlibs: updateobjs
 	rm -f $(OBJS)
 
-clean: cleanlibs
+clean:: cleanlibs
 
 .built: $(LIBS) updateobjs
 

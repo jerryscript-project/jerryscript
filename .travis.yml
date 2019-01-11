@@ -122,12 +122,11 @@ matrix:
           - '${HOME}/.sonar/cache'
 
     - name: "ESP8266 Build Test"
-      cache: ccache
       install: make -f ./targets/esp8266/Makefile.travis install-noapt
       script: make -f ./targets/esp8266/Makefile.travis script
       addons:
         apt:
-          packages: [gperf, texinfo, wget]
+          packages: [wget]
 
     - name: "Mbed OS 5/K64F Build Test"
       addons:

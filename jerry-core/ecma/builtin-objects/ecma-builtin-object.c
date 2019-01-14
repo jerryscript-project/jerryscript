@@ -922,6 +922,126 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg, /**< 'this' a
   return ret_value;
 } /* ecma_builtin_object_object_define_property */
 
+#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+/**
+ * The Object object's 'assign' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 19.1.2.1
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_assign (ecma_value_t this_arg, /**< 'this' argument */
+                                   const ecma_value_t arguments_list_p[], /**< arguments list */
+                                   ecma_length_t arguments_list_len) /**< number of arguments */
+{
+  JERRY_UNUSED (this_arg);
+
+  ecma_value_t target = arguments_list_len > 0 ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
+
+  /* 1. */
+  ecma_value_t to_value = ecma_op_to_object (target);
+
+  if (ECMA_IS_VALUE_ERROR (to_value))
+  {
+    return to_value;
+  }
+
+  ecma_object_t *to_obj_p = ecma_get_object_from_value (to_value);
+
+  /* 2. */
+  if (arguments_list_len == 1)
+  {
+    return to_value;
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  /* 4-5. */
+  for (uint32_t i = 1; i < arguments_list_len && ecma_is_value_empty (ret_value); i++)
+  {
+    ecma_value_t next_source = arguments_list_p[i];
+
+    /* 5.a */
+    if (ecma_is_value_undefined (next_source) || ecma_is_value_null (next_source))
+    {
+      continue;
+    }
+
+    /* 5.b.i */
+    ecma_value_t from_value = ecma_op_to_object (next_source);
+    /* null and undefied cases are handled above, so this must be a valid object */
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (from_value));
+
+    ecma_object_t *from_obj_p = ecma_get_object_from_value (from_value);
+
+    /* 5.b.iii */
+    /* TODO: extends this collection if symbols will be supported */
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_ENUMERABLE);
+
+    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+
+    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
+    {
+      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+
+      /* 5.c.i-ii */
+      ecma_property_descriptor_t prop_desc;
+
+      if (!ecma_op_object_get_own_property_descriptor (from_obj_p, property_name_p, &prop_desc))
+      {
+        continue;
+      }
+
+      /* 5.c.iii */
+      if (prop_desc.is_enumerable
+          && ((prop_desc.is_value_defined && !ecma_is_value_undefined (prop_desc.value))
+              || prop_desc.is_get_defined))
+      {
+        /* 5.c.iii.1 */
+        ecma_value_t prop_value = ecma_op_object_get (from_obj_p, property_name_p);
+
+        /* 5.c.iii.2 */
+        if (ECMA_IS_VALUE_ERROR (prop_value))
+        {
+          ret_value = prop_value;
+        }
+        else
+        {
+          /* 5.c.iii.3 */
+          ecma_value_t status = ecma_op_object_put (to_obj_p, property_name_p, prop_value, true);
+
+          /* 5.c.iii.4 */
+          if (ECMA_IS_VALUE_ERROR (status))
+          {
+            ret_value = status;
+          }
+        }
+
+        ecma_free_value (prop_value);
+        ecma_free_property_descriptor (&prop_desc);
+      }
+
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    }
+
+    ecma_deref_object (from_obj_p);
+    ecma_free_values_collection (props_p, 0);
+  }
+
+  /* 6. */
+  if (ecma_is_value_empty (ret_value))
+  {
+    return to_value;
+  }
+
+  ecma_deref_object (to_obj_p);
+  return ret_value;
+} /* ecma_builtin_object_object_assign */
+#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
 /**
  * @}
  * @}

@@ -53,6 +53,7 @@ ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_
 
 #ifndef CONFIG_DISABLE_ES2015_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL, ecma_builtin_object_object_set_prototype_of, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_ASSIGN, ecma_builtin_object_object_assign, NON_FIXED, 2)
 #endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -470,6 +470,14 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
     /* e. h. */
     ecma_string_t *index_to_str_p = ecma_new_ecma_string_from_uint32 (index);
     ecma_value_t array_item = ecma_op_object_get (array_p, index_to_str_p);
+
+    if (ECMA_IS_VALUE_ERROR (array_item))
+    {
+      ecma_deref_ecma_string (index_to_str_p);
+      ret = array_item;
+      break;
+    }
+
     ecma_value_t put_ret = ecma_op_object_put (ecma_get_object_from_value (value_array),
                                                index_to_str_p,
                                                undefined_val,

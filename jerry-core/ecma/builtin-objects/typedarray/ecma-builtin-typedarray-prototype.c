@@ -1027,6 +1027,7 @@ ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argumen
         ecma_value_t next_string_value = ecma_op_typedarray_get_to_string_at_index (obj_p, k);
         if (ECMA_IS_VALUE_ERROR (next_string_value))
         {
+          ecma_deref_ecma_string (return_string_p);
           ecma_free_value (first_value);
           ecma_free_value (separator_value);
           ecma_free_value (length_value);

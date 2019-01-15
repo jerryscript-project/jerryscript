@@ -50,7 +50,7 @@ LDDIR = $(SDK_PATH)/ld
 # 	so we use it instead of the original one from SDK.
 JERRY_LD_FILE = $(CURDIR)/ld/eagle.app.v6.ld
 
-CCFLAGS += -Os
+CCFLAGS += -Os -std=c99
 #CCFLAGS += -O0
 
 TARGET_LDFLAGS =					\
@@ -91,7 +91,6 @@ LINKFLAGS_eagle.app.v6 =				\
 	-llwip						\
 	-ldriver					\
 	-lmain						\
-	-lmesh						\
 	-lmirom						\
 	-lnet80211					\
 	-lnopoll					\

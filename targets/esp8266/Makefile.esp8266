@@ -18,7 +18,7 @@ BUILD_DIR  = build/obj-esp8266
 COPYTARGET = targets/esp8266/libs
 USBDEVICE  ?= /dev/ttyUSB0
 JERRYHEAP  ?= 20
-ESPTOOL    ?= /opt/Espressif/esptool-py/esptool.py
+ESPTOOL    ?= $(ESPTOOL_PATH)/esptool.py
 
 # compile flags
 ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=

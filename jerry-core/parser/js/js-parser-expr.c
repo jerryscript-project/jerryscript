@@ -1546,9 +1546,9 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
         else
         {
           if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
-              && context_p->last_cbc.literal_object_type == LEXER_LITERAL_OBJECT_EVAL)
+              && context_p->last_cbc.literal_object_type == LEXER_LITERAL_OBJECT_EVAL
+              && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
           {
-            JERRY_ASSERT (context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
             context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
             is_eval = true;
           }

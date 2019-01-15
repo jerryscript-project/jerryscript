@@ -204,9 +204,9 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
 
   ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
-  ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
-  ecma_fast_free_value (len_value);
+  ecma_extended_object_t *ext_array_p = (ecma_extended_object_t *) array_p;
+
+  ecma_length_t len = ext_array_p->u.array.length;
 
   ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
   ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
@@ -410,9 +410,9 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
 
   ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
-  ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
-  ecma_fast_free_value (len_value);
+  ecma_extended_object_t *ext_array_p = (ecma_extended_object_t *) array_p;
+
+  ecma_length_t len = ext_array_p->u.array.length;
 
   ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
   ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);

@@ -172,8 +172,7 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
 
   switch (builtin_routine_id)
   {
-#define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] \
-                                              : ECMA_VALUE_UNDEFINED)
+#define ROUTINE_ARG(n) (arguments_list[n - 1])
 #define ROUTINE_ARG_LIST_0
 #define ROUTINE_ARG_LIST_1 , ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)

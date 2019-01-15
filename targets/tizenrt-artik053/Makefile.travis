@@ -23,7 +23,7 @@ all:
 
 # Fetch Tizen RT repository.
 install:
-	git clone https://github.com/Samsung/TizenRT.git ../TizenRT -b 1.1_Public_Release
+	git clone https://github.com/Samsung/TizenRT.git ../TizenRT -b 2.0_Public_M2
 
 
 ## Targets for building Tizen RT with JerryScript.
@@ -32,7 +32,6 @@ install:
 script-add-jerryscript:
 	cp -R targets/tizenrt-artik053/apps/jerryscript/ ../TizenRT/apps/system/
 	cp -R targets/tizenrt-artik053/configs/jerryscript/ ../TizenRT/build/configs/artik053/
-	cp -R targets/tizenrt-artik053/romfs-1.1.patch ../TizenRT/
 
 # Build the JerryScript library.
 script-libjerry:
@@ -41,6 +40,5 @@ script-libjerry:
 # Configure and build the firmware (Tizen RT with JerryScript).
 script: script-add-jerryscript script-libjerry
 	cd ../TizenRT/os/tools && ./configure.sh artik053/jerryscript
-	cd ../TizenRT && patch -p1 <romfs-1.1.patch
 	mkdir -p ../TizenRT/build/output/res
 	$(MAKE) -C ../TizenRT/os

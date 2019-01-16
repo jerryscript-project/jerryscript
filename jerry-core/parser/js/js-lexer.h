@@ -112,7 +112,7 @@ typedef enum
   LEXER_LEFT_PAREN,              /**< "(" */
   LEXER_LEFT_SQUARE,             /**< "[" */
   LEXER_RIGHT_BRACE,             /**< "}" */
-  LEXER_RIGHT_PAREN,             /**<_")" */
+  LEXER_RIGHT_PAREN,             /**< ")" */
   LEXER_RIGHT_SQUARE,            /**< "]" */
   LEXER_DOT,                     /**< "." */
   LEXER_SEMICOLON,               /**< ";" */

@@ -1336,7 +1336,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_is_value_null (super_value))
           {
-            super_class_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+            super_class_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
+                                                0,
+                                                ECMA_OBJECT_TYPE_GENERAL);
           }
           else
           {
@@ -1541,7 +1543,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           else
           {
             ecma_object_t *super_class_p = ecma_op_resolve_super_reference_value (frame_ctx_p->lex_env_p);
-            *stack_top_p++ = ecma_fast_copy_value (ecma_make_object_value (super_class_p));
+            ecma_ref_object (super_class_p);
+            *stack_top_p++ = ecma_make_object_value (super_class_p);
           }
 
           continue;

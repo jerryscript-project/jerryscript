@@ -364,7 +364,8 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
   parser_emit_cbc (context_p, CBC_CREATE_OBJECT);
 
   bool super_called = false;
-  uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE | (context_p->status_flags & PARSER_CLASS_HAS_SUPER);
+  uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
+  status_flags |= context_p->status_flags & (PARSER_CLASS_HAS_SUPER | PARSER_CLASS_IMPLICIT_SUPER);
 
   while (true)
   {
@@ -472,12 +473,13 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
       }
 
+      uint16_t result_index = context_p->literal_count;
       lexer_literal_t *literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
       literal_p->type = LEXER_UNUSED_LITERAL;
       literal_p->status_flags = 0;
       literal_p->u.bytecode_p = parser_parse_function (context_p, constructor_status_flags);
       literal_p->type = LEXER_FUNCTION_LITERAL;
-      parser_emit_cbc_literal (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_SET_CLASS_LITERAL), context_p->literal_count);
+      parser_emit_cbc_literal (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_SET_CLASS_LITERAL), result_index);
       context_p->literal_count++;
       continue;
     }
@@ -555,8 +557,6 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
-  context_p->status_flags &= (uint32_t) ~PARSER_CLASS_HAS_SUPER;
-
   uint16_t class_ident_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
   if (is_statement)
@@ -582,7 +582,10 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     }
   }
 
-  if (context_p->token.type == LEXER_KEYW_EXTENDS)
+  bool create_class_env = (context_p->token.type == LEXER_KEYW_EXTENDS
+                           || (context_p->status_flags & PARSER_CLASS_HAS_SUPER));
+
+  if (create_class_env)
   {
     parser_parse_super_class_context_start (context_p);
   }
@@ -615,10 +618,10 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, class_ident_index);
   }
 
-  if (context_p->status_flags & PARSER_CLASS_HAS_SUPER)
+  if (create_class_env)
   {
     parser_parse_super_class_context_end (context_p, is_statement);
-    context_p->status_flags &= (uint32_t) ~PARSER_CLASS_HAS_SUPER;
+    context_p->status_flags &= (uint32_t) ~(PARSER_CLASS_HAS_SUPER | PARSER_CLASS_IMPLICIT_SUPER);
   }
 
   parser_flush_cbc (context_p);
@@ -1366,7 +1369,14 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 #ifndef CONFIG_DISABLE_ES2015_CLASS
       if (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags))
       {
-        parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+        if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
+        {
+          parser_emit_cbc (context_p, CBC_PUSH_THIS);
+        }
+        else
+        {
+          parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+        }
       }
       else
       {
@@ -1415,6 +1425,12 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
           break;
         }
 
+        if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
+        {
+          parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_STATIC_SUPER);
+          break;
+        }
+
         bool is_static = (context_p->status_flags & PARSER_CLASS_STATIC_FUNCTION) != 0;
         parser_emit_cbc_ext (context_p, is_static ? CBC_EXT_PUSH_STATIC_SUPER : CBC_EXT_PUSH_SUPER);
         break;
@@ -1422,6 +1438,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 
       if (lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN)
           && (context_p->status_flags & PARSER_CLASS_HAS_SUPER)
+          && !(context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
           && (context_p->status_flags & (PARSER_IS_ARROW_FUNCTION | PARSER_CLASS_CONSTRUCTOR)))
       {
         parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_SUPER);

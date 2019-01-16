@@ -31,6 +31,26 @@ jerryx_arg_js_iterator_pop (jerryx_arg_js_iterator_t *js_arg_iter_p) /**< the JS
 } /* jerryx_arg_js_iterator_pop */
 
 /**
+ * Restore the previous JS argument from the iterator.
+ * It will change the index and js_arg_p value in the iterator.
+ *
+ * @return the restored (now current) JS argument.
+ */
+jerry_value_t
+jerryx_arg_js_iterator_restore (jerryx_arg_js_iterator_t *js_arg_iter_p) /**< the JS arg iterator */
+{
+  if (js_arg_iter_p->js_arg_idx == 0)
+  {
+    return jerry_create_undefined ();
+  }
+
+  --js_arg_iter_p->js_arg_idx;
+  --js_arg_iter_p->js_arg_p;
+
+  return *js_arg_iter_p->js_arg_p;
+} /* jerryx_arg_js_iterator_restore */
+
+/**
  * Get the current JS argument from the iterator.
  *
  * Note:

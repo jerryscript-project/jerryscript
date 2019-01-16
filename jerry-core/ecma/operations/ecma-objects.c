@@ -734,6 +734,30 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
   return ecma_op_object_get (object_p, ecma_get_magic_string (property_id));
 } /* ecma_op_object_get_by_magic_id */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * [[Get]] operation of ecma object where the property is a well-known symbol
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
+                                 lit_magic_string_id_t property_id) /**< property symbol id */
+{
+  ecma_value_t symbol_value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_SYMBOL),
+                                                              property_id);
+  JERRY_ASSERT (ecma_is_value_symbol (symbol_value));
+
+  ecma_string_t *symbol_p = ecma_get_symbol_from_value (symbol_value);
+  ecma_value_t ret_value = ecma_op_object_get (object_p, symbol_p);
+
+  ecma_deref_ecma_string (symbol_p);
+
+  return ret_value;
+} /* ecma_op_object_get_by_symbol_id */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /**
  * [[Put]] ecma general object's operation
  *

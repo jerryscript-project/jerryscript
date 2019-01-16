@@ -46,6 +46,18 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX, /**< [[Index]] property */
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE, /**< [[Values]] property */
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT, /**< [[RemainingElement]] property */
+  /* List of well known symbols */
+  LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
+  LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well known symbol */
+  LIT_GLOBAL_SYMBOL_ITERATOR, /**< @@iterator well known symbol */
+  LIT_GLOBAL_SYMBOL_MATCH, /**< @@match well known symbol */
+  LIT_GLOBAL_SYMBOL_REPLACE, /**< @@replace well known symbol */
+  LIT_GLOBAL_SYMBOL_SEARCH, /**< @@search well known symbol */
+  LIT_GLOBAL_SYMBOL_SPECIES, /**< @@species well known symbol */
+  LIT_GLOBAL_SYMBOL_SPLIT, /**< @@split well known symbol */
+  LIT_GLOBAL_SYMBOL_TO_PRIMITIVE, /**< @@toPrimitive well known symbol */
+  LIT_GLOBAL_SYMBOL_TO_STRING_TAG, /**< @@toStringTag well known symbol */
+  LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< @@unscopables well known symbol */
   LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT,  /**< number of internal magic strings which will be used as
                                               *   property names, and their values need to be marked during gc. */
   LIT_INTERNAL_MAGIC_STRING_DELETED = LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT, /**< special value for

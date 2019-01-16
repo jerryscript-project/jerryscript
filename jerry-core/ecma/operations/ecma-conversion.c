@@ -29,6 +29,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-string-object.h"
+#include "ecma-symbol-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
 
@@ -224,7 +225,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
     return !ecma_string_is_empty (str_p);
   }
 
-  JERRY_ASSERT (ecma_is_value_object (value));
+  JERRY_ASSERT (ecma_is_value_object (value) || ECMA_ASSERT_VALUE_IS_SYMBOL (value));
 
   return true;
 } /* ecma_op_to_boolean */
@@ -258,6 +259,12 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
     ecma_string_t *str_p = ecma_get_string_from_value (value);
     return ecma_make_number_value (ecma_string_to_number (str_p));
   }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (ecma_is_value_symbol (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
   if (ecma_is_value_object (value))
   {
@@ -360,6 +367,85 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
 } /* ecma_get_number */
 
 /**
+ * ToString operation helper function.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.8
+ *
+ * @return NULL - if the conversion fails
+ *         ecma-string - otherwise
+ */
+static ecma_string_t *
+ecma_to_op_string_helper (ecma_value_t value) /**< ecma value */
+{
+  ecma_check_value_type_is_spec_defined (value);
+
+  if (JERRY_UNLIKELY (ecma_is_value_object (value)))
+  {
+    ecma_value_t prim_value = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING);
+
+    if (ECMA_IS_VALUE_ERROR (prim_value))
+    {
+      return NULL;
+    }
+
+    ecma_string_t *ret_string_p = ecma_to_op_string_helper (prim_value);
+
+    ecma_free_value (prim_value);
+
+    return ret_string_p;
+  }
+
+  if (ecma_is_value_string (value))
+  {
+    ecma_string_t *res_p = ecma_get_string_from_value (value);
+    ecma_ref_ecma_string (res_p);
+    return res_p;
+  }
+  else if (ecma_is_value_integer_number (value))
+  {
+    ecma_integer_value_t num = ecma_get_integer_from_value (value);
+
+    if (num < 0)
+    {
+      return ecma_new_ecma_string_from_number ((ecma_number_t) num);
+    }
+    else
+    {
+      return ecma_new_ecma_string_from_uint32 ((uint32_t) num);
+    }
+  }
+  else if (ecma_is_value_float_number (value))
+  {
+    ecma_number_t num = ecma_get_float_from_value (value);
+    return ecma_new_ecma_string_from_number (num);
+  }
+  else if (ecma_is_value_undefined (value))
+  {
+    return ecma_get_magic_string (LIT_MAGIC_STRING_UNDEFINED);
+  }
+  else if (ecma_is_value_null (value))
+  {
+    return ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
+  }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  else if (ecma_is_value_symbol (value))
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
+    return NULL;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+  JERRY_ASSERT (ecma_is_value_boolean (value));
+
+  if (ecma_is_value_true (value))
+  {
+    return ecma_get_magic_string (LIT_MAGIC_STRING_TRUE);
+  }
+
+  return ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
+} /* ecma_to_op_string_helper */
+
+/**
  * ToString operation.
  *
  * See also:
@@ -373,72 +459,39 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  if (JERRY_UNLIKELY (ecma_is_value_object (value)))
+  ecma_string_t *string_p = ecma_to_op_string_helper (value);
+
+  if (JERRY_UNLIKELY (string_p == NULL))
   {
-    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-    ECMA_TRY_CATCH (prim_value,
-                    ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING),
-                    ret_value);
-
-    ret_value = ecma_op_to_string (prim_value);
-
-    ECMA_FINALIZE (prim_value);
-
-    return ret_value;
+    /* Note: At this point the error has already been thrown. */
+    return ECMA_VALUE_ERROR;
   }
-  else
-  {
-    ecma_string_t *res_p = NULL;
 
-    if (ecma_is_value_string (value))
-    {
-      res_p = ecma_get_string_from_value (value);
-      ecma_ref_ecma_string (res_p);
-    }
-    else if (ecma_is_value_integer_number (value))
-    {
-      ecma_integer_value_t num = ecma_get_integer_from_value (value);
-
-      if (num < 0)
-      {
-        res_p = ecma_new_ecma_string_from_number ((ecma_number_t) num);
-      }
-      else
-      {
-        res_p = ecma_new_ecma_string_from_uint32 ((uint32_t) num);
-      }
-    }
-    else if (ecma_is_value_float_number (value))
-    {
-      ecma_number_t num = ecma_get_float_from_value (value);
-      res_p = ecma_new_ecma_string_from_number (num);
-    }
-    else if (ecma_is_value_undefined (value))
-    {
-      res_p = ecma_get_magic_string (LIT_MAGIC_STRING_UNDEFINED);
-    }
-    else if (ecma_is_value_null (value))
-    {
-      res_p = ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_boolean (value));
-
-      if (ecma_is_value_true (value))
-      {
-        res_p = ecma_get_magic_string (LIT_MAGIC_STRING_TRUE);
-      }
-      else
-      {
-        res_p = ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
-      }
-    }
-
-    return ecma_make_string_value (res_p);
-  }
+  return ecma_make_string_value (string_p);
 } /* ecma_op_to_string */
+
+/**
+ * ToPropertyName operation.
+ *
+ * @return NULL - if the conversion fails
+ *         ecma-string - otherwise
+ */
+ecma_string_t *
+ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
+{
+  ecma_check_value_type_is_spec_defined (value);
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (ecma_is_value_symbol (value))
+  {
+    ecma_string_t *symbol_p = ecma_get_symbol_from_value (value);
+    ecma_ref_ecma_string (symbol_p);
+    return symbol_p;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+  return ecma_to_op_string_helper (value);
+} /* ecma_op_to_prop_name */
 
 /**
  * ToObject operation.
@@ -466,6 +519,12 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   {
     return ecma_copy_value (value);
   }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  else if (ecma_is_value_symbol (value))
+  {
+    return ecma_op_create_symbol_object (value);
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   else
   {
     if (ecma_is_value_undefined (value)

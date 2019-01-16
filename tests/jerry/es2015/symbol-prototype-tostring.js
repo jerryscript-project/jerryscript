@@ -13,14 +13,22 @@
  * limitations under the License.
  */
 
-#undef SIMPLE_VALUE
-#undef NUMBER_VALUE
-#undef STRING_VALUE
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
-#undef SYMBOL_VALUE
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
-#undef OBJECT_VALUE
-#undef ROUTINE
-#undef ROUTINE_CONFIGURABLE_ONLY
-#undef ACCESSOR_READ_WRITE
-#undef ACCESSOR_READ_ONLY
+try {
+  Symbol.prototype.toString.call ('NonSymbolValue');
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
+try {
+  Symbol.prototype.toString.call ({});
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
+var foo = Symbol ('foo');
+assert (foo.toString () === "Symbol(foo)");
+
+var fooObj = Object (foo);
+assert (fooObj.toString () === "Symbol(foo)");

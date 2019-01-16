@@ -198,6 +198,42 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * Allocate new ecma-string and fill it with reference to the symbol descriptor
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_symbol_from_descriptor_string (ecma_value_t string_desc) /**< ecma-string */
+{
+  JERRY_ASSERT (!ecma_is_value_symbol (string_desc));
+
+  ecma_string_t *symbol_p = ecma_alloc_string ();
+  symbol_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_CONTAINER_SYMBOL;
+  symbol_p->u.symbol_descriptor = string_desc;
+  symbol_p->hash = (uint16_t) (((uintptr_t) symbol_p) >> ECMA_SYMBOL_HASH_SHIFT);
+  JERRY_ASSERT ((symbol_p->hash & ECMA_GLOBAL_SYMBOL_FLAG) == 0);
+
+  return symbol_p;
+} /* ecma_new_symbol_from_descriptor_string */
+
+/**
+ * Check whether an ecma-string contains an ecma-symbol
+ *
+ * @return true - if the ecma-string contains an ecma-symbol
+ *         false - otherwise
+ */
+bool
+ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string_p != NULL);
+
+  return (!ECMA_IS_DIRECT_STRING (string_p)
+          && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_SYMBOL);
+} /* ecma_prop_name_is_symbol */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /**
  * Allocate new ecma-string and fill it with characters from the utf8 string
  *
@@ -934,6 +970,13 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       ecma_free_value (string_p->u.lit_number);
       break;
     }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    case ECMA_STRING_CONTAINER_SYMBOL:
+    {
+      ecma_free_value (string_p->u.symbol_descriptor);
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC
@@ -1772,6 +1815,13 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
   {
     return false;
   }
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
+  {
+    return false;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
   if (string1_container >= ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {

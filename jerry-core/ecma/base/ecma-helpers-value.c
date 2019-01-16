@@ -311,6 +311,36 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
   return ((value & (ECMA_VALUE_TYPE_MASK - 0x4)) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * Check if the value is symbol.
+ *
+ * @return true - if the value contains symbol value,
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
+{
+  return (ecma_get_value_type_field (value) == ECMA_TYPE_SYMBOL);
+} /* ecma_is_value_symbol */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+/**
+ * Check if the value can be property name.
+ *
+ * @return true - if the value can be property name value,
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_is_value_prop_name (ecma_value_t value) /**< ecma value */
+{
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  return ecma_is_value_string (value) || ecma_is_value_symbol (value);
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+  return ecma_is_value_string (value);
+} /* ecma_is_value_prop_name */
+
 /**
  * Check if the value is direct ecma-string.
  *
@@ -383,6 +413,7 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
                 || ecma_is_value_boolean (value)
                 || ecma_is_value_number (value)
                 || ecma_is_value_string (value)
+                || ECMA_ASSERT_VALUE_IS_SYMBOL (value)
                 || ecma_is_value_object (value));
 } /* ecma_check_value_type_is_spec_defined */
 
@@ -531,6 +562,9 @@ inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT (ecma_string_p != NULL);
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  JERRY_ASSERT (!ecma_prop_name_is_symbol ((ecma_string_t *) ecma_string_p));
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
   if ((((uintptr_t) ecma_string_p) & ECMA_VALUE_TYPE_MASK) != 0)
   {
@@ -539,6 +573,42 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
 
   return ecma_pointer_to_ecma_value (ecma_string_p) | ECMA_TYPE_STRING;
 } /* ecma_make_string_value */
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * Symbol value constructor
+ *
+ * @return ecma-value representation of the string argument
+ */
+inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_make_symbol_value (const ecma_string_t *ecma_symbol_p) /**< symbol to reference in value */
+{
+  JERRY_ASSERT (ecma_symbol_p != NULL);
+  JERRY_ASSERT (ecma_prop_name_is_symbol ((ecma_string_t *) ecma_symbol_p));
+
+  return ecma_pointer_to_ecma_value (ecma_symbol_p) | ECMA_TYPE_SYMBOL;
+} /* ecma_make_symbol_value */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+/**
+ * Property-name value constructor
+ *
+ * @return ecma-value representation of a property name argument
+ */
+inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p) /**< property name to reference in value */
+{
+  JERRY_ASSERT (ecma_prop_name_p != NULL);
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (ecma_prop_name_is_symbol ((ecma_string_t *) ecma_prop_name_p))
+  {
+    return ecma_make_symbol_value (ecma_prop_name_p);
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+  return ecma_make_string_value (ecma_prop_name_p);
+} /* ecma_make_prop_name_value */
 
 /**
  * String value constructor
@@ -660,6 +730,39 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_string_from_value */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * Get pointer to ecma-string from ecma value
+ *
+ * @return the string pointer
+ */
+inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_get_symbol_from_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_is_value_symbol (value));
+
+  return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
+} /* ecma_get_symbol_from_value */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+/**
+ * Get pointer to a property name from ecma value
+ *
+ * @return the string pointer
+ */
+inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_get_prop_name_from_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_is_value_prop_name (value));
+
+  if ((value & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_DIRECT_STRING)
+  {
+    return (ecma_string_t *) (uintptr_t) value;
+  }
+
+  return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
+} /* ecma_get_prop_name_from_value */
+
 /**
  * Get pointer to ecma-object from ecma value
  *
@@ -737,6 +840,13 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
       ecma_ref_ecma_string (ecma_get_string_from_value (value));
       return value;
     }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    case ECMA_TYPE_SYMBOL:
+    {
+      ecma_ref_ecma_string (ecma_get_symbol_from_value (value));
+      return value;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
     case ECMA_TYPE_OBJECT:
     {
       ecma_ref_object (ecma_get_object_from_value (value));
@@ -927,7 +1037,13 @@ ecma_free_value (ecma_value_t value) /**< value description */
       ecma_deref_ecma_string (string_p);
       break;
     }
-
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    case ECMA_TYPE_SYMBOL:
+    {
+      ecma_deref_ecma_string (ecma_get_symbol_from_value (value));
+      break;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
     case ECMA_TYPE_OBJECT:
     {
       ecma_deref_object (ecma_get_object_from_value (value));
@@ -1027,6 +1143,12 @@ ecma_get_typeof_lit_id (ecma_value_t value) /**< input ecma value */
   {
     ret_value = LIT_MAGIC_STRING_STRING;
   }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  else if (ecma_is_value_symbol (value))
+  {
+    ret_value = LIT_MAGIC_STRING_SYMBOL;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   else
   {
     JERRY_ASSERT (ecma_is_value_object (value));

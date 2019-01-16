@@ -70,6 +70,13 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       property_name_p = ecma_get_string_from_value (property);
     }
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    if (ecma_is_value_symbol (property))
+    {
+      property_name_p = ecma_get_symbol_from_value (property);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
     if (property_name_p != NULL)
     {
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
@@ -101,14 +108,12 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     return error_value;
   }
 
-  ecma_value_t prop_to_string_result = ecma_op_to_string (property);
+  ecma_string_t *property_name_p = ecma_op_to_prop_name (property);
 
-  if (ECMA_IS_VALUE_ERROR (prop_to_string_result))
+  if (property_name_p == NULL)
   {
-    return prop_to_string_result;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_string_t *property_name_p = ecma_get_string_from_value (prop_to_string_result);
 
   ecma_value_t get_value_result = ecma_op_get_value_object_base (object, property_name_p);
 
@@ -158,22 +163,25 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     object = to_object;
   }
 
-  if (!ecma_is_value_string (property))
+  ecma_string_t *property_p;
+  ecma_object_t *object_p = ecma_get_object_from_value (object);
+
+  if (!ecma_is_value_prop_name (property))
   {
-    ecma_value_t to_string = ecma_op_to_string (property);
+    property_p = ecma_op_to_prop_name (property);
     ecma_fast_free_value (property);
 
-    if (ECMA_IS_VALUE_ERROR (to_string))
+    if (JERRY_UNLIKELY (property_p == NULL))
     {
-      ecma_free_value (object);
-      return to_string;
+      ecma_deref_object (object_p);
+      return ECMA_VALUE_ERROR;
     }
-
-    property = to_string;
+  }
+  else
+  {
+    property_p = ecma_get_prop_name_from_value (property);
   }
 
-  ecma_object_t *object_p = ecma_get_object_from_value (object);
-  ecma_string_t *property_p = ecma_get_string_from_value (property);
   ecma_value_t completion_value = ECMA_VALUE_EMPTY;
 
   if (!ecma_is_lexical_environment (object_p))
@@ -191,8 +199,8 @@ vm_op_set_value (ecma_value_t object, /**< base object */
                                                     is_strict);
   }
 
-  ecma_free_value (object);
-  ecma_free_value (property);
+  ecma_deref_object (object_p);
+  ecma_deref_ecma_string (property_p);
 
   return completion_value;
 } /* vm_op_set_value */
@@ -1608,6 +1616,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
 
               ecma_property_value_t *prop_value_p;
+
               prop_value_p = ecma_create_named_data_property (array_obj_p,
                                                               index_str_p,
                                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,

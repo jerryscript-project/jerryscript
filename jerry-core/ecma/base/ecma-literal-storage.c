@@ -57,6 +57,9 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 void
 ecma_finalize_lit_storage (void)
 {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  ecma_free_string_list (JERRY_CONTEXT (symbol_list_first_p));
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
   ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
 } /* ecma_finalize_lit_storage */

@@ -441,6 +441,24 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_MAP,
 
 #endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+
+/* The Symbol prototype object (ECMA-262 v6, 19.4.2.7) */
+BUILTIN (ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         symbol_prototype)
+
+/* The Symbol routine (ECMA-262 v6, 19.4.2.1) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYMBOL,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 symbol)
+
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,

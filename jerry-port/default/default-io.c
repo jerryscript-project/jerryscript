@@ -87,7 +87,7 @@ jerry_port_log (jerry_log_level_t level, /**< message log level */
     va_end (args);
     va_start (args, format);
 
-    char buffer[length + 1];
+    JERRY_VLA (char, buffer, length + 1);
     vsnprintf (buffer, (size_t) length + 1, format, args);
 
     fprintf (stderr, "%s", buffer);

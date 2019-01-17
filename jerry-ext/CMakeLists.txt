@@ -47,5 +47,9 @@ target_include_directories(${JERRY_EXT_NAME} PRIVATE ${INCLUDE_EXT_PRIVATE})
 target_compile_definitions(${JERRY_EXT_NAME} PUBLIC ${DEFINES_EXT})
 target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
+if(USING_MSVC AND FEATURE_DEBUGGER)
+  target_link_libraries(${JERRY_EXT_NAME} ws2_32)
+endif()
+
 install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
 install(DIRECTORY ${INCLUDE_EXT_PUBLIC}/ DESTINATION include)

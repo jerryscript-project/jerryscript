@@ -1347,11 +1347,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
-  const bool is_enumerable_only = (const bool) (opts & ECMA_LIST_ENUMERABLE);
-  const bool is_array_indices_only = (const bool) (opts & ECMA_LIST_ARRAY_INDICES);
-  const bool is_with_prototype_chain = (const bool) (opts & ECMA_LIST_PROTOTYPE);
+  const bool is_enumerable_only = (opts & ECMA_LIST_ENUMERABLE) != 0;
+  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
+  const bool is_with_prototype_chain = (opts & ECMA_LIST_PROTOTYPE) != 0;
 #ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
-  const bool is_symbols_only = (const bool) (opts & ECMA_LIST_SYMBOLS);
+  const bool is_symbols_only = (opts & ECMA_LIST_SYMBOLS) != 0;
 #endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;

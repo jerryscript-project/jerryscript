@@ -342,7 +342,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
   JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[obj_builtin_id] == NULL);
 
   ecma_builtin_descriptor_t builtin_desc = ecma_builtin_descriptors[obj_builtin_id];
-  ecma_builtin_id_t object_prototype_builtin_id = (ecma_builtin_id_t) builtin_desc >> ECMA_BUILTIN_PROTOTYPE_ID_SHIFT;
+  ecma_builtin_id_t object_prototype_builtin_id = (ecma_builtin_id_t) (builtin_desc >> ECMA_BUILTIN_PROTOTYPE_ID_SHIFT);
 
   ecma_object_t *prototype_obj_p;
 
@@ -360,7 +360,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
     JERRY_ASSERT (prototype_obj_p != NULL);
   }
 
-  ecma_object_type_t obj_type = (builtin_desc & ECMA_BUILTIN_OBJECT_TYPE_MASK);
+  ecma_object_type_t obj_type = (ecma_object_type_t) (builtin_desc & ECMA_BUILTIN_OBJECT_TYPE_MASK);
 
   bool is_extended_built_in = (obj_type == ECMA_OBJECT_TYPE_CLASS
                                || obj_type == ECMA_OBJECT_TYPE_ARRAY);

@@ -210,7 +210,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
         unsigned int pos = 0;
 
         /* 2. seek and print */
-        while (buffer[pos] != '\0')
+        while ((pos < JERRY_BUFFER_SIZE) && (buffer[pos] != '\0'))
         {
           if (buffer[pos] == '\n')
           {

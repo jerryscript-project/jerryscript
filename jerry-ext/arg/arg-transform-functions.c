@@ -182,8 +182,12 @@ jerryx_arg_helper_process_double (double *d, /**< [in, out] the number to be pro
       return rv; \
     } \
     jerry_release_value (rv); \
-    jerryx_arg_int_option_t *options_p = (jerryx_arg_int_option_t *) &c_arg_p->extra_info; \
-    rv = jerryx_arg_helper_process_double (&tmp, min, max, *options_p); \
+    union \
+    { \
+      jerryx_arg_int_option_t int_option; \
+      uintptr_t extra_info; \
+    } u = { .extra_info = c_arg_p->extra_info }; \
+    rv = jerryx_arg_helper_process_double (&tmp, min, max, u.int_option); \
     if (jerry_value_is_error (rv)) \
     { \
       return rv; \

@@ -54,3 +54,38 @@ try {
   assert (e.message === "foo");
   assert (e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.3.1.
+   Checking behavior when the function's this_argument is null */
+try {
+  Array.prototype.toLocaleString.call(null);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.3.2.
+   Checking behavior when length throws error */
+try {
+  var obj = {};
+  Object.defineProperty(obj, 'length', { 'get' : function () { throw new ReferenceError("foo"); } });
+  Array.prototype.toLocaleString.call(obj);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "foo");
+}
+
+/* ES v5.1 15.4.4.3.3.
+   Checking behavior when length is an object, which has a valueOf method that throws an error */
+var len = { };
+Object.defineProperty(len, 'valueOf', { 'get' : function () { throw new ReferenceError("vOf"); } });
+var obj = { toLocaleString : Array.prototype.toLocaleString, length : len };
+
+try {
+  obj.toLocaleString();
+  assert(false);
+} catch (e) {
+  assert(e.message === 'vOf');
+  assert(e instanceof ReferenceError);
+}

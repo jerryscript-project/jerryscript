@@ -61,3 +61,12 @@ try {
   assert (e.message === "foo");
   assert (e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.2.1.
+   Checking behavior when the function's this_argument is undefined */
+try {
+  Array.prototype.toString.call(undefined);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

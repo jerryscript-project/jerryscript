@@ -313,12 +313,13 @@ typedef struct jerry_context_t jerry_context_t;
  */
 typedef enum
 {
-  JERRY_BIN_OP_EQUAL = 0u,   /**< equal comparison (==) */
-  JERRY_BIN_OP_STRICT_EQUAL, /**< strict equal comparison (===) */
-  JERRY_BIN_OP_LESS,         /**< less relation (<) */
-  JERRY_BIN_OP_LESS_EQUAL,   /**< less or equal relation (<=) */
-  JERRY_BIN_OP_GREATER,      /**< greater relation (>) */
-  JERRY_BIN_OP_GREATER_EQUAL /**< greater or equal relation (>=)*/
+  JERRY_BIN_OP_EQUAL = 0u,    /**< equal comparison (==) */
+  JERRY_BIN_OP_STRICT_EQUAL,  /**< strict equal comparison (===) */
+  JERRY_BIN_OP_LESS,          /**< less relation (<) */
+  JERRY_BIN_OP_LESS_EQUAL,    /**< less or equal relation (<=) */
+  JERRY_BIN_OP_GREATER,       /**< greater relation (>) */
+  JERRY_BIN_OP_GREATER_EQUAL, /**< greater or equal relation (>=)*/
+  JERRY_BIN_OP_INSTANCEOF,    /**< instanceof operation */
 } jerry_binary_operation_t;
 
 /**

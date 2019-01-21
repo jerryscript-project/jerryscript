@@ -391,7 +391,8 @@ ecma_op_implicit_class_constructor_has_instance (ecma_object_t *func_obj_p, /**<
 /**
  * 15.3.5.3 implementation of [[HasInstance]] for Function objects
  *
- * @return ecma value
+ * @return true/false - if arguments are valid
+ *         error - otherwise
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t

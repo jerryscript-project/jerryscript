@@ -947,6 +947,17 @@ jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
     {
       return jerry_return (opfunc_relation (lhs, rhs, true, true));
     }
+    case JERRY_BIN_OP_INSTANCEOF:
+    {
+      if (!ecma_is_value_object (lhs)
+          || !ecma_op_is_callable (rhs))
+      {
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+      }
+
+      ecma_object_t *proto_obj_p = ecma_get_object_from_value (rhs);
+      return jerry_return (ecma_op_object_has_instance (proto_obj_p, lhs));
+    }
     default:
     {
       return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Unsupported binary operation")));

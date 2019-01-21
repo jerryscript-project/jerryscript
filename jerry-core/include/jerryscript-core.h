@@ -343,6 +343,7 @@ jerry_value_t jerry_get_global_object (void);
 /**
  * Checker functions of 'jerry_value_t'.
  */
+jerry_value_t jerry_instanceof (const jerry_value_t value, const jerry_value_t prototype);
 bool jerry_value_is_abort (const jerry_value_t value);
 bool jerry_value_is_array (const jerry_value_t value);
 bool jerry_value_is_boolean (const jerry_value_t value);

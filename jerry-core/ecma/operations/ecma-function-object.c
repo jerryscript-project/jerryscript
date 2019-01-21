@@ -327,7 +327,8 @@ ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_
 /**
  * 15.3.5.3 implementation of [[HasInstance]] for Function objects
  *
- * @return ecma value
+ * @return true/false - if arguments are valid
+ *         error - otherwise
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t

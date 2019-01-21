@@ -602,6 +602,41 @@ jerry_get_global_object (void)
 } /* jerry_get_global_object */
 
 /**
+ * Check if the specified value is an instance of the given prototype.
+ *
+ * See also ECMA-262 v5.1, 11.8.6
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return true  - if the specified value is an instance of the given prototype
+ *         false - otherwise
+ *         error - if value argument is not an object or prototype argument is not a function.
+ *
+ */
+jerry_value_t
+jerry_instanceof (const jerry_value_t value, /**< object value */
+                  const jerry_value_t prototype) /**< prototpye function */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (value)
+      || ecma_is_value_error_reference (prototype))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
+  if (!ecma_is_value_object (value)
+      || !ecma_op_is_callable (prototype))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_object_t *proto_obj_p = ecma_get_object_from_value (prototype);
+  return jerry_return (ecma_op_object_has_instance (proto_obj_p, value));
+} /* jerry_instanceof */
+
+/**
  * Check if the specified value is an abort value.
  *
  * @return true  - if both the error and abort values are set,

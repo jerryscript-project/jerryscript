@@ -878,8 +878,8 @@ main (void)
     jerry_release_value (has_prop_js);
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
     TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
-    char buff[jerry_get_string_length (parsed_data)];
     jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
+    char buff[buff_size + 1];
     jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
     buff[buff_size] = '\0';
     TEST_ASSERT (strcmp (data_check, buff) == false);

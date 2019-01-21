@@ -238,9 +238,10 @@ main (void)
   TEST_ASSERT (cesu8_length == 15);
   TEST_ASSERT (cesu8_length == cesu8_sz);
 
-  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz = 15);
-  TEST_ASSERT (!strncmp (substring, "an ascii string", sz));
+  char fullstring[cesu8_sz];
+  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) fullstring, cesu8_sz);
+  TEST_ASSERT (sz == 15);
+  TEST_ASSERT (!strncmp (fullstring, "an ascii string", sz));
 
   jerry_release_value (args[0]);
 

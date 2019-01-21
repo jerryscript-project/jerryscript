@@ -156,7 +156,7 @@ matrix:
         apt:
           sources:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [gcc-arm-embedded]
+          packages: [gcc-arm-embedded, genromfs]
       install: make -f ./targets/tizenrt-artik053/Makefile.travis install
       script: make -f ./targets/tizenrt-artik053/Makefile.travis script
 

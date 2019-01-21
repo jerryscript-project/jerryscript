@@ -64,5 +64,9 @@ endforeach()
 target_compile_definitions(${JERRY_PORT_DEFAULT_NAME}-minimal PRIVATE DISABLE_EXTRA_API)
 
 # Installation
+configure_file(libjerry-port-default.pc.in libjerry-port-default.pc @ONLY)
+configure_file(libjerry-port-default-minimal.pc.in libjerry-port-default-minimal.pc @ONLY)
+
 install(TARGETS ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default.pc ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default-minimal.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_PORT_DEFAULT}/ DESTINATION include)

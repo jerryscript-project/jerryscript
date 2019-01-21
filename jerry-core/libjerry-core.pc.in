@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libjerry-core
+Description: JerryScript: lightweight JavaScript engine (core engine library)
+URL: https://github.com/pando-project/jerryscript
+Version: 1.0
+Requires.private: @JERRY_CORE_PKGCONFIG_REQUIRES@ # NOTE: libjerry-port-default* is not added as a required package
+Libs: -L${libdir} -ljerry-core
+Libs.private: @JERRY_CORE_PKGCONFIG_LIBS@
+Cflags: -I${includedir}

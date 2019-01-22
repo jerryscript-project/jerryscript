@@ -141,6 +141,13 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.1 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -476,6 +483,13 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       /* ES2015 9.4.5.4 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -800,6 +814,13 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.5 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -1148,6 +1169,15 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
       /* ES2015 9.4.5.3 */
       if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          return ecma_op_general_object_define_own_property (obj_p,
+                                                             property_name_p,
+                                                             property_desc_p,
+                                                             is_throw);
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)

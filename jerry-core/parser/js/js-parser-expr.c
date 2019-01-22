@@ -1412,7 +1412,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     {
       if ((lexer_check_next_character (context_p, LIT_CHAR_DOT)
             || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
-          && context_p->status_flags & (PARSER_CLASS_HAS_SUPER | PARSER_IS_ARROW_FUNCTION))
+          && context_p->status_flags & (PARSER_CLASS_HAS_SUPER))
       {
         if (!LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8))
         {
@@ -1437,9 +1437,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       }
 
       if (lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN)
-          && (context_p->status_flags & PARSER_CLASS_HAS_SUPER)
-          && !(context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
-          && (context_p->status_flags & (PARSER_IS_ARROW_FUNCTION | PARSER_CLASS_CONSTRUCTOR)))
+          && ((context_p->status_flags & PARSER_CLASS_CONSTRUCTOR_SUPER) == PARSER_CLASS_CONSTRUCTOR_SUPER)
+          && !(context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER))
       {
         parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_SUPER);
         break;

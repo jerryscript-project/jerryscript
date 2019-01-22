@@ -1659,6 +1659,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   {
     ecma_free_values_collection (partial_p, 0);
     ecma_deref_ecma_string (stepback_p);
+    ecma_deref_ecma_string (context_p->indent_str_p);
     return ret_value;
   }
 

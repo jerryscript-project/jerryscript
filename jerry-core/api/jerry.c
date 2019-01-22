@@ -21,6 +21,7 @@
 #include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-comparison.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
@@ -781,6 +782,29 @@ jerry_value_is_undefined (const jerry_value_t value) /**< api value */
 
   return ecma_is_value_undefined (value);
 } /* jerry_value_is_undefined */
+
+/**
+ * Perform strict equality comparison on the given operands.
+ *
+ * See also ECMA-262 v5.1, 11.9.6
+ *
+ * @return true  - if the two operands are strictly equal
+ *         false - otherwise
+ *         error - if argument has an error flag
+ */
+jerry_value_t
+jerry_strict_equal (const jerry_value_t lhs, /**< first operand */
+                    const jerry_value_t rhs) /**< second operand */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (lhs) || ecma_is_value_error_reference (rhs))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
+  return  ecma_make_boolean_value (ecma_op_strict_equality_compare (lhs, rhs));
+} /* jerry_strict_equal */
 
 /**
  * Perform the base type of the JavaScript value.

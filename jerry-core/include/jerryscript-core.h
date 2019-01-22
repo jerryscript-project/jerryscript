@@ -356,6 +356,11 @@ bool jerry_value_is_promise (const jerry_value_t value);
 bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
 
+/*
+ * Comparison functions
+ */
+jerry_value_t jerry_strict_equal (const jerry_value_t lhs, const jerry_value_t rhs);
+
 /**
  * JerryScript API value type information.
  */

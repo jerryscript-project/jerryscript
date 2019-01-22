@@ -1211,8 +1211,9 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                          property_name_p,
                                                          property_desc_p,
                                                          is_throw);
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
       break;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
     }
   }
 } /* ecma_op_object_define_own_property */

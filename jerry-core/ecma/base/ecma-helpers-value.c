@@ -336,9 +336,9 @@ ecma_is_value_prop_name (ecma_value_t value) /**< ecma value */
 {
 #ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
   return ecma_is_value_string (value) || ecma_is_value_symbol (value);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
-
+#else /* CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   return ecma_is_value_string (value);
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 } /* ecma_is_value_prop_name */
 
 /**

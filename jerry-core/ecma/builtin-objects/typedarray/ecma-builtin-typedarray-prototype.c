@@ -1052,9 +1052,9 @@ ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argumen
   }
   ecma_free_value (separator_value);
 
+  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
   ecma_free_value (length_value);
   ecma_free_value (obj_value);
-  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_join */
 

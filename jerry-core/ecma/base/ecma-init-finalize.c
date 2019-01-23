@@ -61,6 +61,10 @@ ecma_finalize (void)
 {
   jmem_unregister_free_unused_memory_callback (ecma_free_unused_memory);
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  ecma_module_finalize_lex_envs ();
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
   ecma_finalize_global_lex_env ();
   ecma_finalize_builtins ();
   ecma_gc_run (JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW);

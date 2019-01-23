@@ -28,6 +28,7 @@
 #include "vm-defines.h"
 #include "jerryscript.h"
 #include "jerryscript-debugger-transport.h"
+#include "js-parser-internal.h"
 
 /** \addtogroup context Context
  * @{
@@ -66,6 +67,17 @@ typedef struct jerry_context_data_header
  */
 #define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * Contains the lexical environments of the loaded modules.
+ */
+typedef struct ecma_module_lex_envs
+{
+  ecma_object_t *lex_env_p; /**< pointer to loaded module's lexical environment */
+  struct ecma_module_lex_envs *next_p; /**< pointer to the next item in the linked list */
+} ecma_module_lex_envs_t;
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
 /**
  * JerryScript context
  *
@@ -102,6 +114,12 @@ struct jerry_context_t
 #endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
   ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  ecma_module_lex_envs_t *ecma_module_lex_envs_p; /**< list of module's lexical environments */
+  parser_module_context_t *module_top_context_p; /**< top (current) module parser context */
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */

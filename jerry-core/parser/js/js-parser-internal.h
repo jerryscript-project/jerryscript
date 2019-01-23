@@ -296,6 +296,59 @@ typedef struct
 
 #endif /* JERRY_DEBUGGER */
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * String struct for storing the module path.
+ */
+typedef struct parser_module_utf8_string
+{
+  uint8_t *value_p;     /**< string value stored as uint8_t */
+  prop_length_t length; /**< length of the string */
+} parser_module_utf8_string_t;
+
+/**
+ * Imported or exported names, for example:
+ * import { v as x } from "module";
+ *  exported name: v
+ *  imported name: x
+ * export x as v;
+ *  exported variable: x
+ *  exported as: v
+ * Reference: https://www.ecma-international.org/ecma-262/6.0/#table-41
+ */
+typedef struct parser_module_names
+{
+  ecma_string_t *import_name_p; /**< local name of the import - export item */
+  ecma_string_t *local_name_p;  /**< import name of the import - export item */
+
+  struct parser_module_names *next_p; /**< next linked list node */
+} parser_module_names_t;
+
+/**
+ * Module node to store imports / exports.
+ */
+typedef struct parser_module_node
+{
+  parser_module_names_t *module_names_p; /**< names of the requested imports - exports */
+  uint16_t module_request_count;         /**< count of the requested imports - exports */
+
+  parser_module_utf8_string_t script_path; /**< path of the requested module*/
+
+  struct parser_module_node *next_p; /**< next linked list node */
+} parser_module_node_t;
+
+/**
+ * Module context in the parser context. It is not in the context if modules
+ * are not enabled during the build. It's value is NULL if there is no import /
+ * export in the script, otherwise it contains all the imports and exports.
+ */
+typedef struct
+{
+  parser_module_node_t *imports_p; /**< import item of the current context */
+  parser_module_node_t *exports_p; /**< export item of the current context */
+} parser_module_context_t;
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
 /**
  * Those members of a context which needs
  * to be saved when a sub-function is parsed.
@@ -341,6 +394,11 @@ typedef struct
   uint16_t stack_limit;                       /**< maximum stack depth */
   parser_saved_context_t *last_context_p;     /**< last saved context */
   parser_stack_iterator_t last_statement;     /**< last statement position */
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  parser_module_context_t *module_context_p;  /**< shared module context inside the parser */
+  parser_module_node_t *module_current_node_p; /**< import / export node that is being processed */
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
   /* Lexer members. */
   lexer_token_t token;                        /**< current token */
@@ -547,6 +605,38 @@ void parser_scan_until (parser_context_t *context_p, lexer_range_t *range_p, lex
 
 void parser_parse_statements (parser_context_t *context_p);
 void parser_free_jumps (parser_stack_iterator_t iterator);
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * @}
+ *
+ * \addtogroup jsparser_stmt Module statement parser
+ * @{
+ */
+
+void parser_module_add_export_node_to_context (parser_context_t *context_p);
+void parser_module_add_import_node_to_context (parser_context_t *context_p);
+void parser_module_check_request_place (parser_context_t *context_p);
+void parser_module_context_cleanup (parser_context_t *context_p);
+void parser_module_context_init (parser_context_t *context_p);
+void parser_module_free_saved_names (parser_module_node_t *module_node_p);
+void parser_module_handle_from_clause (parser_context_t *context_p);
+void parser_module_handle_requests (parser_context_t *context_p);
+void parser_module_partial_cleanup_on_error (parser_module_node_t *module_node_p);
+void parser_module_parse_export_item_list (parser_context_t *context_p);
+void parser_module_parse_import_item_list (parser_context_t *context_p);
+
+parser_module_node_t *parser_module_create_module_node (parser_context_t *context_p,
+                                                        parser_module_node_t *template_node_p);
+parser_module_node_t *parser_module_get_export_node (parser_context_t *context_p);
+
+void parser_module_add_item_to_node (parser_context_t *context_p,
+                                     parser_module_node_t *module_node_p,
+                                     lexer_literal_t *import_name_p,
+                                     lexer_literal_t *local_name_p,
+                                     bool is_import_item);
+
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
 /**
  * @}

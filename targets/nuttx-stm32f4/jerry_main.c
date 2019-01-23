@@ -492,6 +492,73 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 } /* jerry_port_log */
 
 /**
+ * Determines the size of the given file.
+ * @return size of the file
+ */
+static size_t
+jerry_port_get_file_size (FILE *file_p) /**< opened file */
+{
+  fseek (file_p, 0, SEEK_END);
+  long size = ftell (file_p);
+  fseek (file_p, 0, SEEK_SET);
+
+  return (size_t) size;
+} /* jerry_port_get_file_size */
+
+/**
+ * Opens file with the given path and reads its source.
+ * @return the source of the file
+ */
+uint8_t *
+jerry_port_read_source (const char *file_name_p, /**< file name */
+                        size_t *out_size_p) /**< [out] read bytes */
+{
+  FILE *file_p = fopen (file_name_p, "rb");
+
+  if (file_p == NULL)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name_p);
+    return NULL;
+  }
+
+  size_t file_size = jerry_port_get_file_size (file_p);
+  uint8_t *buffer_p = (uint8_t *) malloc (file_size);
+
+  if (buffer_p == NULL)
+  {
+    fclose (file_p);
+
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to allocate memory for module");
+    return NULL;
+  }
+
+  size_t bytes_read = fread (buffer_p, 1u, file_size, file_p);
+
+  if (!bytes_read)
+  {
+    fclose (file_p);
+    free (buffer_p);
+
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name_p);
+    return NULL;
+  }
+
+  fclose (file_p);
+  *out_size_p = bytes_read;
+
+  return buffer_p;
+} /* jerry_port_read_source */
+
+/**
+ * Release the previously opened file's content.
+ */
+void
+jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
+{
+  free (buffer_p);
+} /* jerry_port_release_source */
+
+/**
  * Dummy function to get the time zone adjustment.
  *
  * @return 0

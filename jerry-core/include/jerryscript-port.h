@@ -192,6 +192,30 @@ void jerry_port_sleep (uint32_t sleep_time);
 void jerry_port_print_char (char c);
 
 /**
+ * Open a source file and read its contents into a buffer.
+ *
+ * Note:
+ *      This port function is called by jerry-core when ES2015_MODULE_SYSTEM
+ *      is enabled. The path is specified in the import statement's 'from "..."'
+ *      section.
+ *
+ *  @param file_name_p Path that points to the EcmaScript file in the
+ *                     filesystem.
+ *  @param out_size_p The opened file's size in bytes.
+ *
+ *  @return the pointer to the buffer which contains the content of the file.
+ */
+uint8_t *jerry_port_read_source (const char *file_name_p, size_t *out_size_p);
+
+/**
+ * Frees the allocated buffer after the contents of the file are not needed
+ * anymore.
+ *
+ * @param buffer_p The pointer the allocated buffer.
+ */
+void jerry_port_release_source (uint8_t *buffer_p);
+
+/**
  * @}
  */
 

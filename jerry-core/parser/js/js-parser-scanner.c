@@ -865,6 +865,13 @@ parser_scan_until (parser_context_t *context_p, /**< context */
         {
           while (true)
           {
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+            if (context_p->token.type == LEXER_THREE_DOTS)
+            {
+              lexer_next_token (context_p);
+            }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
             if (context_p->token.type != LEXER_LITERAL
                 || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
             {

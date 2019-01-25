@@ -42,6 +42,9 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
   LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  LEXER_THREE_DOTS,              /**< ... (rest or spread operator) */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and

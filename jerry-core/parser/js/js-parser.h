@@ -122,6 +122,10 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
   PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
 #endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER,       /**< formal parameter after rest parameter */
+  PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER,      /**< rest parameter default initializer */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */
 } parser_error_t;

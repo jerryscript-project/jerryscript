@@ -700,6 +700,14 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
     }
   }
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+  {
+    JERRY_ASSERT ((argument_count - 1) == context_p->argument_count);
+    return dst_p;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
   JERRY_ASSERT (argument_count == context_p->argument_count);
   return dst_p;
 } /* parser_generate_initializers */
@@ -1742,6 +1750,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   compiled_code_p->refs = 1;
   compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION;
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+  {
+    JERRY_ASSERT (context_p->argument_count > 0);
+    context_p->argument_count--;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
   if (needs_uint16_arguments)
   {
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) compiled_code_p;
@@ -1806,6 +1822,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_CONSTRUCTOR;
   }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+  {
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_REST_PARAMETER;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
 
   literal_pool_p = (ecma_value_t *) byte_code_p;
   literal_pool_p -= context_p->register_count;
@@ -2160,6 +2183,18 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   {
     uint16_t literal_count = context_p->literal_count;
 
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+    if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+    {
+      parser_raise_error (context_p, PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER);
+    }
+    else if (context_p->token.type == LEXER_THREE_DOTS)
+    {
+      lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+      context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM;
+    }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
     if (context_p->token.type != LEXER_LITERAL
         || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
     {
@@ -2239,6 +2274,13 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 #ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
     if (context_p->token.type == LEXER_ASSIGN)
     {
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+      if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+      {
+        parser_raise_error (context_p, PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER);
+      }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+
       parser_branch_t skip_init;
 
       if (duplicated_argument_names)

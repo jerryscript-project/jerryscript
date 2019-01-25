@@ -648,6 +648,7 @@ typedef enum
   CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 7), /**< this function is a static snapshot function */
   CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 8), /**< this function should be ignored by debugger */
   CBC_CODE_FLAGS_CONSTRUCTOR = (1u << 9), /**< this function is a constructor */
+  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 10), /**< this function has rest parameter */
 } cbc_code_flags;
 
 /**

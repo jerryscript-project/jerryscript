@@ -943,6 +943,15 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
         index = 0;
       }
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+      /* Builtin symbol properties are internal magic strings which must not be listed */
+      if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+      {
+        curr_property_p++;
+        continue;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
       ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 
       uint32_t bit_for_index = (uint32_t) 1u << index;

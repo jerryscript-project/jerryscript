@@ -99,6 +99,15 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
                 || ECMA_ASSERT_VALUE_IS_SYMBOL (base_value)
                 || ecma_is_value_string (base_value));
 
+  /* Fast path for the strings length property. The length of the string
+     can be obtained directly from the ecma-string. */
+  if (ecma_is_value_string (base_value) && ecma_string_is_length (property_name_p))
+  {
+    ecma_string_t *string_p = ecma_get_string_from_value (base_value);
+
+    return ecma_make_uint32_value (ecma_string_get_length (string_p));
+  }
+
   ecma_value_t object_base = ecma_op_to_object (base_value);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (object_base));
 

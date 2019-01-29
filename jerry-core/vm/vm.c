@@ -2387,12 +2387,47 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           result = opfunc_equality (left_value, right_value);
 
-          if (ECMA_IS_VALUE_ERROR (result))
+          if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (result)))
           {
             goto error;
           }
 
-          *stack_top_p++ = result;
+          /* This is a lookahead to the next opcode to improve performance.
+           * If it is CBC_BRANCH_IF_FALSE_FORWARD, execute it. */
+          if (*byte_code_p <= CBC_BRANCH_IF_FALSE_FORWARD_3 && *byte_code_p >= CBC_BRANCH_IF_FALSE_FORWARD)
+          {
+            byte_code_start_p = byte_code_p++;
+            branch_offset_length = CBC_BRANCH_OFFSET_LENGTH (*byte_code_start_p);
+            JERRY_ASSERT (branch_offset_length >= 1 && branch_offset_length <= 3);
+
+            if (result == ECMA_VALUE_FALSE)
+            {
+              branch_offset = *(byte_code_p++);
+
+              if (JERRY_UNLIKELY (branch_offset_length != 1))
+              {
+                branch_offset <<= 8;
+                branch_offset |= *(byte_code_p++);
+                if (JERRY_UNLIKELY (branch_offset_length == 3))
+                {
+                  branch_offset <<= 8;
+                  branch_offset |= *(byte_code_p++);
+                }
+              }
+
+              /* Note: The opcode is a forward branch. */
+              byte_code_p = byte_code_start_p + branch_offset;
+            }
+            else
+            {
+              byte_code_p += branch_offset_length;
+            }
+          }
+          else
+          {
+            *stack_top_p++ = result;
+          }
+
           goto free_both_values;
         }
         case VM_OC_NOT_EQUAL:

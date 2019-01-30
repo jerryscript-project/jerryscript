@@ -92,6 +92,7 @@ typedef enum
   JERRY_FEATURE_REGEXP, /**< Regexp support */
   JERRY_FEATURE_LINE_INFO, /**< line info available */
   JERRY_FEATURE_LOGGING, /**< logging */
+  JERRY_FEATURE_SYMBOL, /**< symbol support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -368,6 +369,7 @@ bool jerry_value_is_null (const jerry_value_t value);
 bool jerry_value_is_object (const jerry_value_t value);
 bool jerry_value_is_promise (const jerry_value_t value);
 bool jerry_value_is_string (const jerry_value_t value);
+bool jerry_value_is_symbol (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
 
 /**
@@ -384,6 +386,7 @@ typedef enum
   JERRY_TYPE_OBJECT,    /**< object type */
   JERRY_TYPE_FUNCTION,  /**< function type */
   JERRY_TYPE_ERROR,     /**< error/abort type */
+  JERRY_TYPE_SYMBOL,    /**< symbol type */
 } jerry_type_t;
 
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
@@ -485,6 +488,7 @@ jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz (const jerry_char_t *str_p, jerry_size_t str_size);
+jerry_value_t jerry_create_symbol (const jerry_value_t value);
 jerry_value_t jerry_create_undefined (void);
 
 /**
@@ -541,6 +545,11 @@ bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_pr
  * Promise resolve/reject functions.
  */
 jerry_value_t jerry_resolve_or_reject_promise (jerry_value_t promise, jerry_value_t argument, bool is_resolve);
+
+/**
+ * Symbol functions.
+ */
+jerry_value_t jerry_get_symbol_descriptive_string (const jerry_value_t symbol);
 
 /**
  * Input validator functions.

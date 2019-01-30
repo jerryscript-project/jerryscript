@@ -1038,16 +1038,18 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated label.";
     }
-#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+#if (!defined (CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER) \
+     || !defined (CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER))
     case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
     {
       return "Duplicated function argument names are not allowed here.";
     }
-#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
+#endif /* (!defined (CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER)
+           || !defined (CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER)) */
 #ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
     case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
     {
-      return "Rest parameter must be last formal parameter.";
+      return "Rest parameter must be the last formal parameter.";
     }
     case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
     {

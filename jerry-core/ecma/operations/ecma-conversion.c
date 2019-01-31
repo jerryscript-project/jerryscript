@@ -360,6 +360,13 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
     return ECMA_VALUE_EMPTY;
   }
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (ecma_is_value_symbol (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
   JERRY_ASSERT (ecma_is_value_boolean (value));
 
   *number_p = ecma_is_value_true (value) ? 1 : 0;

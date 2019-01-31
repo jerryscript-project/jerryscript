@@ -2191,6 +2191,12 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     else if (context_p->token.type == LEXER_THREE_DOTS)
     {
       lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+
+      if (context_p->literal_count == literal_count)
+      {
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
+      }
+
       context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM;
     }
 #endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */

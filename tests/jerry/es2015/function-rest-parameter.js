@@ -33,6 +33,7 @@ function CheckSyntaxError (str)
 CheckSyntaxError ('function x (a, b, ...c, d) {}');
 CheckSyntaxError ('function x (... c = 5) {}');
 CheckSyntaxError ('function x (...) {}');
+CheckSyntaxError ('function x (a, a, ...a) {}');
 CheckSyntaxError ('"use strict" function x (...arguments) {}');
 
 rest_params = ['hello', true, 7, {}, [], function () {}];

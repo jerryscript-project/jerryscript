@@ -136,6 +136,10 @@ struct jerry_context_t
                                                  *   ECMAScript execution should be stopped */
 #endif /* JERRY_VM_EXEC_STOP */
 
+#ifdef VM_RECURSION_LIMIT
+  uint32_t vm_recursion_counter;  /**< VM recursion counter */
+#endif /* VM_RECURSION_LIMIT */
+
 #ifdef JERRY_DEBUGGER
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */

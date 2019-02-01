@@ -44,6 +44,10 @@ ecma_init (void)
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
 #endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
 
+#ifdef VM_RECURSION_LIMIT
+  JERRY_CONTEXT (vm_recursion_counter) = VM_RECURSION_LIMIT;
+#endif /* VM_RECURSION_LIMIT */
+
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
   ecma_job_queue_init ();
 #endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */

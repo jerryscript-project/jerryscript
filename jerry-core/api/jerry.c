@@ -21,6 +21,7 @@
 #include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-comparison.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
@@ -34,6 +35,7 @@
 #include "ecma-regexp-object.h"
 #include "ecma-promise-object.h"
 #include "ecma-typedarray-object.h"
+#include "opcodes.h"
 #include "jcontext.h"
 #include "jerryscript.h"
 #include "jerryscript-debugger-transport.h"
@@ -900,6 +902,57 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #endif /* JERRY_ENABLE_LOGGING */
           );
 } /* jerry_is_feature_enabled */
+
+/**
+ * Perform binary operation on the given operands (==, ===, <, >, etc.).
+ *
+ * @return error - if argument has an error flag or operation is unsuccessful or unsupported
+ *         true/false - the result of the binary operation on the given operands otherwise
+ */
+jerry_value_t
+jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
+                        const jerry_value_t lhs, /**< first operand */
+                        const jerry_value_t rhs) /**< second operand */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (lhs) || ecma_is_value_error_reference (rhs))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
+  switch (op)
+  {
+    case JERRY_BIN_OP_EQUAL:
+    {
+      return jerry_return (ecma_op_abstract_equality_compare (lhs, rhs));
+    }
+    case JERRY_BIN_OP_STRICT_EQUAL:
+    {
+      return ecma_make_boolean_value (ecma_op_strict_equality_compare (lhs, rhs));
+    }
+    case JERRY_BIN_OP_LESS:
+    {
+      return jerry_return (opfunc_relation (lhs, rhs, true, false));
+    }
+    case JERRY_BIN_OP_LESS_EQUAL:
+    {
+      return jerry_return (opfunc_relation (lhs, rhs, false, true));
+    }
+    case JERRY_BIN_OP_GREATER:
+    {
+      return jerry_return (opfunc_relation (lhs, rhs, false, false));
+    }
+    case JERRY_BIN_OP_GREATER_EQUAL:
+    {
+      return jerry_return (opfunc_relation (lhs, rhs, true, true));
+    }
+    default:
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Unsupported binary operation")));
+    }
+  }
+} /* jerry_binary_operation */
 
 /**
  * Create abort from an api value.

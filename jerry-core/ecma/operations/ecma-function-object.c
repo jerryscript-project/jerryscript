@@ -324,6 +324,70 @@ ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_
 
 #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Helper function for implicit class constructors [[HasInstance]] check.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+ecma_op_implicit_class_constructor_has_instance (ecma_object_t *func_obj_p, /**< Function object */
+                                                 ecma_value_t value) /**< argument 'V' */
+{
+  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+  /* Since bound functions represents individual class constructor functions, we should check
+     that the given value is instance of either of the bound function chain elements. */
+  do
+  {
+    ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
+
+    ecma_value_t prototype_obj_value = ecma_op_object_get_by_magic_id (func_obj_p,
+                                                                       LIT_MAGIC_STRING_PROTOTYPE);
+
+    if (ECMA_IS_VALUE_ERROR (prototype_obj_value))
+    {
+      return prototype_obj_value;
+    }
+
+    if (!ecma_is_value_object (prototype_obj_value))
+    {
+      ecma_free_value (prototype_obj_value);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Object expected."));
+    }
+
+    ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
+
+    while (true)
+    {
+      v_obj_p = ecma_get_object_prototype (v_obj_p);
+
+      if (v_obj_p == NULL)
+      {
+        break;
+      }
+
+      if (v_obj_p == prototype_obj_p)
+      {
+        ecma_deref_object (prototype_obj_p);
+        return ECMA_VALUE_TRUE;
+      }
+    }
+
+    ecma_deref_object (prototype_obj_p);
+
+    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
+
+    func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                  ext_function_p->u.bound_function.target_function);
+  }
+  while (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+
+  return ECMA_VALUE_FALSE;
+} /* ecma_op_implicit_class_constructor_has_instance */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
 /**
  * 15.3.5.3 implementation of [[HasInstance]] for Function objects
  *
@@ -343,6 +407,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     /* 1. 3. */
     ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    if (JERRY_UNLIKELY (ext_function_p->u.bound_function.args_len_or_this == ECMA_VALUE_IMPLICIT_CONSTRUCTOR))
+    {
+      return ecma_op_implicit_class_constructor_has_instance (func_obj_p, value);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
     func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                   ext_function_p->u.bound_function.target_function);

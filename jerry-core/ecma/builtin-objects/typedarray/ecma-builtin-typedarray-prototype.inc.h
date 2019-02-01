@@ -45,6 +45,13 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/* ECMA-262 v6, 23.1.3.13 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
+                    ecma_builtin_typedarray_prototype_to_string_tag_getter,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_typedarray_prototype_object_to_string, 0, 0)

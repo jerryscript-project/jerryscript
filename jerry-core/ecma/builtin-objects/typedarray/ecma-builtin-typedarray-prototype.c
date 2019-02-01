@@ -140,6 +140,28 @@ ecma_builtin_typedarray_prototype_length_getter (ecma_value_t this_arg) /**< thi
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
 } /* ecma_builtin_typedarray_prototype_length_getter */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * The %TypedArray%.prototype[Symbol.toStringTag] accessor
+ *
+ * See also:
+ *          ES2015, 22.2.3.31
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_to_string_tag_getter (ecma_value_t this_arg) /**< this argument */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  return ecma_make_magic_string_value (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)));
+} /* ecma_builtin_typedarray_prototype_to_string_tag_getter */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /**
  * Type of routine.
  */

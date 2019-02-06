@@ -31,8 +31,13 @@
  *
  * See also: ECMA-262 v5, 11.9.3
  *
+ * Note:
+ *      This function might raise an exception, so the
+ *      returned value must be freed with ecma_free_value.
+ *
  * @return true - if values are equal,
  *         false - otherwise
+ *         error - in case of any problems
  */
 ecma_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */

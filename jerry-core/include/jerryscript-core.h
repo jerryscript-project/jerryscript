@@ -309,6 +309,19 @@ typedef struct
 typedef struct jerry_context_t jerry_context_t;
 
 /**
+ * Enum that contains the supported binary operation types
+ */
+typedef enum
+{
+  JERRY_BIN_OP_EQUAL = 0u,   /**< equal comparison (==) */
+  JERRY_BIN_OP_STRICT_EQUAL, /**< strict equal comparison (===) */
+  JERRY_BIN_OP_LESS,         /**< less relation (<) */
+  JERRY_BIN_OP_LESS_EQUAL,   /**< less or equal relation (<=) */
+  JERRY_BIN_OP_GREATER,      /**< greater relation (>) */
+  JERRY_BIN_OP_GREATER_EQUAL /**< greater or equal relation (>=)*/
+} jerry_binary_operation_t;
+
+/**
  * General engine functions.
  */
 void jerry_init (jerry_init_flag_t flags);
@@ -378,6 +391,13 @@ jerry_type_t jerry_value_get_type (const jerry_value_t value);
  * Checker function of whether the specified compile feature is enabled.
  */
 bool jerry_is_feature_enabled (const jerry_feature_t feature);
+
+/**
+ * Binary operations
+ */
+jerry_value_t jerry_binary_operation (jerry_binary_operation_t op,
+                                      const jerry_value_t lhs,
+                                      const jerry_value_t rhs);
 
 /**
  * Error manipulation functions.

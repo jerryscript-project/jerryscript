@@ -1,5 +1,5 @@
-# Available jerryscript debugger tools
+# Available JerryScript debugger tools
 
-JerryScript console debugger client ( jerry-client-ws.py )  
-Iotjscode ( https://github.com/Samsung/iotjscode )  
-Jerryscript debugger Chrome webtool ( https://github.com/jerryscript-project/jerryscript-debugger-ts )
+  - JerryScript console debugger client ( jerry_client.py )
+  - IoT.js Code ( https://github.com/pando-project/iotjscode )
+  - JerryScript debugger Chrome webtool ( https://github.com/pando-project/jerryscript-debugger-ts )

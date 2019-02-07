@@ -86,18 +86,6 @@ ecma_string_t *ecma_alloc_string_buffer (size_t size);
 void ecma_dealloc_string_buffer (ecma_string_t *string_p, size_t size);
 
 /**
- * Allocate memory for getter-setter pointer pair
- *
- * @return pointer to allocated memory
- */
-ecma_getter_setter_pointers_t *ecma_alloc_getter_setter_pointers (void);
-
-/**
- * Dealloc memory from getter-setter pointer pair
- */
-void ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_setter_pointers_p);
-
-/**
  * Allocate memory for ecma-property pair
  *
  * @return pointer to allocated memory

@@ -103,6 +103,72 @@ ecma_builtin_string_prototype_object_value_of (ecma_value_t this_arg) /**< this 
 } /* ecma_builtin_string_prototype_object_value_of */
 
 /**
+ * Helper function for the String.prototype object's 'charAt' and charCodeAt' routine
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_char_at_helper (ecma_value_t this_arg, /**< this argument */
+                                              ecma_value_t arg, /**< routine's argument */
+                                              bool charcode_mode) /**< routine mode */
+{
+  /* 1 */
+  ecma_value_t check_coercible_val = ecma_op_check_object_coercible (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (check_coercible_val))
+  {
+    return check_coercible_val;
+  }
+  ecma_free_value (check_coercible_val);
+
+  /* 3 */
+  ecma_number_t index_num;
+  ecma_value_t to_num_result = ecma_get_number (arg, &index_num);
+
+  if (JERRY_UNLIKELY (!ecma_is_value_empty (to_num_result)))
+  {
+    return to_num_result;
+  }
+  ecma_free_value (to_num_result);
+
+  /* 2 */
+  ecma_value_t to_string_val = ecma_op_to_string (this_arg);
+  if (ECMA_IS_VALUE_ERROR (to_string_val))
+  {
+    return to_string_val;
+  }
+
+  /* 4 */
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+  const ecma_length_t len = ecma_string_get_length (original_string_p);
+
+  /* 5 */
+  // When index_num is NaN, then the first two comparisons are false
+  if (index_num < 0 || index_num >= len || (ecma_number_is_nan (index_num) && len == 0))
+  {
+    ecma_free_value (to_string_val);
+    return (charcode_mode ? ecma_make_nan_value ()
+                          : ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY));
+  }
+
+  /* 6 */
+  /*
+   * String length is currently uint32_t, but index_num may be bigger,
+   * ToInteger performs floor, while ToUInt32 performs modulo 2^32,
+   * hence after the check 0 <= index_num < len we assume to_uint32 can be used.
+   * We assume to_uint32 (NaN) is 0.
+   */
+  JERRY_ASSERT (ecma_number_is_nan (index_num) || ecma_number_to_uint32 (index_num) == ecma_number_trunc (index_num));
+
+  ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
+  ecma_free_value (to_string_val);
+
+  return (charcode_mode ? ecma_make_uint32_value (new_ecma_char)
+                        : ecma_make_string_value (ecma_new_ecma_string_from_code_unit (new_ecma_char)));
+} /* ecma_builtin_string_prototype_char_at_helper */
+
+/**
  * The String.prototype object's 'charAt' routine
  *
  * See also:
@@ -115,45 +181,7 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_char_at (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t arg) /**< routine's argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  /* 1 */
-  ECMA_TRY_CATCH (check_coercible_val,
-                  ecma_op_check_object_coercible (this_arg),
-                  ret_value);
-
-  /* 2 */
-  ECMA_TRY_CATCH (to_string_val,
-                  ecma_op_to_string (this_arg),
-                  ret_value);
-
-  /* 3 */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (index_num,
-                               arg,
-                               ret_value);
-
-  /* 4 */
-  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
-  const ecma_length_t len = ecma_string_get_length (original_string_p);
-
-  /* 5 */
-  if (index_num < 0 || index_num >= len || !len)
-  {
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
-  }
-  else
-  {
-    /* 6 */
-    ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
-    ret_value = ecma_make_string_value (ecma_new_ecma_string_from_code_unit (new_ecma_char));
-  }
-
-  ECMA_OP_TO_NUMBER_FINALIZE (index_num);
-
-  ECMA_FINALIZE (to_string_val);
-  ECMA_FINALIZE (check_coercible_val);
-
-  return ret_value;
+  return ecma_builtin_string_prototype_char_at_helper (this_arg, arg, false);
 } /* ecma_builtin_string_prototype_object_char_at */
 
 /**
@@ -169,54 +197,7 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_char_code_at (ecma_value_t this_arg, /**< this argument */
                                                    ecma_value_t arg) /**< routine's argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  /* 1 */
-  ECMA_TRY_CATCH (check_coercible_val,
-                  ecma_op_check_object_coercible (this_arg),
-                  ret_value);
-
-  /* 2 */
-  ECMA_TRY_CATCH (to_string_val,
-                  ecma_op_to_string (this_arg),
-                  ret_value);
-
-  /* 3 */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (index_num,
-                               arg,
-                               ret_value);
-
-  /* 4 */
-  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
-  const ecma_length_t len = ecma_string_get_length (original_string_p);
-
-  /* 5 */
-  // When index_num is NaN, then the first two comparisons are false
-  if (index_num < 0 || index_num >= len || (ecma_number_is_nan (index_num) && !len))
-  {
-    ret_value = ecma_make_nan_value ();
-  }
-  else
-  {
-    /* 6 */
-    /*
-     * String length is currently uit32_t, but index_num may be bigger,
-     * ToInteger performs floor, while ToUInt32 performs modulo 2^32,
-     * hence after the check 0 <= index_num < len we assume to_uint32 can be used.
-     * We assume to_uint32 (NaN) is 0.
-     */
-    JERRY_ASSERT (ecma_number_is_nan (index_num) || ecma_number_to_uint32 (index_num) == ecma_number_trunc (index_num));
-
-    ecma_char_t new_ecma_char = ecma_string_get_char_at_pos (original_string_p, ecma_number_to_uint32 (index_num));
-    ret_value = ecma_make_uint32_value (new_ecma_char);
-  }
-
-  ECMA_OP_TO_NUMBER_FINALIZE (index_num);
-
-  ECMA_FINALIZE (to_string_val);
-  ECMA_FINALIZE (check_coercible_val);
-
-  return ret_value;
+  return ecma_builtin_string_prototype_char_at_helper (this_arg, arg, true);
 } /* ecma_builtin_string_prototype_object_char_code_at */
 
 /**
@@ -559,9 +540,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_arg, /**< this arg
             ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_obj_p,
                                                                     current_index_str_p,
                                                                     match_string_value,
-                                                                    true, /* Writable */
-                                                                    true, /* Enumerable */
-                                                                    true, /* Configurable */
+                                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                     false); /* Failure handling */
 
             JERRY_ASSERT (ecma_is_value_true (completion));
@@ -1491,10 +1470,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                             zero_str_p,
                                                             this_to_string_val,
-                                                            true,
-                                                            true,
-                                                            true,
-                                                            false);
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            false); /* Failure handling */
 
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1569,10 +1546,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                                 zero_str_p,
                                                                 this_to_string_val,
-                                                                true,
-                                                                true,
-                                                                true,
-                                                                false);
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                false); /* Failure handling */
 
           JERRY_ASSERT (ecma_is_value_true (put_comp));
           ecma_deref_ecma_string (zero_str_p);
@@ -1661,10 +1636,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
               ecma_value_t put_comp = ecma_builtin_helper_def_prop (match_obj_p,
                                                                     zero_str_p,
                                                                     ecma_make_string_value (separator_str_p),
-                                                                    true,
-                                                                    true,
-                                                                    true,
-                                                                    true);
+                                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                    true); /* Failure handling */
+
               JERRY_ASSERT (ecma_is_value_true (put_comp));
 
               index_prop_value_p = ecma_create_named_data_property (match_obj_p,
@@ -1708,10 +1682,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
             ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                                   array_length_str_p,
                                                                   ecma_make_string_value (substr_str_p),
-                                                                  true,
-                                                                  true,
-                                                                  true,
-                                                                  false);
+                                                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                  false); /* Failure handling */
 
             JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1755,10 +1727,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
               put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                        new_array_idx_str_p,
                                                        match_comp_value,
-                                                       true,
-                                                       true,
-                                                       true,
-                                                       false);
+                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                       false); /* Failure handling */
 
               JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1803,10 +1773,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                                 array_length_string_p,
                                                                 ecma_make_string_value (substr_str_p),
-                                                                true,
-                                                                true,
-                                                                true,
-                                                                false);
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                false); /* Failure handling */
 
           JERRY_ASSERT (ecma_is_value_true (put_comp));
 

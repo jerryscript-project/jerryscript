@@ -18,6 +18,9 @@ APPLICATION = riot_jerry
 # default BOARD enviroment
 BOARD ?= stm32f4discovery
 
+# LLVM/Clang-based toolchain
+TOOLCHAIN ?= llvm
+
 # path to the RIOT base directory
 RIOTBASE ?= $(CURDIR)/../RIOT
 # path to the JERRYSCRIPT directory
@@ -29,11 +32,6 @@ APPDIR ?= $(JERRYDIR)/targets/riot-stm32f4/source
 # path to the binary directory
 BINDIR ?= $(JERRYDIR)/targets/riot-stm32f4/bin/
 
-# Comment this out to disable code in RIOT that does safety checking
-# which is not needed in a production environment but helps in the
-# development process:
-CFLAGS += -DDEVELHELP
-
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
@@ -44,7 +42,7 @@ USEMODULE += shell
 USEMODULE += shell_commands
 
 # Add the jerry libs
-USEMODULE += libjerrycore libjerryport-minimal libjerryext
+USEMODULE += libjerry-core libjerry-port-default-minimal libjerry-ext
 
 
 include $(RIOTBASE)/Makefile.include

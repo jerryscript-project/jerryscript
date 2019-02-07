@@ -18,46 +18,46 @@
 
 #include "test-common.h"
 
-const char *test_source = (
-                           "function assert (arg) { "
-                           "  if (!arg) { "
-                           "    throw Error('Assert failed');"
-                           "  } "
-                           "} "
-                           "this.t = 1; "
-                           "function f () { "
-                           "return this.t; "
-                           "} "
-                           "this.foo = f; "
-                           "this.bar = function (a) { "
-                           "return a + t; "
-                           "}; "
-                           "function A () { "
-                           "this.t = 12; "
-                           "} "
-                           "this.A = A; "
-                           "this.a = new A (); "
-                           "function call_external () { "
-                           "  return this.external ('1', true); "
-                           "} "
-                           "function call_throw_test() { "
-                           "  var catched = false; "
-                           "  try { "
-                           "    this.throw_test(); "
-                           "  } catch (e) { "
-                           "    catched = true; "
-                           "    assert(e.name == 'TypeError'); "
-                           "    assert(e.message == 'error'); "
-                           "  } "
-                           "  assert(catched); "
-                           "} "
-                           "function throw_reference_error() { "
-                           " throw new ReferenceError ();"
-                           "} "
-                           "p = {'alpha':32, 'bravo':false, 'charlie':{}, 'delta':123.45, 'echo':'foobar'};"
-                           "np = {}; Object.defineProperty (np, 'foxtrot', { "
-                           "get: function() { throw 'error'; }, enumerable: true }) "
-                           );
+const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+  "function assert (arg) { "
+  "  if (!arg) { "
+  "    throw Error('Assert failed');"
+  "  } "
+  "} "
+  "this.t = 1; "
+  "function f () { "
+  "return this.t; "
+  "} "
+  "this.foo = f; "
+  "this.bar = function (a) { "
+  "return a + t; "
+  "}; "
+  "function A () { "
+  "this.t = 12; "
+  "} "
+  "this.A = A; "
+  "this.a = new A (); "
+  "function call_external () { "
+  "  return this.external ('1', true); "
+  "} "
+  "function call_throw_test() { "
+  "  var catched = false; "
+  "  try { "
+  "    this.throw_test(); "
+  "  } catch (e) { "
+  "    catched = true; "
+  "    assert(e.name == 'TypeError'); "
+  "    assert(e.message == 'error'); "
+  "  } "
+  "  assert(catched); "
+  "} "
+  "function throw_reference_error() { "
+  " throw new ReferenceError ();"
+  "} "
+  "p = {'alpha':32, 'bravo':false, 'charlie':{}, 'delta':123.45, 'echo':'foobar'};"
+  "np = {}; Object.defineProperty (np, 'foxtrot', { "
+  "get: function() { throw 'error'; }, enumerable: true }) "
+);
 
 bool test_api_is_free_callback_was_called = false;
 
@@ -191,10 +191,10 @@ const jerry_length_t magic_string_lengths[] =
 #undef JERRY_MAGIC_STRING_DEF
 };
 
-const jerry_char_ptr_t magic_string_items[] =
+const jerry_char_t *magic_string_items[] =
 {
 #define JERRY_MAGIC_STRING_DEF(NAME, STRING) \
-    (const jerry_char_ptr_t) jerry_magic_string_ex_ ## NAME,
+    (const jerry_char_t *) jerry_magic_string_ex_ ## NAME,
 
   JERRY_MAGIC_STRING_ITEMS
 
@@ -318,38 +318,14 @@ test_run_simple (const char *script_p) /**< source code to run */
   return jerry_run_simple ((const jerry_char_t *) script_p, script_size, JERRY_INIT_EMPTY);
 } /* test_run_simple */
 
-static bool
-strict_equals (jerry_value_t a,
-               jerry_value_t b)
-{
-  bool is_strict_equal;
-  const char *is_equal_src;
-  jerry_value_t args[2];
-  jerry_value_t is_equal_fn_val;
-  jerry_value_t res;
-
-  is_equal_src = "var isEqual = function(a, b) { return (a === b); }; isEqual";
-  is_equal_fn_val = jerry_eval ((jerry_char_t *) is_equal_src, strlen (is_equal_src), false);
-  TEST_ASSERT (!jerry_value_is_error (is_equal_fn_val));
-  args[0] = a;
-  args[1] = b;
-  res = jerry_call_function (is_equal_fn_val, jerry_create_undefined (), args, 2);
-  TEST_ASSERT (!jerry_value_is_error (res));
-  TEST_ASSERT (jerry_value_is_boolean (res));
-  is_strict_equal = jerry_get_boolean_value (res);
-  jerry_release_value (res);
-  jerry_release_value (is_equal_fn_val);
-  return is_strict_equal;
-} /* strict_equals */
-
 int
 main (void)
 {
   TEST_INIT ();
 
   bool is_ok;
-  jerry_size_t sz, utf8_sz, cesu8_sz;
-  jerry_length_t cesu8_length, utf8_length;
+  jerry_size_t sz, cesu8_sz;
+  jerry_length_t cesu8_length;
   jerry_value_t val_t, val_foo, val_bar, val_A, val_A_prototype, val_a, val_a_foo, val_value_field, val_p, val_np;
   jerry_value_t val_call_external;
   jerry_value_t global_obj_val, obj_val;
@@ -367,8 +343,8 @@ main (void)
 
   parsed_code_val = jerry_parse (NULL,
                                  0,
-                                 (jerry_char_t *) test_source,
-                                 strlen (test_source),
+                                 test_source,
+                                 sizeof (test_source) - 1,
                                  JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
@@ -378,230 +354,6 @@ main (void)
   jerry_release_value (parsed_code_val);
 
   global_obj_val = jerry_get_global_object ();
-
-  /* Test corner case for jerry_string_to_char_buffer */
-  args[0] = jerry_create_string ((jerry_char_t *) "");
-  sz = jerry_get_string_size (args[0]);
-  TEST_ASSERT (sz == 0);
-  jerry_release_value (args[0]);
-
-  /* Test create_jerry_string_from_utf8 with 4-byte long unicode sequences,
-   * test string: 'str: {DESERET CAPITAL LETTER LONG I}'
-   */
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
-  args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
-
-  /* These sizes must be equal */
-  utf8_sz = jerry_get_string_size (args[0]);
-  cesu8_sz = jerry_get_string_size (args[1]);
-
-  char string_from_utf8[utf8_sz];
-  char string_from_cesu8[cesu8_sz];
-
-  jerry_string_to_char_buffer (args[0], (jerry_char_t *) string_from_utf8, utf8_sz);
-  jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_from_cesu8, cesu8_sz);
-
-  TEST_ASSERT (utf8_sz == cesu8_sz);
-  TEST_ASSERT (!strncmp (string_from_utf8, string_from_cesu8, utf8_sz));
-  jerry_release_value (args[0]);
-  jerry_release_value (args[1]);
-
-  /* Test jerry_string_to_utf8_char_buffer, test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x90\x90\x80");
-  args[1] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
-
-  /* Test that the strings are equal / ensure hashes are equal */
-  TEST_ASSERT (strict_equals (args[0], args[1]));
-
-  /* These sizes must be equal */
-  utf8_sz = jerry_get_utf8_string_size (args[0]);
-  cesu8_sz = jerry_get_utf8_string_size (args[1]);
-
-  TEST_ASSERT (utf8_sz == cesu8_sz);
-
-  char string_from_utf8_string[utf8_sz];
-  char string_from_cesu8_string[cesu8_sz];
-
-  jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) string_from_utf8_string, utf8_sz);
-  jerry_string_to_utf8_char_buffer (args[1], (jerry_char_t *) string_from_cesu8_string, cesu8_sz);
-
-  TEST_ASSERT (!strncmp (string_from_utf8_string, string_from_cesu8_string, utf8_sz));
-  jerry_release_value (args[0]);
-  jerry_release_value (args[1]);
-
-  /* Test string: 'str: {MATHEMATICAL FRAKTUR SMALL F}{MATHEMATICAL FRAKTUR SMALL G}' */
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4");
-
-  cesu8_length = jerry_get_string_length (args[0]);
-  utf8_length = jerry_get_utf8_string_length (args[0]);
-
-  cesu8_sz = jerry_get_string_size (args[0]);
-  utf8_sz =  jerry_get_utf8_string_size (args[0]);
-
-  TEST_ASSERT (cesu8_length == 10 && utf8_length == 8);
-  TEST_ASSERT (cesu8_sz != utf8_sz);
-  TEST_ASSERT (utf8_sz == 14 && cesu8_sz == 18);
-
-  char test_string[utf8_sz];
-
-  TEST_ASSERT (jerry_string_to_utf8_char_buffer (args[0], (jerry_char_t *) test_string, utf8_sz) == 14);
-  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", utf8_sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length, (jerry_char_t *) test_string, utf8_sz);
-  TEST_ASSERT (sz == 14);
-  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length + 1, (jerry_char_t *) test_string, utf8_sz);
-  TEST_ASSERT (sz == 14);
-  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 \xf0\x9d\x94\xa4", sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0], utf8_length, 0, (jerry_char_t *) test_string, utf8_sz);
-  TEST_ASSERT (sz == 0);
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length, (jerry_char_t *) test_string, utf8_sz - 1);
-  TEST_ASSERT (sz == 10);
-  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 ", sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0], 0, utf8_length - 1, (jerry_char_t *) test_string, utf8_sz);
-  TEST_ASSERT (sz == 10);
-  TEST_ASSERT (!strncmp (test_string, "\x73\x74\x72\x3a \xf0\x9d\x94\xa3 ", sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0],
-                                            utf8_length - 2,
-                                            utf8_length - 1,
-                                            (jerry_char_t *) test_string,
-                                            utf8_sz);
-  TEST_ASSERT (sz == 1);
-  TEST_ASSERT (!strncmp (test_string, " ", sz));
-
-  sz = jerry_substring_to_utf8_char_buffer (args[0],
-                                            utf8_length - 3,
-                                            utf8_length - 2,
-                                            (jerry_char_t *) test_string,
-                                            utf8_sz);
-  TEST_ASSERT (sz == 4);
-  TEST_ASSERT (!strncmp (test_string, "\xf0\x9d\x94\xa3", sz));
-
-  jerry_release_value (args[0]);
-
-  /* Test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
-  args[0] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
-
-  cesu8_length = jerry_get_string_length (args[0]);
-  utf8_length = jerry_get_utf8_string_length (args[0]);
-
-  cesu8_sz = jerry_get_string_size (args[0]);
-  utf8_sz =  jerry_get_utf8_string_size (args[0]);
-
-  TEST_ASSERT (cesu8_length == 7 && utf8_length == 6);
-  TEST_ASSERT (cesu8_sz != utf8_sz);
-  TEST_ASSERT (utf8_sz == 9 && cesu8_sz == 11);
-
-  jerry_release_value (args[0]);
-
-  /* Test string: 'price: 10{EURO SIGN}' */
-  args[0] = jerry_create_string_from_utf8 ((jerry_char_t *) "\x70\x72\x69\x63\x65\x3a \x31\x30\xe2\x82\xac");
-
-  cesu8_length = jerry_get_string_length (args[0]);
-  utf8_length = jerry_get_utf8_string_length (args[0]);
-
-  cesu8_sz = jerry_get_string_size (args[0]);
-  utf8_sz =  jerry_get_utf8_string_size (args[0]);
-
-  TEST_ASSERT (cesu8_length == utf8_length);
-  TEST_ASSERT (cesu8_length == 10);
-  TEST_ASSERT (cesu8_sz == utf8_sz);
-  TEST_ASSERT (utf8_sz == 12);
-  jerry_release_value (args[0]);
-
-  /* Test jerry_substring_to_char_buffer */
-  args[0] = jerry_create_string ((jerry_char_t *) "an ascii string");
-
-  /* Buffer size */
-  cesu8_sz = 5;
-
-  char substring[cesu8_sz];
-  sz = jerry_substring_to_char_buffer (args[0], 3, 8, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz == 5);
-  TEST_ASSERT (!strncmp (substring, "ascii", sz));
-
-  /* Buffer size is 5, substring length is 11 => copied only the first 5 char */
-  sz = jerry_substring_to_char_buffer (args[0], 0, 11, (jerry_char_t *) substring, cesu8_sz);
-
-  TEST_ASSERT (sz == 5);
-  TEST_ASSERT (!strncmp (substring, "an as", sz));
-
-  /* Position of the first character is greater than the string length */
-  sz = jerry_substring_to_char_buffer (args[0], 16, 21, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz == 0);
-
-  sz = jerry_substring_to_char_buffer (args[0], 14, 15, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz == 1);
-  TEST_ASSERT (!strncmp (substring, "g", sz));
-
-  sz = jerry_substring_to_char_buffer (args[0], 0, 1, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz == 1);
-  TEST_ASSERT (!strncmp (substring, "a", sz));
-
-  cesu8_length = jerry_get_string_length (args[0]);
-  cesu8_sz = jerry_get_string_size (args[0]);
-  TEST_ASSERT (cesu8_length == 15);
-  TEST_ASSERT (cesu8_length == cesu8_sz);
-
-  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) substring, cesu8_sz);
-  TEST_ASSERT (sz = 15);
-  TEST_ASSERT (!strncmp (substring, "an ascii string", sz));
-
-  jerry_release_value (args[0]);
-
-  /* Test jerry_substring_to_char_buffer: '0101' */
-  args[0] = jerry_create_string ((jerry_char_t *) "0101");
-  cesu8_sz = jerry_get_string_size (args[0]);
-
-  char number_substring[cesu8_sz];
-
-  sz = jerry_substring_to_char_buffer (args[0], 1, 3, (jerry_char_t *) number_substring, cesu8_sz);
-  TEST_ASSERT (sz == 2);
-  TEST_ASSERT (!strncmp (number_substring, "10", sz));
-
-  jerry_release_value (args[0]);
-
-  /* Test jerry_substring_to_char_buffer: 'str: {greek zero sign}' */
-  args[0] = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x80\xed\xb6\x8a");
-  cesu8_sz = jerry_get_string_size (args[0]);
-  cesu8_length = jerry_get_string_length (args[0]);
-  TEST_ASSERT (cesu8_sz == 11);
-  TEST_ASSERT (cesu8_length = 7);
-
-  char supl_substring[cesu8_sz];
-
-  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) supl_substring, cesu8_sz);
-  TEST_ASSERT (sz == 11);
-  TEST_ASSERT (!strncmp (supl_substring, "\x73\x74\x72\x3a \xed\xa0\x80\xed\xb6\x8a", sz));
-
-  /* Decrease the buffer size => the low surrogate char will not fit into the buffer */
-  cesu8_sz -= 1;
-  sz = jerry_substring_to_char_buffer (args[0], 0, cesu8_length, (jerry_char_t *) supl_substring, cesu8_sz);
-  TEST_ASSERT (sz == 8);
-  TEST_ASSERT (!strncmp (supl_substring, "\x73\x74\x72\x3a \xed\xa0\x80", sz));
-
-  sz = jerry_substring_to_char_buffer (args[0],
-                                       cesu8_length - 1,
-                                       cesu8_length,
-                                       (jerry_char_t *) supl_substring,
-                                       cesu8_sz);
-  TEST_ASSERT (sz == 3);
-  TEST_ASSERT (!strncmp (supl_substring, "\xed\xb6\x8a", sz));
-
-  sz = jerry_substring_to_char_buffer (args[0],
-                                       cesu8_length - 2,
-                                       cesu8_length - 1,
-                                       (jerry_char_t *) supl_substring,
-                                       cesu8_sz);
-  TEST_ASSERT (sz == 3);
-  TEST_ASSERT (!strncmp (supl_substring, "\xed\xa0\x80", sz));
-
-  jerry_release_value (args[0]);
 
   /* Get global.boo (non-existing field) */
   val_t = get_property (global_obj_val, "boo");
@@ -830,6 +582,7 @@ main (void)
   jerry_release_value (val_t);
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -839,6 +592,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_error (res));
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -854,6 +608,7 @@ main (void)
   jerry_release_value (val_t);
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -863,6 +618,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_error (res));
 
   /* 'res' should contain exception object */
+  res = jerry_get_value_from_error (res, true);
   TEST_ASSERT (jerry_value_is_object (res));
   jerry_release_value (res);
 
@@ -890,48 +646,6 @@ main (void)
   jerry_release_value (v_und);
   jerry_release_value (array_obj_val);
 
-  /* Test: init property descriptor */
-  jerry_property_descriptor_t prop_desc;
-  jerry_init_property_descriptor_fields (&prop_desc);
-  TEST_ASSERT (prop_desc.is_value_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable_defined == false);
-  TEST_ASSERT (prop_desc.is_writable == false);
-  TEST_ASSERT (prop_desc.is_enumerable_defined == false);
-  TEST_ASSERT (prop_desc.is_enumerable == false);
-  TEST_ASSERT (prop_desc.is_configurable_defined == false);
-  TEST_ASSERT (prop_desc.is_configurable == false);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-
-  /* Test: define own properties */
-  jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "my_defined_property");
-  prop_desc.is_value_defined = true;
-  prop_desc.value = jerry_acquire_value (prop_name);
-  res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (!jerry_value_is_error (res));
-  TEST_ASSERT (jerry_value_is_boolean (res));
-  TEST_ASSERT (jerry_get_boolean_value (res));
-  jerry_release_value (res);
-  jerry_free_property_descriptor_fields (&prop_desc);
-
-  /* Test: get own property descriptor */
-  is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (is_ok);
-  TEST_ASSERT (prop_desc.is_value_defined == true);
-  TEST_ASSERT (jerry_value_is_string (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable == false);
-  TEST_ASSERT (prop_desc.is_enumerable == false);
-  TEST_ASSERT (prop_desc.is_configurable == false);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
-  TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_release_value (prop_name);
-  jerry_free_property_descriptor_fields (&prop_desc);
-
   /* Test: object keys */
   res = jerry_get_object_keys (global_obj_val);
   TEST_ASSERT (!jerry_value_is_error (res));
@@ -939,7 +653,7 @@ main (void)
   jerry_release_value (res);
 
   /* Test: jerry_value_to_primitive */
-  obj_val = jerry_eval ((jerry_char_t *) "new String ('hello')", 20, false);
+  obj_val = jerry_eval ((jerry_char_t *) "new String ('hello')", 20, JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (obj_val));
   TEST_ASSERT (jerry_value_is_object (obj_val));
   TEST_ASSERT (!jerry_value_is_string (obj_val));
@@ -972,8 +686,8 @@ main (void)
   jerry_release_value (obj_val);
 
   /* Test: eval */
-  const char *eval_code_src_p = "(function () { return 123; })";
-  val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), true);
+  const jerry_char_t eval_code_src1[] = "(function () { return 123; })";
+  val_t = jerry_eval (eval_code_src1, sizeof (eval_code_src1) - 1, JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_is_error (val_t));
   TEST_ASSERT (jerry_value_is_object (val_t));
   TEST_ASSERT (jerry_value_is_function (val_t));
@@ -990,11 +704,11 @@ main (void)
   jerry_release_value (global_obj_val);
 
   /* Test: run gc. */
-  jerry_gc ();
+  jerry_gc (JERRY_GC_SEVERITY_LOW);
 
   /* Test: spaces */
-  eval_code_src_p = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";
-  val_t = jerry_eval ((jerry_char_t *) eval_code_src_p, strlen (eval_code_src_p), true);
+  const jerry_char_t eval_code_src2[] = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";
+  val_t = jerry_eval (eval_code_src2, sizeof (eval_code_src2) - 1, JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_is_error (val_t));
   TEST_ASSERT (jerry_value_is_number (val_t)
                && jerry_get_number_value (val_t) == 4321.0);
@@ -1017,16 +731,16 @@ main (void)
   jerry_release_value (val_t);
 
   /* Test: create function */
-  const char *func_resource = "unknown";
-  const char *func_arg_list = "a , b,c";
-  const char *func_src = "  return 5 +  a+\nb+c";
+  const jerry_char_t func_resource[] = "unknown";
+  const jerry_char_t func_arg_list[] = "a , b,c";
+  const jerry_char_t func_src[] = "  return 5 +  a+\nb+c";
 
-  jerry_value_t func_val = jerry_parse_function ((const jerry_char_t *) func_resource,
-                                                 strlen (func_resource),
-                                                 (const jerry_char_t *) func_arg_list,
-                                                 strlen (func_arg_list),
-                                                 (const jerry_char_t *) func_src,
-                                                 strlen (func_src),
+  jerry_value_t func_val = jerry_parse_function (func_resource,
+                                                 sizeof (func_resource) - 1,
+                                                 func_arg_list,
+                                                 sizeof (func_arg_list) - 1,
+                                                 func_src,
+                                                 sizeof (func_src) - 1,
                                                  JERRY_PARSE_NO_OPTS);
 
   TEST_ASSERT (!jerry_value_is_error (func_val));
@@ -1053,7 +767,7 @@ main (void)
   {
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t num_val = jerry_create_number (123);
-    jerry_value_set_error_flag (&num_val);
+    num_val = jerry_create_error_from_value (num_val, true);
     TEST_ASSERT (jerry_value_is_error (num_val));
     jerry_value_t num2_val = jerry_get_value_from_error (num_val, false);
     TEST_ASSERT (jerry_value_is_error (num_val));
@@ -1073,11 +787,11 @@ main (void)
   {
     jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-    const char *parser_err_src_p = "b = 'hello';\nvar a = (;";
+    const jerry_char_t parser_err_src[] = "b = 'hello';\nvar a = (;";
     parsed_code_val = jerry_parse (NULL,
                                    0,
-                                   (jerry_char_t *) parser_err_src_p,
-                                   strlen (parser_err_src_p),
+                                   parser_err_src,
+                                   sizeof (parser_err_src) - 1,
                                    JERRY_PARSE_NO_OPTS);
     TEST_ASSERT (jerry_value_is_error (parsed_code_val));
     parsed_code_val = jerry_get_value_from_error (parsed_code_val, true);
@@ -1098,16 +812,16 @@ main (void)
   /* External Magic String */
   jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-  uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_char_ptr_t));
+  uint32_t num_magic_string_items = (uint32_t) (sizeof (magic_string_items) / sizeof (jerry_char_t *));
   jerry_register_magic_strings (magic_string_items,
                                 num_magic_string_items,
                                 magic_string_lengths);
 
-  const char *ms_code_src_p = "var global = {}; var console = [1]; var process = 1;";
+  const jerry_char_t ms_code_src[] = "var global = {}; var console = [1]; var process = 1;";
   parsed_code_val = jerry_parse (NULL,
                                  0,
-                                 (jerry_char_t *) ms_code_src_p,
-                                 strlen (ms_code_src_p),
+                                 ms_code_src,
+                                 sizeof (ms_code_src) - 1,
                                  JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
@@ -1132,10 +846,10 @@ main (void)
 
   jerry_release_value (args[0]);
 
-  const char *test_magic_str_access_src_p = "'console'.charAt(6) == 'e'";
-  res = jerry_eval ((const jerry_char_t *) test_magic_str_access_src_p,
-                    strlen (test_magic_str_access_src_p),
-                    false);
+  const jerry_char_t test_magic_str_access_src[] = "'console'.charAt(6) == 'e'";
+  res = jerry_eval (test_magic_str_access_src,
+                    sizeof (test_magic_str_access_src) - 1,
+                    JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (jerry_value_is_boolean (res));
   TEST_ASSERT (jerry_get_boolean_value (res) == true);
 
@@ -1155,22 +869,20 @@ main (void)
 
   {
     /*json parser check*/
-    char data_check[]="John";
+    const char data_check[]="John";
     jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
-    const char *data = "{\"name\": \"John\", \"age\": 5}";
-    jerry_size_t str_length = (jerry_size_t) strlen (data);
-    jerry_value_t parsed_json = jerry_json_parse ((jerry_char_t *) data, str_length);
+    const jerry_char_t data[] = "{\"name\": \"John\", \"age\": 5}";
+    jerry_value_t parsed_json = jerry_json_parse (data, sizeof (data) - 1);
     jerry_value_t has_prop_js = jerry_has_property (parsed_json, key);
     TEST_ASSERT (jerry_get_boolean_value (has_prop_js));
     jerry_release_value (has_prop_js);
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
     TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
     jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
-    char buff[jerry_get_string_length (parsed_data)];
-    jerry_char_t *buff_p = (jerry_char_t *) buff;
-    jerry_string_to_char_buffer (parsed_data, buff_p, buff_size);
+    char buff[buff_size + 1];
+    jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
     buff[buff_size] = '\0';
-    TEST_ASSERT (strcmp ((const char *) data_check, (const char *) buff) == false);
+    TEST_ASSERT (strcmp (data_check, buff) == false);
     jerry_release_value (parsed_json);
     jerry_release_value (key);
     jerry_release_value (parsed_data);
@@ -1183,7 +895,7 @@ main (void)
     jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
     jerry_value_t value = jerry_create_string ((const jerry_char_t *) "John");
     jerry_set_property (obj, key, value);
-    jerry_value_t stringified = jerry_json_stringfy (obj);
+    jerry_value_t stringified = jerry_json_stringify (obj);
     TEST_ASSERT (jerry_value_is_string (stringified));
     char buff[jerry_get_string_length (stringified)];
     jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff,

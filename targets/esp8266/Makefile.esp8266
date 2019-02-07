@@ -18,7 +18,7 @@ BUILD_DIR  = build/obj-esp8266
 COPYTARGET = targets/esp8266/libs
 USBDEVICE  ?= /dev/ttyUSB0
 JERRYHEAP  ?= 20
-ESPTOOL    ?= /opt/Espressif/esptool-py/esptool.py
+ESPTOOL    ?= $(ESPTOOL_PATH)/esptool.py
 
 # compile flags
 ESP_CFLAGS := -D__TARGET_ESP8266 -D__attr_always_inline___=
@@ -50,7 +50,6 @@ jerry:
 	 -DCMAKE_C_COMPILER_WORKS=TRUE \
 	 -DENABLE_LTO=OFF \
 	 -DENABLE_ALL_IN_ONE=ON \
-	 -DJERRY_LIBC=OFF \
 	 -DJERRY_CMDLINE=OFF \
 	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
 	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP)

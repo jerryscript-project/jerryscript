@@ -21,7 +21,7 @@
 extern uint32_t jsmbed_js_magic_string_count;
 extern uint32_t jsmbed_js_magic_string_values[];
 
-extern const jerry_char_ptr_t jsmbed_js_magic_strings[];
+extern const jerry_char_t *jsmbed_js_magic_strings[];
 extern const jerry_length_t jsmbed_js_magic_string_lengths[];
 
 void jsmbed_js_load_magic_strings() {

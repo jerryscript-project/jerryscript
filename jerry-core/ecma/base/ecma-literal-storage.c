@@ -57,6 +57,9 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
 void
 ecma_finalize_lit_storage (void)
 {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  ecma_free_string_list (JERRY_CONTEXT (symbol_list_first_p));
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
   ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
   ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
 } /* ecma_finalize_lit_storage */
@@ -286,7 +289,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
     const_literal_end = args_p->const_literal_end - register_end;
     literal_end = args_p->literal_end - register_end;
 
-    if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (compiled_code_p))
     {
       argument_end = args_p->argument_end;
     }
@@ -301,7 +304,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
     const_literal_end = args_p->const_literal_end - register_end;
     literal_end = args_p->literal_end - register_end;
 
-    if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (compiled_code_p))
     {
       argument_end = args_p->argument_end;
     }
@@ -346,7 +349,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
  * Save literals to specified snapshot buffer.
  *
  * Note:
- *   Frees lit_pool_p regardless of success.
+ *      Frees 'lit_pool_p' regardless of success.
  *
  * @return true - if save was performed successfully (i.e. buffer size is sufficient),
  *         false - otherwise

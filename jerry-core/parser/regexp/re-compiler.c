@@ -75,7 +75,8 @@ re_insert_simple_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler con
   }
   else if (qmin > qmax)
   {
-    return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: qmin > qmax."));
+    /* ECMA-262 v5.1 15.10.2.5 */
+    return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: min > max."));
   }
 
   /* TODO: optimize bytecode length. Store 0 rather than INF */
@@ -166,23 +167,31 @@ re_get_end_opcode_type (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler contex
 
 /**
  * Enclose the given bytecode to a group
+ *
+ * @return empty ecma value - if inserted successfully
+ *         error ecma value - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value
  */
-static void
+static ecma_value_t
 re_insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                       uint32_t group_start_offset, /**< offset of group start */
                       uint32_t idx, /**< index of group */
                       bool is_capturable) /**< is capturable group */
 {
-  uint32_t qmin, qmax;
+  uint32_t qmin = re_ctx_p->current_token.qmin;
+  uint32_t qmax = re_ctx_p->current_token.qmax;
+
+  if (qmin > qmax)
+  {
+    /* ECMA-262 v5.1 15.10.2.5 */
+    return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: min > max."));
+  }
+
   re_opcode_t start_opcode = re_get_start_opcode_type (re_ctx_p, is_capturable);
   re_opcode_t end_opcode = re_get_end_opcode_type (re_ctx_p, is_capturable);
-  uint32_t start_head_offset_len;
 
-  qmin = re_ctx_p->current_token.qmin;
-  qmax = re_ctx_p->current_token.qmax;
-  JERRY_ASSERT (qmin <= qmax);
-
-  start_head_offset_len = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
+  uint32_t start_head_offset_len = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
   re_insert_u32 (re_ctx_p->bytecode_ctx_p, group_start_offset, idx);
   re_insert_opcode (re_ctx_p->bytecode_ctx_p, group_start_offset, start_opcode);
   start_head_offset_len = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p) - start_head_offset_len;
@@ -201,12 +210,19 @@ re_insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
                    group_start_offset,
                    re_get_bytecode_length (re_ctx_p->bytecode_ctx_p) - group_start_offset);
   }
+
+  return ECMA_VALUE_EMPTY;
 } /* re_insert_into_group */
 
 /**
  * Enclose the given bytecode to a group and inster jump value
+ *
+ * @return empty ecma value - if inserted successfully
+ *         error ecma value - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value
  */
-static void
+static ecma_value_t
 re_insert_into_group_with_jump (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                                 uint32_t group_start_offset, /**< offset of group start */
                                 uint32_t idx, /**< index of group */
@@ -215,7 +231,7 @@ re_insert_into_group_with_jump (re_compiler_ctx_t *re_ctx_p, /**< RegExp compile
   re_insert_u32 (re_ctx_p->bytecode_ctx_p,
                  group_start_offset,
                  re_get_bytecode_length (re_ctx_p->bytecode_ctx_p) - group_start_offset);
-  re_insert_into_group (re_ctx_p, group_start_offset, idx, is_capturable);
+  return re_insert_into_group (re_ctx_p, group_start_offset, idx, is_capturable);
 } /* re_insert_into_group_with_jump */
 
 /**
@@ -230,6 +246,7 @@ static ecma_value_t
 re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
                       bool expect_eof) /**< expect end of file */
 {
+  REGEXP_RECURSION_COUNTER_DECREASE_AND_TEST ();
   uint32_t idx;
   re_bytecode_ctx_t *bc_ctx_p = re_ctx_p->bytecode_ctx_p;
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
@@ -246,7 +263,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       ret_value = next_token_result;
       break;
     }
-    JERRY_ASSERT (next_token_result == ECMA_VALUE_EMPTY);
+    JERRY_ASSERT (ecma_is_value_empty (next_token_result));
 
     uint32_t new_atom_start_offset = re_get_bytecode_length (re_ctx_p->bytecode_ctx_p);
 
@@ -261,7 +278,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
         if (ecma_is_value_empty (ret_value))
         {
-          re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, true);
+          ret_value = re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, true);
         }
 
         break;
@@ -275,7 +292,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
         if (ecma_is_value_empty (ret_value))
         {
-          re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
+          ret_value = re_insert_into_group (re_ctx_p, new_atom_start_offset, idx, false);
         }
 
         break;
@@ -345,7 +362,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         {
           re_append_opcode (bc_ctx_p, RE_OP_MATCH);
 
-          re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
+          ret_value = re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         }
 
         break;
@@ -362,7 +379,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         {
           re_append_opcode (bc_ctx_p, RE_OP_MATCH);
 
-          re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
+          ret_value = re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         }
 
         break;
@@ -381,7 +398,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         re_append_opcode (bc_ctx_p, RE_OP_BACKREFERENCE);
         re_append_u32 (bc_ctx_p, backref);
 
-        re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
+        ret_value = re_insert_into_group_with_jump (re_ctx_p, new_atom_start_offset, idx, false);
         break;
       }
       case RE_TOK_DIGIT:
@@ -424,6 +441,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         else
         {
           re_insert_u32 (bc_ctx_p, alterantive_offset, re_get_bytecode_length (bc_ctx_p) - alterantive_offset);
+          REGEXP_RECURSION_COUNTER_INCREASE ();
           should_loop = false;
         }
         break;
@@ -437,6 +455,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
         else
         {
           re_insert_u32 (bc_ctx_p, alterantive_offset, re_get_bytecode_length (bc_ctx_p) - alterantive_offset);
+          REGEXP_RECURSION_COUNTER_INCREASE ();
           should_loop = false;
         }
 
@@ -543,6 +562,7 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
   re_ctx.flags = flags;
   re_ctx.highest_backref = 0;
   re_ctx.num_of_non_captures = 0;
+  REGEXP_RECURSION_COUNTER_INIT ();
 
   re_bytecode_ctx_t bc_ctx;
   bc_ctx.block_start_p = NULL;

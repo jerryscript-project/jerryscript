@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libjerry-port-default
+Description: JerryScript: lightweight JavaScript engine (default port library)
+URL: https://github.com/pando-project/jerryscript
+Version: 1.0
+Conflicts: libjerry-port-default-minimal
+Libs: -L${libdir} -ljerry-port-default
+Cflags: -I${includedir}

@@ -12,14 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build and output directories
 BUILD_DIR  ?= build/riotstm32f4
 COPYTARGET ?= targets/riot-stm32f4/bin
 
+# JerryScript configuration
 JERRYHEAP  ?= 16
 
-EXT_CFLAGS := -D__TARGET_RIOT_STM32F4
+# To be defined on the command line of make if Clang is available via a
+# different name (e.g., clang-N.M)
+CC ?= clang
+
+# Cross-compilation settings for Clang
+EXT_CFLAGS := -target arm-none-eabi
 EXT_CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4
-EXT_CFLAGS += -Wno-error=format=
+EXT_CFLAGS += -isystem /usr/arm-none-eabi/include
+EXT_CFLAGS += $(addprefix -isystem $(lastword $(sort $(wildcard /usr/lib/gcc/arm-none-eabi/*/))), include include-fixed)
+EXT_CFLAGS += -nostdinc
+
+# For ABI compatibility with RIOT-OS
+EXT_CFLAGS += -fshort-enums
+
 
 .PHONY: libjerry riot-jerry flash clean
 
@@ -27,25 +40,23 @@ all: libjerry riot-jerry
 
 libjerry:
 	mkdir -p $(BUILD_DIR)
-	mkdir -p $(COPYTARGET)
 	cmake -B$(BUILD_DIR) -H./ \
 	 -DCMAKE_SYSTEM_NAME=RIOT \
 	 -DCMAKE_SYSTEM_PROCESSOR=armv7l \
-	 -DCMAKE_C_COMPILER=arm-none-eabi-gcc \
+	 -DCMAKE_C_COMPILER=$(CC) \
 	 -DCMAKE_C_COMPILER_WORKS=TRUE \
 	 -DENABLE_LTO=OFF \
 	 -DENABLE_ALL_IN_ONE=OFF \
-	 -DJERRY_LIBC=OFF \
 	 -DJERRY_LIBM=OFF \
 	 -DJERRY_CMDLINE=OFF \
 	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
 	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP)
-
 	make -C$(BUILD_DIR) jerry-core jerry-port-default-minimal jerry-ext
-	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/libjerrycore.a
-	cp $(BUILD_DIR)/lib/libjerry-port-default-minimal.a $(COPYTARGET)/libjerryport-minimal.a
-	cp $(BUILD_DIR)/lib/libjerry-ext.a $(COPYTARGET)/libjerryext.a
 
+	mkdir -p $(COPYTARGET)
+	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)
+	cp $(BUILD_DIR)/lib/libjerry-port-default-minimal.a $(COPYTARGET)
+	cp $(BUILD_DIR)/lib/libjerry-ext.a $(COPYTARGET)
 
 riot-jerry: libjerry
 	make -f ./targets/riot-stm32f4/Makefile

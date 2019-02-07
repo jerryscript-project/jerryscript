@@ -72,5 +72,5 @@ void jerry_port_fatal (jerry_fatal_code_t code) /**< cause of error */
   }
 #endif /* !DISABLE_EXTRA_API */
 
-  exit (code);
+  exit ((int) code);
 } /* jerry_port_fatal */

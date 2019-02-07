@@ -24,26 +24,26 @@
  * @{
  */
 
- /**
-  * @{
-  * Valgrind-related options and headers
-  */
- #ifdef JERRY_VALGRIND
- # include "memcheck.h"
+/**
+ * @{
+ * Valgrind-related options and headers
+ */
+#ifdef JERRY_VALGRIND
+# include "memcheck.h"
 
- # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
- # define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
- # define JMEM_VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
- # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s) VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
- # define JMEM_VALGRIND_FREELIKE_SPACE(p)      VALGRIND_FREELIKE_BLOCK((p), 0)
- #else /* !JERRY_VALGRIND */
- # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)
- # define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)
- # define JMEM_VALGRIND_DEFINED_SPACE(p, s)
- # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s)
- # define JMEM_VALGRIND_FREELIKE_SPACE(p)
- #endif /* JERRY_VALGRIND */
- /** @} */
+# define JMEM_VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
+# define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)  VALGRIND_MAKE_MEM_UNDEFINED((p), (s))
+# define JMEM_VALGRIND_DEFINED_SPACE(p, s)    VALGRIND_MAKE_MEM_DEFINED((p), (s))
+# define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s) VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
+# define JMEM_VALGRIND_FREELIKE_SPACE(p)      VALGRIND_FREELIKE_BLOCK((p), 0)
+#else /* !JERRY_VALGRIND */
+# define JMEM_VALGRIND_NOACCESS_SPACE(p, s)
+# define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)
+# define JMEM_VALGRIND_DEFINED_SPACE(p, s)
+# define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s)
+# define JMEM_VALGRIND_FREELIKE_SPACE(p)
+#endif /* JERRY_VALGRIND */
+/** @} */
 
 #ifdef JMEM_STATS
 void jmem_heap_stats_reset_peak (void);
@@ -60,9 +60,6 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
  * \addtogroup poolman Memory pool manager
  * @{
  */
-#ifdef JMEM_STATS
-void jmem_pools_stats_print (void);
-#endif /* JMEM_STATS */
 
 void jmem_pools_finalize (void);
 void jmem_pools_collect_empty (void);

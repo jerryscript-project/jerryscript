@@ -31,8 +31,13 @@
  *
  * See also: ECMA-262 v5, 11.9.3
  *
+ * Note:
+ *      This function might raise an exception, so the
+ *      returned value must be freed with ecma_free_value.
+ *
  * @return true - if values are equal,
  *         false - otherwise
+ *         error - in case of any problems
  */
 ecma_value_t
 ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
@@ -125,6 +130,13 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     y = tmp;
   }
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  if (ecma_is_value_symbol (x))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
   if (ecma_is_value_boolean (y))
   {
     if (ecma_is_value_boolean (x))
@@ -141,6 +153,9 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
   if (ecma_is_value_object (x))
   {
     if (ecma_is_value_string (y)
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        || ecma_is_value_symbol (y)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
         || ecma_is_value_number (y))
     {
       /* 9. */
@@ -195,6 +210,10 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
 {
   if (ecma_is_value_direct (x)
       || ecma_is_value_direct (y)
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+      || ecma_is_value_symbol (x)
+      || ecma_is_value_symbol (y)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
       || ecma_is_value_object (x)
       || ecma_is_value_object (y))
   {
@@ -286,12 +305,18 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 1., 2. */
-  ECMA_TRY_CATCH (prim_first_converted_value,
-                  ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NUMBER),
-                  ret_value);
-  ECMA_TRY_CATCH (prim_second_converted_value,
-                  ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NUMBER),
-                  ret_value);
+  ecma_value_t prim_first_converted_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NUMBER);
+  if (ECMA_IS_VALUE_ERROR (prim_first_converted_value))
+  {
+    return prim_first_converted_value;
+  }
+
+  ecma_value_t prim_second_converted_value = ecma_op_to_primitive (y, ECMA_PREFERRED_TYPE_NUMBER);
+  if (ECMA_IS_VALUE_ERROR (prim_second_converted_value))
+  {
+    ecma_free_value (prim_first_converted_value);
+    return prim_second_converted_value;
+  }
 
   const ecma_value_t px = left_first ? prim_first_converted_value : prim_second_converted_value;
   const ecma_value_t py = left_first ? prim_second_converted_value : prim_first_converted_value;
@@ -393,8 +418,8 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ret_value = ecma_make_boolean_value (is_px_less);
   }
 
-  ECMA_FINALIZE (prim_second_converted_value);
-  ECMA_FINALIZE (prim_first_converted_value);
+  ecma_free_value (prim_second_converted_value);
+  ecma_free_value (prim_first_converted_value);
 
   return ret_value;
 } /* ecma_op_abstract_relational_compare */

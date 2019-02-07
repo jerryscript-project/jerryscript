@@ -35,4 +35,6 @@
     } \
   } while (0)
 
+#define TEST_STRING_LITERAL(x) x
+
 #endif /* !TEST_COMMON_H */

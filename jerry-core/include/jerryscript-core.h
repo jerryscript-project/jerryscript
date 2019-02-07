@@ -91,6 +91,7 @@ typedef enum
   JERRY_FEATURE_DATE, /**< Date support */
   JERRY_FEATURE_REGEXP, /**< Regexp support */
   JERRY_FEATURE_LINE_INFO, /**< line info available */
+  JERRY_FEATURE_LOGGING, /**< logging */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -100,18 +101,34 @@ typedef enum
 typedef enum
 {
   JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
-  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+  JERRY_PARSE_STRICT_MODE = (1 << 0) /**< enable strict mode */
 } jerry_parse_opts_t;
+
+/**
+ * GC operational modes.
+ */
+typedef enum
+{
+  JERRY_GC_SEVERITY_LOW, /**< free unused objects, but keep memory
+                          *   allocated for performance improvements
+                          *   such as property hash tables for large objects */
+  JERRY_GC_SEVERITY_HIGH /**< free as much memory as possible */
+} jerry_gc_mode_t;
+
+/**
+ * Jerry regexp flags.
+ */
+typedef enum
+{
+  JERRY_REGEXP_FLAG_GLOBAL = (1u << 1),      /**< Globally scan string */
+  JERRY_REGEXP_FLAG_IGNORE_CASE = (1u << 2), /**< Ignore case */
+  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3)    /**< Multiline string scan */
+} jerry_regexp_flags_t;
 
 /**
  * Character type of JerryScript.
  */
 typedef uint8_t jerry_char_t;
-
-/**
- * Pointer to an array of character values.
- */
-typedef jerry_char_t *jerry_char_ptr_t;
 
 /**
  * Size type of JerryScript.
@@ -190,11 +207,6 @@ typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_
                                                    const jerry_value_t this_val,
                                                    const jerry_value_t args_p[],
                                                    const jerry_length_t args_count);
-
-/**
- * Native free callback of an object (deprecated).
- */
-typedef void (*jerry_object_free_callback_t) (const uintptr_t native_p);
 
 /**
  * Native free callback of an object.
@@ -279,9 +291,9 @@ typedef struct
 } jerry_context_data_manager_t;
 
 /**
- * Function type for allocating buffer for JerryScript instance.
+ * Function type for allocating buffer for JerryScript context.
  */
-typedef void *(*jerry_instance_alloc_t) (size_t size, void *cb_data_p);
+typedef void *(*jerry_context_alloc_t) (size_t size, void *cb_data_p);
 
 /**
  * Type information of a native pointer.
@@ -292,18 +304,32 @@ typedef struct
 } jerry_object_native_info_t;
 
 /**
- * A forward declaration of the JerryScript instance structure.
+ * An opaque declaration of the JerryScript context structure.
  */
-typedef struct jerry_instance_t jerry_instance_t;
+typedef struct jerry_context_t jerry_context_t;
+
+/**
+ * Enum that contains the supported binary operation types
+ */
+typedef enum
+{
+  JERRY_BIN_OP_EQUAL = 0u,   /**< equal comparison (==) */
+  JERRY_BIN_OP_STRICT_EQUAL, /**< strict equal comparison (===) */
+  JERRY_BIN_OP_LESS,         /**< less relation (<) */
+  JERRY_BIN_OP_LESS_EQUAL,   /**< less or equal relation (<=) */
+  JERRY_BIN_OP_GREATER,      /**< greater relation (>) */
+  JERRY_BIN_OP_GREATER_EQUAL /**< greater or equal relation (>=)*/
+} jerry_binary_operation_t;
 
 /**
  * General engine functions.
  */
 void jerry_init (jerry_init_flag_t flags);
 void jerry_cleanup (void);
-void jerry_register_magic_strings (const jerry_char_ptr_t *ex_str_items_p, uint32_t count,
+void jerry_register_magic_strings (const jerry_char_t * const *ex_str_items_p,
+                                   uint32_t count,
                                    const jerry_length_t *str_lengths_p);
-void jerry_gc (void);
+void jerry_gc (jerry_gc_mode_t mode);
 void *jerry_get_context_data (const jerry_context_data_manager_t *manager_p);
 
 bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);
@@ -318,7 +344,7 @@ jerry_value_t jerry_parse_function (const jerry_char_t *resource_name_p, size_t 
                                     const jerry_char_t *arg_list_p, size_t arg_list_size,
                                     const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 jerry_value_t jerry_run (const jerry_value_t func_val);
-jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, bool is_strict);
+jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 
 jerry_value_t jerry_run_all_enqueued_jobs (void);
 
@@ -356,6 +382,7 @@ typedef enum
   JERRY_TYPE_STRING,    /**< string type */
   JERRY_TYPE_OBJECT,    /**< object type */
   JERRY_TYPE_FUNCTION,  /**< function type */
+  JERRY_TYPE_ERROR,     /**< error/abort type */
 } jerry_type_t;
 
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
@@ -366,16 +393,23 @@ jerry_type_t jerry_value_get_type (const jerry_value_t value);
 bool jerry_is_feature_enabled (const jerry_feature_t feature);
 
 /**
+ * Binary operations
+ */
+jerry_value_t jerry_binary_operation (jerry_binary_operation_t op,
+                                      const jerry_value_t lhs,
+                                      const jerry_value_t rhs);
+
+/**
  * Error manipulation functions.
  */
+jerry_value_t jerry_create_abort_from_value (jerry_value_t value, bool release);
+jerry_value_t jerry_create_error_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
-void jerry_value_set_error_flag (jerry_value_t *value_p);
-void jerry_value_set_abort_flag (jerry_value_t *value_p);
 
 /**
  * Error object function(s).
  */
-jerry_error_t jerry_get_error_type (const jerry_value_t value);
+jerry_error_t jerry_get_error_type (jerry_value_t value);
 
 /**
  * Getter functions of 'jerry_value_t'.
@@ -444,6 +478,8 @@ jerry_value_t jerry_create_number_nan (void);
 jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
 jerry_value_t jerry_create_promise (void);
+jerry_value_t jerry_create_regexp (const jerry_char_t *pattern, uint16_t flags);
+jerry_value_t jerry_create_regexp_sz (const jerry_char_t *pattern, jerry_size_t pattern_size, uint16_t flags);
 jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);
@@ -484,23 +520,18 @@ jerry_value_t jerry_get_object_keys (const jerry_value_t obj_val);
 jerry_value_t jerry_get_prototype (const jerry_value_t obj_val);
 jerry_value_t jerry_set_prototype (const jerry_value_t obj_val, const jerry_value_t proto_obj_val);
 
-JERRY_ATTR_DEPRECATED
-bool jerry_get_object_native_handle (const jerry_value_t obj_val, uintptr_t *out_handle_p);
-JERRY_ATTR_DEPRECATED
-void jerry_set_object_native_handle (const jerry_value_t obj_val, uintptr_t handle_p,
-                                     jerry_object_free_callback_t freecb_p);
-
 bool jerry_get_object_native_pointer (const jerry_value_t obj_val,
                                       void **out_native_pointer_p,
                                       const jerry_object_native_info_t **out_pointer_info_p);
+void jerry_set_object_native_pointer (const jerry_value_t obj_val,
+                                      void *native_pointer_p,
+                                      const jerry_object_native_info_t *native_info_p);
+
 bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
                             void *user_data);
 bool jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_info_p,
                                            jerry_objects_foreach_by_native_info_t foreach_p,
                                            void *user_data_p);
-void jerry_set_object_native_pointer (const jerry_value_t obj_val,
-                                      void *native_pointer_p,
-                                      const jerry_object_native_info_t *native_info_p);
 
 bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_property_foreach_t foreach_p,
                                     void *user_data_p);
@@ -517,9 +548,15 @@ bool jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, jerry_size_t bu
 bool jerry_is_valid_cesu8_string (const jerry_char_t *cesu8_buf_p, jerry_size_t buf_size);
 
 /*
+ * Dynamic memory management functions.
+ */
+void *jerry_heap_alloc (size_t size);
+void jerry_heap_free (void *mem_p, size_t size);
+
+/*
  * External context functions.
  */
-jerry_instance_t *jerry_create_instance (uint32_t heap_size, jerry_instance_alloc_t alloc, void *cb_data_p);
+jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t alloc, void *cb_data_p);
 
 /**
  * Miscellaneous functions.
@@ -583,7 +620,7 @@ jerry_value_t jerry_get_typedarray_buffer (jerry_value_t value,
                                            jerry_length_t *byte_offset,
                                            jerry_length_t *byte_length);
 jerry_value_t jerry_json_parse (const jerry_char_t *string_p, jerry_size_t string_size);
-jerry_value_t jerry_json_stringfy (const jerry_value_t object_to_stringify);
+jerry_value_t jerry_json_stringify (const jerry_value_t object_to_stringify);
 
 /**
  * @}

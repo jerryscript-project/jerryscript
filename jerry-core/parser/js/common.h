@@ -55,24 +55,21 @@ typedef enum
                                          used by the byte code generator. */
 } lexer_literal_type_t;
 
-/* Flags for status_flags. */
-
-/* Local identifier (var, function arg). */
-#define LEXER_FLAG_VAR 0x01
-/* This local identifier cannot be stored in register. */
-#define LEXER_FLAG_NO_REG_STORE 0x02
-/* This local identifier is initialized with a value. */
-#define LEXER_FLAG_INITIALIZED 0x04
-/* This local identifier has a reference to the function itself. */
-#define LEXER_FLAG_FUNCTION_NAME 0x08
-/* This local identifier is a function argument. */
-#define LEXER_FLAG_FUNCTION_ARGUMENT 0x10
-/* This local identifier is not used in the current context. */
-#define LEXER_FLAG_UNUSED_IDENT 0x20
-/* No space is allocated for this character literal. */
-#define LEXER_FLAG_SOURCE_PTR 0x40
-/* Initialize this variable after the byte code is freed. */
-#define LEXER_FLAG_LATE_INIT 0x80
+/**
+ * Flag bits for status_flags member of lexer_literal_t.
+ */
+typedef enum
+{
+  LEXER_FLAG_VAR = (1 << 0), /**< local identifier (var, function arg) */
+  LEXER_FLAG_NO_REG_STORE = (1 << 1), /**< this local identifier cannot be stored in register */
+  LEXER_FLAG_INITIALIZED = (1 << 2), /**< this local identifier is initialized with a value */
+  LEXER_FLAG_FUNCTION_ARGUMENT = (1 << 3), /**< this local identifier is a function argument */
+  LEXER_FLAG_UNUSED_IDENT = (1 << 4), /**< this identifier is referenced by sub-functions,
+                                       *   but not referenced by the currently parsed function */
+  LEXER_FLAG_SOURCE_PTR = (1 << 5), /**< the literal is directly referenced in the source code
+                                     *   (no need to allocate memory) */
+  LEXER_FLAG_LATE_INIT = (1 << 6), /**< initialize this variable after the byte code is freed */
+} lexer_literal_status_flags_t;
 
 /**
  * Type of property length.

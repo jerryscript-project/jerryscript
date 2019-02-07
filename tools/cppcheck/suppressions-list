@@ -1,5 +1,4 @@
 wrongmathcall:tests/unit-libm/test-libm.inc.h
 variableScope:jerry-libm/*.c
 invalidPointerCast:jerry-libm/*.c
-arithOperationsOnVoidPointer:jerry-libc/*.c
 commaSeparatedReturn:*

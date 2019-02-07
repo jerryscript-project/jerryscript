@@ -72,7 +72,6 @@ ecma_builtin_uint8clampedarray_dispatch_construct (const ecma_value_t *arguments
                                                 0,
                                                 LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL);
 
-  ecma_deref_object (prototype_obj_p);
 
   return val;
 } /* ecma_builtin_uint8clampedarray_dispatch_construct */

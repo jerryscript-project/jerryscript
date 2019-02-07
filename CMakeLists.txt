@@ -13,7 +13,7 @@
 # limitations under the License.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (Jerry C ASM)
+project (Jerry C)
 
 # Determining platform
 set(PLATFORM "${CMAKE_SYSTEM_NAME}")
@@ -47,7 +47,6 @@ set(JERRY_CMDLINE_TEST      OFF CACHE BOOL "Build jerry test command line tool?"
 set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
 set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
-set(JERRY_LIBC              ON  CACHE BOOL "Build and use jerry-libc?")
 set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
 set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
 set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
@@ -57,9 +56,6 @@ set(BUILD_SHARED_LIBS  OFF CACHE BOOL "Build shared libraries?")
 set(ENABLE_ALL_IN_ONE  OFF CACHE BOOL "Enable all-in-one build?")
 set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
-
-# Optional features
-set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
 
 # Option overrides
 if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR UNITTESTS OR DOCTESTS)
@@ -75,15 +71,11 @@ if(JERRY_CMDLINE OR DOCTESTS)
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
-  set(JERRY_LIBC         OFF)
   set(JERRY_LIBM         OFF)
-  set(ENABLE_ALL_IN_ONE  ON)
   set(ENABLE_LTO         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_LIBC_MESSAGE         " (FORCED BY PLATFORM)")
   set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
-  set(ENABLE_ALL_IN_ONE_MESSAGE  " (FORCED BY PLATFORM)")
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
@@ -95,14 +87,10 @@ if(USING_TI)
 endif()
 
 if(USING_MSVC)
-  set(JERRY_LIBC         OFF)
   set(JERRY_LIBM         OFF)
-  set(ENABLE_ALL_IN_ONE  ON)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_LIBC_MESSAGE         " (FORCED BY COMPILER)")
   set(JERRY_LIBM_MESSAGE         " (FORCED BY COMPILER)")
-  set(ENABLE_ALL_IN_ONE_MESSAGE  " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
@@ -120,11 +108,9 @@ message(STATUS "JERRY_CMDLINE_TEST          " ${JERRY_CMDLINE_TEST})
 message(STATUS "JERRY_CMDLINE_SNAPSHOT      " ${JERRY_CMDLINE_SNAPSHOT})
 message(STATUS "JERRY_PORT_DEFAULT          " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_EXT                   " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
-message(STATUS "JERRY_LIBC                  " ${JERRY_LIBC} ${JERRY_LIBC_MESSAGE})
 message(STATUS "JERRY_LIBM                  " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
 message(STATUS "UNITTESTS                   " ${UNITTESTS})
 message(STATUS "DOCTESTS                    " ${DOCTESTS})
-message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
 
 # Setup directories
 # Note: This mimics a conventional file system layout in the build directory for
@@ -229,19 +215,10 @@ endif()
 # External compiler & linker flags
 if(DEFINED EXTERNAL_COMPILE_FLAGS)
   jerry_add_compile_flags(${EXTERNAL_COMPILE_FLAGS})
-  jerry_add_flags(CMAKE_ASM_FLAGS "${EXTERNAL_COMPILE_FLAGS}")
 endif()
 
 if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
-endif()
-
-# Jerry's libc
-if(JERRY_LIBC)
-  # Turn off linking to compiler's default libc, in case jerry-libc is used
-  jerry_add_link_flags(-nostdlib)
-
-  add_subdirectory(jerry-libc)
 endif()
 
 # Jerry's libm
@@ -252,14 +229,14 @@ endif()
 # Jerry's core
 add_subdirectory(jerry-core)
 
-# Jerry's default port implementation
-if(JERRY_PORT_DEFAULT)
-  add_subdirectory(jerry-port/default)
-endif()
-
 # Jerry's extension tools
 if(JERRY_EXT)
   add_subdirectory(jerry-ext)
+endif()
+
+# Jerry's default port implementation
+if(JERRY_PORT_DEFAULT)
+  add_subdirectory(jerry-port/default)
 endif()
 
 # Jerry command line tool

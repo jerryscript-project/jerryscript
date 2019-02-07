@@ -48,8 +48,8 @@ extern "C"
 typedef enum
 {
   ERR_OUT_OF_MEMORY = 10,
-  ERR_SYSCALL = 11,
   ERR_REF_COUNT_LIMIT = 12,
+  ERR_DISABLED_BYTE_CODE = 13,
   ERR_FAILED_INTERNAL_ASSERTION = 120
 } jerry_fatal_code_t;
 
@@ -97,6 +97,11 @@ typedef enum
  *
  * Example: a libc-based port may implement this with vfprintf(stderr) or
  * vfprintf(logfile), or both, depending on log level.
+ *
+ * Note:
+ *      This port function is called by jerry-core when JERRY_ENABLE_LOGGING is
+ *      defined. It is also common practice though to use this function in
+ *      application code.
  */
 void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_port_log (jerry_log_level_t level, const char *format, ...);
 
@@ -105,27 +110,37 @@ void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_port_log (jerry_log_level_t level, c
  */
 
 /**
- * Jerry time zone structure
- */
-typedef struct
-{
-  int offset;                /**< minutes from west */
-  int daylight_saving_time;  /**< daylight saving time (1 - DST applies, 0 - not on DST) */
-} jerry_time_zone_t;
-
-/**
- * Get timezone and daylight saving data
+ * Get local time zone adjustment, in milliseconds, for the given timestamp.
+ * The timestamp can be specified in either UTC or local time, depending on
+ * the value of is_utc. Adding the value returned from this function to
+ * a timestamp in UTC time should result in local time for the current time
+ * zone, and subtracting it from a timestamp in local time should result in
+ * UTC time.
+ *
+ * Ideally, this function should satisfy the stipulations applied to LocalTZA
+ * in section 20.3.1.7 of the ECMAScript version 9.0 spec.
+ *
+ * See Also:
+ *          ECMA-262 v9, 20.3.1.7
  *
  * Note:
  *      This port function is called by jerry-core when
  *      CONFIG_DISABLE_DATE_BUILTIN is _not_ defined. Otherwise this function is
  *      not used.
  *
- * @param[out] tz_p time zone structure to fill.
- * @return true  - if success
- *         false - otherwise
+ * @param unix_ms The unix timestamp we want an offset for, given in
+ *                millisecond precision (could be now, in the future,
+ *                or in the past). As with all unix timestamps, 0 refers to
+ *                1970-01-01, a day is exactly 86 400 000 milliseconds, and
+ *                leap seconds cause the same second to occur twice.
+ * @param is_utc Is the given timestamp in UTC time? If false, it is in local
+ *               time.
+ *
+ * @return milliseconds between local time and UTC for the given timestamp,
+ *         if available
+ *.        0 if not available / we are in UTC.
  */
-bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
+double jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc);
 
 /**
  * Get system time
@@ -141,17 +156,17 @@ bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p);
 double jerry_port_get_current_time (void);
 
 /**
- * Get the current instance which contains the current context, heap and other
- * structures. Each port should provide its own implementation of this interface.
+ * Get the current context of the engine. Each port should provide its own
+ * implementation of this interface.
  *
  * Note:
  *      This port function is called by jerry-core when
  *      JERRY_ENABLE_EXTERNAL_CONTEXT is defined. Otherwise this function is not
  *      used.
  *
- * @return the pointer to the jerry instance.
+ * @return the pointer to the engine context.
  */
-struct jerry_instance_t *jerry_port_get_current_instance (void);
+struct jerry_context_t *jerry_port_get_current_context (void);
 
 /**
  * Makes the process sleep for a given time.

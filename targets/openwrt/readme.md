@@ -87,12 +87,8 @@ Please check if the `STAGING_DIR` is configured correctly and that the toolchain
 
 ```
 $ ./tools/build.py --toolchain cmake/toolchain_openwrt_mips.cmake \
-                   --jerry-libc OFF \
                    --lto OFF
 ```
-
-Currenlty the JerryScript libc does not supports the mips platform, that's why the `--jerry-libc OFF` argument
-is passed during build.
 
 ### 2. Copy the binary
 

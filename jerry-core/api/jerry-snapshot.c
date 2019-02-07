@@ -34,18 +34,20 @@
  * @return configuration flags
  */
 static inline uint32_t JERRY_ATTR_ALWAYS_INLINE
-snapshot_get_global_flags (bool has_regex) /**< regex literal is present */
+snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
+                           bool has_class) /**< class literal is present */
 {
   JERRY_UNUSED (has_regex);
+  JERRY_UNUSED (has_class);
 
   uint32_t flags = 0;
 
-#ifdef JERRY_CPOINTER_32_BIT
-  flags |= JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER;
-#endif /* JERRY_CPOINTER_32_BIT */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
-#endif /* CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -61,8 +63,11 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_REGEX_LITERAL;
 #endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
-  return global_flags == snapshot_get_global_flags (false);
+  return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
 
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE || JERRY_ENABLE_SNAPSHOT_EXEC */
@@ -77,6 +82,7 @@ typedef struct
   size_t snapshot_buffer_write_offset;
   ecma_value_t snapshot_error;
   bool regex_found;
+  bool class_found;
 } snapshot_globals_t;
 
 /** \addtogroup jerrysnapshot Jerry snapshot operations
@@ -142,7 +148,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   if (globals_p->snapshot_buffer_write_offset > JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char *error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -153,6 +159,13 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
+  {
+    globals_p->class_found = true;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 #ifndef CONFIG_DISABLE_REGEXP_BUILTIN
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
@@ -275,10 +288,9 @@ static void
 static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< snapshot globals */
                                            ecma_value_t literal) /**< literal form the literal pool */
 {
-  const char *error_prefix_p = "Unsupported static snapshot literal: ";
+  const lit_utf8_byte_t error_prefix[] = "Unsupported static snapshot literal: ";
 
-  ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) error_prefix_p,
-                                                                   (lit_utf8_size_t) strlen (error_prefix_p));
+  ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 (error_prefix, sizeof (error_prefix) - 1);
 
   literal = ecma_op_to_string (literal);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (literal));
@@ -313,7 +325,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
 
   if (globals_p->snapshot_buffer_write_offset >= JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char *error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -328,7 +340,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
     /* Regular expression literals are not supported. */
-    const char *error_message_p = "Regular expression literals are not supported.";
+    const char * const error_message_p = "Regular expression literals are not supported.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -339,7 +351,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    const char *error_message_p = "Snapshot buffer too small.";
+    const char * const error_message_p = "Snapshot buffer too small.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -404,7 +416,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     }
   }
 
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+  if (CBC_NON_STRICT_ARGUMENTS_NEEDED (compiled_code_p))
   {
     buffer_p += ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG;
     literal_start_p = ((ecma_value_t *) buffer_p) - argument_end;
@@ -476,7 +488,7 @@ jerry_snapshot_set_offsets (uint32_t *buffer_p, /**< buffer */
         }
       }
 
-      if (bytecode_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+      if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
       {
         uint8_t *byte_p = (uint8_t *) bytecode_p;
         byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
@@ -569,7 +581,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     uint8_t *byte_p = (uint8_t *) bytecode_p;
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) byte_p;
 
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
     {
       argument_end = args_p->argument_end;
     }
@@ -583,7 +595,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     uint8_t *byte_p = (uint8_t *) bytecode_p;
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) byte_p;
 
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+    if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
     {
       argument_end = args_p->argument_end;
     }
@@ -739,6 +751,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   globals.snapshot_buffer_write_offset = aligned_header_size;
   globals.snapshot_error = ECMA_VALUE_EMPTY;
   globals.regex_found = false;
+  globals.class_found = false;
 
   parse_status = parser_parse_script (args_p,
                                       args_size,
@@ -752,6 +765,8 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
     return ecma_create_error_reference (JERRY_CONTEXT (error_value), true);
   }
 
+  JERRY_ASSERT (bytecode_data_p != NULL);
+
   if (generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STATIC)
   {
     static_snapshot_add_compiled_code (bytecode_data_p, (uint8_t *) buffer_p, buffer_size, &globals);
@@ -763,13 +778,14 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
 
   if (!ecma_is_value_empty (globals.snapshot_error))
   {
+    ecma_bytecode_deref (bytecode_data_p);
     return globals.snapshot_error;
   }
 
   jerry_snapshot_header_t header;
   header.magic = JERRY_SNAPSHOT_MAGIC;
   header.version = JERRY_SNAPSHOT_VERSION;
-  header.global_flags = snapshot_get_global_flags (globals.regex_found);
+  header.global_flags = snapshot_get_global_flags (globals.regex_found, globals.class_found);
   header.lit_table_offset = (uint32_t) globals.snapshot_buffer_write_offset;
   header.number_of_funcs = 1;
   header.func_offsets[0] = aligned_header_size;
@@ -791,7 +807,8 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
                                           &literals_num))
     {
       JERRY_ASSERT (lit_map_p == NULL);
-      const char *error_message_p = "Cannot allocate memory for literals.";
+      const char * const error_message_p = "Cannot allocate memory for literals.";
+      ecma_bytecode_deref (bytecode_data_p);
       return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) error_message_p);
     }
 
@@ -842,7 +859,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char *error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 
@@ -895,8 +912,8 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
     return ecma_create_error_reference_from_context ();
   }
 
-  static const char * const invalid_version_error_p = "Invalid snapshot version or unsupported features present";
-  static const char * const invalid_format_error_p = "Invalid snapshot format";
+  const char * const invalid_version_error_p = "Invalid snapshot version or unsupported features present";
+  const char * const invalid_format_error_p = "Invalid snapshot format";
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
 
   if (snapshot_size <= sizeof (jerry_snapshot_header_t))
@@ -948,7 +965,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   }
   else
   {
-    const uint8_t *literal_base_p = (uint8_t *) (snapshot_data_p + header_p->lit_table_offset);
+    const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
     bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
                                               literal_base_p,
@@ -1038,7 +1055,78 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
 
   do
   {
-    ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
+    const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
+    uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+
+    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+    {
+      const ecma_value_t *literal_start_p;
+      uint32_t argument_end;
+      uint32_t const_literal_end;
+
+      if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+      {
+        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
+
+        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+      }
+      else
+      {
+        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
+
+        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
+        argument_end = args_p->argument_end;
+        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+      }
+
+      for (uint32_t i = 0; i < const_literal_end; i++)
+      {
+        if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
+        {
+          ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
+          ecma_save_literals_append_value (lit_value, lit_pool_p);
+        }
+      }
+
+      if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
+      {
+        uint8_t *byte_p = (uint8_t *) bytecode_p;
+        byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+        literal_start_p = ((ecma_value_t *) byte_p) - argument_end;
+
+        for (uint32_t i = 0; i < argument_end; i++)
+        {
+          if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
+          {
+            ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
+            ecma_save_literals_append_value (lit_value, lit_pool_p);
+          }
+        }
+      }
+    }
+
+    buffer_p += code_size;
+  }
+  while (buffer_p < buffer_end_p);
+} /* scan_snapshot_functions */
+
+/**
+ * Update all literal offsets in a snapshot data.
+ */
+static void
+update_literal_offsets (uint8_t *buffer_p, /**< [in,out] snapshot buffer start */
+                        const uint8_t *buffer_end_p, /**< snapshot buffer end */
+                        const lit_mem_to_snapshot_id_map_entry_t *lit_map_p, /**< literal map */
+                        const uint8_t *literal_base_p) /**< start of literal data */
+{
+  JERRY_ASSERT (buffer_end_p > buffer_p);
+
+  do
+  {
+    const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
     if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
@@ -1070,12 +1158,18 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
         if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
         {
           ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
-          literal_start_p[i] = lit_value;
-          ecma_save_literals_append_value (lit_value, lit_pool_p);
+          const lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
+
+          while (current_p->literal_id != lit_value)
+          {
+            current_p++;
+          }
+
+          literal_start_p[i] = current_p->literal_offset;
         }
       }
 
-      if (bytecode_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
+      if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_p))
       {
         uint8_t *byte_p = (uint8_t *) bytecode_p;
         byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
@@ -1086,86 +1180,9 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
           if ((literal_start_p[i] & ECMA_VALUE_TYPE_MASK) == ECMA_TYPE_SNAPSHOT_OFFSET)
           {
             ecma_value_t lit_value = ecma_snapshot_get_literal (literal_base_p, literal_start_p[i]);
-            literal_start_p[i] = lit_value;
-            ecma_save_literals_append_value (lit_value, lit_pool_p);
-          }
-        }
-      }
-    }
+            const lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
 
-    buffer_p += code_size;
-  }
-  while (buffer_p < buffer_end_p);
-} /* scan_snapshot_functions */
-
-/**
- * Update all literal offsets in a snapshot data.
- */
-static void
-update_literal_offsets (uint8_t *buffer_p, /**< snapshot buffer start */
-                        const uint8_t *buffer_end_p, /**< snapshot buffer end */
-                        lit_mem_to_snapshot_id_map_entry_t *lit_map_p) /**< literal map */
-{
-  JERRY_ASSERT (buffer_end_p > buffer_p);
-
-  do
-  {
-    ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
-    uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
-
-    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
-        && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
-    {
-      ecma_value_t *literal_start_p;
-      uint32_t argument_end;
-      uint32_t const_literal_end;
-
-      if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-      {
-        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint16_arguments_t));
-
-        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
-        argument_end = args_p->argument_end;
-        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
-      }
-      else
-      {
-        literal_start_p = (ecma_value_t *) (buffer_p + sizeof (cbc_uint8_arguments_t));
-
-        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
-        argument_end = args_p->argument_end;
-        const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
-      }
-
-      for (uint32_t i = 0; i < const_literal_end; i++)
-      {
-        if (ecma_is_value_string (literal_start_p[i])
-            || ecma_is_value_float_number (literal_start_p[i]))
-        {
-          lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
-
-          while (current_p->literal_id != literal_start_p[i])
-          {
-            current_p++;
-          }
-
-          literal_start_p[i] = current_p->literal_offset;
-        }
-      }
-
-      if (bytecode_p->status_flags & CBC_CODE_FLAGS_NON_STRICT_ARGUMENTS_NEEDED)
-      {
-        uint8_t *byte_p = (uint8_t *) bytecode_p;
-        byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
-        literal_start_p = ((ecma_value_t *) byte_p) - argument_end;
-
-        for (uint32_t i = 0; i < argument_end; i++)
-        {
-          if (literal_start_p[i] != ECMA_VALUE_EMPTY)
-          {
-            lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;
-
-            while (current_p->literal_id != literal_start_p[i])
+            while (current_p->literal_id != lit_value)
             {
               current_p++;
             }
@@ -1234,7 +1251,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
     uint32_t start_offset = header_p->func_offsets[0];
     const uint8_t *data_p = (const uint8_t *) inp_buffers_p[i];
-    const uint8_t *literal_base_p = (uint8_t *) (data_p + header_p->lit_table_offset);
+    const uint8_t *literal_base_p = data_p + header_p->lit_table_offset;
 
     JERRY_ASSERT (header_p->number_of_funcs > 0);
 
@@ -1242,7 +1259,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
     functions_size += header_p->lit_table_offset - start_offset;
 
     scan_snapshot_functions (data_p + start_offset,
-                             data_p + header_p->lit_table_offset,
+                             literal_base_p,
                              lit_pool_p,
                              literal_base_p);
   }
@@ -1294,9 +1311,11 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
             ((const uint8_t *) inp_buffers_p[i]) + start_offset,
             current_header_p->lit_table_offset - start_offset);
 
+    const uint8_t *literal_base_p = ((const uint8_t *) inp_buffers_p[i]) + current_header_p->lit_table_offset;
     update_literal_offsets (dst_p,
                             dst_p + current_header_p->lit_table_offset - start_offset,
-                            lit_map_p);
+                            lit_map_p,
+                            literal_base_p);
 
     uint32_t current_offset = (uint32_t) (dst_p - (uint8_t *) out_buffer_p) - start_offset;
 
@@ -1563,48 +1582,44 @@ ecma_string_is_valid_identifier (const ecma_string_t *string_p)
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
 
 /**
- * Copy certain string literals into the given buffer in a specified format,
- * which are valid identifiers and none of them are magic string.
+ * Get the literals from a snapshot. Copies certain string literals into the given
+ * buffer in a specified format.
+ *
+ * Note:
+ *      Only valid identifiers are saved in C format.
  *
  * @return size of the literal-list in bytes, at most equal to the buffer size,
- *         if the source parsed successfully and the list of the literals isn't empty,
+ *         if the list of the literals isn't empty,
  *         0 - otherwise.
  */
 size_t
-jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source */
-                               size_t source_size, /**< script source size */
-                               bool is_strict, /**< strict mode */
-                               uint32_t *buffer_p, /**< [out] buffer to save literals to */
-                               size_t buffer_size, /**< the buffer's size */
-                               bool is_c_format) /**< format-flag */
+jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapshot buffer */
+                                  size_t snapshot_size, /**< size of the input snapshot buffer */
+                                  jerry_char_t *lit_buf_p, /**< [out] buffer to save literals to */
+                                  size_t lit_buf_size, /**< the buffer's size */
+                                  bool is_c_format) /**< format-flag */
 {
 #ifdef JERRY_ENABLE_SNAPSHOT_SAVE
-  ecma_value_t parse_status;
-  ecma_compiled_code_t *bytecode_data_p;
+  const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
+  const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
 
-#ifdef JERRY_ENABLE_LINE_INFO
-  JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ENABLE_LINE_INFO */
-
-  parse_status = parser_parse_script (NULL,
-                                      0,
-                                      source_p,
-                                      source_size,
-                                      is_strict,
-                                      &bytecode_data_p);
-
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (snapshot_size <= sizeof (jerry_snapshot_header_t)
+      || header_p->magic != JERRY_SNAPSHOT_MAGIC
+      || header_p->version != JERRY_SNAPSHOT_VERSION
+      || !snapshot_check_global_flags (header_p->global_flags))
   {
-    ecma_free_value (JERRY_CONTEXT (error_value));
+    /* Invalid snapshot format */
     return 0;
   }
 
-  ecma_free_value (parse_status);
+  JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
+  const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
   ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
-  ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
-
-  ecma_bytecode_deref (bytecode_data_p);
+  scan_snapshot_functions (snapshot_data_p + header_p->func_offsets[0],
+                           literal_base_p,
+                           lit_pool_p,
+                           literal_base_p);
 
   lit_utf8_size_t literal_count = 0;
   ecma_value_t *iterator_p = ecma_collection_iterator_init (lit_pool_p);
@@ -1616,9 +1631,14 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     {
       ecma_string_t *literal_p = ecma_get_string_from_value (*iterator_p);
 
-      /* We don't save a literal which isn't a valid identifier or it's a magic string. */
+      /* NOTE:
+       *      We don't save a literal (in C format) which isn't a valid
+       *      identifier or it's a magic string.
+       * TODO:
+       *      Save all of the literals in C format as well.
+       */
       if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && ecma_string_is_valid_identifier (literal_p))
+          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
       {
         literal_count++;
       }
@@ -1633,10 +1653,8 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     return 0;
   }
 
-  uint8_t *destination_p = (uint8_t *) buffer_p;
-
-  uint8_t *const buffer_start_p = destination_p;
-  uint8_t *const buffer_end_p = destination_p + buffer_size;
+  jerry_char_t *const buffer_start_p = lit_buf_p;
+  jerry_char_t *const buffer_end_p = lit_buf_p + lit_buf_size;
 
   JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
   lit_utf8_size_t literal_idx = 0;
@@ -1649,8 +1667,14 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
     {
       ecma_string_t *literal_p = ecma_get_string_from_value (*iterator_p);
 
+      /* NOTE:
+       *      We don't save a literal (in C format) which isn't a valid
+       *      identifier or it's a magic string.
+       * TODO:
+       *      Save all of the literals in C format as well.
+       */
       if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && ecma_string_is_valid_identifier (literal_p))
+          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
       {
         literal_array[literal_idx++] = literal_p;
       }
@@ -1667,43 +1691,43 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
   if (is_c_format)
   {
     /* Save literal count. */
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  (const char *) "jerry_length_t literal_count = ",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              "jerry_length_t literal_count = ",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
 
     /* Save the array of literals. */
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  ";\n\njerry_char_ptr_t literals[",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              ";\n\njerry_char_t *literals[",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
 
     for (lit_utf8_size_t i = 0; i < literal_count; i++)
     {
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "  \"", 0);
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\"", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  \"", 0);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\"", 0);
 
       if (i < literal_count - 1)
       {
-        destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
       }
 
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\n", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
     }
 
-    destination_p = jerry_append_chars_to_buffer (destination_p,
-                                                  buffer_end_p,
-                                                  (const char *) "};\n\njerry_length_t literal_sizes[",
-                                                  0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p,
+                                              buffer_end_p,
+                                              "};\n\njerry_length_t literal_sizes[",
+                                              0);
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, literal_count);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "] =\n{\n", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, literal_count);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "] =\n{\n", 0);
   }
 
   /* Save the literal sizes respectively. */
@@ -1713,51 +1737,51 @@ jerry_parse_and_save_literals (const jerry_char_t *source_p, /**< script source 
 
     if (is_c_format)
     {
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "  ", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  ", 0);
     }
 
-    destination_p = jerry_append_number_to_buffer (destination_p, buffer_end_p, str_size);
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, " ", 0);
+    lit_buf_p = jerry_append_number_to_buffer (lit_buf_p, buffer_end_p, str_size);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " ", 0);
 
     if (is_c_format)
     {
       /* Show the given string as a comment. */
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "/* ", 0);
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
-      destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, " */", 0);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "/* ", 0);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, " */", 0);
 
       if (i < literal_count - 1)
       {
-        destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, ",", 0);
+        lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, ",", 0);
       }
     }
     else
     {
-      destination_p = jerry_append_ecma_string_to_buffer (destination_p, buffer_end_p, literal_array[i]);
+      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
     }
 
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, "\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\n", 0);
   }
 
   if (is_c_format)
   {
-    destination_p = jerry_append_chars_to_buffer (destination_p, buffer_end_p, (const char *) "};\n", 0);
+    lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "};\n", 0);
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
 
-  return destination_p <= buffer_end_p ? (size_t) (destination_p - buffer_start_p) : 0;
+  return lit_buf_p <= buffer_end_p ? (size_t) (lit_buf_p - buffer_start_p) : 0;
 #else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
-  JERRY_UNUSED (source_p);
-  JERRY_UNUSED (source_size);
-  JERRY_UNUSED (is_strict);
-  JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (buffer_size);
+  JERRY_UNUSED (snapshot_p);
+  JERRY_UNUSED (snapshot_size);
+  JERRY_UNUSED (lit_buf_p);
+  JERRY_UNUSED (lit_buf_size);
   JERRY_UNUSED (is_c_format);
 
   return 0;
 #endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
-} /* jerry_parse_and_save_literals */
+} /* jerry_get_literals_from_snapshot */
+
 
 /**
  * Generate snapshot function from specified source and arguments
@@ -1783,7 +1807,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char *error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 

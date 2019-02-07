@@ -21,7 +21,6 @@
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
-#include "ecma-lcache.h"
 #include "ecma-property-hashmap.h"
 #include "jcontext.h"
 #include "jrt.h"
@@ -33,10 +32,13 @@
 
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 #include "ecma-typedarray-object.h"
-#endif
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 #ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
 #include "ecma-promise-object.h"
-#endif
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+#include "ecma-map-object.h"
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
 /* TODO: Extract GC to a separate component */
 
@@ -163,12 +165,6 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
-          && property_pair_p->names_cp[index] >= LIT_NEED_MARK_MAGIC_STRING__COUNT)
-      {
-        break;
-      }
-
       ecma_value_t value = property_pair_p->values[index].value;
 
       if (ecma_is_value_object (value))
@@ -196,6 +192,12 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
       }
       break;
     }
+    case ECMA_PROPERTY_TYPE_INTERNAL:
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
+                    && property_pair_p->names_cp[index] >= LIT_FIRST_INTERNAL_MAGIC_STRING);
+      break;
+    }
     default:
     {
       JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL);
@@ -206,6 +208,87 @@ ecma_gc_mark_property (ecma_property_pair_t *property_pair_p, /**< property pair
     }
   }
 } /* ecma_gc_mark_property */
+
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+
+/**
+ * Mark objects referenced by Promise built-in.
+ */
+static void
+ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended object */
+{
+  /* Mark promise result. */
+  ecma_value_t result = ext_object_p->u.class_prop.u.value;
+
+  if (ecma_is_value_object (result))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (result));
+  }
+
+  /* Mark all reactions. */
+  ecma_value_t *ecma_value_p;
+  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
+
+  while (ecma_value_p != NULL)
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+  }
+
+  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
+
+  while (ecma_value_p != NULL)
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+  }
+} /* ecma_gc_mark_promise_object */
+
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+
+/**
+ * Mark objects referenced by Map built-in.
+ */
+static void
+ecma_gc_mark_map_object (ecma_extended_object_t *ext_object_p) /**< extended object */
+{
+  ecma_map_object_t *map_object_p = (ecma_map_object_t *) ext_object_p;
+
+  jmem_cpointer_t first_chunk_cp = map_object_p->first_chunk_cp;
+
+  if (JERRY_UNLIKELY (first_chunk_cp == ECMA_NULL_POINTER))
+  {
+    return;
+  }
+
+  ecma_value_t *item_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t, first_chunk_cp)->items;
+
+  while (true)
+  {
+    ecma_value_t item = *item_p++;
+
+    if (!ecma_is_value_pointer (item))
+    {
+      if (ecma_is_value_object (item))
+      {
+        ecma_gc_set_object_visited (ecma_get_object_from_value (item));
+      }
+    }
+    else
+    {
+      item_p = (ecma_value_t *) ecma_get_pointer_from_value (item);
+
+      if (item_p == NULL)
+      {
+        return;
+      }
+    }
+  }
+} /* ecma_gc_mark_map_object */
+
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
 
 /**
  * Mark objects as visited starting from specified object as root
@@ -244,43 +327,34 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     switch (ecma_get_object_type (object_p))
     {
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
       case ECMA_OBJECT_TYPE_CLASS:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-        if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_PROMISE_UL)
+        switch (ext_object_p->u.class_prop.class_id)
         {
-          /* Mark promise result. */
-          ecma_value_t result = ext_object_p->u.class_prop.u.value;
-
-          if (ecma_is_value_object (result))
+#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+          case LIT_MAGIC_STRING_PROMISE_UL:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (result));
+            ecma_gc_mark_promise_object (ext_object_p);
+            break;
           }
-
-          /* Mark all reactions. */
-          ecma_value_t *ecma_value_p;
-          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
-
-          while (ecma_value_p != NULL)
+#endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+          case LIT_MAGIC_STRING_MAP_UL:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+            ecma_gc_mark_map_object (ext_object_p);
+            break;
           }
-
-          ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
-
-          while (ecma_value_p != NULL)
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+          default:
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+            break;
           }
         }
 
         break;
       }
-#endif /*! CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
       case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -404,13 +478,9 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
  * Free the native handle/pointer by calling its free callback.
  */
 static void
-ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
-                             lit_magic_string_id_t id) /**< identifier of internal property */
+ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (property_p != NULL);
-
-  JERRY_ASSERT (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-                || id == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
   ecma_native_pointer_t *native_pointer_p;
@@ -418,25 +488,17 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p, /**< property */
   native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                       value_p->value);
 
-  if (id == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE)
+  if (native_pointer_p->info_p != NULL)
   {
-    if (native_pointer_p->u.callback_p != NULL)
-    {
-      native_pointer_p->u.callback_p ((uintptr_t) native_pointer_p->data_p);
-    }
-  }
-  else
-  {
-    if (native_pointer_p->u.info_p != NULL)
-    {
-      ecma_object_native_free_callback_t free_cb = native_pointer_p->u.info_p->free_cb;
+    ecma_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
 
-      if (free_cb != NULL)
-      {
-        free_cb (native_pointer_p->data_p);
-      }
+    if (free_cb != NULL)
+    {
+      free_cb (native_pointer_p->data_p);
     }
   }
+
+  jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
 } /* ecma_gc_free_native_pointer */
 
 /**
@@ -479,10 +541,9 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
         /* Call the native's free callback. */
         if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-                || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
+            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
         {
-          ecma_gc_free_native_pointer (property_p, (lit_magic_string_id_t) name_cp);
+          ecma_gc_free_native_pointer (property_p);
         }
 
         if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
@@ -531,6 +592,9 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        case LIT_MAGIC_STRING_SYMBOL_UL:
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
         case LIT_MAGIC_STRING_STRING_UL:
         case LIT_MAGIC_STRING_NUMBER_UL:
         {
@@ -598,6 +662,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* !CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+        case LIT_MAGIC_STRING_MAP_UL:
+        {
+          ecma_op_map_clear_map ((ecma_map_object_t *) object_p);
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
+          return;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
         default:
         {
           /* The undefined id represents an uninitialized class. */

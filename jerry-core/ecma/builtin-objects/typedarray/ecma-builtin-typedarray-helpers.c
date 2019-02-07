@@ -19,6 +19,7 @@
 
 #include "ecma-builtins.h"
 #include "ecma-gc.h"
+#include "ecma-objects.h"
 #include "ecma-typedarray-object.h"
 
 #define ECMA_BUILTINS_INTERNAL
@@ -94,6 +95,41 @@ ecma_typedarray_helper_get_shift_size (uint8_t builtin_id) /**< the builtin id o
     }
   }
 } /* ecma_typedarray_helper_get_shift_size */
+
+/**
+ * Get the built-in TypedArray type from a magic string.
+ *
+ * @return uint8_t
+ */
+uint8_t
+ecma_typedarray_helper_get_builtin_id (ecma_object_t *obj_p) /**< typedarray object **/
+{
+#define TYPEDARRAY_ID_CASE(magic_id, builtin_id) \
+  case magic_id: \
+  { \
+    return builtin_id; \
+  }
+
+  switch (ecma_object_get_class_name (obj_p))
+  {
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_INT8_ARRAY_UL, ECMA_BUILTIN_ID_INT8ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_UINT8_ARRAY_UL, ECMA_BUILTIN_ID_UINT8ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_UINT8_CLAMPED_ARRAY_UL, ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_INT16_ARRAY_UL, ECMA_BUILTIN_ID_INT16ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_UINT16_ARRAY_UL, ECMA_BUILTIN_ID_UINT16ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_INT32_ARRAY_UL, ECMA_BUILTIN_ID_INT32ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_UINT32_ARRAY_UL, ECMA_BUILTIN_ID_UINT32ARRAY)
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_FLOAT32_ARRAY_UL, ECMA_BUILTIN_ID_FLOAT32ARRAY)
+#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+    TYPEDARRAY_ID_CASE (LIT_MAGIC_STRING_FLOAT64_ARRAY_UL, ECMA_BUILTIN_ID_FLOAT64ARRAY)
+#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+#undef TYPEDARRAY_ID_CASE
+} /* ecma_typedarray_helper_get_builtin_id */
 
 /**
  * Get the magic string of a TypedArray type.
@@ -185,8 +221,6 @@ ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p,
                                                 prototype_obj_p,
                                                 ecma_typedarray_helper_get_shift_size (builtin_id),
                                                 ecma_typedarray_helper_get_magic_string (builtin_id));
-
-  ecma_deref_object (prototype_obj_p);
 
   return val;
 } /* ecma_typedarray_helper_dispatch_construct */

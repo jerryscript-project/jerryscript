@@ -17,27 +17,27 @@
 #include "jerryscript-port-default.h"
 
 /**
- * Pointer to the current instance.
+ * Pointer to the current context.
  * Note that it is a global variable, and is not a thread safe implementation.
  */
-static jerry_instance_t *current_instance_p = NULL;
+static jerry_context_t *current_context_p = NULL;
 
 /**
- * Set the current_instance_p as the passed pointer.
+ * Set the current_context_p as the passed pointer.
  */
 void
-jerry_port_default_set_instance (jerry_instance_t *instance_p) /**< points to the created instance */
+jerry_port_default_set_current_context (jerry_context_t *context_p) /**< points to the created context */
 {
-  current_instance_p = instance_p;
-} /* jerry_port_default_set_instance */
+  current_context_p = context_p;
+} /* jerry_port_default_set_current_context */
 
 /**
- * Get the current instance.
+ * Get the current context.
  *
- * @return the pointer to the current instance
+ * @return the pointer to the current context
  */
-jerry_instance_t *
-jerry_port_get_current_instance (void)
+jerry_context_t *
+jerry_port_get_current_context (void)
 {
-  return current_instance_p;
-} /* jerry_port_get_current_instance */
+  return current_context_p;
+} /* jerry_port_get_current_context */

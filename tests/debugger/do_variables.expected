@@ -1,0 +1,128 @@
+Connecting to: localhost:5001
+Stopped at tests/debugger/do_variables.js:15
+(jerry-debugger) scopes
+level | type   
+0     | global 
+(jerry-debugger) variables
+name   | type      | value     
+f      | Function  |           
+addX   | Function  |           
+z      | undefined | undefined 
+c      | undefined | undefined 
+print  | Function  |           
+gc     | Function  |           
+assert | Function  |           
+(jerry-debugger) variables 1
+name | type | value 
+(jerry-debugger) variables 0
+name   | type      | value     
+f      | Function  |           
+addX   | Function  |           
+z      | undefined | undefined 
+c      | undefined | undefined 
+print  | Function  |           
+gc     | Function  |           
+assert | Function  |           
+(jerry-debugger) b tests/debugger/do_variables.js:20
+Breakpoint 1 at tests/debugger/do_variables.js:20 (in function() at line:19, col:10)
+(jerry-debugger) c
+Stopped at breakpoint:1 tests/debugger/do_variables.js:20 (in function() at line:19, col:10)
+(jerry-debugger) scopes
+level | type    
+0     | local   
+1     | closure 
+2     | global  
+(jerry-debugger) variables 0
+name | type      | value     
+n    | Number    | 9         
+b    | undefined | undefined 
+(jerry-debugger) variables 1
+name | type   | value 
+x    | Number | 3     
+(jerry-debugger) variables 2
+name     | type     | value 
+addThree | Function |       
+f        | Function |       
+addX     | Function |       
+z        | Number   | 5     
+c        | Number   | 4     
+print    | Function |       
+gc       | Function |       
+assert   | Function |       
+(jerry-debugger) b tests/debugger/do_variables.js:30
+Breakpoint 2 at tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
+(jerry-debugger) c
+Stopped at breakpoint:2 tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
+(jerry-debugger) scopes
+level | type   
+0     | local  
+1     | global 
+(jerry-debugger) variables 1
+name     | type     | value 
+d        | Number   | 12    
+addThree | Function |       
+f        | Function |       
+addX     | Function |       
+z        | Number   | 5     
+c        | Number   | 4     
+print    | Function |       
+gc       | Function |       
+assert   | Function |       
+(jerry-debugger) variables 0
+name | type      | value     
+b    | undefined | undefined 
+x    | undefined | undefined 
+user | undefined | undefined 
+m    | undefined | undefined 
+c    | undefined | undefined 
+(jerry-debugger) b tests/debugger/do_variables.js:33
+Breakpoint 3 at tests/debugger/do_variables.js:33 (in f() at line:28, col:1)
+(jerry-debugger) c
+Exception throw detected (to disable automatic stop type exception 0)
+Exception hint: error
+Stopped at breakpoint:2 tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
+(jerry-debugger) c
+Stopped at breakpoint:3 tests/debugger/do_variables.js:33 (in f() at line:28, col:1)
+(jerry-debugger) scopes
+level | type   
+0     | catch  
+1     | local  
+2     | global 
+(jerry-debugger) variables 0
+name | type   | value 
+err  | String | error 
+(jerry-debugger) variables 1
+name | type      | value     
+b    | undefined | undefined 
+x    | undefined | undefined 
+user | undefined | undefined 
+m    | undefined | undefined 
+c    | undefined | undefined 
+(jerry-debugger) b tests/debugger/do_variables.js:50
+Breakpoint 4 at tests/debugger/do_variables.js:50 (in function() at line:46, col:4)
+(jerry-debugger) c
+Stopped at breakpoint:4 tests/debugger/do_variables.js:50 (in function() at line:46, col:4)
+(jerry-debugger) scopes
+level | type    
+0     | with    
+1     | local   
+2     | closure 
+3     | global  
+(jerry-debugger) variables 0
+name | type   | value 
+y    | String | abc   
+2    | Number | 3     
+1    | Number | 2     
+0    | Number | 1     
+(jerry-debugger) variables 1
+name | type      | value     
+h    | undefined | undefined 
+a    | Array     | [1,2,3]   
+(jerry-debugger) variables 2
+name | type    | value           
+b    | Number  | 10              
+x    | Boolean | true            
+user | Object  | [object Object] 
+m    | Null    | null            
+c    | Number  | 10              
+(jerry-debugger) c

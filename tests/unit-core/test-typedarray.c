@@ -246,14 +246,15 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 
     register_js_value ("array", typedarray);
 
-    const char *eval_src_p = (
+    const jerry_char_t eval_src[] = TEST_STRING_LITERAL (
       "assert (array.length == expected_length,"
       "        'expected length: ' + expected_length + ' got: ' + array.length);"
       "assert (array.byteOffset == expected_offset);"
-      "array[0] = 0x11223344;");
-    jerry_value_t result = jerry_eval ((jerry_char_t *) eval_src_p,
-                                       strlen (eval_src_p),
-                                       true);
+      "array[0] = 0x11223344;"
+    );
+    jerry_value_t result = jerry_eval (eval_src,
+                                       sizeof (eval_src) - 1,
+                                       JERRY_PARSE_STRICT_MODE);
     TEST_ASSERT (!jerry_value_is_error (result));
     jerry_release_value (result);
 
@@ -470,16 +471,17 @@ main (void)
     }
 
     /* Check read and to write */
-    const char *eval_src_p = (
+    const jerry_char_t eval_src[] = TEST_STRING_LITERAL (
       "assert (array.length == expected_length, 'expected length: ' + expected_length + ' got: ' + array.length);"
       "for (var i = 0; i < array.length; i++)"
       "{"
       "  assert (array[i] == expected_value);"
       "  array[i] = i;"
-      "};");
-    jerry_value_t result = jerry_eval ((jerry_char_t *) eval_src_p,
-                                       strlen (eval_src_p),
-                                       true);
+      "};"
+    );
+    jerry_value_t result = jerry_eval (eval_src,
+                                       sizeof (eval_src) - 1,
+                                       JERRY_PARSE_STRICT_MODE);
 
     TEST_ASSERT (!jerry_value_is_error (result));
     jerry_release_value (result);

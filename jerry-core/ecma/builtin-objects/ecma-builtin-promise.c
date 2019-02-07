@@ -83,11 +83,11 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
 
   if (is_resolve)
   {
-    property_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
   }
   else
   {
-    property_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
   }
 
   ecma_value_t func = ecma_op_object_get (ecma_get_object_from_value (capability), property_str_p);
@@ -106,7 +106,7 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
 
   ecma_free_value (call_ret);
 
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
   ecma_value_t promise_new = ecma_op_object_get (ecma_get_object_from_value (capability), promise_str_p);
   ecma_free_value (capability);
 
@@ -125,8 +125,9 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
 inline static ecma_value_t
 ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject description */
 {
+  ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
   ecma_value_t reason = JERRY_CONTEXT (error_value);
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
   ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
 
   ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (reject),
@@ -134,6 +135,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject descrip
                                                  &reason,
                                                  1);
   ecma_free_value (reject);
+  ecma_free_value (reason);
 
   if (ECMA_IS_VALUE_ERROR (call_ret))
   {
@@ -142,7 +144,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject descrip
 
   ecma_free_value (call_ret);
 
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
   ecma_value_t promise_new = ecma_op_object_get (ecma_get_object_from_value (capability), promise_str_p);
 
   return promise_new;
@@ -202,13 +204,13 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
 
   ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
-  ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
-  ecma_fast_free_value (len_value);
+  ecma_extended_object_t *ext_array_p = (ecma_extended_object_t *) array_p;
 
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
-  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_length_t len = ext_array_p->u.array.length;
+
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
   ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability),
                                              resolve_str_p);
@@ -228,6 +230,13 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
     ecma_string_t *index_to_str_p = ecma_new_ecma_string_from_uint32 (index);
     ecma_value_t array_item = ecma_op_object_get (array_p, index_to_str_p);
     ecma_deref_ecma_string (index_to_str_p);
+
+    /* f. */
+    if (ECMA_IS_VALUE_ERROR (array_item))
+    {
+      ret = array_item;
+      break;
+    }
 
     /* h. */
     ecma_value_t next_promise = ecma_builtin_promise_resolve (ctor, array_item);
@@ -316,7 +325,8 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   ecma_value_t ret = ECMA_VALUE_UNDEFINED;
   /* 1. */
   ecma_object_t *function_p = ecma_get_object_from_value (function);
-  ecma_string_t *already_called_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_ALREADY_CALLED);
+  ecma_string_t *already_called_str_p;
+  already_called_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_ALREADY_CALLED);
   ecma_value_t already_called = ecma_op_object_get (function_p, already_called_str_p);
 
   JERRY_ASSERT (ecma_is_value_boolean (already_called));
@@ -331,13 +341,13 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   /* 3. */
   ecma_op_object_put (function_p,
                       already_called_str_p,
-                      ecma_make_boolean_value (true),
+                      ECMA_VALUE_TRUE,
                       false);
 
-  ecma_string_t *str_index_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_INDEX);
-  ecma_string_t *str_value_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_VALUE);
-  ecma_string_t *str_capability_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_remaining_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REMAINING_ELEMENT);
+  ecma_string_t *str_index_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX);
+  ecma_string_t *str_value_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE);
+  ecma_string_t *str_capability_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *str_remaining_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT);
 
   /* 4-7. */
   ecma_value_t index_val = ecma_op_object_get (function_p, str_index_p);
@@ -359,7 +369,7 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   /* 9-10. */
   if (ecma_builtin_promise_remaining_inc_or_dec (remaining, false) == 0)
   {
-    ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+    ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
     ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), resolve_str_p);
 
     ret = ecma_op_function_call (ecma_get_object_from_value (resolve),
@@ -400,18 +410,19 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
 
   ecma_value_t ret = ECMA_VALUE_EMPTY;
   ecma_object_t *array_p = ecma_get_object_from_value (array);
-  ecma_value_t len_value = ecma_op_object_get_by_magic_id (array_p, LIT_MAGIC_STRING_LENGTH);
-  ecma_length_t len = (ecma_length_t) ecma_get_integer_from_value (len_value);
-  ecma_fast_free_value (len_value);
+  ecma_extended_object_t *ext_array_p = (ecma_extended_object_t *) array_p;
 
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
-  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
-  ecma_string_t *already_called_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_ALREADY_CALLED);
-  ecma_string_t *index_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_INDEX);
-  ecma_string_t *value_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_VALUE);
-  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *remaining_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REMAINING_ELEMENT);
+  ecma_length_t len = ext_array_p->u.array.length;
+
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *already_called_str_p;
+  already_called_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_ALREADY_CALLED);
+  ecma_string_t *index_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX);
+  ecma_string_t *value_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE);
+  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *remaining_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT);
 
   ecma_value_t undefined_val = ECMA_VALUE_UNDEFINED;
   /* String '1' indicates [[Resolve]] and '2' indicates [[Reject]]. */
@@ -459,11 +470,27 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
     /* e. h. */
     ecma_string_t *index_to_str_p = ecma_new_ecma_string_from_uint32 (index);
     ecma_value_t array_item = ecma_op_object_get (array_p, index_to_str_p);
-    ecma_op_object_put (ecma_get_object_from_value (value_array),
-                        index_to_str_p,
-                        undefined_val,
-                        false);
+
+    if (ECMA_IS_VALUE_ERROR (array_item))
+    {
+      ecma_deref_ecma_string (index_to_str_p);
+      ret = array_item;
+      break;
+    }
+
+    ecma_value_t put_ret = ecma_op_object_put (ecma_get_object_from_value (value_array),
+                                               index_to_str_p,
+                                               undefined_val,
+                                               false);
     ecma_deref_ecma_string (index_to_str_p);
+
+    if (ECMA_IS_VALUE_ERROR (put_ret))
+    {
+      ecma_free_value (array_item);
+      ret = put_ret;
+      break;
+    }
+
     /* i. */
     ecma_value_t next_promise = ecma_builtin_promise_resolve (ctor, array_item);
     ecma_free_value (array_item);
@@ -481,7 +508,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
     /* l. */
     ecma_op_object_put (res_ele_p,
                         already_called_str_p,
-                        ecma_make_boolean_value (false),
+                        ECMA_VALUE_FALSE,
                         false);
     /* m. */
     ecma_op_object_put (res_ele_p,
@@ -558,16 +585,19 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_value_t capability = ecma_promise_new_capability ();
+
+  if (ECMA_IS_VALUE_ERROR (capability))
+  {
+    return capability;
+  }
+
   ecma_value_t ret = ECMA_VALUE_EMPTY;
 
   if (!ecma_is_value_object (array)
       || ecma_get_object_type (ecma_get_object_from_value (array)) != ECMA_OBJECT_TYPE_ARRAY)
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
     ret = ecma_builtin_promise_reject_abrupt (capability);
-    ecma_free_value (JERRY_CONTEXT (error_value));
     ecma_free_value (capability);
-
     return ret;
   }
 

@@ -60,9 +60,6 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF | (ECMA_OBJECT_REF_ONE - 1)) == UINT16
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_TYPE_DELETED == (ECMA_DIRECT_STRING_MAGIC << ECMA_PROPERTY_NAME_TYPE_SHIFT),
                      ecma_property_type_deleted_must_have_magic_string_name_type);
 
-JERRY_STATIC_ASSERT (ECMA_PROPERTY_DELETED_NAME >= LIT_MAGIC_STRING__COUNT,
-                     ecma_property_deleted_name_must_not_be_valid_maigc_string_id);
-
 /**
  * Create an object with specified prototype object
  * (or NULL prototype if there is not prototype for the object)
@@ -130,7 +127,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
 /**
  * Create a object lexical environment with specified outer lexical environment
- * (or NULL if the environment is not nested), binding object and provideThis flag.
+ * (or NULL if the environment is not nested), binding object and provided type flag.
  *
  * See also: ECMA-262 v5, 10.2.1.2
  *
@@ -141,25 +138,21 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 ecma_object_t *
 ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
                             ecma_object_t *binding_obj_p, /**< binding object */
-                            bool provide_this) /**< provideThis flag */
+                            ecma_lexical_environment_type_t type) /**< type of the new lexical environment */
 {
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
+                || type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+#else /* CONFIG_DISABLE_ES2015_CLASS */
+  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  uint16_t type;
-
-  if (provide_this)
-  {
-    type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
-  }
-  else
-  {
-    type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND;
-  }
-
-  new_lexical_environment_p->type_flags_refs = type;
+  new_lexical_environment_p->type_flags_refs = (uint16_t) (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | type);
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -359,23 +352,6 @@ ecma_get_property_list (const ecma_object_t *object_p) /**< object or lexical en
 } /* ecma_get_property_list */
 
 /**
- * Get lexical environment's 'provideThis' property
- *
- * @return true  - if it has 'this' property
- *         false - otherwise
- */
-inline bool JERRY_ATTR_PURE
-ecma_get_lex_env_provide_this (const ecma_object_t *object_p) /**< object-bound lexical environment */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (ecma_is_lexical_environment (object_p));
-  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-
-  return ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
-} /* ecma_get_lex_env_provide_this */
-
-/**
  * Get lexical environment's bound object.
  *
  * @return pointer to ecma object
@@ -385,8 +361,12 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
-  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#ifndef CONFIG_DISABLE_ES2015
+  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
+                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+#else /* CONFIG_DISABLE_ES2015 */
+  JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#endif /* !CONFIG_DISABLE_ES2015 */
 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t,
                                     object_p->property_list_or_bound_object_cp);
@@ -496,7 +476,7 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   /* Just copy the previous value (no need to decompress, compress). */
   first_property_pair_p->header.next_property_cp = *property_list_head_p;
   first_property_pair_p->header.types[0] = ECMA_PROPERTY_TYPE_DELETED;
-  first_property_pair_p->names_cp[0] = ECMA_PROPERTY_DELETED_NAME;
+  first_property_pair_p->names_cp[0] = LIT_INTERNAL_MAGIC_STRING_DELETED;
 
   if (name_p == NULL)
   {
@@ -611,12 +591,15 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
 
-  ecma_property_t *property_p = ecma_lcache_lookup (obj_p, name_p);
+  ecma_property_t *property_p = NULL;
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+  property_p = ecma_lcache_lookup (obj_p, name_p);
   if (property_p != NULL)
   {
     return property_p;
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (obj_p);
 
@@ -628,11 +611,13 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
                                              name_p,
                                              &property_real_name_cp);
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
     if (property_p != NULL
         && !ecma_is_property_lcached (property_p))
     {
       ecma_lcache_insert (obj_p, property_real_name_cp, property_p);
     }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
     return property_p;
   }
@@ -724,11 +709,13 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
     ecma_property_hashmap_create (obj_p);
   }
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   if (property_p != NULL
       && !ecma_is_property_lcached (property_p))
   {
     ecma_lcache_insert (obj_p, property_name_cp, property_p);
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   return property_p;
 } /* ecma_find_named_property */
@@ -771,22 +758,11 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
   {
     case ECMA_PROPERTY_TYPE_NAMEDDATA:
     {
-      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC)
-      {
-        if (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_HANDLE
-            || name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER)
-        {
-          ecma_free_native_pointer (property_p);
-          break;
-        }
-      }
-
       ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       break;
     }
-    default:
+    case ECMA_PROPERTY_TYPE_NAMEDACCESSOR:
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 #ifdef JERRY_CPOINTER_32_BIT
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
@@ -795,12 +771,23 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
 #endif /* JERRY_CPOINTER_32_BIT */
       break;
     }
+    default:
+    {
+      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
+
+      /* Must be a native pointer. */
+      JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+                    && name_cp >= LIT_FIRST_INTERNAL_MAGIC_STRING);
+      break;
+    }
   }
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
   if (ecma_is_property_lcached (property_p))
   {
     ecma_lcache_invalidate (object_p, name_cp, property_p);
   }
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
   if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_PTR)
   {
@@ -852,7 +839,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 
         ecma_free_property (object_p, prop_pair_p->names_cp[i], cur_prop_p->types + i);
         cur_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
-        prop_pair_p->names_cp[i] = ECMA_PROPERTY_DELETED_NAME;
+        prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
 
         JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
 
@@ -994,7 +981,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
           ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
           current_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
-          prop_pair_p->names_cp[i] = ECMA_PROPERTY_DELETED_NAME;
+          prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
         }
       }
     }
@@ -1276,6 +1263,8 @@ ecma_set_property_configurable_attr (ecma_property_t *property_p, /**< [in,out] 
   }
 } /* ecma_set_property_configurable_attr */
 
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
 /**
  * Check whether the property is registered in LCache
  *
@@ -1285,7 +1274,8 @@ inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
   return (*property_p & ECMA_PROPERTY_FLAG_LCACHED) != 0;
 } /* ecma_is_property_lcached */
@@ -1298,7 +1288,8 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
                            bool is_lcached) /**< new value for lcached flag */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR
+                || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL);
 
   if (is_lcached)
   {
@@ -1309,6 +1300,8 @@ ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
     *property_p = (uint8_t) (*property_p & ~ECMA_PROPERTY_FLAG_LCACHED);
   }
 } /* ecma_set_property_lcached */
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * Construct empty property descriptor, i.e.:

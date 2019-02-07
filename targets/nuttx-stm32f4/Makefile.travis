@@ -39,8 +39,8 @@ install-kconfig:
 
 # Fetch nuttx/{apps,nuttx} repositories.
 install-clone-nuttx:
-	git clone https://bitbucket.org/nuttx/apps.git ../apps -b nuttx-7.22
-	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.22
+	git clone https://bitbucket.org/nuttx/apps.git ../apps -b nuttx-7.27
+	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.27
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-kconfig install-clone-nuttx
@@ -51,7 +51,7 @@ install: install-apt-get-deps install-noapt
 
 # Build JerryScript.
 script-build-jerryscript:
-	tools/build.py --clean --toolchain cmake/toolchain_mcu_stm32f4.cmake --profile=es2015-subset --jerry-cmdline OFF --jerry-libc OFF --lto OFF --jerry-libm ON --all-in-one ON --mem-heap 70 --compile-flag='--sysroot=../nuttx'
+	tools/build.py --clean --toolchain cmake/toolchain_mcu_stm32f4.cmake --profile=es2015-subset --jerry-cmdline OFF --lto OFF --jerry-libm ON --all-in-one ON --mem-heap 70 --compile-flag='--sysroot=../nuttx'
 
 # Link in the NuttX JerryScript target directory under the NuttX apps tree.
 script-add-jerryscript-app:

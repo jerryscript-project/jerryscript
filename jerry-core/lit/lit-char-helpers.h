@@ -27,8 +27,6 @@
 #define LIT_CHAR_ZWJ  ((ecma_char_t) 0x200D) /* zero width joiner */
 #define LIT_CHAR_BOM  ((ecma_char_t) 0xFEFF) /* byte order mark */
 
-bool lit_char_is_format_control (ecma_char_t c);
-
 /*
  * Whitespace characters (ECMA-262 v5, Table 2)
  */
@@ -222,7 +220,7 @@ size_t lit_char_get_utf8_length (ecma_char_t chr);
 
 /* read a hex encoded code point from a zero terminated buffer */
 bool lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, lit_utf8_size_t number_of_characters,
-                                  ecma_char_ptr_t out_code_unit_p);
+                                  ecma_char_t *out_code_unit_p);
 
 /**
  * Null character

@@ -6,17 +6,19 @@ This folder contains files to build and run JerryScript on [TizenRT](https://git
 
 #### TL; DR
 
-If you are in a hurry, run following commands:
+If you are in a hurry, run the following commands:
 
 ```
 $ sudo apt-add-repository -y "ppa:team-gcc-arm-embedded/ppa"
-$ sudo apt-get update 
-$ sudo apt-get install gcc-arm-embedded
-$ git clone https://github.com/jerryscript-project/jerryscript.git jerryscript
+$ sudo apt-get update
+$ sudo apt-get install gcc-arm-embedded genromfs
+$ git clone https://github.com/pando-project/jerryscript.git
 $ cd jerryscript
-$ make -f ./targets/tizenrt-artik053/Makefile.travis install script
+$ make -f targets/tizenrt-artik053/Makefile.travis install
+$ make -f targets/tizenrt-artik053/Makefile.travis script
 ```
-Next, go to [step 7](#7-generate-romfs)
+
+Next, go to [step 7](#7-flash-binary)
 
 
 #### Build steps in detail
@@ -25,26 +27,24 @@ Next, go to [step 7](#7-generate-romfs)
 
 * Install toolchain
 
-Get the build in binaries and libraries, [gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar](https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update).
-
-
-Untar the gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar and export the path like
+Get [gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar](https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q3-update).
+Untar the archive and export the path.
 
 ```
 $ tar xvf gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar
 $ export PATH=<Your Toolchain PATH>:$PATH
 ```
 
-* Get the jerryscript and TizenRT sources
+* Get jerryscript and TizenRT sources.
 
 ```
 $ mkdir jerry-tizenrt
 $ cd jerry-tizenrt
-$ git clone https://github.com/jerryscript-project/jerryscript.git
-$ git clone https://github.com/Samsung/TizenRT.git -b 1.1_Public_Release
+$ git clone https://github.com/pando-project/jerryscript.git
+$ git clone https://github.com/Samsung/TizenRT.git -b 2.0_Public_M2
 ```
 
-The following directory structure is created after these commands
+The following directory structure is created after these commands:
 
 ```
 jerry-tizenrt
@@ -57,7 +57,6 @@ jerry-tizenrt
 ```
 $ cp -r jerryscript/targets/tizenrt-artik053/apps/jerryscript/ TizenRT/apps/system/
 $ cp -r jerryscript/targets/tizenrt-artik053/configs/jerryscript/ TizenRT/build/configs/artik053/
-$ cp jerryscript/targets/tizenrt-artik053/romfs-1.1.patch TizenRT/
 ```
 
 #### 3. Configure TizenRT
@@ -67,19 +66,7 @@ $ cd TizenRT/os/tools
 $ ./configure.sh artik053/jerryscript
 ```
 
-#### 4. Configure TizenRT
-
-```
-$ cd ../../
-$ patch -p1 < romfs-1.1.patch
-$ cd build/output/
-$ mkdir res
-# You can add files in res folder
-# The res folder is later flashing into the target's /rom folder
-# CAUTION: You must not exceed 400kb
-```
-
-#### 5. Build JerryScript for TizenRT
+#### 4. Build JerryScript for TizenRT
 
 ```
 # assuming you are in jerry-tizenrt folder
@@ -87,7 +74,6 @@ jerryscript/tools/build.py \
     --clean \
     --lto=OFF \
     --jerry-cmdline=OFF \
-    --jerry-libc=OFF \
     --all-in-one=OFF \
     --mem-heap=70 \
     --profile=es2015-subset \
@@ -95,12 +81,23 @@ jerryscript/tools/build.py \
     --toolchain=${PWD}/jerryscript/cmake/toolchain_mcu_artik053.cmake
 ```
 
-**Note**: there is a Makefile in the `targets/tizenrt-artik053/` folder that also helps to build JerryScript for TizenRT.
+Alternatively, there is a Makefile in the `targets/tizenrt-artik053/` folder that also helps to build JerryScript for TizenRT.
 
 ```
 # assuming you are in jerry-tizenrt folder
 $ cd jerryscript
 $ make -f targets/tizenrt-artik053/Makefile.tizenrt
+```
+
+#### 5. Add your JavaScript program to TizenRT (optional)
+
+If you have script files for JerryScript, you can add them to TizenRT.
+These files will be flashed into the target's `/rom` folder.
+Note that your content cannot exceed 1200 KB.
+
+```
+# assuming you are in jerry-tizenrt folder
+cp jerryscript/tests/hello.js TizenRT/tools/fs/contents/
 ```
 
 #### 6. Build TizenRT binary
@@ -110,15 +107,10 @@ $ make -f targets/tizenrt-artik053/Makefile.tizenrt
 $ cd TizenRT/os
 $ make
 ```
-Binaries are available in TizenRT/build/output/bin
 
-#### 7. Generate romfs
+Binaries are available in `TizenRT/build/output/bin`.
 
-```
-$ genromfs -f ../build/output/bin/rom.img -d ../build/output/res/ -V "NuttXBootVol"
-```
-
-#### 8. Flash binary
+#### 7. Flash binary
 
 ```
 make download ALL
@@ -129,24 +121,24 @@ Reboot the device.
 For more information, see [How to program a binary](https://github.com/Samsung/TizenRT/blob/master/build/configs/artik053/README.md).
 
 
-#### 9. Run JerryScript
+#### 8. Run JerryScript
 
-You can use `minicom` for terminal program, or any other you may like, but set
-baud rate to `115200`.
-
-(Note: Device path may differ like /dev/ttyUSB1.)
+Use a terminal program (e.g., `minicom`) with baud rate of `115200`.
+(Note: Actual device path may vary, e.g., `/dev/ttyUSB1`.)
 
 ```
 sudo minicom --device=/dev/ttyUSB0 --baud=115200
 ```
 
-Run `jerry` with javascript file(s)
+Run `jerry` with javascript file(s):
+
 ```
-TASH>>jerry hello.js                                                               
+TASH>>jerry /rom/hello.js
 Hello JerryScript!
 ```
 
-Without argument it prints:
+Running the program without argument executes a built-in demo:
+
 ```
 TASH>>jerry                                                                        
 No input files, running a hello world demo:                                        

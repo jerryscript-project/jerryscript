@@ -16,7 +16,8 @@
 #ifndef JERRYSCRIPT_DEBUGGER_H
 #define JERRYSCRIPT_DEBUGGER_H
 
-#include <stdbool.h>
+#include "jerryscript-core.h"
+#include "jerryscript-port.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -26,6 +27,11 @@ extern "C"
 /** \addtogroup jerry-debugger Jerry engine interface - Debugger feature
  * @{
  */
+
+/**
+ * JerryScript debugger protocol version.
+ */
+#define JERRY_DEBUGGER_VERSION (8)
 
 /**
  * Types for the client source wait and run method.
@@ -53,7 +59,6 @@ typedef jerry_value_t (*jerry_debugger_wait_for_source_callback_t) (const jerry_
 /**
  * Engine debugger functions.
  */
-void jerry_debugger_init (uint16_t port);
 bool jerry_debugger_is_connected (void);
 void jerry_debugger_stop (void);
 void jerry_debugger_continue (void);
@@ -61,7 +66,8 @@ void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
 jerry_debugger_wait_for_source_status_t
 jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t callback_p,
                                        void *user_p, jerry_value_t *return_value);
-void jerry_debugger_send_output (jerry_char_t buffer[], jerry_size_t str_size, uint8_t type);
+void jerry_debugger_send_output (const jerry_char_t *buffer, jerry_size_t str_size);
+void jerry_debugger_send_log (jerry_log_level_t level, const jerry_char_t *buffer, jerry_size_t str_size);
 
 /**
  * @}

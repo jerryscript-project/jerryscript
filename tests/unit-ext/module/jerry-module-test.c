@@ -181,7 +181,9 @@ assert_number (jerry_value_t js_value, double expected_result)
 static void
 eval_one (const char *the_string, double expected_result)
 {
-  jerry_value_t js_eval_result = jerry_eval ((const jerry_char_t *) the_string, strlen (the_string), true);
+  jerry_value_t js_eval_result = jerry_eval ((const jerry_char_t *) the_string,
+                                             strlen (the_string),
+                                             JERRY_PARSE_STRICT_MODE);
   assert_number (js_eval_result, expected_result);
   jerry_release_value (js_eval_result);
 } /* eval_one */

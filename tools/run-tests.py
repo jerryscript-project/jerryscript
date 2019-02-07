@@ -20,24 +20,29 @@ import argparse
 import collections
 import hashlib
 import os
+import platform
 import subprocess
 import sys
 import settings
 
 OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
-Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args'])
-Options.__new__.__defaults__ = ([], [])
+Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args', 'skip'])
+Options.__new__.__defaults__ = ([], [], False)
+
+def skip_if(condition, desc):
+    return desc if condition else False
 
 OPTIONS_PROFILE_MIN = ['--profile=minimal']
 OPTIONS_PROFILE_ES51 = [] # NOTE: same as ['--profile=es5.1']
 OPTIONS_PROFILE_ES2015 = ['--profile=es2015-subset']
+OPTIONS_VM_RECURSION_LIMIT = ['--vm-recursion-limit=1000']
 OPTIONS_DEBUG = ['--debug']
 OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
-OPTIONS_UNITTESTS = ['--unittests', '--jerry-cmdline=off', '--error-messages=on',
+OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=on',
                      '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on',
                      '--line-info=on', '--mem-stats=on']
-OPTIONS_DOCTESTS = ['--doctests', '--jerry-cmdline=off', '--error-messages=on',
+OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on',
                     '--snapshot-save=on', '--snapshot-exec=on', '--vm-exec-stop=on']
 
 # Test options for unittests
@@ -63,21 +68,22 @@ JERRY_UNITTESTS_OPTIONS = [
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-es5.1',
-            OPTIONS_PROFILE_ES51),
+            OPTIONS_PROFILE_ES51 + OPTIONS_VM_RECURSION_LIMIT),
     Options('jerry_tests-es5.1-snapshot',
-            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT,
+            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_VM_RECURSION_LIMIT,
             ['--snapshot']),
     Options('jerry_tests-es5.1-debug',
-            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG),
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_VM_RECURSION_LIMIT),
     Options('jerry_tests-es5.1-debug-snapshot',
-            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
+            OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG + OPTIONS_VM_RECURSION_LIMIT,
             ['--snapshot']),
     Options('jerry_tests-es5.1-debug-cpointer_32bit',
-            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--cpointer-32bit=on', '--mem-heap=1024']),
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_VM_RECURSION_LIMIT
+            + ['--cpointer-32bit=on', '--mem-heap=1024']),
     Options('jerry_tests-es5.1-debug-external_context',
-            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + ['--jerry-libc=off', '--external-context=on']),
+            OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_VM_RECURSION_LIMIT + ['--external-context=on']),
     Options('jerry_tests-es2015_subset-debug',
-            OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
+            OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG + OPTIONS_VM_RECURSION_LIMIT),
 ]
 
 # Test options for jerry-test-suite
@@ -111,7 +117,7 @@ TEST262_TEST_SUITE_OPTIONS = [
 # Test options for jerry-debugger
 DEBUGGER_TEST_OPTIONS = [
     Options('jerry_debugger_tests',
-            ['--debug', '--jerry-debugger=on', '--jerry-libc=off'])
+            ['--debug', '--jerry-debugger=on'])
 ]
 
 # Test options for buildoption-test
@@ -120,6 +126,8 @@ JERRY_BUILDOPTIONS = [
             ['--lto=on']),
     Options('buildoption_test-error_messages',
             ['--error-messages=on']),
+    Options('buildoption_test-logging',
+            ['--logging=on']),
     Options('buildoption_test-all_in_one',
             ['--all-in-one=on']),
     Options('buildoption_test-valgrind',
@@ -130,10 +138,16 @@ JERRY_BUILDOPTIONS = [
             ['--show-opcodes=on']),
     Options('buildoption_test-show_regexp_opcodes',
             ['--show-regexp-opcodes=on']),
-    Options('buildoption_test-compiler_default_libc',
-            ['--jerry-libc=off']),
     Options('buildoption_test-cpointer_32bit',
-            ['--jerry-libc=off', '--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on']),
+            ['--compile-flag=-m32', '--cpointer-32bit=on', '--system-allocator=on'],
+            skip=skip_if(
+                platform.system() != 'Linux' or (platform.machine() != 'i386' and platform.machine() != 'x86_64'),
+                '-m32 is only supported on x86[-64]-linux')
+           ),
+    Options('buildoption_test-no_jerry_libm',
+            ['--jerry-libm=off', '--link-lib=m']),
+    Options('buildoption_test-no_lcache_prophashmap',
+            ['--compile-flag=-DCONFIG_ECMA_LCACHE_DISABLE', '--compile-flag=-DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE']),
     Options('buildoption_test-external_context',
             ['--jerry-libc=off', '--external-context=on']),
     Options('buildoption_test-shared_libs',
@@ -142,6 +156,10 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-cmdline-test=on']),
     Options('buildoption_test-cmdline_snapshot',
             ['--jerry-cmdline-snapshot=on']),
+    Options('buildoption_test-regexp_recursion_limit',
+            ['--regexp-recursion-limit=1000']),
+    Options('buildoption_test-vm_recursion_limit',
+            OPTIONS_VM_RECURSION_LIMIT),
 ]
 
 def get_arguments():
@@ -196,6 +214,23 @@ def get_arguments():
 
 BINARY_CACHE = {}
 
+TERM_NORMAL = '\033[0m'
+TERM_YELLOW = '\033[1;33m'
+TERM_BLUE = '\033[1;34m'
+
+def report_command(cmd_type, cmd, env=None):
+    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, cmd_type, TERM_NORMAL))
+    if env is not None:
+        sys.stderr.write(''.join('%s%s=%r \\%s\n' % (TERM_BLUE, var, val, TERM_NORMAL)
+                                 for var, val in sorted(env.items())))
+    sys.stderr.write('%s%s%s\n' % (TERM_BLUE, (' \\%s\n\t%s' % (TERM_NORMAL, TERM_BLUE)).join(cmd), TERM_NORMAL))
+
+def report_skip(job):
+    sys.stderr.write('%sSkipping: %s' % (TERM_YELLOW, job.name))
+    if job.skip:
+        sys.stderr.write(' (%s)' % job.skip)
+    sys.stderr.write('%s\n' % TERM_NORMAL)
+
 def create_binary(job, options):
     build_args = job.build_args[:]
     if options.buildoptions:
@@ -214,7 +249,7 @@ def create_binary(job, options):
     if options.toolchain:
         build_cmd.append('--toolchain=%s' % options.toolchain)
 
-    sys.stderr.write('Build command: %s\n' % ' '.join(build_cmd))
+    report_command('Build command:', build_cmd)
 
     binary_key = tuple(sorted(build_args))
     if binary_key in BINARY_CACHE:
@@ -251,7 +286,7 @@ def iterate_test_runner_jobs(jobs, options):
     for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
-            yield job, ret_build, build_dir_path, None
+            yield job, ret_build, None
 
         if build_dir_path in tested_paths:
             sys.stderr.write('(skipping: already tested with %s)\n' % build_dir_path)
@@ -272,15 +307,17 @@ def iterate_test_runner_jobs(jobs, options):
 
         yield job, ret_build, test_cmd
 
-def run_check(runnable):
-    sys.stderr.write('Test command: %s\n' % ' '.join(runnable))
+def run_check(runnable, env=None):
+    report_command('Test command:', runnable, env=env)
 
-    try:
-        ret = subprocess.check_call(runnable)
-    except subprocess.CalledProcessError as err:
-        return err.returncode
+    if env is not None:
+        full_env = dict(os.environ)
+        full_env.update(env)
+        env = full_env
 
-    return ret
+    proc = subprocess.Popen(runnable, env=env)
+    proc.wait()
+    return proc.returncode
 
 def run_jerry_debugger_tests(options):
     ret_build = ret_test = 0
@@ -334,7 +371,7 @@ def run_jerry_tests(options):
         if job.test_args:
             test_cmd.extend(job.test_args)
 
-        ret_test |= run_check(test_cmd)
+        ret_test |= run_check(test_cmd, env=dict(TZ='UTC'))
 
     return ret_build | ret_test
 
@@ -380,7 +417,7 @@ def run_test262_test_suite(options):
         if job.test_args:
             test_cmd.extend(job.test_args)
 
-        ret_test |= run_check(test_cmd)
+        ret_test |= run_check(test_cmd, env=dict(TZ='America/Los_Angeles'))
 
     return ret_build | ret_test
 
@@ -391,16 +428,20 @@ def run_unittests(options):
         if ret_build:
             break
 
-        ret_test |= run_check([
-            settings.UNITTEST_RUNNER_SCRIPT,
-            os.path.join(build_dir_path, 'tests'),
-            "-q" if options.quiet else "",
-        ])
+        ret_test |= run_check(
+            [settings.UNITTEST_RUNNER_SCRIPT] +
+            [os.path.join(build_dir_path, 'tests')] +
+            (["-q"] if options.quiet else [])
+        )
 
     return ret_build | ret_test
 
 def run_buildoption_test(options):
     for job in JERRY_BUILDOPTIONS:
+        if job.skip:
+            report_skip(job)
+            continue
+
         ret, _ = create_binary(job, options)
         if ret:
             break

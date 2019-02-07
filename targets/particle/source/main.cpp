@@ -114,9 +114,7 @@ test_jerry ()
     test.delay(250); \
   ";
 
-  size_t script_size = strlen ((const char *) script);
-
-  jerry_value_t eval_ret = jerry_eval (script, script_size, false);
+  jerry_value_t eval_ret = jerry_eval (script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
 
   /* Free JavaScript value, returned by eval */
   jerry_release_value (eval_ret);

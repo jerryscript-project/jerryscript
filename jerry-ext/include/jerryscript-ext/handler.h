@@ -34,6 +34,10 @@ jerry_value_t jerryx_handler_register_global (const jerry_char_t *name_p,
  * Common external function handlers
  */
 
+jerry_value_t jerryx_handler_assert_fatal (const jerry_value_t func_obj_val, const jerry_value_t this_p,
+                                           const jerry_value_t args_p[], const jerry_length_t args_cnt);
+jerry_value_t jerryx_handler_assert_throw (const jerry_value_t func_obj_val, const jerry_value_t this_p,
+                                           const jerry_value_t args_p[], const jerry_length_t args_cnt);
 jerry_value_t jerryx_handler_assert (const jerry_value_t func_obj_val, const jerry_value_t this_p,
                                      const jerry_value_t args_p[], const jerry_length_t args_cnt);
 jerry_value_t jerryx_handler_gc (const jerry_value_t func_obj_val, const jerry_value_t this_p,

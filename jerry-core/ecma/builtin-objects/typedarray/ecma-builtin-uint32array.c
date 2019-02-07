@@ -72,8 +72,6 @@ ecma_builtin_uint32array_dispatch_construct (const ecma_value_t *arguments_list_
                                                 2,
                                                 LIT_MAGIC_STRING_UINT32_ARRAY_UL);
 
-  ecma_deref_object (prototype_obj_p);
-
   return val;
 } /* ecma_builtin_uint32array_dispatch_construct */
 

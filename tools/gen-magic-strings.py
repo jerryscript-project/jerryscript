@@ -119,10 +119,10 @@ def extract_magic_string_refs(debug=False):
         guard_stack = []
 
         for line in fileinput.input(fname):
-            if_match = re.match('^# *if(.*)', line)
-            elif_match = re.match('^# *elif(.*)', line)
-            else_match = re.match('^# *else', line)
-            endif_match = re.match('^# *endif', line)
+            if_match = re.match('^ *# *if(.*)', line)
+            elif_match = re.match('^ *# *elif(.*)', line)
+            else_match = re.match('^ *# *else', line)
+            endif_match = re.match('^ *# *endif', line)
             if if_match is not None:
                 guard_stack.append([process_guard(if_match.group(1))])
             elif elif_match is not None:

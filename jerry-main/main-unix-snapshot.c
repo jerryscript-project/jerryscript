@@ -14,6 +14,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "jerryscript.h"
@@ -28,14 +29,22 @@
 #define JERRY_BUFFER_SIZE (1048576)
 
 /**
+ * Maximum number of loaded literals
+ */
+#define JERRY_LITERAL_LENGTH (4096)
+
+/**
  * Standalone Jerry exit codes
  */
 #define JERRY_STANDALONE_EXIT_CODE_OK   (0)
 #define JERRY_STANDALONE_EXIT_CODE_FAIL (1)
 
-static uint8_t input_buffer[ JERRY_BUFFER_SIZE ];
-static uint32_t output_buffer[ JERRY_BUFFER_SIZE / 4 ];
+static uint8_t input_buffer[JERRY_BUFFER_SIZE];
+static uint32_t output_buffer[JERRY_BUFFER_SIZE / 4];
+static jerry_char_t literal_buffer[JERRY_BUFFER_SIZE];
 static const char *output_file_name_p = "js.snapshot";
+static jerry_length_t magic_string_lengths[JERRY_LITERAL_LENGTH];
+static const jerry_char_t *magic_string_items[JERRY_LITERAL_LENGTH];
 
 /**
  * Check whether JerryScript has a requested feature enabled or not. If not,
@@ -92,7 +101,7 @@ static size_t
 read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
            const char *file_name) /**< file name */
 {
-  FILE *file = fopen (file_name, "r");
+  FILE *file = fopen (file_name, "rb");
 
   if (file == NULL)
   {
@@ -117,7 +126,7 @@ read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
     return 0;
   }
 
-  printf ("Input file '%s' (%d bytes) loaded.\n", file_name, (int) bytes_read);
+  printf ("Input file '%s' (%lu bytes) loaded.\n", file_name, bytes_read);
   return bytes_read;
 } /* read_file */
 
@@ -164,10 +173,9 @@ typedef enum
 {
   OPT_GENERATE_HELP,
   OPT_GENERATE_STATIC,
-  OPT_GENERATE_LITERAL_LIST,
-  OPT_GENERATE_LITERAL_C,
   OPT_GENERATE_SHOW_OP,
   OPT_GENERATE_OUT,
+  OPT_IMPORT_LITERAL_LIST
 } generate_opt_id_t;
 
 /**
@@ -179,18 +187,15 @@ static const cli_opt_t generate_opts[] =
                .help = "print this help and exit"),
   CLI_OPT_DEF (.id = OPT_GENERATE_STATIC, .opt = "s", .longopt = "static",
                .help = "generate static snapshot"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_LITERAL_LIST, .longopt = "save-literals-list-format",
+  CLI_OPT_DEF (.id = OPT_IMPORT_LITERAL_LIST, .longopt = "load-literals-list-format",
                .meta = "FILE",
-               .help = "export literals found in parsed JS input (in list format)"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_LITERAL_C, .longopt = "save-literals-c-format",
-               .meta = "FILE",
-               .help = "export literals found in parsed JS input (in C source format)"),
+               .help = "import literals from list format (for static snapshots)"),
   CLI_OPT_DEF (.id = OPT_GENERATE_SHOW_OP, .longopt = "show-opcodes",
                .help = "print generated opcodes"),
   CLI_OPT_DEF (.id = OPT_GENERATE_OUT, .opt = "o",  .meta="FILE",
                .help = "specify output file name (default: js.snapshot)"),
   CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
-               .help = "input snapshot file")
+               .help = "input source file")
 };
 
 /**
@@ -205,14 +210,13 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
 {
   (void) argc;
 
-  bool is_save_literals_mode_in_c_format = false;
   uint32_t snapshot_flags = 0;
   jerry_init_flag_t flags = JERRY_INIT_EMPTY;
 
   const char *file_name_p = NULL;
   uint8_t *source_p = input_buffer;
   size_t source_length = 0;
-  const char *save_literals_file_name_p = NULL;
+  const char *literals_file_name_p = NULL;
 
   cli_change_opts (cli_state_p, generate_opts);
 
@@ -230,17 +234,9 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
         snapshot_flags |= JERRY_SNAPSHOT_SAVE_STATIC;
         break;
       }
-      case OPT_GENERATE_LITERAL_LIST:
-      case OPT_GENERATE_LITERAL_C:
+      case OPT_IMPORT_LITERAL_LIST:
       {
-        if (save_literals_file_name_p != NULL)
-        {
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: literal file name already specified");
-          return JERRY_STANDALONE_EXIT_CODE_FAIL;
-        }
-
-        is_save_literals_mode_in_c_format = (id == OPT_GENERATE_LITERAL_C);
-        save_literals_file_name_p = cli_consume_string (cli_state_p);
+        literals_file_name_p = cli_consume_string (cli_state_p);
         break;
       }
       case OPT_GENERATE_SHOW_OP:
@@ -303,11 +299,44 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_length))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Input must be a valid UTF-8 string.\n");
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  jerry_value_t snapshot_result;
+  if (literals_file_name_p != NULL)
+  {
+    /* Import literal list */
+    uint8_t *sp_buffer_start_p = source_p + source_length + 1;
+    size_t sp_buffer_size = read_file (sp_buffer_start_p, literals_file_name_p);
 
+    if (sp_buffer_size > 0)
+    {
+      const char *sp_buffer_p = (const char *) sp_buffer_start_p;
+      uint32_t num_of_lit = 0;
+
+      do
+      {
+        char *sp_buffer_end_p = NULL;
+        jerry_length_t mstr_size = (jerry_length_t) strtol (sp_buffer_p, &sp_buffer_end_p, 10);
+        if (mstr_size > 0)
+        {
+          magic_string_items[num_of_lit] = (jerry_char_t *) (sp_buffer_end_p + 1);
+          magic_string_lengths[num_of_lit] = mstr_size;
+          num_of_lit++;
+        }
+        sp_buffer_p = sp_buffer_end_p + mstr_size + 1;
+      }
+      while ((size_t) (sp_buffer_p - (char *) sp_buffer_start_p) < sp_buffer_size);
+
+      if (num_of_lit > 0)
+      {
+        jerry_register_magic_strings (magic_string_items, num_of_lit,
+                                      magic_string_lengths);
+      }
+    }
+  }
+
+  jerry_value_t snapshot_result;
   snapshot_result = jerry_generate_snapshot ((jerry_char_t *) file_name_p,
                                              (size_t) strlen (file_name_p),
                                              (jerry_char_t *) source_p,
@@ -325,16 +354,18 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
     print_unhandled_exception (snapshot_result);
 
     jerry_release_value (snapshot_result);
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
   size_t snapshot_size = (size_t) jerry_get_number_value (snapshot_result);
   jerry_release_value (snapshot_result);
 
-  FILE *snapshot_file_p = fopen (output_file_name_p, "w");
+  FILE *snapshot_file_p = fopen (output_file_name_p, "wb");
   if (snapshot_file_p == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Unable to write snapshot file: '%s'\n", output_file_name_p);
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
@@ -343,36 +374,197 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
 
   printf ("Created snapshot file: '%s' (%lu bytes)\n", output_file_name_p, (unsigned long) snapshot_size);
 
-  if (save_literals_file_name_p != NULL)
+  jerry_cleanup ();
+  return JERRY_STANDALONE_EXIT_CODE_OK;
+} /* process_generate */
+
+/**
+ * Literal dump command line option IDs
+ */
+typedef enum
+{
+  OPT_LITERAL_DUMP_HELP,
+  OPT_LITERAL_DUMP_FORMAT,
+  OPT_LITERAL_DUMP_OUT,
+} literal_dump_opt_id_t;
+
+/**
+ * Literal dump command line options
+ */
+static const cli_opt_t literal_dump_opts[] =
+{
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_HELP, .opt = "h", .longopt = "help",
+               .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_FORMAT, .longopt = "format",
+               .meta = "[c|list]",
+               .help = "specify output format (default: list)"),
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_OUT, .opt = "o",
+               .help = "specify output file name (default: literals.[h|list])"),
+  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE(S)",
+               .help = "input snapshot files")
+};
+
+/**
+ * Process 'litdump' command.
+ *
+ * @return error code (0 - no error)
+ */
+static int
+process_literal_dump (cli_state_t *cli_state_p, /**< cli state */
+                      int argc, /**< number of arguments */
+                      char *prog_name_p) /**< program name */
+{
+  uint8_t *input_pos_p = input_buffer;
+
+  cli_change_opts (cli_state_p, literal_dump_opts);
+
+  JERRY_VLA (const uint32_t *, snapshot_buffers, argc);
+  JERRY_VLA (size_t, snapshot_buffer_sizes, argc);
+  uint32_t number_of_files = 0;
+  const char *literals_file_name_p = NULL;
+  bool is_c_format = false;
+
+  for (int id = cli_consume_option (cli_state_p); id != CLI_OPT_END; id = cli_consume_option (cli_state_p))
   {
-    const size_t literal_buffer_size = jerry_parse_and_save_literals ((jerry_char_t *) source_p,
-                                                                      source_length,
-                                                                      false,
-                                                                      output_buffer,
-                                                                      sizeof (output_buffer) / sizeof (uint32_t),
-                                                                      is_save_literals_mode_in_c_format);
-    if (literal_buffer_size == 0)
+    switch (id)
     {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Literal saving failed!\n");
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+      case OPT_LITERAL_DUMP_HELP:
+      {
+        cli_help (prog_name_p, "litdump", literal_dump_opts);
+        return JERRY_STANDALONE_EXIT_CODE_OK;
+      }
+      case OPT_LITERAL_DUMP_FORMAT:
+      {
+        const char *fromat_str_p = cli_consume_string (cli_state_p);
+        if (!strcmp ("c", fromat_str_p))
+        {
+          is_c_format = true;
+        }
+        else if (!strcmp ("list", fromat_str_p))
+        {
+          is_c_format = false;
+        }
+        else
+        {
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Unsupported literal dump format.");
+          return JERRY_STANDALONE_EXIT_CODE_FAIL;
+        }
+        break;
+      }
+      case OPT_LITERAL_DUMP_OUT:
+      {
+        literals_file_name_p = cli_consume_string (cli_state_p);
+        break;
+      }
+      case CLI_OPT_DEFAULT:
+      {
+        const char *file_name_p = cli_consume_string (cli_state_p);
+
+        if (cli_state_p->error == NULL)
+        {
+          size_t size = read_file (input_pos_p, file_name_p);
+
+          if (size == 0)
+          {
+            return JERRY_STANDALONE_EXIT_CODE_FAIL;
+          }
+
+          snapshot_buffers[number_of_files] = (const uint32_t *) input_pos_p;
+          snapshot_buffer_sizes[number_of_files] = size;
+
+          number_of_files++;
+          const uintptr_t mask = sizeof (uint32_t) - 1;
+          input_pos_p = (uint8_t *) ((((uintptr_t) input_pos_p) + size + mask) & ~mask);
+        }
+        break;
+      }
+      default:
+      {
+        cli_state_p->error = "Internal error";
+        break;
+      }
     }
-
-    FILE *literal_file_p = fopen (save_literals_file_name_p, "w");
-
-    if (literal_file_p == NULL)
-    {
-      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Unable to write literal file: '%s'\n", save_literals_file_name_p);
-      return JERRY_STANDALONE_EXIT_CODE_FAIL;
-    }
-
-    fwrite (output_buffer, sizeof (uint8_t), literal_buffer_size, literal_file_p);
-    fclose (literal_file_p);
-
-    printf ("Created literal file: '%s' (%lu bytes)\n", save_literals_file_name_p, (unsigned long) literal_buffer_size);
   }
 
-  return 0;
-} /* process_generate */
+  if (check_cli_error (cli_state_p))
+  {
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  if (number_of_files < 1)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: at least one input file must be specified.\n");
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  jerry_init (JERRY_INIT_EMPTY);
+
+  size_t lit_buf_sz = 0;
+  if (number_of_files == 1)
+  {
+    lit_buf_sz = jerry_get_literals_from_snapshot (snapshot_buffers[0],
+                                                   snapshot_buffer_sizes[0],
+                                                   literal_buffer,
+                                                   JERRY_BUFFER_SIZE,
+                                                   is_c_format);
+  }
+  else
+  {
+    /* The input contains more than one input snapshot file, so we must merge them first. */
+    const char *error_p = NULL;
+    size_t merged_snapshot_size = jerry_merge_snapshots (snapshot_buffers,
+                                                         snapshot_buffer_sizes,
+                                                         number_of_files,
+                                                         output_buffer,
+                                                         JERRY_BUFFER_SIZE,
+                                                         &error_p);
+
+    if (merged_snapshot_size == 0)
+    {
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", error_p);
+      jerry_cleanup ();
+      return JERRY_STANDALONE_EXIT_CODE_FAIL;
+    }
+
+    printf ("Successfully merged the input snapshots (%lu bytes).\n", merged_snapshot_size);
+
+    lit_buf_sz = jerry_get_literals_from_snapshot (output_buffer,
+                                                   merged_snapshot_size,
+                                                   literal_buffer,
+                                                   JERRY_BUFFER_SIZE,
+                                                   is_c_format);
+  }
+
+  if (lit_buf_sz == 0)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR,
+                    "Error: Literal saving failed! No literals were found in the input snapshot(s).\n");
+    jerry_cleanup ();
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  if (literals_file_name_p == NULL)
+  {
+    literals_file_name_p = is_c_format ? "literals.h" : "literals.list";
+  }
+
+  FILE *file_p = fopen (literals_file_name_p, "wb");
+
+  if (file_p == NULL)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: cannot open file: '%s'\n", literals_file_name_p);
+    jerry_cleanup ();
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
+  }
+
+  fwrite (literal_buffer, sizeof (uint8_t), lit_buf_sz, file_p);
+  fclose (file_p);
+
+  printf ("Literals are saved into '%s' (%lu bytes).\n", literals_file_name_p, lit_buf_sz);
+
+  jerry_cleanup ();
+  return JERRY_STANDALONE_EXIT_CODE_OK;
+} /* process_literal_dump */
 
 /**
  * Merge command line option IDs
@@ -406,8 +598,6 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
                int argc, /**< number of arguments */
                char *prog_name_p) /**< program name */
 {
-  jerry_init (JERRY_INIT_EMPTY);
-
   uint8_t *input_pos_p = input_buffer;
 
   cli_change_opts (cli_state_p, merge_opts);
@@ -468,36 +658,43 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
   if (number_of_files < 2)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: at least two input files must be passed.\n");
-
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  const char *error_p;
-  size_t size = jerry_merge_snapshots (merge_buffers,
-                                       merge_buffer_sizes,
-                                       number_of_files,
-                                       output_buffer,
-                                       JERRY_BUFFER_SIZE,
-                                       &error_p);
+  jerry_init (JERRY_INIT_EMPTY);
 
-  if (size == 0)
+  const char *error_p = NULL;
+  size_t merged_snapshot_size = jerry_merge_snapshots (merge_buffers,
+                                                       merge_buffer_sizes,
+                                                       number_of_files,
+                                                       output_buffer,
+                                                       JERRY_BUFFER_SIZE,
+                                                       &error_p);
+
+  if (merged_snapshot_size == 0)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: %s\n", error_p);
+    jerry_cleanup ();
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-  FILE *file_p = fopen (output_file_name_p, "w");
+  FILE *file_p = fopen (output_file_name_p, "wb");
 
-  if (file_p != NULL)
-  {
-    fwrite (output_buffer, 1u, size, file_p);
-    fclose (file_p);
-  }
-  else
+  if (file_p == NULL)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: cannot open file: '%s'\n", output_file_name_p);
+    jerry_cleanup ();
+    return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
+  fwrite (output_buffer, 1u, merged_snapshot_size, file_p);
+  fclose (file_p);
+
+  printf ("Merge is completed. Merged snapshot is saved into '%s' (%lu bytes).\n",
+          output_file_name_p,
+          merged_snapshot_size);
+
+  jerry_cleanup ();
   return JERRY_STANDALONE_EXIT_CODE_OK;
 } /* process_merge */
 
@@ -530,6 +727,7 @@ print_commands (char *prog_name_p) /**< program name */
 
   printf ("\nAvailable commands:\n"
           "  generate\n"
+          "  litdump\n"
           "  merge\n"
           "\nPassing -h or --help after a command displays its help.\n");
 } /* print_commands */
@@ -566,6 +764,10 @@ main (int argc, /**< number of arguments */
         if (!strcmp ("merge", command_p))
         {
           return process_merge (&cli_state, argc, argv[0]);
+        }
+        else if (!strcmp ("litdump", command_p))
+        {
+          return process_literal_dump (&cli_state, argc, argv[0]);
         }
         else if (!strcmp ("generate", command_p))
         {

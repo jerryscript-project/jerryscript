@@ -68,20 +68,6 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
 } /* vm_var_decl */
 
 /**
- * 'Logical NOT Operator' opcode handler.
- *
- * See also: ECMA-262 v5, 11.4.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-opfunc_logical_not (ecma_value_t left_value) /**< left value */
-{
-  return ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
-} /* opfunc_logical_not */
-
-/**
  * 'typeof' opcode handler.
  *
  * See also: ECMA-262 v5, 11.4.3
@@ -101,12 +87,10 @@ opfunc_typeof (ecma_value_t left_value) /**< left value */
 void
 opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                      ecma_value_t object, /**< object value */
-                     ecma_value_t accessor_name, /**< accessor name value */
+                     ecma_string_t *accessor_name_p, /**< accessor name */
                      ecma_value_t accessor) /**< accessor value */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (object);
-  JERRY_ASSERT (ecma_is_value_string (accessor_name) || ecma_is_value_number (accessor_name));
-  ecma_string_t *accessor_name_p = ecma_get_string_from_value (ecma_op_to_string (accessor_name));
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
   if (property_p != NULL
@@ -153,8 +137,6 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                                              ECMA_PROPERTY_VALUE_PTR (property_p),
                                              setter_func_p);
   }
-
-  ecma_deref_ecma_string (accessor_name_p);
 } /* opfunc_set_accessor */
 
 /**
@@ -180,14 +162,12 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   }
   JERRY_ASSERT (check_coercible == ECMA_VALUE_EMPTY);
 
-  ecma_value_t str_name_value = ecma_op_to_string (property);
-  if (ECMA_IS_VALUE_ERROR (str_name_value))
-  {
-    return str_name_value;
-  }
+  ecma_string_t *name_string_p = ecma_op_to_prop_name (property);
 
-  JERRY_ASSERT (ecma_is_value_string (str_name_value));
-  ecma_string_t *name_string_p = ecma_get_string_from_value (str_name_value);
+  if (JERRY_UNLIKELY (name_string_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   ecma_value_t obj_value = ecma_op_to_object (object);
   /* The ecma_op_check_object_coercible call already checked the op_to_object error cases. */
@@ -198,8 +178,8 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
 
   ecma_value_t delete_op_ret = ecma_op_object_delete (obj_p, name_string_p, is_strict);
   JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || (is_strict == true && ECMA_IS_VALUE_ERROR (delete_op_ret)));
-  ecma_free_value (obj_value);
-  ecma_free_value (str_name_value);
+  ecma_deref_object (obj_p);
+  ecma_deref_ecma_string (name_string_p);
 
   return delete_op_ret;
 } /* vm_op_delete_prop */
@@ -260,7 +240,8 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-  ecma_collection_header_t *prop_names_coll_p = ecma_op_object_get_property_names (obj_p, false, true, true);
+  ecma_collection_header_t *prop_names_coll_p;
+  prop_names_coll_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
   if (prop_names_coll_p->item_count != 0)
   {

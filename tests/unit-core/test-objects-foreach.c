@@ -28,7 +28,7 @@ static const jerry_object_native_info_t test_info =
   .free_cb = free_test_data
 };
 
-static const char *strict_equal_source = "var x = function(a, b) {return a === b;}; x";
+static const jerry_char_t strict_equal_source[] = "var x = function(a, b) {return a === b;}; x";
 
 static bool
 find_test_object_by_data (const jerry_value_t candidate,
@@ -72,8 +72,8 @@ main (void)
   /* Render strict-equal as a function. */
   jerry_value_t parse_result = jerry_parse (NULL,
                                             0,
-                                            (jerry_char_t *) strict_equal_source,
-                                            strlen (strict_equal_source),
+                                            strict_equal_source,
+                                            sizeof (strict_equal_source) - 1,
                                             JERRY_PARSE_STRICT_MODE);
   TEST_ASSERT (!jerry_value_is_error (parse_result));
   jerry_value_t strict_equal = jerry_run (parse_result);
@@ -99,7 +99,7 @@ main (void)
   jerry_release_value (object);
 
   /* Collect garbage. */
-  jerry_gc ();
+  jerry_gc (JERRY_GC_SEVERITY_LOW);
 
   /* Attempt to retrieve the object by its native pointer again. */
   TEST_ASSERT (!jerry_objects_foreach_by_native_info (&test_info, find_test_object_by_data, &found_object));
@@ -124,7 +124,7 @@ main (void)
   jerry_release_value (args[1]);
 
   /* Collect garbage. */
-  jerry_gc ();
+  jerry_gc (JERRY_GC_SEVERITY_LOW);
 
   /* Attempt to retrieve the object by the presence of its property again. */
   args[0] = property_name;

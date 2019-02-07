@@ -19,6 +19,7 @@
 #include <tinyara/fs/fs_utils.h>
 
 #include "jerryscript.h"
+#include "jerryscript-ext/debugger.h"
 #include "jerryscript-ext/handler.h"
 #include "jerryscript-port.h"
 #include "setjmp.h"
@@ -356,7 +357,8 @@ jerry_cmd_main (int argc, char *argv[])
 
   if (start_debug_server)
   {
-    jerry_debugger_init (debug_port);
+    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port)
+                                   && jerryx_debugger_ws_create ());
   }
 
   register_js_function ("assert", jerryx_handler_assert);
@@ -369,9 +371,8 @@ jerry_cmd_main (int argc, char *argv[])
   {
     printf ("No input files, running a hello world demo:\n");
     const jerry_char_t script[] = "var str = 'Hello World'; print(str + ' from JerryScript')";
-    size_t script_size = strlen ((const char *) script);
 
-    ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
+    ret_value = jerry_parse (NULL, 0, script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
 
     if (!jerry_value_is_error (ret_value))
     {
@@ -473,19 +474,16 @@ jerry_port_log (jerry_log_level_t level, /**< log level */
 } /* jerry_port_log */
 
 /**
- * Dummy function to get the time zone.
+ * Dummy function to get the time zone adjustment.
  *
- * @return true
+ * @return 0
  */
-bool
-jerry_port_get_time_zone (jerry_time_zone_t *tz_p)
+double
+jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 {
   /* We live in UTC. */
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
-
-  return true;
-} /* jerry_port_get_time_zone */
+  return 0;
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Dummy function to get the current time.

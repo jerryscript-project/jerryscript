@@ -26,14 +26,37 @@ file(GLOB SOURCE_PORT_DEFAULT *.c)
 # (should only be necessary if we used compiler default libc but not checking that)
 set(DEFINES_PORT_DEFAULT _BSD_SOURCE _DEFAULT_SOURCE)
 
+INCLUDE (CheckStructHasMember)
+# CHECK_STRUCT_HAS_MEMBER works by trying to compile some C code that accesses the
+# given field of the given struct. However, our default compiler options break this
+# C code, so turn a couple of them off for this.
+set(CMAKE_REQUIRED_FLAGS "-Wno-error=strict-prototypes -Wno-error=old-style-definition")
+# tm.tm_gmtoff is non-standard, so glibc doesn't expose it in c99 mode
+# (our default). Define some macros to expose it anyway.
+set(CMAKE_REQUIRED_DEFINITIONS "-D_BSD_SOURCE -D_DEFAULT_SOURCE")
+CHECK_STRUCT_HAS_MEMBER ("struct tm" tm_gmtoff time.h HAVE_TM_GMTOFF)
+if(HAVE_TM_GMTOFF)
+  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_TM_GMTOFF)
+endif()
+
+# Sleep function availability check
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
+CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
+if(HAVE_TIME_H)
+  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_TIME_H)
+elseif(HAVE_UNISTD_H)
+  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_UNISTD_H)
+endif()
+
 # Default Jerry port implementation library variants:
 #   - default
 #   - default-minimal (no extra termination and log APIs)
 foreach(JERRY_PORT_LIBRARY_NAME ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal)
   add_library(${JERRY_PORT_LIBRARY_NAME} ${SOURCE_PORT_DEFAULT})
   target_include_directories(${JERRY_PORT_LIBRARY_NAME} PUBLIC ${INCLUDE_PORT_DEFAULT})
-  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/jerry-core/include)
-  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/jerry-ext/include)
+  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${INCLUDE_CORE_PUBLIC})
+  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${INCLUDE_EXT_PUBLIC})
   target_compile_definitions(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${DEFINES_PORT_DEFAULT})
   target_link_libraries(${JERRY_PORT_LIBRARY_NAME} jerry-core) # FIXME: remove this dependency as soon as possible
 endforeach()
@@ -41,5 +64,9 @@ endforeach()
 target_compile_definitions(${JERRY_PORT_DEFAULT_NAME}-minimal PRIVATE DISABLE_EXTRA_API)
 
 # Installation
+configure_file(libjerry-port-default.pc.in libjerry-port-default.pc @ONLY)
+configure_file(libjerry-port-default-minimal.pc.in libjerry-port-default-minimal.pc @ONLY)
+
 install(TARGETS ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default.pc ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default-minimal.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_PORT_DEFAULT}/ DESTINATION include)

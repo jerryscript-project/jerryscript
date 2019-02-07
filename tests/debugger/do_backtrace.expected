@@ -14,10 +14,27 @@ out: function test
 Stopped at tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
 (jerry-debugger) s
 Stopped at tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+(jerry-debugger) bt 1 2 t
+Total number of frames: 3
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+(jerry-debugger) bt 1 2
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+(jerry-debugger) bt 0 3 t
+Total number of frames: 3
+Frame 0: tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+Frame 2: tests/debugger/do_backtrace.js:40
 (jerry-debugger) bt
 Frame 0: tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
 Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
 Frame 2: tests/debugger/do_backtrace.js:40
+(jerry-debugger) bt 2
+Frame 0: tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+(jerry-debugger) bt 2 t
+Total number of frames: 3
+Frame 0: tests/debugger/do_backtrace.js:23 (in foo() at line:21, col:1)
+Frame 1: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
 (jerry-debugger) n
 out: function foo
 Stopped at tests/debugger/do_backtrace.js:24 (in foo() at line:21, col:1)
@@ -30,5 +47,16 @@ Frame 0: tests/debugger/do_backtrace.js:18 (in f4() at line:17, col:1)
 Frame 1: tests/debugger/do_backtrace.js:25 (in foo() at line:21, col:1)
 Frame 2: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
 Frame 3: tests/debugger/do_backtrace.js:40
+(jerry-debugger) bt 4 4
+(jerry-debugger) bt 600 919
+(jerry-debugger) bt 3 500
+Frame 3: tests/debugger/do_backtrace.js:40
+(jerry-debugger) bt 42
+Frame 0: tests/debugger/do_backtrace.js:18 (in f4() at line:17, col:1)
+Frame 1: tests/debugger/do_backtrace.js:25 (in foo() at line:21, col:1)
+Frame 2: tests/debugger/do_backtrace.js:33 (in test() at line:30, col:1)
+Frame 3: tests/debugger/do_backtrace.js:40
+(jerry-debugger) bt 4 3
+Error: Start depth needs to be lower than or equal to max depth
 (jerry-debugger) c
 out: function f4

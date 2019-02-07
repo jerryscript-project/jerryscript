@@ -63,17 +63,13 @@ ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
   JERRY_UNUSED (this_arg);
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  bool is_direct_eval = vm_is_direct_eval_form_call ();
+  uint32_t parse_opts = vm_is_direct_eval_form_call () ? ECMA_PARSE_DIRECT_EVAL : ECMA_PARSE_NO_OPTS;
 
   /* See also: ECMA-262 v5, 10.1.1 */
-  bool is_called_from_strict_mode_code;
-  if (is_direct_eval)
+  if (parse_opts && vm_is_strict_mode ())
   {
-    is_called_from_strict_mode_code = vm_is_strict_mode ();
-  }
-  else
-  {
-    is_called_from_strict_mode_code = false;
+    JERRY_ASSERT (parse_opts & ECMA_PARSE_DIRECT_EVAL);
+    parse_opts |= ECMA_PARSE_STRICT_MODE;
   }
 
   if (!ecma_is_value_string (x))
@@ -85,8 +81,7 @@ ecma_builtin_global_object_eval (ecma_value_t this_arg, /**< this argument */
   {
     /* steps 2 to 8 */
     ret_value = ecma_op_eval (ecma_get_string_from_value (x),
-                              is_direct_eval,
-                              is_called_from_strict_mode_code);
+                              parse_opts);
   }
 
   return ret_value;
@@ -190,17 +185,16 @@ ecma_builtin_global_object_parse_int (ecma_value_t this_arg, /**< this argument 
       if (ecma_is_value_empty (ret_value))
       {
         /* 10. */
-        if (strip_prefix)
+        if (strip_prefix
+            && ((end_p - start_p) >= 2)
+            && (current == LIT_CHAR_0))
         {
-          if (end_p - start_p >= 2 && current == LIT_CHAR_0)
+          ecma_char_t next = *string_curr_p;
+          if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
           {
-            ecma_char_t next = *string_curr_p;
-            if (next == LIT_CHAR_LOWERCASE_X || next == LIT_CHAR_UPPERCASE_X)
-            {
-              /* Skip the 'x' or 'X' characters. */
-              start_p = ++string_curr_p;
-              rad = 16;
-            }
+            /* Skip the 'x' or 'X' characters. */
+            start_p = ++string_curr_p;
+            rad = 16;
           }
         }
 
@@ -538,9 +532,7 @@ ecma_builtin_global_object_is_nan (ecma_value_t this_arg, /**< this argument */
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, arg, ret_value);
 
-  bool is_nan = ecma_number_is_nan (arg_num);
-
-  ret_value = is_nan ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  ret_value = ecma_make_boolean_value (ecma_number_is_nan (arg_num));
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 
@@ -567,8 +559,7 @@ ecma_builtin_global_object_is_finite (ecma_value_t this_arg, /**< this argument 
 
   bool is_finite = !(ecma_number_is_nan (arg_num)
                      || ecma_number_is_infinity (arg_num));
-
-  ret_value = is_finite ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  ret_value = ecma_make_boolean_value (is_finite);
 
   ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
 

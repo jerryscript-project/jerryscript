@@ -39,6 +39,9 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_GET_PROTOTYPE_OF_UL, ecma_builtin_object_object_get_prototype_of, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_GET_OWN_PROPERTY_NAMES_UL, ecma_builtin_object_object_get_own_property_names, 1, 1)
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+ROUTINE (LIT_MAGIC_STRING_GET_OWN_PROPERTY_SYMBOLS_UL, ecma_builtin_object_object_get_own_property_symbols, 1, 1)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 ROUTINE (LIT_MAGIC_STRING_SEAL, ecma_builtin_object_object_seal, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_FREEZE, ecma_builtin_object_object_freeze, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_PREVENT_EXTENSIONS_UL, ecma_builtin_object_object_prevent_extensions, 1, 1)
@@ -53,6 +56,7 @@ ROUTINE (LIT_MAGIC_STRING_DEFINE_PROPERTY_UL, ecma_builtin_object_object_define_
 
 #ifndef CONFIG_DISABLE_ES2015_BUILTIN
 ROUTINE (LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL, ecma_builtin_object_object_set_prototype_of, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_ASSIGN, ecma_builtin_object_object_assign, NON_FIXED, 2)
 #endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

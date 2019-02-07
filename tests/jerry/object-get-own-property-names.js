@@ -65,7 +65,7 @@ assert (props.length === 2);
 
 // Test non-object argument
 try {
-  Object.getOwnPrototypeNames("hello");
+  Object.getOwnPropertyNames("hello");
   assert (false);
 } catch (e) {
   assert (e instanceof TypeError);

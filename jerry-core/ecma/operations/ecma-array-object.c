@@ -24,6 +24,7 @@
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-function-object.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -43,14 +44,14 @@
  */
 ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                        are passed to Array constructor */
+                                                                    *   are passed to Array constructor */
                              ecma_length_t arguments_list_len, /**< length of the arguments' list */
                              bool is_treat_single_arg_as_length) /**< if the value is true,
-                                                                      arguments_list_len is 1
-                                                                      and single argument is Number,
-                                                                      then treat the single argument
-                                                                      as new Array's length rather
-                                                                      than as single item of the Array */
+                                                                  *   arguments_list_len is 1
+                                                                  *   and single argument is Number,
+                                                                  *   then treat the single argument
+                                                                  *   as new Array's length rather
+                                                                  *   than as single item of the Array */
 {
   JERRY_ASSERT (arguments_list_len == 0
                 || arguments_list_p != NULL);
@@ -94,8 +95,6 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_deref_object (array_prototype_object_p);
-
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_ARRAY type.
    *
@@ -120,9 +119,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     ecma_builtin_helper_def_prop (object_p,
                                   item_name_string_p,
                                   array_items_p[index],
-                                  true, /* Writable */
-                                  true, /* Enumerable */
-                                  true, /* Configurable */
+                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                   false); /* Failure handling */
 
     ecma_deref_ecma_string (item_name_string_p);
@@ -130,6 +127,39 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_array_object */
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Array object creation with custom prototype.
+ *
+ * See also: ECMA-262 v6, 9.4.2.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p, /**< list of arguments that
+                                                                                   *   are passed to
+                                                                                   *   Array constructor */
+                                            ecma_length_t arguments_list_len, /**< length of the arguments' list */
+                                            bool is_treat_single_arg_as_length, /**< if the value is true,
+                                                                                 *   arguments_list_len is 1
+                                                                                 *   and single argument is Number,
+                                                                                 *   then treat the single argument
+                                                                                 *   as new Array's length rather
+                                                                                 *   than as single item of the
+                                                                                 *   Array */
+                                            ecma_object_t *object_p) /**< The object from whom the new array object
+                                                                      *   is being created */
+{
+  /* TODO: Use @@species after Symbol has been implemented */
+  JERRY_UNUSED (object_p);
+
+  return ecma_op_create_array_object (arguments_list_p,
+                                      arguments_list_len,
+                                      is_treat_single_arg_as_length);
+} /* ecma_op_create_array_object_by_constructor */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
  * Update the length of an array to a new length

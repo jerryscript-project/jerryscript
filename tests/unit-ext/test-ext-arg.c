@@ -17,49 +17,49 @@
  * Unit test for jerry-ext/args.
  */
 
+#include <string.h>
 #include "jerryscript.h"
 #include "jerryscript-ext/arg.h"
 #include "test-common.h"
 
-#include <string.h>
-#include <jerryscript-ext/arg.h>
-
-const char *test_source = (
-                           "var arg1 = true;"
-                           "var arg2 = 10.5;"
-                           "var arg3 = 'abc';"
-                           "var arg4 = function foo() {};"
-                           "test_validator1(arg1, arg2, arg3, arg4);"
-                           "arg1 = new Boolean(true);"
-                           "arg3 = new String('abc');"
-                           "test_validator1(arg1, arg2, arg3);"
-                           "test_validator1(arg1, arg2, '');"
-                           "arg2 = new Number(10.5);"
-                           "test_validator1(arg1, arg2, arg3);"
-                           "test_validator1(arg1, 10.5, 'abcdef');"
-                           "var obj_a = new MyObjectA();"
-                           "var obj_b = new MyObjectB();"
-                           "test_validator2.call(obj_a, 5);"
-                           "test_validator2.call(obj_b, 5);"
-                           "test_validator2.call(obj_a, 1);"
-                           "var obj1 = {prop1:true, prop2:'1.5'};"
-                           "test_validator_prop1(obj1);"
-                           "test_validator_prop2(obj1);"
-                           "test_validator_prop2();"
-                           "var obj2 = {prop1:true};"
-                           "Object.defineProperty(obj2, 'prop2', {"
-                           "  get: function() { throw new TypeError('prop2 error') }"
-                           "});"
-                           "test_validator_prop3(obj2);"
-                           "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
-                           "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
-                           "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
-                           "test_validator_int3(NaN);"
-                           "var arr = [1, 2];"
-                           "test_validator_array1(arr);"
-                           "test_validator_array1();"
-                           "test_validator_array2(arr);"
-                           );
+static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+  "var arg1 = true;"
+  "var arg2 = 10.5;"
+  "var arg3 = 'abc';"
+  "var arg4 = function foo() {};"
+  "test_validator1(arg1, arg2, arg3, arg4);"
+  "arg1 = new Boolean(true);"
+  "arg3 = new String('abc');"
+  "test_validator1(arg1, arg2, arg3);"
+  "test_validator1(arg1, arg2, '');"
+  "arg2 = new Number(10.5);"
+  "test_validator1(arg1, arg2, arg3);"
+  "test_validator1(arg1, 10.5, 'abcdef');"
+  "var obj_a = new MyObjectA();"
+  "var obj_b = new MyObjectB();"
+  "test_validator2.call(obj_a, 5);"
+  "test_validator2.call(obj_b, 5);"
+  "test_validator2.call(obj_a, 1);"
+  "var obj1 = {prop1:true, prop2:'1.5'};"
+  "test_validator_prop1(obj1);"
+  "test_validator_prop2(obj1);"
+  "test_validator_prop2();"
+  "var obj2 = {prop1:true};"
+  "Object.defineProperty(obj2, 'prop2', {"
+  "  get: function() { throw new TypeError('prop2 error') }"
+  "});"
+  "test_validator_prop3(obj2);"
+  "test_validator_int1(-1000, 1000, 128, -1000, 1000, -127,"
+  "                    -1000, 4294967297, 65536, -2200000000, 4294967297, -2147483647);"
+  "test_validator_int2(-1.5, -1.5, -1.5, 1.5, 1.5, 1.5, Infinity, -Infinity, 300.5, 300.5);"
+  "test_validator_int3(NaN);"
+  "var arr = [1, 2];"
+  "test_validator_array1(arr);"
+  "test_validator_array1();"
+  "test_validator_array2(arr);"
+  "test_validator_restore(false, 3.0);"
+  "test_validator_restore(3.0, false);"
+);
 
 static const jerry_object_native_info_t thing_a_info =
 {
@@ -89,6 +89,7 @@ static int validator2_count = 0;
 static int validator_int_count = 0;
 static int validator_prop_count = 0;
 static int validator_array_count = 0;
+static int validator_restore_count = 0;
 
 /**
  * The handler should have following arguments:
@@ -563,13 +564,171 @@ test_validator_array2_handler (const jerry_value_t func_obj_val __attribute__((u
   return jerry_create_undefined ();
 } /* test_validator_array2_handler */
 
+/**
+ * This validator is designed to test the
+ * jerryx_arg_js_iterator_restore function.  We'll introduce a union
+ * type to hold a bool or double and a transform function that will
+ * look for this type.  Then, we'll call the handler with two
+ * parameters, one bool and one double and see if we correctly build
+ * the union types for each parameter.  To check that the code protects
+ * against backing up too far, when the check for the double fails,
+ * we'll "restore" the stack three times; this shouldn't break
+ * anything.
+*/
+/*
+ * This enumeration type specifies the kind of thing held in the union.
+*/
+typedef enum
+{
+  DOUBLE_VALUE,
+  BOOL_VALUE
+} union_type_t;
+
+/*
+ * This struct holds either a boolean or double in a union and has a
+ * second field that describes the type held in the union.
+*/
+typedef struct
+{
+  union_type_t type_of_value;
+  union
+  {
+    double double_field;
+    bool bool_field;
+  } value;
+} double_or_bool_t;
+
+/**
+ * This creates a jerryx_arg_t that can be used like any
+ * of the installed functions, like jerryx_arg_bool().
+ */
+#define jerryx_arg_double_or_bool_t(value_ptr, coerce_or_not, optional_or_not, last_parameter) \
+        jerryx_arg_custom (value_ptr, \
+                           (uintptr_t)&((uintptr_t []){(uintptr_t)coerce_or_not, \
+                                                       (uintptr_t)optional_or_not, \
+                                                       (uintptr_t)last_parameter}), \
+                           jerry_arg_to_double_or_bool_t)
+/*
+ * This function is the argument validator used in the above macro called
+ * jerryx_arg_double_or_bool. It calls jerryx_arg_js_iterator_restore()
+ * more times than it should to ensure that calling that function too
+ * often doesn't cause an error.
+*/
+static jerry_value_t
+jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p,
+                             const jerryx_arg_t *c_arg_p)
+{
+  /* c_arg_p has two fields: dest, which is a pointer to the data that
+   * gets filled in, and extra_info, which contains the flags used to
+   * control coercion and optional-ness, respectively. For this test,
+   * we added an extra flag that tells us that we're working on the
+   * last parameter; when we know it's the last parameter, we'll "restore"
+   * the stack more times than there are actual stack values to ensure
+   * that the restore function doesn't produce an error. */
+  double_or_bool_t *destination = c_arg_p->dest;
+  uintptr_t *extra_info = (uintptr_t *)(c_arg_p->extra_info);
+  jerryx_arg_t conversion_function;
+  jerry_value_t conversion_result;
+  jerry_value_t restore_result;
+  bool last_parameter = (extra_info[2] == 1);
+
+  validator_restore_count++;
+
+  conversion_function = jerryx_arg_number ((double *) (&(destination->value.double_field)),
+                                           (jerryx_arg_coerce_t) extra_info[0],
+                                           JERRYX_ARG_OPTIONAL);
+  conversion_result = conversion_function.func (js_arg_iter_p, &conversion_function);
+  if (!jerry_value_is_error (conversion_result))
+  {
+    if (last_parameter)
+    {
+      /* The stack is only two parameters high, but we want to ensure that
+       * excessive calls will not result in aberrant behavior... */
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      restore_result = jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      TEST_ASSERT (jerry_value_is_undefined (restore_result));
+    }
+
+    destination->type_of_value = DOUBLE_VALUE;
+    return conversion_result;
+  }
+
+  jerryx_arg_js_iterator_restore (js_arg_iter_p);
+
+  conversion_function = jerryx_arg_boolean ((bool *) (&(destination->value.bool_field)),
+                                            (jerryx_arg_coerce_t) extra_info[0],
+                                            (jerryx_arg_optional_t) extra_info[1]);
+
+  jerry_release_value (conversion_result);
+  conversion_result = conversion_function.func (js_arg_iter_p, &conversion_function);
+  if (!jerry_value_is_error (conversion_result))
+  {
+    if (last_parameter)
+    {
+      /* The stack is only two parameters high, but we want to ensure that
+       * excessive calls will not result in aberrant behavior... */
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      restore_result = jerryx_arg_js_iterator_restore (js_arg_iter_p);
+      TEST_ASSERT (jerry_value_is_undefined (restore_result));
+    }
+
+    destination->type_of_value = BOOL_VALUE;
+    return conversion_result;
+  }
+
+  /* Fall through indicates that whatever they gave us, it wasn't
+   * one of the types we were expecting... */
+  jerry_release_value (conversion_result);
+  return jerry_create_error (JERRY_ERROR_TYPE,
+                             (const jerry_char_t *) "double_or_bool-type error.");
+} /* jerry_arg_to_double_or_bool_t */
+
+/**
+ * This validator expects two parameters, one a bool and one a double -- the
+ * order doesn't matter (so we'll call it twice with the orders reversed).
+*/
+static jerry_value_t
+test_validator_restore_handler (const jerry_value_t func_obj_val __attribute__((unused)), /**< function object */
+                                const jerry_value_t this_val __attribute__((unused)), /**< this value */
+                                const jerry_value_t args_p[], /**< arguments list */
+                                const jerry_length_t args_cnt __attribute__((unused))) /**< arguments length */
+{
+  double_or_bool_t arg1;
+  double_or_bool_t arg2;
+
+  jerryx_arg_t item_mapping[] =
+  {
+    jerryx_arg_double_or_bool_t (&arg1, JERRYX_ARG_NO_COERCE, JERRYX_ARG_REQUIRED, 0),
+    jerryx_arg_double_or_bool_t (&arg2, JERRYX_ARG_NO_COERCE, JERRYX_ARG_REQUIRED, 1)
+  };
+
+  jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, item_mapping, ARRAY_SIZE (item_mapping));
+
+  TEST_ASSERT (!jerry_value_is_error (is_ok));
+
+  /* We are going to call this with [false, 3.0] and [3.0, false] parameters... */
+  bool arg1_is_false = (arg1.type_of_value == BOOL_VALUE && arg1.value.bool_field == false);
+  bool arg1_is_three = (arg1.type_of_value == DOUBLE_VALUE && arg1.value.double_field == 3.0);
+  bool arg2_is_false = (arg2.type_of_value == BOOL_VALUE && arg2.value.bool_field == false);
+  bool arg2_is_three = (arg2.type_of_value == DOUBLE_VALUE && arg2.value.double_field == 3.0);
+  TEST_ASSERT ((arg1_is_false && arg2_is_three) || (arg1_is_three && arg2_is_false));
+
+  jerry_release_value (is_ok);
+
+  return jerry_create_undefined ();
+} /* test_validator_restore_handler */
+
 static void
 test_utf8_string (void)
 {
   /* test string: 'str: {DESERET CAPITAL LETTER LONG I}' */
   jerry_value_t str = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
   char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
-  size_t buf_len = strlen (expect_utf8_buf);
+  size_t buf_len = sizeof (expect_utf8_buf) - 1;
   char buf[buf_len+1];
 
   jerryx_arg_t mapping[] =
@@ -659,11 +818,12 @@ main (void)
   register_js_function ("test_validator_prop3", test_validator_prop3_handler);
   register_js_function ("test_validator_array1", test_validator_array1_handler);
   register_js_function ("test_validator_array2", test_validator_array2_handler);
+  register_js_function ("test_validator_restore", test_validator_restore_handler);
 
   jerry_value_t parsed_code_val = jerry_parse (NULL,
                                                0,
-                                               (jerry_char_t *) test_source,
-                                               strlen (test_source),
+                                               test_source,
+                                               sizeof (test_source) - 1,
                                                JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
@@ -674,6 +834,7 @@ main (void)
   TEST_ASSERT (validator_prop_count == 4);
   TEST_ASSERT (validator_int_count == 3);
   TEST_ASSERT (validator_array_count == 3);
+  TEST_ASSERT (validator_restore_count == 4);
 
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);

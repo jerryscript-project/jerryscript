@@ -24,143 +24,7 @@
 #define JMEM_ALLOCATOR_INTERNAL
 #include "jmem-allocator-internal.h"
 
-/**
- * Initialize memory allocators.
- */
-void
-jmem_init (void)
-{
-  jmem_heap_init ();
-} /* jmem_init */
-
-/**
- * Finalize memory allocators.
- */
-void
-jmem_finalize (void)
-{
-  jmem_pools_finalize ();
-
 #ifdef JMEM_STATS
-  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
-  {
-    jmem_stats_print ();
-  }
-#endif /* JMEM_STATS */
-
-  jmem_heap_finalize ();
-} /* jmem_finalize */
-
-/**
- * Compress pointer
- *
- * @return packed pointer
- */
-inline jmem_cpointer_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
-{
-  JERRY_ASSERT (pointer_p != NULL);
-  JERRY_ASSERT (jmem_is_heap_pointer (pointer_p));
-
-  uintptr_t uint_ptr = (uintptr_t) pointer_p;
-
-  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
-
-#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
-  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
-#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
-  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
-
-  uint_ptr -= heap_start;
-  uint_ptr >>= JMEM_ALIGNMENT_LOG;
-
-#ifdef JERRY_CPOINTER_32_BIT
-  JERRY_ASSERT (uint_ptr <= UINT32_MAX);
-#else /* !JERRY_CPOINTER_32_BIT */
-  JERRY_ASSERT (uint_ptr <= UINT16_MAX);
-#endif /* JERRY_CPOINTER_32_BIT */
-  JERRY_ASSERT (uint_ptr != JMEM_CP_NULL);
-#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
-
-  return (jmem_cpointer_t) uint_ptr;
-} /* jmem_compress_pointer */
-
-/**
- * Decompress pointer
- *
- * @return unpacked pointer
- */
-inline void * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
-{
-  JERRY_ASSERT (compressed_pointer != JMEM_CP_NULL);
-
-  uintptr_t uint_ptr = compressed_pointer;
-
-  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
-
-#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
-  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
-#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
-  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
-
-  uint_ptr <<= JMEM_ALIGNMENT_LOG;
-  uint_ptr += heap_start;
-
-  JERRY_ASSERT (jmem_is_heap_pointer ((void *) uint_ptr));
-#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
-
-  return (void *) uint_ptr;
-} /* jmem_decompress_pointer */
-
-/**
- * Register specified 'try to give memory back' callback routine
- */
-void
-jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
-{
-  /* Currently only one callback is supported */
-  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == NULL);
-
-  JERRY_CONTEXT (jmem_free_unused_memory_callback) = callback;
-} /* jmem_register_free_unused_memory_callback */
-
-/**
- * Unregister specified 'try to give memory back' callback routine
- */
-void
-jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
-{
-  /* Currently only one callback is supported */
-  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == callback);
-
-  JERRY_CONTEXT (jmem_free_unused_memory_callback) = NULL;
-} /* jmem_unregister_free_unused_memory_callback */
-
-/**
- * Run 'try to give memory back' callbacks with specified severity
- */
-void
-jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
-{
-  if (JERRY_CONTEXT (jmem_free_unused_memory_callback) != NULL)
-  {
-    JERRY_CONTEXT (jmem_free_unused_memory_callback) (severity);
-  }
-
-  jmem_pools_collect_empty ();
-} /* jmem_run_free_unused_memory_callbacks */
-
-#ifdef JMEM_STATS
-/**
- * Print memory usage statistics
- */
-void
-jmem_stats_print (void)
-{
-  jmem_heap_stats_print ();
-} /* jmem_stats_print */
-
 /**
  * Register byte code allocation.
  */
@@ -278,3 +142,130 @@ jmem_stats_free_property_bytes (size_t property_size)
 } /* jmem_stats_free_property_bytes */
 
 #endif /* JMEM_STATS */
+
+/**
+ * Initialize memory allocators.
+ */
+void
+jmem_init (void)
+{
+  jmem_heap_init ();
+} /* jmem_init */
+
+/**
+ * Finalize memory allocators.
+ */
+void
+jmem_finalize (void)
+{
+  jmem_pools_finalize ();
+
+#ifdef JMEM_STATS
+  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
+  {
+    jmem_heap_stats_print ();
+  }
+#endif /* JMEM_STATS */
+
+  jmem_heap_finalize ();
+} /* jmem_finalize */
+
+/**
+ * Compress pointer
+ *
+ * @return packed pointer
+ */
+inline jmem_cpointer_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+jmem_compress_pointer (const void *pointer_p) /**< pointer to compress */
+{
+  JERRY_ASSERT (pointer_p != NULL);
+  JERRY_ASSERT (jmem_is_heap_pointer (pointer_p));
+
+  uintptr_t uint_ptr = (uintptr_t) pointer_p;
+
+  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
+
+#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
+  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
+  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
+
+  uint_ptr -= heap_start;
+  uint_ptr >>= JMEM_ALIGNMENT_LOG;
+
+#ifdef JERRY_CPOINTER_32_BIT
+  JERRY_ASSERT (uint_ptr <= UINT32_MAX);
+#else /* !JERRY_CPOINTER_32_BIT */
+  JERRY_ASSERT (uint_ptr <= UINT16_MAX);
+#endif /* JERRY_CPOINTER_32_BIT */
+  JERRY_ASSERT (uint_ptr != JMEM_CP_NULL);
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
+
+  return (jmem_cpointer_t) uint_ptr;
+} /* jmem_compress_pointer */
+
+/**
+ * Decompress pointer
+ *
+ * @return unpacked pointer
+ */
+inline void * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompress */
+{
+  JERRY_ASSERT (compressed_pointer != JMEM_CP_NULL);
+
+  uintptr_t uint_ptr = compressed_pointer;
+
+  JERRY_ASSERT (((jmem_cpointer_t) uint_ptr) == uint_ptr);
+
+#if defined (ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY) && defined (JERRY_CPOINTER_32_BIT)
+  JERRY_ASSERT (uint_ptr % JMEM_ALIGNMENT == 0);
+#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
+  const uintptr_t heap_start = (uintptr_t) &JERRY_HEAP_CONTEXT (first);
+
+  uint_ptr <<= JMEM_ALIGNMENT_LOG;
+  uint_ptr += heap_start;
+
+  JERRY_ASSERT (jmem_is_heap_pointer ((void *) uint_ptr));
+#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
+
+  return (void *) uint_ptr;
+} /* jmem_decompress_pointer */
+
+/**
+ * Register specified 'try to give memory back' callback routine
+ */
+void
+jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
+{
+  /* Currently only one callback is supported */
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == NULL);
+
+  JERRY_CONTEXT (jmem_free_unused_memory_callback) = callback;
+} /* jmem_register_free_unused_memory_callback */
+
+/**
+ * Unregister specified 'try to give memory back' callback routine
+ */
+void
+jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback) /**< callback routine */
+{
+  /* Currently only one callback is supported */
+  JERRY_ASSERT (JERRY_CONTEXT (jmem_free_unused_memory_callback) == callback);
+
+  JERRY_CONTEXT (jmem_free_unused_memory_callback) = NULL;
+} /* jmem_unregister_free_unused_memory_callback */
+
+/**
+ * Run 'try to give memory back' callbacks with specified severity
+ */
+void
+jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
+{
+  if (JERRY_CONTEXT (jmem_free_unused_memory_callback) != NULL)
+  {
+    JERRY_CONTEXT (jmem_free_unused_memory_callback) (severity);
+  }
+
+  jmem_pools_collect_empty ();
+} /* jmem_run_free_unused_memory_callbacks */

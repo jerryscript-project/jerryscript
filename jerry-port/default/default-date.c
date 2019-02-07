@@ -13,41 +13,43 @@
  * limitations under the License.
  */
 
+#ifdef HAVE_TM_GMTOFF
+#include <time.h>
+#endif /* HAVE_TM_GMTOFF */
 #ifdef __GNUC__
 #include <sys/time.h>
-#endif
+#endif /* __GNUC__ */
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
 /**
- * Default implementation of jerry_port_get_time_zone. Uses 'gettimeofday' if
- * available on the system, does nothing otherwise.
+ * Default implementation of jerry_port_get_local_time_zone_adjustment. Uses the 'tm_gmtoff' field
+ * of 'struct tm' (a GNU extension) filled by 'localtime_r' if available on the
+ * system, does nothing otherwise.
  *
- * @return true - if 'gettimeofday' is available and executed successfully,
- *         false - otherwise.
+ * @return offset between UTC and local time at the given unix timestamp, if
+ *         available. Otherwise, returns 0, assuming UTC time.
  */
-bool jerry_port_get_time_zone (jerry_time_zone_t *tz_p) /**< [out] time zone structure to fill */
+double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since unix epoch */
+                                                  bool is_utc)  /**< is the time above in UTC? */
 {
-#ifdef __GNUC__
-  struct timeval tv;
-  struct timezone tz;
-
-  /* gettimeofday may not fill tz, so zero-initializing */
-  tz.tz_minuteswest = 0;
-  tz.tz_dsttime = 0;
-
-  if (gettimeofday (&tv, &tz) == 0)
+#ifdef HAVE_TM_GMTOFF
+  struct tm tm;
+  time_t now = (time_t) (unix_ms / 1000);
+  localtime_r (&now, &tm);
+  if (!is_utc)
   {
-    tz_p->offset = tz.tz_minuteswest;
-    tz_p->daylight_saving_time = tz.tz_dsttime > 0 ? 1 : 0;
-
-    return true;
+    now -= tm.tm_gmtoff;
+    localtime_r (&now, &tm);
   }
-#endif /* __GNUC__ */
-
-  return false;
-} /* jerry_port_get_time_zone */
+  return ((double) tm.tm_gmtoff) * 1000;
+#else /* !HAVE_TM_GMTOFF */
+  (void) unix_ms;
+  (void) is_utc;
+  return 0.0;
+#endif /* HAVE_TM_GMTOFF */
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Default implementation of jerry_port_get_current_time. Uses 'gettimeofday' if

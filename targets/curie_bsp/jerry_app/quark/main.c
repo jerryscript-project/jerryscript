@@ -111,7 +111,7 @@ void eval_jerry_script (int argc, char *argv[], struct tcmd_handler_ctx *ctx)
     }
     *p = '\0';
 
-    jerry_value_t eval_ret = jerry_eval (buffer, str_total_length - 1, false);
+    jerry_value_t eval_ret = jerry_eval (buffer, str_total_length - 1, JERRY_PARSE_NO_OPTS);
 
     if (jerry_value_is_error (eval_ret))
     {

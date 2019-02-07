@@ -43,6 +43,8 @@
   const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   static ecma_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
+  static ecma_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
   static ecma_value_t c_getter_func_name (ROUTINE_ARG_LIST_0); \
   static ecma_value_t c_setter_func_name (ROUTINE_ARG_LIST_1);
@@ -63,6 +65,8 @@ enum
 {
   PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+  ECMA_ROUTINE_ ## name ## c_function_name,
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
   ECMA_ROUTINE_ ## name ## c_function_name,
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
   ECMA_ACCESSOR_ ## name ## c_getter_func_name, \
@@ -87,12 +91,26 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ROUTINE, \
+    ECMA_PROPERTY_FLAG_CONFIGURABLE, \
+    ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
+  },
 #else /* BUILTIN_CUSTOM_DISPATCH */
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
+  },
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ROUTINE, \
+    ECMA_PROPERTY_FLAG_CONFIGURABLE, \
     ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
   },
 #endif /* !BUILTIN_CUSTOM_DISPATCH */
@@ -124,6 +142,15 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     prop_attributes, \
     magic_string_id \
   },
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#define SYMBOL_VALUE(name, desc_string_id) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_SYMBOL, \
+    ECMA_PROPERTY_FIXED, \
+    desc_string_id \
+  },
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 #define ACCESSOR_READ_WRITE(name, c_getter_name, c_setter_name, prop_attributes) \
   { \
     name, \
@@ -172,14 +199,18 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
 
   switch (builtin_routine_id)
   {
-#define ROUTINE_ARG(n) (arguments_number >= n ? arguments_list[n - 1] \
-                                              : ECMA_VALUE_UNDEFINED)
+#define ROUTINE_ARG(n) (arguments_list[n - 1])
 #define ROUTINE_ARG_LIST_0
 #define ROUTINE_ARG_LIST_1 , ROUTINE_ARG(1)
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1, ROUTINE_ARG(2)
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2, ROUTINE_ARG(3)
 #define ROUTINE_ARG_LIST_NON_FIXED , arguments_list, arguments_number
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
+       case ECMA_ROUTINE_ ## name ## c_function_name: \
+       { \
+         return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \
+       }
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
        case ECMA_ROUTINE_ ## name ## c_function_name: \
        { \
          return c_function_name (this_arg_value ROUTINE_ARG_LIST_ ## args_number); \

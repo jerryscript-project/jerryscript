@@ -68,28 +68,7 @@ typedef struct
   ecma_collection_header_t *reject_reactions; /**< list of PromiseRejectReactions */
 } ecma_promise_object_t;
 
-/**
- * Use symbolic constant to represent the internal property name of
- * promise related structures.
- */
-typedef enum
-{
-  ECMA_PROMISE_PROPERTY_PROMISE, /**< [[Promise]] property */
-  ECMA_PROMISE_PROPERTY_RESOLVE, /**< [[Resolve]] property */
-  ECMA_PROMISE_PROPERTY_REJECT, /**< [[Reject]] property */
-  ECMA_PROMISE_PROPERTY_CAPABILITY, /**< [[Capability]] property */
-  ECMA_PROMISE_PROPERTY_HANDLER, /**< [[Handler]] property */
-  ECMA_PROMISE_PROPERTY_ALREADY_CALLED, /**< [[AlreadyCalled]] property */
-  ECMA_PROMISE_PROPERTY_INDEX, /**< [[Index]] property */
-  ECMA_PROMISE_PROPERTY_VALUE, /**< [[Values]] property */
-  ECMA_PROMISE_PROPERTY_REMAINING_ELEMENT /**< [[RemainingElement]] property */
-} ecma_promise_property_symbolic_constant_t;
-
 bool ecma_is_promise (ecma_object_t *obj_p);
-ecma_value_t ecma_promise_get_result (ecma_object_t *obj_p);
-void ecma_promise_set_result (ecma_object_t *obj_p, ecma_value_t result);
-uint8_t ecma_promise_get_state (ecma_object_t *obj_p);
-void ecma_promise_set_state (ecma_object_t *obj_p, uint8_t state);
 ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
 ecma_value_t ecma_promise_new_capability (void);

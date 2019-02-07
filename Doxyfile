@@ -778,7 +778,7 @@ INPUT_ENCODING         = UTF-8
 # *.md, *.mm, *.dox, *.py, *.f90, *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf,
 # *.qsf, *.as and *.js.
 
-FILE_PATTERNS          = *.h, *.c
+FILE_PATTERNS          = *.h *.c
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -793,7 +793,21 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+# FIXME: None of these files are excluded light-heartedly. They should be
+# removed one-by-one and warnings reported by doxygen should be fixed by those
+# who are familiar with the undocumented parts.
+EXCLUDE                = \
+        jerry-core/ecma/base/ecma-globals.h \
+        jerry-core/ecma/base/ecma-helpers.h \
+        jerry-core/ecma/operations/ecma-exceptions.h \
+        jerry-core/include/jerryscript-debugger-transport.h \
+        jerry-core/jcontext/jcontext.h \
+        jerry-core/parser/js/byte-code.h \
+        jerry-core/parser/js/common.h \
+        jerry-core/parser/js/js-lexer.h \
+        jerry-core/parser/js/js-parser-internal.h \
+        jerry-core/parser/regexp/re-parser.h \
+        jerry-core/vm/vm-stack.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -809,7 +823,7 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = *.inc.h
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -2000,7 +2014,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = JERRY_STATIC_ASSERT(x,y)=
+PREDEFINED             = JERRY_STATIC_ASSERT(x,y)= JERRY_ATTR_FORMAT(x,y,z)=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

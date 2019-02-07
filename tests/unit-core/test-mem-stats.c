@@ -23,17 +23,17 @@ int main (void)
   {
     return 0;
   }
-  const char *test_source = (
-                         "var a = 'hello';"
-                         "var b = 'world';"
-                         "var c = a + ' ' + b;"
-                         );
+  const jerry_char_t test_source[] = TEST_STRING_LITERAL (
+    "var a = 'hello';"
+    "var b = 'world';"
+    "var c = a + ' ' + b;"
+  );
 
   jerry_init (JERRY_INIT_EMPTY);
   jerry_value_t parsed_code_val = jerry_parse (NULL,
                                                0,
-                                               (jerry_char_t *) test_source,
-                                               strlen (test_source),
+                                               test_source,
+                                               sizeof (test_source) - 1,
                                                JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 

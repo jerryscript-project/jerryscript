@@ -7,16 +7,16 @@ This folder contains files to run JerryScript on
 
 #### 1. Setup the build environment for STM32F4-Discovery board
 
-Clone the necessary projects into a `jerry-nuttx` directory. The last tested working version of NuttX is 7.22.
+Clone the necessary projects into a `jerry-nuttx` directory. The last tested working version of NuttX is 7.27.
 
 ```sh
 # Create a base folder for all the projects.
 mkdir jerry-nuttx && cd jerry-nuttx
 
-git clone https://github.com/jerryscript-project/jerryscript.git
-git clone https://bitbucket.org/nuttx/nuttx.git -b nuttx-7.22
-git clone https://bitbucket.org/nuttx/apps.git -b nuttx-7.22
-git clone https://github.com/texane/stlink.git
+git clone https://github.com/pando-project/jerryscript.git
+git clone https://bitbucket.org/nuttx/nuttx.git -b nuttx-7.27
+git clone https://bitbucket.org/nuttx/apps.git -b nuttx-7.27
+git clone https://github.com/texane/stlink.git -b v1.5.1
 ```
 
 The following directory structure is created after these commands:
@@ -41,7 +41,6 @@ jerryscript/tools/build.py \
     --clean \
     --lto=OFF \
     --jerry-cmdline=OFF \
-    --jerry-libc=OFF \
     --jerry-libm=ON \
     --all-in-one=ON \
     --mem-heap=70 \

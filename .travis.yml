@@ -1,13 +1,8 @@
 language: c
 
-# Default environment: Container-based (sudo-less) Ubuntu Trusty 14.04.
+# Default environment: Ubuntu Trusty 14.04.
 os: linux
 dist: trusty
-sudo: false
-
-# Default dependency installation step: nop intentionally.
-# Jobs can add their own dependencies by redefinig the 'install' stage in the matrix below.
-install: true
 
 # Default job task: run tests as defined in the $OPT environment variable.
 # Jobs can redefine the 'script' stage in the matrix below.
@@ -16,21 +11,21 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - env:
-        - JOBNAME="Checks"
+    - name: "Checks"
+      env:
         - OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
       install: pip install --user pylint==1.6.5
       addons:
         apt:
           packages: [doxygen, cppcheck, vera++]
 
-    - env:
-        - JOBNAME="Linux/x86-64 Build & Correctness Tests"
+    - name: "Linux/x86-64 Build & Correctness Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite"
 
-    - env:
-        - JOBNAME="Linux/x86 (cpointer-32bit) Build & Correctness Tests"
-        - OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--jerry-libc=off,--compile-flag=-m32,--cpointer-32bit=on"
+    - name: "Linux/x86 (cpointer-32bit) Build & Correctness Tests"
+      env:
+        - OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-m32,--cpointer-32bit=on"
       addons:
         apt:
           packages: [gcc-multilib]
@@ -44,35 +39,36 @@ matrix:
         apt:
           packages: [gcc-arm-linux-gnueabihf, libc6-dev-armhf-cross, qemu-user-static]
 
-    - env:
-        - JOBNAME="OSX/x86-64 Build, Correctness & Unit Tests"
+    - name: "OSX/x86-64 Build, Correctness & Unit Tests"
+      env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --unittests"
       os: osx
-      install: tools/brew-install-deps.sh
+      addons:
+        homebrew:
+          packages: [cmake, cppcheck, vera++]
 
-    - env:
-        - JOBNAME="Build Tests"
+    - name: "Build Tests"
+      env:
         - OPTS="--buildoption-test"
       addons:
         apt:
           packages: [gcc-multilib]
 
-    - env:
-        - JOBNAME="Unit Tests"
+    - name: "Unit Tests"
+      env:
         - OPTS="--unittests"
 
-    - env:
-        - JOBNAME="Unit Tests (INIT_FINI)"
+    - name: "Unit Tests (INIT_FINI)"
+      env:
         - OPTS="--unittests --buildoptions=--cmake-param=-DFEATURE_INIT_FINI=ON"
 
-    - env:
-        - JOBNAME="Debugger Tests"
+    - name: "Debugger Tests"
+      env:
         - OPTS="--jerry-debugger"
 
-    - env:
-        - JOBNAME="Conformance Tests"
+    - name: "Conformance Tests"
+      env:
         - OPTS="--test262"
-        - TZ=America/Los_Angeles
 
     - env:
         - JOBNAME="ASAN Tests"
@@ -96,8 +92,8 @@ matrix:
           sources: ubuntu-toolchain-r-test
           packages: [gcc-5, gcc-5-multilib]
 
-    - env:
-        - JOBNAME="Coverity Scan"
+    - name: "Coverity Scan"
+      env:
         # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
         # "travis encrypt" command using the project repo's public key.
         - secure: "V7BdXv3FCVkFGEfKfWto6I+Sytou1zTCGyn49xurkBfKNsG/3vbkXfsbK1m6lCZxmY7W/1odpfjixpAPZgy2L4FgPZK6/UyVvC8pIFjDOubcEniN48haleSvm/ZFPLDifxDL2+VVFtK1oRYPtDBzzSoUCcfwovgk+Wy+tSBnhnyRLqO/WaI6PqFof7ECYMTRlJVjioZARVP4YmkBruIPmGDdR/3EvwowlxfuiFoPheix61ug4x3tpTBW2qWgvFjDyCZXFz4pJrBQPTAIbyKMxHcBykJjl9eR+dWAOsvE1Uw48tFOJxjKDfUttVQUPsyKFllmcCVS0fDYB5pzZOmRUPxJmox1jt8J1FY85Ri1PGY0THBPM2H7to4Yf2418Y3539epbN8p+79dwaM7e2OiJ2owukbWI7PoNqIz5DV5zxpIKsOQfeWuNLJOgsBePEIU7lz133Si/2d5W/7If46B1d+hZRBJfSYksgDqDU6G/voZkPf0K5bKe2O2BxiIW1DYk4yQ1ecZAkqGjZ8jG3zYGMG3mSF4VyuU4UGFG1Pg8fw7Ap5zuHxSVY1H9dtu4T6JQG3aj/x1omlzfw48DjgkwxVhf7Xvl3yfR7pzydYheLX3MZYtcVo7rWnglZFZoUjWDK1StbmzsvPftvwWtoDTWlzo4xeSXhahSJvJyc4U8Wc="
@@ -109,68 +105,62 @@ matrix:
           notification_email: rsipka.uszeged@partner.samsung.com
           build_command: "tools/build.py --clean"
           branch_pattern: master
-      script: true # Changed to nop, Coverity Scan has already built the project by the time 'script' stage is reached.
+      script: skip # Changed to nop, Coverity Scan has already built the project by the time 'script' stage is reached.
 
-    - env: JOBNAME="SonarQube"
+    - name: "SonarQube"
       addons:
         sonarcloud:
-          organization: "jerryscript-project"
-          token:
-            secure: "C1QD99nllAQndSDj4uIQPWCK0jBYrC5P0IrpdhfG7li7uvdzphUM++z3zkhYeeTJR3flw/cr8d9saYlbMjGw2eZ7AdJPFy4FJ1doBXD2amIuepaG1e829SLnJner9VA+d/8j28m7lZNtvZF5efbrS4KOicijNixmJy2PKG0K2035fs6MHLdywF8cJhyMaoRiMvYahIZEjXMvPBSgG1m4+A3PpzyN8XijwOT47cVtCLav4L21Mc7LcHsrc3LeyhtEJ+cs7Lx9WDQDwXX9iCRTA5ByqrXsS4rBV/N3lJI5M9p68Yj94Qy2OvVeCmUZ4ezwuuwkX00vBUk2f4eZx3oFAp973ekA8EGm/5qEvHVcbjHoHLbfUxsAKQHVoExXGdM5r1KeVgxLDT2FSQnBZLoxIrtGOUqFEOL4WX5YaQNoUKvYFO+CNvsMQkNg65QzLinRfqcH20KjzAsVeFwVI/j87J2VjooM8910savpw53iVBNPqmO/lG3kzFL7L2p1FeOuyEg9ANAbMhAXt3SL2srT0xni+ysg4Iwq+IkU+hkQWsvM8Voz+QJmiotFsi1Pzakcu3IOlT8lVVyn5q0z59YVDht/6if7acqkZ3X5vldeNIZYkImmYhMebScxVhzAa8AS6/81A+zJ8lW1+RWJQtP3uPM1+Dq18iFkPrCEMZwtoXI="
-      script:
-        if [[ "${TRAVIS_REPO_SLUG}" == "jerryscript-project/jerryscript"
-          && ${TRAVIS_BRANCH} == "master"
-          && ${TRAVIS_EVENT_TYPE} == "push" ]];
-        then
-          git fetch --unshallow;
-          build-wrapper-linux-x86-64 --out-dir bw-output ./tools/build.py;
-          sonar-scanner -Dsonar.projectVersion="${TRAVIS_COMMIT}";
-        fi
+          organization: "pando-project"
+      script: tools/check-sonarqube.sh
       cache:
         directories:
           - '${HOME}/.sonar/cache'
 
-    - env: JOBNAME="ESP8266 Build Test"
-      cache: ccache
+    - name: "ESP8266 Build Test"
       install: make -f ./targets/esp8266/Makefile.travis install-noapt
       script: make -f ./targets/esp8266/Makefile.travis script
       addons:
         apt:
-          packages: [gperf, texinfo, wget]
+          packages: [wget]
 
-    - env: JOBNAME="Mbed OS 5/K64F Build Test"
+    - name: "Mbed OS 5/K64F Build Test"
       addons:
         apt:
           sources:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
           packages: [gcc-arm-embedded]
+      language: python # NOTE: only way to ensure python>=2.7.10 on Trusty image
+      python: 2.7
       install: make -f ./targets/mbedos5/Makefile.travis install
       script: make -f ./targets/mbedos5/Makefile.travis script
 
-    - env: JOBNAME="NuttX/STM32F4 Build Test"
+    - name: "NuttX/STM32F4 Build Test"
       install: make -f targets/nuttx-stm32f4/Makefile.travis install-noapt
       script: make -f targets/nuttx-stm32f4/Makefile.travis script
       addons:
         apt:
           packages: [gcc-arm-none-eabi, libnewlib-arm-none-eabi, gperf]
 
-    - env: JOBNAME="RIOT/STM32F4 Build Test"
+    - name: "RIOT/STM32F4 Build Test"
       install: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
       script: make -f ./targets/riot-stm32f4/Makefile.travis script
-      addons:
-        apt:
-          packages: [gcc-arm-none-eabi, libnewlib-arm-none-eabi]
-
-    - env: JOBNAME="Tizen RT/Artik053 Build Test"
+      compiler: clang-3.9
       addons:
         apt:
           sources:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [gcc-arm-embedded]
+          packages: [clang-3.9, gcc-arm-embedded, gcc-multilib]
+
+    - name: "Tizen RT/Artik053 Build Test"
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:team-gcc-arm-embedded/ppa
+          packages: [gcc-arm-embedded, genromfs]
       install: make -f ./targets/tizenrt-artik053/Makefile.travis install
       script: make -f ./targets/tizenrt-artik053/Makefile.travis script
 
-    - env: JOBNAME="Zephyr/Arduino 101 Build Test"
+    - name: "Zephyr/Arduino 101 Build Test"
       install: make -f ./targets/zephyr/Makefile.travis install-noapt
       script: make -f ./targets/zephyr/Makefile.travis script
       addons:

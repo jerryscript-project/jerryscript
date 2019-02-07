@@ -90,20 +90,6 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
 } /* jerry_debugger_stop_at_breakpoint */
 
 /**
- * Debugger server initialization. Must be called after jerry_init.
- */
-void
-jerry_debugger_init (uint16_t port) /**< server port number */
-{
-#ifdef JERRY_DEBUGGER
-  JERRY_CONTEXT (debugger_port) = port;
-  jerry_debugger_accept_connection ();
-#else /* !JERRY_DEBUGGER */
-  JERRY_UNUSED (port);
-#endif /* JERRY_DEBUGGER */
-} /* jerry_debugger_init */
-
-/**
  * Sets whether the engine should wait and run a source.
  *
  * @return enum JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED - if the source is not received
@@ -173,7 +159,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
         }
       }
 
-      jerry_debugger_sleep ();
+      jerry_debugger_transport_sleep ();
     }
 
     JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
@@ -203,21 +189,42 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
  * Currently only sends print output.
  */
 void
-jerry_debugger_send_output (jerry_char_t buffer[], /**< buffer */
-                            jerry_size_t str_size, /**< string size */
-                            uint8_t type) /**< type of output */
+jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
+                            jerry_size_t str_size) /**< string size */
 {
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
-                                type,
+                                JERRY_DEBUGGER_OUTPUT_OK,
                                 (const uint8_t *) buffer,
                                 sizeof (uint8_t) * str_size);
   }
 #else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (buffer);
   JERRY_UNUSED (str_size);
-  JERRY_UNUSED (type);
 #endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_send_output */
+
+/**
+ * Send the log of the program to the debugger client.
+ */
+void
+jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics message */
+                         const jerry_char_t *buffer, /**< buffer */
+                         jerry_size_t str_size) /**< string size */
+{
+#ifdef JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
+                                (uint8_t) (level + 2),
+                                (const uint8_t *) buffer,
+                                sizeof (uint8_t) * str_size);
+  }
+#else /* !JERRY_DEBUGGER */
+  JERRY_UNUSED (level);
+  JERRY_UNUSED (buffer);
+  JERRY_UNUSED (str_size);
+#endif /* JERRY_DEBUGGER */
+} /* jerry_debugger_send_log */

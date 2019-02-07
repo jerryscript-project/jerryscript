@@ -19,6 +19,10 @@ DEBUGGER_CLIENT=$2
 TEST_CASE=$3
 CLIENT_ARGS=""
 
+TERM_NORMAL='\033[0m'
+TERM_RED='\033[1;31m'
+TERM_GREEN='\033[1;32m'
+
 if [[ $TEST_CASE == *"client_source"* ]]; then
   START_DEBUG_SERVER="${JERRY} --start-debug-server --debugger-wait-source &"
   if [[ $TEST_CASE == *"client_source_multiple"* ]]; then
@@ -36,7 +40,13 @@ sleep 1s
 
 RESULT_TEMP=`mktemp ${TEST_CASE}.out.XXXXXXXXXX`
 
-(cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) &> ${RESULT_TEMP}
+(cat "${TEST_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) >${RESULT_TEMP} 2>&1
+
+if [[ $TEST_CASE == *"restart"* ]]; then
+  CONTINUE_CASE=$(sed "s/restart/continue/g" <<< "$TEST_CASE")
+  (cat "${CONTINUE_CASE}.cmd" | ${DEBUGGER_CLIENT} --non-interactive ${CLIENT_ARGS}) >>${RESULT_TEMP} 2>&1
+fi
+
 diff -U0 ${TEST_CASE}.expected ${RESULT_TEMP}
 STATUS_CODE=$?
 
@@ -44,9 +54,9 @@ rm -f ${RESULT_TEMP}
 
 if [ ${STATUS_CODE} -ne 0 ]
 then
-  echo "${TEST_CASE} failed"
+  echo -e "${TERM_RED}FAIL: ${TEST_CASE}${TERM_NORMAL}\n"
 else
-  echo "${TEST_CASE} passed"
+  echo -e "${TERM_GREEN}PASS: ${TEST_CASE}${TERM_NORMAL}\n"
 fi
 
 exit ${STATUS_CODE}

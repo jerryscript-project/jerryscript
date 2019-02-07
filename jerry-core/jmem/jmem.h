@@ -25,13 +25,6 @@
  * @{
  */
 
-#ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
-/**
- * Size of heap
- */
-#define JMEM_HEAP_SIZE ((size_t) (CONFIG_MEM_HEAP_AREA_SIZE))
-#endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
-
 /**
  * Logarithm of required alignment for allocated units/blocks
  */
@@ -151,7 +144,6 @@ typedef struct
   size_t free_iter_count; /**< Number of iterations required for inserting free blocks */
 } jmem_heap_stats_t;
 
-void jmem_stats_print (void);
 void jmem_stats_allocate_byte_code_bytes (size_t property_size);
 void jmem_stats_free_byte_code_bytes (size_t property_size);
 void jmem_stats_allocate_string_bytes (size_t string_size);

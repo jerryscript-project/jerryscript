@@ -70,8 +70,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (prototype_obj_p);
-
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
   ext_object_p->u.class_prop.u.value = prim_value;

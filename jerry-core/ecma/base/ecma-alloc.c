@@ -16,7 +16,6 @@
 #include "ecma-alloc.h"
 #include "ecma-globals.h"
 #include "ecma-gc.h"
-#include "ecma-lcache.h"
 #include "jrt.h"
 #include "jmem.h"
 
@@ -183,35 +182,6 @@ ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
 
   jmem_heap_free_block (string_p, size);
 } /* ecma_dealloc_string_buffer */
-
-/**
- * Allocate memory for getter-setter pointer pair
- *
- * @return pointer to allocated memory
- */
-inline ecma_getter_setter_pointers_t * JERRY_ATTR_ALWAYS_INLINE
-ecma_alloc_getter_setter_pointers (void)
-{
-#ifdef JMEM_STATS
-  jmem_stats_allocate_property_bytes (sizeof (ecma_property_pair_t));
-#endif /* JMEM_STATS */
-
-  return (ecma_getter_setter_pointers_t *) jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
-} /* ecma_alloc_getter_setter_pointers */
-
-/**
- * Dealloc memory from getter-setter pointer pair
- */
-inline void JERRY_ATTR_ALWAYS_INLINE
-ecma_dealloc_getter_setter_pointers (ecma_getter_setter_pointers_t *getter_setter_pointers_p) /**< pointer pair
-                                                                                                * to be freed */
-{
-#ifdef JMEM_STATS
-  jmem_stats_free_property_bytes (sizeof (ecma_property_pair_t));
-#endif /* JMEM_STATS */
-
-  jmem_pools_free (getter_setter_pointers_p, sizeof (ecma_getter_setter_pointers_t));
-} /* ecma_dealloc_getter_setter_pointers */
 
 /**
  * Allocate memory for ecma-property pair

@@ -32,6 +32,7 @@
  * @{
  */
 
+#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * End of list marker.
  */
@@ -52,7 +53,6 @@
  * @}
  */
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
 /**
  * Get end of region
  *
@@ -65,51 +65,43 @@ jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 } /* jmem_heap_get_region_end */
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#ifndef JERRY_ENABLE_EXTERNAL_CONTEXT
 /**
- * Check size of heap is corresponding to configuration
+ * @{
+ * JMEM_HEAP_STAT_xxx definitions
  */
-JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
-                     size_of_mem_heap_must_be_less_than_or_equal_to_MEM_HEAP_SIZE);
-#endif /* !JERRY_ENABLE_EXTERNAL_CONTEXT */
-
 #ifdef JMEM_STATS
 static void jmem_heap_stat_init (void);
 static void jmem_heap_stat_alloc (size_t num);
 static void jmem_heap_stat_free (size_t num);
+
+#define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
+#define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
+#define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
 static void jmem_heap_stat_skip (void);
 static void jmem_heap_stat_nonskip (void);
 static void jmem_heap_stat_alloc_iter (void);
 static void jmem_heap_stat_free_iter (void);
+
+#define JMEM_HEAP_STAT_SKIP() jmem_heap_stat_skip ()
+#define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
+#define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
+#define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
-/**
- * @{
- * JMEM_HEAP_STAT_xxx definitions
- */
-#  define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
-#  define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
-#  define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
-#  define JMEM_HEAP_STAT_SKIP() jmem_heap_stat_skip ()
-#  define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
-#  define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
-#  define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
-/** @} */
 #else /* !JMEM_STATS */
-/**
- * @{
- * JMEM_HEAP_STAT_xxx definitions
- */
-#  define JMEM_HEAP_STAT_INIT()
-#  define JMEM_HEAP_STAT_ALLOC(v1)
-#  define JMEM_HEAP_STAT_FREE(v1)
-#  define JMEM_HEAP_STAT_SKIP()
-#  define JMEM_HEAP_STAT_NONSKIP()
-#  define JMEM_HEAP_STAT_ALLOC_ITER()
-#  define JMEM_HEAP_STAT_FREE_ITER()
-/** @} */
+#define JMEM_HEAP_STAT_INIT()
+#define JMEM_HEAP_STAT_ALLOC(v1) JERRY_UNUSED (v1)
+#define JMEM_HEAP_STAT_FREE(v1) JERRY_UNUSED (v1)
+
+#ifndef JERRY_SYSTEM_ALLOCATOR
+#define JMEM_HEAP_STAT_SKIP()
+#define JMEM_HEAP_STAT_NONSKIP()
+#define JMEM_HEAP_STAT_ALLOC_ITER()
+#define JMEM_HEAP_STAT_FREE_ITER()
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 #endif /* JMEM_STATS */
+/** @} */
 
 /**
  * Startup initialization of heap
@@ -117,12 +109,11 @@ static void jmem_heap_stat_free_iter (void);
 void
 jmem_heap_init (void)
 {
+#ifndef JERRY_SYSTEM_ALLOCATOR
 #ifndef JERRY_CPOINTER_32_BIT
   /* the maximum heap size for 16bit compressed pointers should be 512K */
   JERRY_ASSERT (((UINT16_MAX + 1) << JMEM_ALIGNMENT_LOG) >= JMEM_HEAP_SIZE);
 #endif /* !JERRY_CPOINTER_32_BIT */
-
-#ifndef JERRY_SYSTEM_ALLOCATOR
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
   JERRY_CONTEXT (jmem_heap_limit) = CONFIG_MEM_HEAP_DESIRED_LIMIT;
@@ -495,11 +486,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
 #else /* JERRY_SYSTEM_ALLOCATOR */
-#ifdef JMEM_STATS
   JMEM_HEAP_STAT_FREE (size);
-#else /* !JMEM_STATS */
-  JERRY_UNUSED (size);
-#endif /* JMEM_STATS */
   free (ptr);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_free_block */
@@ -547,9 +534,12 @@ jmem_heap_stats_print (void)
 {
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
-  JERRY_DEBUG_MSG ("Heap stats:\n"
-                   "  Heap size = %zu bytes\n"
-                   "  Allocated = %zu bytes\n"
+  JERRY_DEBUG_MSG ("Heap stats:\n");
+#ifndef JERRY_SYSTEM_ALLOCATOR
+  JERRY_DEBUG_MSG ("  Heap size = %zu bytes\n",
+                   heap_stats->size);
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+  JERRY_DEBUG_MSG ("  Allocated = %zu bytes\n"
                    "  Peak allocated = %zu bytes\n"
                    "  Waste = %zu bytes\n"
                    "  Peak waste = %zu bytes\n"
@@ -561,7 +551,6 @@ jmem_heap_stats_print (void)
                    "  Peak allocated object data = %zu bytes\n"
                    "  Allocated property data = %zu bytes\n"
                    "  Peak allocated property data = %zu bytes\n",
-                   heap_stats->size,
                    heap_stats->allocated_bytes,
                    heap_stats->peak_allocated_bytes,
                    heap_stats->waste_bytes,
@@ -593,7 +582,9 @@ jmem_heap_stats_print (void)
 static void
 jmem_heap_stat_init (void)
 {
+#ifndef JERRY_SYSTEM_ALLOCATOR
   JERRY_CONTEXT (jmem_heap_stats).size = JMEM_HEAP_AREA_SIZE;
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_stat_init */
 
 /**

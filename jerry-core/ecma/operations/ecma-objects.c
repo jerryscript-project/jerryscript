@@ -20,7 +20,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-function-object.h"
-#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-string-object.h"
 #include "ecma-objects-arguments.h"
@@ -142,6 +141,13 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.1 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -264,29 +270,27 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     {
       uint32_t index = ecma_string_get_array_index (property_name_p);
 
-      if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+      if (index != ECMA_STRING_NOT_ARRAY_INDEX
+          && index < ext_object_p->u.pseudo_array.u1.length)
       {
-        if (index < ext_object_p->u.pseudo_array.u1.length)
+        ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+        if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
         {
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-          {
-            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+          ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                      ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
+          JERRY_ASSERT (lex_env_p != NULL
+                        && ecma_is_lexical_environment (lex_env_p));
 
-            JERRY_ASSERT (lex_env_p != NULL
-                          && ecma_is_lexical_environment (lex_env_p));
+          ecma_value_t binding_value = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
 
-            ecma_value_t binding_value = ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-
-            ecma_named_data_property_assign_value (object_p,
-                                                   ECMA_PROPERTY_VALUE_PTR (property_p),
-                                                   binding_value);
-            ecma_free_value (binding_value);
-          }
+          ecma_named_data_property_assign_value (object_p,
+                                                 ECMA_PROPERTY_VALUE_PTR (property_p),
+                                                 binding_value);
+          ecma_free_value (binding_value);
         }
       }
     }
@@ -314,7 +318,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
  * @return pointer to a property - if it exists,
  *         NULL (i.e. ecma-undefined) - otherwise.
  */
-ecma_property_t
+static ecma_property_t
 ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p, /**< property name */
                              ecma_property_ref_t *property_ref_p, /**< property reference */
@@ -456,24 +460,22 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX
+            && index < ext_object_p->u.pseudo_array.u1.length)
         {
-          if (index < ext_object_p->u.pseudo_array.u1.length)
+          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
           {
-            ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-            if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-              ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                          ext_object_p->u.pseudo_array.u2.lex_env_cp);
+            JERRY_ASSERT (lex_env_p != NULL
+                          && ecma_is_lexical_environment (lex_env_p));
 
-              JERRY_ASSERT (lex_env_p != NULL
-                            && ecma_is_lexical_environment (lex_env_p));
-
-              return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-            }
+            return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
           }
         }
       }
@@ -481,6 +483,13 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       /* ES2015 9.4.5.4 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -725,6 +734,30 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
   return ecma_op_object_get (object_p, ecma_get_magic_string (property_id));
 } /* ecma_op_object_get_by_magic_id */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/**
+ * [[Get]] operation of ecma object where the property is a well-known symbol
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
+                                 lit_magic_string_id_t property_id) /**< property symbol id */
+{
+  ecma_value_t symbol_value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_SYMBOL),
+                                                              property_id);
+  JERRY_ASSERT (ecma_is_value_symbol (symbol_value));
+
+  ecma_string_t *symbol_p = ecma_get_symbol_from_value (symbol_value);
+  ecma_value_t ret_value = ecma_op_object_get (object_p, symbol_p);
+
+  ecma_deref_ecma_string (symbol_p);
+
+  return ret_value;
+} /* ecma_op_object_get_by_symbol_id */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /**
  * [[Put]] ecma general object's operation
  *
@@ -781,25 +814,23 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX
+            && index < ext_object_p->u.pseudo_array.u1.length)
         {
-          if (index < ext_object_p->u.pseudo_array.u1.length)
+          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
           {
-            ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
 
-            if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
 
-              ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                          ext_object_p->u.pseudo_array.u2.lex_env_cp);
+            JERRY_ASSERT (lex_env_p != NULL
+                          && ecma_is_lexical_environment (lex_env_p));
 
-              JERRY_ASSERT (lex_env_p != NULL
-                            && ecma_is_lexical_environment (lex_env_p));
-
-              ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
-              return ECMA_VALUE_TRUE;
-            }
+            ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
+            return ECMA_VALUE_TRUE;
           }
         }
       }
@@ -807,6 +838,13 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.5 */
       if (ecma_is_typedarray (ecma_make_object_value (object_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          break;
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -954,10 +992,8 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           return ecma_builtin_helper_def_prop (object_p,
                                                property_name_p,
                                                value,
-                                               true, /* Writable */
-                                               true, /* Enumerable */
-                                               true, /* Configurable */
-                                               is_throw); /* Failure handling */
+                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                               true); /* Failure handling */
         }
       }
 
@@ -1157,6 +1193,15 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
       /* ES2015 9.4.5.3 */
       if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
       {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+        if (ecma_prop_name_is_symbol (property_name_p))
+        {
+          return ecma_op_general_object_define_own_property (obj_p,
+                                                             property_name_p,
+                                                             property_desc_p,
+                                                             is_throw);
+        }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -1190,8 +1235,9 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                                          property_name_p,
                                                          property_desc_p,
                                                          is_throw);
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
       break;
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
     }
   }
 } /* ecma_op_object_define_own_property */
@@ -1346,11 +1392,7 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
  */
 ecma_collection_header_t *
 ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
-                                   bool is_array_indices_only, /**< true - exclude properties with names
-                                                                *          that are not indices */
-                                   bool is_enumerable_only, /**< true - exclude non-enumerable properties */
-                                   bool is_with_prototype_chain) /**< true - list properties from prototype chain,
-                                                                  *   false - list only own properties */
+                                   uint32_t opts) /**< any combination of ecma_list_properties_options_t values  */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
@@ -1360,6 +1402,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
+  const bool is_enumerable_only = (opts & ECMA_LIST_ENUMERABLE) != 0;
+  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
+  const bool is_with_prototype_chain = (opts & ECMA_LIST_PROTOTYPE) != 0;
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+  const bool is_symbols_only = (opts & ECMA_LIST_SYMBOLS) != 0;
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
   const size_t names_hashes_bitmap_size = ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size;
@@ -1377,82 +1425,90 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     ecma_collection_header_t *prop_names_p = ecma_new_values_collection ();
 
-    if (obj_is_builtin)
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+    if (JERRY_LIKELY (!is_symbols_only))
     {
-      ecma_builtin_list_lazy_property_names (obj_p,
-                                             is_enumerable_only,
-                                             prop_names_p,
-                                             skipped_non_enumerable_p);
-    }
-    else
-    {
-      switch (type)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
+      if (obj_is_builtin)
       {
-        case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
+        ecma_builtin_list_lazy_property_names (obj_p,
+                                               is_enumerable_only,
+                                               prop_names_p,
+                                               skipped_non_enumerable_p);
+      }
+      else
+      {
+        switch (type)
         {
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
-          if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
+          case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
           {
-            ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
+  #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+            if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
+            {
+              ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
+            }
+  #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+            break;
           }
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
-          break;
-        }
-        case ECMA_OBJECT_TYPE_FUNCTION:
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
-        case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
-        {
-          ecma_op_function_list_lazy_property_names (obj_p,
-                                                     is_enumerable_only,
-                                                     prop_names_p,
-                                                     skipped_non_enumerable_p);
-          break;
-        }
-        case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-        {
-          ecma_op_external_function_list_lazy_property_names (is_enumerable_only,
-                                                              prop_names_p,
-                                                              skipped_non_enumerable_p);
-          break;
-        }
-        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-        {
-          ecma_op_bound_function_list_lazy_property_names (is_enumerable_only,
-                                                           prop_names_p,
-                                                           skipped_non_enumerable_p);
-          break;
-        }
-        case ECMA_OBJECT_TYPE_CLASS:
-        {
-          ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-          if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
+          case ECMA_OBJECT_TYPE_FUNCTION:
+  #ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+          case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
+  #endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
           {
-            ecma_op_string_list_lazy_property_names (obj_p,
-                                                     is_enumerable_only,
-                                                     prop_names_p,
-                                                     skipped_non_enumerable_p);
+            ecma_op_function_list_lazy_property_names (obj_p,
+                                                       is_enumerable_only,
+                                                       prop_names_p,
+                                                       skipped_non_enumerable_p);
+            break;
           }
+          case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+          {
+            ecma_op_external_function_list_lazy_property_names (is_enumerable_only,
+                                                                prop_names_p,
+                                                                skipped_non_enumerable_p);
+            break;
+          }
+          case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+          {
+            ecma_op_bound_function_list_lazy_property_names (is_enumerable_only,
+                                                             prop_names_p,
+                                                             skipped_non_enumerable_p);
+            break;
+          }
+          case ECMA_OBJECT_TYPE_CLASS:
+          {
+            ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-          break;
-        }
-        case ECMA_OBJECT_TYPE_ARRAY:
-        {
-          ecma_op_array_list_lazy_property_names (obj_p,
-                                                  is_enumerable_only,
-                                                  prop_names_p,
-                                                  skipped_non_enumerable_p);
-          break;
-        }
-        default:
-        {
-          JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL);
+            if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
+            {
+              ecma_op_string_list_lazy_property_names (obj_p,
+                                                       is_enumerable_only,
+                                                       prop_names_p,
+                                                       skipped_non_enumerable_p);
+            }
 
-          break;
+            break;
+          }
+          case ECMA_OBJECT_TYPE_ARRAY:
+          {
+            ecma_op_array_list_lazy_property_names (obj_p,
+                                                    is_enumerable_only,
+                                                    prop_names_p,
+                                                    skipped_non_enumerable_p);
+            break;
+          }
+          default:
+          {
+            JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL);
+
+            break;
+          }
         }
       }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
     }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
 
@@ -1463,6 +1519,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     while (ecma_value_p != NULL)
     {
       ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+      /* Symbols are never lazy listed */
+      JERRY_ASSERT (!ecma_prop_name_is_symbol (name_p));
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
       ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint8_t hash = (uint8_t) ecma_string_hash (name_p);
@@ -1508,6 +1570,19 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
           if (!(is_enumerable_only && !ecma_is_property_enumerable (*property_p)))
           {
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+            /* If is_symbols_only is false and prop_name is symbol
+               we should skip the current property e.g. for-in.
+
+               Also if is_symbols_only is true and prop_name is not symbol
+               we should skip the current property e.g. Object.getOwnPropertySymbols. */
+            if (JERRY_UNLIKELY (is_symbols_only != ecma_prop_name_is_symbol (name_p)))
+            {
+              ecma_deref_ecma_string (name_p);
+              continue;
+            }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
             uint8_t hash = (uint8_t) ecma_string_hash (name_p);
             uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
             uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
@@ -1520,7 +1595,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
               while (ecma_value_p != NULL)
               {
-                ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+                ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
                 ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
                 if (ecma_compare_ecma_strings (name_p, current_name_p))
@@ -1536,7 +1611,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
               own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
 
               ecma_append_to_values_collection (prop_names_p,
-                                                ecma_make_string_value (name_p),
+                                                ecma_make_prop_name_value (name_p),
                                                 0);
             }
           }
@@ -1545,7 +1620,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (*property_p));
 
             ecma_append_to_values_collection (skipped_non_enumerable_p,
-                                              ecma_make_string_value (name_p),
+                                              ecma_make_prop_name_value (name_p),
                                               0);
           }
 
@@ -1561,7 +1636,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     while (ecma_value_p != NULL)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_string_t *name_p = ecma_get_prop_name_from_value (*ecma_value_p);
       ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint32_t index = ecma_string_get_array_index (name_p);
@@ -1590,7 +1665,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     while (ecma_value_p != NULL)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_string_t *name_p = ecma_get_prop_name_from_value (*ecma_value_p);
       ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint32_t index = ecma_string_get_array_index (name_p);
@@ -1680,7 +1755,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
         while (ecma_value_p != NULL)
         {
-          ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
           ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
           if (ecma_compare_ecma_strings (name_p, current_name_p))
@@ -1697,7 +1772,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
         while (ecma_value_p != NULL)
         {
-          ecma_string_t *current_name_p = ecma_get_string_from_value (*ecma_value_p);
+          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
           ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
           if (ecma_compare_ecma_strings (name_p, current_name_p))
@@ -1712,7 +1787,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       {
         JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0);
 
-        ecma_append_to_values_collection (ret_p, ecma_make_string_value (names_p[i]), 0);
+        ecma_append_to_values_collection (ret_p, ecma_make_prop_name_value (names_p[i]), 0);
       }
 
       ecma_deref_ecma_string (name_p);
@@ -1781,7 +1856,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_CLASS:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      return ext_object_p->u.class_prop.class_id;
+      return (lit_magic_string_id_t) ext_object_p->u.class_prop.class_id;
     }
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
@@ -1793,7 +1868,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
         case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
         {
-          return ext_obj_p->u.pseudo_array.u1.class_id;
+          return (lit_magic_string_id_t) ext_obj_p->u.pseudo_array.u1.class_id;
         }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
         default:

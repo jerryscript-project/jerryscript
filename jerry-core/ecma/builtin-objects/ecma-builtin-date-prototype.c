@@ -579,13 +579,10 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_TIME)
   {
-    ecma_value_t time = (arguments_number >= 1 ? arguments_list[0]
-                                               : ECMA_VALUE_UNDEFINED);
-
     ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
     /* 1. */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (time_num, time, ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (time_num, arguments_list[0], ret_value);
     *prim_value_p = ecma_date_time_clip (time_num);
 
     ret_value = ecma_make_number_value (time_num);
@@ -600,7 +597,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
     if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
     {
-      this_num += ecma_date_local_time_zone (this_num);
+      this_num += ecma_date_local_time_zone_adjustment (this_num);
     }
 
     if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)

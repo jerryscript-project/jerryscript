@@ -59,7 +59,7 @@ ecma_builtin_arraybuffer_object_is_view (ecma_value_t this_arg, /**< 'this' argu
 
   /* TODO: if arg has [[ViewArrayBuffer]], return true */
 
-  return ecma_make_boolean_value (false);
+  return ECMA_VALUE_FALSE;
 } /* ecma_builtin_arraybuffer_object_is_view */
 
 /**

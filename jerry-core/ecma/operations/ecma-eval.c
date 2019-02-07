@@ -22,10 +22,7 @@
 #include "ecma-lex-env.h"
 #include "js-parser.h"
 #include "vm.h"
-
-#ifdef JERRY_ENABLE_LINE_INFO
 #include "jcontext.h"
-#endif /* JERRY_ENABLE_LINE_INFO */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -45,8 +42,7 @@
  */
 ecma_value_t
 ecma_op_eval (ecma_string_t *code_p, /**< code string */
-              bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
-              bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
+              uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
   ecma_value_t ret_value;
 
@@ -61,8 +57,7 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
 
     ret_value = ecma_op_eval_chars_buffer (code_utf8_buffer_p,
                                            chars_num,
-                                           is_direct,
-                                           is_called_from_strict_mode_code);
+                                           parse_opts);
 
     ECMA_FINALIZE_UTF8_STRING (code_utf8_buffer_p, code_utf8_buffer_size);
   }
@@ -82,25 +77,35 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
 ecma_value_t
 ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters buffer */
                            size_t code_buffer_size, /**< size of the buffer */
-                           bool is_direct, /**< is eval called directly (ECMA-262 v5, 15.1.2.1.1) */
-                           bool is_called_from_strict_mode_code) /**< is eval is called from strict mode code */
+                           uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
 #ifndef JERRY_DISABLE_JS_PARSER
   JERRY_ASSERT (code_p != NULL);
 
   ecma_compiled_code_t *bytecode_data_p;
 
-  bool is_strict_call = (is_direct && is_called_from_strict_mode_code);
+  uint32_t is_strict_call = ECMA_PARSE_STRICT_MODE | ECMA_PARSE_DIRECT_EVAL;
+
+  if ((parse_opts & is_strict_call) != is_strict_call)
+  {
+    parse_opts &= (uint32_t) ~ECMA_PARSE_STRICT_MODE;
+  }
 
 #ifdef JERRY_ENABLE_LINE_INFO
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
 #endif /* JERRY_ENABLE_LINE_INFO */
 
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+  parse_opts |= ECMA_GET_SUPER_EVAL_PARSER_OPTS ();
+
+  ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS ();
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
   ecma_value_t parse_status = parser_parse_script (NULL,
                                                    0,
                                                    code_p,
                                                    code_buffer_size,
-                                                   is_strict_call,
+                                                   parse_opts,
                                                    &bytecode_data_p);
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
@@ -108,12 +113,11 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
     return parse_status;
   }
 
-  return vm_run_eval (bytecode_data_p, is_direct);
+  return vm_run_eval (bytecode_data_p, parse_opts);
 #else /* JERRY_DISABLE_JS_PARSER */
   JERRY_UNUSED (code_p);
   JERRY_UNUSED (code_buffer_size);
-  JERRY_UNUSED (is_direct);
-  JERRY_UNUSED (is_called_from_strict_mode_code);
+  JERRY_UNUSED (parse_opts);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
 #endif /* !JERRY_DISABLE_JS_PARSER */

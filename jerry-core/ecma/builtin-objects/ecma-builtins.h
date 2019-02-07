@@ -23,6 +23,7 @@
  */
 typedef enum
 {
+/** @cond doxygen_suppress */
 #define BUILTIN(a, b, c, d, e)
 #define BUILTIN_ROUTINE(builtin_id, \
                         object_type, \
@@ -43,6 +44,7 @@ typedef enum
 #include "ecma-builtins.inc.h"
 #undef BUILTIN
 #undef BUILTIN_ROUTINE
+/** @endcond */
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 
@@ -96,6 +98,8 @@ bool
 ecma_builtin_is (ecma_object_t *obj_p, ecma_builtin_id_t builtin_id);
 ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id);
+ecma_object_t *
+ecma_builtin_get_global (void);
 bool
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p);
 

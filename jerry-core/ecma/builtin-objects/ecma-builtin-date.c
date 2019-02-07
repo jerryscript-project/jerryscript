@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
@@ -22,7 +24,6 @@
 #include "ecma-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
-#include "math.h"
 
 #ifndef CONFIG_DISABLE_DATE_BUILTIN
 
@@ -490,8 +491,6 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
-
-  ecma_deref_object (prototype_obj_p);
 
   if (arguments_list_len == 0)
   {

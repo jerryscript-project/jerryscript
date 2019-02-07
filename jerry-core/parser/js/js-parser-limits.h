@@ -26,46 +26,60 @@
  * @{
  */
 
-/* Maximum identifier length accepted by the parser.
- * Limit: LEXER_MAX_STRING_LENGTH. */
+/**
+ * Maximum identifier length accepted by the parser.
+ * Limit: LEXER_MAX_STRING_LENGTH.
+ */
 #ifndef PARSER_MAXIMUM_IDENT_LENGTH
 #define PARSER_MAXIMUM_IDENT_LENGTH 255
 #endif /* !PARSER_MAXIMUM_IDENT_LENGTH */
 
-/* Maximum string limit.
- * Limit: 2147483647 / 65535. */
+/**
+ * Maximum string limit.
+ * Limit: 2147483647 / 65535.
+ */
 #ifdef JERRY_CPOINTER_32_BIT
 #define PARSER_MAXIMUM_STRING_LIMIT 2147483647
 #else /* !JERRY_CPOINTER_32_BIT */
 #define PARSER_MAXIMUM_STRING_LIMIT 65535
 #endif /* JERRY_CPOINTER_32_BIT */
 
-/* Maximum string length.
- * Limit: PARSER_MAXIMUM_STRING_LIMIT. */
+/**
+ * Maximum string length.
+ * Limit: PARSER_MAXIMUM_STRING_LIMIT.
+ */
 #ifndef PARSER_MAXIMUM_STRING_LENGTH
 #define PARSER_MAXIMUM_STRING_LENGTH PARSER_MAXIMUM_STRING_LIMIT
 #endif /* !PARSER_MAXIMUM_STRING_LENGTH */
 
-/* Maximum number of literals.
- * Limit: 32767. Recommended: 510, 32767 */
+/**
+ * Maximum number of literals.
+ * Limit: 32767. Recommended: 510, 32767
+ */
 #ifndef PARSER_MAXIMUM_NUMBER_OF_LITERALS
 #define PARSER_MAXIMUM_NUMBER_OF_LITERALS 32767
 #endif /* !PARSER_MAXIMUM_NUMBER_OF_LITERALS */
 
-/* Maximum number of registers.
- * Limit: PARSER_MAXIMUM_NUMBER_OF_LITERALS */
+/**
+ * Maximum number of registers.
+ * Limit: PARSER_MAXIMUM_NUMBER_OF_LITERALS
+ */
 #ifndef PARSER_MAXIMUM_NUMBER_OF_REGISTERS
 #define PARSER_MAXIMUM_NUMBER_OF_REGISTERS 256
 #endif /* !PARSER_MAXIMUM_NUMBER_OF_REGISTERS */
 
-/* Maximum code size.
- * Limit: 16777215. Recommended: 65535, 16777215. */
+/**
+ * Maximum code size.
+ * Limit: 16777215. Recommended: 65535, 16777215.
+ */
 #ifndef PARSER_MAXIMUM_CODE_SIZE
 #define PARSER_MAXIMUM_CODE_SIZE (65535 << (JMEM_ALIGNMENT_LOG))
 #endif /* !PARSER_MAXIMUM_CODE_SIZE */
 
-/* Maximum number of values pushed onto the stack by a function.
- * Limit: 65500. Recommended: 1024. */
+/**
+ * Maximum number of values pushed onto the stack by a function.
+ * Limit: 65500. Recommended: 1024.
+ */
 #ifndef PARSER_MAXIMUM_STACK_LIMIT
 #define PARSER_MAXIMUM_STACK_LIMIT 1024
 

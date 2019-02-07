@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo -n "Generating documentation with doxygen ..."
-DOXYGEN_WARNINGS=$((doxygen > /dev/null) 2>&1)
-echo " finished"
-
-if [ -n "$DOXYGEN_WARNINGS" ]
+doxygen 2>&1 >/dev/null | head -n 1000 | tee doxygen.log
+if [ -s doxygen.log ]
 then
-  echo "$DOXYGEN_WARNINGS"
-  exit 1
+  EXIT=1
+else
+  EXIT=0
 fi
+rm -f doxygen.log
+exit $EXIT

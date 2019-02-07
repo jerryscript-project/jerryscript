@@ -543,9 +543,7 @@ ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object 
   ecma_value_t completion_value = ecma_builtin_helper_def_prop (obj_p,
                                                                 property_name_p,
                                                                 value,
-                                                                true, /* Writable */
-                                                                true, /* Enumerable */
-                                                                true, /* Configurable */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                 false); /* Failure handling */
 
   JERRY_ASSERT (ecma_is_value_boolean (completion_value));
@@ -685,9 +683,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
         ecma_value_t completion = ecma_builtin_helper_def_prop (array_p,
                                                                 index_str_p,
                                                                 value,
-                                                                true, /* Writable */
-                                                                true, /* Enumerable */
-                                                                true, /* Configurable */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                 false); /* Failure handling */
 
         JERRY_ASSERT (ecma_is_value_true (completion));
@@ -741,7 +737,7 @@ ecma_builtin_json_walk (ecma_object_t *reviver_p, /**< reviver function */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (value_get);
 
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, false, true, false);
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE);
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
@@ -919,17 +915,16 @@ static ecma_value_t ecma_builtin_json_str_helper (const ecma_value_t arg1, /**< 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_object_t *obj_wrapper_p = ecma_op_create_object_object_noarg ();
   ecma_string_t *empty_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-  ecma_value_t put_comp_val = ecma_op_object_put (obj_wrapper_p,
-                                                  empty_str_p,
-                                                  arg1,
-                                                  false);
+  ecma_value_t put_comp_val = ecma_builtin_helper_def_prop (obj_wrapper_p,
+                                                            empty_str_p,
+                                                            arg1,
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                            false);
+
   JERRY_ASSERT (ecma_is_value_true (put_comp_val));
-  ecma_free_value (put_comp_val);
-  ECMA_TRY_CATCH (str_val,
-                  ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context),
-                  ret_value);
-  ret_value = ecma_copy_value (str_val);
-  ECMA_FINALIZE (str_val);
+
+  ret_value = ecma_builtin_json_str (empty_str_p, obj_wrapper_p, &context);
+
   ecma_free_value (put_comp_val);
   ecma_deref_ecma_string (empty_str_p);
   ecma_deref_object (obj_wrapper_p);
@@ -1213,107 +1208,137 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
 static ecma_value_t
 ecma_builtin_json_quote (ecma_string_t *string_p) /**< string that should be quoted*/
 {
-  /* 1. */
-  ecma_string_t *product_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
-
   ECMA_STRING_TO_UTF8_STRING (string_p, string_buff, string_buff_size);
-
   const lit_utf8_byte_t *str_p = string_buff;
-  const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
+  const lit_utf8_byte_t *str_end_p = str_p + string_buff_size;
+  size_t n_bytes = 2; /* Start with 2 for surrounding quotes. */
 
   while (str_p < str_end_p)
   {
-    ecma_char_t current_char = lit_utf8_read_next (&str_p);
+    lit_utf8_byte_t c = *str_p++;
 
-    /* 2.a, b */
-    if (current_char == LIT_CHAR_BACKSLASH
-        || current_char == LIT_CHAR_DOUBLE_QUOTE
-        || current_char == LIT_CHAR_BS
-        || current_char == LIT_CHAR_FF
-        || current_char == LIT_CHAR_LF
-        || current_char == LIT_CHAR_CR
-        || current_char == LIT_CHAR_TAB)
+    if (c == LIT_CHAR_BACKSLASH || c == LIT_CHAR_DOUBLE_QUOTE)
     {
-      lit_utf8_byte_t abbrev = (lit_utf8_byte_t) current_char;
+      n_bytes += 2;
+    }
+    else if (c >= LIT_CHAR_SP && c < LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      n_bytes++;
+    }
+    else if (c > LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      lit_utf8_size_t sz = lit_get_unicode_char_size_by_utf8_first_byte (c);
+      n_bytes += sz;
+      str_p += sz - 1;
+    }
+    else
+    {
+      switch (c)
+      {
+        case LIT_CHAR_BS:
+        case LIT_CHAR_FF:
+        case LIT_CHAR_LF:
+        case LIT_CHAR_CR:
+        case LIT_CHAR_TAB:
+        {
+          n_bytes += 2;
+          break;
+        }
+        default: /* Hexadecimal. */
+        {
+          n_bytes += 2 + 4;
+          break;
+        }
+      }
+    }
+  }
 
-      switch (current_char)
+  lit_utf8_byte_t *buf_begin = jmem_heap_alloc_block (n_bytes);
+  JERRY_ASSERT (buf_begin != NULL);
+  lit_utf8_byte_t *buf = buf_begin;
+  str_p = string_buff;
+
+  *buf++ = LIT_CHAR_DOUBLE_QUOTE;
+
+  while (str_p < str_end_p)
+  {
+    lit_utf8_byte_t c = *str_p++;
+
+    if (c == LIT_CHAR_BACKSLASH || c == LIT_CHAR_DOUBLE_QUOTE)
+    {
+      *buf++ = LIT_CHAR_BACKSLASH;
+      *buf++ = c;
+    }
+    else if (c >= LIT_CHAR_SP && c < LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      *buf++ = c;
+    }
+    else if (c > LIT_UTF8_1_BYTE_CODE_POINT_MAX)
+    {
+      str_p--;
+      ecma_char_t current_char = lit_utf8_read_next (&str_p);
+      buf += lit_code_unit_to_utf8 (current_char, (lit_utf8_byte_t *) buf);
+    }
+    else
+    {
+      switch (c)
       {
         case LIT_CHAR_BS:
         {
-          abbrev = LIT_CHAR_LOWERCASE_B;
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_B;
           break;
         }
         case LIT_CHAR_FF:
         {
-          abbrev = LIT_CHAR_LOWERCASE_F;
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_F;
           break;
         }
         case LIT_CHAR_LF:
         {
-          abbrev = LIT_CHAR_LOWERCASE_N;
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_N;
           break;
         }
         case LIT_CHAR_CR:
         {
-          abbrev = LIT_CHAR_LOWERCASE_R;
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_R;
           break;
         }
         case LIT_CHAR_TAB:
         {
-          abbrev = LIT_CHAR_LOWERCASE_T;
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_T;
           break;
         }
-        default:
+        default: /* Hexadecimal. */
         {
-          JERRY_ASSERT (current_char == LIT_CHAR_BACKSLASH || current_char == LIT_CHAR_DOUBLE_QUOTE);
-
+          JERRY_ASSERT (c < 0x9f);
+          *buf++ = LIT_CHAR_BACKSLASH;
+          *buf++ = LIT_CHAR_LOWERCASE_U;
+          *buf++ = LIT_CHAR_0;
+          *buf++ = LIT_CHAR_0;
+          *buf++ = (lit_utf8_byte_t) (LIT_CHAR_0 + (c >> 4)); /* Max range 0-9, hex digits unnecessary. */
+          lit_utf8_byte_t c2 = (c & 0xf);
+          *buf++ = (lit_utf8_byte_t) (c2 + ((c2 <= 9) ? LIT_CHAR_0 : (LIT_CHAR_LOWERCASE_A - 10)));
           break;
         }
       }
-
-      lit_utf8_byte_t chars[2] = { LIT_CHAR_BACKSLASH, abbrev };
-
-      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 2, 2);
-    }
-    /* 2.c */
-    else if (current_char < LIT_CHAR_SP)
-    {
-      lit_utf8_byte_t chars[6] = { LIT_CHAR_BACKSLASH, LIT_CHAR_LOWERCASE_U, LIT_CHAR_0, LIT_CHAR_0 };
-
-      JERRY_ASSERT (current_char < 0x9f);
-
-      chars[4] = (lit_utf8_byte_t) (LIT_CHAR_0 + (current_char >> 4));
-
-      int last_char = current_char & 0xf;
-      last_char += (last_char <= 9) ? LIT_CHAR_0 : (LIT_CHAR_LOWERCASE_A - 10);
-
-      chars[5] = (lit_utf8_byte_t) last_char;
-
-      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 6, 6);
-    }
-    /* 2.d */
-    else if (current_char < LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-    {
-      /* Fast case for ascii characters. */
-      lit_utf8_byte_t chars[1] = { (lit_utf8_byte_t) current_char };
-
-      product_str_p = ecma_append_chars_to_string (product_str_p, chars, 1, 1);
-    }
-    else
-    {
-      ecma_string_t *current_char_str_p = ecma_new_ecma_string_from_code_unit (current_char);
-
-      product_str_p = ecma_concat_ecma_strings (product_str_p, current_char_str_p);
-      ecma_deref_ecma_string (current_char_str_p);
     }
   }
 
+  *buf++ = LIT_CHAR_DOUBLE_QUOTE;
+
+  /* Make sure we didn't run off the end or allocated more than we actually wanted. */
+  JERRY_ASSERT ((size_t) (buf - buf_begin) == n_bytes);
+
+  ecma_string_t *product_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) buf_begin,
+                                                                 (lit_utf8_size_t) (buf - buf_begin));
+  jmem_heap_free_block (buf_begin, n_bytes);
   ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
 
-  /* 3. */
-  product_str_p = ecma_append_magic_string_to_string (product_str_p, LIT_MAGIC_STRING_DOUBLE_QUOTE_CHAR);
-
-  /* 4. */
   return ecma_make_string_value (product_str_p);
 } /* ecma_builtin_json_quote */
 
@@ -1550,7 +1575,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   {
     property_keys_p = ecma_new_values_collection ();
 
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, false, true, false);
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE);
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
@@ -1634,6 +1659,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
   {
     ecma_free_values_collection (partial_p, 0);
     ecma_deref_ecma_string (stepback_p);
+    ecma_deref_ecma_string (context_p->indent_str_p);
     return ret_value;
   }
 

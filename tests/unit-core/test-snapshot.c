@@ -24,18 +24,23 @@
 #define SNAPSHOT_BUFFER_SIZE (256)
 
 /**
+ * Maximum size of literal buffer
+ */
+#define LITERAL_BUFFER_SIZE (256)
+
+/**
  * Magic strings
  */
-static const jerry_char_ptr_t magic_strings[] =
+static const jerry_char_t *magic_strings[] =
 {
-  (const jerry_char_ptr_t) " ",
-  (const jerry_char_ptr_t) "a",
-  (const jerry_char_ptr_t) "b",
-  (const jerry_char_ptr_t) "c",
-  (const jerry_char_ptr_t) "from",
-  (const jerry_char_ptr_t) "func",
-  (const jerry_char_ptr_t) "string",
-  (const jerry_char_ptr_t) "snapshot"
+  (const jerry_char_t *) " ",
+  (const jerry_char_t *) "a",
+  (const jerry_char_t *) "b",
+  (const jerry_char_t *) "c",
+  (const jerry_char_t *) "from",
+  (const jerry_char_t *) "func",
+  (const jerry_char_t *) "string",
+  (const jerry_char_t *) "snapshot"
 };
 
 /**
@@ -58,17 +63,17 @@ static void test_function_snapshot (void)
   const jerry_init_flag_t flags = JERRY_INIT_EMPTY;
   static uint32_t function_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-  const char *args_p = "a, b";
-  const char *code_to_snapshot_p = "return a + b";
+  const jerry_char_t func_args[] = "a, b";
+  const jerry_char_t code_to_snapshot[] = "return a + b";
 
   jerry_init (flags);
   jerry_value_t generate_result;
   generate_result = jerry_generate_function_snapshot (NULL,
                                                       0,
-                                                      (const jerry_char_t *) code_to_snapshot_p,
-                                                      strlen (code_to_snapshot_p),
-                                                      (jerry_char_t *) args_p,
-                                                      strlen (args_p),
+                                                      code_to_snapshot,
+                                                      sizeof (code_to_snapshot) - 1,
+                                                      func_args,
+                                                      sizeof (func_args) - 1,
                                                       0,
                                                       function_snapshot_buffer,
                                                       SNAPSHOT_BUFFER_SIZE);
@@ -130,20 +135,22 @@ static void test_function_arguments_snapshot (void)
   {
     static uint32_t arguments_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-    const char *code_to_snapshot_p = ("function f(a,b,c) {"
-                                      "  arguments[0]++;"
-                                      "  arguments[1]++;"
-                                      "  arguments[2]++;"
-                                      "  return a + b + c;"
-                                      "}"
-                                      "f(3,4,5);");
+    const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
+      "function f(a,b,c) {"
+      "  arguments[0]++;"
+      "  arguments[1]++;"
+      "  arguments[2]++;"
+      "  return a + b + c;"
+      "}"
+      "f(3,4,5);"
+    );
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                0,
                                                arguments_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -196,14 +203,14 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    const char *code_to_snapshot_p = "(function () { return 'string from snapshot'; }) ();";
+    const jerry_char_t code_to_snapshot[] = "(function () { return 'string from snapshot'; }) ();";
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                0,
                                                snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -216,13 +223,13 @@ main (void)
     /* Check the snapshot data. Unused bytes should be filled with zeroes */
     const uint8_t expected_data[] =
     {
-      0x4A, 0x52, 0x52, 0x59, 0x0D, 0x00, 0x00, 0x00,
+      0x4A, 0x52, 0x52, 0x59, 0x15, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00,
       0x01, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00,
       0x03, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00,
       0x00, 0x00, 0x00, 0x01, 0x18, 0x00, 0x00, 0x00,
-      0x28, 0x00, 0xB7, 0x46, 0x00, 0x00, 0x00, 0x00,
-      0x03, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00,
+      0x28, 0x00, 0xB8, 0x46, 0x00, 0x00, 0x00, 0x00,
+      0x03, 0x00, 0x01, 0x00, 0x21, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x01, 0x01, 0x07, 0x00, 0x00, 0x00,
       0x47, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x14, 0x00, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67,
@@ -242,11 +249,13 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
-    const char *code_to_snapshot_p = ("function func(a, b, c) {"
-                                      "  c = 'snapshot';"
-                                      "  return arguments[0] + ' ' + b + ' ' + arguments[2];"
-                                      "};"
-                                      "func('string', 'from');");
+    const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
+      "function func(a, b, c) {"
+      "  c = 'snapshot';"
+      "  return arguments[0] + ' ' + b + ' ' + arguments[2];"
+      "};"
+      "func('string', 'from');"
+    );
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_register_magic_strings (magic_strings,
@@ -256,8 +265,8 @@ main (void)
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot,
+                                               sizeof (code_to_snapshot) - 1,
                                                JERRY_SNAPSHOT_SAVE_STATIC,
                                                snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -286,14 +295,14 @@ main (void)
     size_t snapshot_sizes[2];
     static uint32_t merged_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
 
-    const char *code_to_snapshot_p = "123";
+    const jerry_char_t code_to_snapshot1[] = "var a = 'hello'; 123";
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot1,
+                                               sizeof (code_to_snapshot1) - 1,
                                                0,
                                                snapshot_buffer_0,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -305,13 +314,13 @@ main (void)
 
     jerry_cleanup ();
 
-    code_to_snapshot_p = "456";
+    const jerry_char_t code_to_snapshot2[] = "var b = 'hello'; 456";
 
     jerry_init (JERRY_INIT_EMPTY);
     generate_result = jerry_generate_snapshot (NULL,
                                                0,
-                                               (const jerry_char_t *) code_to_snapshot_p,
-                                               strlen (code_to_snapshot_p),
+                                               code_to_snapshot2,
+                                               sizeof (code_to_snapshot2) - 1,
                                                0,
                                                snapshot_buffer_1,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -331,6 +340,12 @@ main (void)
     snapshot_buffers[0] = snapshot_buffer_0;
     snapshot_buffers[1] = snapshot_buffer_1;
 
+    static uint32_t snapshot_buffer_0_bck[SNAPSHOT_BUFFER_SIZE];
+    static uint32_t snapshot_buffer_1_bck[SNAPSHOT_BUFFER_SIZE];
+
+    memcpy (snapshot_buffer_0_bck, snapshot_buffer_0, SNAPSHOT_BUFFER_SIZE);
+    memcpy (snapshot_buffer_1_bck, snapshot_buffer_1, SNAPSHOT_BUFFER_SIZE);
+
     size_t merged_size = jerry_merge_snapshots (snapshot_buffers,
                                                 snapshot_sizes,
                                                 2,
@@ -340,6 +355,8 @@ main (void)
 
     jerry_cleanup ();
 
+    TEST_ASSERT (0 == memcmp (snapshot_buffer_0_bck, snapshot_buffer_0, SNAPSHOT_BUFFER_SIZE));
+    TEST_ASSERT (0 == memcmp (snapshot_buffer_1_bck, snapshot_buffer_1, SNAPSHOT_BUFFER_SIZE));
 
     jerry_init (JERRY_INIT_EMPTY);
 
@@ -362,20 +379,36 @@ main (void)
     /* C format generation */
     jerry_init (JERRY_INIT_EMPTY);
 
-    static uint32_t literal_buffer_c[SNAPSHOT_BUFFER_SIZE];
-    static const char *code_for_c_format_p = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
+    static jerry_char_t literal_buffer_c[LITERAL_BUFFER_SIZE];
+    static uint32_t literal_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+    static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
 
-    size_t literal_sizes_c_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_c_format_p,
-                                                                   strlen (code_for_c_format_p),
-                                                                   false,
-                                                                   literal_buffer_c,
-                                                                   SNAPSHOT_BUFFER_SIZE,
-                                                                   true);
-    TEST_ASSERT (literal_sizes_c_format == 203);
+    jerry_value_t generate_result;
+    generate_result = jerry_generate_snapshot (NULL,
+                                               0,
+                                               code_for_c_format,
+                                               sizeof (code_for_c_format) - 1,
+                                               0,
+                                               literal_snapshot_buffer,
+                                               SNAPSHOT_BUFFER_SIZE);
+
+    TEST_ASSERT (!jerry_value_is_error (generate_result)
+                 && jerry_value_is_number (generate_result));
+
+    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
+    jerry_release_value (generate_result);
+    TEST_ASSERT (snapshot_size == 120);
+
+    const size_t lit_c_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
+                                                                  snapshot_size,
+                                                                  literal_buffer_c,
+                                                                  LITERAL_BUFFER_SIZE,
+                                                                  true);
+    TEST_ASSERT (lit_c_buf_sz == 200);
 
     static const char *expected_c_format = (
                                             "jerry_length_t literal_count = 4;\n\n"
-                                            "jerry_char_ptr_t literals[4] =\n"
+                                            "jerry_char_t *literals[4] =\n"
                                             "{\n"
                                             "  \"Bb\",\n"
                                             "  \"aa\",\n"
@@ -391,24 +424,18 @@ main (void)
                                             "};\n"
                                             );
 
-    TEST_ASSERT (!strncmp ((char *) literal_buffer_c, expected_c_format, literal_sizes_c_format));
-    jerry_cleanup ();
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_c, expected_c_format, lit_c_buf_sz));
 
     /* List format generation */
-    jerry_init (JERRY_INIT_EMPTY);
+    static jerry_char_t literal_buffer_list[LITERAL_BUFFER_SIZE];
+    const size_t lit_list_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
+                                                                     snapshot_size,
+                                                                     literal_buffer_list,
+                                                                     LITERAL_BUFFER_SIZE,
+                                                                     false);
 
-    static uint32_t literal_buffer_list[SNAPSHOT_BUFFER_SIZE];
-    static const char *code_for_list_format_p = "var obj = { a:'aa', bb:'Bb' };";
-
-    size_t literal_sizes_list_format = jerry_parse_and_save_literals ((jerry_char_t *) code_for_list_format_p,
-                                                                      strlen (code_for_list_format_p),
-                                                                      false,
-                                                                      literal_buffer_list,
-                                                                      SNAPSHOT_BUFFER_SIZE,
-                                                                      false);
-
-    TEST_ASSERT (literal_sizes_list_format == 25);
-    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "1 a\n2 Bb\n2 aa\n2 bb\n3 obj\n", literal_sizes_list_format));
+    TEST_ASSERT (lit_list_buf_sz == 30);
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "2 Bb\n2 aa\n3 aaa\n4 fo o\n4 xzy0\n", lit_list_buf_sz));
 
     jerry_cleanup ();
   }

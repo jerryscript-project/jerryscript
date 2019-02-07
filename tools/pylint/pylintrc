@@ -275,7 +275,7 @@ docstring-min-length=-1
 [ELIF]
 
 # Maximum number of nested blocks for function / method body
-max-nested-blocks=5
+max-nested-blocks=7
 
 
 [LOGGING]
@@ -319,7 +319,7 @@ max-returns=6
 max-branches=15
 
 # Maximum number of statements in function / method body
-max-statements=50
+max-statements=75
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7

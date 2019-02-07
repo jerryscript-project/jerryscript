@@ -30,9 +30,6 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
   set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
   target_link_libraries(${TARGET_NAME} jerry-libm)
-  if(JERRY_LIBC)
-    target_link_libraries(${TARGET_NAME} jerry-libc)
-  endif()
 
   add_dependencies(unittests-libm ${TARGET_NAME})
 endforeach()

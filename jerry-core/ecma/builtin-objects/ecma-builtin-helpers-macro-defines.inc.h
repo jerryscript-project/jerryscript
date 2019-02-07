@@ -25,6 +25,12 @@
 #define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#ifndef SYMBOL_VALUE
+#define SYMBOL_VALUE(name, desc_string_id)
+#endif /* !SYMBOL_VALUE */
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 #ifndef OBJECT_VALUE
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)
 #endif /* !OBJECT_VALUE */
@@ -32,6 +38,10 @@
 #ifndef ROUTINE
 #define ROUTINE(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE */
+
+#ifndef ROUTINE_CONFIGURABLE_ONLY
+#define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value)
+#endif /* !ROUTINE_CONFIGURABLE_ONLY */
 
 #ifndef ACCESSOR_READ_WRITE
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes)

@@ -36,5 +36,8 @@ set_property(TARGET ${JERRY_LIBM_NAME}
 
 target_include_directories(${JERRY_LIBM_NAME} PUBLIC ${INCLUDE_LIBM})
 
+configure_file(libjerry-libm.pc.in libjerry-libm.pc @ONLY)
+
 install(TARGETS ${JERRY_LIBM_NAME} DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-libm.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_LIBM}/ DESTINATION include/jerry-libm)

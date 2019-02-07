@@ -28,6 +28,11 @@ extern "C"
  */
 
 /**
+ * Jerry snapshot format version.
+ */
+#define JERRY_SNAPSHOT_VERSION (21u)
+
+/**
  * Flags for jerry_generate_snapshot and jerry_generate_function_snapshot.
  */
 typedef enum
@@ -65,8 +70,8 @@ jerry_value_t jerry_load_function_snapshot (const uint32_t *function_snapshot_p,
 
 size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
                               uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);
-size_t jerry_parse_and_save_literals (const jerry_char_t *source_p, size_t source_size, bool is_strict,
-                                      uint32_t *buffer_p, size_t buffer_size, bool is_c_format);
+size_t jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
+                                         jerry_char_t *lit_buf_p, size_t lit_buf_size, bool is_c_format);
 /**
  * @}
  */

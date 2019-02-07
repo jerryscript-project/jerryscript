@@ -70,64 +70,105 @@ void * __cdecl _alloca (size_t _Size);
  * these in a guarded block above (e.g., as for GCC) to fine tune compilation
  * for your own compiler. */
 
-/*
- * Attributes
+/**
+ * Function attribute to align function to given number of bytes.
  */
 #ifndef JERRY_ATTR_ALIGNED
 #define JERRY_ATTR_ALIGNED(ALIGNMENT)
 #endif /* !JERRY_ATTR_ALIGNED */
 
+/**
+ * Function attribute to inline function to all call sites.
+ */
 #ifndef JERRY_ATTR_ALWAYS_INLINE
 #define JERRY_ATTR_ALWAYS_INLINE
 #endif /* !JERRY_ATTR_ALWAYS_INLINE */
 
+/**
+ * Function attribute to declare that function has no effect except the return
+ * value and it only depends on parameters.
+ */
 #ifndef JERRY_ATTR_CONST
 #define JERRY_ATTR_CONST
 #endif /* !JERRY_ATTR_CONST */
 
+/**
+ * Function attribute to trigger warning if deprecated function is called.
+ */
 #ifndef JERRY_ATTR_DEPRECATED
 #define JERRY_ATTR_DEPRECATED
 #endif /* !JERRY_ATTR_DEPRECATED */
 
+/**
+ * Function attribute to declare that function is variadic and takes a format
+ * string and some arguments as parameters.
+ */
 #ifndef JERRY_ATTR_FORMAT
 #define JERRY_ATTR_FORMAT(...)
 #endif /* !JERRY_ATTR_FORMAT */
 
+/**
+ * Function attribute to predict that function is a hot spot, and therefore
+ * should be optimized aggressively.
+ */
 #ifndef JERRY_ATTR_HOT
 #define JERRY_ATTR_HOT
 #endif /* !JERRY_ATTR_HOT */
 
+/**
+ * Function attribute not to inline function ever.
+ */
 #ifndef JERRY_ATTR_NOINLINE
 #define JERRY_ATTR_NOINLINE
 #endif /* !JERRY_ATTR_NOINLINE */
 
+/**
+ * Function attribute to declare that function never returns.
+ */
 #ifndef JERRY_ATTR_NORETURN
 #define JERRY_ATTR_NORETURN
 #endif /* !JERRY_ATTR_NORETURN */
 
+/**
+ * Function attribute to declare that function has no effect except the return
+ * value and it only depends on parameters and global variables.
+ */
 #ifndef JERRY_ATTR_PURE
 #define JERRY_ATTR_PURE
 #endif /* !JERRY_ATTR_PURE */
 
+/**
+ * Function attribute to place function in given section.
+ */
 #ifndef JERRY_ATTR_SECTION
 #define JERRY_ATTR_SECTION(SECTION)
 #endif /* !JERRY_ATTR_SECTION */
 
+/**
+ * Function attribute to trigger warning if function's caller doesn't use (e.g.,
+ * check) the return value.
+ */
 #ifndef JERRY_ATTR_WARN_UNUSED_RESULT
 #define JERRY_ATTR_WARN_UNUSED_RESULT
 #endif /* !JERRY_ATTR_WARN_UNUSED_RESULT */
 
-/*
- * Condition likeliness, unlikeliness
+/**
+ * Helper to predict that a condition is likely.
  */
 #ifndef JERRY_LIKELY
 #define JERRY_LIKELY(x) (x)
 #endif /* !JERRY_LIKELY */
 
+/**
+ * Helper to predict that a condition is unlikely.
+ */
 #ifndef JERRY_UNLIKELY
 #define JERRY_UNLIKELY(x) (x)
 #endif /* !JERRY_UNLIKELY */
 
+/**
+ * Helper to declare (or mimic) a C99 variable-length array.
+ */
 #ifndef JERRY_VLA
 #define JERRY_VLA(type, name, size) type name[size]
 #endif /* !JERRY_VLA */

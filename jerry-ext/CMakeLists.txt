@@ -16,28 +16,46 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_EXT_NAME jerry-ext)
 project (${JERRY_EXT_NAME} C)
 
+# Optional features
+set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+
+# Status messages
+message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
+
 # Include directories
-set(INCLUDE_EXT "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_EXT_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_EXT_PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/common")
+
+set(INCLUDE_EXT_PUBLIC ${INCLUDE_EXT_PUBLIC} PARENT_SCOPE) # for jerry-port
 
 if(FEATURE_INIT_FINI)
   set(DEFINES_EXT ${DEFINES_EXT} ENABLE_INIT_FINI)
 endif()
 
 # Source directories
-file(GLOB SOURCE_EXT_ARG      arg/*.c)
-file(GLOB SOURCE_EXT_MODULE   module/*.c)
-file(GLOB SOURCE_EXT_HANDLER  handler/*.c)
-
-set(SOURCE_EXT
-    ${SOURCE_EXT_ARG}
-    ${SOURCE_EXT_MODULE}
-    ${SOURCE_EXT_HANDLER})
+file(GLOB SOURCE_EXT
+     arg/*.c
+     common/*.c
+     debugger/*.c
+     handler/*.c
+     module/*.c)
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 
-target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT})
+target_include_directories(${JERRY_EXT_NAME} PUBLIC ${INCLUDE_EXT_PUBLIC})
+target_include_directories(${JERRY_EXT_NAME} PRIVATE ${INCLUDE_EXT_PRIVATE})
 target_compile_definitions(${JERRY_EXT_NAME} PUBLIC ${DEFINES_EXT})
 target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
+set(JERRY_EXT_PKGCONFIG_LIBS)
+
+if(USING_MSVC AND FEATURE_DEBUGGER)
+  target_link_libraries(${JERRY_EXT_NAME} ws2_32)
+  set(JERRY_EXT_PKGCONFIG_LIBS -lws2_32)
+endif()
+
+configure_file(libjerry-ext.pc.in libjerry-ext.pc @ONLY)
+
 install(TARGETS ${JERRY_EXT_NAME} DESTINATION lib)
-install(DIRECTORY ${INCLUDE_EXT}/ DESTINATION include)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-ext.pc DESTINATION lib/pkgconfig)
+install(DIRECTORY ${INCLUDE_EXT_PUBLIC}/ DESTINATION include)

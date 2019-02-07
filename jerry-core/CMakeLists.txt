@@ -16,6 +16,9 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_CORE_NAME jerry-core)
 project (${JERRY_CORE_NAME} C)
 
+# Optional build settings
+set(ENABLE_ALL_IN_ONE          OFF     CACHE BOOL   "Enable all-in-one build?")
+
 # Optional features
 set(FEATURE_CPOINTER_32_BIT    OFF     CACHE BOOL   "Enable 32 bit compressed pointers?")
 set(FEATURE_DEBUGGER           OFF     CACHE BOOL   "Enable JerryScript debugger?")
@@ -23,6 +26,7 @@ set(FEATURE_ERROR_MESSAGES     OFF     CACHE BOOL   "Enable error messages?")
 set(FEATURE_EXTERNAL_CONTEXT   OFF     CACHE BOOL   "Enable external context?")
 set(FEATURE_JS_PARSER          ON      CACHE BOOL   "Enable js-parser?")
 set(FEATURE_LINE_INFO          OFF     CACHE BOOL   "Enable line info?")
+set(FEATURE_LOGGING            OFF     CACHE BOOL   "Enable logging?")
 set(FEATURE_MEM_STATS          OFF     CACHE BOOL   "Enable memory statistics?")
 set(FEATURE_MEM_STRESS_TEST    OFF     CACHE BOOL   "Enable mem-stress test?")
 set(FEATURE_PARSER_DUMP        OFF     CACHE BOOL   "Enable parser byte-code dumps?")
@@ -35,8 +39,16 @@ set(FEATURE_SYSTEM_ALLOCATOR   OFF     CACHE BOOL   "Enable system allocator?")
 set(FEATURE_VALGRIND           OFF     CACHE BOOL   "Enable Valgrind support?")
 set(FEATURE_VM_EXEC_STOP       OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(MEM_HEAP_SIZE_KB           "512"   CACHE STRING "Size of memory heap, in kilobytes")
+set(REGEXP_RECURSION_LIMIT     "0"     CACHE STRING "Limit of regexp recursion depth")
+set(VM_RECURSION_LIMIT         "0"     CACHE STRING "Limit of VM recursion depth")
 
 # Option overrides
+if(USING_MSVC)
+  set(ENABLE_ALL_IN_ONE ON) # FIXME: This should not be needed but right now it is. To be tracked down and followed up.
+
+  set(ENABLE_ALL_IN_ONE_MESSAGE " (FORCED BY COMPILER)")
+endif()
+
 if(FEATURE_SYSTEM_ALLOCATOR)
   set(FEATURE_CPOINTER_32_BIT ON)
 
@@ -57,13 +69,21 @@ if(JERRY_CMDLINE_SNAPSHOT)
   set(FEATURE_SNAPSHOT_SAVE_MESSAGE " (FORCED BY SNAPSHOT TOOL)")
 endif()
 
+if(FEATURE_MEM_STATS OR FEATURE_PARSER_DUMP OR FEATURE_REGEXP_DUMP)
+  set(FEATURE_LOGGING ON)
+
+  set(FEATURE_LOGGING_MESSAGE " (FORCED BY STATS OR DUMP)")
+endif()
+
 # Status messages
+message(STATUS "ENABLE_ALL_IN_ONE           " ${ENABLE_ALL_IN_ONE} ${ENABLE_ALL_IN_ONE_MESSAGE})
 message(STATUS "FEATURE_CPOINTER_32_BIT     " ${FEATURE_CPOINTER_32_BIT} ${FEATURE_CPOINTER_32_BIT_MESSAGE})
 message(STATUS "FEATURE_DEBUGGER            " ${FEATURE_DEBUGGER})
 message(STATUS "FEATURE_ERROR_MESSAGES      " ${FEATURE_ERROR_MESSAGES})
 message(STATUS "FEATURE_EXTERNAL_CONTEXT    " ${FEATURE_EXTERNAL_CONTEXT})
 message(STATUS "FEATURE_JS_PARSER           " ${FEATURE_JS_PARSER})
 message(STATUS "FEATURE_LINE_INFO           " ${FEATURE_LINE_INFO})
+message(STATUS "FEATURE_LOGGING             " ${FEATURE_LOGGING} ${FEATURE_LOGGING_MESSAGE})
 message(STATUS "FEATURE_MEM_STATS           " ${FEATURE_MEM_STATS})
 message(STATUS "FEATURE_MEM_STRESS_TEST     " ${FEATURE_MEM_STRESS_TEST})
 message(STATUS "FEATURE_PARSER_DUMP         " ${FEATURE_PARSER_DUMP} ${FEATURE_PARSER_DUMP_MESSAGE})
@@ -76,9 +96,12 @@ message(STATUS "FEATURE_SYSTEM_ALLOCATOR    " ${FEATURE_SYSTEM_ALLOCATOR})
 message(STATUS "FEATURE_VALGRIND            " ${FEATURE_VALGRIND})
 message(STATUS "FEATURE_VM_EXEC_STOP        " ${FEATURE_VM_EXEC_STOP})
 message(STATUS "MEM_HEAP_SIZE_KB            " ${MEM_HEAP_SIZE_KB})
+message(STATUS "REGEXP_RECURSION_LIMIT      " ${REGEXP_RECURSION_LIMIT})
+message(STATUS "VM_RECURSION_LIMIT          " ${VM_RECURSION_LIMIT})
 
 # Include directories
-set(INCLUDE_CORE
+set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(INCLUDE_CORE_PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/api"
     "${CMAKE_CURRENT_SOURCE_DIR}/debugger"
@@ -86,7 +109,6 @@ set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/builtin-objects/typedarray"
     "${CMAKE_CURRENT_SOURCE_DIR}/ecma/operations"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/jcontext"
     "${CMAKE_CURRENT_SOURCE_DIR}/jmem"
     "${CMAKE_CURRENT_SOURCE_DIR}/jrt"
@@ -95,36 +117,25 @@ set(INCLUDE_CORE
     "${CMAKE_CURRENT_SOURCE_DIR}/parser/regexp"
     "${CMAKE_CURRENT_SOURCE_DIR}/vm")
 
+set(INCLUDE_CORE_PUBLIC ${INCLUDE_CORE_PUBLIC} PARENT_SCOPE) # for jerry-port
+set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} PARENT_SCOPE) # for tests/unit-core
+
 # Sources
 # Jerry core
-file(GLOB SOURCE_CORE_API                       api/*.c)
-file(GLOB SOURCE_CORE_DEBUGGER                  debugger/*.c)
-file(GLOB SOURCE_CORE_ECMA_BASE                 ecma/base/*.c)
-file(GLOB SOURCE_CORE_ECMA_BUILTINS             ecma/builtin-objects/*.c)
-file(GLOB SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY  ecma/builtin-objects/typedarray/*.c)
-file(GLOB SOURCE_CORE_ECMA_OPERATIONS           ecma/operations/*.c)
-file(GLOB SOURCE_CORE_JCONTEXT                  jcontext/*.c)
-file(GLOB SOURCE_CORE_JMEM                      jmem/*.c)
-file(GLOB SOURCE_CORE_JRT                       jrt/*.c)
-file(GLOB SOURCE_CORE_LIT                       lit/*.c)
-file(GLOB SOURCE_CORE_PARSER_JS                 parser/js/*.c)
-file(GLOB SOURCE_CORE_PARSER_REGEXP             parser/regexp/*.c)
-file(GLOB SOURCE_CORE_VM                        vm/*.c)
-
-set(SOURCE_CORE_FILES
-    ${SOURCE_CORE_API}
-    ${SOURCE_CORE_DEBUGGER}
-    ${SOURCE_CORE_ECMA_BASE}
-    ${SOURCE_CORE_ECMA_BUILTINS}
-    ${SOURCE_CORE_ECMA_BUILTINS_TYPEDARRAY}
-    ${SOURCE_CORE_ECMA_OPERATIONS}
-    ${SOURCE_CORE_JCONTEXT}
-    ${SOURCE_CORE_JMEM}
-    ${SOURCE_CORE_JRT}
-    ${SOURCE_CORE_LIT}
-    ${SOURCE_CORE_PARSER_JS}
-    ${SOURCE_CORE_PARSER_REGEXP}
-    ${SOURCE_CORE_VM})
+file(GLOB SOURCE_CORE_FILES
+     api/*.c
+     debugger/*.c
+     ecma/base/*.c
+     ecma/builtin-objects/*.c
+     ecma/builtin-objects/typedarray/*.c
+     ecma/operations/*.c
+     jcontext/*.c
+     jmem/*.c
+     jrt/*.c
+     lit/*.c
+     parser/js/*.c
+     parser/regexp/*.c
+     vm/*.c)
 
 # All-in-one build
 if(ENABLE_ALL_IN_ONE)
@@ -177,6 +188,11 @@ if(FEATURE_LINE_INFO)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LINE_INFO)
 endif()
 
+# Logging
+if(FEATURE_LOGGING)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ENABLE_LOGGING)
+endif()
+
 # Memory statistics
 if(FEATURE_MEM_STATS)
   set(DEFINES_JERRY ${DEFINES_JERRY} JMEM_STATS)
@@ -184,20 +200,6 @@ endif()
 
 # Enable debugger
 if(FEATURE_DEBUGGER)
-  if(JERRY_LIBC)
-    message(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the JerryScript debugger.")
-  endif()
-
-  # Sleep function availability check
-  INCLUDE (CheckIncludeFiles)
-  CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
-  CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
-  if(HAVE_TIME_H)
-    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_TIME_H)
-  elseif(HAVE_UNISTD_H)
-    set(DEFINES_JERRY ${DEFINES_JERRY} HAVE_UNISTD_H)
-  endif()
-
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
 endif()
 
@@ -225,13 +227,19 @@ else()
   message(FATAL_ERROR "Profile file: '${FEATURE_PROFILE}' doesn't exist!")
 endif()
 
-if(JERRY_LIBC AND FEATURE_SYSTEM_ALLOCATOR)
-  MESSAGE(FATAL_ERROR "This configuration is not supported. Please build against your system libc to enable the system allocator.")
-endif()
-
 # RegExp strict mode
 if(FEATURE_REGEXP_STRICT_MODE)
   set(DEFINES_JERRY ${DEFINES_JERRY} ENABLE_REGEXP_STRICT_MODE)
+endif()
+
+# RegExp recursion depth limit
+if(REGEXP_RECURSION_LIMIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} REGEXP_RECURSION_LIMIT=${REGEXP_RECURSION_LIMIT})
+endif()
+
+# VM recursion depth limit
+if(VM_RECURSION_LIMIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} VM_RECURSION_LIMIT=${VM_RECURSION_LIMIT})
 endif()
 
 # RegExp byte-code dumps
@@ -257,7 +265,7 @@ endif()
 # Valgrind
 if(FEATURE_VALGRIND)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VALGRIND)
-  set(INCLUDE_CORE ${INCLUDE_CORE} ${INCLUDE_THIRD_PARTY_VALGRIND})
+  set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
 endif()
 
 # Enable VM execution stopping
@@ -272,20 +280,25 @@ set(DEFINES_JERRY ${DEFINES_JERRY} CONFIG_MEM_HEAP_AREA_SIZE=${MEM_HEAP_AREA_SIZ
 add_library(${JERRY_CORE_NAME} ${SOURCE_CORE_FILES})
 
 target_compile_definitions(${JERRY_CORE_NAME} PUBLIC ${DEFINES_JERRY})
-target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE})
+target_include_directories(${JERRY_CORE_NAME} PUBLIC ${INCLUDE_CORE_PUBLIC})
+target_include_directories(${JERRY_CORE_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
+
+set(JERRY_CORE_PKGCONFIG_REQUIRES)
+set(JERRY_CORE_PKGCONFIG_LIBS)
 
 if(JERRY_LIBM)
   target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
-endif()
-
-if(JERRY_LIBC)
-  target_link_libraries(${JERRY_CORE_NAME} jerry-libc)
+  set(JERRY_CORE_PKGCONFIG_REQUIRES libjerry-libm)
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)
 foreach(EXT_LIB ${EXTERNAL_LINK_LIBS})
   target_link_libraries(${JERRY_CORE_NAME} ${EXT_LIB})
+  set(JERRY_CORE_PKGCONFIG_LIBS "${JERRY_CORE_PKGCONFIG_LIBS} -l${EXT_LIB}")
 endforeach()
 
+configure_file(libjerry-core.pc.in libjerry-core.pc @ONLY)
+
 install(TARGETS ${JERRY_CORE_NAME} DESTINATION lib)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-core.pc DESTINATION lib/pkgconfig)
+install(DIRECTORY ${INCLUDE_CORE_PUBLIC}/ DESTINATION include)

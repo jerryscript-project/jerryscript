@@ -16,17 +16,12 @@
 #ifndef DEBUGGER_H
 #define DEBUGGER_H
 
-#include "debugger-ws.h"
 #include "ecma-globals.h"
+#include "jerryscript-debugger-transport.h"
 
 #ifdef JERRY_DEBUGGER
 
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
-
-/**
- * JerryScript debugger protocol version.
- */
-#define JERRY_DEBUGGER_VERSION (3)
 
 /**
  * Frequency of calling jerry_debugger_receive() by the VM.
@@ -34,22 +29,17 @@
 #define JERRY_DEBUGGER_MESSAGE_FREQUENCY 5
 
 /**
- * Sleep time in milliseconds between each jerry_debugger_receive call
+ * This constant represents that the string to be sent has no subtype.
  */
-#define JERRY_DEBUGGER_TIMEOUT 100
-
-/**
-  * This constant represents that the string to be sent has no subtype.
-  */
 #define JERRY_DEBUGGER_NO_SUBTYPE 0
 
 /**
  * Limited resources available for the engine, so it is important to
  * check the maximum buffer size. It needs to be between 64 and 256 bytes.
  */
-#if JERRY_DEBUGGER_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_MAX_BUFFER_SIZE > 256
+#if JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE > 256
 #error Please define the MAX_BUFFER_SIZE between 64 and 256 bytes.
-#endif /* JERRY_DEBUGGER_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_MAX_BUFFER_SIZE > 256 */
+#endif /* JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE < 64 || JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE > 256 */
 
 /**
  * Calculate the maximum number of items for a given type
@@ -154,14 +144,18 @@ typedef enum
   JERRY_DEBUGGER_EXCEPTION_HIT = 17, /**< notify exception hit */
   JERRY_DEBUGGER_EXCEPTION_STR = 18, /**< exception string fragment */
   JERRY_DEBUGGER_EXCEPTION_STR_END = 19, /**< exception string last fragment */
-  JERRY_DEBUGGER_BACKTRACE = 20, /**< backtrace data */
-  JERRY_DEBUGGER_BACKTRACE_END = 21, /**< last backtrace data */
-  JERRY_DEBUGGER_EVAL_RESULT = 22, /**< eval result */
-  JERRY_DEBUGGER_EVAL_RESULT_END = 23, /**< last part of eval result */
-  JERRY_DEBUGGER_WAIT_FOR_SOURCE = 24, /**< engine waiting for source code */
-  JERRY_DEBUGGER_OUTPUT_RESULT = 25, /**< output sent by the program to the debugger */
-  JERRY_DEBUGGER_OUTPUT_RESULT_END = 26, /**< last output result data */
-
+  JERRY_DEBUGGER_BACKTRACE_TOTAL = 20, /**< number of total frames */
+  JERRY_DEBUGGER_BACKTRACE = 21, /**< backtrace data */
+  JERRY_DEBUGGER_BACKTRACE_END = 22, /**< last backtrace data */
+  JERRY_DEBUGGER_EVAL_RESULT = 23, /**< eval result */
+  JERRY_DEBUGGER_EVAL_RESULT_END = 24, /**< last part of eval result */
+  JERRY_DEBUGGER_WAIT_FOR_SOURCE = 25, /**< engine waiting for source code */
+  JERRY_DEBUGGER_OUTPUT_RESULT = 26, /**< output sent by the program to the debugger */
+  JERRY_DEBUGGER_OUTPUT_RESULT_END = 27, /**< last output result data */
+  JERRY_DEBUGGER_SCOPE_CHAIN = 28, /**< scope chain */
+  JERRY_DEBUGGER_SCOPE_CHAIN_END = 29, /**< last output of scope chain */
+  JERRY_DEBUGGER_SCOPE_VARIABLES = 30, /**< scope variables */
+  JERRY_DEBUGGER_SCOPE_VARIABLES_END = 31, /**< last output of scope variables */
   JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT, /**< number of different type of output messages by the debugger */
 
   /* Messages sent by the client to server. */
@@ -191,9 +185,18 @@ typedef enum
   JERRY_DEBUGGER_GET_BACKTRACE = 16, /**< get backtrace */
   JERRY_DEBUGGER_EVAL = 17, /**< first message of evaluating a string */
   JERRY_DEBUGGER_EVAL_PART = 18, /**< next message of evaluating a string */
-
+  JERRY_DEBUGGER_GET_SCOPE_CHAIN = 19, /**< get type names of the scope chain */
+  JERRY_DEBUGGER_GET_SCOPE_VARIABLES = 20, /**< get variables of a scope */
   JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT, /**< number of different type of input messages */
 } jerry_debugger_header_type_t;
+
+/**
+ * Debugger option flags.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_LITTLE_ENDIAN = 1u << 0, /**< little endian */
+} jerry_debugger_configuration_flags_t;
 
 /**
  * Subtypes of eval.
@@ -216,6 +219,10 @@ typedef enum
 
 /**
  * Subtypes of output_result.
+ *
+ * Note:
+ *      This enum has to be kept in sync with jerry_log_level_t with an offset
+ *      of +2.
  */
 typedef enum
 {
@@ -225,6 +232,43 @@ typedef enum
   JERRY_DEBUGGER_OUTPUT_DEBUG = 4, /**< output result, debug */
   JERRY_DEBUGGER_OUTPUT_TRACE = 5, /**< output result, trace */
 } jerry_debugger_output_subtype_t;
+
+/**
+ * Types of scopes.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_SCOPE_WITH = 1, /**< with */
+  JERRY_DEBUGGER_SCOPE_LOCAL = 2, /**< local */
+  JERRY_DEBUGGER_SCOPE_CLOSURE = 3, /**< closure */
+  JERRY_DEBUGGER_SCOPE_GLOBAL = 4, /**< global */
+  JERRY_DEBUGGER_SCOPE_NON_CLOSURE = 5 /**< non closure */
+} jerry_debugger_scope_chain_type_t;
+
+/**
+ * Type of scope variables.
+ */
+typedef enum
+{
+  JERRY_DEBUGGER_VALUE_NONE = 1,
+  JERRY_DEBUGGER_VALUE_UNDEFINED = 2,
+  JERRY_DEBUGGER_VALUE_NULL = 3,
+  JERRY_DEBUGGER_VALUE_BOOLEAN = 4,
+  JERRY_DEBUGGER_VALUE_NUMBER = 5,
+  JERRY_DEBUGGER_VALUE_STRING = 6,
+  JERRY_DEBUGGER_VALUE_FUNCTION = 7,
+  JERRY_DEBUGGER_VALUE_ARRAY = 8,
+  JERRY_DEBUGGER_VALUE_OBJECT = 9
+} jerry_debugger_scope_variable_type_t;
+
+/**
+ * Byte data for evaluating expressions and receiving client source.
+ */
+typedef struct
+{
+  uint32_t uint8_size; /**< total size of the client source */
+  uint32_t uint8_offset; /**< current offset in the client source */
+} jerry_debugger_uint8_data_t;
 
 /**
  * Delayed free of byte code data.
@@ -241,10 +285,10 @@ typedef struct
 typedef struct
 {
   uint8_t type; /**< type of the message */
+  uint8_t configuration; /**< configuration option bits */
+  uint8_t version[sizeof (uint32_t)]; /**< debugger version */
   uint8_t max_message_size; /**< maximum incoming message size */
   uint8_t cpointer_size; /**< size of compressed pointers */
-  uint8_t little_endian; /**< little endian machine */
-  uint8_t version; /**< debugger version */
 } jerry_debugger_send_configuration_t;
 
 /**
@@ -353,6 +397,24 @@ typedef struct
 } jerry_debugger_send_backtrace_t;
 
 /**
+ * Outgoing message: scope chain.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t scope_types[]; /**< scope types */
+} jerry_debugger_send_scope_chain_t;
+
+/**
+ * Outgoing message: number of total frames in backtrace.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t frame_count[sizeof (uint32_t)]; /**< total number of frames */
+} jerry_debugger_send_backtrace_total_t;
+
+/**
  * Incoming message: set behaviour when exception occures.
  */
 typedef struct
@@ -376,7 +438,9 @@ typedef struct
 typedef struct
 {
   uint8_t type; /**< type of the message */
+  uint8_t min_depth[sizeof (uint32_t)]; /**< minimum depth*/
   uint8_t max_depth[sizeof (uint32_t)]; /**< maximum depth (0 - unlimited) */
+  uint8_t get_total_frame_count; /**< non-zero: if total frame count is also requested */
 } jerry_debugger_receive_get_backtrace_t;
 
 /**
@@ -389,6 +453,15 @@ typedef struct
 } jerry_debugger_receive_eval_first_t;
 
 /**
+ * Incoming message: get scope variables
+*/
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+  uint8_t chain_index[sizeof (uint32_t)]; /**< index element of the scope */
+} jerry_debugger_receive_get_scope_variables_t;
+
+/**
  * Incoming message: first message of client source.
  */
 typedef struct
@@ -399,11 +472,8 @@ typedef struct
 
 void jerry_debugger_free_unreferenced_byte_code (void);
 
-void jerry_debugger_sleep (void);
+bool jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p);
 
-bool jerry_debugger_process_message (uint8_t *recv_buffer_p, uint32_t message_size,
-                                     bool *resume_exec_p, uint8_t *expected_message_p,
-                                     jerry_debugger_uint8_data_t **message_data_p);
 void jerry_debugger_breakpoint_hit (uint8_t message_type);
 
 void jerry_debugger_send_type (jerry_debugger_header_type_t type);

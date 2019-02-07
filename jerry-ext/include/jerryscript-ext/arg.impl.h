@@ -94,12 +94,16 @@ typedef struct
         func = jerryx_arg_transform_ ## type; \
       } \
     } \
-    const jerryx_arg_int_option_t int_option = { .round = round_flag, .clamp = clamp_flag }; \
+    union \
+    { \
+      jerryx_arg_int_option_t int_option; \
+      uintptr_t extra_info; \
+    } u = { .int_option = { .round = (uint8_t) round_flag, .clamp = (uint8_t) clamp_flag } }; \
     return (jerryx_arg_t) \
     { \
       .func = func, \
       .dest = (void *) dest, \
-      .extra_info = *(uintptr_t *) &int_option \
+      .extra_info = u.extra_info \
     }; \
   }
 

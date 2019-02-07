@@ -21,6 +21,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-symbol-object.h"
 #include "jcontext.h"
 #include "jrt.h"
 
@@ -137,13 +138,11 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
                                                        sizeof (ecma_extended_object_t),
                                                        ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (prototype_obj_p);
-
   ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
 
 #ifdef JERRY_ENABLE_LINE_INFO
   /* The "stack" identifier is not a magic string. */
-  const char *stack_id_p = "stack";
+  const char * const stack_id_p = "stack";
 
   ecma_string_t *stack_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) stack_id_p, 5);
 
@@ -218,7 +217,7 @@ ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< nat
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
+static ecma_value_t
 ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
                            const lit_utf8_byte_t *msg_p) /**< error message */
 {
@@ -291,6 +290,13 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
         lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);
         arg_string_p = ecma_get_magic_string (class_name);
       }
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+      else if (ecma_is_value_symbol (arg_val))
+      {
+        ecma_value_t symbol_desc_value = ecma_get_symbol_descriptive_string (arg_val);
+        arg_string_p = ecma_get_string_from_value (symbol_desc_value);
+      }
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
       else
       {
         ecma_value_t str_val = ecma_op_to_string (arg_val);
@@ -342,20 +348,6 @@ ecma_raise_common_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_COMMON, (const lit_utf8_byte_t *) msg_p);
 } /* ecma_raise_common_error */
-
-/**
- * Raise an EvalError with the given message.
- *
- * See also: ECMA-262 v5, 15.11.6.1
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_raise_eval_error (const char *msg_p) /**< error message */
-{
-  return ecma_raise_standard_error (ECMA_ERROR_EVAL, (const lit_utf8_byte_t *) msg_p);
-} /* ecma_raise_eval_error */
 
 /**
  * Raise a RangeError with the given message.

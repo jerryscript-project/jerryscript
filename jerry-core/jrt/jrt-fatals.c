@@ -37,14 +37,14 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       JERRY_ERROR_MSG ("Error: ERR_OUT_OF_MEMORY\n");
       break;
     }
-    case ERR_SYSCALL:
-    {
-      /* print nothing as it may invoke syscall recursively */
-      break;
-    }
     case ERR_REF_COUNT_LIMIT:
     {
       JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
+      break;
+    }
+    case ERR_DISABLED_BYTE_CODE:
+    {
+      JERRY_ERROR_MSG ("Error: ERR_DISABLED_BYTE_CODE\n");
       break;
     }
     case ERR_FAILED_INTERNAL_ASSERTION:

@@ -56,7 +56,6 @@ int test_jerry (int argc, char **argv)
   jerry_value_t ret_value = jerry_create_undefined ();
 
   const jerry_char_t script[] = "print ('Hello, World!');";
-  size_t script_size = strlen ((const char *) script);
   printf ("This test run the following script code: [%s]\n\n", script);
 
   /* Initialize engine */
@@ -66,7 +65,7 @@ int test_jerry (int argc, char **argv)
   register_js_function ("print", jerryx_handler_print);
 
   /* Setup Global scope code */
-  ret_value = jerry_parse (NULL, 0, script, script_size, JERRY_PARSE_NO_OPTS);
+  ret_value = jerry_parse (NULL, 0, script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
 
   if (!jerry_value_is_error (ret_value))
   {

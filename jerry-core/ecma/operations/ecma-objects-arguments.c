@@ -20,7 +20,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-arguments.h"
@@ -110,8 +109,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_ARGUMENTS_UL;
   }
 
-  ecma_deref_object (prototype_p);
-
   ecma_property_value_t *prop_value_p;
 
   /* 11.a, 11.b */
@@ -183,8 +180,6 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                                      &prop_desc,
                                                      false);
     JERRY_ASSERT (ecma_is_value_true (completion));
-
-    ecma_deref_object (thrower_p);
   }
 
   ecma_string_t *arguments_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS);

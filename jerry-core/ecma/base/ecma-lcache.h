@@ -23,10 +23,13 @@
  * @{
  */
 
-void ecma_lcache_init (void);
+#ifndef CONFIG_ECMA_LCACHE_DISABLE
+
 void ecma_lcache_insert (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *prop_p);
 ecma_property_t *ecma_lcache_lookup (ecma_object_t *object_p, const ecma_string_t *prop_name_p);
 void ecma_lcache_invalidate (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *prop_p);
+
+#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
 /**
  * @}

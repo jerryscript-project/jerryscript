@@ -39,12 +39,14 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
 {
   static const lit_utf8_byte_t * const lit_magic_strings[] JERRY_CONST_DATA =
   {
+/** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     (const lit_utf8_byte_t *) utf8_string,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+/** @endcond */
   };
 
   JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
@@ -62,12 +64,14 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
 {
   static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
   {
+/** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
 #define LIT_MAGIC_STRING_DEF(id, utf8_string) \
     sizeof(utf8_string) - 1,
 #include "lit-magic-strings.inc.h"
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+/** @endcond */
   };
 
   JERRY_ASSERT (id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT);
@@ -81,11 +85,12 @@ lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
  *
  * @return magic string id
  */
-lit_magic_string_id_t
+static lit_magic_string_id_t
 lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string size */
 {
   static const lit_magic_string_id_t lit_magic_string_size_block_starts[] JERRY_CONST_DATA =
   {
+/** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_DEF(id, utf8_string)
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id) \
     id,
@@ -93,6 +98,7 @@ lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string s
     LIT_NON_INTERNAL_MAGIC_STRING__COUNT
 #undef LIT_MAGIC_STRING_DEF
 #undef LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE
+/** @endcond */
   };
 
   JERRY_ASSERT (size <= (sizeof (lit_magic_string_size_block_starts) / sizeof (lit_magic_string_id_t)));
@@ -128,8 +134,8 @@ lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic s
  * Register external magic strings
  */
 void
-lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character arrays, representing
-                                                                 *   external magic strings' contents */
+lit_magic_strings_ex_set (const lit_utf8_byte_t * const *ex_str_items, /**< character arrays, representing
+                                                                        *   external magic strings' contents */
                           uint32_t count,                       /**< number of the strings */
                           const lit_utf8_size_t *ex_str_sizes)  /**< sizes of the strings */
 {
@@ -151,9 +157,7 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
        id < JERRY_CONTEXT (lit_magic_string_ex_count);
        id = (lit_magic_string_ex_id_t) (id + 1))
   {
-    lit_utf8_size_t string_size = lit_zt_utf8_string_size (lit_get_magic_string_ex_utf8 (id));
-    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] == string_size);
-    JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes)[id] <= LIT_MAGIC_STRING_LENGTH_LIMIT);
+    lit_utf8_size_t string_size = JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 
     /**
      * Check whether the strings are sorted by size and lexicographically,
@@ -163,6 +167,8 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t **ex_str_items, /**< character a
     {
       const lit_magic_string_ex_id_t prev_id = id - 1;
       const lit_utf8_size_t prev_string_size = lit_get_magic_string_ex_size (prev_id);
+      JERRY_ASSERT (lit_is_valid_cesu8_string (lit_get_magic_string_ex_utf8 (id),
+                                               string_size));
       JERRY_ASSERT (prev_string_size <= string_size);
 
       if (prev_string_size == string_size)
@@ -198,7 +204,7 @@ lit_is_utf8_string_magic (const lit_utf8_byte_t *string_p, /**< utf-8 string */
   while (first < last)
   {
     lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
-    int compare = memcmp (lit_get_magic_string_utf8 (middle), string_p, string_size);
+    int compare = memcmp (lit_get_magic_string_utf8 ((lit_magic_string_id_t) middle), string_p, string_size);
 
     if (compare == 0)
     {
@@ -243,7 +249,7 @@ lit_is_utf8_string_pair_magic (const lit_utf8_byte_t *string1_p, /**< first utf-
   while (first < last)
   {
     lit_utf8_size_t middle = ((first + last) / 2); /**< mid point of search */
-    const lit_utf8_byte_t *middle_string_p = lit_get_magic_string_utf8 (middle);
+    const lit_utf8_byte_t *middle_string_p = lit_get_magic_string_utf8 ((lit_magic_string_id_t) middle);
 
     int compare = memcmp (middle_string_p, string1_p, string1_size);
 

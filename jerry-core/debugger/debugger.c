@@ -18,20 +18,36 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-eval.h"
+#include "ecma-function-object.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
+#include "jerryscript-port.h"
 #include "lit-char-helpers.h"
 
 #ifdef JERRY_DEBUGGER
 
 /**
+ * Incoming message: next message of string data.
+ */
+typedef struct
+{
+  uint8_t type; /**< type of the message */
+} jerry_debugger_receive_uint8_data_part_t;
+
+/**
  * The number of message types in the debugger should reflect the
  * debugger versioning.
  */
-JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 27
-                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 19
-                     && JERRY_DEBUGGER_VERSION == 3,
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 32
+                     && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 21
+                     && JERRY_DEBUGGER_VERSION == 8,
                      debugger_version_correlates_to_message_type_count);
+
+/**
+ * Waiting for data from the client.
+ */
+#define JERRY_DEBUGGER_RECEIVE_DATA_MODE \
+  (JERRY_DEBUGGER_BREAKPOINT_MODE | JERRY_DEBUGGER_CLIENT_SOURCE_MODE)
 
 /**
  * Type cast the debugger send buffer into a specific type.
@@ -71,19 +87,58 @@ jerry_debugger_free_unreferenced_byte_code (void)
 } /* jerry_debugger_free_unreferenced_byte_code */
 
 /**
+ * Send data over an active connection.
+ *
+ * @return true - if the data was sent successfully
+ *         false - otherwise
+ */
+static bool
+jerry_debugger_send (size_t message_length) /**< message length in bytes */
+{
+  JERRY_ASSERT (message_length <= JERRY_CONTEXT (debugger_max_send_size));
+
+  jerry_debugger_transport_header_t *header_p = JERRY_CONTEXT (debugger_transport_header_p);
+  uint8_t *payload_p = JERRY_CONTEXT (debugger_send_buffer_payload_p);
+
+  return header_p->send (header_p, payload_p, message_length);
+} /* jerry_debugger_send */
+
+/**
  * Send backtrace.
  */
 static void
-jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the received data */
+jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the received data */
 {
   JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_backtrace_t, get_backtrace_p);
 
+  uint32_t min_depth;
+  memcpy (&min_depth, get_backtrace_p->min_depth, sizeof (uint32_t));
   uint32_t max_depth;
   memcpy (&max_depth, get_backtrace_p->max_depth, sizeof (uint32_t));
 
   if (max_depth == 0)
   {
     max_depth = UINT32_MAX;
+  }
+
+  if (get_backtrace_p->get_total_frame_count != 0)
+  {
+    JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_backtrace_total_t, backtrace_total_p);
+    backtrace_total_p->type = JERRY_DEBUGGER_BACKTRACE_TOTAL;
+
+    vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+    uint32_t frame_count = 0;
+    while (iter_frame_ctx_p != NULL)
+    {
+      if (!(iter_frame_ctx_p->bytecode_header_p->status_flags & (CBC_CODE_FLAGS_STATIC_FUNCTION)))
+      {
+        frame_count++;
+      }
+      iter_frame_ctx_p = iter_frame_ctx_p->prev_context_p;
+    }
+    memcpy (backtrace_total_p->frame_count, &frame_count, sizeof (frame_count));
+
+    jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + sizeof (frame_count));
   }
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_backtrace_t, backtrace_p);
@@ -96,35 +151,46 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the recei
   const size_t max_frame_count = JERRY_DEBUGGER_SEND_MAX (jerry_debugger_frame_t);
   const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_frame_count, jerry_debugger_frame_t);
 
-  while (frame_ctx_p != NULL && max_depth > 0)
+  if (min_depth <= max_depth)
   {
-    if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
+    uint32_t min_depth_offset = 0;
+
+    while (frame_ctx_p != NULL && min_depth_offset < min_depth)
     {
       frame_ctx_p = frame_ctx_p->prev_context_p;
-      continue;
+      min_depth_offset++;
     }
 
-    if (current_frame >= max_frame_count)
+    while (frame_ctx_p != NULL && min_depth_offset++ < max_depth)
     {
-      if (!jerry_debugger_send (max_message_size))
+      if (frame_ctx_p->bytecode_header_p->status_flags
+          & (CBC_CODE_FLAGS_DEBUGGER_IGNORE | CBC_CODE_FLAGS_STATIC_FUNCTION))
       {
-        return;
+        frame_ctx_p = frame_ctx_p->prev_context_p;
+        continue;
       }
-      current_frame = 0;
+
+      if (current_frame >= max_frame_count)
+      {
+        if (!jerry_debugger_send (max_message_size))
+        {
+          return;
+        }
+        current_frame = 0;
+      }
+
+      jerry_debugger_frame_t *frame_p = backtrace_p->frames + current_frame;
+
+      jmem_cpointer_t byte_code_cp;
+      JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->bytecode_header_p);
+      memcpy (frame_p->byte_code_cp, &byte_code_cp, sizeof (jmem_cpointer_t));
+
+      uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
+      memcpy (frame_p->offset, &offset, sizeof (uint32_t));
+
+      frame_ctx_p = frame_ctx_p->prev_context_p;
+      current_frame++;
     }
-
-    jerry_debugger_frame_t *frame_p = backtrace_p->frames + current_frame;
-
-    jmem_cpointer_t byte_code_cp;
-    JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->bytecode_header_p);
-    memcpy (frame_p->byte_code_cp, &byte_code_cp, sizeof (jmem_cpointer_t));
-
-    uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
-    memcpy (frame_p->offset, &offset, sizeof (uint32_t));
-
-    frame_ctx_p = frame_ctx_p->prev_context_p;
-    current_frame++;
-    max_depth--;
   }
 
   size_t message_size = current_frame * sizeof (jerry_debugger_frame_t);
@@ -133,6 +199,325 @@ jerry_debugger_send_backtrace (uint8_t *recv_buffer_p) /**< pointer to the recei
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + message_size);
 } /* jerry_debugger_send_backtrace */
+
+/**
+ * Send the scope chain types.
+ */
+static void
+jerry_debugger_send_scope_chain (void)
+{
+  vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+
+  const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
+  const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_byte_count, uint8_t);
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_type_p);
+  message_type_p->type = JERRY_DEBUGGER_SCOPE_CHAIN;
+
+  size_t buffer_pos = 0;
+  bool next_func_is_local = true;
+  ecma_object_t *lex_env_p = iter_frame_ctx_p->lex_env_p;
+
+  while (true)
+  {
+    JERRY_ASSERT (ecma_is_lexical_environment (lex_env_p));
+
+    if (buffer_pos == max_byte_count)
+    {
+      if (!jerry_debugger_send (max_message_size))
+      {
+        return;
+      }
+
+      buffer_pos = 0;
+    }
+
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+    {
+      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_NON_CLOSURE) != 0)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_NON_CLOSURE;
+      }
+      else if (next_func_is_local)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_LOCAL;
+        next_func_is_local = false;
+      }
+      else
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_CLOSURE;
+      }
+    }
+    else if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
+    {
+      if (ecma_get_lex_env_outer_reference (lex_env_p) == NULL)
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_GLOBAL;
+        break;
+      }
+      else
+      {
+        message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_WITH;
+      }
+    }
+
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+  }
+
+  message_type_p->type = JERRY_DEBUGGER_SCOPE_CHAIN_END;
+
+  jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + buffer_pos);
+} /* jerry_debugger_send_scope_chain */
+
+/**
+ * Get type of the scope variable property.
+ */
+static jerry_debugger_scope_variable_type_t
+jerry_debugger_get_variable_type (ecma_value_t value) /**< input ecma value */
+{
+  jerry_debugger_scope_variable_type_t ret_value = JERRY_DEBUGGER_VALUE_NONE;
+
+  if (ecma_is_value_undefined (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_UNDEFINED;
+  }
+  else if (ecma_is_value_null (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_NULL;
+  }
+  else if (ecma_is_value_boolean (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_BOOLEAN;
+  }
+  else if (ecma_is_value_number (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_NUMBER;
+  }
+  else if (ecma_is_value_string (value))
+  {
+    ret_value = JERRY_DEBUGGER_VALUE_STRING;
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_is_value_object (value));
+
+    if (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL)
+    {
+      ret_value = JERRY_DEBUGGER_VALUE_ARRAY;
+    }
+    else
+    {
+      ret_value = ecma_op_is_callable (value) ? JERRY_DEBUGGER_VALUE_FUNCTION : JERRY_DEBUGGER_VALUE_OBJECT;
+    }
+  }
+
+  JERRY_ASSERT (ret_value != JERRY_DEBUGGER_VALUE_NONE);
+
+  return ret_value;
+} /* jerry_debugger_get_variable_type */
+
+/**
+ * Helper function for jerry_debugger_send_scope_variables.
+ *
+ * It will copies the given scope values type, length and value into the outgoing message string.
+ *
+ * @return true - if the copy was successfully
+ *         false - otherwise
+ */
+static bool
+jerry_debugger_copy_variables_to_string_message (jerry_debugger_scope_variable_type_t variable_type, /**< type */
+                                                 ecma_string_t *value_str, /**< property name or value string */
+                                                 jerry_debugger_send_string_t *message_string_p, /**< msg pointer */
+                                                 size_t *buffer_pos) /**< string data position of the message */
+{
+  const size_t max_byte_count = JERRY_DEBUGGER_SEND_MAX (uint8_t);
+  const size_t max_message_size = JERRY_DEBUGGER_SEND_SIZE (max_byte_count, uint8_t);
+
+  ECMA_STRING_TO_UTF8_STRING (value_str, str_buff, str_buff_size);
+
+  size_t str_size = 0;
+  size_t str_limit = 255;
+  bool result = true;
+
+  bool type_processed = false;
+
+  while (true)
+  {
+    if (*buffer_pos == max_byte_count)
+    {
+      if (!jerry_debugger_send (max_message_size))
+      {
+        result = false;
+        break;
+      }
+
+      *buffer_pos = 0;
+    }
+
+    if (!type_processed)
+    {
+      if (variable_type != JERRY_DEBUGGER_VALUE_NONE)
+      {
+        message_string_p->string[*buffer_pos] = variable_type;
+        *buffer_pos += 1;
+      }
+      type_processed = true;
+      continue;
+    }
+
+    if (variable_type == JERRY_DEBUGGER_VALUE_FUNCTION)
+    {
+      str_size = 0; // do not copy function values
+    }
+    else
+    {
+      str_size = (str_buff_size > str_limit) ? str_limit : str_buff_size;
+    }
+
+    message_string_p->string[*buffer_pos] = (uint8_t) str_size;
+    *buffer_pos += 1;
+    break;
+  }
+
+  if (result)
+  {
+    size_t free_bytes = max_byte_count - *buffer_pos;
+    const uint8_t *string_p = str_buff;
+
+    while (str_size > free_bytes)
+    {
+      memcpy (message_string_p->string + *buffer_pos, string_p, free_bytes);
+
+      if (!jerry_debugger_send (max_message_size))
+      {
+        result = false;
+        break;
+      }
+
+      string_p += free_bytes;
+      str_size -= free_bytes;
+      free_bytes = max_byte_count;
+      *buffer_pos = 0;
+    }
+
+    if (result)
+    {
+      memcpy (message_string_p->string + *buffer_pos, string_p, str_size);
+      *buffer_pos += str_size;
+    }
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (str_buff, str_buff_size);
+
+  return result;
+} /* jerry_debugger_copy_variables_to_string_message */
+
+/**
+ * Send variables of the given scope chain level.
+ */
+static void
+jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer to the received data */
+{
+  JERRY_DEBUGGER_RECEIVE_BUFFER_AS (jerry_debugger_receive_get_scope_variables_t, get_scope_variables_p);
+
+  uint32_t chain_index;
+  memcpy (&chain_index, get_scope_variables_p->chain_index, sizeof (uint32_t));
+
+  vm_frame_ctx_t *iter_frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
+  ecma_object_t *lex_env_p = iter_frame_ctx_p->lex_env_p;
+
+  while (chain_index != 0)
+  {
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+
+    if (JERRY_UNLIKELY (lex_env_p == NULL))
+    {
+      jerry_debugger_send_type (JERRY_DEBUGGER_SCOPE_VARIABLES_END);
+      return;
+    }
+
+    if ((ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
+        || (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE))
+    {
+      chain_index--;
+    }
+  }
+
+  ecma_property_header_t *prop_iter_p;
+
+  if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+  {
+    prop_iter_p = ecma_get_property_list (lex_env_p);
+  }
+  else
+  {
+    JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+    prop_iter_p =  ecma_get_property_list (binding_obj_p);
+  }
+
+  JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_string_p);
+  message_string_p->type = JERRY_DEBUGGER_SCOPE_VARIABLES;
+
+  size_t buffer_pos = 0;
+
+  while (prop_iter_p != NULL)
+  {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[i]))
+      {
+        if (ECMA_PROPERTY_GET_NAME_TYPE (prop_iter_p->types[i]) == ECMA_DIRECT_STRING_MAGIC
+            && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+        {
+          continue;
+        }
+
+        ecma_string_t *prop_name = ecma_string_from_property_name (prop_iter_p->types[i],
+                                                                   prop_pair_p->names_cp[i]);
+
+        if (!jerry_debugger_copy_variables_to_string_message (JERRY_DEBUGGER_VALUE_NONE,
+                                                              prop_name,
+                                                              message_string_p,
+                                                              &buffer_pos))
+        {
+          ecma_deref_ecma_string (prop_name);
+          return;
+        }
+
+        ecma_deref_ecma_string (prop_name);
+
+        ecma_property_value_t prop_value_p = prop_pair_p->values[i];
+        ecma_value_t property_value;
+
+        jerry_debugger_scope_variable_type_t variable_type = jerry_debugger_get_variable_type (prop_value_p.value);
+
+        property_value = ecma_op_to_string (prop_value_p.value);
+
+        if (!jerry_debugger_copy_variables_to_string_message (variable_type,
+                                                              ecma_get_string_from_value (property_value),
+                                                              message_string_p,
+                                                              &buffer_pos))
+        {
+          ecma_free_value (property_value);
+          return;
+        }
+
+        ecma_free_value (property_value);
+      }
+    }
+
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
+
+  message_string_p->type = JERRY_DEBUGGER_SCOPE_VARIABLES_END;
+  jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + buffer_pos);
+} /* jerry_debugger_send_scope_variables */
 
 /**
  * Send result of evaluated expression or throw an error.
@@ -148,12 +533,17 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
 
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
-  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 1, eval_string_size - 1, true, false);
+
+  uint32_t chain_index;
+  memcpy (&chain_index, eval_string_p, sizeof (uint32_t));
+  uint32_t parse_opts = ECMA_PARSE_DIRECT_EVAL | (chain_index << ECMA_PARSE_CHAIN_INDEX_SHIFT);
+
+  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 5, eval_string_size - 5, parse_opts);
   JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
 
   if (!ECMA_IS_VALUE_ERROR (result))
   {
-    if (eval_string_p[0] != JERRY_DEBUGGER_EVAL_EVAL)
+    if (eval_string_p[4] != JERRY_DEBUGGER_EVAL_EVAL)
     {
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
       JERRY_CONTEXT (error_value) = result;
@@ -162,7 +552,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
 
-      if (eval_string_p[0] == JERRY_DEBUGGER_EVAL_THROW)
+      if (eval_string_p[4] == JERRY_DEBUGGER_EVAL_THROW)
       {
         JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
       }
@@ -232,23 +622,13 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 } /* jerry_debugger_send_eval */
 
 /**
- * Suspend execution for a given time.
- * Note: If the platform does not have nanosleep or usleep, this function does not sleep at all.
- */
-void
-jerry_debugger_sleep (void)
-{
-  jerry_port_sleep (JERRY_DEBUGGER_TIMEOUT);
-} /* jerry_debugger_sleep */
-
-/**
  * Check received packet size.
  */
 #define JERRY_DEBUGGER_CHECK_PACKET_SIZE(type) \
   if (message_size != sizeof (type)) \
   { \
     JERRY_ERROR_MSG ("Invalid message size\n"); \
-    jerry_debugger_close_connection (); \
+    jerry_debugger_transport_close (); \
     return false; \
   }
 
@@ -258,8 +638,8 @@ jerry_debugger_sleep (void)
  * @return true - if message is processed successfully
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
-jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the received data */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to the received data */
                                 uint32_t message_size, /**< message size */
                                 bool *resume_exec_p, /**< pointer to the resume exec flag */
                                 uint8_t *expected_message_type_p, /**< message type */
@@ -271,7 +651,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
     JERRY_ERROR_MSG ("Message requires breakpoint mode\n");
-    jerry_debugger_close_connection ();
+    jerry_debugger_transport_close ();
     return false;
   }
 
@@ -286,7 +666,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Unexpected message\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -296,7 +676,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -308,7 +688,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     {
       jmem_heap_free_block (uint8_data_p, uint8_data_p->uint8_size + sizeof (jerry_debugger_uint8_data_t));
       JERRY_ERROR_MSG ("Invalid message size\n");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
 
@@ -358,7 +738,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (byte_code_free_cp != JERRY_CONTEXT (debugger_byte_code_free_tail))
       {
         JERRY_ERROR_MSG ("Invalid byte code free order\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -474,6 +854,24 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       return true;
     }
 
+    case JERRY_DEBUGGER_GET_SCOPE_CHAIN:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_type_t);
+
+      jerry_debugger_send_scope_chain ();
+
+      return true;
+    }
+
+    case JERRY_DEBUGGER_GET_SCOPE_VARIABLES:
+    {
+      JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_get_scope_variables_t);
+
+      jerry_debugger_send_scope_variables (recv_buffer_p);
+
+      return true;
+    }
+
     case JERRY_DEBUGGER_EXCEPTION_CONFIG:
     {
       JERRY_DEBUGGER_CHECK_PACKET_SIZE (jerry_debugger_receive_exception_config_t);
@@ -519,7 +917,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_PARSER_WAIT_MODE))
       {
         JERRY_ERROR_MSG ("Not in parser wait mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -529,10 +927,10 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
 
     case JERRY_DEBUGGER_EVAL:
     {
-      if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
+      if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 5)
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -546,7 +944,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
         if (eval_size != message_size - sizeof (jerry_debugger_receive_eval_first_t))
         {
           JERRY_ERROR_MSG ("Invalid message size\n");
-          jerry_debugger_close_connection ();
+          jerry_debugger_transport_close ();
           return false;
         }
 
@@ -582,14 +980,14 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (message_size <= sizeof (jerry_debugger_receive_client_source_first_t))
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -604,7 +1002,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
           && client_source_size != message_size - header_size)
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -641,7 +1039,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -659,7 +1057,7 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
       if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CLIENT_SOURCE_MODE))
       {
         JERRY_ERROR_MSG ("Not in client source mode\n");
-        jerry_debugger_close_connection ();
+        jerry_debugger_transport_close ();
         return false;
       }
 
@@ -675,11 +1073,74 @@ jerry_debugger_process_message (uint8_t *recv_buffer_p, /**< pointer to the rece
     default:
     {
       JERRY_ERROR_MSG ("Unexpected message.");
-      jerry_debugger_close_connection ();
+      jerry_debugger_transport_close ();
       return false;
     }
   }
 } /* jerry_debugger_process_message */
+
+/**
+ * Receive message from the client.
+ *
+ * Note:
+ *   If the function returns with true, the value of
+ *   JERRY_DEBUGGER_VM_STOP flag should be ignored.
+ *
+ * @return true - if execution should be resumed,
+ *         false - otherwise
+ */
+bool
+jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out] data received from client */
+{
+  JERRY_ASSERT (jerry_debugger_transport_is_connected ());
+
+  JERRY_ASSERT (message_data_p != NULL ? !!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE)
+                                       : !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_RECEIVE_DATA_MODE));
+
+  JERRY_CONTEXT (debugger_message_delay) = JERRY_DEBUGGER_MESSAGE_FREQUENCY;
+
+  bool resume_exec = false;
+  uint8_t expected_message_type = 0;
+
+  while (true)
+  {
+    jerry_debugger_transport_receive_context_t context;
+    if (!jerry_debugger_transport_receive (&context))
+    {
+      JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED));
+      return true;
+    }
+
+    if (context.message_p == NULL)
+    {
+      if (expected_message_type != 0)
+      {
+        jerry_debugger_transport_sleep ();
+        continue;
+      }
+
+      return resume_exec;
+    }
+
+    /* Only datagram packets are supported. */
+    JERRY_ASSERT (context.message_total_length > 0);
+
+    /* The jerry_debugger_process_message function is inlined
+     * so passing these arguments is essentially free. */
+    if (!jerry_debugger_process_message (context.message_p,
+                                         (uint32_t) context.message_length,
+                                         &resume_exec,
+                                         &expected_message_type,
+                                         message_data_p))
+    {
+      JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED));
+      return true;
+    }
+
+    jerry_debugger_transport_receive_completed (&context);
+  }
+} /* jerry_debugger_receive */
+
 
 #undef JERRY_DEBUGGER_CHECK_PACKET_SIZE
 
@@ -715,7 +1176,7 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
 
   while (!jerry_debugger_receive (&uint8_data))
   {
-    jerry_debugger_sleep ();
+    jerry_debugger_transport_sleep ();
   }
 
   if (uint8_data != NULL)
@@ -766,10 +1227,18 @@ jerry_debugger_send_configuration (uint8_t max_message_size) /**< maximum messag
   endian_data.uint16_value = 1;
 
   configuration_p->type = JERRY_DEBUGGER_CONFIGURATION;
+  configuration_p->configuration = 0;
+
+  if (endian_data.uint8_value[0] == 1)
+  {
+    configuration_p->configuration |= (uint8_t) JERRY_DEBUGGER_LITTLE_ENDIAN;
+  }
+
+  uint32_t version = JERRY_DEBUGGER_VERSION;
+  memcpy (configuration_p->version, &version, sizeof (uint32_t));
+
   configuration_p->max_message_size = max_message_size;
   configuration_p->cpointer_size = sizeof (jmem_cpointer_t);
-  configuration_p->little_endian = (endian_data.uint8_value[0] == 1);
-  configuration_p->version = JERRY_DEBUGGER_VERSION;
 
   return jerry_debugger_send (sizeof (jerry_debugger_send_configuration_t));
 } /* jerry_debugger_send_configuration */
@@ -786,7 +1255,7 @@ jerry_debugger_send_data (jerry_debugger_header_type_t type, /**< message type *
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_type_t, message_type_p);
 
-  message_type_p->type = type;
+  message_type_p->type = (uint8_t) type;
   memcpy (message_type_p + 1, data, size);
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t) + size);

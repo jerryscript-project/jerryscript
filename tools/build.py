@@ -24,10 +24,6 @@ import subprocess
 import sys
 import settings
 
-BUILD_DIR = os.path.join(settings.PROJECT_DIR, 'build')
-
-DEFAULT_PROFILE = 'es5.1'
-
 def default_toolchain():
     (sysname, _, _, _, machine) = os.uname()
     toolchain = os.path.join(settings.PROJECT_DIR,
@@ -39,7 +35,7 @@ def get_arguments():
     devhelp_preparser = argparse.ArgumentParser(add_help=False)
     devhelp_preparser.add_argument('--devhelp', action='store_true', default=False,
                                    help='show help with all options '
-                                   '(including those, which are useful for developers only)')
+                                        '(including those, which are useful for developers only)')
 
     devhelp_arguments, args = devhelp_preparser.parse_known_args()
     if devhelp_arguments.devhelp:
@@ -143,6 +139,11 @@ def get_arguments():
     if arguments.devhelp:
         parser.print_help()
         sys.exit(0)
+
+    if arguments.vm_recursion_limit:
+        if arguments.vm_recursion_limit < 0:
+            print ('Configuration error: VM recursion limit must be greater or equal than 0')
+            sys.exit(1)
 
     return arguments
 

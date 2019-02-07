@@ -26,6 +26,9 @@
  * @{
  */
 
+JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION,
+                     parser_with_context_stack_allocation_must_be_equal_to_parser_super_class_context_stack_allocation);
+
 /**
  * Abort (finalize) the current stack context, and remove it.
  *
@@ -54,15 +57,26 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       break;
     }
     case VM_CONTEXT_CATCH:
-    case VM_CONTEXT_WITH:
     {
-      ecma_deref_object (frame_ctx_p->lex_env_p);
-      frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+      JERRY_ASSERT (PARSER_TRY_CONTEXT_STACK_ALLOCATION > PARSER_WITH_CONTEXT_STACK_ALLOCATION);
 
-      JERRY_ASSERT (PARSER_TRY_CONTEXT_STACK_ALLOCATION == PARSER_WITH_CONTEXT_STACK_ALLOCATION);
+      const uint16_t size_diff = PARSER_TRY_CONTEXT_STACK_ALLOCATION - PARSER_WITH_CONTEXT_STACK_ALLOCATION;
 
-      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, size_diff);
+      vm_stack_top_p -= size_diff;
+      /* FALLTHRU */
+    }
+    case VM_CONTEXT_WITH:
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+    case VM_CONTEXT_SUPER_CLASS:
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+    {
+      ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+      frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+      ecma_deref_object (lex_env_p);
+
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_WITH_CONTEXT_STACK_ALLOCATION;
       break;
     }
     default:
@@ -77,9 +91,10 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       {
         ecma_value_t value = chunk_p->items[index];
 
-        if (JERRY_UNLIKELY (ecma_is_value_collection_chunk (value)))
+        if (JERRY_UNLIKELY (ecma_is_value_pointer (value)))
         {
-          ecma_collection_chunk_t *next_chunk_p = ecma_get_collection_chunk_from_value (value);
+          ecma_collection_chunk_t *next_chunk_p;
+          next_chunk_p = (ecma_collection_chunk_t *) ecma_get_pointer_from_value (value);
           jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));
 
           chunk_p = next_chunk_p;
@@ -218,8 +233,9 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
       else
       {
-        ecma_deref_object (frame_ctx_p->lex_env_p);
-        frame_ctx_p->lex_env_p = ecma_get_object_from_value (vm_stack_top_p[-2]);
+        ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+        frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+        ecma_deref_object (lex_env_p);
 
         if (byte_code_p[0] == CBC_CONTEXT_END)
         {

@@ -13,11 +13,19 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_TIME_H
+#if !defined (_XOPEN_SOURCE) || _XOPEN_SOURCE < 500
+#undef _XOPEN_SOURCE
+/* Required macro for sleep functions (nanosleep or usleep) */
+#define _XOPEN_SOURCE 500
+#endif
+
+#ifdef WIN32
+#include <windows.h>
+#elif defined (HAVE_TIME_H)
 #include <time.h>
 #elif defined (HAVE_UNISTD_H)
 #include <unistd.h>
-#endif /* HAVE_TIME_H */
+#endif /* WIN32 */
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
@@ -28,7 +36,9 @@
  */
 void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
 {
-#ifdef HAVE_TIME_H
+#ifdef WIN32
+  Sleep (sleep_time);
+#elif defined (HAVE_TIME_H)
   struct timespec sleep_timespec;
   sleep_timespec.tv_sec = (time_t) sleep_time / 1000;
   sleep_timespec.tv_nsec = ((long int) sleep_time % 1000) * 1000000L;

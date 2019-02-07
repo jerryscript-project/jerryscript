@@ -42,6 +42,9 @@ typedef enum
 #ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
   LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
 #endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  LEXER_THREE_DOTS,              /**< ... (rest or spread operator) */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and
@@ -112,7 +115,7 @@ typedef enum
   LEXER_LEFT_PAREN,              /**< "(" */
   LEXER_LEFT_SQUARE,             /**< "[" */
   LEXER_RIGHT_BRACE,             /**< "}" */
-  LEXER_RIGHT_PAREN,             /**<_")" */
+  LEXER_RIGHT_PAREN,             /**< ")" */
   LEXER_RIGHT_SQUARE,            /**< "]" */
   LEXER_DOT,                     /**< "." */
   LEXER_SEMICOLON,               /**< ";" */
@@ -149,30 +152,61 @@ typedef enum
   LEXER_PROPERTY_SETTER,         /**< property setter function */
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
+  LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
 
+#ifdef CONFIG_DISABLE_ES2015
   /* Future reserved words: these keywords
    * must form a group after all other keywords. */
 #define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_CLASS
+#endif /* CONFIG_DISABLE_ES2015 */
   LEXER_KEYW_CLASS,              /**< class */
-  LEXER_KEYW_ENUM,               /**< enum */
   LEXER_KEYW_EXTENDS,            /**< extends */
   LEXER_KEYW_SUPER,              /**< super */
   LEXER_KEYW_CONST,              /**< const */
   LEXER_KEYW_EXPORT,             /**< export */
   LEXER_KEYW_IMPORT,             /**< import */
+#ifndef CONFIG_DISABLE_ES2015
+  /* Future reserved words: these keywords
+   * must form a group after all other keywords.
+   * Note:
+   *      Tokens from LEXER_KEYW_CLASS to LEXER_KEYW_IMPORT
+   *      are no longer future reserved words in ES2015. */
+#define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_ENUM
+#endif /* !CONFIG_DISABLE_ES2015 */
+  LEXER_KEYW_ENUM,               /**< enum */
+#ifndef CONFIG_DISABLE_ES2015
+  LEXER_KEYW_AWAIT,              /**< await */
+#endif /* !CONFIG_DISABLE_ES2015 */
 
   /* Future strict reserved words: these keywords
    * must form a group after future reserved words. */
 #define LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD LEXER_KEYW_IMPLEMENTS
   LEXER_KEYW_IMPLEMENTS,         /**< implements */
-  LEXER_KEYW_LET,                /**< let */
   LEXER_KEYW_PRIVATE,            /**< private */
   LEXER_KEYW_PUBLIC,             /**< public */
-  LEXER_KEYW_YIELD,              /**< yield */
   LEXER_KEYW_INTERFACE,          /**< interface */
   LEXER_KEYW_PACKAGE,            /**< package */
   LEXER_KEYW_PROTECTED,          /**< protected */
+
+#ifndef CONFIG_DISABLE_ES2015
+  /* Context dependent strict reserved words:
+   * See also: ECMA-262 v6, 11.6.2.1 */
+#define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD LEXER_KEYW_STATIC
   LEXER_KEYW_STATIC,             /**< static */
+#else /* CONFIG_DISABLE_ES2015 */
+  /* Context dependent strict reserved words:
+   * See also: ECMA-262 v6, 11.6.2.1 */
+#define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD
+#endif /* !CONFIG_DISABLE_ES2015 */
+
+  /* Context dependent future strict reserved words:
+   * See also: ECMA-262 v6, 11.6.2.1 */
+#define LEXER_FIRST_CONTEXT_DEPENDENT_FUTURE_RESERVED_WORD LEXER_KEYW_LET
+  LEXER_KEYW_LET,                /**< let */
+  LEXER_KEYW_YIELD,              /**< yield */
+#ifdef CONFIG_DISABLE_ES2015
+  LEXER_KEYW_STATIC,             /**< static */
+#endif /* CONFIG_DISABLE_ES2015 */
 } lexer_token_type_t;
 
 #define LEXER_NEWLINE_LS_PS_BYTE_1 0xe2
@@ -206,6 +240,16 @@ typedef enum
   LEXER_WAS_NEWLINE = (1u << 0),             /**< newline was seen */
   LEXER_NO_SKIP_SPACES = (1u << 1)           /**< ignore skip spaces */
 } lexer_newline_flags_t;
+
+/**
+ * Lexer object identifier parse options.
+ */
+typedef enum
+{
+  LEXER_OBJ_IDENT_NO_OPTS = (1u << 0),          /**< no options */
+  LEXER_OBJ_IDENT_ONLY_IDENTIFIERS = (1u << 1), /**< only identifiers are accepted */
+  LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
+} lexer_obj_ident_opts_t;
 
 /**
  * Lexer literal object types.

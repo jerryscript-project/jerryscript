@@ -64,7 +64,6 @@ ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
 
@@ -84,48 +83,46 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   {
     if (ecma_is_value_undefined (flags_value))
     {
-      ret_value = ecma_copy_value (pattern_value);
+      return ecma_copy_value (pattern_value);
     }
-    else
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp call."));
-    }
+
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp call."));
   }
-  else
+
+  ecma_string_t *pattern_string_p = NULL;
+  ecma_value_t ret_value = ecma_regexp_read_pattern_str_helper (pattern_value, &pattern_string_p);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_string_t *pattern_string_p = NULL;
-    ecma_string_t *flags_string_p = NULL;
+    return ret_value;
+  }
+  JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
-    ret_value = ecma_regexp_read_pattern_str_helper (pattern_value, &pattern_string_p);
+  uint16_t flags = 0;
+  if (!ecma_is_value_undefined (flags_value))
+  {
+    ecma_value_t flags_str_value = ecma_op_to_string (flags_value);
 
-    if (ecma_is_value_empty (ret_value) && !ecma_is_value_undefined (flags_value))
-    {
-      ECMA_TRY_CATCH (flags_str_value,
-                      ecma_op_to_string (flags_value),
-                      ret_value);
-
-      flags_string_p = ecma_get_string_from_value (flags_str_value);
-      ecma_ref_ecma_string (flags_string_p);
-
-      ECMA_FINALIZE (flags_str_value);
-    }
-
-    if (ecma_is_value_empty (ret_value))
-    {
-      ret_value = ecma_op_create_regexp_object (pattern_string_p, flags_string_p);
-    }
-
-    if (pattern_string_p != NULL)
+    if (ECMA_IS_VALUE_ERROR (flags_str_value))
     {
       ecma_deref_ecma_string (pattern_string_p);
+      return flags_str_value;
     }
 
-    if (flags_string_p != NULL)
+    ecma_string_t *flags_string_p = ecma_get_string_from_value (flags_str_value);
+    JERRY_ASSERT (flags_string_p != NULL);
+    ret_value = re_parse_regexp_flags (flags_string_p, &flags);
+    ecma_free_value (flags_str_value); // implicit frees flags_string_p
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
     {
-      ecma_deref_ecma_string (flags_string_p);
+      ecma_deref_ecma_string (pattern_string_p);
+      return ret_value;
     }
+    JERRY_ASSERT (ecma_is_value_empty (ret_value));
   }
 
+  ret_value = ecma_op_create_regexp_object (pattern_string_p, flags);
+  ecma_deref_ecma_string (pattern_string_p);
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_construct */
 

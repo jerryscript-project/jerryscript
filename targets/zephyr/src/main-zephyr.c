@@ -50,7 +50,7 @@ static int shell_cmd_handler (char *source_buffer)
 
   ret_val = jerry_eval ((jerry_char_t *) source_buffer,
     strlen (source_buffer),
-    false);
+    JERRY_PARSE_NO_OPTS);
 
   if (jerry_value_is_error (ret_val))
   {

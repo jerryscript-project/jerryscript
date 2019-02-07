@@ -23,22 +23,16 @@ all:
 
 # Install tools via apt.
 install-apt-get-deps:
-	sudo apt-get install -q -y gperf texinfo wget
+	sudo apt-get install -q -y wget
 
 # Fetch and build crosstool-NG with support for Xtensa.
 install-xtensa-kx106-gcc:
-	git clone https://github.com/jcmvbkbc/crosstool-NG.git ../crosstool-NG -b lx106-g++-1.21.0
-	cd ../crosstool-NG && ./bootstrap
-	cd ../crosstool-NG && ./configure --enable-local
-	$(MAKE) -C ../crosstool-NG --no-print-directory -Rr # HACK: without the command line arguments, make bails out with recursion error
-	cd ../crosstool-NG && ./ct-ng xtensa-lx106-elf
-	cd ../crosstool-NG && ./ct-ng build
+	wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz -O ../xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+	cd .. && tar xvfz xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz
 
 # Fetch Espressif SDK and Xtensa libraries.
 install-espressif-sdk:
-	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ../ESP8266_SDK
-	cd ../ESP8266_SDK && git checkout 2fab9e23d779cdd6e5900b8ba2b588e30d9b08c4
-	wget https://github.com/esp8266/esp8266-wiki/raw/master/libs/libhal.a -O ../ESP8266_SDK/lib/libhal.a
+	git clone https://github.com/espressif/ESP8266_RTOS_SDK.git ../ESP8266_RTOS_SDK -b v2.1.0
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-xtensa-kx106-gcc install-espressif-sdk
@@ -49,4 +43,4 @@ install: install-apt-get-deps install-noapt
 
 # Build the firmware (ESP8266 with JerryScript).
 script:
-	PATH=$(CURDIR)/../crosstool-NG/builds/xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/esp8266/Makefile.esp8266 BIN_PATH=build/obj-esp8266 SDK_PATH=$(CURDIR)/../ESP8266_SDK
+	PATH=$(CURDIR)/../xtensa-lx106-elf/bin:$$PATH $(MAKE) -f ./targets/esp8266/Makefile.esp8266 BIN_PATH=build/obj-esp8266 SDK_PATH=$(CURDIR)/../ESP8266_RTOS_SDK

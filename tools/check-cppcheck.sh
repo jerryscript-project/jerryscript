@@ -15,32 +15,32 @@
 # limitations under the License.
 
 if [[ "$OSTYPE" == "linux"* ]]; then
-    CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(nproc)}
+  CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(nproc)}
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(sysctl -n hw.ncpu)}
+  CPPCHECK_JOBS=${CPPCHECK_JOBS:=$(sysctl -n hw.ncpu)}
 else
-    CPPCHECK_JOBS=${CPPCHECK_JOBS:=1}
+  CPPCHECK_JOBS=${CPPCHECK_JOBS:=1}
 fi
 
 JERRY_CORE_DIRS=`find jerry-core -type d`
 JERRY_EXT_DIRS=`find jerry-ext -type d`
 JERRY_PORT_DIRS=`find jerry-port -type d`
-JERRY_LIBC_DIRS=`find jerry-libc -type d`
 JERRY_LIBM_DIRS=`find jerry-libm -type d`
 
 
 INCLUDE_DIRS=()
-for DIR in $JERRY_CORE_DIRS $JERRY_EXT_DIRS $JERRY_PORT_DIRS $JERRY_LIBC_DIRS $JERRY_LIBM_DIRS
+for DIR in $JERRY_CORE_DIRS $JERRY_EXT_DIRS $JERRY_PORT_DIRS $JERRY_LIBM_DIRS
 do
- INCLUDE_DIRS=("${INCLUDE_DIRS[@]}" "-I$DIR")
+  INCLUDE_DIRS=("${INCLUDE_DIRS[@]}" "-I$DIR")
 done
 
 cppcheck -j$CPPCHECK_JOBS --force \
- --language=c --std=c99 \
- --enable=warning,style,performance,portability,information \
- --template="{file}:{line}: {severity}({id}): {message}" \
- --error-exitcode=1 \
- --exitcode-suppressions=tools/cppcheck/suppressions-list \
- --suppressions-list=tools/cppcheck/suppressions-list \
- "${INCLUDE_DIRS[@]}" \
- jerry-core jerry-ext jerry-port jerry-libc jerry-libm jerry-main tests/unit-*
+  --language=c --std=c99 \
+  --quiet \
+  --enable=warning,style,performance,portability,information \
+  --template="{file}:{line}: {severity}({id}): {message}" \
+  --error-exitcode=1 \
+  --exitcode-suppressions=tools/cppcheck/suppressions-list \
+  --suppressions-list=tools/cppcheck/suppressions-list \
+  "${INCLUDE_DIRS[@]}" \
+  jerry-core jerry-ext jerry-port jerry-libm jerry-main tests/unit-*

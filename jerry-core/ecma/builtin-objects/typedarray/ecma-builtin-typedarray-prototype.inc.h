@@ -45,6 +45,13 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
 
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+/* ECMA-262 v6, 23.1.3.13 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
+                    ecma_builtin_typedarray_prototype_to_string_tag_getter,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_typedarray_prototype_object_to_string, 0, 0)
@@ -58,6 +65,10 @@ ROUTINE (LIT_MAGIC_STRING_REDUCE_RIGHT_UL, ecma_builtin_typedarray_prototype_red
 ROUTINE (LIT_MAGIC_STRING_FILTER, ecma_builtin_typedarray_prototype_filter, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_REVERSE, ecma_builtin_typedarray_prototype_reverse, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_SET, ecma_builtin_typedarray_prototype_set, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_SUBARRAY, ecma_builtin_typedarray_prototype_subarray, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_FILL, ecma_builtin_typedarray_prototype_fill, 3, 1)
+ROUTINE (LIT_MAGIC_STRING_SORT, ecma_builtin_typedarray_prototype_sort, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_typedarray_prototype_find, 2, 1)
 
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 

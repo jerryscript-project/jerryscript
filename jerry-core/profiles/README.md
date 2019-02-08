@@ -34,6 +34,7 @@ CONFIG_DISABLE_ES2015_BUILTIN
 CONFIG_DISABLE_ES2015_CLASS
 CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
 CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
 CONFIG_DISABLE_ES2015_MAP_BUILTIN
 CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
 CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
@@ -96,6 +97,8 @@ In JerryScript all of the features are enabled by default, so an empty profile f
   Disable the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
 * `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`:
   Disable the [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions).
+* `CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN`:
+  Disable the [Iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
 * `CONFIG_DISABLE_ES2015_MAP_BUILTIN`:
   Disable the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`:
@@ -109,7 +112,7 @@ In JerryScript all of the features are enabled by default, so an empty profile f
 * `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`:
   Disable the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
 * `CONFIG_DISABLE_ES2015`: Disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
-  (equivalent to `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_CLASS`,
+  (equivalent to : `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_CLASS`,
   `CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER`, `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`,
-  `CONFIG_DISABLE_ES2015_MAP_BUILTIN`, `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`,
+  `CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN`,`CONFIG_DISABLE_ES2015_MAP_BUILTIN`, `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`,
   `CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN`, `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`, `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`, and `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`).

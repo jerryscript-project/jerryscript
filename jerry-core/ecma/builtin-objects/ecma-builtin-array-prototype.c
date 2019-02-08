@@ -24,6 +24,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
@@ -2503,6 +2504,116 @@ ecma_builtin_array_prototype_object_find (ecma_value_t this_arg, /**< this argum
   return ret_value;
 } /* ecma_builtin_array_prototype_object_find */
 #endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+
+#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+/**
+ * Helper function for Array.prototype object's {'keys', 'values', 'entries'}
+ * routines common parts.
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_array_iterators_helper (ecma_value_t this_arg, /**< this argument */
+                                     uint8_t type) /**< any combination of
+                                                    *   ecma_array_iterator_type_t bits */
+{
+  /* 1. */
+  ecma_value_t obj_this = ecma_op_to_object (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (obj_this))
+  {
+    /* 2. */
+    return obj_this;
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
+
+  /* 3. */
+  ecma_value_t ret_value = ecma_op_create_iterator_object (obj_this,
+                                                           prototype_obj_p,
+                                                           ECMA_PSEUDO_ARRAY_ITERATOR,
+                                                           type);
+  ecma_free_value (obj_this);
+
+  return ret_value;
+} /* ecma_builtin_array_iterators_helper */
+
+/**
+ * The Array.prototype object's 'entries' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.4
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_entries (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_array_iterators_helper (this_arg, ECMA_ARRAY_ITERATOR_KEYS_VALUES);
+} /* ecma_builtin_array_prototype_entries */
+
+/**
+ * The Array.prototype object's 'values' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.29.
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_values (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_array_iterators_helper (this_arg, ECMA_ARRAY_ITERATOR_VALUES);
+} /* ecma_builtin_array_prototype_values */
+
+/**
+ * The Array.prototype object's '@@iterator' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.30.
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_symbol_iterator (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_array_prototype_values (this_arg);
+} /* ecma_builtin_array_prototype_symbol_iterator */
+
+/**
+ * The Array.prototype object's 'keys' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.13
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_keys (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_array_iterators_helper (this_arg, ECMA_ARRAY_ITERATOR_KEYS);
+} /* ecma_builtin_array_prototype_keys */
+#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
 
 /**
  * @}

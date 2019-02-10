@@ -37,6 +37,7 @@ file(GLOB SOURCE_EXT
      arg/*.c
      common/*.c
      debugger/*.c
+     handle-scope/*.c
      handler/*.c
      module/*.c)
 

@@ -1326,10 +1326,15 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     {
       if (re_ctx.flags & RE_FLAG_GLOBAL)
       {
-        ecma_op_object_put (regexp_object_p,
-                            ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                            ecma_make_integer_value (0),
-                            true);
+        ecma_value_t put_result = ecma_op_object_put (regexp_object_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                      ecma_make_integer_value (0),
+                                                      true);
+        if (ECMA_IS_VALUE_ERROR (put_result))
+        {
+          ecma_free_value (ret_value);
+          ret_value = put_result;
+        }
       }
 
       is_match = false;
@@ -1372,10 +1377,16 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
       lastindex_num = ECMA_NUMBER_ZERO;
     }
 
-    ecma_op_object_put (regexp_object_p,
-                        ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                        ecma_make_number_value (lastindex_num),
-                        true);
+    ecma_value_t put_result = ecma_op_object_put (regexp_object_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                  ecma_make_number_value (lastindex_num),
+                                                  true);
+
+    if (ECMA_IS_VALUE_ERROR (put_result))
+    {
+      ecma_free_value (ret_value);
+      ret_value = put_result;
+    }
   }
 
   /* 3. Fill the result array or return with 'undefiend' */

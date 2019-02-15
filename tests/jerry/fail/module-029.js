@@ -13,19 +13,5 @@
  * limitations under the License.
  */
 
-var a = 1;
-
-function b () {
-  return 2;
-}
-
-export var c = 3;
-
-export function d () {
-  return 4;
-}
-
-export { a as e, b }
-export var f = "str";
-
-assert (true);
+/* Import/export statements must be in the global scope. */
+Function('','import { c } from "tests/jerry/es2015/module-export-01.js";')

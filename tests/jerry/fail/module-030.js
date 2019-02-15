@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+/* No default export found. */
+import def from "tests/jerry/es2015/module-export-06.js"

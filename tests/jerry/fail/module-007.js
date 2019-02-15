@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
-import { from as as } from "tests/jerry/es2015/module-imported.js";
+/* Module requests must always be evaluated. */
+import "tests/jerry/fail/module-sideeffect.js"

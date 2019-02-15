@@ -17,6 +17,8 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 #include "jcontext.h"
+
+#include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
 /** \addtogroup parser Parser
@@ -325,13 +327,9 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-    if (context_p->module_context_p != NULL && context_p->module_current_node_p != NULL)
+    if (JERRY_CONTEXT (module_top_context_p) != NULL && context_p->module_current_node_p != NULL)
     {
-      parser_module_add_item_to_node (context_p,
-                                      context_p->module_current_node_p,
-                                      context_p->lit_object.literal_p,
-                                      context_p->lit_object.literal_p,
-                                      false);
+      context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
     }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
@@ -401,13 +399,9 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   name_p = context_p->lit_object.literal_p;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (context_p->module_context_p != NULL && context_p->module_current_node_p != NULL)
+  if (JERRY_CONTEXT (module_top_context_p) != NULL && context_p->module_current_node_p != NULL)
   {
-    parser_module_add_item_to_node (context_p,
-                                    context_p->module_current_node_p,
-                                    name_p,
-                                    name_p,
-                                    false);
+    context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
   }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
@@ -1678,56 +1672,121 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 /**
  * Parse import statement.
+ * Note: See 15.2.2
  */
 static void
-parser_parse_import_statement (parser_context_t *context_p) /**< context */
+parser_parse_import_statement (parser_context_t *context_p) /**< parser context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
 
   parser_module_check_request_place (context_p);
   parser_module_context_init (context_p);
 
-  parser_module_node_t module_node;
-  memset (&module_node, 0, sizeof (parser_module_node_t));
+  ecma_module_node_t module_node;
+  memset (&module_node, 0, sizeof (ecma_module_node_t));
   context_p->module_current_node_p = &module_node;
 
   lexer_next_token (context_p);
 
-  switch (context_p->token.type)
+  /* Check for a ModuleSpecifier*/
+  if (context_p->token.type != LEXER_LITERAL
+      || context_p->token.lit_location.type != LEXER_STRING_LITERAL)
   {
-    case LEXER_LEFT_BRACE:
+    if (!(context_p->token.type == LEXER_LEFT_BRACE
+          || context_p->token.type == LEXER_MULTIPLY
+          || (context_p->token.type == LEXER_LITERAL && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)))
     {
-      lexer_next_token (context_p);
-      parser_module_parse_import_item_list (context_p);
+      parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_MULTIPLY_LITERAL_EXPECTED);
+    }
 
-      if (context_p->token.type != LEXER_RIGHT_BRACE)
+    if (context_p->token.type == LEXER_LITERAL)
+    {
+      /* Handle ImportedDefaultBinding */
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+
+      ecma_string_t *local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                                    context_p->lit_object.literal_p->prop.length);
+
+      if (parser_module_check_duplicate_import (context_p, local_name_p))
       {
-        parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+        ecma_deref_ecma_string (local_name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_IMPORT_BINDING);
+      }
+
+      ecma_string_t *import_name_p = ecma_get_magic_string (LIT_MAGIC_STRING_DEFAULT);
+      parser_module_add_names_to_node (context_p, import_name_p, local_name_p);
+
+      ecma_deref_ecma_string (local_name_p);
+      ecma_deref_ecma_string (import_name_p);
+
+      lexer_next_token (context_p);
+
+      if (context_p->token.type != LEXER_COMMA
+          && !lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+      {
+        parser_raise_error (context_p, PARSER_ERR_FROM_COMMA_EXPECTED);
+      }
+
+      if (context_p->token.type == LEXER_COMMA)
+      {
+        lexer_next_token (context_p);
+        if (context_p->token.type != LEXER_MULTIPLY
+            && context_p->token.type != LEXER_LEFT_BRACE)
+        {
+          parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_MULTIPLY_EXPECTED);
+        }
+      }
+    }
+
+    if (context_p->token.type == LEXER_MULTIPLY)
+    {
+      /* NameSpaceImport*/
+      lexer_next_token (context_p);
+      if (context_p->token.type != LEXER_LITERAL
+          || !lexer_compare_raw_identifier_to_current (context_p, "as", 2))
+      {
+        parser_raise_error (context_p, PARSER_ERR_AS_EXPECTED);
       }
 
       lexer_next_token (context_p);
-      break;
+      if (context_p->token.type != LEXER_LITERAL)
+      {
+        parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+      }
+
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+
+      ecma_string_t *local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                                    context_p->lit_object.literal_p->prop.length);
+
+      if (parser_module_check_duplicate_import (context_p, local_name_p))
+      {
+        ecma_deref_ecma_string (local_name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_IMPORT_BINDING);
+      }
+
+      ecma_string_t *import_name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR);
+
+      parser_module_add_names_to_node (context_p, import_name_p, local_name_p);
+      ecma_deref_ecma_string (local_name_p);
+      ecma_deref_ecma_string (import_name_p);
+
+      lexer_next_token (context_p);
+    }
+    else if (context_p->token.type == LEXER_LEFT_BRACE)
+    {
+      /* Handle NamedImports */
+      parser_module_parse_import_clause (context_p);
     }
 
-    case LEXER_MULTIPLY:
-    case LEXER_LITERAL:
+    if (context_p->token.type != LEXER_LITERAL || !lexer_compare_raw_identifier_to_current (context_p, "from", 4))
     {
-      parser_module_parse_import_item_list (context_p);
-      break;
+      parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
     }
-
-    default:
-    {
-      parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED);
-    }
+    lexer_next_token (context_p);
   }
 
-  if (context_p->token.type != LEXER_LITERAL ||!lexer_compare_raw_identifier_to_current (context_p, "from", 4))
-  {
-    parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
-  }
-
-  parser_module_handle_from_clause (context_p);
+  parser_module_handle_module_specifier (context_p);
   parser_module_add_import_node_to_context (context_p);
 
   context_p->module_current_node_p = NULL;
@@ -1744,75 +1803,156 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   parser_module_check_request_place (context_p);
   parser_module_context_init (context_p);
 
-  parser_module_node_t module_node;
-  memset (&module_node, 0, sizeof (parser_module_node_t));
+  ecma_module_node_t module_node;
+  memset (&module_node, 0, sizeof (ecma_module_node_t));
   context_p->module_current_node_p = &module_node;
 
   lexer_next_token (context_p);
-
   switch (context_p->token.type)
   {
-    case LEXER_LEFT_BRACE:
+    case LEXER_KEYW_DEFAULT:
+    {
+      lexer_range_t range;
+      parser_save_range (context_p, &range, context_p->source_end_p);
+
+      lexer_next_token (context_p);
+      if (context_p->token.type == LEXER_KEYW_CLASS)
+      {
+        context_p->status_flags |= PARSER_MODULE_DEFAULT_CLASS_OR_FUNC;
+        parser_parse_class (context_p, true);
+      }
+      else if (context_p->token.type == LEXER_KEYW_FUNCTION)
+      {
+        context_p->status_flags |= PARSER_MODULE_DEFAULT_CLASS_OR_FUNC;
+        parser_parse_function_statement (context_p);
+      }
+      else
+      {
+        /* Assignment expression */
+        context_p->status_flags |= PARSER_MODULE_DEFAULT_EXPR;
+        parser_set_range (context_p, &range);
+
+        /* 15.2.3.5 Use the synthetic name '*default*' as the identifier. */
+        lexer_construct_literal_object (context_p,
+                                        (lexer_lit_location_t *) &lexer_default_literal,
+                                        lexer_default_literal.type);
+        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
+
+        context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
+        parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+
+        context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
+
+        /* Fake an assignment to the default identifier */
+        context_p->token.type = LEXER_ASSIGN;
+
+        parser_parse_expression (context_p,
+                                 PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
+      }
+
+      ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
+                                                              context_p->module_identifier_lit_p->prop.length);
+      ecma_string_t *export_name_p = ecma_get_magic_string (LIT_MAGIC_STRING_DEFAULT);
+
+      if (parser_module_check_duplicate_export (context_p, export_name_p))
+      {
+        ecma_deref_ecma_string (name_p);
+        ecma_deref_ecma_string (export_name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
+      }
+
+      parser_module_add_names_to_node (context_p,
+                                       export_name_p,
+                                       name_p);
+      ecma_deref_ecma_string (name_p);
+      ecma_deref_ecma_string (export_name_p);
+      context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_DEFAULT_EXPR);
+      break;
+    }
+    case LEXER_MULTIPLY:
     {
       lexer_next_token (context_p);
-      parser_module_parse_export_item_list (context_p);
-
-      if (context_p->token.type != LEXER_RIGHT_BRACE)
+      if (!(context_p->token.type == LEXER_LITERAL
+            && lexer_compare_raw_identifier_to_current (context_p, "from", 4)))
       {
-        parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+        parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
       }
 
       lexer_next_token (context_p);
+      parser_module_handle_module_specifier (context_p);
       break;
     }
-
-    case LEXER_KEYW_DEFAULT:
-    {
-      /* TODO: This part is going to be implemented in the next part of the patch. */
-      parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
-      break;
-    }
-
-    case LEXER_MULTIPLY:
-    case LEXER_LITERAL:
-    {
-      parser_module_parse_export_item_list (context_p);
-      break;
-    }
-
-    case LEXER_KEYW_FUNCTION:
-    {
-      parser_parse_function_statement (context_p);
-      break;
-    }
-
     case LEXER_KEYW_VAR:
     {
       parser_parse_var_statement (context_p);
+      ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
+                                                              context_p->module_identifier_lit_p->prop.length);
+
+      if (parser_module_check_duplicate_export (context_p, name_p))
+      {
+        ecma_deref_ecma_string (name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
+      }
+
+      parser_module_add_names_to_node (context_p,
+                                       name_p,
+                                       name_p);
+      ecma_deref_ecma_string (name_p);
       break;
     }
-
     case LEXER_KEYW_CLASS:
     {
-      /* TODO: This part is going to be implemented in the next part of the patch. */
-      parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
+      parser_parse_class (context_p, true);
+      ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
+                                                              context_p->module_identifier_lit_p->prop.length);
+
+      if (parser_module_check_duplicate_export (context_p, name_p))
+      {
+        ecma_deref_ecma_string (name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
+      }
+
+      parser_module_add_names_to_node (context_p,
+                                       name_p,
+                                       name_p);
+      ecma_deref_ecma_string (name_p);
       break;
     }
+    case LEXER_KEYW_FUNCTION:
+    {
+      parser_parse_function_statement (context_p);
+      ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
+                                                              context_p->module_identifier_lit_p->prop.length);
 
+      if (parser_module_check_duplicate_export (context_p, name_p))
+      {
+        ecma_deref_ecma_string (name_p);
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
+      }
+
+      parser_module_add_names_to_node (context_p,
+                                       name_p,
+                                       name_p);
+      ecma_deref_ecma_string (name_p);
+      break;
+    }
+    case LEXER_LEFT_BRACE:
+    {
+      parser_module_parse_export_clause (context_p);
+
+      if (context_p->token.type == LEXER_LITERAL
+          && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+      {
+        lexer_next_token (context_p);
+        parser_module_handle_module_specifier (context_p);
+      }
+      break;
+    }
     default:
     {
-      parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED);
+      parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_MULTIPLY_LITERAL_EXPECTED);
       break;
     }
-  }
-
-  if (context_p->token.type == LEXER_LITERAL
-      && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
-  {
-    /* TODO: Import the requested properties from the given script and export
-             them from the current to make a redirection.
-       This part is going to be implemented in the next part of the patch. */
-    parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
   }
 
   parser_module_add_export_node_to_context (context_p);

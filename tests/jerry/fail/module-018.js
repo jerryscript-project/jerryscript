@@ -13,8 +13,5 @@
  * limitations under the License.
  */
 
-export function getString () {
-  return prefix;
-}
-
-assert (getString());
+/* An import statement can have either a NameSpaceImport or NamedIpmorts */
+import * as mod, { b } from "tests/jerry/es2015/module-export-01.js"

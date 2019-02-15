@@ -13,23 +13,5 @@
  * limitations under the License.
  */
 
-import { b, c, d, e, f as g } from "tests/jerry/es2015/module-imported.js"
-
-import
-{
-  b as pi,
-  getString,
-  getArea
-} from "tests/jerry/es2015/module-imported-2.js"
-
-var str = "str";
-
-assert (b () === 2);
-assert (c === 3);
-assert (d () === 4);
-assert (e === 1);
-assert (g === str);
-
-assert (pi === 3.14);
-assert (getArea (2) == 12.56);
-assert (getString (str) === "strString")
+/* '*' is not valid inside NamedImports. */
+import { *, d } from "tests/jerry/es2015/module-imported-01.js"

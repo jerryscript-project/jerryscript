@@ -199,11 +199,11 @@ void jerry_port_print_char (char c);
  *      is enabled. The path is specified in the import statement's 'from "..."'
  *      section.
  *
- *  @param file_name_p Path that points to the EcmaScript file in the
- *                     filesystem.
- *  @param out_size_p The opened file's size in bytes.
+ * @param file_name_p Path that points to the EcmaScript file in the
+ *                    filesystem.
+ * @param out_size_p The opened file's size in bytes.
  *
- *  @return the pointer to the buffer which contains the content of the file.
+ * @return the pointer to the buffer which contains the content of the file.
  */
 uint8_t *jerry_port_read_source (const char *file_name_p, size_t *out_size_p);
 
@@ -214,6 +214,22 @@ uint8_t *jerry_port_read_source (const char *file_name_p, size_t *out_size_p);
  * @param buffer_p The pointer the allocated buffer.
  */
 void jerry_port_release_source (uint8_t *buffer_p);
+
+/**
+ * Normalize a file path string.
+ *
+ * Note:
+ *      This port function is called by jerry-core when ES2015_MODULE_SYSTEM
+ *      is enabled. The normalized path is used to uniquely identify modules.
+ *
+ * @param in_path_p Input path as a zero terminated string.
+ * @param out_buf_p Pointer to the output buffer where the normalized path should be written.
+ * @param out_buf_size Size of the output buffer.
+ *
+ * @return length of the string written to the output buffer
+ *         zero, if the buffer was not sufficient or an error occured
+ */
+size_t jerry_port_normalize_path (const char *in_path_p, char *out_buf_p, size_t out_buf_size);
 
 /**
  * @}

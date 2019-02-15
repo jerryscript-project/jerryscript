@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
+/* A string literal must always follow the 'from' keyword. */
 import { b } from 3

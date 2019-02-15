@@ -13,5 +13,8 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+export {} from "tests/jerry/es2015/module-export-01.js";
+export {aa,} from "tests/jerry/es2015/module-export-01.js";
+export {bb as b_, cc as c_} from "tests/jerry/es2015/module-export-01.js";
+export * from "tests/jerry/es2015/module-export-01.js";
+export default function () {return "default"};

@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+/* Star exports can't have an export name. */
+export * as star from "tests/jerry/es2015/module-export-01.js"

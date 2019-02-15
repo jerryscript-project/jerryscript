@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+/* Indirect exports must be checked if they are resolvable. */
+export { l } from "tests/jerry/es2015/module-export-01.js"

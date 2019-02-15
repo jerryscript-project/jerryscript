@@ -17,6 +17,8 @@
 
 #ifndef JERRY_DISABLE_JS_PARSER
 #include "jcontext.h"
+
+#include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
 /** \addtogroup parser Parser
@@ -568,6 +570,14 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 
     class_ident_index = context_p->lit_object.index;
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
+
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+    if (JERRY_CONTEXT (module_top_context_p) != NULL && context_p->module_current_node_p != NULL)
+    {
+      context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
+    }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
     lexer_next_token (context_p);
   }
   else
@@ -1266,6 +1276,15 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         lexer_construct_literal_object (context_p,
                                         &context_p->token.lit_location,
                                         context_p->token.lit_location.type);
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+        if (context_p->status_flags & PARSER_MODULE_DEFAULT_EXPR
+            && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+        {
+          context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
+          context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
+          context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_EXPR);
+        }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
       }
       else if (context_p->token.lit_location.type == LEXER_NUMBER_LITERAL)
       {

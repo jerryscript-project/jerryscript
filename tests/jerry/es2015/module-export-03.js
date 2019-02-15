@@ -13,5 +13,14 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+export default class {
+  constructor(num) {
+    this.num = num
+  }
+
+  incr() {
+    return ++(this.num);
+  }
+}
+
+export * from "tests/jerry/es2015/module-export-02.js"

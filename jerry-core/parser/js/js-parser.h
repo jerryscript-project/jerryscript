@@ -130,18 +130,20 @@ typedef enum
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_ERR_RIGHT_PAREN_COMMA_FROM_EXPECTED,         /**< rigth paren or comma or from expected */
+  PARSER_ERR_FILE_NOT_FOUND,                          /**< file not found*/
   PARSER_ERR_FROM_EXPECTED,                           /**< from expected */
+  PARSER_ERR_FROM_COMMA_EXPECTED,                     /**< from or comma expected */
+  PARSER_ERR_AS_EXPECTED,                             /**< as expected */
   PARSER_ERR_STRING_EXPECTED,                         /**< string literal expected */
-  PARSER_ERR_MODULE_REQUEST_NOT_FOUND,                /**< not found imported variable in module */
-  PARSER_ERR_FILE_NOT_FOUND,                          /**< not found given file in the import statement */
-  PARSER_ERR_NOT_IMPLEMENTED,                         /**< feature not implemented yet */
-  PARSER_ERR_MODULE_REQUEST_LIMIT_REACHED,            /**< maximum number of requests reached */
   PARSER_ERR_MODULE_UNEXPECTED,                       /**< unexpected import or export statement */
-  PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED,    /**< left paren or multiply or literal expected */
+  PARSER_ERR_LEFT_BRACE_MULTIPLY_LITERAL_EXPECTED,    /**< left brace or multiply or literal expected */
+  PARSER_ERR_LEFT_BRACE_MULTIPLY_EXPECTED,            /**< left brace or multiply expected */
+  PARSER_ERR_RIGHT_BRACE_COMMA_EXPECTED,              /**< right brace or comma expected */
+  PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER,            /**< duplicated export identifier name */
+  PARSER_ERR_DUPLICATED_IMPORT_BINDING,               /**< duplicated import binding name */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
-  PARSER_ERR_NON_STRICT_ARG_DEFINITION               /**< non-strict argument definition */
+  PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */
 } parser_error_t;
 
 /**

@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+export var x = 41
+export default a = "str"

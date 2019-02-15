@@ -13,19 +13,6 @@
  * limitations under the License.
  */
 
-export function getString (prefix) {
-  return prefix + "String";
-}
-
-function getAreaOfCircle (radius) {
-  return radius * radius * pi;
-}
-
-export getAreaOfCircle as getArea;
-
-import { pi } from "tests/jerry/es2015/module-imported-3.js";
-assert (pi === 3.14);
-
-export pi as b;
-
-assert (true);
+export * from "tests/jerry/es2015/module-export-01.js";
+export * from "tests/jerry/es2015/module-export-04.js";
+export default a = "str"

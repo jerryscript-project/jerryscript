@@ -1590,8 +1590,7 @@ ecma_builtin_json_object (ecma_object_t *obj_p, /**< the object*/
 
       JERRY_ASSERT (ecma_is_property_enumerable (property));
 
-      if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
-          || ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_VIRTUAL)
+      if (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_SPECIAL)
       {
         ecma_append_to_values_collection (property_keys_p, *ecma_value_p, 0);
       }

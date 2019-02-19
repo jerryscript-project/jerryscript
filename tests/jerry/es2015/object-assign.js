@@ -146,7 +146,7 @@ function completeAssign (target, sources) {
 }
 
 var copy = completeAssign ({}, [obj]);
-assert (JSON.stringify (copy) === '{"foo":1}');
+assert (JSON.stringify (copy) === '{"foo":1,"bar":2}');
 assert (copy.bar === 2);
 
 // Test when target is not coercible to object

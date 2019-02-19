@@ -50,7 +50,16 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
 
   for (jerry_length_t arg_index = 0; arg_index < args_cnt; arg_index++)
   {
-    jerry_value_t str_val = jerry_value_to_string (args_p[arg_index]);
+    jerry_value_t str_val;
+
+    if (jerry_value_is_symbol (args_p[arg_index]))
+    {
+      str_val = jerry_get_symbol_descriptive_string (args_p[arg_index]);
+    }
+    else
+    {
+      str_val = jerry_value_to_string (args_p[arg_index]);
+    }
 
     if (jerry_value_is_error (str_val))
     {

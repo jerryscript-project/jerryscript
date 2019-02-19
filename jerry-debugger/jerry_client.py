@@ -22,7 +22,7 @@ import socket
 import sys
 import logging
 import time
-import jerry_client_ws
+import jerry_client_main
 
 def write(string):
     print(string, end='')
@@ -248,9 +248,9 @@ def src_check_args(args):
 
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def main():
-    args = jerry_client_ws.arguments_parse()
+    args = jerry_client_main.arguments_parse()
 
-    debugger = jerry_client_ws.JerryDebugger(args.address)
+    debugger = jerry_client_main.JerryDebugger(args.address)
     debugger.non_interactive = args.non_interactive
 
     logging.debug("Connected to JerryScript on %d port", debugger.port)

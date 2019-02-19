@@ -19,9 +19,9 @@ import argparse
 import logging
 import re
 import select
-import socket
 import struct
 import sys
+from jerry_client_websocket import WebSocket
 
 # Expected debugger protocol version.
 JERRY_DEBUGGER_VERSION = 8
@@ -100,10 +100,6 @@ JERRY_DEBUGGER_EVAL = 17
 JERRY_DEBUGGER_EVAL_PART = 18
 JERRY_DEBUGGER_GET_SCOPE_CHAIN = 19
 JERRY_DEBUGGER_GET_SCOPE_VARIABLES = 20
-
-MAX_BUFFER_SIZE = 128
-WEBSOCKET_BINARY_FRAME = 2
-WEBSOCKET_FIN_BIT = 0x80
 
 JERRY_DEBUGGER_SCOPE_WITH = 1
 JERRY_DEBUGGER_SCOPE_LOCAL = 2
@@ -278,7 +274,6 @@ class JerryDebugger(object):
 
         print("Connecting to: %s:%s" % (self.host, self.port))
 
-        self.message_data = b""
         self.prompt = False
         self.function_list = {}
         self.source = ''
@@ -303,62 +298,27 @@ class JerryDebugger(object):
         self.nocolor = ''
         self.src_offset = 0
         self.src_offset_diff = 0
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect((self.host, self.port))
         self.non_interactive = False
         self.current_out = b""
         self.current_log = b""
 
-        self.send_message(b"GET /jerry-debugger HTTP/1.1\r\n" +
-                          b"Upgrade: websocket\r\n" +
-                          b"Connection: Upgrade\r\n" +
-                          b"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n")
-        result = b""
-        expected = (b"HTTP/1.1 101 Switching Protocols\r\n" +
-                    b"Upgrade: websocket\r\n" +
-                    b"Connection: Upgrade\r\n" +
-                    b"Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n")
+        self.channel = WebSocket(address=(self.host, self.port))
 
-        len_expected = len(expected)
-
-        while len(result) < len_expected:
-            result += self.client_socket.recv(1024)
-
-        len_result = len(result)
-
-        if result[0:len_expected] != expected:
-            raise Exception("Unexpected handshake")
-
-        if len_result > len_expected:
-            result = result[len_expected:]
-        else:
-            result = b""
-
-        len_expected = 10
-        # Network configurations, which has the following struct:
-        # header [2] - opcode[1], size[1]
+        config_size = 8
+        # The server will send the configuration message after connection established
         # type [1]
         # configuration [1]
         # version [4]
         # max_message_size [1]
         # cpointer_size [1]
+        result = self.channel.connect(config_size)
 
-        while len(result) < len_expected:
-            result += self.client_socket.recv(1024)
-
-        len_result = len(result)
-
-        expected = struct.pack("BBB",
-                               WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                               8,
-                               JERRY_DEBUGGER_CONFIGURATION)
-
-        if result[0:3] != expected:
+        if len(result) != config_size or ord(result[0]) != JERRY_DEBUGGER_CONFIGURATION:
             raise Exception("Unexpected configuration")
 
-        self.little_endian = ord(result[3]) & JERRY_DEBUGGER_LITTLE_ENDIAN
-        self.max_message_size = ord(result[8])
-        self.cp_size = ord(result[9])
+        self.little_endian = ord(result[1]) & JERRY_DEBUGGER_LITTLE_ENDIAN
+        self.max_message_size = ord(result[6])
+        self.cp_size = ord(result[7])
 
         if self.little_endian:
             self.byte_order = "<"
@@ -374,18 +334,15 @@ class JerryDebugger(object):
 
         self.idx_format = "I"
 
-        self.version = struct.unpack(self.byte_order + self.idx_format, result[4:8])[0]
+        self.version = struct.unpack(self.byte_order + self.idx_format, result[2:6])[0]
         if self.version != JERRY_DEBUGGER_VERSION:
             raise Exception("Incorrect debugger version from target: %d expected: %d" %
                             (self.version, JERRY_DEBUGGER_VERSION))
 
         logging.debug("Compressed pointer size: %d", self.cp_size)
 
-        if len_result > len_expected:
-            self.message_data = result[len_expected:]
-
     def __del__(self):
-        self.client_socket.close()
+        self.channel.close()
 
     def _exec_command(self, command_id):
         self.send_command(command_id)
@@ -515,15 +472,16 @@ class JerryDebugger(object):
                 return "Error: Positive integer number expected, %s\n" % (val_errno)
 
         self.frame_index = min_depth
-        message = struct.pack(self.byte_order + "BBIB" + self.idx_format + self.idx_format + "B",
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 4 + 4 + 1,
-                              0,
+
+        message = struct.pack(self.byte_order + "BB" + self.idx_format + self.idx_format + "B",
+                              1 + 4 + 4 + 1,
                               JERRY_DEBUGGER_GET_BACKTRACE,
                               min_depth,
                               max_depth,
                               get_total)
-        self.send_message(message)
+
+        self.channel.send_message(self.byte_order, message)
+
         self.prompt = False
         return ""
 
@@ -539,13 +497,13 @@ class JerryDebugger(object):
             except ValueError as val_errno:
                 return "Error: Non negative integer number expected, %s\n" % (val_errno)
 
-        message = struct.pack(self.byte_order + "BBIB" + self.idx_format,
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 4,
-                              0,
+        message = struct.pack(self.byte_order + "BB" + self.idx_format,
+                              1 + 4,
                               JERRY_DEBUGGER_GET_SCOPE_VARIABLES,
                               index)
-        self.send_message(message)
+
+        self.channel.send_message(self.byte_order, message)
+
         self.prompt = False
         return ""
 
@@ -605,18 +563,16 @@ class JerryDebugger(object):
 
         max_fragment = min(self.max_message_size - message_header, size)
 
-        message = struct.pack(self.byte_order + "BBIBI",
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + max_fragment + message_header,
-                              0,
+        message = struct.pack(self.byte_order + "BBI",
+                              max_fragment + message_header,
                               message_type,
                               size)
 
         if size == max_fragment:
-            self.send_message(message + args)
+            self.channel.send_message(self.byte_order, message + args)
             return
 
-        self.send_message(message + args[0:max_fragment])
+        self.channel.send_message(self.byte_order, message + args[0:max_fragment])
         offset = max_fragment
 
         if message_type == JERRY_DEBUGGER_EVAL:
@@ -631,15 +587,14 @@ class JerryDebugger(object):
         while offset < size:
             next_fragment = min(max_fragment, size - offset)
 
-            message = struct.pack(self.byte_order + "BBIB",
-                                  WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                                  WEBSOCKET_FIN_BIT + next_fragment + message_header,
-                                  0,
+            message = struct.pack(self.byte_order + "BB",
+                                  next_fragment + message_header,
                                   message_type)
 
             prev_offset = offset
             offset += next_fragment
-            self.send_message(message + args[prev_offset:offset])
+
+            self.channel.send_message(self.byte_order, message + args[prev_offset:offset])
 
     def delete_active(self):
         for i in self.active_breakpoint_list.values():
@@ -663,50 +618,40 @@ class JerryDebugger(object):
         return False
 
     def send_breakpoint(self, breakpoint):
-        message = struct.pack(self.byte_order + "BBIBB" + self.cp_format + self.idx_format,
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 1 + self.cp_size + 4,
-                              0,
+        message = struct.pack(self.byte_order + "BBB" + self.cp_format + self.idx_format,
+                              1 + 1 + self.cp_size + 4,
                               JERRY_DEBUGGER_UPDATE_BREAKPOINT,
                               int(breakpoint.active_index >= 0),
                               breakpoint.function.byte_code_cp,
                               breakpoint.offset)
-        self.send_message(message)
+        self.channel.send_message(self.byte_order, message)
 
     def send_bytecode_cp(self, byte_code_cp):
-        message = struct.pack(self.byte_order + "BBIB" + self.cp_format,
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + self.cp_size,
-                              0,
+        message = struct.pack(self.byte_order + "BB" + self.cp_format,
+                              1 + self.cp_size,
                               JERRY_DEBUGGER_FREE_BYTE_CODE_CP,
                               byte_code_cp)
-        self.send_message(message)
+        self.channel.send_message(self.byte_order, message)
 
     def send_command(self, command):
-        message = struct.pack(self.byte_order + "BBIB",
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1,
-                              0,
+        message = struct.pack(self.byte_order + "BB",
+                              1,
                               command)
-        self.send_message(message)
+        self.channel.send_message(self.byte_order, message)
 
     def send_exception_config(self, enable):
-        message = struct.pack(self.byte_order + "BBIBB",
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 1,
-                              0,
+        message = struct.pack(self.byte_order + "BBB",
+                              1 + 1,
                               JERRY_DEBUGGER_EXCEPTION_CONFIG,
                               enable)
-        self.send_message(message)
+        self.channel.send_message(self.byte_order, message)
 
     def send_parser_config(self, enable):
-        message = struct.pack(self.byte_order + "BBIBB",
-                              WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT,
-                              WEBSOCKET_FIN_BIT + 1 + 1,
-                              0,
+        message = struct.pack(self.byte_order + "BBB",
+                              1 + 1,
                               JERRY_DEBUGGER_PARSER_CONFIG,
                               enable)
-        self.send_message(message)
+        self.channel.send_message(self.byte_order, message)
 
     def set_colors(self):
         self.nocolor = '\033[0m'
@@ -716,46 +661,6 @@ class JerryDebugger(object):
         self.green_bg = '\033[42m\033[30m'
         self.yellow_bg = '\033[43m\033[30m'
         self.blue = '\033[94m'
-
-    def send_message(self, message):
-        size = len(message)
-        while size > 0:
-            bytes_send = self.client_socket.send(message)
-            if bytes_send < size:
-                message = message[bytes_send:]
-            size -= bytes_send
-
-
-    def get_message(self, blocking):
-        # Connection was closed
-        if self.message_data is None:
-            return None
-
-        while True:
-            if len(self.message_data) >= 2:
-                if ord(self.message_data[0]) != WEBSOCKET_BINARY_FRAME | WEBSOCKET_FIN_BIT:
-                    raise Exception("Unexpected data frame")
-
-                size = ord(self.message_data[1])
-                if size == 0 or size >= 126:
-                    raise Exception("Unexpected data frame")
-
-                if len(self.message_data) >= size + 2:
-                    result = self.message_data[0:size + 2]
-                    self.message_data = self.message_data[size + 2:]
-                    return result
-
-            if not blocking:
-                select_result = select.select([self.client_socket], [], [], 0)[0]
-                if self.client_socket not in select_result:
-                    return b''
-
-            data = self.client_socket.recv(MAX_BUFFER_SIZE)
-
-            if not data:
-                self.message_data = None
-                return None
-            self.message_data += data
 
     def store_client_sources(self, args):
         self.client_sources = args
@@ -783,7 +688,7 @@ class JerryDebugger(object):
         result = ""
 
         while True:
-            data = self.get_message(False)
+            data = self.channel.get_message(False)
             if not self.non_interactive:
                 if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
                     sys.stdin.readline()
@@ -796,8 +701,8 @@ class JerryDebugger(object):
             if not data:  # Break the while loop if there is no more data.
                 return DebuggerAction(DebuggerAction.END, "")
 
-            buffer_type = ord(data[2])
-            buffer_size = ord(data[1]) - 1
+            buffer_type = ord(data[0])
+            buffer_size = len(data) -1
 
             logging.debug("Main buffer type: %d, message size: %d", buffer_type, buffer_size)
 
@@ -822,7 +727,7 @@ class JerryDebugger(object):
                 self._release_function(data)
 
             elif buffer_type in [JERRY_DEBUGGER_BREAKPOINT_HIT, JERRY_DEBUGGER_EXCEPTION_HIT]:
-                breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format, data[3:])
+                breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format, data[1:])
 
                 breakpoint = self._get_breakpoint(breakpoint_data)
                 self.last_breakpoint_hit = breakpoint[0]
@@ -850,20 +755,20 @@ class JerryDebugger(object):
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR:
-                self.exception_string += data[3:]
+                self.exception_string += data[1:]
 
             elif buffer_type == JERRY_DEBUGGER_EXCEPTION_STR_END:
-                self.exception_string += data[3:]
+                self.exception_string += data[1:]
 
             elif buffer_type == JERRY_DEBUGGER_BACKTRACE_TOTAL:
-                total = struct.unpack(self.byte_order + self.idx_format, data[3:])[0]
+                total = struct.unpack(self.byte_order + self.idx_format, data[1:])[0]
                 result += "Total number of frames: %d\n" % (total)
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type in [JERRY_DEBUGGER_BACKTRACE, JERRY_DEBUGGER_BACKTRACE_END]:
                 frame_index = self.frame_index
 
-                buffer_pos = 3
+                buffer_pos = 1
                 while buffer_size > 0:
                     breakpoint_data = struct.unpack(self.byte_order + self.cp_format + self.idx_format,
                                                     data[buffer_pos: buffer_pos + self.cp_size + 4])
@@ -894,7 +799,7 @@ class JerryDebugger(object):
             elif buffer_type == JERRY_DEBUGGER_MEMSTATS_RECEIVE:
 
                 memory_stats = struct.unpack(self.byte_order + self.idx_format * 5,
-                                             data[3: 3 + 4 * 5])
+                                             data[1: 1 + 4 * 5])
 
                 result += "Allocated bytes: %s\n" % memory_stats[0]
                 result += "Byte code bytes: %s\n" % memory_stats[1]
@@ -909,7 +814,7 @@ class JerryDebugger(object):
                 self.send_client_source()
 
             elif buffer_type in [JERRY_DEBUGGER_SCOPE_CHAIN, JERRY_DEBUGGER_SCOPE_CHAIN_END]:
-                self.scopes = data[3:]
+                self.scopes = data[1:]
 
                 if buffer_type == JERRY_DEBUGGER_SCOPE_CHAIN_END:
                     result = self.process_scopes()
@@ -920,7 +825,7 @@ class JerryDebugger(object):
                 return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type in [JERRY_DEBUGGER_SCOPE_VARIABLES, JERRY_DEBUGGER_SCOPE_VARIABLES_END]:
-                self.scope_vars += "".join(data[3:])
+                self.scope_vars += "".join(data[1:])
 
                 if buffer_type == JERRY_DEBUGGER_SCOPE_VARIABLES_END:
                     result = self.process_scope_variables()
@@ -988,8 +893,8 @@ class JerryDebugger(object):
             if data is None:
                 return "Error: connection lost during source code receiving"
 
-            buffer_type = ord(data[2])
-            buffer_size = ord(data[1]) - 1
+            buffer_type = ord(data[0])
+            buffer_size = len(data) - 1
 
             logging.debug("Parser buffer type: %d, message size: %d", buffer_type, buffer_size)
 
@@ -998,19 +903,19 @@ class JerryDebugger(object):
                 return ""
 
             elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE, JERRY_DEBUGGER_SOURCE_CODE_END]:
-                source_code += data[3:]
+                source_code += data[1:]
 
             elif buffer_type in [JERRY_DEBUGGER_SOURCE_CODE_NAME, JERRY_DEBUGGER_SOURCE_CODE_NAME_END]:
-                source_code_name += data[3:]
+                source_code_name += data[1:]
 
             elif buffer_type in [JERRY_DEBUGGER_FUNCTION_NAME, JERRY_DEBUGGER_FUNCTION_NAME_END]:
-                function_name += data[3:]
+                function_name += data[1:]
 
             elif buffer_type == JERRY_DEBUGGER_PARSE_FUNCTION:
                 logging.debug("Source name: %s, function name: %s", source_code_name, function_name)
 
                 position = struct.unpack(self.byte_order + self.idx_format + self.idx_format,
-                                         data[3: 3 + 4 + 4])
+                                         data[1: 1 + 4 + 4])
 
                 stack.append({"source": source_code,
                               "source_name": source_code_name,
@@ -1028,7 +933,7 @@ class JerryDebugger(object):
 
                 logging.debug("Breakpoint %s received", name)
 
-                buffer_pos = 3
+                buffer_pos = 1
                 while buffer_size > 0:
                     line = struct.unpack(self.byte_order + self.idx_format,
                                          data[buffer_pos: buffer_pos + 4])
@@ -1038,7 +943,7 @@ class JerryDebugger(object):
 
             elif buffer_type == JERRY_DEBUGGER_BYTE_CODE_CP:
                 byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
-                                             data[3: 3 + self.cp_size])[0]
+                                             data[1: 1 + self.cp_size])[0]
 
                 logging.debug("Byte code cptr received: {0x%x}", byte_code_cp)
 
@@ -1068,7 +973,7 @@ class JerryDebugger(object):
             elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
                 # Redefined functions are dropped during parsing.
                 byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
-                                             data[3: 3 + self.cp_size])[0]
+                                             data[1: 1 + self.cp_size])[0]
 
                 if byte_code_cp in new_function_list:
                     del new_function_list[byte_code_cp]
@@ -1084,7 +989,7 @@ class JerryDebugger(object):
                 logging.error("Parser error!")
                 raise Exception("Unexpected message")
 
-            data = self.get_message(True)
+            data = self.channel.get_message(True)
 
         # Copy the ready list to the global storage.
         self.function_list.update(new_function_list)
@@ -1131,7 +1036,7 @@ class JerryDebugger(object):
 
     def _release_function(self, data):
         byte_code_cp = struct.unpack(self.byte_order + self.cp_format,
-                                     data[3: 3 + self.cp_size])[0]
+                                     data[1: 1 + self.cp_size])[0]
 
         function = self.function_list[byte_code_cp]
 
@@ -1234,13 +1139,13 @@ class JerryDebugger(object):
             if buffer_type in [JERRY_DEBUGGER_EVAL_RESULT_END,
                                JERRY_DEBUGGER_OUTPUT_RESULT_END]:
                 subtype = ord(data[-1])
-                message += data[3:-1]
+                message += data[1:-1]
                 break
             else:
-                message += data[3:]
+                message += data[1:]
 
-            data = self.get_message(True)
-            buffer_type = ord(data[2])
+            data = self.channel.get_message(True)
+            buffer_type = ord(data[0])
             # Checks if the next frame would be an invalid data frame.
             # If it is not the message type, or the end type of it, an exception is thrown.
             if buffer_type not in [msg_type, msg_type + 1]:

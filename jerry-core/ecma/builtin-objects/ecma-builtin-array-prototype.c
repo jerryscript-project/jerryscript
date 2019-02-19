@@ -579,7 +579,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
       ECMA_FINALIZE (put_value);
     }
     /* 6.j */
-    else if (lower_exist && !upper_exist)
+    else if (lower_exist)
     {
       ECMA_TRY_CATCH (del_value, ecma_op_object_delete (obj_p, lower_str_p, true), ret_value);
       ECMA_TRY_CATCH (put_value, ecma_op_object_put (obj_p, upper_str_p, lower_value, true), ret_value);
@@ -1224,8 +1224,9 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
       }
     }
     /* 13. */
-    else if (item_count > delete_count)
+    else
     {
+      JERRY_ASSERT (item_count > delete_count);
       /* 13.b */
       for (k = len - delete_count; k > start  && ecma_is_value_empty (ret_value); k--)
       {

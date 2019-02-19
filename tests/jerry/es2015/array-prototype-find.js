@@ -135,3 +135,14 @@ try {
 
 // Checking behavior when the there are more than 2 arguments
 assert (array.find (function (e) { return e < 2 }, {}, 8, 4, 5, 6, 6) === 1);
+
+function func (element) {
+  return element > 8;
+}
+
+/* ES v6.0 22.1.3.8.8.c
+   Checking behavior when the first element deletes the second */
+function f() { delete arr[1]; };
+var arr = [0, 1, 2, 3];
+Object.defineProperty(arr, '0', { 'get' : f });
+Array.prototype.find.call(arr, func);

@@ -175,3 +175,187 @@ try {
   assert (e.message === "foo");
   assert (e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.12.5.
+   Checking behavior when the first argument of the function is an object, which throws error */
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function() { throw new ReferenceError("1"); } });
+  [1, 2].splice(o);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "1");
+}
+
+/* ES v5.1 15.4.4.12.7.
+   Checking behavior when the second argument of the function is an object, which throws error */
+try {
+  var o = {};
+  Object.defineProperty(o, 'toString', { 'get' : function() { throw new ReferenceError("2"); } });
+  [1, 2].splice(1, o);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "2");
+}
+
+/* ES v5.1 15.4.4.12.9.b
+   Checking behavior when the first element throws error */
+try {
+  var a = [1, 5, 6, 7, 8, 5];
+  Object.defineProperty(a, '0', { 'get' : function() { throw new ReferenceError("foo0"); } });
+  Array.prototype.splice.call(a, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "foo0");
+}
+
+/* ES v5.1 15.4.4.12.12.b.iii.
+   Checking behavior when an element of the array throws error */
+function f0() { throw new TypeError("4"); };
+
+try {
+  obj = {get: f0, valueOf : f0, toString: f0};
+  arr = [1, 2, obj, 4, 5];
+  Object.defineProperty(arr, '4', { 'get' : f0 });
+  arr.splice(1, 3, obj);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+  assert(e.message == "4");
+}
+
+/* ES v5.1 15.4.4.12 12.b.iv.
+   Checking behavior when a modified object is an element of the array */
+function f() {
+  delete arr[3];
+  arr.length = 13;
+  Object.defineProperty(arr, '5', function() { });
+};
+
+try {
+  obj = {get: f, valueOf : f, toString: f};
+  arr = [1, 2, obj, 4, 5];
+  Object.defineProperty(arr, '2',{ 'get' : f } );
+  for(var i = 0; i < arr.length; i++) {
+    var a = arr[i];
+  }
+  arr.splice(1, 4, obj);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.12.b.v.
+   Checking behavior when elements are getting deleted by an element which only has a get function */
+function f1() {
+  for(var i = 0; i < arr.length; i++) {
+    delete arr[i];
+  }
+};
+
+try{
+  arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  delete arr[2];
+  Object.defineProperty(arr, '2', { 'get' : f1 });
+  arr.splice(1, 7, 5);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.12.d.i.
+   Checking behavior when a modified object is an element of the array and deletes the elements */
+function f2() {
+  for(var i = 0; i < arr.length; i++) {
+    delete arr[i];
+  }
+};
+
+try {
+  obj = {get: f2, valueOf : f2, toString: f2 };
+  arr = [1, 2, obj, 4, 5];
+  for(var i = 0; i < 6; i++) {
+    Object.defineProperty(arr, i, { 'get' : f2 });
+  }
+  arr.splice(1, 3, obj);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.13.b.iii.
+   Checking behavior when a yet non existing element will throw an error */
+function f3() { throw new TypeError("6");};
+
+try {
+  arr = [1, 2, 4, 5];
+  Object.defineProperty(arr, '4',{ 'get' : f3 });
+  arr.splice(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+  assert(e.message == "6");
+}
+
+/* ES v5.1 15.4.4.12.13.b.iv.2.
+   Checking behavior when the last element gets deleted */
+function f4() { delete arr[23]; };
+
+try {
+  arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+  delete arr[23];
+  Object.defineProperty(arr, '23', { 'get' : f4 });
+  arr.splice(1, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.13.b.v.1.
+   Checking behavior when the last element throws error */
+function f5() {
+  for(var i = 0; i < arr.length; i++) {
+    delete arr[i];
+  }
+};
+
+try {
+  arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+  delete arr[23];
+  Object.defineProperty(arr, '23', { 'get' : f5 });
+  arr.splice(1, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.15.b.
+   Checking behavior when the issue is the same as above, but splice has more arguments */
+function f6() {
+  for(var i = 0; i < arr.length; i++) {
+    delete arr[i];
+  }
+};
+
+try {
+  arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  delete arr[2];
+  Object.defineProperty(arr, '2', { 'get' : f6 });
+  arr.splice(1, 7, 5, 5, 5, 5);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.12.16.
+   Checking behavior when the array is empty, large, and not writable */
+try {
+  arr = [];
+  Object.defineProperty(arr, 'length', { value : 999, writable: false });
+  arr.splice(1, 2, 4, 5);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

@@ -18,6 +18,11 @@
 #include "lit-strings.h"
 
 /**
+ * Maximum number of external magic strings that can be registered.
+ */
+#define LIT_EXTERNAL_MAGIC_STRING_LIMIT (UINT32_MAX / 2)
+
+/**
  * Get number of external magic strings
  *
  * @return number of the strings, if there were registered,
@@ -35,7 +40,7 @@ lit_get_magic_string_ex_count (void)
  * @return pointer to zero-terminated magic string
  */
 const lit_utf8_byte_t *
-lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
+lit_get_magic_string_utf8 (uint32_t id) /**< magic string id */
 {
   static const lit_utf8_byte_t * const lit_magic_strings[] JERRY_CONST_DATA =
   {
@@ -60,7 +65,7 @@ lit_get_magic_string_utf8 (lit_magic_string_id_t id) /**< magic string id */
  * @return size in bytes
  */
 lit_utf8_size_t
-lit_get_magic_string_size (lit_magic_string_id_t id) /**< magic string id */
+lit_get_magic_string_size (uint32_t id) /**< magic string id */
 {
   static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
   {
@@ -112,7 +117,7 @@ lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string s
  * @return pointer to zero-terminated magic string
  */
 const lit_utf8_byte_t *
-lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic string id */
+lit_get_magic_string_ex_utf8 (uint32_t id) /**< extern magic string id */
 {
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) && id < JERRY_CONTEXT (lit_magic_string_ex_count));
 
@@ -125,7 +130,7 @@ lit_get_magic_string_ex_utf8 (lit_magic_string_ex_id_t id) /**< extern magic str
  * @return size in bytes
  */
 lit_utf8_size_t
-lit_get_magic_string_ex_size (lit_magic_string_ex_id_t id) /**< external magic string id */
+lit_get_magic_string_ex_size (uint32_t id) /**< external magic string id */
 {
   return JERRY_CONTEXT (lit_magic_string_ex_sizes)[id];
 } /* lit_get_magic_string_ex_size */
@@ -146,6 +151,12 @@ lit_magic_strings_ex_set (const lit_utf8_byte_t * const *ex_str_items, /**< char
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_array) == NULL);
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_count) == 0);
   JERRY_ASSERT (JERRY_CONTEXT (lit_magic_string_ex_sizes) == NULL);
+
+  /* Limit the number of external magic strings */
+  if (count > LIT_EXTERNAL_MAGIC_STRING_LIMIT)
+  {
+    count = LIT_EXTERNAL_MAGIC_STRING_LIMIT;
+  }
 
   /* Set external magic strings information */
   JERRY_CONTEXT (lit_magic_string_ex_array) = ex_str_items;

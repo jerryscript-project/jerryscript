@@ -47,8 +47,7 @@ JERRY_STATIC_ASSERT ((ECMA_TYPE_DIRECT_STRING & 0x1) != 0,
 JERRY_STATIC_ASSERT (LIT_MAGIC_STRING__COUNT <= ECMA_DIRECT_STRING_MAX_IMM,
                      all_magic_strings_must_be_encoded_as_direct_string);
 
-JERRY_STATIC_ASSERT ((int) ECMA_DIRECT_STRING_UINT == (int) ECMA_STRING_CONTAINER_UINT32_IN_DESC
-                     && (int) ECMA_DIRECT_STRING_MAGIC_EX == (int) ECMA_STRING_CONTAINER_MAGIC_STRING_EX,
+JERRY_STATIC_ASSERT ((int) ECMA_DIRECT_STRING_UINT == (int) ECMA_STRING_CONTAINER_UINT32_IN_DESC,
                      ecma_direct_and_container_types_must_match);
 
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_NAME_TYPE_SHIFT > ECMA_VALUE_SHIFT,
@@ -135,18 +134,19 @@ ecma_string_get_chars_fast (const ecma_string_t *string_p, /**< ecma-string */
   {
     if (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC)
     {
-      lit_magic_string_id_t id = (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+      uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+
+      if (id >= LIT_MAGIC_STRING__COUNT)
+      {
+        id -= LIT_MAGIC_STRING__COUNT;
+
+        *size_p = lit_get_magic_string_ex_size (id);
+        return lit_get_magic_string_ex_utf8 (id);
+      }
 
       *size_p = lit_get_magic_string_size (id);
       return lit_get_magic_string_utf8 (id);
     }
-
-    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
-
-    lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
-
-    *size_p = lit_get_magic_string_ex_size (id);
-    return lit_get_magic_string_ex_utf8 (id);
   }
 
   JERRY_ASSERT (string_p->refs_and_container >= ECMA_STRING_REF_ONE);
@@ -184,9 +184,11 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 {
   JERRY_ASSERT (id < lit_get_magic_string_ex_count ());
 
-  if (JERRY_LIKELY (id <= ECMA_DIRECT_STRING_MAX_IMM))
+  uintptr_t string_id = (uintptr_t) (id + LIT_MAGIC_STRING__COUNT);
+
+  if (JERRY_LIKELY (string_id <= ECMA_DIRECT_STRING_MAX_IMM))
   {
-    return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC_EX, (uintptr_t) id);
+    return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_MAGIC, string_id);
   }
 
   ecma_string_t *string_desc_p = ecma_alloc_string ();
@@ -578,30 +580,33 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
     {
       case ECMA_DIRECT_STRING_MAGIC:
       {
-        lit_magic_string_id_t id = (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string1_p);
-        cesu8_string1_p = lit_get_magic_string_utf8 (id);
-        cesu8_string1_size = lit_get_magic_string_size (id);
-        cesu8_string1_length = cesu8_string1_size;
+        uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string1_p);
+
+        if (id >= LIT_MAGIC_STRING__COUNT)
+        {
+          id -= LIT_MAGIC_STRING__COUNT;
+          cesu8_string1_p = lit_get_magic_string_ex_utf8 (id);
+          cesu8_string1_size = lit_get_magic_string_ex_size (id);
+          cesu8_string1_length = lit_utf8_string_length (cesu8_string1_p, cesu8_string1_size);
+        }
+        else
+        {
+          cesu8_string1_p = lit_get_magic_string_utf8 (id);
+          cesu8_string1_size = lit_get_magic_string_size (id);
+          cesu8_string1_length = cesu8_string1_size;
+        }
+
         break;
       }
-      case ECMA_DIRECT_STRING_UINT:
+      default:
       {
+        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string1_p) == ECMA_DIRECT_STRING_UINT);
         cesu8_string1_size = ecma_uint32_to_utf8_string ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string1_p),
                                                          uint32_to_string_buffer,
                                                          ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
         cesu8_string1_p = uint32_to_string_buffer;
         cesu8_string1_length = cesu8_string1_size;
         string1_is_uint32 = true;
-        break;
-      }
-      default:
-      {
-        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string1_p) == ECMA_DIRECT_STRING_MAGIC_EX);
-
-        lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string1_p);
-        cesu8_string1_p = lit_get_magic_string_ex_utf8 (id);
-        cesu8_string1_size = lit_get_magic_string_ex_size (id);
-        cesu8_string1_length = lit_utf8_string_length (cesu8_string1_p, cesu8_string1_size);
         break;
       }
     }
@@ -791,29 +796,31 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
     {
       case ECMA_DIRECT_STRING_MAGIC:
       {
-        lit_magic_string_id_t id = (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string2_p);
-        cesu8_string2_p = lit_get_magic_string_utf8 (id);
-        cesu8_string2_size = lit_get_magic_string_size (id);
-        cesu8_string2_length = cesu8_string2_size;
+        uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string2_p);
+
+        if (id >= LIT_MAGIC_STRING__COUNT)
+        {
+          id -= LIT_MAGIC_STRING__COUNT;
+          cesu8_string2_p = lit_get_magic_string_ex_utf8 (id);
+          cesu8_string2_size = lit_get_magic_string_ex_size (id);
+          cesu8_string2_length = lit_utf8_string_length (cesu8_string2_p, cesu8_string2_size);
+        }
+        else
+        {
+          cesu8_string2_p = lit_get_magic_string_utf8 (id);
+          cesu8_string2_size = lit_get_magic_string_size (id);
+          cesu8_string2_length = cesu8_string2_size;
+        }
         break;
       }
-      case ECMA_DIRECT_STRING_UINT:
+      default:
       {
+        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string2_p) == ECMA_DIRECT_STRING_UINT);
         cesu8_string2_size = ecma_uint32_to_utf8_string ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string2_p),
                                                          uint32_to_string_buffer,
                                                          ECMA_MAX_CHARS_IN_STRINGIFIED_UINT32);
         cesu8_string2_p = uint32_to_string_buffer;
         cesu8_string2_length = cesu8_string2_size;
-        break;
-      }
-      default:
-      {
-        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string2_p) == ECMA_DIRECT_STRING_MAGIC_EX);
-
-        lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string2_p);
-        cesu8_string2_p = lit_get_magic_string_ex_utf8 (id);
-        cesu8_string2_size = lit_get_magic_string_ex_size (id);
-        cesu8_string2_length = lit_utf8_string_length (cesu8_string2_p, cesu8_string2_size);
         break;
       }
     }
@@ -1462,19 +1469,35 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
     {
       case ECMA_DIRECT_STRING_MAGIC:
       {
-        lit_magic_string_id_t id = (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+        uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
 
-        size = lit_get_magic_string_size (id);
-        length = size;
+        if (id >= LIT_MAGIC_STRING__COUNT)
+        {
+          id -= LIT_MAGIC_STRING__COUNT;
+          size = lit_get_magic_string_ex_size (id);
+          result_p = lit_get_magic_string_ex_utf8 (id);
+          length = 0;
 
-        result_p = lit_get_magic_string_utf8 (id);
+          if (JERRY_UNLIKELY (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
+          {
+            length = lit_utf8_string_length (result_p, size);
+          }
+        }
+        else
+        {
+          size = lit_get_magic_string_size (id);
+          length = size;
 
-        /* All magic strings must be ascii strings. */
-        JERRY_ASSERT (ECMA_STRING_IS_ASCII (result_p, size));
+          result_p = lit_get_magic_string_utf8 (id);
+
+          /* All magic strings must be ascii strings. */
+          JERRY_ASSERT (ECMA_STRING_IS_ASCII (result_p, size));
+        }
         break;
       }
-      case ECMA_DIRECT_STRING_UINT:
+      default:
       {
+        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_UINT);
         uint32_t uint32_number = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
         size = (lit_utf8_size_t) ecma_string_get_uint32_size (uint32_number);
 
@@ -1482,22 +1505,6 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
         length = ecma_uint32_to_utf8_string (uint32_number, (lit_utf8_byte_t *) result_p, size);
         JERRY_ASSERT (length == size);
         *flags_p |= ECMA_STRING_FLAG_MUST_BE_FREED;
-        break;
-      }
-      default:
-      {
-        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
-
-        lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
-
-        size = lit_get_magic_string_ex_size (id);
-        result_p = lit_get_magic_string_ex_utf8 (id);
-        length = 0;
-
-        if (JERRY_UNLIKELY (*flags_p & ECMA_STRING_FLAG_IS_ASCII))
-        {
-          length = lit_utf8_string_length (result_p, size);
-        }
         break;
       }
     }
@@ -1672,10 +1679,6 @@ ecma_string_get_property_name_hash (ecma_property_t property, /**< property name
     {
       ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, prop_name_cp);
       return prop_name_p->hash;
-    }
-    case ECMA_DIRECT_STRING_MAGIC_EX:
-    {
-      return (lit_string_hash_t) (LIT_MAGIC_STRING__COUNT + prop_name_cp);
     }
     default:
     {
@@ -1984,22 +1987,23 @@ ecma_string_get_ascii_size (const ecma_string_t *string_p) /**< ecma-string */
     {
       case ECMA_DIRECT_STRING_MAGIC:
       {
-        lit_magic_string_id_t id = (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+        uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+
+        if (id >= LIT_MAGIC_STRING__COUNT)
+        {
+          return ECMA_STRING_NO_ASCII_SIZE;
+        }
 
         JERRY_ASSERT (ECMA_STRING_IS_ASCII (lit_get_magic_string_utf8 (id),
                                             lit_get_magic_string_size (id)));
+
         return lit_get_magic_string_size (id);
-      }
-      case ECMA_DIRECT_STRING_UINT:
-      {
-        uint32_t uint32_number = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
-        return ecma_string_get_uint32_size (uint32_number);
       }
       default:
       {
-        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
-
-        return ECMA_STRING_NO_ASCII_SIZE;
+        JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_UINT);
+        uint32_t uint32_number = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+        return ecma_string_get_uint32_size (uint32_number);
       }
     }
   }
@@ -2031,9 +2035,10 @@ ecma_string_get_length (const ecma_string_t *string_p) /**< ecma-string */
 
   if (ECMA_IS_DIRECT_STRING (string_p))
   {
-    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
+    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC);
+    JERRY_ASSERT ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) >= LIT_MAGIC_STRING__COUNT);
 
-    lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+    uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) - LIT_MAGIC_STRING__COUNT;
     return lit_utf8_string_length (lit_get_magic_string_ex_utf8 (id),
                                    lit_get_magic_string_ex_size (id));
   }
@@ -2075,9 +2080,10 @@ ecma_string_get_utf8_length (const ecma_string_t *string_p) /**< ecma-string */
 
   if (ECMA_IS_DIRECT_STRING (string_p))
   {
-    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
+    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC);
+    JERRY_ASSERT ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) >= LIT_MAGIC_STRING__COUNT);
 
-    lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+    uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) - LIT_MAGIC_STRING__COUNT;
     return lit_get_utf8_length_of_cesu8_string (lit_get_magic_string_ex_utf8 (id),
                                                 lit_get_magic_string_ex_size (id));
   }
@@ -2132,10 +2138,10 @@ ecma_string_get_size (const ecma_string_t *string_p) /**< ecma-string */
 
   if (ECMA_IS_DIRECT_STRING (string_p))
   {
-    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
+    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC);
+    JERRY_ASSERT ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) >= LIT_MAGIC_STRING__COUNT);
 
-    lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
-    return lit_get_magic_string_ex_size (id);
+    return lit_get_magic_string_ex_size ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) - LIT_MAGIC_STRING__COUNT);
   }
 
   switch (ECMA_STRING_GET_CONTAINER (string_p))
@@ -2174,9 +2180,10 @@ ecma_string_get_utf8_size (const ecma_string_t *string_p) /**< ecma-string */
 
   if (ECMA_IS_DIRECT_STRING (string_p))
   {
-    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX);
+    JERRY_ASSERT (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC);
+    JERRY_ASSERT ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) >= LIT_MAGIC_STRING__COUNT);
 
-    lit_magic_string_ex_id_t id = (lit_magic_string_ex_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+    uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p) - LIT_MAGIC_STRING__COUNT;
     return lit_get_utf8_size_of_cesu8_string (lit_get_magic_string_ex_utf8 (id),
                                               lit_get_magic_string_ex_size (id));
   }
@@ -2259,7 +2266,12 @@ ecma_get_string_magic (const ecma_string_t *string_p) /**< ecma-string */
 {
   if (ECMA_IS_DIRECT_STRING_WITH_TYPE (string_p, ECMA_DIRECT_STRING_MAGIC))
   {
-    return (lit_magic_string_id_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+    uint32_t id = (uint32_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
+
+    if (id < LIT_MAGIC_STRING__COUNT)
+    {
+      return (lit_magic_string_id_t) id;
+    }
   }
 
   return LIT_MAGIC_STRING__COUNT;
@@ -2278,14 +2290,7 @@ ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate h
     return (string_p->hash);
   }
 
-  lit_string_hash_t hash = (lit_string_hash_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
-
-  if (ECMA_GET_DIRECT_STRING_TYPE (string_p) == ECMA_DIRECT_STRING_MAGIC_EX)
-  {
-    hash = (lit_string_hash_t) (hash + LIT_MAGIC_STRING__COUNT);
-  }
-
-  return hash;
+  return (lit_string_hash_t) ECMA_GET_DIRECT_STRING_VALUE (string_p);
 } /* ecma_string_hash */
 
 /**

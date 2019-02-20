@@ -1272,7 +1272,6 @@ typedef enum
   ECMA_DIRECT_STRING_PTR = 0, /**< string is a string pointer, only used by property names */
   ECMA_DIRECT_STRING_MAGIC = 1, /**< string is a magic string */
   ECMA_DIRECT_STRING_UINT = 2, /**< string is an unsigned int */
-  ECMA_DIRECT_STRING_MAGIC_EX = 3, /**< string is an extended magic string */
 } ecma_direct_string_type_t;
 
 /**

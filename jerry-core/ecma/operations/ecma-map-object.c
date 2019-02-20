@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-map-object.h"
+#include "ecma-property-hashmap.h"
 #include "ecma-objects.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
@@ -29,8 +32,23 @@
  * @{
  */
 
-JERRY_STATIC_ASSERT (ECMA_MAP_OBJECT_ITEM_COUNT == 3,
-                     ecma_map_object_item_count_must_be_3);
+/**
+ * Creates an empty object for the map object's internal slot.
+ *
+ * Note: The created object is not registered to the GC.
+ *
+ * @return ecma value of the created object
+ */
+static ecma_value_t
+ecma_op_map_create_internal_object (void)
+{
+  ecma_object_t *internal_object_p = ecma_alloc_object ();
+  internal_object_p->type_flags_refs = (ECMA_OBJECT_TYPE_GENERAL | ECMA_OBJECT_FLAG_EXTENSIBLE | ECMA_OBJECT_REF_ONE);
+  internal_object_p->property_list_or_bound_object_cp = JMEM_CP_NULL;
+  internal_object_p->prototype_or_outer_reference_cp = JMEM_CP_NULL;
+
+  return ecma_make_object_value (internal_object_p);
+} /* ecma_op_map_create_internal_object */
 
 /**
  * Handle calling [[Construct]] of built-in map like objects
@@ -43,17 +61,14 @@ ecma_op_map_create (const ecma_value_t *arguments_list_p, /**< arguments list */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_MAP_PROTOTYPE);
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_MAP_PROTOTYPE),
                                                 sizeof (ecma_map_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_map_object_t *map_object_p = (ecma_map_object_t *) object_p;
-  map_object_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_MAP_UL;
-  map_object_p->header.u.class_prop.extra_info = 0;
-  map_object_p->header.u.class_prop.u.length = 0;
-  map_object_p->first_chunk_cp = ECMA_NULL_POINTER;
-  map_object_p->last_chunk_cp = ECMA_NULL_POINTER;
+  ecma_map_object_t *map_obj_p = (ecma_map_object_t *) object_p;
+  map_obj_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_MAP_UL;
+  map_obj_p->header.u.class_prop.u.value = ecma_op_map_create_internal_object ();
+  map_obj_p->size = 0;
 
   return ecma_make_object_value (object_p);
 } /* ecma_op_map_create */
@@ -87,6 +102,63 @@ ecma_op_map_get_object (ecma_value_t this_arg) /**< this argument */
 } /* ecma_op_map_get_object */
 
 /**
+ * Creates a property key for the internal object from the given argument
+ *
+ * Note:
+ *      This operation does not increase the reference counter of strings and symbols
+ *
+ * @return property key
+ */
+static ecma_string_t *
+ecma_op_map_to_key (ecma_value_t key_arg) /**< key argument */
+{
+  if (ecma_is_value_prop_name (key_arg))
+  {
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (key_arg);
+    ecma_ref_ecma_string (prop_name_p);
+    return prop_name_p;
+  }
+
+  if (ecma_is_value_object (key_arg))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (key_arg);
+    ecma_string_t *key_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_MAP_KEY);
+    ecma_property_t *property_p = ecma_find_named_property (obj_p, key_string_p);
+    ecma_string_t *object_key_string;
+
+    if (property_p == NULL)
+    {
+      object_key_string = ecma_new_map_key_string (key_arg);
+      ecma_property_value_t *value_p = ecma_create_named_data_property (obj_p,
+                                                                        key_string_p,
+                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                        NULL);
+      value_p->value = ecma_make_string_value (object_key_string);
+    }
+    else
+    {
+      object_key_string = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+
+    }
+
+    ecma_ref_ecma_string (object_key_string);
+    return object_key_string;
+  }
+
+  if (ecma_is_value_integer_number (key_arg))
+  {
+    ecma_integer_value_t integer = ecma_get_integer_from_value (key_arg);
+
+    if (JERRY_LIKELY (integer > 0 && integer <= ECMA_DIRECT_STRING_MAX_IMM))
+    {
+      return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_ECMA_INTEGER, (uintptr_t) integer);
+    }
+  }
+
+  return ecma_new_map_key_string (key_arg);
+} /* ecma_op_map_to_key */
+
+/**
  * Returns with the size of the map object.
  *
  * @return size of the map object as ecma-value.
@@ -95,105 +167,14 @@ ecma_value_t
 ecma_op_map_size (ecma_value_t this_arg) /**< this argument */
 {
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  return ecma_make_uint32_value (map_object_p->header.u.class_prop.u.length);
+  return ecma_make_uint32_value (map_object_p->size);
 } /* ecma_op_map_size */
-
-/**
- * Linear search for the value in the map storage
- *
- * @return pointer to value if key is found
- *         NULL otherwise
- */
-static ecma_value_t *
-ecma_builtin_map_search (jmem_cpointer_t first_chunk_cp, /**< first chunk */
-                         ecma_value_t key) /**< key to search */
-{
-  if (JERRY_UNLIKELY (first_chunk_cp == ECMA_NULL_POINTER))
-  {
-    return NULL;
-  }
-
-  ecma_map_object_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t,
-                                                                first_chunk_cp);
-
-  bool is_direct = true;
-  const ecma_string_t *key_str_p = NULL;
-  ecma_number_t key_float = 0;
-
-  if (ecma_is_value_non_direct_string (key))
-  {
-    key_str_p = ecma_get_string_from_value (key);
-    is_direct = false;
-  }
-  else if (ecma_is_value_float_number (key))
-  {
-    key_float = ecma_get_float_from_value (key);
-    is_direct = false;
-  }
-
-  ecma_value_t *item_p = chunk_p->items;
-  ecma_value_t last_key = ECMA_VALUE_ARRAY_HOLE;
-
-  while (true)
-  {
-    ecma_value_t item = *item_p++;
-
-    if (JERRY_UNLIKELY (item == ECMA_VALUE_ARRAY_HOLE))
-    {
-      JERRY_ASSERT (last_key == ECMA_VALUE_ARRAY_HOLE);
-      continue;
-    }
-
-    if (JERRY_UNLIKELY (ecma_is_value_pointer (item)))
-    {
-      item_p = (ecma_value_t *) ecma_get_pointer_from_value (item);
-
-      if (item_p == NULL)
-      {
-        JERRY_ASSERT (last_key == ECMA_VALUE_ARRAY_HOLE);
-        return NULL;
-      }
-
-      JERRY_ASSERT (!ecma_is_value_pointer (*item_p));
-      continue;
-    }
-
-    if (last_key == ECMA_VALUE_ARRAY_HOLE)
-    {
-      last_key = item;
-    }
-    else
-    {
-      if (JERRY_LIKELY (is_direct))
-      {
-        if (key == last_key)
-        {
-          return item_p - 1;
-        }
-      }
-      else if (key_str_p != NULL)
-      {
-        if (ecma_is_value_non_direct_string (last_key)
-            && ecma_compare_ecma_non_direct_strings (key_str_p, ecma_get_string_from_value (last_key)))
-        {
-          return item_p - 1;
-        }
-      }
-      else if (ecma_is_value_float_number (last_key)
-               && ecma_get_float_from_value (last_key) == key_float)
-      {
-        return item_p - 1;
-      }
-
-      last_key = ECMA_VALUE_ARRAY_HOLE;
-    }
-  }
-} /* ecma_builtin_map_search */
 
 /**
  * The generic map prototype object's 'get' routine
@@ -206,19 +187,31 @@ ecma_op_map_get (ecma_value_t this_arg, /**< this argument */
                  ecma_value_t key_arg) /**< key argument */
 {
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t *value_p = ecma_builtin_map_search (map_object_p->first_chunk_cp, key_arg);
-
-  if (value_p == NULL)
+  if (map_object_p->size == 0)
   {
     return ECMA_VALUE_UNDEFINED;
   }
 
-  return ecma_copy_value (*value_p);
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+
+  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+
+  ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+
+  ecma_deref_ecma_string (prop_name_p);
+
+  if (property_p == NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
 } /* ecma_op_map_get */
 
 /**
@@ -232,12 +225,26 @@ ecma_op_map_has (ecma_value_t this_arg, /**< this argument */
                  ecma_value_t key_arg) /**< key argument */
 {
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  return ecma_make_boolean_value (ecma_builtin_map_search (map_object_p->first_chunk_cp, key_arg) != NULL);
+  if (map_object_p->size == 0)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+
+  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+
+  ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+
+  ecma_deref_ecma_string (prop_name_p);
+
+  return ecma_make_boolean_value (property_p != NULL);
 } /* ecma_op_map_has */
 
 /**
@@ -252,79 +259,34 @@ ecma_op_map_set (ecma_value_t this_arg, /**< this argument */
                  ecma_value_t value_arg) /**< value argument */
 {
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t *value_p = ecma_builtin_map_search (map_object_p->first_chunk_cp, key_arg);
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  if (value_p == NULL)
+  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+
+  ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+
+  if (property_p == NULL)
   {
-    ecma_value_t *key_p = NULL;
-    ecma_map_object_chunk_t *last_chunk_p = ECMA_GET_POINTER (ecma_map_object_chunk_t,
-                                                              map_object_p->last_chunk_cp);
-
-    if (last_chunk_p != NULL)
-    {
-      if (last_chunk_p->items[2] == ECMA_VALUE_ARRAY_HOLE)
-      {
-        key_p = last_chunk_p->items + 2;
-
-        if (last_chunk_p->items[1] == ECMA_VALUE_ARRAY_HOLE)
-        {
-          key_p = last_chunk_p->items + 1;
-          value_p = last_chunk_p->items + 2;
-        }
-      }
-    }
-
-    if (key_p == NULL || value_p == NULL)
-    {
-      size_t size = sizeof (ecma_map_object_chunk_t);
-      ecma_map_object_chunk_t *new_chunk_p = (ecma_map_object_chunk_t *) jmem_heap_alloc_block (size);
-
-      new_chunk_p->items[ECMA_MAP_OBJECT_ITEM_COUNT] = ecma_make_pointer_value (NULL);
-
-      for (int i = 0; i < ECMA_MAP_OBJECT_ITEM_COUNT; i++)
-      {
-        new_chunk_p->items[i] = ECMA_VALUE_ARRAY_HOLE;
-      }
-
-      ECMA_SET_NON_NULL_POINTER (map_object_p->last_chunk_cp, new_chunk_p);
-
-      if (last_chunk_p == NULL)
-      {
-        map_object_p->first_chunk_cp = map_object_p->last_chunk_cp;
-      }
-      else
-      {
-        last_chunk_p->items[ECMA_MAP_OBJECT_ITEM_COUNT] = ecma_make_pointer_value (new_chunk_p);
-      }
-
-      if (key_p == NULL)
-      {
-        JERRY_ASSERT (value_p == NULL);
-        key_p = new_chunk_p->items + 0;
-        value_p = new_chunk_p->items + 1;
-      }
-      else
-      {
-        value_p = new_chunk_p->items + 0;
-      }
-    }
-
-    *key_p = ecma_copy_value_if_not_object (key_arg);
-    map_object_p->header.u.class_prop.u.length++;
+    ecma_property_value_t *value_p = ecma_create_named_data_property (internal_obj_p,
+                                                                      prop_name_p,
+                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                      NULL);
+    value_p->value = ecma_copy_value_if_not_object (value_arg);
+    map_object_p->size++;
   }
   else
   {
-    ecma_free_value_if_not_object (*value_p);
+    ecma_named_data_property_assign_value (internal_obj_p, ECMA_PROPERTY_VALUE_PTR (property_p), value_arg);
   }
 
-  *value_p = ecma_copy_value_if_not_object (value_arg);
-
-  ecma_ref_object (&map_object_p->header.object);
+  ecma_deref_ecma_string (prop_name_p);
+  ecma_ref_object ((ecma_object_t *) &map_object_p->header);
   return this_arg;
 } /* ecma_op_map_set */
 
@@ -334,42 +296,120 @@ ecma_op_map_set (ecma_value_t this_arg, /**< this argument */
 void
 ecma_op_map_clear_map (ecma_map_object_t *map_object_p) /**< map object */
 {
-  JERRY_ASSERT (ecma_get_object_type (&map_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-                && (map_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_MAP_UL));
+  ecma_object_t *object_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  jmem_cpointer_t first_chunk_cp = map_object_p->first_chunk_cp;
+  JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
 
-  if (JERRY_UNLIKELY (first_chunk_cp == ECMA_NULL_POINTER))
+  ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
+
+  if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
-    return;
+    ecma_property_hashmap_free (object_p);
+    prop_iter_p = ecma_get_property_list (object_p);
   }
 
-  ecma_map_object_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t,
-                                                                first_chunk_cp);
-
-  do
+  while (prop_iter_p != NULL)
   {
-    ecma_value_t *current_p = chunk_p->items;
-    ecma_value_t *last_p = current_p + ECMA_MAP_OBJECT_ITEM_COUNT;
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
-    do
+    /* Both cannot be deleted. */
+    JERRY_ASSERT (prop_iter_p->types[0] != ECMA_PROPERTY_TYPE_DELETED
+                  || prop_iter_p->types[1] != ECMA_PROPERTY_TYPE_DELETED);
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      ecma_free_value_if_not_object (*current_p++);
+      ecma_property_t *property_p = (ecma_property_t *) (prop_iter_p->types + i);
+      jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
+
+      if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
+      {
+        ecma_free_property (object_p, name_cp, property_p);
+      }
     }
-    while (current_p < last_p);
 
-    ecma_value_t next = *current_p;
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
 
-    jmem_heap_free_block (chunk_p, sizeof (ecma_map_object_chunk_t));
-
-    chunk_p = (ecma_map_object_chunk_t *) ecma_get_pointer_from_value (next);
+    ecma_dealloc_property_pair (prop_pair_p);
   }
-  while (chunk_p != NULL);
 
-  map_object_p->header.u.class_prop.u.length = 0;
-  map_object_p->first_chunk_cp = ECMA_NULL_POINTER;
-  map_object_p->last_chunk_cp = ECMA_NULL_POINTER;
+  ecma_dealloc_object (object_p);
 } /* ecma_op_map_clear_map */
+
+/**
+ * The generic map prototype object's 'forEach' routine
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
+                     ecma_value_t predicate, /**< callback function */
+                     ecma_value_t predicate_this_arg) /**< this argument for
+                                                       *   invoke predicate */
+{
+  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
+  if (map_object_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (!ecma_op_is_callable (predicate))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  JERRY_ASSERT (ecma_is_value_object (predicate));
+  ecma_object_t *func_object_p = ecma_get_object_from_value (predicate);
+
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+
+  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
+
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+
+  ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
+
+  while (ecma_value_p != NULL)
+  {
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+    ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+    JERRY_ASSERT (property_p != NULL);
+
+    ecma_value_t value = ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+    ecma_value_t key_arg;
+
+    if (ecma_prop_name_is_map_key (prop_name_p))
+    {
+      key_arg = prop_name_p->u.value;
+    }
+    else
+    {
+      key_arg = *ecma_value_p;
+    }
+
+    ecma_value_t call_args[] = { value, key_arg };
+
+    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 2);
+
+    ecma_free_value (value);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
+    {
+      ret_value = call_value;
+      break;
+    }
+
+    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+  }
+
+  ecma_free_values_collection (props_p, 0);
+
+  return ret_value;
+} /* ecma_op_map_foreach */
 
 /**
  * The Map prototype object's 'clear' routine
@@ -380,69 +420,20 @@ ecma_op_map_clear_map (ecma_map_object_t *map_object_p) /**< map object */
 ecma_value_t
 ecma_op_map_clear (ecma_value_t this_arg) /**< this argument */
 {
-  /* WeakMap does not have a clear method. */
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
   ecma_op_map_clear_map (map_object_p);
+
+  map_object_p->header.u.class_prop.u.value = ecma_op_map_create_internal_object ();
+  map_object_p->size = 0;
+
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_map_clear */
-
-/**
- * Deletes the current chunk if it is filled with ECMA_VALUE_ARRAY_HOLE.
- *
- * @return next chunk if the chunk is deleted, NULL otherwise
- */
-static ecma_map_object_chunk_t *
-ecma_op_map_delete_chunk (ecma_map_object_t *map_object_p, /**< map object */
-                          ecma_map_object_chunk_t *chunk_p, /**< current chunk */
-                          ecma_map_object_chunk_t *prev_chunk_p) /**< previous chunk */
-{
-  for (int i = 0; i < ECMA_MAP_OBJECT_ITEM_COUNT; i++)
-  {
-    JERRY_ASSERT (!ecma_is_value_pointer (chunk_p->items[i]));
-
-    if (chunk_p->items[i] != ECMA_VALUE_ARRAY_HOLE)
-    {
-      return NULL;
-    }
-  }
-
-  ecma_value_t next_chunk = chunk_p->items[ECMA_MAP_OBJECT_ITEM_COUNT];
-  ecma_map_object_chunk_t *next_chunk_p = (ecma_map_object_chunk_t *) ecma_get_pointer_from_value (next_chunk);
-
-  jmem_heap_free_block (chunk_p, sizeof (ecma_map_object_chunk_t));
-
-  if (prev_chunk_p != NULL)
-  {
-    prev_chunk_p->items[ECMA_MAP_OBJECT_ITEM_COUNT] = ecma_make_pointer_value (next_chunk_p);
-
-    if (next_chunk_p == NULL)
-    {
-      JERRY_ASSERT (map_object_p->first_chunk_cp != map_object_p->last_chunk_cp);
-      JERRY_ASSERT (ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t, map_object_p->last_chunk_cp) == chunk_p);
-
-      ECMA_SET_POINTER (map_object_p->last_chunk_cp, prev_chunk_p);
-    }
-    return next_chunk_p;
-  }
-
-  if (next_chunk_p == NULL)
-  {
-    JERRY_ASSERT (map_object_p->first_chunk_cp == map_object_p->last_chunk_cp);
-    JERRY_ASSERT (ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t, map_object_p->last_chunk_cp) == chunk_p);
-
-    map_object_p->first_chunk_cp = ECMA_NULL_POINTER;
-    map_object_p->last_chunk_cp = ECMA_NULL_POINTER;
-    return next_chunk_p;
-  }
-
-  ECMA_SET_POINTER (map_object_p->first_chunk_cp, next_chunk_p);
-  return next_chunk_p;
-} /* ecma_op_map_delete_chunk */
 
 /**
  * The generic map prototype object's 'delete' routine
@@ -455,123 +446,27 @@ ecma_op_map_delete (ecma_value_t this_arg, /**< this argument */
                     ecma_value_t key_arg) /**< key argument */
 {
   ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  if (JERRY_UNLIKELY (map_object_p->first_chunk_cp == ECMA_NULL_POINTER))
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+
+  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+
+  ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+
+  ecma_deref_ecma_string (prop_name_p);
+
+  if (property_p == NULL)
   {
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_map_object_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t,
-                                                                map_object_p->first_chunk_cp);
-
-  bool is_direct = true;
-  const ecma_string_t *key_str_p = NULL;
-  ecma_number_t key_float = 0;
-
-  if (ecma_is_value_non_direct_string (key_arg))
-  {
-    key_str_p = ecma_get_string_from_value (key_arg);
-    is_direct = false;
-  }
-  else if (ecma_is_value_float_number (key_arg))
-  {
-    key_float = ecma_get_float_from_value (key_arg);
-    is_direct = false;
-  }
-
-  ecma_map_object_chunk_t *prev_chunk_p = NULL;
-  ecma_value_t *item_p = chunk_p->items;
-  bool is_key = true;
-
-  while (true)
-  {
-    ecma_value_t item = *item_p++;
-
-    if (JERRY_UNLIKELY (item == ECMA_VALUE_ARRAY_HOLE))
-    {
-      JERRY_ASSERT (is_key);
-      continue;
-    }
-
-    if (JERRY_UNLIKELY (ecma_is_value_pointer (item)))
-    {
-      prev_chunk_p = chunk_p;
-      chunk_p = (ecma_map_object_chunk_t *) ecma_get_pointer_from_value (item);
-
-      if (chunk_p == NULL)
-      {
-        JERRY_ASSERT (is_key);
-        return ECMA_VALUE_FALSE;
-      }
-
-      item_p = chunk_p->items;
-
-      JERRY_ASSERT (!ecma_is_value_pointer (*item_p));
-      continue;
-    }
-
-    if (is_key)
-    {
-      if (JERRY_LIKELY (is_direct))
-      {
-        if (key_arg == item)
-        {
-          break;
-        }
-      }
-      else if (key_str_p != NULL)
-      {
-        if (ecma_is_value_non_direct_string (item)
-            && ecma_compare_ecma_non_direct_strings (key_str_p, ecma_get_string_from_value (item)))
-        {
-          break;
-        }
-      }
-      else if (ecma_is_value_float_number (item)
-               && ecma_get_float_from_value (item) == key_float)
-      {
-        break;
-      }
-    }
-
-    is_key = !is_key;
-  }
-
-  map_object_p->header.u.class_prop.u.length--;
-
-  item_p -= 1;
-  ecma_free_value_if_not_object (item_p[0]);
-  item_p[0] = ECMA_VALUE_ARRAY_HOLE;
-
-  if ((item_p - chunk_p->items) < ECMA_MAP_OBJECT_ITEM_COUNT - 1)
-  {
-    JERRY_ASSERT (!ecma_is_value_pointer (item_p[1]));
-
-    ecma_free_value_if_not_object (item_p[1]);
-    item_p[1] = ECMA_VALUE_ARRAY_HOLE;
-
-    ecma_op_map_delete_chunk (map_object_p, chunk_p, prev_chunk_p);
-    return ECMA_VALUE_TRUE;
-  }
-
-  ecma_map_object_chunk_t *next_chunk_p = ecma_op_map_delete_chunk (map_object_p, chunk_p, prev_chunk_p);
-
-  if (next_chunk_p == NULL)
-  {
-    prev_chunk_p = chunk_p;
-
-    ecma_value_t next_chunk = chunk_p->items[ECMA_MAP_OBJECT_ITEM_COUNT];
-    next_chunk_p = (ecma_map_object_chunk_t *) ecma_get_pointer_from_value (next_chunk);
-  }
-
-  ecma_free_value_if_not_object (next_chunk_p->items[0]);
-  next_chunk_p->items[0] = ECMA_VALUE_ARRAY_HOLE;
-
-  ecma_op_map_delete_chunk (map_object_p, next_chunk_p, prev_chunk_p);
+  ecma_delete_property (internal_obj_p, ECMA_PROPERTY_VALUE_PTR (property_p));
+  map_object_p->size--;
 
   return ECMA_VALUE_TRUE;
 } /* ecma_op_map_delete */

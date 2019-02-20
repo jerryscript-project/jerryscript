@@ -30,6 +30,7 @@
 ecma_value_t ecma_op_map_create (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 ecma_value_t ecma_op_map_size (ecma_value_t this_arg);
 ecma_value_t ecma_op_map_get (ecma_value_t this_arg, ecma_value_t key_arg);
+ecma_value_t ecma_op_map_foreach (ecma_value_t this_arg, ecma_value_t predicate, ecma_value_t predicate_this_arg);
 ecma_value_t ecma_op_map_has (ecma_value_t this_arg, ecma_value_t key_arg);
 ecma_value_t ecma_op_map_set (ecma_value_t this_arg, ecma_value_t key_arg, ecma_value_t value_arg);
 void ecma_op_map_clear_map (ecma_map_object_t *map_object_p);

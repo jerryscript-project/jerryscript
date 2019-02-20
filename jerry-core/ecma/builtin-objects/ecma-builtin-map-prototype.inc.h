@@ -40,6 +40,7 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_CLEAR, ecma_builtin_map_prototype_object_clear, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_DELETE, ecma_builtin_map_prototype_object_delete, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_map_prototype_object_foreach, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_GET, ecma_builtin_map_prototype_object_get, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_HAS, ecma_builtin_map_prototype_object_has, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_SET, ecma_builtin_map_prototype_object_set, 2, 2)

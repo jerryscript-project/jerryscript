@@ -39,6 +39,9 @@ typedef enum
 
 ecma_value_t ecma_op_check_object_coercible (ecma_value_t value);
 bool ecma_op_same_value (ecma_value_t x, ecma_value_t y);
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+bool ecma_op_same_value_zero (ecma_value_t x, ecma_value_t y);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 ecma_value_t ecma_op_to_primitive (ecma_value_t value, ecma_preferred_type_hint_t preferred_type);
 bool ecma_op_to_boolean (ecma_value_t value);
 ecma_value_t ecma_op_to_number (ecma_value_t value);

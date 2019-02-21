@@ -708,7 +708,7 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
 
   /* 9. targetBuffer */
   ecma_object_t *target_arraybuffer_p = ecma_typedarray_get_arraybuffer (target_typedarray_p);
-  lit_utf8_byte_t *target_buffer_p = ecma_typedarray_get_buffer (target_typedarray_p);
+  lit_utf8_byte_t *target_buffer_p = ecma_arraybuffer_get_buffer (target_arraybuffer_p);
 
   /* 11. targetLength */
   ecma_length_t target_length = ecma_typedarray_get_length (target_typedarray_p);
@@ -752,6 +752,12 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
   if ((int64_t) src_length_uint32 + target_offset_uint32 > target_length)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid range of index"));
+  }
+
+  /* Fast path first. If the source and target arrays are the same we do not need to copy anything. */
+  if (this_arg == arr_val)
+  {
+    return ECMA_VALUE_UNDEFINED;
   }
 
   /* 24.d, 25. srcByteIndex */

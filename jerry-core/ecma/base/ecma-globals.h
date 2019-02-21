@@ -1489,6 +1489,14 @@ typedef struct
 } ecma_lit_storage_item_t;
 
 #ifndef CONFIG_ECMA_LCACHE_DISABLE
+/**
+ * Container of an LCache entry identifier
+ */
+#ifdef JERRY_CPOINTER_32_BIT
+typedef uint64_t ecma_lcache_hash_entry_id_t;
+#else /* !JERRY_CPOINTER_32_BIT */
+typedef uint32_t ecma_lcache_hash_entry_id_t;
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Entry of LCache hash table
@@ -1498,11 +1506,8 @@ typedef struct
   /** Pointer to a property of the object */
   ecma_property_t *prop_p;
 
-  /** Compressed pointer to object (ECMA_NULL_POINTER marks record empty) */
-  jmem_cpointer_t object_cp;
-
-  /** Compressed pointer to property's name */
-  jmem_cpointer_t prop_name_cp;
+  /** Entry identifier in LCache */
+  ecma_lcache_hash_entry_id_t id;
 } ecma_lcache_hash_entry_t;
 
 /**

@@ -14,6 +14,7 @@
  */
 
 #include "ecma-array-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -478,10 +479,11 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
       break;
     }
 
-    ecma_value_t put_ret = ecma_op_object_put (ecma_get_object_from_value (value_array),
-                                               index_to_str_p,
-                                               undefined_val,
-                                               false);
+    ecma_value_t put_ret = ecma_builtin_helper_def_prop (ecma_get_object_from_value (value_array),
+                                                         index_to_str_p,
+                                                         undefined_val,
+                                                         ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                         false);
     ecma_deref_ecma_string (index_to_str_p);
 
     if (ECMA_IS_VALUE_ERROR (put_ret))

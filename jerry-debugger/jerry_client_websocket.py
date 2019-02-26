@@ -15,14 +15,13 @@
 # limitations under the License.
 
 import struct
-from jerry_client_tcp import Socket
 
 MAX_BUFFER_SIZE = 128
 WEBSOCKET_BINARY_FRAME = 2
 WEBSOCKET_FIN_BIT = 0x80
 
 class WebSocket(object):
-    def __init__(self, address, protocol=Socket()):
+    def __init__(self, address, protocol):
 
         self.data_buffer = b""
         self.protocol = protocol

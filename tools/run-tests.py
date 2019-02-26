@@ -326,21 +326,23 @@ def run_jerry_debugger_tests(options):
         if ret_build:
             break
 
-        for test_file in os.listdir(settings.DEBUGGER_TESTS_DIR):
-            if test_file.endswith(".cmd"):
-                test_case, _ = os.path.splitext(test_file)
-                test_case_path = os.path.join(settings.DEBUGGER_TESTS_DIR, test_case)
-                test_cmd = [
-                    settings.DEBUGGER_TEST_RUNNER_SCRIPT,
-                    get_binary_path(build_dir_path),
-                    settings.DEBUGGER_CLIENT_SCRIPT,
-                    os.path.relpath(test_case_path, settings.PROJECT_DIR)
-                ]
+        for channel in ["websocket", "rawpacket"]:
+            for test_file in os.listdir(settings.DEBUGGER_TESTS_DIR):
+                if test_file.endswith(".cmd"):
+                    test_case, _ = os.path.splitext(test_file)
+                    test_case_path = os.path.join(settings.DEBUGGER_TESTS_DIR, test_case)
+                    test_cmd = [
+                        settings.DEBUGGER_TEST_RUNNER_SCRIPT,
+                        get_binary_path(build_dir_path),
+                        channel,
+                        settings.DEBUGGER_CLIENT_SCRIPT,
+                        os.path.relpath(test_case_path, settings.PROJECT_DIR)
+                    ]
 
-                if job.test_args:
-                    test_cmd.extend(job.test_args)
+                    if job.test_args:
+                        test_cmd.extend(job.test_args)
 
-                ret_test |= run_check(test_cmd)
+                    ret_test |= run_check(test_cmd)
 
     return ret_build | ret_test
 

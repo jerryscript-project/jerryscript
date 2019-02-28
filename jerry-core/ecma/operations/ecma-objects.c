@@ -1829,11 +1829,17 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
 #ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE)
 #endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
+#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
+#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 #else /* JERRY_NDEBUG */
   JERRY_UNUSED (obj_p);

@@ -39,8 +39,8 @@ install-kconfig:
 
 # Fetch nuttx/{apps,nuttx} repositories.
 install-clone-nuttx:
-	git clone https://bitbucket.org/nuttx/apps.git ../apps -b nuttx-7.27
-	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.27
+	git clone https://bitbucket.org/nuttx/apps.git ../apps -b nuttx-7.28
+	git clone https://bitbucket.org/nuttx/nuttx.git ../nuttx -b nuttx-7.28
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-kconfig install-clone-nuttx

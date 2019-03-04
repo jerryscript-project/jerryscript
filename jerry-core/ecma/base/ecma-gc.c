@@ -372,6 +372,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
           case ECMA_PSEUDO_ARRAY_ITERATOR:
           {
+            ecma_object_t *iterated_obj_p = ECMA_GET_POINTER (ecma_object_t,
+                                                              ext_object_p->u.pseudo_array.u2.iterated_value_cp);
+
+            if (iterated_obj_p != NULL)
+            {
+              ecma_gc_set_object_visited (iterated_obj_p);
+            }
             break;
           }
 #endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */

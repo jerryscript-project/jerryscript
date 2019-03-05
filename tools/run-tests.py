@@ -160,6 +160,8 @@ JERRY_BUILDOPTIONS = [
             ['--regexp-recursion-limit=1000']),
     Options('buildoption_test-vm_recursion_limit',
             OPTIONS_VM_RECURSION_LIMIT),
+    Options('buildoption_test-single-source',
+            ['--cmake-param=-DENABLE_ALL_IN_ONE_SOURCE=ON']),
 ]
 
 def get_arguments():

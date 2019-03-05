@@ -14,13 +14,14 @@
  */
 
 #include "jerryscript-ext/handler.h"
+#include "jerryscript-port.h"
 #include "jerryscript-debugger.h"
 
 /**
  * Provide a 'print' implementation for scripts.
  *
  * The routine converts all of its arguments to strings and outputs them
- * char-by-char using jerryx_port_handler_print_char.
+ * char-by-char using jerry_port_print_char.
  *
  * The NUL character is output as "\u0000", other characters are output
  * bytewise.
@@ -30,7 +31,7 @@
  *      output. This allows more flexibility but also extends the core
  *      JerryScript engine port API. Applications that want to use
  *      `jerryx_handler_print` must ensure that their port implementation also
- *      provides `jerryx_port_handler_print_char`.
+ *      provides `jerry_port_print_char`.
  *
  * @return undefined - if all arguments could be converted to strings,
  *         error - otherwise.
@@ -103,13 +104,13 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
 
         if (chr != '\0')
         {
-          jerryx_port_handler_print_char (chr);
+          jerry_port_print_char (chr);
           continue;
         }
 
         for (jerry_size_t null_index = 0; null_str[null_index] != '\0'; null_index++)
         {
-          jerryx_port_handler_print_char (null_str[null_index]);
+          jerry_port_print_char (null_str[null_index]);
         }
       }
     }
@@ -120,7 +121,7 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
 
   if (args_cnt == 0 || jerry_value_is_error (ret_val))
   {
-    jerryx_port_handler_print_char ('\n');
+    jerry_port_print_char ('\n');
   }
 
   return ret_val;

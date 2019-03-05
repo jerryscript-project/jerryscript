@@ -180,6 +180,18 @@ struct jerry_context_t *jerry_port_get_current_context (void);
 void jerry_port_sleep (uint32_t sleep_time);
 
 /**
+ * Print a single character.
+ *
+ * Note:
+ *      This port function is here so the jerry-ext components would have
+ *      a common way to print out information.
+ *      If possible do not use from the jerry-core.
+ *
+ * @param c the character to print.
+ */
+void jerry_port_print_char (char c);
+
+/**
  * @}
  */
 

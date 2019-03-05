@@ -71,11 +71,11 @@ jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
 } /* jerry_port_get_local_time_zone_adjustment */
 
 /**
- * Provide the implementation of jerryx_port_handler_print_char.
+ * Provide the implementation of jerry_port_print_char.
  * Uses 'printf' to print a single character to standard output.
  */
 void
-jerryx_port_handler_print_char (char c) /**< the character to print */
+jerry_port_print_char (char c) /**< the character to print */
 {
   printf ("%c", c);
-} /* jerryx_port_handler_print_char */
+} /* jerry_port_print_char */

@@ -45,17 +45,6 @@ jerry_value_t jerryx_handler_gc (const jerry_value_t func_obj_val, const jerry_v
 jerry_value_t jerryx_handler_print (const jerry_value_t func_obj_val, const jerry_value_t this_p,
                                     const jerry_value_t args_p[], const jerry_length_t args_cnt);
 
-/*
- * Port API extension
- */
-
-/**
- * Print a single character.
- *
- * @param c the character to print.
- */
-void jerryx_port_handler_print_char (char c);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

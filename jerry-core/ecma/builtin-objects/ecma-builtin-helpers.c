@@ -78,8 +78,8 @@ ecma_builtin_helper_object_to_string_tag_helper (ecma_value_t tag_value) /**< st
   }
 
   /* Copy to buffer the #@@toStringTag# string */
-  buffer_ptr += ecma_string_copy_to_utf8_buffer (tag_str_p, buffer_ptr,
-                                                 (lit_utf8_size_t) ((str_buffer + buffer_size) - buffer_ptr));
+  buffer_ptr += ecma_string_copy_to_cesu8_buffer (tag_str_p, buffer_ptr,
+                                                  (lit_utf8_size_t) ((str_buffer + buffer_size) - buffer_ptr));
 
   JERRY_ASSERT (buffer_ptr <= str_buffer + buffer_size);
 

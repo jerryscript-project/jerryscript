@@ -79,7 +79,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
 
   if (ecma_is_value_object (value)
       || ecma_is_value_number (value)
-      || ecma_is_value_string (value)
+      || ecma_is_value_prop_name (value)
       || ecma_is_value_boolean (value))
   {
     /* 1.b, 1.c, 1.d */

@@ -601,7 +601,18 @@ parser_generate_initializers (parser_context_t *context_p, /**< context */
       }
     }
 
-    JERRY_ASSERT (argument_count == context_p->argument_count);
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+    if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+    {
+      JERRY_ASSERT ((argument_count - 1) == context_p->argument_count);
+    }
+    else
+    {
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+      JERRY_ASSERT (argument_count == context_p->argument_count);
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+    }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
   }
 
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
@@ -981,6 +992,13 @@ parse_print_literal (ecma_compiled_code_t *compiled_code_p, /**< compiled code *
     ident_end = args_p->ident_end;
     const_literal_end = args_p->const_literal_end;
   }
+
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_REST_PARAMETER)
+  {
+    argument_end++;
+  }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
 
   parser_list_iterator_init (literal_pool_p, &literal_iterator);
 

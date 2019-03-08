@@ -16,7 +16,7 @@
 #include "ecma-globals.h"
 #include "re-bytecode.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /** \addtogroup parser Parser
  * @{
@@ -443,4 +443,4 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */

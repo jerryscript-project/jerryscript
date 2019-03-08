@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_STRING_BUILTIN
+#if ENABLED (JERRY_BUILTIN_STRING)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -41,6 +41,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_char_code, NON_FIXED, 1)
 
-#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

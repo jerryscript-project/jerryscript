@@ -43,11 +43,11 @@ ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
                              bool is_treat_single_arg_as_length);
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
 ecma_value_t
 ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
                                             bool is_treat_single_arg_as_length, ecma_object_t *object_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
 ecma_value_t
 ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint32_t flags);

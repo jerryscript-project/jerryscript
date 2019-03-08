@@ -22,13 +22,13 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 #include "ecma-symbol-object.h"
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_STRING_BUILTIN
+#if ENABLED (JERRY_BUILTIN_STRING)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -130,13 +130,13 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   {
     ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   /* 2.a */
   else if (ecma_is_value_symbol (arguments_list_p[0]))
   {
     ret_value = ecma_get_symbol_descriptive_string (arguments_list_p[0]);
   }
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
   /* 2.b */
   else
   {
@@ -166,4 +166,4 @@ ecma_builtin_string_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */

@@ -39,12 +39,12 @@ typedef enum
   LEXER_LIT_TRUE,                /**< true (not a keyword!) */
   LEXER_LIT_FALSE,               /**< false (not a keyword!) */
   LEXER_LIT_NULL,                /**< null (not a keyword!) */
-#ifndef CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
+#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
   LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
-#endif /* !CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS */
-#ifndef CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
+#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
   LEXER_THREE_DOTS,              /**< ... (rest or spread operator) */
-#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER */
+#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and
@@ -121,9 +121,9 @@ typedef enum
   LEXER_SEMICOLON,               /**< ";" */
   LEXER_COLON,                   /**< ":" */
   LEXER_COMMA,                   /**< "," */
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
   LEXER_ARROW,                   /**< "=>" */
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
   LEXER_KEYW_BREAK,              /**< break */
   LEXER_KEYW_DO,                 /**< do */
@@ -154,29 +154,29 @@ typedef enum
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
 
-#ifdef CONFIG_DISABLE_ES2015
+#if !ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords
    * must form a group after all other keywords. */
 #define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_CLASS
-#endif /* CONFIG_DISABLE_ES2015 */
+#endif /* !ENABLED (JERRY_ES2015) */
   LEXER_KEYW_CLASS,              /**< class */
   LEXER_KEYW_EXTENDS,            /**< extends */
   LEXER_KEYW_SUPER,              /**< super */
   LEXER_KEYW_CONST,              /**< const */
   LEXER_KEYW_EXPORT,             /**< export */
   LEXER_KEYW_IMPORT,             /**< import */
-#ifndef CONFIG_DISABLE_ES2015
+#if ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords
    * must form a group after all other keywords.
    * Note:
    *      Tokens from LEXER_KEYW_CLASS to LEXER_KEYW_IMPORT
    *      are no longer future reserved words in ES2015. */
 #define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_ENUM
-#endif /* !CONFIG_DISABLE_ES2015 */
+#endif /* ENABLED (JERRY_ES2015) */
   LEXER_KEYW_ENUM,               /**< enum */
-#ifndef CONFIG_DISABLE_ES2015
+#if ENABLED (JERRY_ES2015)
   LEXER_KEYW_AWAIT,              /**< await */
-#endif /* !CONFIG_DISABLE_ES2015 */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Future strict reserved words: these keywords
    * must form a group after future reserved words. */
@@ -188,25 +188,25 @@ typedef enum
   LEXER_KEYW_PACKAGE,            /**< package */
   LEXER_KEYW_PROTECTED,          /**< protected */
 
-#ifndef CONFIG_DISABLE_ES2015
+#if ENABLED (JERRY_ES2015)
   /* Context dependent strict reserved words:
    * See also: ECMA-262 v6, 11.6.2.1 */
 #define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD LEXER_KEYW_STATIC
   LEXER_KEYW_STATIC,             /**< static */
-#else /* CONFIG_DISABLE_ES2015 */
+#else /* !ENABLED (JERRY_ES2015) */
   /* Context dependent strict reserved words:
    * See also: ECMA-262 v6, 11.6.2.1 */
 #define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD
-#endif /* !CONFIG_DISABLE_ES2015 */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Context dependent future strict reserved words:
    * See also: ECMA-262 v6, 11.6.2.1 */
 #define LEXER_FIRST_CONTEXT_DEPENDENT_FUTURE_RESERVED_WORD LEXER_KEYW_LET
   LEXER_KEYW_LET,                /**< let */
   LEXER_KEYW_YIELD,              /**< yield */
-#ifdef CONFIG_DISABLE_ES2015
+#if !ENABLED (JERRY_ES2015)
   LEXER_KEYW_STATIC,             /**< static */
-#endif /* CONFIG_DISABLE_ES2015 */
+#endif /* !ENABLED (JERRY_ES2015) */
 } lexer_token_type_t;
 
 #define LEXER_NEWLINE_LS_PS_BYTE_1 0xe2

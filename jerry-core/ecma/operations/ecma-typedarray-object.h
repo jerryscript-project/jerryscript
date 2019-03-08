@@ -15,9 +15,10 @@
 
 #ifndef ECMA_TYPEDARRAY_OBJECT_H
 #define ECMA_TYPEDARRAY_OBJECT_H
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
 
 #include "ecma-globals.h"
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -67,5 +68,5 @@ ecma_value_t ecma_typedarray_create_object_with_length (ecma_length_t array_leng
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #endif /* !ECMA_TYPEDARRAY_OBJECT_H */

@@ -6,7 +6,7 @@ dist: trusty
 
 # Default job task: run tests as defined in the $OPT environment variable.
 # Jobs can redefine the 'script' stage in the matrix below.
-script: travis_wait 20 tools/run-tests.py $OPTS
+script: tools/run-tests.py $OPTS
 
 # All the job definitions in the matrix.
 matrix:
@@ -15,7 +15,7 @@ matrix:
       install: pip install --user pylint==1.6.5
       script:
         - tools/run-tests.py --check-signed-off=travis --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint
-        - travis_wait 30 tools/run-tests.py --check-cppcheck
+        - travis_wait 40 tools/run-tests.py --check-cppcheck
       addons:
         apt:
           packages: [doxygen, cppcheck, vera++]

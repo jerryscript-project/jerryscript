@@ -190,7 +190,7 @@ enum
   ECMA_VALUE_IMPLICIT_CONSTRUCTOR = ECMA_MAKE_VALUE (9), /**< special value for bound class constructors */
 };
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Maximum integer number for an ecma value
  */
@@ -199,7 +199,7 @@ enum
  * Maximum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
  */
 #define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7fffff0
-#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#else /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 /**
  * Maximum integer number for an ecma value
  */
@@ -208,9 +208,9 @@ enum
  * Maximum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
  */
 #define ECMA_INTEGER_NUMBER_MAX_SHIFTED 0x7ffffff0
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Minimum integer number for an ecma value
  */
@@ -219,7 +219,7 @@ enum
  * Minimum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
  */
 #define ECMA_INTEGER_NUMBER_MIN_SHIFTED -0x7fffff0
-#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#else /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 /**
  * Minimum integer number for an ecma value
  */
@@ -228,7 +228,7 @@ enum
  * Minimum integer number for an ecma value (shifted left with ECMA_DIRECT_SHIFT)
  */
 #define ECMA_INTEGER_NUMBER_MIN_SHIFTED (-0x7fffffff - 1) /* -0x80000000 */
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 #if ECMA_DIRECT_SHIFT != 4
 #error "Please update ECMA_INTEGER_NUMBER_MIN/MAX_SHIFTED according to the new value of ECMA_DIRECT_SHIFT."
@@ -243,11 +243,11 @@ enum
 /**
  * Maximum integer number, which if squared, still fits in ecma_integer_value_t
  */
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 #define ECMA_INTEGER_MULTIPLY_MAX 0xb50
-#else /* CONFIG_ECMA_NUMBER_TYPE != CONFIG_ECMA_NUMBER_FLOAT32 */
+#else /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 #define ECMA_INTEGER_MULTIPLY_MAX 0x2d41
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 /**
  * Checks whether the error flag is set.
@@ -363,9 +363,9 @@ typedef enum
                                        *   that are not indices */
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties only */
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 } ecma_list_properties_options_t;
 
 /**
@@ -647,9 +647,9 @@ typedef enum
   ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
   ECMA_OBJECT_TYPE_ARROW_FUNCTION = 7, /**< arrow function objects */
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
 
@@ -687,7 +687,7 @@ typedef enum
   ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
-#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
 /**
  * Types of array iterators.
  */
@@ -697,7 +697,7 @@ typedef enum
   ECMA_ARRAY_ITERATOR_VALUES, /**< List only key values */
   ECMA_ARRAY_ITERATOR_KEYS_VALUES, /**< List key indices and values */
 } ecma_array_iterator_type_t;
-#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
@@ -926,7 +926,7 @@ typedef struct
 
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
-#ifndef CONFIG_DISABLE_ES2015_ARROW_FUNCTION
+#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
 
 /**
  * Description of arrow function objects.
@@ -952,9 +952,9 @@ typedef struct
 
 #endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
 
-#endif /* !CONFIG_DISABLE_ES2015_ARROW_FUNCTION */
+#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
-#ifndef CONFIG_DISABLE_ES2015_MAP_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
 
 /**
  * Map item count of chunks
@@ -980,7 +980,7 @@ typedef struct
                                                        *   the rest can be ECMA_VALUE_ARRAY_HOLE or any valid value. */
 } ecma_map_object_chunk_t;
 
-#endif /* !CONFIG_DISABLE_ES2015_MAP_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
 /**
  * Description of ECMA property descriptor
@@ -1030,7 +1030,7 @@ typedef struct
   ecma_object_t *set_p;
 } ecma_property_descriptor_t;
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Description of an ecma-number
  */
@@ -1066,7 +1066,7 @@ typedef float ecma_number_t;
  *          IEEE-754 2008, 3.6, Table 3.5
  */
 #define ECMA_NUMBER_FRACTION_WIDTH   (23)
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#elif ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Description of an ecma-number
  */
@@ -1102,7 +1102,7 @@ typedef double ecma_number_t;
  *          IEEE-754 2008, 3.6, Table 3.5
  */
 #define ECMA_NUMBER_FRACTION_WIDTH   (52)
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 /**
  * Value '0' of ecma_number_t
@@ -1129,7 +1129,7 @@ typedef double ecma_number_t;
  */
 #define ECMA_NUMBER_MINUS_ONE ((ecma_number_t) -1)
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
  *
@@ -1142,7 +1142,7 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.2
  */
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#elif ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
  *
@@ -1155,7 +1155,7 @@ typedef double ecma_number_t;
  * See also: ECMA_262 v5, 15.7.3.3
  */
 # define ECMA_NUMBER_MIN_VALUE ((ecma_number_t) 5e-324)
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 /**
  * Euler number
@@ -1521,7 +1521,7 @@ typedef struct
 
 #endif /* !CONFIG_ECMA_LCACHE_DISABLE */
 
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /**
  * Extra information for ArrayBuffers.
@@ -1562,7 +1562,7 @@ typedef struct
   ecma_length_t array_length; /**< the array length */
 } ecma_extended_typedarray_object_t;
 
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
 /**
  * Flag for indicating whether the symbol is a well known symbol

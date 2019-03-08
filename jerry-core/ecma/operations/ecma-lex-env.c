@@ -68,7 +68,7 @@ ecma_get_global_environment (void)
   return JERRY_CONTEXT (ecma_global_lex_env_p);
 } /* ecma_get_global_environment */
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 /**
  * Add the lexenv of the newly imported module to the JERRY_CONTEXT.
  */
@@ -106,7 +106,7 @@ ecma_module_finalize_lex_envs (void)
 
   JERRY_CONTEXT (ecma_module_lex_envs_p) = NULL;
 } /* ecma_module_finalize_lex_envs */
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 /**
  * @}

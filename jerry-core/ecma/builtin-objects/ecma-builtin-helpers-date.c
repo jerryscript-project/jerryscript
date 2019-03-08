@@ -24,7 +24,7 @@
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
+#if ENABLED (JERRY_BUILTIN_DATE)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -823,4 +823,4 @@ ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_DATE) */

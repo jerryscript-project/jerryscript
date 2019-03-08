@@ -16,7 +16,7 @@
 #ifndef RE_BYTECODE_H
 #define RE_BYTECODE_H
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 #include "ecma-globals.h"
 
@@ -124,5 +124,5 @@ void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 #endif /* !RE_BYTECODE_H */

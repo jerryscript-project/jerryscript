@@ -29,7 +29,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#ifndef CONFIG_DISABLE_MATH_BUILTIN
+#if ENABLED (JERRY_BUILTIN_MATH)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -371,4 +371,4 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_MATH_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_MATH) */

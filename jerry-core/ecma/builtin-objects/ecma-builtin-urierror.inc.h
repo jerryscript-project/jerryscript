@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+#if ENABLED (JERRY_BUILTIN_ERRORS)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -37,6 +37,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

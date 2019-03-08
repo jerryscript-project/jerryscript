@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 #include "jcontext.h"
 #include "jerryscript-port.h"
 
@@ -600,4 +600,4 @@ parser_module_handle_from_clause (parser_context_t *context_p) /**< parser conte
 
   lexer_next_token (context_p);
 } /* parser_module_handle_from_clause */
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */

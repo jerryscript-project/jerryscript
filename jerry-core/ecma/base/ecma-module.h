@@ -18,10 +18,10 @@
 
 #include "js-parser-internal.h"
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 
 void ecma_module_load_modules (parser_context_t *context_p);
 
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #endif /* !ECMA_MODULE_H */

@@ -279,7 +279,7 @@ endif()
 
 # RegExp strict mode
 if(FEATURE_REGEXP_STRICT_MODE)
-  set(DEFINES_JERRY ${DEFINES_JERRY} ENABLE_REGEXP_STRICT_MODE)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_REGEXP_STRICT_MODE=1)
 endif()
 
 # RegExp recursion depth limit

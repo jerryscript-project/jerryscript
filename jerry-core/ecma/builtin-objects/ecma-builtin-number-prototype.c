@@ -28,7 +28,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
+#if ENABLED (JERRY_BUILTIN_NUMBER)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -997,4 +997,4 @@ ecma_builtin_number_prototype_object_to_precision (ecma_value_t this_arg, /**< t
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */

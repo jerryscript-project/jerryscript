@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /* ES2015 22.2.3.4 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
@@ -45,12 +45,12 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FIXED)
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 /* ECMA-262 v6, 23.1.3.13 */
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
                     ecma_builtin_typedarray_prototype_to_string_tag_getter,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -70,6 +70,6 @@ ROUTINE (LIT_MAGIC_STRING_FILL, ecma_builtin_typedarray_prototype_fill, 3, 1)
 ROUTINE (LIT_MAGIC_STRING_SORT, ecma_builtin_typedarray_prototype_sort, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_typedarray_prototype_find, 2, 1)
 
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

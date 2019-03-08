@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+#if ENABLED (JERRY_BUILTIN_ERRORS)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -74,4 +74,4 @@ ecma_builtin_syntax_error_dispatch_construct (const ecma_value_t *arguments_list
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */

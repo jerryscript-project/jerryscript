@@ -137,17 +137,17 @@ typedef enum
  */
 #define ECMA_BOOL_TO_BITFIELD(x) ((x) ? 1 : 0)
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 /**
  * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
  */
 #define ECMA_ASSERT_VALUE_IS_SYMBOL(value) (ecma_is_value_symbol ((value)))
-#else /* CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 /**
  * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
  */
 #define ECMA_ASSERT_VALUE_IS_SYMBOL(value) (false)
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 /* ecma-helpers-value.c */
 bool JERRY_ATTR_CONST ecma_is_value_direct (ecma_value_t value);
@@ -166,9 +166,9 @@ bool JERRY_ATTR_CONST ecma_are_values_integer_numbers (ecma_value_t first_value,
 bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 bool JERRY_ATTR_CONST ecma_is_value_symbol (ecma_value_t value);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
@@ -185,9 +185,9 @@ ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
 ecma_value_t JERRY_ATTR_PURE ecma_make_string_value (const ecma_string_t *ecma_string_p);
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 ecma_value_t JERRY_ATTR_PURE ecma_make_symbol_value (const ecma_string_t *ecma_symbol_p);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 ecma_value_t JERRY_ATTR_PURE ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p);
 ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
 ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
@@ -197,9 +197,9 @@ ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t 
 ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_number_from_value (ecma_value_t value);
 ecma_string_t JERRY_ATTR_PURE *ecma_get_string_from_value (ecma_value_t value);
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 ecma_string_t JERRY_ATTR_PURE *ecma_get_symbol_from_value (ecma_value_t value);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 ecma_string_t JERRY_ATTR_PURE *ecma_get_prop_name_from_value (ecma_value_t value);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
 ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
@@ -218,10 +218,10 @@ void ecma_free_number (ecma_value_t value);
 lit_magic_string_id_t ecma_get_typeof_lit_id (ecma_value_t value);
 
 /* ecma-helpers-string.c */
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 ecma_string_t *ecma_new_symbol_from_descriptor_string (ecma_value_t string_desc);
 bool ecma_prop_name_is_symbol (ecma_string_t *string_p);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string_p,
                                                                   lit_utf8_size_t string_size);

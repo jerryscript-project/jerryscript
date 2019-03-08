@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -44,6 +44,6 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
               LIT_MAGIC_STRING_SYMBOL_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

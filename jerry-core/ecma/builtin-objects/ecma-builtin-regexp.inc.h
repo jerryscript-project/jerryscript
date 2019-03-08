@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /* ECMA-262 v5, 15.10.5 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
@@ -31,6 +31,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

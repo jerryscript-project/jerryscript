@@ -113,15 +113,15 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
   /* 1. */
   if (!was_object)
   {
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
     arg = ecma_op_to_object (arg);
     if (ECMA_IS_VALUE_ERROR (arg))
     {
       return arg;
     }
-#else /* CONFIG_DISABLE_ES2015_BUILTIN */
+#else /* !ENABLED (JERRY_ES2015_BUILTIN) */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
   }
   /* 2. */
   ecma_object_t *obj_p = ecma_get_object_from_value (arg);
@@ -137,17 +137,17 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t this_arg, /**< 'this' 
     ret_value = ECMA_VALUE_NULL;
   }
 
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
   if (!was_object)
   {
     ecma_free_value (arg);
   }
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
   return ret_value;
 } /* ecma_builtin_object_object_get_prototype_of */
 
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
 /**
  * [[SetPrototypeOf]]
  *
@@ -269,7 +269,7 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t this_arg, /**< 'this' 
 
   return ret_value;
 } /* ecma_builtin_object_object_set_prototype_of */
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 /**
  * The Object object's 'getOwnPropertyNames' routine
@@ -302,7 +302,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_value_t this_arg, /**< '
   return ret_value;
 } /* ecma_builtin_object_object_get_own_property_names */
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 /**
  * The Object object's 'getOwnPropertySymbols' routine
  *
@@ -329,7 +329,7 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_value_t this_arg, /**<
 
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS);
 } /* ecma_builtin_object_object_get_own_property_symbols */
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 /**
  * The Object object's 'seal' routine
@@ -949,7 +949,7 @@ ecma_builtin_object_object_define_property (ecma_value_t this_arg, /**< 'this' a
   return ret_value;
 } /* ecma_builtin_object_object_define_property */
 
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
 /**
  * The Object object's 'assign' routine
  *
@@ -1067,7 +1067,7 @@ ecma_builtin_object_object_assign (ecma_value_t this_arg, /**< 'this' argument *
   ecma_deref_object (to_obj_p);
   return ret_value;
 } /* ecma_builtin_object_object_assign */
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 /**
  * @}

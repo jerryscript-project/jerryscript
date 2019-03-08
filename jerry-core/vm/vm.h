@@ -122,9 +122,9 @@ typedef enum
   VM_OC_PUSH_OBJECT,             /**< push object */
   VM_OC_PUSH_NAMED_FUNC_EXPR,    /**< push named function expression */
   VM_OC_SET_PROPERTY,            /**< set property */
-#ifndef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
-#endif /* !CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
   VM_OC_SET_GETTER,              /**< set getter */
   VM_OC_SET_SETTER,              /**< set setter */
   VM_OC_PUSH_UNDEFINED_BASE,     /**< push undefined base */
@@ -212,7 +212,7 @@ typedef enum
   VM_OC_FINALLY,                 /**< finally */
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   VM_OC_CLASS_HERITAGE,          /**< create a super class context */
   VM_OC_CLASS_INHERITANCE,       /**< inherit properties from the 'super' class */
   VM_OC_PUSH_CLASS_CONSTRUCTOR,  /**< push class constructor */
@@ -226,7 +226,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
-#endif /* !CONFIG_DISABLE_ES2015 */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 #ifdef JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
@@ -243,9 +243,9 @@ typedef enum
  */
 typedef enum
 {
-#ifdef CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
+#if !ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
-#endif /* CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER */
+#endif /* !ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
 #ifndef JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
@@ -254,7 +254,7 @@ typedef enum
   VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !JERRY_ENABLE_LINE_INFO */
-#ifdef CONFIG_DISABLE_ES2015_CLASS
+#if !ENABLED (JERRY_ES2015_CLASS)
   VM_OC_CLASS_HERITAGE = VM_OC_NONE,          /**< create a super class context */
   VM_OC_CLASS_INHERITANCE = VM_OC_NONE,       /**< inherit properties from the 'super' class */
   VM_OC_PUSH_CLASS_CONSTRUCTOR = VM_OC_NONE,  /**< push class constructor */
@@ -268,7 +268,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER = VM_OC_NONE,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
-#endif /* CONFIG_DISABLE_ES2015 */
+#endif /* !ENABLED (JERRY_ES2015_CLASS) */
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
 
@@ -355,9 +355,9 @@ typedef enum
 ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_opts);
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_t *lex_env_p);
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
                      ecma_object_t *lex_env_p, uint32_t parse_opts, const ecma_value_t *arg_list_p,

@@ -24,7 +24,7 @@
 #include "ecma-module.h"
 #include "vm.h"
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 
 /**
  * Check if property is exported from the script.
@@ -255,4 +255,4 @@ ecma_module_load_modules (parser_context_t *context_p) /**< parser context */
   }
 } /* ecma_module_load_modules */
 
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */

@@ -28,7 +28,7 @@
 #include "ecma-helpers.h"
 #include "jcontext.h"
 
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -85,12 +85,12 @@ ecma_get_typedarray_element (lit_utf8_byte_t *src, /**< the location in the inte
     {
       return GET_ELEMENT (float, src);
     }
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
     case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
     {
       return GET_ELEMENT (double, src);
     }
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
     default:
     {
       JERRY_UNREACHABLE ();
@@ -140,13 +140,13 @@ ecma_set_typedarray_element (lit_utf8_byte_t *dst_p, /**< the location in the in
       *((float *) dst_p) = (float) value;
       return;
     }
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
     case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
     {
       *((double *) dst_p) = (double) value;
       return;
     }
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
     default:
     {
       break;
@@ -970,21 +970,21 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
       element_size_shift = 2;
       break;
     }
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
     case LIT_MAGIC_STRING_FLOAT64_ARRAY_UL:
     {
       proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE);
       element_size_shift = 3;
       break;
     }
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64 */
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
     default:
     {
       JERRY_UNREACHABLE ();
     }
   }
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t constructor_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
 
   if (ECMA_IS_VALUE_ERROR (constructor_value)
@@ -1005,20 +1005,20 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
   {
     return constructor_prototype;
   }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_value_t new_obj = ecma_typedarray_create_object_with_length (array_length,
                                                                     proto_p,
                                                                     element_size_shift,
                                                                     class_id);
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_object_t *constructor_prototype_object_p = ecma_get_object_from_value (constructor_prototype);
   ecma_object_t *new_obj_p = ecma_get_object_from_value (new_obj);
   ECMA_SET_POINTER (new_obj_p->prototype_or_outer_reference_cp, constructor_prototype_object_p);
 
   ecma_deref_object (constructor_prototype_object_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   return new_obj;
 } /* ecma_op_create_typedarray_with_type_and_length */
@@ -1027,4 +1027,4 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
  * @}
  * @}
  */
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */

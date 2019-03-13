@@ -98,3 +98,32 @@ jerry_port_log (jerry_log_level_t level, /**< message log level */
     va_end (args);
   }
 } /* jerry_port_log */
+
+
+#ifdef JERRY_DEBUGGER
+
+#define DEBUG_BUFFER_SIZE (256)
+static char debug_buffer[DEBUG_BUFFER_SIZE];
+static int debug_buffer_index = 0;
+
+#endif /* JERRY_DEBUGGER */
+
+/**
+ * Default implementation of jerry_port_print_char. Uses 'putchar' to
+ * print a single character to standard output.
+ */
+void
+jerry_port_print_char (char c) /**< the character to print */
+{
+  putchar (c);
+
+#ifdef JERRY_DEBUGGER
+  debug_buffer[debug_buffer_index++] = c;
+
+  if ((debug_buffer_index == DEBUG_BUFFER_SIZE) || (c == '\n'))
+  {
+    jerry_debugger_send_output ((jerry_char_t *) debug_buffer, (jerry_size_t) debug_buffer_index);
+    debug_buffer_index = 0;
+  }
+#endif /* JERRY_DEBUGGER */
+} /* jerry_port_print_char */

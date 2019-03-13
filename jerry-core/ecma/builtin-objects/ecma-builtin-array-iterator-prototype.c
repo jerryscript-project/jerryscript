@@ -92,11 +92,26 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   else
   {
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
-    JERRY_ASSERT (ecma_get_object_type (array_object_p) == ECMA_OBJECT_TYPE_ARRAY);
+    ecma_value_t len_value = ecma_op_object_get (array_object_p,
+                                                 ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH));
 
-    ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_object_p;
+    if (ECMA_IS_VALUE_ERROR (len_value))
+    {
+      return len_value;
+    }
 
-    length = ext_array_obj_p->u.array.length;
+    ecma_number_t length_number;
+    ecma_value_t length_value = ecma_get_number (len_value, &length_number);
+
+    if (ECMA_IS_VALUE_ERROR (length_value))
+    {
+      ecma_free_value (len_value);
+      return length_value;
+    }
+
+    length = ecma_number_to_uint32 (length_number);
+
+    ecma_free_value (len_value);
 #ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
   }
 #endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */

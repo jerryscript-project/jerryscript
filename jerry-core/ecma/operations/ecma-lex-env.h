@@ -39,10 +39,10 @@ ecma_object_t *ecma_get_global_environment (void);
  */
 
 /* ECMA-262 v5, 8.7.1 and 8.7.2 */
-ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, ecma_string_t *var_name_string_p,
-                                             bool is_strict);
+ecma_value_t ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, ecma_object_t **ref_base_lex_env_p,
+                                             ecma_string_t *name_p);
 ecma_value_t ecma_op_get_value_object_base (ecma_value_t base_value, ecma_string_t *property_name_p);
-ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, ecma_string_t *var_name_string_p,
+ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, ecma_string_t *var_name_string_p,
                                              bool is_strict, ecma_value_t value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */

@@ -35,7 +35,7 @@
  */
 
 /**
- * GetValue operation part (lexical environment base or unresolvable reference).
+ * GetValue operation part
  *
  * See also: ECMA-262 v5, 8.7.1, sections 3 and 5
  *
@@ -43,34 +43,64 @@
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_get_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
-                                ecma_string_t *var_name_string_p, /**< variable name */
-                                bool is_strict) /**< flag indicating strict mode */
+ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environment */
+                                ecma_object_t **ref_base_lex_env_p, /**< [out] reference's base (lexical environment) */
+                                ecma_string_t *name_p) /**< variable name */
 {
-  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
-  /* 3. */
-  if (JERRY_UNLIKELY (is_unresolvable_reference))
+  while (lex_env_p != NULL)
   {
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
-    ecma_value_t var_name_val = ecma_make_string_value (var_name_string_p);
-    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
-                                                                      "% is not defined",
-                                                                      var_name_val);
-#else /* !JERRY_ENABLE_ERROR_MESSAGES */
-    ecma_value_t error_value = ecma_raise_reference_error (NULL);
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
-    return error_value;
+    switch (ecma_get_lex_env_type (lex_env_p))
+    {
+      case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
+      {
+        ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+        if (property_p != NULL)
+        {
+          *ref_base_lex_env_p = lex_env_p;
+          return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+        }
+        break;
+      }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      case ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND:
+      {
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+      default:
+      {
+        JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+
+        ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+
+        ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
+
+        if (ecma_is_value_found (result))
+        {
+          *ref_base_lex_env_p = lex_env_p;
+          return result;
+        }
+
+        break;
+      }
+    }
+
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
 
-  /* 5. */
-  JERRY_ASSERT (ref_base_lex_env_p != NULL
-                && ecma_is_lexical_environment (ref_base_lex_env_p));
+  *ref_base_lex_env_p = NULL;
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+  return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                "% is not defined",
+                                                ecma_make_string_value (name_p));
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+  return ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
 
-  /* 5.a */
-  return ecma_op_get_binding_value (ref_base_lex_env_p,
-                                    var_name_string_p,
-                                    is_strict);
 } /* ecma_op_get_value_lex_env_base */
 
 /**
@@ -145,7 +175,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
 } /* ecma_op_get_value_object_base */
 
 /**
- * PutValue operation part (lexical environment base or unresolvable reference).
+ * PutValue operation part
  *
  * See also: ECMA-262 v5, 8.7.2, sections 3 and 5
  *
@@ -153,54 +183,90 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_put_value_lex_env_base (ecma_object_t *ref_base_lex_env_p, /**< reference's base (lexical environment) */
-                                ecma_string_t *var_name_string_p, /**< variable name */
+ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environment */
+                                ecma_string_t *name_p, /**< variable name */
                                 bool is_strict, /**< flag indicating strict mode */
                                 ecma_value_t value) /**< ECMA-value */
 {
-  const bool is_unresolvable_reference = (ref_base_lex_env_p == NULL);
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
 
-  /* 3. */
-  if (JERRY_UNLIKELY (is_unresolvable_reference))
+  while (lex_env_p != NULL)
   {
-    /* 3.a. */
-    if (is_strict)
+    switch (ecma_get_lex_env_type (lex_env_p))
     {
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
-      ecma_value_t var_name_val = ecma_make_string_value (var_name_string_p);
-      ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
-                                                                        "% is not defined",
-                                                                        var_name_val);
-#else /* !JERRY_ENABLE_ERROR_MESSAGES */
-      ecma_value_t error_value = ecma_raise_reference_error (NULL);
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
-      return error_value;
+      case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
+      {
+        ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+        if (property_p != NULL)
+        {
+          if (ecma_is_property_writable (*property_p))
+          {
+            ecma_named_data_property_assign_value (lex_env_p, ECMA_PROPERTY_VALUE_PTR (property_p), value);
+          }
+          else if (is_strict)
+          {
+            return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));
+          }
+          return ECMA_VALUE_EMPTY;
+        }
+        break;
+      }
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      case ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND:
+      {
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+      default:
+      {
+        JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+
+        ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+
+        if (ecma_op_object_has_property (binding_obj_p, name_p))
+        {
+          ecma_value_t completion = ecma_op_object_put (binding_obj_p,
+                                                        name_p,
+                                                        value,
+                                                        is_strict);
+
+          if (ECMA_IS_VALUE_ERROR (completion))
+          {
+            return completion;
+          }
+
+          JERRY_ASSERT (ecma_is_value_boolean (completion));
+          return ECMA_VALUE_EMPTY;
+        }
+
+        break;
+      }
     }
-    else
-    {
-      /* 3.b. */
-      ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
-      ecma_value_t completion = ecma_op_object_put (global_object_p,
-                                                    var_name_string_p,
-                                                    value,
-                                                    false);
-
-      JERRY_ASSERT (ecma_is_value_boolean (completion));
-
-      return ECMA_VALUE_EMPTY;
-    }
+    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
   }
 
-  /* 5. */
-  JERRY_ASSERT (ref_base_lex_env_p != NULL
-                && ecma_is_lexical_environment (ref_base_lex_env_p));
+  if (is_strict)
+  {
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+    return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+                                                  "% is not defined",
+                                                  ecma_make_string_value (name_p));
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+    return ecma_raise_reference_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+  }
 
-  /* 5.a */
-  return ecma_op_set_mutable_binding (ref_base_lex_env_p,
-                                      var_name_string_p,
-                                      value,
-                                      is_strict);
+  ecma_value_t completion = ecma_op_object_put (ecma_builtin_get_global (),
+                                                name_p,
+                                                value,
+                                                false);
+
+  JERRY_ASSERT (ecma_is_value_boolean (completion));
+
+  return ECMA_VALUE_EMPTY;
 } /* ecma_op_put_value_lex_env_base */
 
 /**

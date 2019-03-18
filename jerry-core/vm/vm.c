@@ -226,6 +226,37 @@ static const uint16_t vm_decode_table[] JERRY_CONST_DATA =
 
 #undef CBC_OPCODE
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * Run ES2015 module code
+ *
+ * Note:
+ *      returned value must be freed with ecma_free_value, when it is no longer needed.
+ *
+ * @return ecma value
+ */
+ecma_value_t
+vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode to run */
+               ecma_object_t *lex_env_p) /**< pointer to the specified lexenv to run in */
+{
+  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+
+  ecma_value_t ret_value = vm_run (bytecode_p,
+                                   ecma_make_object_value (glob_obj_p),
+                                   lex_env_p,
+                                   false,
+                                   NULL,
+                                   0);
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ret_value = ecma_create_error_reference_from_context ();
+  }
+
+  return ret_value;
+} /* vm_run_module */
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
 /**
  * Run global code
  *

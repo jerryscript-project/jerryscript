@@ -1064,6 +1064,46 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Non-strict argument definition.";
     }
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+    case PARSER_ERR_MODULE_REQUEST_NOT_FOUND:
+    {
+      return "Import request not found in the module.";
+    }
+    case PARSER_ERR_FILE_NOT_FOUND:
+    {
+      return "Requested module not found.";
+    }
+    case PARSER_ERR_NOT_IMPLEMENTED:
+    {
+      return "Requested feature is not implemented yet.";
+    }
+    case PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED:
+    {
+      return "Expected '{' or '*' or literal token.";
+    }
+    case PARSER_ERR_RIGHT_PAREN_COMMA_FROM_EXPECTED:
+    {
+      return "Expected '}' or 'as' or 'from' literal token.";
+    }
+    case PARSER_ERR_FROM_EXPECTED:
+    {
+      return "Expected 'from' token.";
+    }
+    case PARSER_ERR_STRING_EXPECTED:
+    {
+      return "Expected a string.";
+    }
+    case PARSER_ERR_MODULE_REQUEST_LIMIT_REACHED:
+    {
+      return "Maximum module request count reached.";
+    }
+    case PARSER_ERR_MODULE_UNEXPECTED:
+    {
+      return "Import and export statements must be in the global context.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
     default:
     {
       JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);

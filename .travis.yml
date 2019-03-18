@@ -6,7 +6,7 @@ dist: trusty
 
 # Default job task: run tests as defined in the $OPT environment variable.
 # Jobs can redefine the 'script' stage in the matrix below.
-script: tools/run-tests.py $OPTS
+script: travis_wait 20 tools/run-tests.py $OPTS
 
 # All the job definitions in the matrix.
 matrix:

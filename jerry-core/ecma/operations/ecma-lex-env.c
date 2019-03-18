@@ -68,6 +68,46 @@ ecma_get_global_environment (void)
   return JERRY_CONTEXT (ecma_global_lex_env_p);
 } /* ecma_get_global_environment */
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * Add the lexenv of the newly imported module to the JERRY_CONTEXT.
+ */
+void
+ecma_module_add_lex_env (ecma_object_t *lex_env_p) /**< module lexenv */
+{
+  JERRY_ASSERT (lex_env_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (lex_env_p));
+
+  ecma_module_lex_envs_t *new_module_lex_env_p;
+  new_module_lex_env_p = jmem_heap_alloc_block (sizeof (ecma_module_lex_envs_t));
+  new_module_lex_env_p->lex_env_p = lex_env_p;
+
+  new_module_lex_env_p->next_p = JERRY_CONTEXT (ecma_module_lex_envs_p);
+  JERRY_CONTEXT (ecma_module_lex_envs_p) = new_module_lex_env_p;
+} /* ecma_module_add_lex_env */
+
+/**
+ * Finalize the lexenvs of the imported modules and its ECMA components.
+ */
+void
+ecma_module_finalize_lex_envs (void)
+{
+  ecma_module_lex_envs_t *module_lex_envs = JERRY_CONTEXT (ecma_module_lex_envs_p);
+
+  while (module_lex_envs != NULL)
+  {
+    ecma_module_lex_envs_t *next_p = module_lex_envs->next_p;
+
+    ecma_deref_object (module_lex_envs->lex_env_p);
+    jmem_heap_free_block (module_lex_envs, sizeof (ecma_module_lex_envs_t));
+
+    module_lex_envs = next_p;
+  }
+
+  JERRY_CONTEXT (ecma_module_lex_envs_p) = NULL;
+} /* ecma_module_finalize_lex_envs */
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
 /**
  * @}
  */

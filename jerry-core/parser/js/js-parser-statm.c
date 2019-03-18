@@ -324,6 +324,17 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+    if (context_p->module_context_p != NULL && context_p->module_current_node_p != NULL)
+    {
+      parser_module_add_item_to_node (context_p,
+                                      context_p->module_current_node_p,
+                                      context_p->lit_object.literal_p,
+                                      context_p->lit_object.literal_p,
+                                      false);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_ASSIGN)
@@ -388,6 +399,17 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 
   name_p = context_p->lit_object.literal_p;
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  if (context_p->module_context_p != NULL && context_p->module_current_node_p != NULL)
+  {
+    parser_module_add_item_to_node (context_p,
+                                    context_p->module_current_node_p,
+                                    name_p,
+                                    name_p,
+                                    false);
+  }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
   status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
   if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
@@ -1653,6 +1675,151 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
   }
 } /* parser_parse_continue_statement */
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+/**
+ * Parse import statement.
+ */
+static void
+parser_parse_import_statement (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
+
+  parser_module_check_request_place (context_p);
+  parser_module_context_init (context_p);
+
+  parser_module_node_t module_node;
+  memset (&module_node, 0, sizeof (parser_module_node_t));
+  context_p->module_current_node_p = &module_node;
+
+  lexer_next_token (context_p);
+
+  switch (context_p->token.type)
+  {
+    case LEXER_LEFT_BRACE:
+    {
+      lexer_next_token (context_p);
+      parser_module_parse_import_item_list (context_p);
+
+      if (context_p->token.type != LEXER_RIGHT_BRACE)
+      {
+        parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+      }
+
+      lexer_next_token (context_p);
+      break;
+    }
+
+    case LEXER_MULTIPLY:
+    case LEXER_LITERAL:
+    {
+      parser_module_parse_import_item_list (context_p);
+      break;
+    }
+
+    default:
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED);
+    }
+  }
+
+  if (context_p->token.type != LEXER_LITERAL ||!lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+  {
+    parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
+  }
+
+  parser_module_handle_from_clause (context_p);
+  parser_module_add_import_node_to_context (context_p);
+
+  context_p->module_current_node_p = NULL;
+} /* parser_parse_import_statement */
+
+/**
+ * Parse export statement.
+ */
+static void
+parser_parse_export_statement (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
+
+  parser_module_check_request_place (context_p);
+  parser_module_context_init (context_p);
+
+  parser_module_node_t module_node;
+  memset (&module_node, 0, sizeof (parser_module_node_t));
+  context_p->module_current_node_p = &module_node;
+
+  lexer_next_token (context_p);
+
+  switch (context_p->token.type)
+  {
+    case LEXER_LEFT_BRACE:
+    {
+      lexer_next_token (context_p);
+      parser_module_parse_export_item_list (context_p);
+
+      if (context_p->token.type != LEXER_RIGHT_BRACE)
+      {
+        parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+      }
+
+      lexer_next_token (context_p);
+      break;
+    }
+
+    case LEXER_KEYW_DEFAULT:
+    {
+      /* TODO: This part is going to be implemented in the next part of the patch. */
+      parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
+      break;
+    }
+
+    case LEXER_MULTIPLY:
+    case LEXER_LITERAL:
+    {
+      parser_module_parse_export_item_list (context_p);
+      break;
+    }
+
+    case LEXER_KEYW_FUNCTION:
+    {
+      parser_parse_function_statement (context_p);
+      break;
+    }
+
+    case LEXER_KEYW_VAR:
+    {
+      parser_parse_var_statement (context_p);
+      break;
+    }
+
+    case LEXER_KEYW_CLASS:
+    {
+      /* TODO: This part is going to be implemented in the next part of the patch. */
+      parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
+      break;
+    }
+
+    default:
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_MULTIPLY_LITERAL_EXPECTED);
+      break;
+    }
+  }
+
+  if (context_p->token.type == LEXER_LITERAL
+      && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+  {
+    /* TODO: Import the requested properties from the given script and export
+             them from the current to make a redirection.
+       This part is going to be implemented in the next part of the patch. */
+    parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
+  }
+
+  parser_module_add_export_node_to_context (context_p);
+  context_p->module_current_node_p = NULL;
+} /* parser_parse_export_statement */
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
 /**
  * Parse label statement.
  */
@@ -1897,6 +2064,20 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         continue;
       }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+      case LEXER_KEYW_IMPORT:
+      {
+        parser_parse_import_statement (context_p);
+        break;
+      }
+
+      case LEXER_KEYW_EXPORT:
+      {
+        parser_parse_export_statement (context_p);
+        break;
+      }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
       case LEXER_KEYW_FUNCTION:
       {

@@ -19,6 +19,7 @@
 #include "ecma-literal-storage.h"
 #include "jcontext.h"
 #include "js-parser-internal.h"
+#include "ecma-module.h"
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
@@ -2360,7 +2361,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      parser_error_location_t *error_location_p) /**< error location */
 {
   parser_context_t context;
-  ecma_compiled_code_t *compiled_code;
+  ecma_compiled_code_t *compiled_code_p;
 
   context.error = PARSER_ERR_NO_ERROR;
   context.allocated_buffer_p = NULL;
@@ -2396,6 +2397,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
   context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
+
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  context.module_context_p = NULL;
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
@@ -2474,7 +2479,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     JERRY_ASSERT (context.last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
     JERRY_ASSERT (context.allocated_buffer_p == NULL);
 
-    compiled_code = parser_post_processing (&context);
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+    if (context.module_context_p != NULL)
+    {
+      parser_module_handle_requests (&context);
+      ecma_module_load_modules (&context);
+    }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
+    compiled_code_p = parser_post_processing (&context);
     parser_list_free (&context.literal_pool);
 
 #ifdef PARSER_DUMP_BYTE_CODE
@@ -2507,7 +2520,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
       error_location_p->column = context.token.column;
     }
 
-    compiled_code = NULL;
+    compiled_code_p = NULL;
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
   }
@@ -2522,9 +2535,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  parser_module_context_cleanup (&context);
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
   parser_stack_free (&context);
 
-  return compiled_code;
+  return compiled_code_p;
 } /* parser_parse_source */
 
 /**
@@ -2850,6 +2866,13 @@ void
 parser_raise_error (parser_context_t *context_p, /**< context */
                     parser_error_t error) /**< error code */
 {
+#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+  if (context_p->module_context_p != NULL)
+  {
+    parser_module_free_saved_names (context_p->module_current_node_p);
+  }
+#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+
   parser_saved_context_t *saved_context_p = context_p->last_context_p;
 
   while (saved_context_p != NULL)

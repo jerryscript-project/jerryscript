@@ -250,7 +250,7 @@ def src_check_args(args):
 def main():
     args = jerry_client_main.arguments_parse()
 
-    debugger = jerry_client_main.JerryDebugger(args.address)
+    debugger = jerry_client_main.JerryDebugger(args.address, args.channel)
     debugger.non_interactive = args.non_interactive
 
     logging.debug("Connected to JerryScript on %d port", debugger.port)

@@ -317,6 +317,7 @@ typedef enum
   OPT_SHOW_RE_OP,
   OPT_DEBUG_SERVER,
   OPT_DEBUG_PORT,
+  OPT_DEBUG_CHANNEL,
   OPT_DEBUGGER_WAIT_SOURCE,
   OPT_EXEC_SNAP,
   OPT_EXEC_SNAP_FUNC,
@@ -346,6 +347,8 @@ static const cli_opt_t main_opts[] =
                .help = "start debug server and wait for a connecting client"),
   CLI_OPT_DEF (.id = OPT_DEBUG_PORT, .longopt = "debug-port", .meta = "NUM",
                .help = "debug server port (default: 5001)"),
+  CLI_OPT_DEF (.id = OPT_DEBUG_CHANNEL, .longopt = "debug-channel", .meta = "[websocket|rawpacket]",
+               .help = "Specify the debugger transmission channel (default: websocket)"),
   CLI_OPT_DEF (.id = OPT_DEBUGGER_WAIT_SOURCE, .longopt = "debugger-wait-source",
                .help = "wait for an executable source from the client"),
   CLI_OPT_DEF (.id = OPT_EXEC_SNAP, .longopt = "exec-snapshot", .meta = "FILE",
@@ -418,14 +421,23 @@ context_alloc (size_t size,
  */
 static void
 init_engine (jerry_init_flag_t flags, /**< initialized flags for the engine */
-             bool debug_server, /**< enable the debugger init or not */
+             char *debug_channel, /**< enable the debugger init or not */
              uint16_t debug_port) /**< the debugger port */
 {
   jerry_init (flags);
-  if (debug_server)
+  if (strcmp (debug_channel, ""))
   {
-    jerryx_debugger_after_connect (jerryx_debugger_tcp_create (debug_port)
-                                   && jerryx_debugger_ws_create ());
+    bool tcp_created = jerryx_debugger_tcp_create (debug_port);
+
+    if (!strcmp (debug_channel, "rawpacket"))
+    {
+      jerryx_debugger_after_connect (tcp_created && jerryx_debugger_rp_create ());
+    }
+    else
+    {
+      assert (!strcmp (debug_channel, "websocket"));
+      jerryx_debugger_after_connect (tcp_created && jerryx_debugger_ws_create ());
+    }
   }
 
   register_js_function ("assert", jerryx_handler_assert);
@@ -451,6 +463,7 @@ main (int argc,
 
   bool start_debug_server = false;
   uint16_t debug_port = 5001;
+  char *debug_channel = "websocket";
 
   bool is_repl_mode = false;
   bool is_wait_mode = false;
@@ -516,6 +529,16 @@ main (int argc,
         if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
         {
           debug_port = (uint16_t) cli_consume_int (&cli_state);
+        }
+        break;
+      }
+      case OPT_DEBUG_CHANNEL:
+      {
+        if (check_feature (JERRY_FEATURE_DEBUGGER, cli_state.arg))
+        {
+          debug_channel = (char *) cli_consume_string (&cli_state);
+          check_usage (!strcmp (debug_channel, "websocket") || !strcmp (debug_channel, "rawpacket"),
+                       argv[0], "Error: invalid value for --debug-channel: ", cli_state.arg);
         }
         break;
       }
@@ -612,7 +635,12 @@ main (int argc,
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
-  init_engine (flags, start_debug_server, debug_port);
+  if (!start_debug_server)
+  {
+    debug_channel = "";
+  }
+
+  init_engine (flags, debug_channel, debug_port);
 
   jerry_value_t ret_value = jerry_create_undefined ();
 
@@ -730,7 +758,7 @@ main (int argc,
             break;
           }
 
-          init_engine (flags, true, debug_port);
+          init_engine (flags, debug_channel, debug_port);
 
           ret_value = jerry_create_undefined ();
         }
@@ -774,7 +802,7 @@ main (int argc,
 
     jerry_cleanup ();
 
-    init_engine (flags, true, debug_port);
+    init_engine (flags, debug_channel, debug_port);
 
     ret_value = jerry_create_undefined ();
   }

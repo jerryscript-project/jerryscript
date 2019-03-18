@@ -12,9 +12,10 @@ script: tools/run-tests.py $OPTS
 matrix:
   include:
     - name: "Checks"
-      env:
-        - OPTS="--check-signed-off=travis --check-cppcheck --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint"
       install: pip install --user pylint==1.6.5
+      script:
+        - tools/run-tests.py --check-signed-off=travis --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint
+        - travis_wait 30 tools/run-tests.py --check-cppcheck
       addons:
         apt:
           packages: [doxygen, cppcheck, vera++]

@@ -21,11 +21,10 @@ WEBSOCKET_BINARY_FRAME = 2
 WEBSOCKET_FIN_BIT = 0x80
 
 class WebSocket(object):
-    def __init__(self, address, protocol):
+    def __init__(self, protocol):
 
         self.data_buffer = b""
         self.protocol = protocol
-        self.address = address
 
     def __handshake(self):
         """ Client Handshake Request. """
@@ -55,7 +54,7 @@ class WebSocket(object):
 
     def connect(self, config_size):
         """  WebSockets connection. """
-        self.protocol.connect(self.address)
+        self.protocol.connect()
         self.data_buffer = b""
         self.__handshake()
 

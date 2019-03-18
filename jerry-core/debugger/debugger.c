@@ -38,9 +38,9 @@ typedef struct
  * The number of message types in the debugger should reflect the
  * debugger versioning.
  */
-JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 32
+JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 33
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 21
-                     && JERRY_DEBUGGER_VERSION == 8,
+                     && JERRY_DEBUGGER_VERSION == 9,
                      debugger_version_correlates_to_message_type_count);
 
 /**

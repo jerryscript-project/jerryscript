@@ -14,38 +14,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import socket
 import select
+import serial
 
-# pylint: disable=too-many-arguments,superfluous-parens
-class Socket(object):
+class Serial(object):
     """ Create a new socket using the given address family, socket type and protocol number. """
-    def __init__(self, address, socket_family=socket.AF_INET, socket_type=socket.SOCK_STREAM, proto=0, fileno=None):
-        self.address = address
-        self.socket = socket.socket(socket_family, socket_type, proto, fileno)
+    def __init__(self, serial_config):
+        config = serial_config.split(',')
+        config_size = len(config)
+
+        port = config[0] if config_size > 0 else "/dev/ttyUSB0"
+        baudrate = config[1] if config_size > 1 else 115200
+        bytesize = int(config[2]) if config_size > 2 else 8
+        parity = config[3] if config_size > 3 else 'N'
+        stopbits = int(config[4]) if config_size > 4 else 1
+
+        self.ser = serial.Serial(port=port, baudrate=baudrate, parity=parity,
+                                 stopbits=stopbits, bytesize=bytesize, timeout=1)
 
     def connect(self):
-        """
-        Connect to a remote socket at address (host, port).
-        The format of address depends on the address family.
-        """
-        print("Connecting to: %s:%s" % (self.address[0], self.address[1]))
-        self.socket.connect(self.address)
+        """ Connect to the server, write a 'c' to the serial port """
+        self.send_data('c')
 
     def close(self):
-        """" Mark the socket closed. """
-        self.socket.close()
+        """"  close the serial port. """
+        self.ser.close()
 
     def receive_data(self, max_size=1024):
         """ The maximum amount of data to be received at once is specified by max_size. """
-        return self.socket.recv(max_size)
+        return self.ser.read(max_size)
 
     def send_data(self, data):
-        """ Send data to the socket. The socket must be connected to a remote socket. """
-        return self.socket.send(data)
+        """ Write data to the serial port. """
+        return self.ser.write(data)
 
     def ready(self):
         """ Monitor the file descriptor. """
-        result = select.select([self.socket], [], [], 0)[0]
+        result = select.select([self.ser.fileno()], [], [], 0)[0]
 
-        return self.socket in result
+        return self.ser.fileno() in result

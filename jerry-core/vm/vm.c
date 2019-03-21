@@ -851,9 +851,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             vm_var_decl (frame_ctx_p, name_p);
 
-            ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p, name_p);
-
-            ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+            ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (frame_ctx_p->lex_env_p,
                                                                             name_p,
                                                                             is_strict,
                                                                             lit_value);
@@ -1679,12 +1677,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
             ecma_object_t *ref_base_lex_env_p;
-            ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
-                                                                 name_p);
 
-            result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                     name_p,
-                                                     is_strict);
+            result = ecma_op_get_value_lex_env_base (frame_ctx_p->lex_env_p,
+                                                     &ref_base_lex_env_p,
+                                                     name_p);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
@@ -2152,22 +2148,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-            ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
-                                                                                name_p);
+            ecma_object_t *ref_base_lex_env_p;
+
+            result = ecma_op_get_value_lex_env_base (frame_ctx_p->lex_env_p,
+                                                     &ref_base_lex_env_p,
+                                                     name_p);
 
             if (ref_base_lex_env_p == NULL)
             {
+              ecma_free_value (JERRY_CONTEXT (error_value));
               result = ECMA_VALUE_UNDEFINED;
             }
-            else
-            {
-              result = ecma_op_get_value_lex_env_base (ref_base_lex_env_p,
-                                                       name_p,
-                                                       is_strict);
-
-            }
-
-            if (ECMA_IS_VALUE_ERROR (result))
+            else if (ECMA_IS_VALUE_ERROR (result))
             {
               goto error;
             }
@@ -3179,10 +3171,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_string_t *var_name_str_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
-          ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (frame_ctx_p->lex_env_p,
-                                                                              var_name_str_p);
-
-          ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (ref_base_lex_env_p,
+          ecma_value_t put_value_result = ecma_op_put_value_lex_env_base (frame_ctx_p->lex_env_p,
                                                                           var_name_str_p,
                                                                           is_strict,
                                                                           result);

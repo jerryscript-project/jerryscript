@@ -29,7 +29,7 @@
 bool ecma_typedarray_helper_is_typedarray (uint8_t builtin_id);
 uint8_t ecma_typedarray_helper_get_shift_size (uint8_t builtin_id);
 uint8_t ecma_typedarray_helper_get_builtin_id (ecma_object_t *obj_p);
-uint8_t ecma_typedarray_helper_get_magic_string (uint8_t builtin_id);
+lit_magic_string_id_t ecma_typedarray_helper_get_magic_string (uint8_t builtin_id);
 uint8_t ecma_typedarray_helper_get_prototype_id (uint8_t builtin_id);
 
 ecma_value_t

@@ -1841,6 +1841,9 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
 #else /* JERRY_NDEBUG */
   JERRY_UNUSED (obj_p);

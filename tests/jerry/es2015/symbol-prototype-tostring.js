@@ -29,6 +29,8 @@ try {
 
 var foo = Symbol ('foo');
 assert (foo.toString () === "Symbol(foo)");
+assert (String (foo) === "Symbol(foo)");
 
 var fooObj = Object (foo);
 assert (fooObj.toString () === "Symbol(foo)");
+assert (String (fooObj) === "Symbol(foo)");

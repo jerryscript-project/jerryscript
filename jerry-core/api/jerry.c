@@ -193,6 +193,8 @@ jerry_cleanup (void)
 #ifdef JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
+    jerry_debugger_send_type (JERRY_DEBUGGER_CLOSE_CONNECTION);
+
     jerry_debugger_transport_close ();
   }
 #endif /* JERRY_DEBUGGER */

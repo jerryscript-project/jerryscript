@@ -20,14 +20,13 @@ MAX_BUFFER_SIZE = 256
 
 class RawPacket(object):
     """ Simplified transmission layer. """
-    def __init__(self, address, protocol):
+    def __init__(self, protocol):
         self.protocol = protocol
         self.data_buffer = b""
-        self.address = address
 
     def connect(self, config_size):
         """  Create connection. """
-        self.protocol.connect(self.address)
+        self.protocol.connect()
         self.data_buffer = b""
 
         # It will return with the Network configurations, which has the following struct:

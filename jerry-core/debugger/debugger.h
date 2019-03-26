@@ -156,6 +156,7 @@ typedef enum
   JERRY_DEBUGGER_SCOPE_CHAIN_END = 29, /**< last output of scope chain */
   JERRY_DEBUGGER_SCOPE_VARIABLES = 30, /**< scope variables */
   JERRY_DEBUGGER_SCOPE_VARIABLES_END = 31, /**< last output of scope variables */
+  JERRY_DEBUGGER_CLOSE_CONNECTION = 32, /**< close connection with the client */
   JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT, /**< number of different type of output messages by the debugger */
 
   /* Messages sent by the client to server. */

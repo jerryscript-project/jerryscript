@@ -24,6 +24,11 @@ import logging
 import time
 import jerry_client_main
 
+from jerry_client_websocket import WebSocket
+from jerry_client_rawpacket import RawPacket
+from jerry_client_tcp import Socket
+from jerry_client_serial import Serial
+
 def write(string):
     print(string, end='')
 
@@ -246,14 +251,40 @@ def src_check_args(args):
         print("Error: Non-negative integer number expected: %s" % (val_errno))
         return -1
 
-# pylint: disable=too-many-branches,too-many-locals,too-many-statements
+# pylint: disable=too-many-branches,too-many-locals,too-many-statements,redefined-variable-type
 def main():
     args = jerry_client_main.arguments_parse()
 
-    debugger = jerry_client_main.JerryDebugger(args.address, args.channel)
+    channel = None
+    protocol = None
+
+    if args.protocol == "tcp":
+        address = None
+        if ":" not in args.address:
+            address = (args.address, 5001) # use default port
+        else:
+            host, port = args.address.split(":")
+            address = (host, int(port))
+
+        protocol = Socket(address)
+    elif args.protocol == "serial":
+        protocol = Serial(args.serial_config)
+    else:
+        print("Unsupported transmission protocol")
+        return -1
+
+    if args.channel == "websocket":
+        channel = WebSocket(protocol=protocol)
+    elif args.channel == "rawpacket":
+        channel = RawPacket(protocol=protocol)
+    else:
+        print("Unsupported communication channel")
+        return -1
+
+    debugger = jerry_client_main.JerryDebugger(channel)
     debugger.non_interactive = args.non_interactive
 
-    logging.debug("Connected to JerryScript on %d port", debugger.port)
+    logging.debug("Connected to JerryScript")
 
     prompt = DebuggerPrompt(debugger)
     prompt.prompt = "(jerry-debugger) "

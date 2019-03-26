@@ -21,12 +21,9 @@ import re
 import select
 import struct
 import sys
-from jerry_client_websocket import WebSocket
-from jerry_client_rawpacket import RawPacket
-from jerry_client_tcp import Socket
 
 # Expected debugger protocol version.
-JERRY_DEBUGGER_VERSION = 8
+JERRY_DEBUGGER_VERSION = 9
 
 # Messages sent by the server to client.
 JERRY_DEBUGGER_CONFIGURATION = 1
@@ -60,6 +57,7 @@ JERRY_DEBUGGER_SCOPE_CHAIN = 28
 JERRY_DEBUGGER_SCOPE_CHAIN_END = 29
 JERRY_DEBUGGER_SCOPE_VARIABLES = 30
 JERRY_DEBUGGER_SCOPE_VARIABLES_END = 31
+JERRY_DEBUGGER_CLOSE_CONNECTION = 32
 
 # Debugger option flags
 JERRY_DEBUGGER_LITTLE_ENDIAN = 0x1
@@ -123,7 +121,7 @@ def arguments_parse():
     parser = argparse.ArgumentParser(description="JerryScript debugger client")
 
     parser.add_argument("address", action="store", nargs="?", default="localhost:5001",
-                        help="specify a unique network address for connection (default: %(default)s)")
+                        help="specify a unique network address for tcp connection (default: %(default)s)")
     parser.add_argument("-v", "--verbose", action="store_true", default=False,
                         help="increase verbosity (default: %(default)s)")
     parser.add_argument("--non-interactive", action="store_true", default=False,
@@ -138,6 +136,10 @@ def arguments_parse():
                         help="specify a javascript source file to execute")
     parser.add_argument("--channel", choices=["websocket", "rawpacket"], default="websocket",
                         help="specify the communication channel (default: %(default)s)")
+    parser.add_argument("--protocol", choices=["tcp", "serial"], default="tcp",
+                        help="specify the transmission protocol over the communication channel (default: %(default)s)")
+    parser.add_argument("--serial-config", metavar="CONFIG_STRING", default="/dev/ttyUSB0,115200,8,N,1",
+                        help="Configure parameters for serial port (default: %(default)s)")
     args = parser.parse_args()
 
     if args.verbose:
@@ -266,17 +268,7 @@ class DebuggerAction(object):
 
 class JerryDebugger(object):
     # pylint: disable=too-many-instance-attributes,too-many-statements,too-many-public-methods,no-self-use,redefined-variable-type
-    def __init__(self, address, channel):
-
-        if ":" not in address:
-            self.host = address
-            self.port = 5001  # use default port
-        else:
-            self.host, self.port = address.split(":")
-            self.port = int(self.port)
-
-        print("Connecting to: %s:%s" % (self.host, self.port))
-
+    def __init__(self, channel):
         self.prompt = False
         self.function_list = {}
         self.source = ''
@@ -304,15 +296,7 @@ class JerryDebugger(object):
         self.non_interactive = False
         self.current_out = b""
         self.current_log = b""
-        self.channel = None
-
-        protocol = Socket()
-        if channel == "websocket":
-            self.channel = WebSocket(address=(self.host, self.port), protocol=protocol)
-        elif channel == "rawpacket":
-            self.channel = RawPacket(address=(self.host, self.port), protocol=protocol)
-        else:
-            raise Exception("Unsupported communication channel")
+        self.channel = channel
 
         config_size = 8
         # The server will send the configuration message after connection established
@@ -697,7 +681,6 @@ class JerryDebugger(object):
     # pylint: disable=too-many-branches,too-many-locals,too-many-statements,too-many-return-statements
     def process_messages(self):
         result = ""
-
         while True:
             data = self.channel.get_message(False)
             if not self.non_interactive:
@@ -845,6 +828,9 @@ class JerryDebugger(object):
                     self.prompt = True
 
                 return DebuggerAction(DebuggerAction.TEXT, result)
+
+            elif JERRY_DEBUGGER_CLOSE_CONNECTION:
+                return DebuggerAction(DebuggerAction.END, "")
 
             else:
                 raise Exception("Unknown message")

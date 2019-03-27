@@ -30,14 +30,22 @@
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly
    but these catch some common cases. */
 
+
+#ifndef __LITTLE_ENDIAN
+/* Check if compiler has byte order macro. Some older versions do not.
+ * If byte order is supported and set to little or target is among common
+ * cases checked define __LITTLE_ENDIAN.
+ */
 #if (defined (i386) || defined (__i386) || defined (__i386__) || \
      defined (i486) || defined (__i486) || defined (__i486__) || \
      defined (intel) || defined (x86) || defined (i86pc) || \
      defined (__alpha) || defined (__osf__) || \
      defined (__x86_64__) || defined (__arm__) || defined (__aarch64__) || \
-     defined (__xtensa__))
+     defined (__xtensa__) || defined (__MIPSEL)) || \
+(defined (__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
 #define __LITTLE_ENDIAN
 #endif
+#endif /* !__LITTLE_ENDIAN */
 
 #ifdef __LITTLE_ENDIAN
 #define __HI(x) *(1 + (int *) &x)

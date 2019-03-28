@@ -28,7 +28,7 @@ You can checkout the firmware with the following command:
 
 ```
 # assume you are in root folder
-git clone https://github.com/spark/firmware.git particle/firmware particle/firmware
+git clone https://github.com/spark/firmware.git particle/firmware
 ````
 
 The Photon’s latest firmware release is hosted in the latest branch of the firmware repo.

@@ -2475,7 +2475,8 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  return ecma_builtin_helper_object_get_properties (ecma_get_object_from_value (obj_val), true);
+  return ecma_builtin_helper_object_get_properties (ecma_get_object_from_value (obj_val),
+                                                    ECMA_LIST_ENUMERABLE);
 } /* jerry_get_object_keys */
 
 /**

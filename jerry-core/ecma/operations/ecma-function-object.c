@@ -927,37 +927,40 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     }
     else
     {
-      break;
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+      arguments_list_p = ecma_op_function_clear_construct_flag (arguments_list_p);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+      JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
+      args_length--;
+
+      ecma_length_t merged_args_list_len = args_length + arguments_list_len;
+      ecma_value_t ret_value;
+
+      JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
+
+      ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+
+      memcpy (merged_args_list_p, args_p + 1, args_length * sizeof (ecma_value_t));
+      memcpy (merged_args_list_p + args_length, arguments_list_p, arguments_list_len * sizeof (ecma_value_t));
+
+      /* 5. */
+      ret_value = ecma_op_function_call (target_func_obj_p,
+                                         this_arg_value,
+                                         merged_args_list_p,
+                                         merged_args_list_len);
+
+      JMEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
+
+      return ret_value;
     }
   }
   while (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
-  arguments_list_p = ecma_op_function_clear_construct_flag (arguments_list_p);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
-
-  JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
-  args_length--;
-
-  ecma_length_t merged_args_list_len = args_length + arguments_list_len;
-  ecma_value_t ret_value;
-
-  JMEM_DEFINE_LOCAL_ARRAY (merged_args_list_p, merged_args_list_len, ecma_value_t);
-
-  ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
-
-  memcpy (merged_args_list_p, args_p + 1, args_length * sizeof (ecma_value_t));
-  memcpy (merged_args_list_p + args_length, arguments_list_p, arguments_list_len * sizeof (ecma_value_t));
-
-  /* 5. */
-  ret_value = ecma_op_function_call (target_func_obj_p,
-                                     this_arg_value,
-                                     merged_args_list_p,
-                                     merged_args_list_len);
-
-  JMEM_FINALIZE_LOCAL_ARRAY (merged_args_list_p);
-
-  return ret_value;
+  return ecma_op_function_call (func_obj_p,
+                                this_arg_value,
+                                arguments_list_p,
+                                arguments_list_len);
 } /* ecma_op_function_call */
 
 /**

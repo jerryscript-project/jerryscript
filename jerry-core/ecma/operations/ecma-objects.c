@@ -1559,7 +1559,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
 
           if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-              && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+              && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+              && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
           {
             /* Internal properties are never enumerated. */
             continue;

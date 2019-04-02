@@ -111,13 +111,14 @@ JERRY_TEST_SUITE_OPTIONS.extend([
 
 # Test options for test262
 TEST262_TEST_SUITE_OPTIONS = [
-    Options('test262_tests')
+    Options('test262_tests'),
+    Options('test262_tests-debug', OPTIONS_DEBUG)
 ]
 
 # Test options for jerry-debugger
 DEBUGGER_TEST_OPTIONS = [
     Options('jerry_debugger_tests',
-            ['--debug', '--jerry-debugger=on'])
+            OPTIONS_DEBUG + ['--jerry-debugger=on'])
 ]
 
 # Test options for buildoption-test

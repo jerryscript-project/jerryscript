@@ -50,10 +50,9 @@ DECLARE_CLASS_FUNCTION(DigitalOut, write) {
 
     // Extract native DigitalOut pointer
     void* void_ptr;
-    const jerry_object_native_info_t* type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native DigitalOut pointer");
     }
@@ -78,10 +77,9 @@ DECLARE_CLASS_FUNCTION(DigitalOut, read) {
 
     // Extract native DigitalOut pointer
     void* void_ptr;
-    const jerry_object_native_info_t* type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native DigitalOut pointer");
     }
@@ -103,10 +101,9 @@ DECLARE_CLASS_FUNCTION(DigitalOut, is_connected) {
 
     // Extract native DigitalOut pointer
     void* void_ptr;
-    const jerry_object_native_info_t* type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native DigitalOut pointer");
     }

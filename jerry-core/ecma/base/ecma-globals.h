@@ -294,10 +294,11 @@ typedef struct
 /**
  * Representation for native pointer data.
  */
-typedef struct
+typedef struct ecma_native_pointer_t
 {
   void *data_p; /**< points to the data of the object */
   ecma_object_native_info_t *info_p; /**< native info */
+  struct ecma_native_pointer_t *next_p; /**< points to the next ecma_native_pointer_t element */
 } ecma_native_pointer_t;
 
 /**

@@ -501,17 +501,24 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
   native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                       value_p->value);
 
-  if (native_pointer_p->info_p != NULL)
+  while (native_pointer_p != NULL)
   {
-    ecma_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
-
-    if (free_cb != NULL)
+    if (native_pointer_p->info_p != NULL)
     {
-      free_cb (native_pointer_p->data_p);
-    }
-  }
+      ecma_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
 
-  jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+      if (free_cb != NULL)
+      {
+        free_cb (native_pointer_p->data_p);
+      }
+    }
+
+    ecma_native_pointer_t *next_p = native_pointer_p->next_p;
+
+    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+
+    native_pointer_p = next_p;
+  }
 } /* ecma_gc_free_native_pointer */
 
 /**

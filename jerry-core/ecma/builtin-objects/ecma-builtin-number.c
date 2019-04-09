@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
+#if ENABLED (JERRY_BUILTIN_NUMBER)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -97,4 +97,4 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */

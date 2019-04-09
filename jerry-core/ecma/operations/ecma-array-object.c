@@ -85,11 +85,11 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     array_items_count = arguments_list_len;
   }
 
-#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
+#if ENABLED (JERRY_BUILTIN_ARRAY)
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
-#else /* CONFIG_DISABLE_ARRAY_BUILTIN */
+#else /* ENABLED (JERRY_BUILTIN_ARRAY) */
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
+#endif /* !(ENABLED (JERRY_BUILTIN_ARRAY)) */
 
   ecma_object_t *object_p = ecma_create_object (array_prototype_object_p,
                                                 sizeof (ecma_extended_object_t),
@@ -128,7 +128,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_array_object */
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
 /**
  * Array object creation with custom prototype.
  *
@@ -159,7 +159,7 @@ ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p
                                       arguments_list_len,
                                       is_treat_single_arg_as_length);
 } /* ecma_op_create_array_object_by_constructor */
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
 /**
  * Update the length of an array to a new length

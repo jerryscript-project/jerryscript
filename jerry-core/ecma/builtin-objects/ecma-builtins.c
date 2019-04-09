@@ -421,7 +421,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
   /** Initializing [[PrimitiveValue]] properties of built-in prototype objects */
   switch (obj_builtin_id)
   {
-#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
+#if ENABLED (JERRY_BUILTIN_ARRAY)
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_ARRAY);
@@ -431,9 +431,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ext_object_p->u.array.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
       break;
     }
-#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
 
-#ifndef CONFIG_DISABLE_STRING_BUILTIN
+#if ENABLED (JERRY_BUILTIN_STRING)
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
@@ -443,9 +443,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ext_object_p->u.class_prop.u.value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
       break;
     }
-#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */
 
-#ifndef CONFIG_DISABLE_NUMBER_BUILTIN
+#if ENABLED (JERRY_BUILTIN_NUMBER)
     case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
@@ -455,9 +455,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ext_object_p->u.class_prop.u.value = ecma_make_integer_value (0);
       break;
     }
-#endif /* !CONFIG_DISABLE_NUMBER_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
 
-#ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
+#if ENABLED (JERRY_BUILTIN_BOOLEAN)
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
@@ -467,9 +467,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ext_object_p->u.class_prop.u.value = ECMA_VALUE_FALSE;
       break;
     }
-#endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
 
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
+#if ENABLED (JERRY_BUILTIN_DATE)
     case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
@@ -482,9 +482,9 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, prim_prop_num_value_p);
       break;
     }
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_DATE) */
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
     case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
     {
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
@@ -494,7 +494,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ext_object_p->u.class_prop.u.value = ECMA_NULL_POINTER;
       break;
     }
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
     default:
     {
       JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_CLASS);
@@ -653,7 +653,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (string_p);
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (string_p)))
   {
     if (string_p->hash & ECMA_GLOBAL_SYMBOL_FLAG)
@@ -661,7 +661,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       magic_string_id = (string_p->hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
     }
   }
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
   if (magic_string_id == LIT_MAGIC_STRING__COUNT)
   {
@@ -782,7 +782,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->value);
       break;
     }
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
       lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
@@ -800,7 +800,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_symbol_value (symbol_p);
       break;
     }
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
       ecma_object_t *builtin_object_p = ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value);
@@ -943,14 +943,14 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
         index = 0;
       }
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
       /* Builtin symbol properties are internal magic strings which must not be listed */
       if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
       {
         curr_property_p++;
         continue;
       }
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
       ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 

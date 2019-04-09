@@ -25,7 +25,7 @@
  #include "ecma-try-catch-macro.h"
  #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -95,4 +95,4 @@ ecma_builtin_symbol_prototype_object_to_primitive (ecma_value_t this_arg) /**< t
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */

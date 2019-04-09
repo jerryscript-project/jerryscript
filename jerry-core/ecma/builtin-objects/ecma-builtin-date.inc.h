@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
+#if ENABLED (JERRY_BUILTIN_DATE)
 
 /* ECMA-262 v5, 15.9.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
@@ -34,6 +34,6 @@ ROUTINE (LIT_MAGIC_STRING_PARSE, ecma_builtin_date_parse, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UTC_U, ecma_builtin_date_utc, NON_FIXED, 7)
 ROUTINE (LIT_MAGIC_STRING_NOW, ecma_builtin_date_now, 0, 0)
 
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_DATE) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

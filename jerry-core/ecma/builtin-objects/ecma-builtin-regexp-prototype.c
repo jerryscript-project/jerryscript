@@ -24,7 +24,7 @@
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 #include "ecma-regexp-object.h"
 #include "re-compiler.h"
 
@@ -45,7 +45,7 @@
  * @{
  */
 
-#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+#if ENABLED (JERRY_BUILTIN_ANNEXB)
 
 /**
  * The RegExp.prototype object's 'compile' routine
@@ -216,7 +216,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_regexp_prototype_compile */
 
-#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
 
 /**
  * The RegExp.prototype object's 'exec' routine
@@ -398,4 +398,4 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */

@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+#if ENABLED (JERRY_BUILTIN_ERRORS)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -39,6 +39,6 @@ STRING_VALUE (LIT_MAGIC_STRING_MESSAGE,
               LIT_MAGIC_STRING__EMPTY,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#endif /* CONFIG_DISABLE_ERROR_BUILTINS */
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

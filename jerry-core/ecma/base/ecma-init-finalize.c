@@ -48,9 +48,9 @@ ecma_init (void)
   JERRY_CONTEXT (vm_recursion_counter) = VM_RECURSION_LIMIT;
 #endif /* VM_RECURSION_LIMIT */
 
-#ifndef CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();
-#endif /* CONFIG_DISABLE_ES2015_PROMISE_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 } /* ecma_init */
 
 /**
@@ -61,9 +61,9 @@ ecma_finalize (void)
 {
   jmem_unregister_free_unused_memory_callback (ecma_free_unused_memory);
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   ecma_module_finalize_lex_envs ();
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
   ecma_finalize_global_lex_env ();
   ecma_finalize_builtins ();

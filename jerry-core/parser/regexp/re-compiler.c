@@ -24,7 +24,7 @@
 #include "re-compiler.h"
 #include "re-parser.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /** \addtogroup parser Parser
  * @{
@@ -675,4 +675,4 @@ re_compile_bytecode (const re_compiled_code_t **out_bytecode_p, /**< [out] point
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */

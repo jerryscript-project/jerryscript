@@ -30,7 +30,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_ARRAY_BUILTIN
+#if ENABLED (JERRY_BUILTIN_ARRAY)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -229,17 +229,17 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
                                             ecma_object_t *obj_p) /**< array object */
 {
   /* 2. */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* CONFIG_DISABLE_ES2015_CLASS */
+#else /* !ENABLED (JERRY_ES2015_CLASS) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
   uint32_t new_length = 0;
@@ -739,17 +739,17 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 
   JERRY_ASSERT (start <= len && end <= len);
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* CONFIG_DISABLE_ES2015_CLASS */
+#else /* !ENABLED (JERRY_ES2015_CLASS) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1049,17 +1049,17 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
                                             ecma_object_t *obj_p, /**< array object */
                                             uint32_t len) /**< array object's length */
 {
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* CONFIG_DISABLE_ES2015_CLASS */
+#else /* !ENABLED (JERRY_ES2015_CLASS) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1688,17 +1688,17 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
   }
 
   /* 6. */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* CONFIG_DISABLE_ES2015_CLASS */
+#else /* !ENABLED (JERRY_ES2015_CLASS) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1780,17 +1780,17 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   }
 
   /* 6. */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* CONFIG_DISABLE_ES2015_CLASS */
+#else /* !ENABLED (JERRY_ES2015_CLASS) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1992,7 +1992,7 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
   return ret_value;
 } /* ecma_builtin_array_reduce_from */
 
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
 /**
  * The Array.prototype object's 'find' routine
  *
@@ -2061,9 +2061,9 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
 
   return ret_value;
 } /* ecma_builtin_array_prototype_object_find */
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
-#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
 /**
  * Helper function for Array.prototype object's {'keys', 'values', 'entries', '@@iterator'}
  * routines common parts.
@@ -2092,7 +2092,7 @@ ecma_builtin_array_iterators_helper (ecma_object_t *obj_p, /**< array object */
                                          ECMA_PSEUDO_ARRAY_ITERATOR,
                                          type);
 } /* ecma_builtin_array_iterators_helper */
-#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * Dispatcher of the built-in's routines
@@ -2137,7 +2137,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     return ret_value;
   }
 
-#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
   if (JERRY_UNLIKELY (builtin_routine_id >= ECMA_ARRAY_PROTOTYPE_ENTRIES
                       && builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR))
   {
@@ -2162,7 +2162,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     ecma_deref_object (obj_p);
     return ret_value;
   }
-#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
   ecma_value_t len_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
 
@@ -2300,7 +2300,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                   length);
       break;
     }
-#ifndef CONFIG_DISABLE_ES2015_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN)
     case ECMA_ARRAY_PROTOTYPE_FIND:
     {
       ret_value = ecma_builtin_array_prototype_object_find (routine_arg_1,
@@ -2309,7 +2309,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                             length);
       break;
     }
-#endif /* !CONFIG_DISABLE_ES2015_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FILTER);
@@ -2334,4 +2334,4 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */

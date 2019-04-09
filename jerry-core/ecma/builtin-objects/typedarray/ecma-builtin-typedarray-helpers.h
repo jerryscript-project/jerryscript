@@ -15,9 +15,9 @@
 
 #ifndef ECMA_TYPEDARRAY_HELPERS_H
 #define ECMA_TYPEDARRAY_HELPERS_H
-#ifndef CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
-
 #include "ecma-globals.h"
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -42,5 +42,5 @@ ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p,
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #endif /* !ECMA_TYPEDARRAY_HELPERS_H */

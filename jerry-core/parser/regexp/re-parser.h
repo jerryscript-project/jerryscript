@@ -16,7 +16,7 @@
 #ifndef RE_PARSER_H
 #define RE_PARSER_H
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /** \addtogroup parser Parser
  * @{
@@ -113,5 +113,5 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, re_token_t *out_token_p);
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 #endif /* !RE_PARSER_H */

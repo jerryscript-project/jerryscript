@@ -42,12 +42,12 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 
   uint32_t flags = 0;
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
   flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#if ENABLED (JERRY_ES2015_CLASS)
   flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -60,12 +60,12 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 static inline bool JERRY_ATTR_ALWAYS_INLINE
 snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 {
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_REGEX_LITERAL;
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#if ENABLED (JERRY_ES2015_CLASS)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
@@ -120,11 +120,11 @@ snapshot_write_to_buffer_by_offset (uint8_t *buffer_p, /**< buffer */
 /**
  * Maximum snapshot write buffer offset.
  */
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 #define JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET (0x7fffff >> 1)
-#else
+#else /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 #define JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET (UINT32_MAX >> 1)
-#endif
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 /**
  * Save snapshot helper.
@@ -160,14 +160,14 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
   {
     globals_p->class_found = true;
   }
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
     /* Regular expression. */
@@ -219,7 +219,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
     return start_offset;
   }
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
   JERRY_ASSERT (compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 
@@ -548,7 +548,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) base_addr_p;
   uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
     const re_compiled_code_t *re_bytecode_p = NULL;
@@ -567,7 +567,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
     return (ecma_compiled_code_t *) re_bytecode_p;
   }
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
   JERRY_ASSERT (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 

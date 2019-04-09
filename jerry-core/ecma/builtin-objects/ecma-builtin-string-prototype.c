@@ -31,11 +31,11 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 #include "ecma-regexp-object.h"
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
-#ifndef CONFIG_DISABLE_STRING_BUILTIN
+#if ENABLED (JERRY_BUILTIN_STRING)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -360,7 +360,7 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_value_t this_arg, /**<
   return ret_value;
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /**
  * The common preparation code for 'search' and 'match' functions
@@ -1336,7 +1336,7 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_search */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
 /**
  * The String.prototype object's 'slice' routine
@@ -1510,7 +1510,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
 
         if (separator_is_regexp)
         {
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
           ecma_value_t regexp_value = ecma_copy_value_if_not_object (separator);
           ecma_value_t match_result;
           match_result = ecma_regexp_exec_helper (regexp_value,
@@ -1524,9 +1524,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
           }
 
           ecma_free_value (match_result);
-#else
+#else /* !ENABLED (JERRY_BUILTIN_REGEXP) */
           return ecma_raise_type_error (ECMA_ERR_MSG ("REGEXP separator is disabled in split method."));
-#endif
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
         }
         else
         {
@@ -1576,14 +1576,14 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_arg, /**< this arg
 
           if (separator_is_regexp)
           {
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
             ecma_value_t regexp_value = ecma_copy_value_if_not_object (separator);
             ecma_string_t *substr_str_p = ecma_string_substr (this_to_string_p, curr_pos, string_length);
             match_result = ecma_regexp_exec_helper (regexp_value, ecma_make_string_value (substr_str_p), true);
             ecma_deref_ecma_string (substr_str_p);
-#else
+#else /* !ENABLED (JERRY_BUILTIN_REGEXP) */
             return ecma_raise_type_error (ECMA_ERR_MSG ("REGEXP separator is disabled in split method."));
-#endif
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
           }
           else
           {
@@ -2094,7 +2094,7 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   return ret_value;
 } /* ecma_builtin_string_prototype_object_trim */
 
-#ifndef CONFIG_DISABLE_ANNEXB_BUILTIN
+#if ENABLED (JERRY_BUILTIN_ANNEXB)
 
 /**
  * The String.prototype object's 'substr' routine
@@ -2162,7 +2162,7 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_substr */
 
-#endif /* !CONFIG_DISABLE_ANNEXB_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
 
 /**
  * @}
@@ -2170,4 +2170,4 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_STRING_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */

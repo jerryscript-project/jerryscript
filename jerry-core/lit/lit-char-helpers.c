@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+#include "config.h"
 #include "lit-char-helpers.h"
 #include "lit-unicode-ranges.inc.h"
 #include "lit-strings.h"
 
-#ifndef CONFIG_DISABLE_UNICODE_CASE_CONVERSION
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 #include "lit-unicode-conversions.inc.h"
-#endif /* !CONFIG_DISABLE_UNICODE_CASE_CONVERSION */
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 
 #define NUM_OF_ELEMENTS(array) (sizeof (array) / sizeof ((array)[0]))
 
@@ -468,7 +469,7 @@ lit_char_is_word_char (ecma_char_t c) /**< code unit */
           || c == LIT_CHAR_UNDERSCORE);
 } /* lit_char_is_word_char */
 
-#ifndef CONFIG_DISABLE_UNICODE_CASE_CONVERSION
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 
 /**
  * Check if the specified character is in one of those tables which contain bidirectional conversions.
@@ -644,7 +645,7 @@ search_in_conversion_table (ecma_char_t character,        /**< code unit */
 
   return 0;
 } /* search_in_conversion_table */
-#endif /* !CONFIG_DISABLE_UNICODE_CASE_CONVERSION */
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 
 /**
  * Returns the lowercase character sequence of an ecma character.
@@ -667,7 +668,7 @@ lit_char_to_lower_case (ecma_char_t character, /**< input character value */
     return 1;
   }
 
-#ifndef CONFIG_DISABLE_UNICODE_CASE_CONVERSION
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 
   ecma_length_t lowercase_sequence = search_in_bidirectional_conversion_tables (character, output_buffer_p, true);
 
@@ -700,7 +701,7 @@ lit_char_to_lower_case (ecma_char_t character, /**< input character value */
     return lowercase_sequence;
   }
 
-#endif /* !CONFIG_DISABLE_UNICODE_CASE_CONVERSION */
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 
   output_buffer_p[0] = character;
   return 1;
@@ -727,7 +728,7 @@ lit_char_to_upper_case (ecma_char_t character, /**< input character value */
     return 1;
   }
 
-#ifndef CONFIG_DISABLE_UNICODE_CASE_CONVERSION
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 
   ecma_length_t uppercase_sequence = search_in_bidirectional_conversion_tables (character, output_buffer_p, false);
 
@@ -761,7 +762,7 @@ lit_char_to_upper_case (ecma_char_t character, /**< input character value */
     return uppercase_sequence;
   }
 
-#endif /* !CONFIG_DISABLE_UNICODE_CASE_CONVERSION */
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 
   output_buffer_p[0] = character;
   return 1;

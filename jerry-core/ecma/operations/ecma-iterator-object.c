@@ -34,7 +34,7 @@
  * @{
  */
 
-#ifndef CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
 /**
  * Implementation of 'CreateArrayFromList' specialized for iterators
  *
@@ -161,7 +161,7 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_iterator_object */
 
-#endif /* !CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 /**
  * @}
  * @}

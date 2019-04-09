@@ -22,7 +22,7 @@
 #include "re-compiler.h"
 #include "re-parser.h"
 
-#ifndef CONFIG_DISABLE_REGEXP_BUILTIN
+#if ENABLED (JERRY_BUILTIN_REGEXP)
 
 /** \addtogroup parser Parser
  * @{
@@ -890,9 +890,9 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     }
     case LIT_CHAR_LEFT_BRACE:
     {
-#ifdef ENABLE_REGEXP_STRICT_MODE
+#if ENABLED (JERRY_REGEXP_STRICT_MODE)
       return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
-#else /* !ENABLE_REGEXP_STRICT_MODE */
+#else /* !ENABLED (JERRY_REGEXP_STRICT_MODE) */
       const lit_utf8_byte_t *input_curr_p = parser_ctx_p->input_curr_p;
 
       lit_utf8_decr (&parser_ctx_p->input_curr_p);
@@ -917,7 +917,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
         parser_ctx_p->input_curr_p = input_curr_p;
         ret_value = ECMA_VALUE_EMPTY;
       }
-#endif /* ENABLE_REGEXP_STRICT_MODE */
+#endif /* ENABLED (JERRY_REGEXP_STRICT_MODE) */
       break;
     }
     case LIT_CHAR_NULL:
@@ -943,4 +943,4 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_REGEXP_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */

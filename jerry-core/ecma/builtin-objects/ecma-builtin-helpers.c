@@ -35,7 +35,7 @@
  * @{
  */
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 /**
  * Helper function for Object.prototype.toString routine when
  * the @@toStringTag property is present
@@ -96,7 +96,7 @@ ecma_builtin_helper_object_to_string_tag_helper (ecma_value_t tag_value) /**< st
 
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_helper_object_to_string_tag_helper */
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 /**
  * Common implementation of the Object.prototype.toString routine
@@ -140,7 +140,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
     type_string = ecma_object_get_class_name (obj_p);
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
     ecma_value_t tag_value = ecma_op_object_get_by_symbol_id (obj_p, LIT_MAGIC_STRING_TO_STRING_TAG);
 
     if (ECMA_IS_VALUE_ERROR (tag_value))
@@ -156,7 +156,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
     }
 
     ecma_free_value (tag_value);
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
     ecma_deref_object (obj_p);
   }

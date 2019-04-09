@@ -30,18 +30,18 @@ Alternatively, if you want to use a custom profile at
 
 ```
 # Turn off every ES2015 feature EXCEPT the arrow functions
-CONFIG_DISABLE_ES2015_BUILTIN
-CONFIG_DISABLE_ES2015_CLASS
-CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
-CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER
-CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN
-CONFIG_DISABLE_ES2015_MAP_BUILTIN
-CONFIG_DISABLE_ES2015_MODULE_SYSTEM
-CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER
-CONFIG_DISABLE_ES2015_PROMISE_BUILTIN
-CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
-CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS
-CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN
+JERRY_ES2015_BUILTIN=0
+JERRY_ES2015_BUILTIN_ITERATOR=0
+JERRY_ES2015_BUILTIN_MAP=0
+JERRY_ES2015_BUILTIN_PROMISE=0
+JERRY_ES2015_BUILTIN_SYMBOL=0
+JERRY_ES2015_BUILTIN_TYPEDARRAY=0
+JERRY_ES2015_CLASS=0
+JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER=0
+JERRY_ES2015_FUNCTION_REST_PARAMETER=0
+JERRY_ES2015_MODULE_SYSTEM=0
+JERRY_ES2015_OBJECT_INITIALIZER=0
+JERRY_ES2015_TEMPLATE_STRINGS=0
 ```
 
 Run the build script as follows (assuming that you are in the project root
@@ -62,59 +62,88 @@ Set FEATURE_PROFILE option to one of the following values:
 ### Configurations
 
 In JerryScript all of the features are enabled by default, so an empty profile file turns on all of the available ECMA features.
+The defines can have a value of `0` or `1`. If for whatever reason one of them are not defined, it is treated as if it were
+defined to `1`.
 
-* `CONFIG_DISABLE_ANNEXB_BUILTIN`:
-  Disable the [Annex B](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-B) of the ECMA5.1 standard.
-* `CONFIG_DISABLE_ARRAY_BUILTIN`:
-  Disable the [Array](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.4) built-in.
-* `CONFIG_DISABLE_BOOLEAN_BUILTIN`:
-  Disable the [Boolean](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.6) built-in.
-* `CONFIG_DISABLE_DATE_BUILTIN`:
-  Disable the [Date](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.9) built-in.
-* `CONFIG_DISABLE_ERROR_BUILTINS`:
-  Disable the [Native Error Types](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.11.6) (EvalError, RangeError, ReferenceError, SyntaxError, TypeError, URIError).
+#### ES 5.1 features
+
+* `JERRY_BUILTIN_ANNEXB`:
+  Enables or disables the [Annex B](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-B) of the ECMA5.1 standard.
+* `JERRY_BUILTIN_ARRAY`:
+  Enables or disable the [Array](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.4) built-in.
+* `JERRY_BUILTIN_BOOLEAN`:
+  Enables or disables the [Boolean](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.6) built-in.
+* `JERRY_BUILTIN_DATE`:
+  Enables or disables the [Date](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.9) built-in.
+* `JERRY_BUILTIN_ERRORS`:
+  Enables or disables the [Native Error Types](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.11.6) (EvalError, RangeError, ReferenceError, SyntaxError, TypeError, URIError).
   **Note**: The [Error](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.11.2) object remains available.
-* `CONFIG_DISABLE_JSON_BUILTIN`:
-  Disable the [JSON](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.12) built-in.
-* `CONFIG_DISABLE_MATH_BUILTIN`:
-  Disable the [Math](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.8) built-in.
-* `CONFIG_DISABLE_NUMBER_BUILTIN`:
-  Disable the [Number](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.7) built-in.
-* `CONFIG_DISABLE_REGEXP_BUILTIN`:
-  Disable the [RegExp](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.10) built-in.
-* `CONFIG_DISABLE_STRING_BUILTIN`:
-  Disable the [String](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.5) built-in.
-* `CONFIG_DISABLE_BUILTINS`:
-  Disable all of the [Standard Built-in ECMAScript 5.1 Objects](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15)
-  (equivalent to `CONFIG_DISABLE_ANNEXB_BUILTIN`, `CONFIG_DISABLE_ARRAY_BUILTIN`, `CONFIG_DISABLE_BOOLEAN_BUILTIN`, `CONFIG_DISABLE_DATE_BUILTIN`, `CONFIG_DISABLE_ERROR_BUILTINS`, `CONFIG_DISABLE_JSON_BUILTIN`, `CONFIG_DISABLE_MATH_BUILTIN`, `CONFIG_DISABLE_NUMBER_BUILTIN`, `CONFIG_DISABLE_REGEXP_BUILTIN`, and `CONFIG_DISABLE_STRING_BUILTIN`).
+* `JERRY_BUILTIN_JSON`:
+  Enables or disables the [JSON](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.12) built-in.
+* `JERRY_BUILTIN_MATH`:
+  Enables or disables the [Math](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.8) built-in.
+* `JERRY_BUILTIN_NUMBER`:
+  Enables or disables the [Number](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.7) built-in.
+* `JERRY_BUILTIN_REGEXP`:
+  Enables or disables the [RegExp](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.10) built-in.
+* `JERRY_BUILTIN_STRING`:
+  Enables or disables the [String](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.5) built-in.
+* `JERRY_BUILTINS`:
+  Enables or disable all of the [Standard Built-in ECMAScript 5.1 Objects](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15)
+  This option is evaulated first, any other `JERRY_BUILTIN_<name>` defines will override that specific builtin config.
+  Equivalent with setting the following defines to the `JERRY_BUILTINS` value:
+    * `JERRY_BUILTIN_ANNEXB`
+    * `JERRY_BUILTIN_ARRAY`
+    * `JERRY_BUILTIN_BOOLEAN`
+    * `JERRY_BUILTIN_DATE`
+    * `JERRY_BUILTIN_ERRORS`
+    * `JERRY_BUILTIN_JSON`
+    * `JERRY_BUILTIN_MATH`
+    * `JERRY_BUILTIN_NUMBER`
+    * `JERRY_BUILTIN_REGEXP`
+    * `JERRY_BUILTIN_STRING`
 
-* `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`:
-  Disable the [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions).
-* `CONFIG_DISABLE_ES2015_BUILTIN`:
-  Disable the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
-* `CONFIG_DISABLE_ES2015_CLASS`:
-  Disable the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
-* `CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER`:
-  Disable the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
-* `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`:
-  Disable the [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions).
-* `CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN`:
-  Disable the [Iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
-* `CONFIG_DISABLE_ES2015_MAP_BUILTIN`:
-  Disable the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
-* `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`:
-  Disable the [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
-* `CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN`:
-  Disable the [Symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) built-in.
-* `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`:
-  Disable the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
-* `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`:
-  Disable the [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings).
-* `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`:
-  Disable the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
-* `CONFIG_DISABLE_ES2015_MODULE_SYSTEM`: Disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
-* `CONFIG_DISABLE_ES2015`: Disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
-  (equivalent to : `CONFIG_DISABLE_ES2015_ARROW_FUNCTION`, `CONFIG_DISABLE_ES2015_BUILTIN`, `CONFIG_DISABLE_ES2015_CLASS`,
-  `CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER`, `CONFIG_DISABLE_ES2015_FUNCTION_REST_PARAMETER`,
-  `CONFIG_DISABLE_ES2015_ITERATOR_BUILTIN`,`CONFIG_DISABLE_ES2015_MAP_BUILTIN`,  `CONFIG_DISABLE_ES2015_MODULE_SYSTEM`, `CONFIG_DISABLE_ES2015_OBJECT_INITIALIZER`,
-  `CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN`, `CONFIG_DISABLE_ES2015_PROMISE_BUILTIN`, `CONFIG_DISABLE_ES2015_TEMPLATE_STRINGS`, and `CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN`).
+#### ES6 (ES 2015) features
+
+* `JERRY_ES2015_ARROW_FUNCTION`:
+  Enables or disables the [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions).
+* `JERRY_ES2015_BUILTIN`:
+  Enables or disables the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
+* `JERRY_ES2015_BUILTIN_ITERATOR`:
+  Enables or disables the [Iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
+* `JERRY_ES2015_BUILTIN_MAP`:
+  Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
+* `JERRY_ES2015_BUILTIN_SYMBOL`:
+  Enables or disables the [Symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) built-in.
+* `JERRY_ES2015_BUILTIN_PROMISE`:
+  Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
+* `JERRY_ES2015_BUILTIN_TYPEDARRAY`:
+  Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
+* `JERRY_ES2015_CLASS`:
+  Enables or disables the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
+* `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`:
+  Enables or disables the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
+* `JERRY_ES2015_FUNCTION_REST_PARAMETER`:
+  Enables or disables the [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions).
+* `JERRY_ES2015_MODULE_SYSTEM`:
+  Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
+* `JERRY_ES2015_OBJECT_INITIALIZER`:
+  Enables or disables the [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
+* `JERRY_ES2015_TEMPLATE_STRINGS`:
+  Enables or disables the [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings).
+* `JERRY_ES2015`: Enables or disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
+  This option is evaulated first, any other `JERRY_ES2015_<name>` defines will override that specific entry.
+  Equivalent with setting the following defines to the `JERRY_ES2015` value:
+    * `JERRY_ES2015_ARROW_FUNCTION`
+    * `JERRY_ES2015_BUILTIN`
+    * `JERRY_ES2015_BUILTIN_ITERATOR`
+    * `JERRY_ES2015_BUILTIN_MAP`
+    * `JERRY_ES2015_BUILTIN_PROMISE`
+    * `JERRY_ES2015_BUILTIN_SYMBOL`
+    * `JERRY_ES2015_BUILTIN_TYPEDARRAY`
+    * `JERRY_ES2015_CLASS`
+    * `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`
+    * `JERRY_ES2015_FUNCTION_REST_PARAMETER`
+    * `JERRY_ES2015_MODULE_SYSTEM`
+    * `JERRY_ES2015_OBJECT_INITIALIZER`
+    * `JERRY_ES2015_TEMPLATE_STRINGS`

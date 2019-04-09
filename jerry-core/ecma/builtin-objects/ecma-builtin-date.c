@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
+#if ENABLED (JERRY_BUILTIN_DATE)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -571,4 +571,4 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_DATE) */

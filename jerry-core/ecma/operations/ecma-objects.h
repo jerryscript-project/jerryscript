@@ -35,9 +35,9 @@ ecma_value_t ecma_op_object_find (ecma_object_t *object_p, ecma_string_t *proper
 ecma_value_t ecma_op_object_get_own_data_prop (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t ecma_op_object_get (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t ecma_op_object_get_by_magic_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 ecma_value_t ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
-#endif /* CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 ecma_value_t ecma_op_object_put (ecma_object_t *object_p, ecma_string_t *property_name_p, ecma_value_t value,
                                  bool is_throw);
 ecma_value_t ecma_op_object_delete (ecma_object_t *obj_p, ecma_string_t *property_name_p, bool is_throw);

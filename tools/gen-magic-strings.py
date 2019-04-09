@@ -193,7 +193,7 @@ def calculate_magic_string_guards(defs, uses, debug=False):
 
 
 def guards_to_str(guards):
-    return ' \\\n|| '.join(' && '.join(g for g in sorted(guard))
+    return ' \\\n|| '.join(' && '.join(g.strip() for g in sorted(guard))
                            for guard in sorted(guards))
 
 

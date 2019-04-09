@@ -95,11 +95,11 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
 #endif /* JERRY_ENABLE_LINE_INFO */
 
-#ifndef CONFIG_DISABLE_ES2015_CLASS
+#if ENABLED (JERRY_ES2015_CLASS)
   parse_opts |= ECMA_GET_SUPER_EVAL_PARSER_OPTS ();
 
   ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS ();
-#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   ecma_value_t parse_status = parser_parse_script (NULL,
                                                    0,

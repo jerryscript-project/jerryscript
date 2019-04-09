@@ -506,7 +506,6 @@ jerry_port_print_char (char c) /**< the character to print */
   printf ("%c", c);
 } /* jerry_port_print_char */
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
 /**
  * Determines the size of the given file.
  * @return size of the file
@@ -573,7 +572,6 @@ jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
 {
   free (buffer_p);
 } /* jerry_port_release_source */
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
 
 /**
 * Main program.

@@ -48,7 +48,7 @@ ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *index_p, ecma_value_t value,
                               uint32_t opts, bool is_throw);
 
-#ifndef CONFIG_DISABLE_DATE_BUILTIN
+#if ENABLED (JERRY_BUILTIN_DATE)
 
 /**
  * Time range defines for helper functions.
@@ -118,8 +118,9 @@ ecma_value_t ecma_date_value_to_iso_string (ecma_number_t datetime_number);
 ecma_value_t ecma_date_value_to_date_string (ecma_number_t datetime_number);
 ecma_value_t ecma_date_value_to_time_string (ecma_number_t datetime_number);
 
-#endif /* !CONFIG_DISABLE_DATE_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_DATE) */
 
+#if ENABLED (JERRY_BUILTIN_JSON)
 /* ecma-builtin-helper-json.c */
 
 /**
@@ -165,6 +166,7 @@ ecma_builtin_helper_json_create_formatted_json (lit_utf8_byte_t left_bracket, li
 ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
                                                     ecma_collection_header_t *partial_p);
+#endif /* ENABLED (JERRY_BUILTIN_JSON) */
 
 /* ecma-builtin-helper-error.c */
 

@@ -31,7 +31,7 @@
 #include "lit-char-helpers.h"
 #include "lit-globals.h"
 
-#ifndef CONFIG_DISABLE_JSON_BUILTIN
+#if ENABLED (JERRY_BUILTIN_JSON)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -1818,4 +1818,4 @@ ecma_builtin_json_array (ecma_object_t *obj_p, /**< the array object*/
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_JSON_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_JSON) */

@@ -37,7 +37,7 @@ JERRY_STATIC_ASSERT (((1 << (ECMA_DIRECT_SHIFT - 1)) | ECMA_TYPE_DIRECT) == ECMA
 #define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
                               ECMA_NUMBER_BIASED_EXP_WIDTH)
 
-#if CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32
+#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t),
                      size_of_ecma_number_t_must_be_equal_to_4_bytes);
 
@@ -112,7 +112,7 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 127;
 
-#elif CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT64
+#elif ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t),
                      size_of_ecma_number_t_must_be_equal_to_8_bytes);
 
@@ -186,7 +186,7 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 1023;
 
-#endif /* CONFIG_ECMA_NUMBER_TYPE == CONFIG_ECMA_NUMBER_FLOAT32 */
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 
 /**
  * Get fraction of number

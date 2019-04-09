@@ -34,10 +34,10 @@ void ecma_init_global_lex_env (void);
 void ecma_finalize_global_lex_env (void);
 ecma_object_t *ecma_get_global_environment (void);
 
-#ifndef CONFIG_DISABLE_ES2015_MODULE_SYSTEM
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 void ecma_module_add_lex_env (ecma_object_t *lex_env_p);
 void ecma_module_finalize_lex_envs (void);
-#endif /* !CONFIG_DISABLE_ES2015_MODULE_SYSTEM */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 /**
  * @}

@@ -25,7 +25,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
-#ifndef CONFIG_DISABLE_BOOLEAN_BUILTIN
+#if ENABLED (JERRY_BUILTIN_BOOLEAN)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -117,4 +117,4 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
  * @}
  */
 
-#endif /* !CONFIG_DISABLE_BOOLEAN_BUILTIN */
+#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */

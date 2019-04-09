@@ -16,7 +16,7 @@
 #ifndef ECMA_SYMBOL_H
 #define ECMA_SYMBOL_H
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ECMA
@@ -44,7 +44,7 @@ ecma_symbol_to_string_helper (ecma_value_t this_arg, bool is_to_string);
 ecma_value_t
 ecma_get_symbol_descriptive_string (ecma_value_t symbol_value);
 
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 /**
  * @}
  * @}

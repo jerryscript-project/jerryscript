@@ -1420,7 +1420,7 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
 
   switch (((ecma_extended_object_t *) prototype_p)->u.built_in.id)
   {
-#ifndef CONFIG_DISABLE_ERROR_BUILTINS
+#if ENABLED (JERRY_BUILTIN_ERRORS)
     case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:
     {
       string_id = LIT_MAGIC_STRING_EVAL_ERROR_UL;
@@ -1451,7 +1451,7 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
       string_id = LIT_MAGIC_STRING_URI_ERROR_UL;
       break;
     }
-#endif /* !CONFIG_DISABLE_ERROR_BUILTINS */
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
     case ECMA_BUILTIN_ID_ERROR_PROTOTYPE:
     {
       string_id = LIT_MAGIC_STRING_ERROR_UL;

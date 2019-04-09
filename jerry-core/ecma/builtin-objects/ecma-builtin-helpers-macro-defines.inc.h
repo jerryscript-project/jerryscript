@@ -25,11 +25,11 @@
 #define STRING_VALUE(name, magic_string_id, prop_attributes)
 #endif /* !STRING_VALUE */
 
-#ifndef CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 #ifndef SYMBOL_VALUE
 #define SYMBOL_VALUE(name, desc_string_id)
 #endif /* !SYMBOL_VALUE */
-#endif /* !CONFIG_DISABLE_ES2015_SYMBOL_BUILTIN */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 #ifndef OBJECT_VALUE
 #define OBJECT_VALUE(name, obj_builtin_id, prop_attributes)

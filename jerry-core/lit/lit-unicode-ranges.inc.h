@@ -22,7 +22,7 @@
  * The characters covered by these intervals are from
  * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint16_t lit_unicode_letter_interval_sps[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_letter_interval_sps[] JERRY_ATTR_CONST_DATA =
 {
   0x00c0, 0x00d8, 0x00f8, 0x01f8, 0x02c6, 0x02e0, 0x0370, 0x0376, 0x037a, 0x0388,
   0x038e, 0x03a3, 0x03f7, 0x048a, 0x0531, 0x0561, 0x05d0, 0x05f0, 0x0620, 0x066e,
@@ -63,7 +63,7 @@ static const uint16_t lit_unicode_letter_interval_sps[] JERRY_CONST_DATA =
  * The characters covered by these intervals are from
  * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint8_t lit_unicode_letter_interval_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_unicode_letter_interval_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x0016, 0x001e, 0x00ff, 0x00c9, 0x000b, 0x0004, 0x0004, 0x0001, 0x0003, 0x0002,
   0x0013, 0x0052, 0x008a, 0x00a5, 0x0025, 0x0026, 0x001a, 0x0002, 0x002a, 0x0001,
@@ -105,7 +105,7 @@ static const uint8_t lit_unicode_letter_interval_lengths[] JERRY_CONST_DATA =
  * The characters are from the following Unicode categories:
  * Lu, Ll, Lt, Lm, Lo, Nl
  */
-static const uint16_t lit_unicode_letter_chars[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_letter_chars[] JERRY_ATTR_CONST_DATA =
 {
   0x00aa, 0x00b5, 0x00ba, 0x02ec, 0x02ee, 0x037f, 0x0386, 0x038c, 0x0559, 0x06d5,
   0x06ff, 0x0710, 0x07b1, 0x07fa, 0x081a, 0x0824, 0x0828, 0x093d, 0x0950, 0x09b2,
@@ -125,7 +125,7 @@ static const uint16_t lit_unicode_letter_chars[] JERRY_CONST_DATA =
  * The characters covered by these intervals are from
  * the following Unicode categories: Nd, Mn, Mc, Pc
  */
-static const uint16_t lit_unicode_non_letter_ident_part_interval_sps[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_non_letter_ident_part_interval_sps[] JERRY_ATTR_CONST_DATA =
 {
   0x0300, 0x0483, 0x0591, 0x05c1, 0x05c4, 0x0610, 0x064b, 0x06d6, 0x06df, 0x06e7,
   0x06ea, 0x06f0, 0x0730, 0x07a6, 0x07c0, 0x07eb, 0x0816, 0x081b, 0x0825, 0x0829,
@@ -155,7 +155,7 @@ static const uint16_t lit_unicode_non_letter_ident_part_interval_sps[] JERRY_CON
  * The characters covered by these intervals are from
  * the following Unicode categories: Nd, Mn, Mc, Pc
  */
-static const uint8_t lit_unicode_non_letter_ident_part_interval_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_unicode_non_letter_ident_part_interval_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x006f, 0x0004, 0x002c, 0x0001, 0x0001, 0x000a, 0x001e, 0x0006, 0x0005, 0x0001,
   0x0003, 0x0009, 0x001a, 0x000a, 0x0009, 0x0008, 0x0003, 0x0008, 0x0002, 0x0004,
@@ -186,7 +186,7 @@ static const uint8_t lit_unicode_non_letter_ident_part_interval_lengths[] JERRY_
  * The characters are from the following Unicode categories:
  * Nd, Mn, Mc, Pc
  */
-static const uint16_t lit_unicode_non_letter_ident_part_chars[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_non_letter_ident_part_chars[] JERRY_ATTR_CONST_DATA =
 {
   0x05bf, 0x05c7, 0x0670, 0x0711, 0x09bc, 0x09d7, 0x0a3c, 0x0a51, 0x0a75, 0x0abc,
   0x0b3c, 0x0b82, 0x0bd7, 0x0cbc, 0x0d57, 0x0dca, 0x0dd6, 0x0e31, 0x0eb1, 0x0f35,
@@ -197,7 +197,7 @@ static const uint16_t lit_unicode_non_letter_ident_part_chars[] JERRY_CONST_DATA
 /**
  * Unicode separator character interval starting points from Unicode category: Zs
  */
-static const uint16_t lit_unicode_separator_char_interval_sps[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_separator_char_interval_sps[] JERRY_ATTR_CONST_DATA =
 {
   0x2000
 };
@@ -205,7 +205,7 @@ static const uint16_t lit_unicode_separator_char_interval_sps[] JERRY_CONST_DATA
 /**
  * Unicode separator character interval lengths from Unicode category: Zs
  */
-static const uint8_t lit_unicode_separator_char_interval_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_unicode_separator_char_interval_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x000b
 };
@@ -216,7 +216,7 @@ static const uint8_t lit_unicode_separator_char_interval_lengths[] JERRY_CONST_D
  *
  * Unicode category: Zs
  */
-static const uint16_t lit_unicode_separator_chars[] JERRY_CONST_DATA =
+static const uint16_t lit_unicode_separator_chars[] JERRY_ATTR_CONST_DATA =
 {
   0x1680, 0x180e, 0x202f, 0x205f, 0x3000
 };

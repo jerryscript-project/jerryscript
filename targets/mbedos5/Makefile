@@ -48,7 +48,7 @@ else ifeq ($(MBED_VERBOSE), 2)
 MBED_CLI_FLAGS += -vv
 endif
 
-MBED_CLI_FLAGS += -D "CONFIG_MEM_HEAP_AREA_SIZE=(1024*$(HEAPSIZE))"
+MBED_CLI_FLAGS += -D "JERRY_GLOBAL_HEAP_SIZE=$(HEAPSIZE)"
 MBED_CLI_FLAGS += -t GCC_ARM
 
 .PHONY: all js2c getlibs rebuild library

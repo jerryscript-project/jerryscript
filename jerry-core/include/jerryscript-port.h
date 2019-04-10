@@ -99,8 +99,8 @@ typedef enum
  * vfprintf(logfile), or both, depending on log level.
  *
  * Note:
- *      This port function is called by jerry-core when JERRY_ENABLE_LOGGING is
- *      defined. It is also common practice though to use this function in
+ *      This port function is called by jerry-core when JERRY_LOGGING is
+ *      enabled. It is also common practice though to use this function in
  *      application code.
  */
 void JERRY_ATTR_FORMAT (printf, 2, 3) jerry_port_log (jerry_log_level_t level, const char *format, ...);
@@ -161,7 +161,7 @@ double jerry_port_get_current_time (void);
  *
  * Note:
  *      This port function is called by jerry-core when
- *      JERRY_ENABLE_EXTERNAL_CONTEXT is defined. Otherwise this function is not
+ *      JERRY_EXTERNAL_CONTEXT is enabled. Otherwise this function is not
  *      used.
  *
  * @return the pointer to the engine context.

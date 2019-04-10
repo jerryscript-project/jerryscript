@@ -93,13 +93,13 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   }
 
   *ref_base_lex_env_p = NULL;
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
+#if ENABLED (JERRY_ERROR_MESSAGES)
   return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
                                                 "% is not defined",
                                                 ecma_make_string_value (name_p));
-#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+#else /* ENABLED (JERRY_ERROR_MESSAGES) */
   return ecma_raise_reference_error (NULL);
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
 } /* ecma_op_get_value_lex_env_base */
 
@@ -250,13 +250,13 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
   if (is_strict)
   {
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
+#if ENABLED (JERRY_ERROR_MESSAGES)
     return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
                                                   "% is not defined",
                                                   ecma_make_string_value (name_p));
-#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+#else /* !ENABLED (JERRY_ERROR_MESSAGES) */
     return ecma_raise_reference_error (NULL);
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
   }
 
   ecma_value_t completion = ecma_op_object_put (ecma_builtin_get_global (),

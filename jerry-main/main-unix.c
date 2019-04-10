@@ -407,7 +407,7 @@ check_usage (bool condition, /**< the condition that must hold */
   }
 } /* check_usage */
 
-#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 
 /**
  * The alloc function passed to jerry_create_context
@@ -420,7 +420,7 @@ context_alloc (size_t size,
   return malloc (size);
 } /* context_alloc */
 
-#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+#endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
 /**
  * Inits the engine and the debugger
@@ -666,12 +666,12 @@ main (int argc,
     is_repl_mode = true;
   }
 
-#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 
-  jerry_context_t *context_p = jerry_create_context (CONFIG_MEM_HEAP_AREA_SIZE, context_alloc, NULL);
+  jerry_context_t *context_p = jerry_create_context (JERRY_GLOBAL_HEAP_SIZE * 1024, context_alloc, NULL);
   jerry_port_default_set_current_context (context_p);
 
-#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+#endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
   if (!start_debug_server)
   {
@@ -938,8 +938,8 @@ main (int argc,
   jerry_release_value (ret_value);
 
   jerry_cleanup ();
-#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
   free (context_p);
-#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+#endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
   return ret_code;
 } /* main */

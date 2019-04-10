@@ -21,7 +21,7 @@
 #include "lit-char-helpers.h"
 #include "jcontext.h"
 
-#ifndef JERRY_DISABLE_JS_PARSER
+#if ENABLED (JERRY_PARSER)
 
 /** \addtogroup parser Parser
  * @{
@@ -2642,4 +2642,4 @@ lexer_convert_binary_lvalue_token_to_binary (uint8_t token) /**< binary lvalue t
  * @}
  */
 
-#endif /* !JERRY_DISABLE_JS_PARSER */
+#endif /* ENABLED (JERRY_PARSER) */

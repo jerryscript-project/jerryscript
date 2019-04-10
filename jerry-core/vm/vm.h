@@ -236,10 +236,10 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
 #endif /* JERRY_DEBUGGER */
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
   VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
   VM_OC_LINE,                    /**< line number of the next statement */
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
 
@@ -255,10 +255,10 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
 #endif /* !JERRY_DEBUGGER */
-#ifndef JERRY_ENABLE_LINE_INFO
+#if !ENABLED (JERRY_LINE_INFO)
   VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
-#endif /* !JERRY_ENABLE_LINE_INFO */
+#endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015_CLASS)
   VM_OC_CLASS_HERITAGE = VM_OC_NONE,          /**< create a super class context */
   VM_OC_CLASS_INHERITANCE = VM_OC_NONE,       /**< inherit properties from the 'super' class */

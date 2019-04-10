@@ -83,7 +83,7 @@ def build_jerry_data(jerry_path):
             jerry_dirs.add(os.path.split(path)[0])
 
     jerry_cflags = [
-        '-DCONFIG_MEM_HEAP_AREA_SIZE=10*1024',
+        '-DJERRY_GLOBAL_HEAP_SIZE=10',
         '-DJERRY_NDEBUG',
         '-DJERRY_DISABLE_HEAVY_DEBUG',
         '-DJERRY_BUILTIN_NUMBER=0',
@@ -97,8 +97,8 @@ def build_jerry_data(jerry_path):
         '-DJERRY_BUILTIN_REGEXP=0',
         '-DJERRY_BUILTIN_ANNEXB=0',
         '-DJERRY_ES2015=0',
-        '-DCONFIG_ECMA_LCACHE_DISABLE',
-        '-DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE',
+        '-DJERRY_LCACHE=0',
+        '-DJERRY_PROPRETY_HASHMAP=0',
     ]
 
     return {

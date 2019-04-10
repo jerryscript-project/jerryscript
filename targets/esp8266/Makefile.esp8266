@@ -28,7 +28,7 @@ MFORCE32 = $(shell xtensa-lx106-elf-gcc --help=target | grep mforce-l32)
 ifneq ($(MFORCE32),)
     # Your compiler supports the -mforce-l32 flag which means that
     # constants can be placed in ROM to free additional RAM
-    ESP_CFLAGS += -DJERRY_CONST_DATA="__attribute__((aligned(4))) __attribute__((section(\".irom.text\")))"
+    ESP_CFLAGS += -DJERRY_ATTR_CONST_DATA="__attribute__((aligned(4))) __attribute__((section(\".irom.text\")))"
     ESP_CFLAGS += -mforce-l32
 endif
 
@@ -52,7 +52,7 @@ jerry:
 	 -DENABLE_ALL_IN_ONE=ON \
 	 -DJERRY_CMDLINE=OFF \
 	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
-	 -DMEM_HEAP_SIZE_KB=$(JERRYHEAP)
+	 -DJERRY_GLOBAL_HEAP_SIZE=$(JERRYHEAP)
 
 	make -C$(BUILD_DIR) jerry-core jerry-libm
 	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/

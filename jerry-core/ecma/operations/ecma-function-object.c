@@ -128,12 +128,12 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   size_t function_object_size = sizeof (ecma_extended_object_t);
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
   {
     function_object_size = sizeof (ecma_static_function_t);
   }
-#endif
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
   ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
                                               function_object_size,
@@ -160,7 +160,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 
   /* 10., 11., 12. */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
   {
     ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
@@ -171,10 +171,10 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
     ext_func_p->u.function.bytecode_cp = ECMA_NULL_POINTER;
     ((ecma_static_function_t *) func_p)->bytecode_p = bytecode_data_p;
   }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
-#endif
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
   /* 14., 15., 16., 17., 18. */
   /*
@@ -204,12 +204,12 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
 
   size_t arrow_function_object_size = sizeof (ecma_arrow_function_t);
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
   {
     arrow_function_object_size = sizeof (ecma_static_arrow_function_t);
   }
-#endif
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
   ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
                                               arrow_function_object_size,
@@ -219,7 +219,7 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
 
   ECMA_SET_NON_NULL_POINTER (arrow_func_p->scope_cp, scope_p);
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
   {
     ECMA_SET_NON_NULL_POINTER (arrow_func_p->bytecode_cp, bytecode_data_p);
@@ -230,10 +230,10 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
     arrow_func_p->bytecode_cp = ECMA_NULL_POINTER;
     ((ecma_static_arrow_function_t *) func_p)->bytecode_p = bytecode_data_p;
   }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   ECMA_SET_NON_NULL_POINTER (arrow_func_p->bytecode_cp, bytecode_data_p);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
-#endif
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
   arrow_func_p->this_binding = ecma_copy_value_if_not_object (this_binding);
   return func_p;
@@ -280,7 +280,7 @@ ecma_op_create_external_function_object (ecma_external_handler_t handler_cb) /**
 inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< function pointer */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (function_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
   {
     return ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
@@ -290,10 +290,10 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
   {
     return ((ecma_static_function_t *) function_p)->bytecode_p;
   }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   return ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
                                           function_p->u.function.bytecode_cp);
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* ecma_op_function_get_compiled_code */
 
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
@@ -306,7 +306,7 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
 inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_p) /**< arrow function pointer */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (arrow_function_p->bytecode_cp != ECMA_NULL_POINTER)
   {
     return ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
@@ -316,10 +316,10 @@ ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_
   {
     return ((ecma_static_arrow_function_t *) arrow_function_p)->bytecode_p;
   }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   return ECMA_GET_NON_NULL_POINTER (const ecma_compiled_code_t,
                                     arrow_function_p->bytecode_cp);
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* ecma_op_arrow_function_get_compiled_code */
 
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */

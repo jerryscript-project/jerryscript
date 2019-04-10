@@ -63,11 +63,11 @@
 /**
  * Compressed pointer
  */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
 typedef uint32_t jmem_cpointer_t;
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 typedef uint16_t jmem_cpointer_t;
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Severity of a 'try give memory back' request
@@ -108,7 +108,7 @@ void *jmem_heap_alloc_block (const size_t size);
 void *jmem_heap_alloc_block_null_on_error (const size_t size);
 void jmem_heap_free_block (void *ptr, const size_t size);
 
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
 /**
  * Heap memory usage statistics
  */
@@ -154,7 +154,7 @@ void jmem_stats_allocate_property_bytes (size_t property_size);
 void jmem_stats_free_property_bytes (size_t property_size);
 
 void jmem_heap_get_stats (jmem_heap_stats_t *);
-#endif /* JMEM_STATS */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
 jmem_cpointer_t JERRY_ATTR_PURE jmem_compress_pointer (const void *pointer_p);
 void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);

@@ -16,7 +16,7 @@
 #include "js-parser-internal.h"
 #include "lit-char-helpers.h"
 
-#ifndef JERRY_DISABLE_JS_PARSER
+#if ENABLED (JERRY_PARSER)
 
 /** \addtogroup parser Parser
  * @{
@@ -1027,4 +1027,4 @@ parser_scan_until (parser_context_t *context_p, /**< context */
  * @}
  */
 
-#endif /* !JERRY_DISABLE_JS_PARSER */
+#endif /* ENABLED (JERRY_PARSER) */

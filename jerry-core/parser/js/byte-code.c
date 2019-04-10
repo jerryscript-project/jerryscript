@@ -21,7 +21,7 @@ JERRY_STATIC_ASSERT ((sizeof (cbc_uint8_arguments_t) % sizeof (jmem_cpointer_t))
 JERRY_STATIC_ASSERT ((sizeof (cbc_uint16_arguments_t) % sizeof (jmem_cpointer_t)) == 0,
                      sizeof_cbc_uint16_arguments_t_must_be_divisible_by_sizeof_jmem_cpointer_t);
 
-#ifndef JERRY_DISABLE_JS_PARSER
+#if ENABLED (JERRY_PARSER)
 
 /** \addtogroup parser Parser
  * @{
@@ -42,7 +42,7 @@ JERRY_STATIC_ASSERT ((sizeof (cbc_uint16_arguments_t) % sizeof (jmem_cpointer_t)
 /**
  * Flags of the opcodes.
  */
-const uint8_t cbc_flags[] JERRY_CONST_DATA =
+const uint8_t cbc_flags[] JERRY_ATTR_CONST_DATA =
 {
   CBC_OPCODE_LIST
 };
@@ -57,7 +57,7 @@ const uint8_t cbc_ext_flags[] =
 
 #undef CBC_OPCODE
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) #arg1,
 
@@ -79,7 +79,7 @@ const char * const cbc_ext_names[] =
 
 #undef CBC_OPCODE
 
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 /**
  * @}
@@ -87,4 +87,4 @@ const char * const cbc_ext_names[] =
  * @}
  */
 
-#endif /* !JERRY_DISABLE_JS_PARSER */
+#endif /* ENABLED (JERRY_PARSER) */

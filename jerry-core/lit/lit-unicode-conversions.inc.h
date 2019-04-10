@@ -17,7 +17,7 @@
  * from UnicodeData-9.0.0.txt and SpecialCasing-9.0.0.txt files. Do not edit! */
 
 /* Contains start points of character case ranges (these are bidirectional conversions). */
-static const uint16_t lit_character_case_ranges[] JERRY_CONST_DATA =
+static const uint16_t lit_character_case_ranges[] JERRY_ATTR_CONST_DATA =
 {
   0x00c0, 0x00e0, 0x00d8, 0x00f8, 0x0189, 0x0256, 0x01b1, 0x028a, 0x0388, 0x03ad,
   0x038e, 0x03cd, 0x0391, 0x03b1, 0x03a3, 0x03c3, 0x03fd, 0x037b, 0x0400, 0x0450,
@@ -29,7 +29,7 @@ static const uint16_t lit_character_case_ranges[] JERRY_CONST_DATA =
 };
 
 /* Interval lengths of start points in `character_case_ranges` table. */
-static const uint8_t lit_character_case_range_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_character_case_range_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x0017, 0x0007, 0x0002, 0x0002, 0x0003, 0x0002, 0x0011, 0x0009, 0x0003, 0x0010,
   0x0020, 0x0026, 0x0026, 0x0050, 0x0006, 0x0008, 0x0006, 0x0008, 0x0008, 0x0006,
@@ -38,7 +38,7 @@ static const uint8_t lit_character_case_range_lengths[] JERRY_CONST_DATA =
 };
 
 /* Contains the start points of bidirectional conversion ranges. */
-static const uint16_t lit_character_pair_ranges[] JERRY_CONST_DATA =
+static const uint16_t lit_character_pair_ranges[] JERRY_ATTR_CONST_DATA =
 {
   0x0100, 0x0132, 0x0139, 0x014a, 0x0179, 0x0182, 0x0187, 0x018b, 0x0191, 0x0198,
   0x01a0, 0x01a7, 0x01ac, 0x01af, 0x01b3, 0x01b8, 0x01bc, 0x01cd, 0x01de, 0x01f4,
@@ -49,7 +49,7 @@ static const uint16_t lit_character_pair_ranges[] JERRY_CONST_DATA =
 };
 
 /* Interval lengths of start points in `character_pair_ranges` table. */
-static const uint8_t lit_character_pair_range_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_character_pair_range_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x0030, 0x0006, 0x0010, 0x002e, 0x0006, 0x0004, 0x0002, 0x0002, 0x0002, 0x0002,
   0x0006, 0x0002, 0x0002, 0x0002, 0x0004, 0x0002, 0x0002, 0x0010, 0x0012, 0x0002,
@@ -60,7 +60,7 @@ static const uint8_t lit_character_pair_range_lengths[] JERRY_CONST_DATA =
 };
 
 /* Contains lower/upper case bidirectional conversion pairs. */
-static const uint16_t lit_character_pairs[] JERRY_CONST_DATA =
+static const uint16_t lit_character_pairs[] JERRY_ATTR_CONST_DATA =
 {
   0x0178, 0x00ff, 0x0181, 0x0253, 0x0186, 0x0254, 0x018e, 0x01dd, 0x018f, 0x0259,
   0x0190, 0x025b, 0x0193, 0x0260, 0x0194, 0x0263, 0x0196, 0x0269, 0x0197, 0x0268,
@@ -80,20 +80,20 @@ static const uint16_t lit_character_pairs[] JERRY_CONST_DATA =
 /* Contains start points of one-to-two uppercase ranges where the second character
  * is always the same.
  */
-static const uint16_t lit_upper_case_special_ranges[] JERRY_CONST_DATA =
+static const uint16_t lit_upper_case_special_ranges[] JERRY_ATTR_CONST_DATA =
 {
   0x1f80, 0x1f08, 0x0399, 0x1f88, 0x1f08, 0x0399, 0x1f90, 0x1f28, 0x0399, 0x1f98,
   0x1f28, 0x0399, 0x1fa0, 0x1f68, 0x0399, 0x1fa8, 0x1f68, 0x0399
 };
 
 /* Interval lengths for start points in `upper_case_special_ranges` table. */
-static const uint8_t lit_upper_case_special_range_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_upper_case_special_range_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x0007, 0x0007, 0x0007, 0x0007, 0x0007, 0x0007
 };
 
 /* Contains start points of lowercase ranges. */
-static const uint16_t lit_lower_case_ranges[] JERRY_CONST_DATA =
+static const uint16_t lit_lower_case_ranges[] JERRY_ATTR_CONST_DATA =
 {
   0x1e96, 0x1e96, 0x1f80, 0x1f80, 0x1f88, 0x1f80, 0x1f90, 0x1f90, 0x1f98, 0x1f90,
   0x1fa0, 0x1fa0, 0x1fa8, 0x1fa0, 0x1fb2, 0x1fb2, 0x1fb6, 0x1fb6, 0x1fc2, 0x1fc2,
@@ -102,14 +102,14 @@ static const uint16_t lit_lower_case_ranges[] JERRY_CONST_DATA =
 };
 
 /* Interval lengths for start points in `lower_case_ranges` table. */
-static const uint8_t lit_lower_case_range_lengths[] JERRY_CONST_DATA =
+static const uint8_t lit_lower_case_range_lengths[] JERRY_ATTR_CONST_DATA =
 {
   0x0005, 0x0008, 0x0008, 0x0008, 0x0008, 0x0008, 0x0008, 0x0003, 0x0002, 0x0003,
   0x0002, 0x0002, 0x0002, 0x0003, 0x0002, 0x0003, 0x0002, 0x0007, 0x0005
 };
 
 /* The remaining lowercase conversions. The lowercase variant can be one-to-three character long. */
-static const uint16_t lit_lower_case_conversions[] JERRY_CONST_DATA =
+static const uint16_t lit_lower_case_conversions[] JERRY_ATTR_CONST_DATA =
 {
   0x00df, 0x00df, 0x0149, 0x0149, 0x01c5, 0x01c6, 0x01c8, 0x01c9, 0x01cb, 0x01cc,
   0x01f0, 0x01f0, 0x01f2, 0x01f3, 0x0390, 0x0390, 0x03b0, 0x03b0, 0x03f4, 0x03b8,
@@ -119,13 +119,13 @@ static const uint16_t lit_lower_case_conversions[] JERRY_CONST_DATA =
 };
 
 /* Number of one-to-one, one-to-two, and one-to-three lowercase conversions. */
-static const uint8_t lit_lower_case_conversion_counters[] JERRY_CONST_DATA =
+static const uint8_t lit_lower_case_conversion_counters[] JERRY_ATTR_CONST_DATA =
 {
   0x0016, 0x0001, 0x0000
 };
 
 /* The remaining uppercase conversions. The uppercase variant can be one-to-three character long. */
-static const uint16_t lit_upper_case_conversions[] JERRY_CONST_DATA =
+static const uint16_t lit_upper_case_conversions[] JERRY_ATTR_CONST_DATA =
 {
   0x00b5, 0x039c, 0x0130, 0x0130, 0x0131, 0x0049, 0x017f, 0x0053, 0x01c5, 0x01c4,
   0x01c8, 0x01c7, 0x01cb, 0x01ca, 0x01f2, 0x01f1, 0x0345, 0x0399, 0x03c2, 0x03a3,
@@ -156,7 +156,7 @@ static const uint16_t lit_upper_case_conversions[] JERRY_CONST_DATA =
 };
 
 /* Number of one-to-one, one-to-two, and one-to-three uppercase conversions. */
-static const uint8_t lit_upper_case_conversion_counters[] JERRY_CONST_DATA =
+static const uint8_t lit_upper_case_conversion_counters[] JERRY_ATTR_CONST_DATA =
 {
   0x001c, 0x002c, 0x0010
 };

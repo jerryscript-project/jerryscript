@@ -383,10 +383,10 @@ typedef struct
   uint16_t context_stack_depth;               /**< current context stack depth */
 #endif /* !JERRY_NDEBUG */
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   int is_show_opcodes;                        /**< show opcodes */
   uint32_t total_byte_code_size;              /**< total byte code size */
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 #ifdef JERRY_DEBUGGER
   parser_breakpoint_info_t breakpoint_info[PARSER_MAX_BREAKPOINT_INFO_COUNT]; /**< breakpoint info list */
@@ -394,9 +394,9 @@ typedef struct
   parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
 #endif /* JERRY_DEBUGGER */
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
   parser_line_counter_t last_line_info_line; /**< last line where line info has been inserted */
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 } parser_context_t;
 
 /**
@@ -611,11 +611,11 @@ void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_
 
 #endif /* JERRY_DEBUGGER */
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
 
 void parser_emit_line_info (parser_context_t *context_p, uint32_t line, bool flush_cbc);
 
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
 /**
  * @}

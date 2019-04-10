@@ -758,9 +758,9 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
         JERRY_CONTEXT (debugger_byte_code_free_tail) = ECMA_NULL_POINTER;
       }
 
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
       jmem_stats_free_byte_code_bytes (((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
-#endif /* JMEM_STATS */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
       jmem_heap_free_block (byte_code_free_p,
                             ((size_t) byte_code_free_p->size) << JMEM_ALIGNMENT_LOG);
@@ -1375,7 +1375,7 @@ jerry_debugger_send_memstats (void)
 
   memstats_p->type = JERRY_DEBUGGER_MEMSTATS_RECEIVE;
 
-#ifdef JMEM_STATS /* if jmem_stats are defined */
+#if ENABLED (JERRY_MEM_STATS) /* if memory statistics feature is enabled */
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   uint32_t allocated_bytes = (uint32_t) heap_stats->allocated_bytes;
@@ -1388,13 +1388,13 @@ jerry_debugger_send_memstats (void)
   memcpy (memstats_p->object_bytes, &object_bytes, sizeof (uint32_t));
   uint32_t property_bytes = (uint32_t) heap_stats->property_bytes;
   memcpy (memstats_p->property_bytes, &property_bytes, sizeof (uint32_t));
-#else /* if not, just put zeros */
+#else /* !ENABLED (JERRY_MEM_STATS) if not, just put zeros */
   memset (memstats_p->allocated_bytes, 0, sizeof (uint32_t));
   memset (memstats_p->byte_code_bytes, 0, sizeof (uint32_t));
   memset (memstats_p->string_bytes, 0, sizeof (uint32_t));
   memset (memstats_p->object_bytes, 0, sizeof (uint32_t));
   memset (memstats_p->property_bytes, 0, sizeof (uint32_t));
-#endif
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
   jerry_debugger_send (sizeof (jerry_debugger_send_memstats_t));
 } /* jerry_debugger_send_memstats */

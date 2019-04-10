@@ -233,7 +233,7 @@ re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
   re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &value, sizeof (uint32_t));
 } /* re_insert_u32 */
 
-#ifdef REGEXP_DUMP_BYTE_CODE
+#if ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE)
 /**
  * RegExp bytecode dumper
  */
@@ -435,7 +435,7 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
   }
   JERRY_DEBUG_MSG ("EOF\n");
 } /* re_dump_bytecode */
-#endif /* REGEXP_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE) */
 
 /**
  * @}

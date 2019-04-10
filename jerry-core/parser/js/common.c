@@ -16,7 +16,7 @@
 #include "common.h"
 #include "ecma-helpers.h"
 
-#ifndef JERRY_DISABLE_JS_PARSER
+#if ENABLED (JERRY_PARSER)
 
 /** \addtogroup parser Parser
  * @{
@@ -49,7 +49,7 @@ util_free_literal (lexer_literal_t *literal_p) /**< literal */
   }
 } /* util_free_literal */
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 
 /**
  * Debug utility to print a character sequence.
@@ -124,7 +124,7 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
   JERRY_DEBUG_MSG (")");
 } /* util_print_literal */
 
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 /**
  * @}
@@ -132,4 +132,4 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
  * @}
  */
 
-#endif /* !JERRY_DISABLE_JS_PARSER */
+#endif /* ENABLED (JERRY_PARSER) */

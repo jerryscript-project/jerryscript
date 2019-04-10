@@ -46,7 +46,7 @@ class UniCodeSource(object):
 
     def add_table(self, table, table_name, table_type, table_descr):
         self.__data.append(table_descr)
-        self.__data.append("static const %s lit_%s[] JERRY_CONST_DATA =" % (table_type, table_name))
+        self.__data.append("static const %s lit_%s[] JERRY_ATTR_CONST_DATA =" % (table_type, table_name))
         self.__data.append("{")
         self.__data.append(format_code(table, 1))
         self.__data.append("};")

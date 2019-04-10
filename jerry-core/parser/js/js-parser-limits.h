@@ -38,11 +38,11 @@
  * Maximum string limit.
  * Limit: 2147483647 / 65535.
  */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
 #define PARSER_MAXIMUM_STRING_LIMIT 2147483647
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 #define PARSER_MAXIMUM_STRING_LIMIT 65535
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Maximum string length.

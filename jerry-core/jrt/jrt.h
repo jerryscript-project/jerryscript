@@ -19,19 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
 #include "jerryscript-port.h"
 #include "jrt-types.h"
-
-/*
- * Normally compilers store const(ant)s in ROM. Thus saving RAM.
- * But if your compiler does not support it then the directive below can force it.
- *
- * For the moment it is mainly meant for the following targets:
- *      - ESP8266
- */
-#ifndef JERRY_CONST_DATA
-# define JERRY_CONST_DATA
-#endif /* JERRY_CONST_DATA */
 
 /*
  * Constants
@@ -121,17 +111,17 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 /*
  * Logging
  */
-#ifdef JERRY_ENABLE_LOGGING
+#if ENABLED (JERRY_LOGGING)
 #define JERRY_ERROR_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define JERRY_DEBUG_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define JERRY_TRACE_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
-#else /* !JERRY_ENABLE_LOGGING */
+#else /* !ENABLED (JERRY_LOGGING) */
 #define JERRY_ERROR_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_WARNING_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_DEBUG_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_TRACE_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
-#endif /* JERRY_ENABLE_LOGGING */
+#endif /* ENABLED (JERRY_LOGGING) */
 
 /**
  * Size of struct member

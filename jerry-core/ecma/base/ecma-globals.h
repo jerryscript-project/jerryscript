@@ -58,9 +58,9 @@ typedef enum
 {
   ECMA_STATUS_API_AVAILABLE     = (1u << 0), /**< api available */
   ECMA_STATUS_DIRECT_EVAL       = (1u << 1), /**< eval is called directly */
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   ECMA_STATUS_HIGH_SEV_GC       = (1u << 2), /**< last gc run was a high severity run */
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
 } ecma_status_flag_t;
 
@@ -476,16 +476,16 @@ typedef uint8_t ecma_property_t; /**< ecma_property_types_t (3 bit) and ecma_pro
  */
 typedef struct
 {
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
   jmem_cpointer_t next_property_cp; /**< next cpointer */
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
   ecma_property_t types[ECMA_PROPERTY_PAIR_ITEM_COUNT]; /**< two property type slot. The first represent
                                                          *   the type of this property (e.g. property pair) */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
   uint16_t padding; /**< an unused value */
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
   jmem_cpointer_t next_property_cp; /**< next cpointer */
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 } ecma_property_header_t;
 
 /**
@@ -503,11 +503,11 @@ typedef struct
 typedef union
 {
   ecma_value_t value; /**< value of a property */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
   jmem_cpointer_t getter_setter_pair_cp; /**< cpointer to getter setter pair */
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
   ecma_getter_setter_pointers_t getter_setter_pair; /**< getter setter pair */
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 } ecma_property_value_t;
 
 /**
@@ -877,7 +877,7 @@ typedef struct
                                      *   If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
 
 /**
  * Description of static function objects.
@@ -888,7 +888,7 @@ typedef struct
   const ecma_compiled_code_t *bytecode_p; /**< real byte code pointer */
 } ecma_static_function_t;
 
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
 
@@ -903,7 +903,7 @@ typedef struct
   jmem_cpointer_t bytecode_cp; /**< function byte code */
 } ecma_arrow_function_t;
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
 
 /**
  * Description of static arrow function objects.
@@ -914,7 +914,7 @@ typedef struct
   const ecma_compiled_code_t *bytecode_p;
 } ecma_static_arrow_function_t;
 
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
@@ -1233,11 +1233,11 @@ typedef enum
  * Maximum value of the immediate part of a direct magic string.
  * Must be compatible with the immediate property name.
  */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
 #define ECMA_DIRECT_STRING_MAX_IMM 0x07ffffff
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 #define ECMA_DIRECT_STRING_MAX_IMM 0x0000ffff
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Shift for direct string value part in ecma_value_t.
@@ -1409,7 +1409,7 @@ typedef struct
   ecma_value_t value; /**< referenced value */
 } ecma_error_reference_t;
 
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
 
 /**
  * The lowest state of the ecma_prop_hashmap_alloc_state counter.
@@ -1423,7 +1423,7 @@ typedef struct
  */
 #define ECMA_PROP_HASHMAP_ALLOC_MAX 4
 
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
 /**
  * Number of values in a literal storage item
@@ -1439,15 +1439,15 @@ typedef struct
   jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
 } ecma_lit_storage_item_t;
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
+#if ENABLED (JERRY_LCACHE)
 /**
  * Container of an LCache entry identifier
  */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
 typedef uint64_t ecma_lcache_hash_entry_id_t;
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 typedef uint32_t ecma_lcache_hash_entry_id_t;
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Entry of LCache hash table
@@ -1471,7 +1471,7 @@ typedef struct
  */
 #define ECMA_LCACHE_HASH_ROW_LENGTH 2
 
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* ENABLED (JERRY_LCACHE) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 

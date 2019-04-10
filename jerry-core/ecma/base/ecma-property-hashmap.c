@@ -26,7 +26,7 @@
  * @{
  */
 
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
 
 /**
  * Compute the total size of the property hashmap.
@@ -42,7 +42,7 @@
 /**
  * Stepping values for searching items in the hashmap.
  */
-static const uint8_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS] JERRY_CONST_DATA =
+static const uint8_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS] JERRY_ATTR_CONST_DATA =
 {
   3, 5, 7, 11, 13, 17, 19, 23
 };
@@ -65,7 +65,7 @@ static const uint8_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF
 #define ECMA_PROPERTY_HASHMAP_SET_BIT(byte_p, index) \
   ((byte_p)[(index) >> 3] = (uint8_t) ((byte_p)[(index) >> 3] | (1 << ((index) & 0x7))))
 
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
 /**
  * Create a new property hashmap for the object.
@@ -74,7 +74,7 @@ static const uint8_t ecma_property_hashmap_steps[ECMA_PROPERTY_HASHMAP_NUMBER_OF
 void
 ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 {
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) != ECMA_PROP_HASHMAP_ALLOC_ON)
   {
     return;
@@ -214,9 +214,9 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
     prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
                                     prop_iter_p->next_property_cp);
   }
-#else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#else /* !ENABLED (JERRY_PROPRETY_HASHMAP) */
   JERRY_UNUSED (object_p);
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 } /* ecma_property_hashmap_create */
 
 /**
@@ -226,7 +226,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 void
 ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
 {
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   /* Property hash must be exists and must be the first property. */
   ecma_property_header_t *property_p = ecma_get_property_list (object_p);
 
@@ -238,9 +238,9 @@ ecma_property_hashmap_free (ecma_object_t *object_p) /**< object */
 
   jmem_heap_free_block (hashmap_p,
                         ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE (hashmap_p->max_property_count));
-#else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#else /* !ENABLED (JERRY_PROPRETY_HASHMAP) */
   JERRY_UNUSED (object_p);
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 } /* ecma_property_hashmap_free */
 
 /**
@@ -252,7 +252,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
                               ecma_property_pair_t *property_pair_p, /**< property pair */
                               int property_index) /**< property index in the pair (0 or 1) */
 {
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   ecma_property_hashmap_t *hashmap_p = ECMA_GET_NON_NULL_POINTER (ecma_property_hashmap_t,
                                                                   object_p->property_list_or_bound_object_cp);
 
@@ -322,12 +322,12 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   {
     *bits_p = (uint8_t) ((*bits_p) | mask);
   }
-#else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#else /* !ENABLED (JERRY_PROPRETY_HASHMAP) */
   JERRY_UNUSED (object_p);
   JERRY_UNUSED (name_p);
   JERRY_UNUSED (property_pair_p);
   JERRY_UNUSED (property_index);
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 } /* ecma_property_hashmap_insert */
 
 /**
@@ -341,7 +341,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
                               jmem_cpointer_t name_cp, /**< property name */
                               ecma_property_t *property_p) /**< property */
 {
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   ecma_property_hashmap_t *hashmap_p = ECMA_GET_NON_NULL_POINTER (ecma_property_hashmap_t,
                                                                   object_p->property_list_or_bound_object_cp);
 
@@ -411,16 +411,16 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
     JERRY_ASSERT (entry_index != start_entry_index);
 #endif /* !JERRY_NDEBUG */
   }
-#else /* CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#else /* !ENABLED (JERRY_PROPRETY_HASHMAP) */
   JERRY_UNUSED (object_p);
   JERRY_UNUSED (name_cp);
   JERRY_UNUSED (property_p);
 
   return ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 } /* ecma_property_hashmap_delete */
 
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
 /**
  * Find a named property.
  *
@@ -594,7 +594,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
 #endif /* !JERRY_NDEBUG */
   }
 } /* ecma_property_hashmap_find */
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
 /**
  * @}

@@ -63,7 +63,7 @@ The existing open source gcc compiler with Xtensa support stores const(ants) in
 the same limited RAM where our code needs to run.
 
 It is possible to force the compiler to store a constant into ROM and also read it from there thus saving RAM.
-The only requirement is to add `JERRY_CONST_DATA` attribute to your constant.
+The only requirement is to add `JERRY_ATTR_CONST_DATA` attribute to your constant.
 
 For example:
 
@@ -74,7 +74,7 @@ static const lit_magic_size_t lit_magic_string_sizes[] =
 can be modified to
 
 ```C
-static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
+static const lit_magic_size_t lit_magic_string_sizes[] JERRY_ATTR_CONST_DATA =
 ```
 
 That is already done to some constants in jerry-core. E.g.:

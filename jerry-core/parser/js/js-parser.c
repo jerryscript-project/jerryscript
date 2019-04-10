@@ -226,7 +226,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       {
         if (literal_p->status_flags & LEXER_FLAG_VAR)
         {
-          if (status_flags & PARSER_NO_REG_STORE)
+          if (status_flags & (PARSER_NO_REG_STORE | PARSER_ARGUMENTS_NEEDED))
           {
             literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
           }

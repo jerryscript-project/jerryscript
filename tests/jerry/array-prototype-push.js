@@ -74,3 +74,15 @@ try {
 }
 assert(o.length === 1);
 assert(o[0] === "z");
+
+/* ES v5.1 15.4.4.7.5.
+   Checking behavior when array is non-extensible while pushing */
+var arr = [];
+Object.freeze(arr);
+
+try {
+  arr.push(1, 2);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

@@ -101,3 +101,25 @@ assert(obj[0] === "baz");
 assert(obj[1] === "foo");
 assert(obj[2] === undefined);
 assert(obj[3] === "bar");
+
+/* ES v5.1 15.4.4.13.6.d.ii.
+   Checking behavior when the array is freezed */
+try {
+  var arr = [0, 1];
+  Object.freeze(arr);
+  Array.prototype.unshift.call(arr, 2, 3);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.13.6.e.i.
+   Checking behavior when the array has only one property and bigger length */
+try {
+  var arr = { length : 9 };
+  Object.defineProperty(arr, '6', { value : 2 });
+  Array.prototype.unshift.call(arr, 2, 3);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

@@ -92,3 +92,95 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+// Checking behavior when unable to get elements
+var obj = { sort : Array.prototype.sort, length : 2};
+Object.defineProperty(obj, '0', { 'get' : function () { throw new ReferenceError ("foo"); } });
+Object.defineProperty(obj, '1', { 'get' : function () { throw new ReferenceError ("bar"); } });
+
+try {
+  obj.sort();
+  assert(false);
+} catch (e) {
+  assert(e.message === "foo");
+  assert(e instanceof ReferenceError);
+}
+
+// Checking behavior when array is non-extensible while sorting
+var arr = [1, 0];
+
+try {
+  arr.sort(function () { Object.freeze(arr) });
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// Checking behavior when unable to delete property
+var obj = {sort : Array.prototype.sort, '0' : 2, '1' : 1, length : 4};
+Object.defineProperty(obj, '3', function () {});
+
+try {
+  obj.sort();
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// Checking behavior when unable to get the last element
+var arr = [1, 2, ];
+Object.defineProperty(arr, '2', { 'get' : function () { throw new ReferenceError ("foo"); } });
+
+try {
+  arr.sort();
+  assert(false);
+} catch (e) {
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
+}
+
+// Checking behavior when lhs_value throws exception at comparefn
+f = function () { throw new ReferenceError('foo'); };
+obj = { 'toString' : f };
+arr = [obj, 1];
+
+try {
+  arr.sort();
+  assert(false);
+} catch (e) {
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
+}
+
+// Checking behavior when rhs_value throws exception at comparefn
+f = function () { throw new ReferenceError('foo'); };
+obj = { 'toString' : f };
+arr = [1, obj];
+
+try {
+  arr.sort();
+  assert(false);
+} catch (e) {
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
+}
+
+// Sorting when array elements are the same string
+arr = ['foo', 'foo'];
+arr.sort();
+
+assert(arr[0] === 'foo');
+assert(arr[1] === 'foo');
+
+// Checking behavior when comparefn's call value cannot be converted to number
+obj = { };
+Object.defineProperty(obj, 'toString', function () { });
+f = function () { return obj };
+arr = [1, 2];
+
+try {
+  arr.sort(f);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

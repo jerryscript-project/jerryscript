@@ -77,3 +77,61 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.9.7.c.
+   Checking behavior when the array is freezed */
+try {
+  f = function () { throw new ReferenceError("getter"); };
+  arr =  { length : 9 };
+  Object.defineProperty(arr, '8', { 'get' : f });
+  Array.prototype.shift.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+  assert(e.message == "getter");
+}
+
+/* ES v5.1 15.4.4.9.7.d.ii.
+   Checking behavior when the array is freezed */
+try {
+  arr =  { length : 9 };
+  Object.defineProperty(arr, '8', { value : 8 });
+  Object.defineProperty(arr, '7', { value : 7 });
+  Array.prototype.shift.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.9.7.e.i.
+   Checking behavior when the first element is null */
+try {
+  arr = { length : 9 };
+  Object.defineProperty(arr, '0', { value : null });
+  Array.prototype.shift.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.9.8.
+   Checking behavior when last element is not writable */
+try {
+  arr = { length : 9 };
+  Object.defineProperty(arr, '8', { writable : false });
+  Array.prototype.shift.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.9.9.
+   Checking behavior when the array is freezed */
+try {
+  arr = { length : 9 };
+  Object.freeze(arr);
+  Array.prototype.shift.call(arr);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

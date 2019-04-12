@@ -110,3 +110,44 @@ try {
   assert (e.message === "foo");
   assert (e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.10.5.
+   Checking behavior when start value throws exception */
+var arg1 = { };
+Object.defineProperty(arg1, 'valueOf', { 'get' : function () { throw new ReferenceError ("foo"); } });
+var obj = { slice : Array.prototype.slice };
+
+try {
+  obj.slice(arg1);
+  assert(false);
+} catch (e) {
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
+}
+
+/* ES v5.1 15.4.4.10.7.
+   Checking behavior when end value throws exception */
+var arg2 = { };
+Object.defineProperty(arg2, 'valueOf', { 'get' : function () { throw new ReferenceError ("foo"); } });
+var obj = { slice : Array.prototype.slice };
+
+try {
+  obj.slice(0, arg2);
+  assert(false);
+} catch (e) {
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
+}
+
+/* ES v5.1 15.4.4.10.10.
+   Checking behavior when unable to get element */
+var obj = { length : 3, slice : Array.prototype.slice };
+Object.defineProperty(obj, '1', { 'get' : function () { throw new ReferenceError ("foo"); } });
+
+try {
+  obj.slice(0, 3);
+  assert (false);
+} catch (e) {
+  assert (e.message === "foo");
+  assert (e instanceof ReferenceError);
+}

@@ -72,3 +72,27 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+/* ES v5.1 15.4.4.6.5.c
+   Checking behavior when unable to delete property */
+var obj = {pop : Array.prototype.pop, length : 2};
+Object.defineProperty(obj, '1', function () {});
+
+try {
+  obj.pop();
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+/* ES v5.1 15.4.4.6.5.d
+   Checking behavior when array is not modifiable */
+var obj = {pop : Array.prototype.pop, length : 2};
+Object.freeze(obj);
+
+try {
+  obj.pop();
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

@@ -1393,14 +1393,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_object_t *child_class_p = ecma_get_object_from_value (child_value);
           ecma_object_t *child_prototype_class_p = ecma_get_object_from_value (child_prototype_value);
-          ecma_property_value_t *prop_value_p;
-
-          prop_value_p = ecma_create_named_data_property (child_prototype_class_p,
-                                                          ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
-                                                          ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                          NULL);
-
-          ecma_named_data_property_assign_value (child_prototype_class_p, prop_value_p, child_value);
 
           ecma_object_t *super_class_p = ecma_get_lex_env_binding_object (frame_ctx_p->lex_env_p);
 
@@ -1429,7 +1421,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           continue;
         }
-        case VM_OC_PUSH_CLASS_CONSTRUCTOR:
+        case VM_OC_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE:
         {
           ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
@@ -1440,7 +1432,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
           ext_func_obj_p->u.external_handler_cb = ecma_op_function_implicit_constructor_handler_cb;
 
-          *stack_top_p++ = ecma_make_object_value (function_obj_p);
+          ecma_value_t function_obj_value = ecma_make_object_value (function_obj_p);
+          *stack_top_p++ = function_obj_value;
+
+          ecma_object_t *prototype_class_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
+                                                                                   0,
+                                                                                   ECMA_OBJECT_TYPE_GENERAL);
+          *stack_top_p++ = ecma_make_object_value (prototype_class_p);
+
+          /* 14.5.14.18 Set constructor to prototype */
+          ecma_property_value_t *prop_value_p;
+          prop_value_p = ecma_create_named_data_property (prototype_class_p,
+                                                          ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
+                                                          ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                          NULL);
+          ecma_named_data_property_assign_value (prototype_class_p, prop_value_p, function_obj_value);
 
           continue;
         }

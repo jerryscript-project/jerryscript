@@ -215,7 +215,7 @@ typedef enum
 #if ENABLED (JERRY_ES2015_CLASS)
   VM_OC_CLASS_HERITAGE,          /**< create a super class context */
   VM_OC_CLASS_INHERITANCE,       /**< inherit properties from the 'super' class */
-  VM_OC_PUSH_CLASS_CONSTRUCTOR,  /**< push class constructor */
+  VM_OC_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE,  /**< push class constructor */
   VM_OC_SET_CLASS_CONSTRUCTOR,   /**< set class constructor to the given function literal */
   VM_OC_PUSH_IMPL_CONSTRUCTOR,   /**< create implicit class constructor */
   VM_OC_CLASS_EXPR_CONTEXT_END,  /**< class expression heritage context end */
@@ -257,7 +257,7 @@ typedef enum
 #if !ENABLED (JERRY_ES2015_CLASS)
   VM_OC_CLASS_HERITAGE = VM_OC_NONE,          /**< create a super class context */
   VM_OC_CLASS_INHERITANCE = VM_OC_NONE,       /**< inherit properties from the 'super' class */
-  VM_OC_PUSH_CLASS_CONSTRUCTOR = VM_OC_NONE,  /**< push class constructor */
+  VM_OC_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE = VM_OC_NONE,  /**< push class constructor */
   VM_OC_SET_CLASS_CONSTRUCTOR = VM_OC_NONE,   /**< set class constructor to the given function literal */
   VM_OC_PUSH_IMPL_CONSTRUCTOR = VM_OC_NONE,   /**< create implicit class constructor */
   VM_OC_CLASS_EXPR_CONTEXT_END = VM_OC_NONE,  /**< class expression heritage context end */

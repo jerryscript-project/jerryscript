@@ -199,6 +199,7 @@ main (int argc, char **argv)
   (void) argc;
   (void) argv;
   jerry_value_t js_global = 0, js_function = 0, js_property_name = 0;
+  jerry_value_t res;
 
 #ifndef ENABLE_INIT_FINI
   my_broken_module_register ();
@@ -211,13 +212,19 @@ main (int argc, char **argv)
 
   js_function = jerry_create_external_function (handle_require);
   js_property_name = jerry_create_string ((const jerry_char_t *) "require");
-  jerry_set_property (js_global, js_property_name, js_function);
+  res = jerry_set_property (js_global, js_property_name, js_function);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
+  jerry_release_value (res);
   jerry_release_value (js_property_name);
   jerry_release_value (js_function);
 
   js_function = jerry_create_external_function (handle_clear_require_cache);
   js_property_name = jerry_create_string ((const jerry_char_t *) "clear_require_cache");
-  jerry_set_property (js_global, js_property_name, js_function);
+  res = jerry_set_property (js_global, js_property_name, js_function);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
+  jerry_release_value (res);
   jerry_release_value (js_property_name);
   jerry_release_value (js_function);
 

@@ -145,7 +145,10 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
   TEST_ASSERT (jerry_get_boolean_value (args_p[0]) == true);
 
   jerry_value_t field_name = jerry_create_string ((jerry_char_t *) "value_field");
-  jerry_set_property (this_val, field_name, args_p[0]);
+  jerry_value_t res = jerry_set_property (this_val, field_name, args_p[0]);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
+  jerry_release_value (res);
   jerry_release_value (field_name);
 
   jerry_set_object_native_pointer (this_val,
@@ -630,7 +633,10 @@ main (void)
   TEST_ASSERT (jerry_get_array_length (array_obj_val) == 10);
 
   jerry_value_t v_in = jerry_create_number (10.5);
-  jerry_set_property_by_index (array_obj_val, 5, v_in);
+  res = jerry_set_property_by_index (array_obj_val, 5, v_in);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
+  jerry_release_value (res);
   jerry_value_t v_out = jerry_get_property_by_index (array_obj_val, 5);
 
   TEST_ASSERT (jerry_value_is_number (v_out)
@@ -895,7 +901,10 @@ main (void)
     char check_value[] = "{\"name\":\"John\"}";
     jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
     jerry_value_t value = jerry_create_string ((const jerry_char_t *) "John");
-    jerry_set_property (obj, key, value);
+    res = jerry_set_property (obj, key, value);
+    TEST_ASSERT (!jerry_value_is_error (res));
+    TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
+    jerry_release_value (res);
     jerry_value_t stringified = jerry_json_stringify (obj);
     TEST_ASSERT (jerry_value_is_string (stringified));
     char buff[jerry_get_string_length (stringified)];

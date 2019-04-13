@@ -142,7 +142,7 @@ DECLARE_CLASS_FUNCTION(I2C, read) {
 
         for (uint32_t i = 0; i < data_len; i++) {
             jerry_value_t val = jerry_create_number(double(data[i]));
-            jerry_set_property_by_index(out_array, i, val);
+            jerry_release_value(jerry_set_property_by_index(out_array, i, val));
             jerry_release_value(val);
         }
 

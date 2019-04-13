@@ -39,7 +39,7 @@ void jsmbed_js_load_magic_strings() {
         jerry_value_t constant_value = jerry_create_number(jsmbed_js_magic_string_values[idx]);
         jerry_value_t magic_string = jerry_create_string(jsmbed_js_magic_strings[idx]);
 
-        jerry_set_property(global, magic_string, constant_value);
+        jerry_release_value(jerry_set_property(global, magic_string, constant_value));
 
         jerry_release_value(constant_value);
         jerry_release_value(magic_string);

@@ -80,13 +80,13 @@ init_jerry ()
 
   func_obj = jerry_create_external_function (set_led);
   prop_name = jerry_create_string ((const jerry_char_t *) "setLed");
-  jerry_set_property (object, prop_name, func_obj);
+  jerry_release_value (jerry_set_property (object, prop_name, func_obj));
   jerry_release_value (prop_name);
   jerry_release_value (func_obj);
 
   func_obj = jerry_create_external_function (js_delay);
   prop_name = jerry_create_string ((const jerry_char_t *) "delay");
-  jerry_set_property (object, prop_name, func_obj);
+  jerry_release_value (jerry_set_property (object, prop_name, func_obj));
   jerry_release_value (prop_name);
   jerry_release_value (func_obj);
 
@@ -95,7 +95,7 @@ init_jerry ()
 
   /* Add the JS object to the global context */
   prop_name = jerry_create_string ((const jerry_char_t *) "test");
-  jerry_set_property (global_object, prop_name, object);
+  jerry_release_value (jerry_set_property (global_object, prop_name, object));
   jerry_release_value (prop_name);
   jerry_release_value (object);
   jerry_release_value (global_object);

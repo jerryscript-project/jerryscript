@@ -101,7 +101,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_rise");
-    jerry_set_property(this_obj, property_name, f);
+    jerry_release_value(jerry_set_property(this_obj, property_name, f));
     jerry_release_value(property_name);
 
     return jerry_create_undefined();
@@ -168,7 +168,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_fall");
-    jerry_set_property(this_obj, property_name, f);
+    jerry_release_value(jerry_set_property(this_obj, property_name, f));
     jerry_release_value(property_name);
 
     return jerry_create_undefined();

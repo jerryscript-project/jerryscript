@@ -402,6 +402,11 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
+  if (!ecma_is_value_object (value))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
   while (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
   {
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
@@ -422,11 +427,6 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   JERRY_ASSERT (ecma_is_normal_or_arrow_function (ecma_get_object_type (func_obj_p))
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-  if (!ecma_is_value_object (value))
-  {
-    return ECMA_VALUE_FALSE;
-  }
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
 

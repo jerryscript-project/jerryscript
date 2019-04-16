@@ -2591,9 +2591,8 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
   {
     if (!ecma_is_lexical_environment (iter_p))
     {
-      native_pointer_p = ecma_get_native_pointer_value (iter_p);
+      native_pointer_p = ecma_get_native_pointer_value (iter_p, (void *) native_info_p);
       if (native_pointer_p
-          && ((const jerry_object_native_info_t *) native_pointer_p->info_p) == native_info_p
           && !foreach_p (ecma_make_object_value (iter_p), native_pointer_p->data_p, user_data_p))
       {
         return true;
@@ -2605,11 +2604,10 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
 } /* jerry_objects_foreach_by_native_info */
 
 /**
- * Get native pointer and its type information, associated with specified object.
+ * Get native pointer and its type information, associated with the given native type info.
  *
  * Note:
- *  If native pointer is present, its type information is returned
- *  in out_native_pointer_p and out_native_info_p.
+ *  If native pointer is present, its type information is returned in out_native_pointer_p
  *
  * @return true - if there is an associated pointer,
  *         false - otherwise
@@ -2617,8 +2615,8 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
 bool
 jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get native pointer from */
                                  void **out_native_pointer_p, /**< [out] native pointer */
-                                 const jerry_object_native_info_t **out_native_info_p) /**< [out] the type info
-                                                                                        *   of the native pointer */
+                                 const jerry_object_native_info_t *native_info_p) /**< the type info
+                                                                                   *   of the native pointer */
 {
   jerry_assert_api_available ();
 
@@ -2628,7 +2626,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
   }
 
   ecma_native_pointer_t *native_pointer_p;
-  native_pointer_p = ecma_get_native_pointer_value (ecma_get_object_from_value (obj_val));
+  native_pointer_p = ecma_get_native_pointer_value (ecma_get_object_from_value (obj_val), (void *) native_info_p);
 
   if (native_pointer_p == NULL)
   {
@@ -2638,11 +2636,6 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
   if (out_native_pointer_p != NULL)
   {
     *out_native_pointer_p = native_pointer_p->data_p;
-  }
-
-  if (out_native_info_p != NULL)
-  {
-    *out_native_info_p = (const jerry_object_native_info_t *) native_pointer_p->info_p;
   }
 
   return true;
@@ -2675,6 +2668,35 @@ jerry_set_object_native_pointer (const jerry_value_t obj_val, /**< object to set
     ecma_create_native_pointer_property (object_p, native_pointer_p, (void *) native_info_p);
   }
 } /* jerry_set_object_native_pointer */
+
+/**
+ * Delete the previously set native pointer by the native type info from the specified object.
+ *
+ * Note:
+ *      If the specified object has no matching native pointer for the given native type info
+ *      the function has no effect.
+ *
+ * Note:
+ *      This operation cannot throw an exception.
+ *
+ * @return true - if the native pointer has been deleted succesfully
+ *         false - otherwise
+ */
+bool
+jerry_delete_object_native_pointer (const jerry_value_t obj_val, /**< object to delete native pointer from */
+                                    const jerry_object_native_info_t *native_info_p) /**< object's native type info */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_object (obj_val))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
+
+    return ecma_delete_native_pointer_property (object_p, (void *) native_info_p);
+  }
+
+  return false;
+} /* jerry_delete_object_native_pointer */
 
 /**
  * Applies the given function to the every property in the object.

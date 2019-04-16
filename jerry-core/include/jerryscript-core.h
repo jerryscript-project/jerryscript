@@ -527,10 +527,12 @@ jerry_value_t jerry_set_prototype (const jerry_value_t obj_val, const jerry_valu
 
 bool jerry_get_object_native_pointer (const jerry_value_t obj_val,
                                       void **out_native_pointer_p,
-                                      const jerry_object_native_info_t **out_pointer_info_p);
+                                      const jerry_object_native_info_t *native_pointer_info_p);
 void jerry_set_object_native_pointer (const jerry_value_t obj_val,
                                       void *native_pointer_p,
                                       const jerry_object_native_info_t *native_info_p);
+bool jerry_delete_object_native_pointer (const jerry_value_t obj_val,
+                                         const jerry_object_native_info_t *native_info_p);
 
 bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
                             void *user_data);

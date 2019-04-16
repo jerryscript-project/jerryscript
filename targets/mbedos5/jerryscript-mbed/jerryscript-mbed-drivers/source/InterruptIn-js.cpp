@@ -53,10 +53,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     // Detach the rise callback when InterruptIn::rise(null) is called
     if (jerry_value_is_null(args[0])) {
         void *void_ptr;
-        const jerry_object_native_info_t *type_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-        if (!has_ptr || type_ptr != &native_obj_type_info) {
+        if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
                                       (const jerry_char_t *) "Failed to get native InterruptIn pointer");
         }
@@ -83,10 +82,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, rise, 0, function);
 
     void *void_ptr;
-    const jerry_object_native_info_t *type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native InterruptIn pointer");
     }
@@ -120,10 +118,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     // Detach the fall callback when InterruptIn::fall(null) is called
     if (jerry_value_is_null(args[0])) {
         void *void_ptr;
-        const jerry_object_native_info_t *type_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-        if (!has_ptr || type_ptr != &native_obj_type_info) {
+        if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
                                       (const jerry_char_t *) "Failed to get native InterruptIn pointer");
         }
@@ -150,10 +147,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, fall, 0, function);
 
     void *void_ptr;
-    const jerry_object_native_info_t *type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native InterruptIn pointer");
     }
@@ -186,10 +182,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, mode) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, mode, 0, number);
 
     void *void_ptr;
-    const jerry_object_native_info_t *type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native InterruptIn pointer");
     }
@@ -211,10 +206,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, disable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, disable_irq, (args_count == 0));
 
     void *void_ptr;
-    const jerry_object_native_info_t *type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native InterruptIn pointer");
     }
@@ -234,10 +228,9 @@ DECLARE_CLASS_FUNCTION(InterruptIn, enable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, enable_irq, (args_count == 0));
 
     void *void_ptr;
-    const jerry_object_native_info_t *type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native InterruptIn pointer");
     }

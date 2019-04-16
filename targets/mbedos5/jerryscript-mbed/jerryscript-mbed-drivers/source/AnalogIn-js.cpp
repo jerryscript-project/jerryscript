@@ -47,10 +47,9 @@ DECLARE_CLASS_FUNCTION(AnalogIn, read) {
 
     // Extract native AnalogIn pointer
     void* void_ptr;
-    const jerry_object_native_info_t* type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native AnalogIn pointer");
     }
@@ -73,10 +72,9 @@ DECLARE_CLASS_FUNCTION(AnalogIn, read_u16) {
 
     // Extract native AnalogIn pointer
     void* void_ptr;
-    const jerry_object_native_info_t* type_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &type_ptr);
+    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
 
-    if (!has_ptr || type_ptr != &native_obj_type_info) {
+    if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
                                   (const jerry_char_t *) "Failed to get native AnalogIn pointer");
     }

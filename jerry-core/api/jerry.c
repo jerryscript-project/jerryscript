@@ -22,6 +22,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
+#include "ecma-dataview-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
@@ -919,6 +920,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
           || feature == JERRY_FEATURE_TYPEDARRAY
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+          || feature == JERRY_FEATURE_DATAVIEW
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
 #if ENABLED (JERRY_BUILTIN_DATE)
           || feature == JERRY_FEATURE_DATE
 #endif /* ENABLED (JERRY_BUILTIN_DATE) */
@@ -3227,6 +3231,129 @@ jerry_get_arraybuffer_pointer (const jerry_value_t value) /**< Array Buffer to u
   return NULL;
 } /* jerry_get_arraybuffer_pointer */
 
+/**
+ * DataView related functions
+ */
+
+/**
+ * Creates a DataView object with the given ArrayBuffer, ByteOffset and ByteLength arguments.
+ *
+ * Notes:
+ *      * returned value must be freed with jerry_release_value, when it is no longer needed.
+ *      * if the DataView bulitin is disabled this will return a TypeError.
+ *
+ * @return value of the constructed DataView object - if success
+ *         created error - otherwise
+ */
+jerry_value_t
+jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to create DataView from */
+                       const jerry_length_t byte_offset, /**< offset in bytes, to the first byte in the buffer */
+                       const jerry_length_t byte_length) /**< number of elements in the byte array */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+  if (ecma_is_value_error_reference (array_buffer))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_value_t arguments_p[3] =
+  {
+    array_buffer,
+    ecma_make_uint32_value (byte_offset),
+    ecma_make_uint32_value (byte_length)
+  };
+
+  return jerry_return (ecma_op_dataview_create (arguments_p, 3));
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+  JERRY_UNUSED (array_buffer);
+  JERRY_UNUSED (byte_offset);
+  JERRY_UNUSED (byte_length);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("DataView is not supported.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+} /* jerry_create_dataview */
+
+/**
+ * Check if the given value is a DataView object.
+ *
+ * @return true - if it is a DataView object
+ *         false - otherwise
+ */
+bool
+jerry_value_is_dataview (const jerry_value_t value) /**< value to check if it is a DataView object */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+  if (!ecma_is_value_object (value))
+  {
+    return false;
+  }
+
+  ecma_dataview_object_t *dataview_object_p = (ecma_dataview_object_t *) ecma_get_object_from_value (value);
+
+  return (ecma_get_object_type (&dataview_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
+          && dataview_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_DATAVIEW_UL);
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+} /* jerry_value_is_dataview */
+
+/**
+ * Get the underlying ArrayBuffer from a DataView.
+ *
+ * Additionally the byteLength and byteOffset properties are also returned
+ * which were specified when the DataView was created.
+ *
+ * Note:
+ *     the returned value must be freed with a jerry_release_value call
+ *
+ * @return ArrayBuffer of a DataView
+ *         TypeError if the object is not a DataView.
+ */
+jerry_value_t
+jerry_get_dataview_buffer (jerry_value_t value, /**< DataView to get the arraybuffer from */
+                           jerry_length_t *byte_offset, /**< [out] byteOffset property */
+                           jerry_length_t *byte_length) /**< [out] byteLength property */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+  if (ecma_is_value_error_reference (value))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_dataview_object_t *dataview_p = ecma_op_dataview_get_object (value);
+
+  if (JERRY_UNLIKELY (dataview_p == NULL))
+  {
+    return ecma_create_error_reference_from_context ();
+  }
+
+  if (byte_offset != NULL)
+  {
+    *byte_offset = dataview_p->byte_offset;
+  }
+
+  if (byte_length != NULL)
+  {
+    *byte_length = dataview_p->header.u.class_prop.u.length;
+  }
+
+  ecma_object_t *arraybuffer_p = dataview_p->buffer_p;
+  ecma_ref_object (arraybuffer_p);
+
+  return ecma_make_object_value (arraybuffer_p);
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (byte_offset);
+  JERRY_UNUSED (byte_length);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("DataView is not supported.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+} /* jerry_get_dataview_buffer */
 
 /**
  * TypedArray related functions

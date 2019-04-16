@@ -474,6 +474,22 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE,
          array_iterator_prototype)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+/* The DataView prototype object (ECMA-262 v6, 24.2.3.1) */
+BUILTIN (ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         dataview_prototype)
+
+/* The DataView routine (ECMA-262 v6, 24.2.2.1) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATAVIEW,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 dataview)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
          ECMA_OBJECT_TYPE_GENERAL,

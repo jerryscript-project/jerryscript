@@ -690,6 +690,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+        case LIT_MAGIC_STRING_DATAVIEW_UL:
+        {
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_dataview_object_t));
+          return;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
         default:
         {
           /* The undefined id represents an uninitialized class. */

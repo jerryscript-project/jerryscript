@@ -134,15 +134,15 @@ ecma_typedarray_helper_get_builtin_id (ecma_object_t *obj_p) /**< typedarray obj
 /**
  * Get the magic string of a TypedArray type.
  *
- * @return uint8_t
+ * @return lit_magic_string_id_t
  */
-uint8_t
+lit_magic_string_id_t
 ecma_typedarray_helper_get_magic_string (uint8_t builtin_id) /**< the builtin id of the typedarray **/
 {
 #define TYPEDARRAY_ID_CASE(builtin_id, magic_id) \
   case builtin_id: \
   { \
-    return magic_id; \
+    return (lit_magic_string_id_t) magic_id; \
   }
 
   switch (builtin_id)

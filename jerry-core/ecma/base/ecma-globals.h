@@ -1565,6 +1565,18 @@ typedef struct
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+/**
+ * Description of DataView objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< header part */
+  ecma_object_t *buffer_p; /**< [[ViewedArrayBuffer]] internal slot */
+  uint32_t byte_offset; /**< [[ByteOffset]] internal slot */
+} ecma_dataview_object_t;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+
 /**
  * Flag for indicating whether the symbol is a well known symbol
  *

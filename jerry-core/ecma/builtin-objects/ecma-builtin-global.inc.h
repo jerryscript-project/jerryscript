@@ -212,6 +212,13 @@ OBJECT_VALUE (LIT_MAGIC_STRING_SYMBOL_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+/* ECMA-262 v6, 23.1.1.1 */
+OBJECT_VALUE (LIT_MAGIC_STRING_DATAVIEW_UL,
+              ECMA_BUILTIN_ID_DATAVIEW,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

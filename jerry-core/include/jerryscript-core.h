@@ -93,6 +93,7 @@ typedef enum
   JERRY_FEATURE_LINE_INFO, /**< line info available */
   JERRY_FEATURE_LOGGING, /**< logging */
   JERRY_FEATURE_SYMBOL, /**< symbol support */
+  JERRY_FEATURE_DATAVIEW, /**< DataView support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -595,6 +596,21 @@ jerry_length_t jerry_arraybuffer_read (const jerry_value_t value,
 jerry_length_t jerry_get_arraybuffer_byte_length (const jerry_value_t value);
 uint8_t *jerry_get_arraybuffer_pointer (const jerry_value_t value);
 
+/**
+ * DataView functions.
+ */
+jerry_value_t
+jerry_create_dataview (const jerry_value_t value,
+                       const jerry_length_t byte_offset,
+                       const jerry_length_t byte_length);
+
+bool
+jerry_value_is_dataview (const jerry_value_t value);
+
+jerry_value_t
+jerry_get_dataview_buffer (const jerry_value_t dataview,
+                           jerry_length_t *byte_offset,
+                           jerry_length_t *byte_length);
 
 /**
  * TypedArray functions.

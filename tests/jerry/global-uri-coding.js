@@ -102,7 +102,7 @@ assert (decodeURIComponent ("%70%71%72%73%74%75%76%77%78%79%7a%7b%7c%7d%7e") ===
 assert (decodeURI ("%6A%6B%6C%6D%6E%6F") === "jklmno");
 assert (decodeURI ("%C3%A9") === "\xe9");
 assert (decodeURI ("%e2%b1%a5") === "\u2c65");
-/* assert (decodeURI ("%f0%90%90%a8") === "\ud801\udc28"); */
+assert (decodeURI ("%f0%90%90%a8") === "\ud801\udc28");
 
 checkDecodeURIParseError ("13%");
 checkDecodeURIParseError ("%0g");

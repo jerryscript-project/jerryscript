@@ -156,6 +156,54 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   }
 } /* ecma_op_same_value */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+/**
+ * SameValueZero operation.
+ *
+ * See also:
+ *          ECMA-262 v6, 7.2.10
+ *
+ * @return true - if the value are same according to ECMA-defined SameValueZero algorithm,
+ *         false - otherwise
+ */
+bool
+ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
+                         ecma_value_t y) /**< ecma value */
+{
+  if (ecma_is_value_number (x) && ecma_is_value_number (y))
+  {
+    ecma_number_t x_num = ecma_get_number_from_value (x);
+    ecma_number_t y_num = ecma_get_number_from_value (y);
+
+    bool is_x_nan = ecma_number_is_nan (x_num);
+    bool is_y_nan = ecma_number_is_nan (y_num);
+
+    if (is_x_nan || is_y_nan)
+    {
+      /*
+       * If both are NaN
+       *   return true;
+       * else
+       *   one of the numbers is NaN, and another - is not
+       *   return false;
+       */
+      return (is_x_nan && is_y_nan);
+    }
+
+    if (ecma_number_is_zero (x_num)
+        && ecma_number_is_zero (y_num)
+        && ecma_number_is_negative (x_num) != ecma_number_is_negative (y_num))
+    {
+      return true;
+    }
+
+    return (x_num == y_num);
+  }
+
+  return ecma_op_same_value (x, y);
+} /* ecma_op_same_value_zero */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+
 /**
  * ToPrimitive operation.
  *

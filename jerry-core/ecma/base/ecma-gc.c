@@ -246,50 +246,6 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-
-/**
- * Mark objects referenced by Map built-in.
- */
-static void
-ecma_gc_mark_map_object (ecma_extended_object_t *ext_object_p) /**< extended object */
-{
-  ecma_map_object_t *map_object_p = (ecma_map_object_t *) ext_object_p;
-
-  jmem_cpointer_t first_chunk_cp = map_object_p->first_chunk_cp;
-
-  if (JERRY_UNLIKELY (first_chunk_cp == ECMA_NULL_POINTER))
-  {
-    return;
-  }
-
-  ecma_value_t *item_p = ECMA_GET_NON_NULL_POINTER (ecma_map_object_chunk_t, first_chunk_cp)->items;
-
-  while (true)
-  {
-    ecma_value_t item = *item_p++;
-
-    if (!ecma_is_value_pointer (item))
-    {
-      if (ecma_is_value_object (item))
-      {
-        ecma_gc_set_object_visited (ecma_get_object_from_value (item));
-      }
-    }
-    else
-    {
-      item_p = (ecma_value_t *) ecma_get_pointer_from_value (item);
-
-      if (item_p == NULL)
-      {
-        return;
-      }
-    }
-  }
-} /* ecma_gc_mark_map_object */
-
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
-
 /**
  * Mark objects as visited starting from specified object as root
  */
@@ -340,13 +296,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-          case LIT_MAGIC_STRING_MAP_UL:
-          {
-            ecma_gc_mark_map_object (ext_object_p);
-            break;
-          }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
           default:
           {
             break;

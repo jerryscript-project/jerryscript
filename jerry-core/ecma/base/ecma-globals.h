@@ -968,8 +968,7 @@ typedef struct
 typedef struct
 {
   ecma_extended_object_t header; /**< header part */
-  jmem_cpointer_t first_chunk_cp; /**< first chunk of item list */
-  jmem_cpointer_t last_chunk_cp; /**< last chunk of item list */
+  uint32_t size; /**< size of the map object */
 } ecma_map_object_t;
 
 /**
@@ -1273,6 +1272,7 @@ typedef enum
   ECMA_DIRECT_STRING_PTR = 0, /**< string is a string pointer, only used by property names */
   ECMA_DIRECT_STRING_MAGIC = 1, /**< string is a magic string */
   ECMA_DIRECT_STRING_UINT = 2, /**< string is an unsigned int */
+  ECMA_DIRECT_STRING_ECMA_INTEGER = 3, /**< string is an ecma-integer */
 } ecma_direct_string_type_t;
 
 /**
@@ -1351,6 +1351,8 @@ typedef enum
 
   ECMA_STRING_CONTAINER_SYMBOL, /**< the ecma-string is a symbol */
 
+  ECMA_STRING_CONTAINER_MAP_KEY, /**< the ecma-string is a map key string */
+
   ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
                                *   so no string processing function supports this type except
                                *   the ecma_deref_ecma_string function. */
@@ -1422,6 +1424,7 @@ typedef struct
     ecma_value_t lit_number; /**< number (see ECMA_STRING_LITERAL_NUMBER) */
     uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
     ecma_value_t symbol_descriptor; /**< symbol descriptor string-value */
+    ecma_value_t value; /**< original key value corresponds to the map key string */
   } u;
 } ecma_string_t;
 

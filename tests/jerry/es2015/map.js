@@ -73,6 +73,43 @@ assert(m.get(1) === 8);
 assert(m.get(2) === 8);
 assert(m.get(3) === 8);
 
+m.set(NaN, "not a number");
+assert(m.size === 4);
+assert(m.get(NaN) === "not a number");
+assert(m.get(Number("foo")) === "not a number")
+
+m.set(0, "PosZero");
+assert(m.size === 5);
+m.set(-0, "NegZero");
+assert(m.size === 5);
+assert(m.get (0) === "NegZero");
+assert(m.get (-0) === "NegZero");
+
+var symbolFoo = Symbol ("foo");
+m.set (symbolFoo, "SymbolFoo");
+assert(m.size === 6);
+assert(m.get(symbolFoo) === "SymbolFoo");
+
+var object = {};
+m.set (object, "object");
+assert(m.size === 7);
+assert(m.get(object) === "object");
+assert(m.get({}) === undefined);
+
+var myObj = { o : 4 };
+m.set("foo", myObj);
+assert(m.size === 8);
+assert(m.get ("foo") === myObj);
+assert(m.get ("foo").o === 4);
+
+m.clear();
+assert(m.size === 0);
+
+m.set("foo", myObj);
+assert(m.size === 1);
+assert(m.get ("foo") === myObj);
+assert(m.get ("foo").o === 4);
+
 var mapNameDesc = Object.getOwnPropertyDescriptor (Map, 'name');
 assert(mapNameDesc.value === "Map");
 assert(mapNameDesc.writable === false);

@@ -66,6 +66,24 @@ ecma_builtin_map_prototype_object_delete (ecma_value_t this_arg, /**< this argum
 } /* ecma_builtin_map_prototype_object_delete */
 
 /**
+ * The Map.prototype object's 'forEach' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.3.5
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_map_prototype_object_foreach (ecma_value_t this_arg, /**< this argument */
+                                           ecma_value_t predicate, /**< callback function */
+                                           ecma_value_t predicate_this_arg) /**< this argument for
+                                                                             *   invoke predicate */
+{
+  return ecma_op_map_foreach (this_arg, predicate, predicate_this_arg);
+} /* ecma_builtin_map_prototype_object_foreach */
+
+/**
  * The Map.prototype object's 'get' routine
  *
  * See also:

@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-conversion.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -235,6 +236,41 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
           && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_SYMBOL);
 } /* ecma_prop_name_is_symbol */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+/**
+ * Allocate new ecma-string and fill it with reference to the map key descriptor
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_map_key_string (ecma_value_t value) /**< non prop-name ecma-value */
+{
+  JERRY_ASSERT (!ecma_is_value_prop_name (value));
+
+  ecma_string_t *string_p = ecma_alloc_string ();
+  string_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_CONTAINER_MAP_KEY;
+  string_p->u.value = ecma_copy_value_if_not_object (value);
+  string_p->hash = ecma_is_value_simple (value) ? (uint16_t) value : 0;
+
+  return string_p;
+} /* ecma_new_map_key_string */
+
+/**
+ * Check whether an ecma-string contains a map key string
+ *
+ * @return true - if the ecma-string contains a map key string
+ *         false - otherwise
+ */
+bool
+ecma_prop_name_is_map_key (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string_p != NULL);
+
+  return (!ECMA_IS_DIRECT_STRING (string_p)
+          && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAP_KEY);
+} /* ecma_prop_name_is_map_key */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
 /**
  * Allocate new ecma-string and fill it with characters from the utf8 string
@@ -984,6 +1020,13 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+    case ECMA_STRING_CONTAINER_MAP_KEY:
+    {
+      ecma_free_value_if_not_object (string_p->u.value);
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC
@@ -1864,6 +1907,13 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
   {
     return false;
   }
+
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+  if (string1_container == ECMA_STRING_CONTAINER_MAP_KEY)
+  {
+    return ecma_op_same_value_zero (string1_p->u.value, string2_p->u.value);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
   if (string1_container >= ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {

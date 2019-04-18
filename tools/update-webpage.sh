@@ -35,6 +35,8 @@ EXT_REFERENCE_HANDLER_MD="10.EXT-REFERENCE-HANDLER.md"
 EXT_REFERENCE_AUTORELEASE_MD="11.EXT-REFERENCE-AUTORELEASE.md"
 EXT_REFERENCE_MODULE_MD="12.EXT-REFERENCE-MODULE.md"
 DEBUGGER_TRANSPORT_MD="13.DEBUGGER-TRANSPORT.md"
+EXT_REFERENCE_HANDLE_SCOPE_MD="14.EXT-REFERENCE-HANDLE-SCOPE.md"
+MODULE_SYSTEM_MD="15.MODULE-SYSTEM.md"
 
 declare -A titles
 
@@ -51,6 +53,8 @@ titles[$EXT_REFERENCE_HANDLER_MD]="'Extension API: External Function Handlers'"
 titles[$EXT_REFERENCE_AUTORELEASE_MD]="'Extension API: Autorelease Values'"
 titles[$EXT_REFERENCE_MODULE_MD]="'Extension API: Module Support'"
 titles[$DEBUGGER_TRANSPORT_MD]="'Debugger Transport'"
+titles[$EXT_REFERENCE_HANDLE_SCOPE_MD]="'Extension API: Handle Scope'"
+titles[$MODULE_SYSTEM_MD]="'Module System (EcmaScript2015)'"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`

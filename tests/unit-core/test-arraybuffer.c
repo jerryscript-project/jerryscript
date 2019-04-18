@@ -326,8 +326,6 @@ main (void)
       sum += data[i];
     }
 
-    jerry_release_value (buffer);
-
     const jerry_char_t eval_test_arraybuffer[] = TEST_STRING_LITERAL (
       "var sum = 0;"
       "for (var i = 0; i < array.length; i++)"

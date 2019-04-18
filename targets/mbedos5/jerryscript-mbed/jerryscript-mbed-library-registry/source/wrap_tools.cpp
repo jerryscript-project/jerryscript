@@ -67,7 +67,7 @@ bool jsmbed_wrap_register_class_function(jerry_value_t this_obj, const char* nam
     jerry_value_t property_name = jerry_create_string(reinterpret_cast<const jerry_char_t *>(name));
     jerry_value_t handler_obj = jerry_create_external_function(handler);
 
-    jerry_set_property(this_obj, property_name, handler_obj);
+    jerry_release_value(jerry_set_property(this_obj, property_name, handler_obj));
 
     jerry_release_value(handler_obj);
     jerry_release_value(property_name);

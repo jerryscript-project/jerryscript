@@ -27,21 +27,23 @@ install-apt-get-deps:
 
 # Install Zephyr SDK.
 install-zephyr-sdk:
-	wget https://github.com/zephyrproject-rtos/meta-zephyr-sdk/releases/download/0.9.3/zephyr-sdk-0.9.3-setup.run -O ../zephyr-sdk-0.9.3-setup.run
-	sh ../zephyr-sdk-0.9.3-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.9.3
-	cmake --version
+	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.10.0/zephyr-sdk-0.10.0-setup.run -O ../zephyr-sdk-0.10.0-setup.run
+	sh ../zephyr-sdk-0.10.0-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.10.0
 
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr:
-	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.13.0
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.14.0
 	pip3 install --user -U pip
 	pip3 install --user -U setuptools
-	# FIXME: It's temporary workaround to make Travis CI happy for Zephry v1.13.0.
-	pip3 install --user pyocd==0.12.0
 	pip3 install --user -r ../zephyr/scripts/requirements.txt
 
+# Install recent CMake
+install-cmake:
+	pip install --user cmake
+	cmake --version
+
 # Perform all the necessary (JerryScript-independent) installation steps.
-install-noapt: install-zephyr-sdk install-zephyr
+install-noapt: install-zephyr-sdk install-zephyr install-cmake
 install: install-apt-get-deps install-noapt
 
 
@@ -50,7 +52,7 @@ install: install-apt-get-deps install-noapt
 # Build the firmware (Zephyr with JerryScript).
 SHELL=bash
 script:
-	export ZEPHYR_GCC_VARIANT=zephyr && \
-	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.9.3 && \
+	export ZEPHYR_TOOLCHAIN_VARIANT=zephyr && \
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.10.0 && \
 	source ../zephyr/zephyr-env.sh && \
 	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101

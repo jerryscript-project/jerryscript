@@ -1494,6 +1494,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_CLASS_EVAL:
         {
+          ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS ();
           ECMA_SET_SUPER_EVAL_PARSER_OPTS (*byte_code_p++);
           continue;
         }

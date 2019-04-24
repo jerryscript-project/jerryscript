@@ -3198,34 +3198,29 @@ jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer *
  * Get a pointer for the start of the ArrayBuffer.
  *
  * Note:
- *    * Only valid for ArrayBuffers created with jerry_create_arraybuffer_external.
  *    * This is a high-risk operation as the bounds are not checked
  *      when accessing the pointer elements.
- *    * jerry_release_value must be called on the ArrayBuffer when the pointer is no longer needed.
  *
  * @return pointer to the back-buffer of the ArrayBuffer.
- *         pointer is NULL if the parameter is not an ArrayBuffer with external memory
-             or it is not an ArrayBuffer at all.
+ *         pointer is NULL if the parameter is not an ArrayBuffer
  */
 uint8_t *
-jerry_get_arraybuffer_pointer (const jerry_value_t value) /**< Array Buffer to use */
+jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buffer to use */
 {
   jerry_assert_api_available ();
+
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-  if (!ecma_is_arraybuffer (value))
+  if (ecma_is_value_error_reference (array_buffer)
+      || !ecma_is_arraybuffer (array_buffer))
   {
     return NULL;
   }
 
-  ecma_object_t *buffer_p = ecma_get_object_from_value (value);
-  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (buffer_p))
-  {
-    jerry_acquire_value (value);
-    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
-    return (uint8_t *const) mem_buffer_p;
-  }
+  ecma_object_t *buffer_p = ecma_get_object_from_value (array_buffer);
+  lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+  return (uint8_t *const) mem_buffer_p;
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-  JERRY_UNUSED (value);
+  JERRY_UNUSED (array_buffer);
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
   return NULL;

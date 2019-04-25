@@ -251,7 +251,7 @@ ecma_new_map_key_string (ecma_value_t value) /**< non prop-name ecma-value */
   ecma_string_t *string_p = ecma_alloc_string ();
   string_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_CONTAINER_MAP_KEY;
   string_p->u.value = ecma_copy_value_if_not_object (value);
-  string_p->hash = ecma_is_value_simple (value) ? (uint16_t) value : 0;
+  string_p->hash = (lit_string_hash_t) (ecma_is_value_simple (value) ? value : 0);
 
   return string_p;
 } /* ecma_new_map_key_string */

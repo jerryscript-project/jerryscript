@@ -13,5 +13,29 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+export {};
+export {a as aa,};
+export {b as bb, c as cc};
+export {d};
+export var x = 42;
+export function f(a) {return a;};
+export class Dog {
+  constructor (name) {
+    this.name = name;
+  }
+
+  speak() {
+    return this.name + " barks."
+  }
+};
+export default "default";
+
+var a = "a";
+var b = 5;
+var c = function(a) { return 2 * a;}
+var d = [1,2,3];
+
+assert (x === 42);
+assert (f(1) === 1);
+var dog = new Dog("Pluto")
+assert(dog.speak() === "Pluto barks.")

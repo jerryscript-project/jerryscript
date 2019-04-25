@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+/* Can't have circular imports/exports. */
+export { b } from "tests/jerry/fail/module-027.js"

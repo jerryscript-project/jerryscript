@@ -239,21 +239,14 @@ ecma_value_t
 vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode to run */
                ecma_object_t *lex_env_p) /**< pointer to the specified lexenv to run in */
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+  ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
 
-  ecma_value_t ret_value = vm_run (bytecode_p,
-                                   ecma_make_object_value (glob_obj_p),
-                                   lex_env_p,
-                                   false,
-                                   NULL,
-                                   0);
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    ret_value = ecma_create_error_reference_from_context ();
-  }
-
-  return ret_value;
+  return vm_run (bytecode_p,
+                 ecma_make_object_value (glob_obj_p),
+                 lex_env_p,
+                 false,
+                 NULL,
+                 0);
 } /* vm_run_module */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
@@ -3587,6 +3580,25 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   /* Use JERRY_MAX() to avoid array declaration with size 0. */
   JERRY_VLA (ecma_value_t, stack, JERRY_MAX (call_stack_size, 1));
   frame_ctx.registers_p = stack;
+
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (JERRY_CONTEXT (module_top_context_p) != NULL)
+  {
+    ecma_value_t ret_value = ecma_module_connect_imports ();
+
+    if (ecma_is_value_empty (ret_value))
+    {
+      ret_value = ecma_module_check_indirect_exports ();
+    }
+
+    ecma_module_cleanup ();
+
+    if (!ecma_is_value_empty (ret_value))
+    {
+      return ret_value;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
   return vm_execute (&frame_ctx, arg_list_p, arg_list_len);
 } /* vm_run */

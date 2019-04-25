@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-// File does not exist.
-import { a } from "tests/jerry/fail/module-exports.js"
+/* NamedImports must always be followed by a FromClause. */
+import { b }, from "tests/jerry/es2015/module-export-01.js"

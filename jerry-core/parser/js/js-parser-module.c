@@ -19,114 +19,121 @@
 #include "jcontext.h"
 #include "jerryscript-port.h"
 
-#include "ecma-exceptions.h"
 #include "ecma-function-object.h"
+#include "ecma-gc.h"
+#include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-literal-storage.h"
 #include "ecma-lex-env.h"
 #include "ecma-module.h"
 
 /**
- * Maximum import count limit.
+ * Description of "*default*" literal string.
  */
-#define MAX_IMPORT_COUNT UINT16_MAX
+const lexer_lit_location_t lexer_default_literal =
+{
+  (const uint8_t *) "*default*", 9, LEXER_IDENT_LITERAL, false
+};
 
 /**
- * Check duplicates in module node.
- * @return true - if the given item is duplicated entry in the current node
+ * Check for duplicated imported binding names.
+ *
+ * @return true - if the given name is a duplicate
  *         false - otherwise
  */
-static bool
-parser_module_check_for_duplicates_in_node (parser_module_node_t *module_node_p, /**< module node */
-                                            lexer_literal_t *import_name_p) /**< newly imported name */
+bool
+parser_module_check_duplicate_import (parser_context_t *context_p, /**< parser context */
+                                      ecma_string_t *local_name_p) /**< newly imported name */
 {
-  JERRY_ASSERT (import_name_p != NULL);
-
-  parser_module_names_t *import_names_p = module_node_p->module_names_p;
-
-  while (import_names_p != NULL)
+  ecma_module_names_t *module_names_p = context_p->module_current_node_p->module_names_p;
+  while (module_names_p != NULL)
   {
-    uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
-    lit_utf8_size_t current_length = 0;
-    const uint8_t *current_p = ecma_string_get_chars (import_names_p->import_name_p, &current_length, &flags);
-
-    if (current_p != NULL && current_length == import_name_p->prop.length
-        && memcmp (current_p, import_name_p->u.char_p, current_length) == 0)
+    if (ecma_compare_ecma_strings (module_names_p->local_name_p, local_name_p))
     {
       return true;
     }
 
-    import_names_p = import_names_p->next_p;
+    module_names_p = module_names_p->next_p;
+  }
+
+  ecma_module_node_t *module_node_p = JERRY_CONTEXT (module_top_context_p)->imports_p;
+  while (module_node_p != NULL)
+  {
+    module_names_p = module_node_p->module_names_p;
+
+    while (module_names_p != NULL)
+    {
+      if (ecma_compare_ecma_strings (module_names_p->local_name_p, local_name_p))
+      {
+        return true;
+      }
+
+      module_names_p = module_names_p->next_p;
+    }
+
+    module_node_p = module_node_p->next_p;
   }
 
   return false;
-} /* parser_module_check_for_duplicates_in_node */
+} /* parser_module_check_duplicate_import */
 
 /**
- * Check duplicates in the whole module context.
- * @return true - if the given item is duplicated entry
- *         false - otherwise
+ * Check for duplicated exported bindings.
+ * @return - true - if the exported name is a duplicate
+ *           false - otherwise
  */
-static bool
-parser_module_check_for_duplicates (parser_context_t *context_p, /**< parser context */
-                                    parser_module_node_t *module_node_p, /**< module noda */
-                                    lexer_literal_t *import_name_p) /**< newly imported name */
+bool
+parser_module_check_duplicate_export (parser_context_t *context_p, /**< parser context */
+                                      ecma_string_t *export_name_p) /**< exported identifier */
 {
-  if (import_name_p == NULL)
+  /* We have to check in the currently constructed node, as well as all of the already added nodes. */
+  ecma_module_names_t *current_names_p = context_p->module_current_node_p->module_names_p;
+  while (current_names_p != NULL)
   {
-    return false;
+    if (ecma_compare_ecma_strings (current_names_p->imex_name_p, export_name_p))
+    {
+      return true;
+    }
+    current_names_p = current_names_p->next_p;
   }
 
-  bool hasDuplicate = parser_module_check_for_duplicates_in_node (module_node_p,
-                                                                  import_name_p);
-
-  if (!hasDuplicate)
+  ecma_module_node_t *export_node_p = JERRY_CONTEXT (module_top_context_p)->local_exports_p;
+  if (export_node_p != NULL)
   {
-    parser_module_node_t *node_p = context_p->module_context_p->imports_p;
-    while (node_p != NULL && !hasDuplicate)
+    JERRY_ASSERT (export_node_p->next_p == NULL);
+    ecma_module_names_t *name_p = export_node_p->module_names_p;
+
+    while (name_p != NULL)
     {
-      hasDuplicate = parser_module_check_for_duplicates_in_node (node_p,
-                                                                 import_name_p);
-      node_p = node_p->next_p;
+      if (ecma_compare_ecma_strings (name_p->imex_name_p, export_name_p))
+      {
+        return true;
+      }
+
+      name_p = name_p->next_p;
     }
   }
 
-  return hasDuplicate;
-} /* parser_module_check_for_duplicates */
-
-/**
- * Delete the saved names from the given module node.
- */
-void
-parser_module_free_saved_names (parser_module_node_t *module_node_p) /**< module node */
-{
-  if (module_node_p == NULL || module_node_p->module_names_p == NULL)
+  export_node_p = JERRY_CONTEXT (module_top_context_p)->indirect_exports_p;
+  while (export_node_p != NULL)
   {
-    return;
-  }
+    ecma_module_names_t *name_p = export_node_p->module_names_p;
 
-  parser_module_names_t *current_p = module_node_p->module_names_p;
-
-  for (uint16_t i = 0; i < module_node_p->module_request_count; i++)
-  {
-    parser_module_names_t *next_p = current_p->next_p;
-
-    if (current_p->import_name_p != NULL)
+    while (name_p != NULL)
     {
-      ecma_deref_ecma_string (current_p->import_name_p);
-      current_p->import_name_p = NULL;
+      if (ecma_compare_ecma_strings (name_p->imex_name_p, export_name_p))
+      {
+        return true;
+      }
+
+      name_p = name_p->next_p;
     }
 
-    if (current_p->local_name_p != NULL)
-    {
-      ecma_deref_ecma_string (current_p->local_name_p);
-      current_p->local_name_p = NULL;
-    }
-
-    parser_free (current_p, sizeof (parser_module_names_t));
-    current_p = next_p;
+    export_node_p = export_node_p->next_p;
   }
-} /* parser_module_free_saved_names */
+
+  /* Star exports don't have any names associated with them, so no need to check those. */
+  return false;
+} /* parser_module_check_duplicate_export */
 
 /**
  * Add export node to parser context.
@@ -134,37 +141,56 @@ parser_module_free_saved_names (parser_module_node_t *module_node_p) /**< module
 void
 parser_module_add_export_node_to_context (parser_context_t *context_p) /**< parser context */
 {
-  parser_module_node_t *module_node_p = context_p->module_current_node_p;
-  parser_module_node_t *exports_p = context_p->module_context_p->exports_p;
+  ecma_module_node_t *module_node_p = context_p->module_current_node_p;
+  ecma_module_node_t **export_list_p;
 
-  if (exports_p != NULL)
+  /* Check which list we should add it to. */
+  if (module_node_p->module_request_p)
   {
-    parser_module_names_t *module_names_p = module_node_p->module_names_p;
-
-    for (uint16_t i = 0; i < module_node_p->module_request_count - 1 ; i++)
+    /* If the export node has a module request, that means it's either an indirect export, or a star export. */
+    if (!module_node_p->module_names_p)
     {
-      module_names_p = module_names_p->next_p;
-    }
-
-    module_names_p->next_p = exports_p->module_names_p;
-    exports_p->module_names_p = module_node_p->module_names_p;
-
-    int request_count = exports_p->module_request_count + module_node_p->module_request_count;
-
-    if ((uint16_t) request_count < MAX_IMPORT_COUNT)
-    {
-      exports_p->module_request_count = (uint16_t) request_count;
+      /* If there are no names in the node, then it's a star export. */
+      export_list_p = &(JERRY_CONTEXT (module_top_context_p)->star_exports_p);
     }
     else
     {
-      parser_raise_error (context_p, PARSER_ERR_MODULE_REQUEST_LIMIT_REACHED);
+      export_list_p = &(JERRY_CONTEXT (module_top_context_p)->indirect_exports_p);
     }
   }
   else
   {
-    parser_module_node_t *export_node_p = parser_module_create_module_node (context_p, module_node_p);
-    context_p->module_context_p->exports_p = export_node_p;
+    /* If there is no module request, then it's a local export. */
+    export_list_p = &(JERRY_CONTEXT (module_top_context_p)->local_exports_p);
   }
+
+  /* Check if we have a node with the same module request, append to it if we do. */
+  ecma_module_node_t *stored_exports_p = *export_list_p;
+  while (stored_exports_p != NULL)
+  {
+    if (stored_exports_p->module_request_p == module_node_p->module_request_p)
+    {
+      ecma_module_names_t *module_names_p = module_node_p->module_names_p;
+
+      if (module_names_p != NULL)
+      {
+        while (module_names_p->next_p != NULL)
+        {
+          module_names_p = module_names_p->next_p;
+        }
+
+        module_names_p->next_p = stored_exports_p->module_names_p;
+        stored_exports_p->module_names_p = module_node_p->module_names_p;
+      }
+      return;
+    }
+
+    stored_exports_p = stored_exports_p->next_p;
+  }
+
+  ecma_module_node_t *export_node_p = parser_module_create_module_node (context_p, module_node_p);
+  export_node_p->next_p = *export_list_p;
+  *export_list_p = export_node_p;
 } /* parser_module_add_export_node_to_context */
 
 /**
@@ -173,393 +199,275 @@ parser_module_add_export_node_to_context (parser_context_t *context_p) /**< pars
 void
 parser_module_add_import_node_to_context (parser_context_t *context_p) /**< parser context */
 {
-  parser_module_node_t *module_node_p = context_p->module_current_node_p;
-  parser_module_node_t *stored_imports = context_p->module_context_p->imports_p;
-  bool is_stored_module = false;
+  ecma_module_node_t *module_node_p = context_p->module_current_node_p;
+  ecma_module_node_t *stored_imports = JERRY_CONTEXT (module_top_context_p)->imports_p;
 
+  /* Check if we have a node with the same module request, append to it if we do. */
   while (stored_imports != NULL)
   {
-    if (stored_imports->script_path.length == module_node_p->script_path.length
-        && memcmp (stored_imports->script_path.value_p,
-                   module_node_p->script_path.value_p,
-                   stored_imports->script_path.length) == 0)
+    if (stored_imports->module_request_p == module_node_p->module_request_p)
     {
-      parser_free (module_node_p->script_path.value_p, module_node_p->script_path.length * sizeof (uint8_t));
+      ecma_module_names_t *module_names_p = module_node_p->module_names_p;
 
-      parser_module_names_t *module_names_p = module_node_p->module_names_p;
-      is_stored_module = true;
-
-      for (uint16_t i = 0; i < module_node_p->module_request_count - 1; i++)
+      if (module_names_p != NULL)
       {
-        module_names_p = module_names_p->next_p;
-      }
+        while (module_names_p->next_p != NULL)
+        {
+          module_names_p = module_names_p->next_p;
+        }
 
-      module_names_p->next_p = stored_imports->module_names_p;
-      stored_imports->module_names_p = module_node_p->module_names_p;
-
-      int request_count = stored_imports->module_request_count + module_node_p->module_request_count;
-      if ((uint16_t) request_count < MAX_IMPORT_COUNT)
-      {
-        stored_imports->module_request_count = (uint16_t) request_count;
+        module_names_p->next_p = stored_imports->module_names_p;
+        stored_imports->module_names_p = module_node_p->module_names_p;
       }
-      else
-      {
-        parser_raise_error (context_p, PARSER_ERR_MODULE_REQUEST_LIMIT_REACHED);
-      }
-
-      break;
+      return;
     }
+
     stored_imports = stored_imports->next_p;
   }
 
-  if (!is_stored_module)
-  {
-    parser_module_node_t *permanent_node_p = parser_module_create_module_node (context_p, module_node_p);
-    permanent_node_p->next_p = context_p->module_context_p->imports_p;
-    context_p->module_context_p->imports_p = permanent_node_p;
-  }
-
+  ecma_module_node_t *permanent_node_p = parser_module_create_module_node (context_p, module_node_p);
+  permanent_node_p->next_p = JERRY_CONTEXT (module_top_context_p)->imports_p;
+  JERRY_CONTEXT (module_top_context_p)->imports_p = permanent_node_p;
 } /* parser_module_add_import_node_to_context */
 
 /**
- * Add import or export item to module node.
+ * Add module names to current module node.
  */
 void
-parser_module_add_item_to_node (parser_context_t *context_p, /**< parser context */
-                                parser_module_node_t *module_node_p, /**< current module node */
-                                lexer_literal_t *import_name_p, /**< import name */
-                                lexer_literal_t *local_name_p, /**< local name */
-                                bool is_import_item) /**< given item is import item */
+parser_module_add_names_to_node (parser_context_t *context_p, /**< parser context */
+                                 ecma_string_t *imex_name_p, /**< import/export name */
+                                 ecma_string_t *local_name_p) /**< local name */
 {
-  if (is_import_item
-      && parser_module_check_for_duplicates (context_p, module_node_p, import_name_p))
-  {
-    parser_raise_error (context_p, PARSER_ERR_DUPLICATED_LABEL);
-  }
+  ecma_module_names_t *new_names_p = (ecma_module_names_t *) parser_malloc (context_p,
+                                                                            sizeof (ecma_module_names_t));
+  memset (new_names_p, 0, sizeof (ecma_module_names_t));
 
-  parser_module_names_t *new_names_p = (parser_module_names_t *) parser_malloc (context_p,
-                                                                                sizeof (parser_module_names_t));
-
+  ecma_module_node_t *module_node_p = context_p->module_current_node_p;
   new_names_p->next_p = module_node_p->module_names_p;
   module_node_p->module_names_p = new_names_p;
 
-  module_node_p->module_names_p->import_name_p = ecma_new_ecma_string_from_utf8 (import_name_p->u.char_p,
-                                                                                 import_name_p->prop.length);
+  JERRY_ASSERT (imex_name_p != NULL);
+  ecma_ref_ecma_string (imex_name_p);
+  new_names_p->imex_name_p = imex_name_p;
 
-  module_node_p->module_names_p->local_name_p = ecma_new_ecma_string_from_utf8 (local_name_p->u.char_p,
-                                                                                local_name_p->prop.length);
-
-  module_node_p->module_request_count++;
-} /* parser_module_add_item_to_node */
-
-/**
- * Cleanup the whole module context from parser context.
- */
-void
-parser_module_context_cleanup (parser_context_t *context_p) /**< parser context */
-{
-  parser_module_context_t *module_context_p = context_p->module_context_p;
-
-  if (module_context_p == NULL)
-  {
-    return;
-  }
-
-  parser_module_node_t *current_node_p = module_context_p->imports_p;
-
-  while (current_node_p != NULL)
-  {
-    parser_free (current_node_p->script_path.value_p, current_node_p->script_path.length * sizeof (uint8_t));
-    parser_module_free_saved_names (current_node_p);
-
-    parser_module_node_t *next_node_p = current_node_p->next_p;
-
-    parser_free (current_node_p, sizeof (parser_module_node_t));
-    current_node_p = next_node_p;
-  }
-
-  parser_module_context_t *parent_context_p = JERRY_CONTEXT (module_top_context_p);
-  if ((parent_context_p == NULL || parent_context_p->exports_p == NULL || parent_context_p->imports_p == NULL)
-      && module_context_p->exports_p != NULL)
-  {
-    parser_module_free_saved_names (module_context_p->exports_p);
-    parser_free (module_context_p->exports_p, sizeof (parser_module_node_t));
-  }
-
-  parser_free (module_context_p, sizeof (parser_module_context_t));
-  context_p->module_context_p = NULL;
-} /* parser_module_context_cleanup */
+  JERRY_ASSERT (local_name_p != NULL);
+  ecma_ref_ecma_string (local_name_p);
+  new_names_p->local_name_p = local_name_p;
+} /* parser_module_add_names_to_node */
 
 /**
- * Create module context and bind to the parser context.
+ * Create module context if needed.
  */
 void
 parser_module_context_init (parser_context_t *context_p) /**< parser context */
 {
-  if (context_p->module_context_p == NULL)
+  if (JERRY_CONTEXT (module_top_context_p) == NULL)
   {
-    context_p->module_context_p = (parser_module_context_t *) parser_malloc (context_p,
-                                                                             sizeof (parser_module_context_t));
+    ecma_module_context_t *module_context_p;
+    module_context_p = (ecma_module_context_t *) parser_malloc (context_p,
+                                                                sizeof (ecma_module_context_t));
 
-    memset (context_p->module_context_p, 0, sizeof (parser_module_context_t));
+    memset (module_context_p, 0, sizeof (ecma_module_context_t));
+    JERRY_CONTEXT (module_top_context_p) = module_context_p;
   }
 } /* parser_module_context_init */
 
 /**
- * Create import node.
+ * Create a permanent import/export node from a template node.
  * @return - the copy of the template if the second parameter is not NULL.
- *         - otherwise: an empty import node.
+ *         - otherwise: an empty node.
  */
-parser_module_node_t *
+ecma_module_node_t *
 parser_module_create_module_node (parser_context_t *context_p, /**< parser context */
-                                  parser_module_node_t *template_node_p) /**< template node for the new node */
+                                  ecma_module_node_t *template_node_p) /**< template node for the new node */
 {
-  parser_module_node_t *node = (parser_module_node_t *) parser_malloc (context_p, sizeof (parser_module_node_t));
+  ecma_module_node_t *node_p = (ecma_module_node_t *) parser_malloc (context_p, sizeof (ecma_module_node_t));
 
   if (template_node_p != NULL)
   {
-    node->module_names_p = template_node_p->module_names_p;
-    node->module_request_count = template_node_p->module_request_count;
-
-    node->script_path.value_p = template_node_p->script_path.value_p;
-    node->script_path.length = template_node_p->script_path.length;
-    node->next_p = NULL;
+    node_p->module_names_p = template_node_p->module_names_p;
+    node_p->module_request_p = template_node_p->module_request_p;
+    node_p->next_p = NULL;
   }
   else
   {
-    memset (node, 0, sizeof (parser_module_node_t));
+    memset (node_p, 0, sizeof (ecma_module_node_t));
   }
 
-  return node;
+  return node_p;
 } /* parser_module_create_module_node */
 
 /**
- * Create export node or get the previously created one.
- * @return the export node
- */
-parser_module_node_t *
-parser_module_get_export_node (parser_context_t *context_p) /**< parser context */
-{
-  if (context_p->module_context_p->exports_p != NULL)
-  {
-    return context_p->module_context_p->exports_p;
-  }
-
-  return parser_module_create_module_node (context_p, NULL);
-} /* parser_module_get_export_node */
-
-/**
- * Parse export item list.
+ * Parse an ExportClause.
  */
 void
-parser_module_parse_export_item_list (parser_context_t *context_p) /**< parser context */
+parser_module_parse_export_clause (parser_context_t *context_p) /**< parser context */
 {
-  if (context_p->token.type == LEXER_LITERAL
-      && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
-  {
-    parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
-  }
-
-  if (context_p->token.type == LEXER_KEYW_DEFAULT || context_p->token.type == LEXER_MULTIPLY)
-  {
-    /* TODO: This part is going to be implemented in the next part of the patch. */
-    parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
-  }
-
-  bool has_export_name = false;
-  lexer_literal_t *export_name_p = NULL;
-  lexer_literal_t *local_name_p = NULL;
-  parser_module_node_t *module_node_p = context_p->module_current_node_p;
+  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
+  lexer_next_token (context_p);
 
   while (true)
   {
-    if (has_export_name
-        && context_p->token.type != LEXER_KEYW_DEFAULT
-        && (context_p->token.type != LEXER_LITERAL
-            || lexer_compare_raw_identifier_to_current (context_p, "from", 4)
-            || lexer_compare_raw_identifier_to_current (context_p, "as", 2)))
+    if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
-      parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
-    }
-
-    if (context_p->token.lit_location.type != LEXER_IDENT_LITERAL
-        && context_p->token.lit_location.type != LEXER_STRING_LITERAL)
-    {
-      parser_raise_error (context_p, PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED);
-    }
-
-    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
-
-    if (has_export_name)
-    {
-      export_name_p = context_p->lit_object.literal_p;
-    }
-    else
-    {
-      local_name_p = context_p->lit_object.literal_p;
-      export_name_p = context_p->lit_object.literal_p;
-    }
-
-    lexer_next_token (context_p);
-
-    if (context_p->token.type == LEXER_COMMA)
-    {
-      has_export_name = false;
-      parser_module_add_item_to_node (context_p, module_node_p, export_name_p, local_name_p, false);
-    }
-    else if (context_p->token.type == LEXER_LITERAL
-             && lexer_compare_raw_identifier_to_current (context_p, "as", 2))
-    {
-      if (has_export_name)
-      {
-        parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
-      }
-
-      has_export_name = true;
-    }
-    else
-    {
-      parser_module_add_item_to_node (context_p, module_node_p, export_name_p, local_name_p, false);
+      lexer_next_token (context_p);
       break;
     }
-    lexer_next_token (context_p);
-  }
-} /* parser_module_parse_export_item_list */
 
-/**
- * Parse import item list.
- */
-void
-parser_module_parse_import_item_list (parser_context_t *context_p) /**< parser context */
-{
-  /* Import list is empty, the whole module will be loaded. */
-  if (context_p->token.type == LEXER_LITERAL
-      && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
-  {
-    /* TODO: This part is going to be implemented in the next part of the patch. */
-    parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
-  }
-
-  bool has_import_name = false;
-  lexer_literal_t *import_name_p = NULL;
-  lexer_literal_t *local_name_p = NULL;
-  parser_module_node_t *module_node_p = context_p->module_current_node_p;
-
-  while (true)
-  {
-    bool whole_module_needed = context_p->token.type == LEXER_MULTIPLY;
-
-    if (whole_module_needed)
-    {
-      parser_raise_error (context_p, PARSER_ERR_NOT_IMPLEMENTED);
-    }
-
+    /* 15.2.3.1 The referenced binding cannot be a reserved word. */
     if (context_p->token.type != LEXER_LITERAL
-        || lexer_compare_raw_identifier_to_current (context_p, "from", 4)
-        || lexer_compare_raw_identifier_to_current (context_p, "as", 2))
+        || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
+        || context_p->token.literal_is_reserved)
     {
-      parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+      parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
     }
+
+    ecma_string_t *export_name_p = NULL;
+    ecma_string_t *local_name_p = NULL;
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-    if (has_import_name)
-    {
-      import_name_p = context_p->lit_object.literal_p;
-    }
-    else
-    {
-      local_name_p = context_p->lit_object.literal_p;
-      import_name_p = context_p->lit_object.literal_p;
-    }
+    local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                   context_p->lit_object.literal_p->prop.length);
 
+    ecma_ref_ecma_string (local_name_p);
+    export_name_p = local_name_p;
 
     lexer_next_token (context_p);
+    if (context_p->token.type == LEXER_LITERAL
+        && lexer_compare_raw_identifier_to_current (context_p, "as", 2))
+    {
+      lexer_next_token (context_p);
 
-    if (context_p->token.type == LEXER_RIGHT_BRACE
-        || (context_p->token.type == LEXER_LITERAL
-            && lexer_compare_raw_identifier_to_current (context_p, "from", 4)))
-    {
-      parser_module_add_item_to_node (context_p, module_node_p, import_name_p, local_name_p, true);
-      break;
-    }
-
-    if (context_p->token.type == LEXER_COMMA)
-    {
-      parser_module_add_item_to_node (context_p, module_node_p, import_name_p, local_name_p, true);
-      has_import_name = false;
-    }
-    else if (context_p->token.type == LEXER_LITERAL
-             && lexer_compare_raw_identifier_to_current (context_p, "as", 2))
-    {
-      if (has_import_name)
+      if (context_p->token.type != LEXER_LITERAL
+          || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
       {
-        parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+        ecma_deref_ecma_string (local_name_p);
+        ecma_deref_ecma_string (export_name_p);
+        parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
-      has_import_name = true;
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+
+      ecma_deref_ecma_string (local_name_p);
+      export_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                      context_p->lit_object.literal_p->prop.length);
+
+      lexer_next_token (context_p);
     }
-    else
+
+    if (parser_module_check_duplicate_export (context_p, export_name_p))
     {
-      parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_COMMA_FROM_EXPECTED);
+      ecma_deref_ecma_string (local_name_p);
+      ecma_deref_ecma_string (export_name_p);
+      parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
     }
-    lexer_next_token (context_p);
+
+    parser_module_add_names_to_node (context_p, export_name_p, local_name_p);
+    ecma_deref_ecma_string (local_name_p);
+    ecma_deref_ecma_string (export_name_p);
+
+    if (context_p->token.type != LEXER_COMMA
+        && context_p->token.type != LEXER_RIGHT_BRACE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_COMMA_EXPECTED);
+    }
+    else if (context_p->token.type == LEXER_COMMA)
+    {
+      lexer_next_token (context_p);
+    }
+
+    if (context_p->token.type == LEXER_LITERAL
+        && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+    {
+      parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
+    }
   }
-} /* parser_module_parse_import_item_list */
+} /* parser_module_parse_export_clause */
 
 /**
- * Handle import requests.
- * Check if imported variables are exported in the appropriate module.
- * Raise parser error if imported item is not exported.
+ * Parse an ImportClause
  */
 void
-parser_module_handle_requests (parser_context_t *context_p) /**< parser context */
+parser_module_parse_import_clause (parser_context_t *context_p) /**< parser context */
 {
-  parser_module_context_t *module_context_p = JERRY_CONTEXT (module_top_context_p);
+  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
+  lexer_next_token (context_p);
 
-  if (context_p->module_context_p->exports_p == NULL || module_context_p == NULL)
+  while (true)
   {
-    return;
-  }
-
-  bool throw_error = false;
-
-  parser_module_names_t *import_name_p = module_context_p->imports_p->module_names_p;
-  parser_module_names_t *current_exports_p = context_p->module_context_p->exports_p->module_names_p;
-
-  for (uint16_t i = 0; i < module_context_p->imports_p->module_request_count; ++i)
-  {
-    bool request_is_found_in_module = false;
-    parser_module_names_t *export_iterator_p = current_exports_p;
-
-    for (uint16_t j = 0; j < context_p->module_context_p->exports_p->module_request_count;
-         ++j, export_iterator_p = export_iterator_p->next_p)
+    if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
-      if (ecma_compare_ecma_strings (import_name_p->local_name_p, export_iterator_p->import_name_p))
-      {
-        request_is_found_in_module = true;
-        break;
-      }
-    }
-
-    if (!request_is_found_in_module)
-    {
-      parser_module_free_saved_names (context_p->module_context_p->exports_p);
-      throw_error = true;
+      lexer_next_token (context_p);
       break;
     }
 
-    import_name_p = import_name_p->next_p;
-  }
+    if (context_p->token.type != LEXER_LITERAL
+        || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+    {
+      parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+    }
 
-  *module_context_p->exports_p = *context_p->module_context_p->exports_p;
-  parser_free (context_p->module_context_p->exports_p, sizeof (parser_module_node_t));
+    ecma_string_t *import_name_p = NULL;
+    ecma_string_t *local_name_p = NULL;
 
-  if (throw_error)
-  {
-    parser_raise_error (context_p, PARSER_ERR_MODULE_REQUEST_NOT_FOUND);
+    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+
+    local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                   context_p->lit_object.literal_p->prop.length);
+    ecma_ref_ecma_string (local_name_p);
+    import_name_p = local_name_p;
+
+    lexer_next_token (context_p);
+    if (context_p->token.type == LEXER_LITERAL
+        && lexer_compare_raw_identifier_to_current (context_p, "as", 2))
+    {
+      lexer_next_token (context_p);
+
+      if (context_p->token.type != LEXER_LITERAL
+          || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+      {
+        ecma_deref_ecma_string (local_name_p);
+        ecma_deref_ecma_string (import_name_p);
+        parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+      }
+
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+
+      ecma_deref_ecma_string (local_name_p);
+      local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                     context_p->lit_object.literal_p->prop.length);
+      lexer_next_token (context_p);
+    }
+
+    if (parser_module_check_duplicate_import (context_p, local_name_p))
+    {
+      ecma_deref_ecma_string (local_name_p);
+      ecma_deref_ecma_string (import_name_p);
+      parser_raise_error (context_p, PARSER_ERR_DUPLICATED_IMPORT_BINDING);
+    }
+
+    parser_module_add_names_to_node (context_p, import_name_p, local_name_p);
+    ecma_deref_ecma_string (local_name_p);
+    ecma_deref_ecma_string (import_name_p);
+
+    if (context_p->token.type != LEXER_COMMA
+        && (context_p->token.type != LEXER_RIGHT_BRACE))
+    {
+      parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_COMMA_EXPECTED);
+    }
+    else if (context_p->token.type == LEXER_COMMA)
+    {
+      lexer_next_token (context_p);
+    }
+
+    if (context_p->token.type == LEXER_LITERAL
+        && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+    {
+      parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
+    }
   }
-} /* parser_module_handle_requests */
+} /* parser_module_parse_import_clause */
 
 /**
  * Raises parser error if the import or export statement is not in the global scope.
@@ -569,35 +477,37 @@ parser_module_check_request_place (parser_context_t *context_p) /**< parser cont
 {
   if (context_p->last_context_p != NULL
       || context_p->stack_top_uint8 != 0
-      || (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0)
+      || (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0
+      || (context_p->status_flags & PARSER_IS_FUNCTION) != 0)
   {
     parser_raise_error (context_p, PARSER_ERR_MODULE_UNEXPECTED);
   }
 } /* parser_module_check_request_place */
 
 /**
- * Handle from clause at the end of the import / export statement.
+ * Handle module specifier at the end of the import / export statement.
  */
 void
-parser_module_handle_from_clause (parser_context_t *context_p) /**< parser context */
+parser_module_handle_module_specifier (parser_context_t *context_p) /**< parser context */
 {
-  parser_module_node_t *module_node_p = context_p->module_current_node_p;
-  lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_NO_OPTS);
-
-  if (context_p->lit_object.literal_p->prop.length == 0)
+  ecma_module_node_t *module_node_p = context_p->module_current_node_p;
+  if (context_p->token.type != LEXER_LITERAL
+      || context_p->token.lit_location.type != LEXER_STRING_LITERAL
+      || context_p->token.lit_location.length == 0)
   {
-    parser_raise_error (context_p, PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED);
+    parser_raise_error (context_p, PARSER_ERR_STRING_EXPECTED);
   }
 
-  module_node_p->script_path.length = (prop_length_t) (context_p->lit_object.literal_p->prop.length + 1);
-  module_node_p->script_path.value_p = (uint8_t *) parser_malloc (context_p,
-                                                                  module_node_p->script_path.length * sizeof (uint8_t));
+  lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
 
-  memcpy (module_node_p->script_path.value_p,
-          context_p->lit_object.literal_p->u.char_p,
-          module_node_p->script_path.length);
-  module_node_p->script_path.value_p[module_node_p->script_path.length - 1] = '\0';
+  ecma_string_t *path_p = ecma_module_create_normalized_path (context_p->lit_object.literal_p->u.char_p,
+                                                              context_p->lit_object.literal_p->prop.length);
 
+  ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
+  ecma_deref_ecma_string (path_p);
+
+  module_node_p->module_request_p = module_p;
   lexer_next_token (context_p);
-} /* parser_module_handle_from_clause */
+} /* parser_module_handle_module_specifier */
+
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */

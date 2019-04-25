@@ -2277,6 +2277,21 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
       return;
     }
   }
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  else if (context_p->status_flags & PARSER_MODULE_DEFAULT_CLASS_OR_FUNC)
+  {
+    /* When parsing default exports for modules, it is not required by functions or classes to have identifiers.
+     * In this case we use a synthetic name for them. */
+    context_p->token.type = LEXER_LITERAL;
+    context_p->token.literal_is_reserved = false;
+    context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
+    context_p->token.lit_location.has_escape = false;
+    lexer_construct_literal_object (context_p,
+                                    (lexer_lit_location_t *) &lexer_default_literal,
+                                    lexer_default_literal.type);
+    return;
+  }
+#endif
 
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */

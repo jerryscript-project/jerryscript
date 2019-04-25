@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
-eval ("import { c } from 'tests/jerry/es2015/module-imported.js';");
+/* Import/export statements must be in the global scope. */
+eval ('import { c } from "tests/jerry/es2015/module-export-01.js";');

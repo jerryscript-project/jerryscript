@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-import { , as b } from "tests/jerry/es2015/module-imported.js";
+import { , as b } from "tests/jerry/es2015/module-export-01.js";

@@ -13,5 +13,4 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+export default x = y = z = "default";

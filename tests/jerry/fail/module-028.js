@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+/* Ambiguous import */
+import { x } from "tests/jerry/es2015/module-export-05.js"

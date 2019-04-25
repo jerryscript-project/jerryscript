@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
-export var pi = 3.14;
-
-assert (true);
+export {}
+export {} from "tests/jerry/es2015/module-export-01.js";
+export {};
+export {} from "tests/jerry/es2015/module-export-04.js"

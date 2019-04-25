@@ -17,9 +17,9 @@
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
+#include "ecma-module.h"
 #include "jcontext.h"
 #include "js-parser-internal.h"
-#include "ecma-module.h"
 
 #ifndef JERRY_DISABLE_JS_PARSER
 
@@ -2399,7 +2399,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  context.module_context_p = NULL;
+  context.module_current_node_p = NULL;
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_ES2015_CLASS)
@@ -2479,14 +2479,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     JERRY_ASSERT (context.last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
     JERRY_ASSERT (context.allocated_buffer_p == NULL);
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-    if (context.module_context_p != NULL)
-    {
-      parser_module_handle_requests (&context);
-      ecma_module_load_modules (&context);
-    }
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
-
     compiled_code_p = parser_post_processing (&context);
     parser_list_free (&context.literal_pool);
 
@@ -2513,6 +2505,14 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                          context.allocated_buffer_size);
     }
 
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+    if (context.module_current_node_p != NULL
+        && context.module_current_node_p->module_names_p != NULL)
+    {
+      ecma_module_release_module_names (context.module_current_node_p->module_names_p);
+    }
+#endif
+
     if (error_location_p != NULL)
     {
       error_location_p->error = context.error;
@@ -2535,9 +2535,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* PARSER_DUMP_BYTE_CODE */
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  parser_module_context_cleanup (&context);
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   parser_stack_free (&context);
 
   return compiled_code_p;
@@ -2866,13 +2863,6 @@ void
 parser_raise_error (parser_context_t *context_p, /**< context */
                     parser_error_t error) /**< error code */
 {
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (context_p->module_context_p != NULL)
-  {
-    parser_module_free_saved_names (context_p->module_current_node_p);
-  }
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
-
   parser_saved_context_t *saved_context_p = context_p->last_context_p;
 
   while (saved_context_p != NULL)
@@ -2943,6 +2933,12 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 
   if (!*bytecode_data_p)
   {
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+    if (JERRY_CONTEXT (module_top_context_p) != NULL)
+    {
+      ecma_module_cleanup ();
+    }
+#endif
 #ifdef JERRY_DEBUGGER
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
@@ -2982,6 +2978,22 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     return ecma_raise_syntax_error ("");
 #endif /* JERRY_ENABLE_ERROR_MESSAGES */
   }
+
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (JERRY_CONTEXT (module_top_context_p) != NULL)
+  {
+    ecma_value_t ret_value = ecma_module_parse_modules ();
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      ecma_bytecode_deref (*bytecode_data_p);
+      *bytecode_data_p = NULL;
+      ecma_module_cleanup ();
+
+      return ret_value;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #ifdef JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))

@@ -13,5 +13,12 @@
  * limitations under the License.
  */
 
-/* Can't have reserved words for the referenced bindings. */
-export { yield as y };
+import def, * as mod from "tests/jerry/es2015/module-export-02.js";
+import {b_, c_,} from "tests/jerry/es2015/module-export-02.js";
+
+assert (def() === "default")
+assert (mod.aa === "a")
+assert (b_ === 5)
+assert (c_(b_) === 10)
+assert (mod.x === 42)
+assert (Array.isArray(mod.d))

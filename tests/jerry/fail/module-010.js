@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
-import { c as a, d as a } from "tests/jerry/es2015/module-imported.js";
+/* Can't have duplicate local bindings */
+import { c as a, d as a } from "tests/jerry/es2015/module-export-01.js";

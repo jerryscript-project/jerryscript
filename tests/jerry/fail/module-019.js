@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
+/* An ImportClause must be followed by a FromClause. */
 import { c }

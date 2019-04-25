@@ -86,16 +86,37 @@ jerryx_debugger_rp_receive (jerry_debugger_transport_header_t *header_p, /**< he
     return true;
   }
 
-  JERRYX_ASSERT (receive_context_p->message_length >= sizeof (jerryx_rawpacket_receive_header_t));
-
-  uint8_t *message_p = receive_context_p->message_p;
-  size_t message_length = (size_t) (message_p[0]);
-
   size_t message_total_length = receive_context_p->message_total_length;
 
   if (message_total_length == 0)
   {
+    /* Byte stream. */
+    if (receive_context_p->message_length < sizeof (jerryx_rawpacket_receive_header_t))
+    {
+      receive_context_p->message_p = NULL;
+      return true;
+    }
+  }
+  else
+  {
+    /* Datagram packet. */
+    JERRYX_ASSERT (receive_context_p->message_length >= sizeof (jerryx_rawpacket_receive_header_t));
+  }
+
+  uint8_t *message_p = receive_context_p->message_p;
+  size_t message_length = (size_t) (message_p[0]);
+
+  if (message_total_length == 0)
+  {
     size_t new_total_length = message_length + sizeof (jerryx_rawpacket_receive_header_t);
+
+    /* Byte stream. */
+    if (receive_context_p->message_length < new_total_length)
+    {
+      receive_context_p->message_p = NULL;
+      return true;
+    }
+
     receive_context_p->message_total_length = new_total_length;
   }
   else
@@ -104,9 +125,7 @@ jerryx_debugger_rp_receive (jerry_debugger_transport_header_t *header_p, /**< he
     JERRYX_ASSERT (receive_context_p->message_length == (message_length + sizeof (jerryx_rawpacket_receive_header_t)));
   }
 
-  message_p += sizeof (jerryx_rawpacket_receive_header_t);
-
-  receive_context_p->message_p = message_p;
+  receive_context_p->message_p = message_p + sizeof (jerryx_rawpacket_receive_header_t);
   receive_context_p->message_length = message_length;
 
   return true;

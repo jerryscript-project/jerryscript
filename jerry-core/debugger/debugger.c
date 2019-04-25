@@ -1115,6 +1115,8 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
 
     if (context.message_p == NULL)
     {
+      JERRY_CONTEXT (debugger_received_length) = (uint16_t) context.received_length;
+
       if (expected_message_type != 0)
       {
         jerry_debugger_transport_sleep ();

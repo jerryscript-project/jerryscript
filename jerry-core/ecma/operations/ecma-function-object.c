@@ -536,16 +536,14 @@ static ecma_object_t *
 ecma_op_find_super_declerative_lex_env (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
 {
   JERRY_ASSERT (lex_env_p);
-  JERRY_ASSERT (ecma_op_resolve_super_reference_value (lex_env_p));
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) != ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
 
-  while (true)
+  while (lex_env_p != NULL)
   {
     ecma_object_t *lex_env_outer_p = ecma_get_lex_env_outer_reference (lex_env_p);
 
-    JERRY_ASSERT (lex_env_outer_p);
-
-    if (ecma_get_lex_env_type (lex_env_outer_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    if (lex_env_outer_p != NULL &&
+        ecma_get_lex_env_type (lex_env_outer_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
     {
       JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
       return lex_env_p;
@@ -553,6 +551,8 @@ ecma_op_find_super_declerative_lex_env (ecma_object_t *lex_env_p) /**< starting 
 
     lex_env_p = lex_env_outer_p;
   }
+
+  return NULL;
 } /* ecma_op_find_super_declerative_lex_env */
 
 /**
@@ -569,7 +569,8 @@ ecma_op_get_class_this_binding_property (ecma_object_t *lex_env_p) /**< starting
 
   lex_env_p = ecma_op_find_super_declerative_lex_env (lex_env_p);
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_THIS_BINDING);
-  return ecma_find_named_property (lex_env_p, name_p);
+
+  return lex_env_p == NULL ? NULL : ecma_find_named_property (lex_env_p, name_p);
 } /* ecma_op_get_class_this_binding_property */
 
 /**

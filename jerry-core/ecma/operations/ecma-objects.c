@@ -756,6 +756,56 @@ ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
 
   return ret_value;
 } /* ecma_op_object_get_by_symbol_id */
+
+/**
+ * GetMethod operation the property is a well-known symbol
+ *
+ * See also: ECMA-262 v6, 7.3.9
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator fucntion object - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
+                                 lit_magic_string_id_t property_id) /**< property symbol id */
+{
+  /* 2. */
+  ecma_value_t obj_value = ecma_op_to_object (value);
+
+  if (ECMA_IS_VALUE_ERROR (obj_value))
+  {
+    return obj_value;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+  ecma_value_t func = ecma_op_object_get_by_symbol_id (obj_p, property_id);
+  ecma_deref_object (obj_p);
+
+  /* 3. */
+  if (ECMA_IS_VALUE_ERROR (func))
+  {
+    return func;
+  }
+
+  /* 4. */
+  if (ecma_is_value_undefined (func) || ecma_is_value_null (func))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  /* 5. */
+  if (!ecma_op_is_callable (func))
+  {
+    ecma_free_value (func);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not callable."));
+  }
+
+  /* 6. */
+  return func;
+} /* ecma_op_get_method_by_symbol_id */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
 /**
@@ -1838,6 +1888,9 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */

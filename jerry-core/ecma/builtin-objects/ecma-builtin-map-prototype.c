@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecma-map-object.h"
+#include "ecma-container-object.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
 
@@ -46,7 +46,7 @@
 static ecma_value_t
 ecma_builtin_map_prototype_object_clear (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_map_clear (this_arg);
+  return ecma_op_container_clear (this_arg, false);
 } /* ecma_builtin_map_prototype_object_clear */
 
 /**
@@ -62,7 +62,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_map_delete (this_arg, key_arg);
+  return ecma_op_container_delete (this_arg, key_arg, false);
 } /* ecma_builtin_map_prototype_object_delete */
 
 /**
@@ -80,7 +80,7 @@ ecma_builtin_map_prototype_object_foreach (ecma_value_t this_arg, /**< this argu
                                            ecma_value_t predicate_this_arg) /**< this argument for
                                                                              *   invoke predicate */
 {
-  return ecma_op_map_foreach (this_arg, predicate, predicate_this_arg);
+  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, false);
 } /* ecma_builtin_map_prototype_object_foreach */
 
 /**
@@ -96,7 +96,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_get (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_map_get (this_arg, key_arg);
+  return ecma_op_container_get (this_arg, key_arg);
 } /* ecma_builtin_map_prototype_object_get */
 
 /**
@@ -112,7 +112,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_has (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_map_has (this_arg, key_arg);
+  return ecma_op_container_has (this_arg, key_arg, false);
 } /* ecma_builtin_map_prototype_object_has */
 
 /**
@@ -129,7 +129,7 @@ ecma_builtin_map_prototype_object_set (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t key_arg, /**< key argument */
                                        ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_map_set (this_arg, key_arg, value_arg);
+  return ecma_op_container_set (this_arg, key_arg, value_arg, false);
 } /* ecma_builtin_map_prototype_object_set */
 
 /**
@@ -144,7 +144,7 @@ ecma_builtin_map_prototype_object_set (ecma_value_t this_arg, /**< this argument
 static ecma_value_t
 ecma_builtin_map_prototype_object_size_getter (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_map_size (this_arg);
+  return ecma_op_container_size (this_arg, false);
 } /* ecma_builtin_map_prototype_object_size_getter */
 
 /**

@@ -37,7 +37,7 @@
 #include "ecma-promise-object.h"
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-#include "ecma-map-object.h"
+#include "ecma-container-object.h"
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
 /* TODO: Extract GC to a separate component */
@@ -639,10 +639,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           return;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+        case LIT_MAGIC_STRING_SET_UL:
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
         case LIT_MAGIC_STRING_MAP_UL:
         {
-          ecma_op_map_clear_map ((ecma_map_object_t *) object_p);
+          ecma_op_container_clear_map ((ecma_map_object_t *) object_p);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
           return;
         }

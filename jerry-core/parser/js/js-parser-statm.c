@@ -327,9 +327,10 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-    if (JERRY_CONTEXT (module_top_context_p) != NULL && context_p->module_current_node_p != NULL)
+    if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
     {
       context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
+      context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
     }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
@@ -399,9 +400,10 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   name_p = context_p->lit_object.literal_p;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (module_top_context_p) != NULL && context_p->module_current_node_p != NULL)
+  if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
   {
     context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
+    context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
   }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
@@ -1815,6 +1817,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       lexer_range_t range;
       parser_save_range (context_p, &range, context_p->source_end_p);
 
+      context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
+
       lexer_next_token (context_p);
       if (context_p->token.type == LEXER_KEYW_CLASS)
       {
@@ -1829,7 +1833,6 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       else
       {
         /* Assignment expression */
-        context_p->status_flags |= PARSER_MODULE_DEFAULT_EXPR;
         parser_set_range (context_p, &range);
 
         /* 15.2.3.5 Use the synthetic name '*default*' as the identifier. */
@@ -1866,7 +1869,6 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
                                        name_p);
       ecma_deref_ecma_string (name_p);
       ecma_deref_ecma_string (export_name_p);
-      context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_DEFAULT_EXPR);
       break;
     }
     case LEXER_MULTIPLY:
@@ -1884,6 +1886,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     }
     case LEXER_KEYW_VAR:
     {
+      context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
       parser_parse_var_statement (context_p);
       ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
                                                               context_p->module_identifier_lit_p->prop.length);
@@ -1902,6 +1905,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     }
     case LEXER_KEYW_CLASS:
     {
+      context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
       parser_parse_class (context_p, true);
       ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
                                                               context_p->module_identifier_lit_p->prop.length);
@@ -1920,6 +1924,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     }
     case LEXER_KEYW_FUNCTION:
     {
+      context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
       parser_parse_function_statement (context_p);
       ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->module_identifier_lit_p->u.char_p,
                                                               context_p->module_identifier_lit_p->prop.length);
@@ -1955,6 +1960,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     }
   }
 
+  context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_STORE_IDENT);
   parser_module_add_export_node_to_context (context_p);
   context_p->module_current_node_p = NULL;
 } /* parser_parse_export_statement */

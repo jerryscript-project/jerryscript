@@ -2289,6 +2289,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
     lexer_construct_literal_object (context_p,
                                     (lexer_lit_location_t *) &lexer_default_literal,
                                     lexer_default_literal.type);
+    context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC);
     return;
   }
 #endif

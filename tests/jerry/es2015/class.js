@@ -68,8 +68,9 @@ class B {
 }
 
 var b = new B;
-assert(typeof B  === "function");
-assert(typeof b === "object");
+assert (typeof B  === "function");
+assert (typeof b === "object");
+assert (b.constructor === B);
 
 class C {
   c1() {
@@ -88,6 +89,7 @@ var c = new C;
 assert (c.c1() === 5);
 assert (c.c2() === undefined);
 assert (c["3"]() === 3);
+assert (c.constructor === C);
 
 class D {
   constructor(d) {
@@ -99,7 +101,8 @@ class D {
   }
 }
 var d = new D(5);
-assert(d.d1() === 5);
+assert (d.d1() === 5);
+assert (d.constructor === D);
 
 class E {
   constructor(e) {
@@ -118,6 +121,7 @@ var e = new E (5);
 assert (e.e === 5);
 e.e = 10;
 assert (e.e === 10);
+assert (e.constructor === E);
 
 var F = class ClassF {
   constructor(f) {
@@ -159,6 +163,7 @@ assert (F.f3(1, 1) === 2);
 assert (F.constructor(5) === 5);
 assert (F.static(5) === 5);
 assert (F["2"](5) === 10);
+assert (f.constructor === F);
 
 var G = class {
   static set a(a) {

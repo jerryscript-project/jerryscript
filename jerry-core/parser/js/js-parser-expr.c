@@ -363,7 +363,6 @@ static void
 parser_parse_class_literal (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
-  parser_emit_cbc (context_p, CBC_CREATE_OBJECT);
 
   bool super_called = false;
   uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
@@ -605,7 +604,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
   }
 
-  parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CLASS_CONSTRUCTOR);
+  parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE);
 
   bool is_strict = context_p->status_flags & PARSER_IS_STRICT;
 

@@ -82,7 +82,7 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 25),  /**< parsing a function or class default export */
-  PARSER_MODULE_DEFAULT_EXPR = (1u << 26),    /**< parsing a default export expression */
+  PARSER_MODULE_STORE_IDENT = (1u << 26),    /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 } parser_general_flags_t;
 

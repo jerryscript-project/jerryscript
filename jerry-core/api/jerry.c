@@ -808,6 +808,21 @@ jerry_value_is_undefined (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_undefined */
 
 /**
+ * Perform instanceof check on the specified two operands.
+ *
+ * @return true  - if the left hand side is instance of right hand side,
+ *         false - otherwise.
+ */
+bool
+jerry_value_instanceof (const jerry_value_t value, const jerry_value_t proto)
+{
+  jerry_assert_api_available ();
+
+  ecma_value_t ret = ecma_op_object_has_instance (ecma_get_object_from_value (proto), value);
+  return ecma_is_value_true (ret);
+}
+
+/**
  * Perform the base type of the JavaScript value.
  *
  * @return jerry_type_t value

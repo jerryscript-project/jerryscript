@@ -372,6 +372,7 @@ bool jerry_value_is_promise (const jerry_value_t value);
 bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_symbol (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
+bool jerry_value_instanceof(const jerry_value_t value, const jerry_value_t proto);
 
 /**
  * JerryScript API value type information.

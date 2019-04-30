@@ -450,6 +450,7 @@ main (void)
   val_a = get_property (global_obj_val, "a");
   TEST_ASSERT (!jerry_value_is_error (val_a));
   TEST_ASSERT (jerry_value_is_object (val_a));
+  TEST_ASSERT (jerry_value_instanceof (val_a, val_A));
 
   /* Get a.t */
   res = get_property (val_a, "t");

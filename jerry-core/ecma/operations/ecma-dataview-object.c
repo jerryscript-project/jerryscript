@@ -112,7 +112,11 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
     int32_t byte_length_int32 = ecma_number_to_int32 (byte_length);
 
-    if (ecma_number_is_infinity (byte_length))
+    if (ecma_number_is_nan (byte_length))
+    {
+      viewByteLength = 0;
+    }
+    else if (ecma_number_is_infinity (byte_length))
     {
       viewByteLength = UINT32_MAX;
     }

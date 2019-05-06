@@ -2894,7 +2894,7 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_DISABLE_JS_PARSER */
 
 /**
- * Parse EcamScript source code
+ * Parse EcmaScript source code
  *
  * Note:
  *      if arg_list_p is not NULL, a function body is parsed

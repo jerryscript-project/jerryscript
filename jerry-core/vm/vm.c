@@ -3603,6 +3603,8 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
     {
       return ret_value;
     }
+
+    JERRY_CONTEXT (module_top_context_p) = NULL;
   }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 

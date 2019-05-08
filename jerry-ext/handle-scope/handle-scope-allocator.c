@@ -36,7 +36,7 @@ static jerryx_handle_scope_pool_t jerryx_handle_scope_pool =
 /**
  * Get current handle scope top of stack.
  */
-inline jerryx_handle_scope_t *
+jerryx_handle_scope_t *
 jerryx_handle_scope_get_current (void)
 {
   return jerryx_handle_scope_current;
@@ -45,7 +45,7 @@ jerryx_handle_scope_get_current (void)
 /**
  * Get root handle scope.
  */
-inline jerryx_handle_scope_t *
+jerryx_handle_scope_t *
 jerryx_handle_scope_get_root (void)
 {
   return &jerryx_handle_scope_root;
@@ -56,7 +56,7 @@ jerryx_handle_scope_get_root (void)
  *
  * @param scope - the one to be determined.
  */
-static inline bool
+static bool
 jerryx_handle_scope_is_in_prelist (jerryx_handle_scope_t *scope)
 {
   return (jerryx_handle_scope_pool.prelist <= scope)

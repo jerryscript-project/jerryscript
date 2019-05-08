@@ -296,6 +296,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+          case LIT_MAGIC_STRING_DATAVIEW_UL:
+          {
+            ecma_dataview_object_t *dataview_p = (ecma_dataview_object_t *) object_p;
+            ecma_gc_set_object_visited (dataview_p->buffer_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
           default:
           {
             break;

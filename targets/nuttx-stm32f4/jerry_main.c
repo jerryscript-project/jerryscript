@@ -39,6 +39,8 @@
  */
 #define SYNTAX_ERROR_CONTEXT_SIZE 2
 
+void set_log_level (jerry_log_level_t level);
+
 /**
  * Print usage and available options
  */
@@ -288,10 +290,6 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
-/**
- * JerryScript log level
- */
-static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
 
 /**
  * Main program.
@@ -331,23 +329,23 @@ int jerry_main (int argc, char *argv[])
     else if (!strcmp ("--mem-stats", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS;
-      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
+      set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--mem-stats-separate", argv[i]))
     {
       flags |= JERRY_INIT_MEM_STATS_SEPARATE;
-      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
+      set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--show-opcodes", argv[i]))
     {
       flags |= JERRY_INIT_SHOW_OPCODES | JERRY_INIT_SHOW_REGEXP_OPCODES;
-      jerry_log_level = JERRY_LOG_LEVEL_DEBUG;
+      set_log_level (JERRY_LOG_LEVEL_DEBUG);
     }
     else if (!strcmp ("--log-level", argv[i]))
     {
       if (++i < argc && strlen (argv[i]) == 1 && argv[i][0] >='0' && argv[i][0] <= '3')
       {
-        jerry_log_level = argv[i][0] - '0';
+        set_log_level (argv[i][0] - '0');
       }
       else
       {
@@ -465,149 +463,3 @@ int jerry_main (int argc, char *argv[])
 
   return ret_code;
 } /* main */
-
-/**
- * Aborts the program.
- */
-void jerry_port_fatal (jerry_fatal_code_t code)
-{
-  exit (1);
-} /* jerry_port_fatal */
-
-/**
- * Provide log message implementation for the engine.
- */
-void
-jerry_port_log (jerry_log_level_t level, /**< log level */
-                const char *format, /**< format string */
-                ...)  /**< parameters */
-{
-  if (level <= jerry_log_level)
-  {
-    va_list args;
-    va_start (args, format);
-    vfprintf (stderr, format, args);
-    va_end (args);
-  }
-} /* jerry_port_log */
-
-/**
- * Determines the size of the given file.
- * @return size of the file
- */
-static size_t
-jerry_port_get_file_size (FILE *file_p) /**< opened file */
-{
-  fseek (file_p, 0, SEEK_END);
-  long size = ftell (file_p);
-  fseek (file_p, 0, SEEK_SET);
-
-  return (size_t) size;
-} /* jerry_port_get_file_size */
-
-/**
- * Opens file with the given path and reads its source.
- * @return the source of the file
- */
-uint8_t *
-jerry_port_read_source (const char *file_name_p, /**< file name */
-                        size_t *out_size_p) /**< [out] read bytes */
-{
-  FILE *file_p = fopen (file_name_p, "rb");
-
-  if (file_p == NULL)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  size_t file_size = jerry_port_get_file_size (file_p);
-  uint8_t *buffer_p = (uint8_t *) malloc (file_size);
-
-  if (buffer_p == NULL)
-  {
-    fclose (file_p);
-
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to allocate memory for module");
-    return NULL;
-  }
-
-  size_t bytes_read = fread (buffer_p, 1u, file_size, file_p);
-
-  if (!bytes_read)
-  {
-    fclose (file_p);
-    free (buffer_p);
-
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  fclose (file_p);
-  *out_size_p = bytes_read;
-
-  return buffer_p;
-} /* jerry_port_read_source */
-
-/**
- * Release the previously opened file's content.
- */
-void
-jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
-{
-  free (buffer_p);
-} /* jerry_port_release_source */
-
-/**
- * Normalize a file path
- *
- * @return length of the path written to the output buffer
- */
-size_t
-jerry_port_normalize_path (const char *in_path_p, /**< input file path */
-                           char *out_buf_p,       /**< output buffer */
-                           size_t out_buf_size)   /**< size of output buffer */
-{
-  size_t len = strlen (in_path_p);
-  if (len + 1 > out_buf_size)
-  {
-    return 0;
-  }
-
-  /* Return the original string. */
-  strcpy (out_buf_p, in_path_p);
-  return len;
-} /* jerry_port_normalize_path */
-
-/**
- * Dummy function to get the time zone adjustment.
- *
- * @return 0
- */
-double
-jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
-{
-  /* We live in UTC. */
-  return 0;
-} /* jerry_port_get_local_time_zone_adjustment */
-
-/**
- * Dummy function to get the current time.
- *
- * @return 0
- */
-double
-jerry_port_get_current_time (void)
-{
-  return 0;
-} /* jerry_port_get_current_time */
-
-/**
- * Provide the implementation of jerry_port_print_char.
- * Uses 'printf' to print a single character to standard output.
- */
-void
-jerry_port_print_char (char c) /**< the character to print */
-{
-  printf ("%c", c);
-} /* jerry_port_print_char */

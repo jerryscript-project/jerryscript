@@ -377,7 +377,12 @@ ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
   {
     ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
     ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
-    JERRY_ASSERT (property_p != NULL);
+
+    if (property_p == NULL)
+    {
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+      continue;
+    }
 
     ecma_value_t value = ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
     ecma_value_t key_arg;
@@ -388,7 +393,15 @@ ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
     }
     else
     {
-      key_arg = *ecma_value_p;
+      if (ECMA_IS_DIRECT_STRING (prop_name_p)
+          && ECMA_GET_DIRECT_STRING_TYPE (prop_name_p) == ECMA_DIRECT_STRING_ECMA_INTEGER)
+      {
+        key_arg = ecma_make_uint32_value ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (prop_name_p));
+      }
+      else
+      {
+        key_arg = *ecma_value_p;
+      }
     }
 
     ecma_value_t call_args[] = { value, key_arg };

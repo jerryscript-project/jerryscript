@@ -666,8 +666,9 @@ typedef enum
   ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
   ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
   ECMA_PSEUDO_ARRAY_ITERATOR = 3, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
+  ECMA_PSEUDO_STRING_ITERATOR = 4, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
 
-  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_ARRAY_ITERATOR /**< maximum value */
+  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_STRING_ITERATOR /**< maximum value */
 } ecma_pseudo_array_type_t;
 
 /**
@@ -874,7 +875,7 @@ typedef struct
       {
         ecma_value_t lex_env_cp; /**< for arguments: lexical environment */
         ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
-        ecma_value_t iterated_value_cp; /**< for %Iterator%: [[IteratedObject]] property */
+        ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
       } u2;
     } pseudo_array;
 

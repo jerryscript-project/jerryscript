@@ -1891,6 +1891,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+        case ECMA_PSEUDO_STRING_ITERATOR:
+        {
+          return LIT_MAGIC_STRING_STRING_ITERATOR_UL;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
         default:
         {
           JERRY_ASSERT (ext_obj_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);

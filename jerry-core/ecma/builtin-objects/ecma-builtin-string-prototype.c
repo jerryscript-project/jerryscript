@@ -23,6 +23,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
@@ -2163,6 +2164,40 @@ ecma_builtin_string_prototype_object_substr (ecma_value_t this_arg, /**< this ar
 } /* ecma_builtin_string_prototype_object_substr */
 
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+/**
+ * The String.prototype object's @@iterator routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.27
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_iterator (ecma_value_t this_arg) /**< this argument */
+{
+  ecma_value_t coercible = ecma_op_check_object_coercible (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (coercible))
+  {
+    return coercible;
+  }
+
+  ecma_value_t to_string = ecma_op_to_string (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (to_string))
+  {
+    return to_string;
+  }
+
+  return ecma_op_create_iterator_object (to_string,
+                                         ecma_builtin_get (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE),
+                                         ECMA_PSEUDO_STRING_ITERATOR,
+                                         0);
+} /* ecma_builtin_string_prototype_object_iterator */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * @}

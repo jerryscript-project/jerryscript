@@ -472,6 +472,13 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE,
          ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          true,
          array_iterator_prototype)
+
+/* The %StringIteratorPrototype% object (ECMA-262 v6, 22.1.5.2) */
+BUILTIN (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         true,
+         string_iterator_prototype)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)

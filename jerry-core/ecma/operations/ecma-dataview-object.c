@@ -301,7 +301,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 
   if (ecma_is_value_empty (value_to_set))
   {
-    lit_utf8_byte_t swap_block_p[element_size];
+    JERRY_VLA (lit_utf8_byte_t, swap_block_p, element_size);
     memcpy (swap_block_p, block_p, element_size * sizeof (lit_utf8_byte_t));
     ecma_dataview_swap_order (system_is_little_endian, is_little_endian, element_size, swap_block_p);
     return ecma_make_number_value (ecma_get_typedarray_element (swap_block_p, id));

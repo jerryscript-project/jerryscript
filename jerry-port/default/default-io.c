@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -206,13 +207,39 @@ jerry_port_normalize_path (const char *in_path_p, /**< input file path */
                            char *out_buf_p,       /**< output buffer */
                            size_t out_buf_size)   /**< size of output buffer */
 {
-  /* TODO: implement path normalization */
-  size_t len = strlen (in_path_p);
-  if (len + 1 > out_buf_size)
+  size_t ret = 0;
+
+#if defined (WIN32)
+  char *norm_p = _fullpath (out_buf_p, in_path_p, out_buf_size);
+
+  if (norm_p != NULL)
   {
-    return 0;
+    ret = strnlen (norm_p, out_buf_size);
+  }
+#elif defined (__unix__) || defined (__APPLE__)
+  char *temp_p = (char *) malloc (PATH_MAX);
+  char *norm_p = realpath (in_path_p, temp_p);
+
+  if (norm_p != NULL)
+  {
+    const size_t len = strnlen (norm_p, out_buf_size);
+    if (len < out_buf_size)
+    {
+      strncpy (out_buf_p, norm_p, out_buf_size);
+      ret = len;
+    }
   }
 
-  strcpy (out_buf_p, in_path_p);
-  return len;
+  free (temp_p);
+#else
+  /* Do nothing. */
+  const size_t len = strnlen (in_path_p, out_buf_size);
+  if (len < out_buf_size)
+  {
+    strncpy (out_buf_p, in_path_p, out_buf_size);
+    ret = len;
+  }
+#endif
+
+  return ret;
 } /* jerry_port_normalize_path */

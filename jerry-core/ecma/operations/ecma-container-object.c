@@ -19,7 +19,8 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
-#include "ecma-map-object.h"
+#include "ecma-iterator-object.h"
+#include "ecma-container-object.h"
 #include "ecma-property-hashmap.h"
 #include "ecma-objects.h"
 
@@ -28,19 +29,19 @@
 /** \addtogroup ecma ECMA
  * @{
  *
- * \addtogroup \addtogroup ecmamaphelpers ECMA builtin map helper functions
+ * \addtogroup \addtogroup ecmamaphelpers ECMA builtin map/set helper functions
  * @{
  */
 
 /**
- * Creates an empty object for the map object's internal slot.
+ * Creates an empty object for the map/set object's internal slot.
  *
  * Note: The created object is not registered to the GC.
  *
  * @return ecma value of the created object
  */
 static ecma_value_t
-ecma_op_map_create_internal_object (void)
+ecma_op_container_create_internal_object (void)
 {
   ecma_object_t *internal_object_p = ecma_alloc_object ();
   internal_object_p->type_flags_refs = (ECMA_OBJECT_TYPE_GENERAL | ECMA_OBJECT_FLAG_EXTENSIBLE | ECMA_OBJECT_REF_ONE);
@@ -48,58 +49,181 @@ ecma_op_map_create_internal_object (void)
   internal_object_p->prototype_or_outer_reference_cp = JMEM_CP_NULL;
 
   return ecma_make_object_value (internal_object_p);
-} /* ecma_op_map_create_internal_object */
+} /* ecma_op_container_create_internal_object */
 
 /**
- * Handle calling [[Construct]] of built-in map like objects
+ * Handle calling [[Construct]] of built-in map/set like objects
  *
  * @return ecma value
  */
 ecma_value_t
-ecma_op_map_create (const ecma_value_t *arguments_list_p, /**< arguments list */
-                    ecma_length_t arguments_list_len) /**< number of arguments */
+ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments list */
+                          ecma_length_t arguments_list_len, /**< number of arguments */
+                          bool is_set) /**< true - to perform Set operations
+                                        *   false - to perform Map operations */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_MAP_PROTOTYPE),
+  ecma_object_t *proto_p = ecma_builtin_get (is_set ? ECMA_BUILTIN_ID_SET_PROTOTYPE : ECMA_BUILTIN_ID_MAP_PROTOTYPE);
+
+  ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 sizeof (ecma_map_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_map_object_t *map_obj_p = (ecma_map_object_t *) object_p;
-  map_obj_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_MAP_UL;
-  map_obj_p->header.u.class_prop.u.value = ecma_op_map_create_internal_object ();
+  map_obj_p->header.u.class_prop.class_id = is_set ? LIT_MAGIC_STRING_SET_UL : LIT_MAGIC_STRING_MAP_UL;
+  map_obj_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
   map_obj_p->size = 0;
 
-  return ecma_make_object_value (object_p);
-} /* ecma_op_map_create */
+  ecma_value_t set_value = ecma_make_object_value (object_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+  if (arguments_list_len == 0)
+  {
+    return set_value;
+  }
+
+  ecma_value_t iterable = arguments_list_p[0];
+
+  if (ecma_is_value_undefined (iterable) || ecma_is_value_null (iterable))
+  {
+    return set_value;
+  }
+
+  ecma_value_t iter = ecma_op_get_iterator (iterable, ECMA_VALUE_EMPTY);
+
+  if (ECMA_IS_VALUE_ERROR (iter))
+  {
+    ecma_deref_object (object_p);
+    return iter;
+  }
+
+  while (true)
+  {
+    ecma_value_t next = ecma_op_iterator_step (iter);
+
+    if (ECMA_IS_VALUE_ERROR (next))
+    {
+      ecma_free_value (iter);
+      ecma_deref_object (object_p);
+      return next;
+    }
+
+    if (ecma_is_value_false (next))
+    {
+      break;
+    }
+
+    ecma_value_t next_value = ecma_op_iterator_value (next);
+
+    if (ECMA_IS_VALUE_ERROR (next_value))
+    {
+      ecma_free_value (next);
+      ecma_free_value (iter);
+      ecma_deref_object (object_p);
+      return next_value;
+    }
+
+    ecma_value_t result;
+    if (is_set)
+    {
+      result = ecma_op_container_set (set_value, next_value, next_value, is_set);
+    }
+    else
+    {
+      if (!ecma_is_value_object (next_value))
+      {
+        // TODO close the iterator when generator function will be supported
+        ecma_free_value (next_value);
+        ecma_free_value (next);
+        ecma_free_value (iter);
+        ecma_deref_object (object_p);
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+      }
+
+      ecma_object_t *next_object_p = ecma_get_object_from_value (next_value);
+
+      ecma_value_t key = ecma_op_object_get (next_object_p, ecma_new_ecma_string_from_uint32 (0));
+
+      if (ECMA_IS_VALUE_ERROR (key))
+      {
+        // TODO close the iterator when generator function will be supported
+        ecma_free_value (next_value);
+        ecma_free_value (next);
+        ecma_free_value (iter);
+        ecma_deref_object (object_p);
+        return key;
+      }
+
+      ecma_value_t value = ecma_op_object_get (next_object_p, ecma_new_ecma_string_from_uint32 (1));
+
+      if (ECMA_IS_VALUE_ERROR (value))
+      {
+        // TODO close the iterator when generator function will be supported
+        ecma_free_value (next_value);
+        ecma_free_value (key);
+        ecma_free_value (next);
+        ecma_free_value (iter);
+        ecma_deref_object (object_p);
+        return value;
+      }
+
+      result = ecma_op_container_set (set_value, key, value, is_set);
+
+      ecma_free_value (key);
+      ecma_free_value (value);
+    }
+
+    ecma_free_value (next_value);
+    ecma_free_value (next);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      // TODO close the iterator when generator function will be supported
+      ecma_free_value (iter);
+      ecma_deref_object (object_p);
+      return result;
+    }
+
+    ecma_free_value (result);
+  }
+
+  ecma_free_value (iter);
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+
+  return set_value;
+} /* ecma_op_container_create */
 
 /**
- * Get map object pointer
+ * Get map/set object pointer
  *
  * Note:
  *   If the function returns with NULL, the error object has
  *   already set, and the caller must return with ECMA_VALUE_ERROR
  *
- * @return pointer to the map if this_arg is a valid map object
+ * @return pointer to the map/set if this_arg is a valid map/set object
  *         NULL otherwise
  */
 static ecma_map_object_t *
-ecma_op_map_get_object (ecma_value_t this_arg) /**< this argument */
+ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
+                              bool is_set) /**< true - to perform Set operations
+                                            *   false - to perform Map operations */
 {
   if (ecma_is_value_object (this_arg))
   {
     ecma_map_object_t *map_object_p = (ecma_map_object_t *) ecma_get_object_from_value (this_arg);
 
     if (ecma_get_object_type (&map_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-        && map_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_MAP_UL)
+        && map_object_p->header.u.class_prop.class_id == (is_set ? LIT_MAGIC_STRING_SET_UL : LIT_MAGIC_STRING_MAP_UL))
     {
       return map_object_p;
     }
   }
 
-  ecma_raise_type_error (ECMA_ERR_MSG ("Expected a Map object."));
+  ecma_raise_type_error (ECMA_ERR_MSG (is_set ? "Expected a Set object." : "Expected a Map object."));
   return NULL;
-} /* ecma_op_map_get_object */
+} /* ecma_op_container_get_object */
 
 /**
  * Creates a property key for the internal object from the given argument
@@ -110,7 +234,7 @@ ecma_op_map_get_object (ecma_value_t this_arg) /**< this argument */
  * @return property key
  */
 static ecma_string_t *
-ecma_op_map_to_key (ecma_value_t key_arg) /**< key argument */
+ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
 {
   if (ecma_is_value_prop_name (key_arg))
   {
@@ -156,17 +280,19 @@ ecma_op_map_to_key (ecma_value_t key_arg) /**< key argument */
   }
 
   return ecma_new_map_key_string (key_arg);
-} /* ecma_op_map_to_key */
+} /* ecma_op_container_to_key */
 
 /**
- * Returns with the size of the map object.
+ * Returns with the size of the map/set object.
  *
- * @return size of the map object as ecma-value.
+ * @return size of the map/set object as ecma-value.
  */
 ecma_value_t
-ecma_op_map_size (ecma_value_t this_arg) /**< this argument */
+ecma_op_container_size (ecma_value_t this_arg, /**< this argument */
+                        bool is_set) /**< true - to perform Set operations
+                                      *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
@@ -174,7 +300,7 @@ ecma_op_map_size (ecma_value_t this_arg) /**< this argument */
   }
 
   return ecma_make_uint32_value (map_object_p->size);
-} /* ecma_op_map_size */
+} /* ecma_op_container_size */
 
 /**
  * The generic map prototype object's 'get' routine
@@ -183,10 +309,10 @@ ecma_op_map_size (ecma_value_t this_arg) /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_get (ecma_value_t this_arg, /**< this argument */
-                 ecma_value_t key_arg) /**< key argument */
+ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
+                       ecma_value_t key_arg) /**< key argument */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, false);
 
   if (map_object_p == NULL)
   {
@@ -200,7 +326,7 @@ ecma_op_map_get (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+  ecma_string_t *prop_name_p = ecma_op_container_to_key (key_arg);
 
   ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
 
@@ -212,19 +338,21 @@ ecma_op_map_get (ecma_value_t this_arg, /**< this argument */
   }
 
   return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-} /* ecma_op_map_get */
+} /* ecma_op_container_get */
 
 /**
- * The generic map prototype object's 'has' routine
+ * The generic map/set prototype object's 'has' routine
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_has (ecma_value_t this_arg, /**< this argument */
-                 ecma_value_t key_arg) /**< key argument */
+ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
+                       ecma_value_t key_arg, /**< key argument */
+                       bool is_set) /**< true - to perform Set operations
+                                     *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
@@ -238,27 +366,29 @@ ecma_op_map_has (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+  ecma_string_t *prop_name_p = ecma_op_container_to_key (key_arg);
 
   ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
 
   ecma_deref_ecma_string (prop_name_p);
 
   return ecma_make_boolean_value (property_p != NULL);
-} /* ecma_op_map_has */
+} /* ecma_op_container_has */
 
 /**
- * The generic map prototype object's 'set' routine
+ * The generic map prototype object's 'set' and set prototype object's 'add' routine
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_set (ecma_value_t this_arg, /**< this argument */
-                 ecma_value_t key_arg, /**< key argument */
-                 ecma_value_t value_arg) /**< value argument */
+ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
+                       ecma_value_t key_arg, /**< key argument */
+                       ecma_value_t value_arg, /**< value argument */
+                       bool is_set) /**< true - to perform Set operations
+                                     *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
@@ -267,7 +397,7 @@ ecma_op_map_set (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+  ecma_string_t *prop_name_p = ecma_op_container_to_key (key_arg);
 
   ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
 
@@ -288,13 +418,13 @@ ecma_op_map_set (ecma_value_t this_arg, /**< this argument */
   ecma_deref_ecma_string (prop_name_p);
   ecma_ref_object ((ecma_object_t *) &map_object_p->header);
   return this_arg;
-} /* ecma_op_map_set */
+} /* ecma_op_container_set */
 
 /**
- * Low-level function to clear all items from a map
+ * Low-level function to clear all items from a map/set
  */
 void
-ecma_op_map_clear_map (ecma_map_object_t *map_object_p) /**< map object */
+ecma_op_container_clear_map (ecma_map_object_t *map_object_p) /**< map object */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
@@ -336,21 +466,23 @@ ecma_op_map_clear_map (ecma_map_object_t *map_object_p) /**< map object */
   }
 
   ecma_dealloc_object (object_p);
-} /* ecma_op_map_clear_map */
+} /* ecma_op_container_clear_map */
 
 /**
- * The generic map prototype object's 'forEach' routine
+ * The generic map/set prototype object's 'forEach' routine
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
-                     ecma_value_t predicate, /**< callback function */
-                     ecma_value_t predicate_this_arg) /**< this argument for
-                                                       *   invoke predicate */
+ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
+                           ecma_value_t predicate, /**< callback function */
+                           ecma_value_t predicate_this_arg, /**< this argument for
+                                                             *   invoke predicate */
+                           bool is_set) /**< true - to perform Set operations
+                                         *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
@@ -404,7 +536,7 @@ ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
       }
     }
 
-    ecma_value_t call_args[] = { value, key_arg };
+    ecma_value_t call_args[] = { value, is_set ? value : key_arg };
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 2);
 
@@ -422,43 +554,47 @@ ecma_op_map_foreach (ecma_value_t this_arg, /**< this argument */
   ecma_free_values_collection (props_p, 0);
 
   return ret_value;
-} /* ecma_op_map_foreach */
+} /* ecma_op_container_foreach */
 
 /**
- * The Map prototype object's 'clear' routine
+ * The Map/Set prototype object's 'clear' routine
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_clear (ecma_value_t this_arg) /**< this argument */
+ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
+                         bool is_set) /**< true - to perform Set operations
+                                       *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_op_map_clear_map (map_object_p);
+  ecma_op_container_clear_map (map_object_p);
 
-  map_object_p->header.u.class_prop.u.value = ecma_op_map_create_internal_object ();
+  map_object_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
   map_object_p->size = 0;
 
   return ECMA_VALUE_UNDEFINED;
-} /* ecma_op_map_clear */
+} /* ecma_op_container_clear */
 
 /**
- * The generic map prototype object's 'delete' routine
+ * The generic map/set prototype object's 'delete' routine
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_map_delete (ecma_value_t this_arg, /**< this argument */
-                    ecma_value_t key_arg) /**< key argument */
+ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
+                          ecma_value_t key_arg, /**< key argument */
+                          bool is_set) /**< true - to perform Set operations
+                                        *   false - to perform Map operations */
 {
-  ecma_map_object_t *map_object_p = ecma_op_map_get_object (this_arg);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
 
   if (map_object_p == NULL)
   {
@@ -467,7 +603,7 @@ ecma_op_map_delete (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  ecma_string_t *prop_name_p = ecma_op_map_to_key (key_arg);
+  ecma_string_t *prop_name_p = ecma_op_container_to_key (key_arg);
 
   ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
 
@@ -482,7 +618,7 @@ ecma_op_map_delete (ecma_value_t this_arg, /**< this argument */
   map_object_p->size--;
 
   return ECMA_VALUE_TRUE;
-} /* ecma_op_map_delete */
+} /* ecma_op_container_delete */
 
 /**
  * @}

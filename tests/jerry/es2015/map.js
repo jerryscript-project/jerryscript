@@ -117,3 +117,9 @@ assert(mapNameDesc.enumerable === false);
 assert(mapNameDesc.configurable === true);
 
 assert(Map.prototype.name === undefined);
+
+m = new Map([{0: "foo", 1: 3}, {0 : "bar", 1 : 2}]);
+
+assert (m.size === 2);
+assert (m.get("foo") === 3);
+assert (m.get("bar") === 2);

@@ -17,13 +17,13 @@
 #include "ecma-exceptions.h"
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-#define BUILTIN_INC_HEADER_NAME "ecma-builtin-map.inc.h"
-#define BUILTIN_UNDERSCORED_ID map
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-set.inc.h"
+#define BUILTIN_UNDERSCORED_ID set
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -32,23 +32,23 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup map ECMA Map object built-in
+ * \addtogroup set ECMA Set object built-in
  * @{
  */
 
 /**
- * Handle calling [[Call]] of built-in Map object
+ * Handle calling [[Call]] of built-in Set object
  *
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_map_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_set_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                 ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Map requires 'new'."));
-} /* ecma_builtin_map_dispatch_call */
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Set requires 'new'."));
+} /* ecma_builtin_set_dispatch_call */
 
 /**
  * Handle calling [[Construct]] of built-in Map object
@@ -56,11 +56,11 @@ ecma_builtin_map_dispatch_call (const ecma_value_t *arguments_list_p, /**< argum
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_map_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+ecma_builtin_set_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                      ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_op_container_create (arguments_list_p, arguments_list_len, false);
-} /* ecma_builtin_map_dispatch_construct */
+  return ecma_op_container_create (arguments_list_p, arguments_list_len, true);
+} /* ecma_builtin_set_dispatch_construct */
 
 /**
  * @}
@@ -68,4 +68,4 @@ ecma_builtin_map_dispatch_construct (const ecma_value_t *arguments_list_p, /**< 
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */

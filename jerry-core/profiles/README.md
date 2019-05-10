@@ -35,6 +35,7 @@ JERRY_ES2015_BUILTIN_DATAVIEW=0
 JERRY_ES2015_BUILTIN_ITERATOR=0
 JERRY_ES2015_BUILTIN_MAP=0
 JERRY_ES2015_BUILTIN_PROMISE=0
+JERRY_ES2015_BUILTIN_SET=0
 JERRY_ES2015_BUILTIN_SYMBOL=0
 JERRY_ES2015_BUILTIN_TYPEDARRAY=0
 JERRY_ES2015_CLASS=0
@@ -116,6 +117,8 @@ defined to `1`.
   Enables or disables the [Iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
 * `JERRY_ES2015_BUILTIN_MAP`:
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
+* `JERRY_ES2015_BUILTIN_SET`:
+  Enables or disables the [SET](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
 * `JERRY_ES2015_BUILTIN_SYMBOL`:
   Enables or disables the [Symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) built-in.
 * `JERRY_ES2015_BUILTIN_PROMISE`:
@@ -142,6 +145,7 @@ defined to `1`.
     * `JERRY_ES2015_BUILTIN_DATAVIEW`
     * `JERRY_ES2015_BUILTIN_ITERATOR`
     * `JERRY_ES2015_BUILTIN_MAP`
+    * `JERRY_ES2015_BUILTIN_SET`
     * `JERRY_ES2015_BUILTIN_PROMISE`
     * `JERRY_ES2015_BUILTIN_SYMBOL`
     * `JERRY_ES2015_BUILTIN_TYPEDARRAY`

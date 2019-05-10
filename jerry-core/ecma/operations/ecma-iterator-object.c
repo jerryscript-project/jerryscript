@@ -161,6 +161,241 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_iterator_object */
 
+/**
+ * GetIterator operation
+ *
+ * See also: ECMA-262 v6, 7.4.1
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator object - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
+                      ecma_value_t method) /**< provided method argument */
+{
+  /* 1. */
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
+
+  /* 2. */
+  bool has_method = !ecma_is_value_empty (method);
+
+  if (!has_method)
+  {
+    /* 2.a */
+    method = ecma_op_get_method_by_symbol_id (value, LIT_MAGIC_STRING_ITERATOR);
+
+    /* 2.b */
+    if (ECMA_IS_VALUE_ERROR (method))
+    {
+      return method;
+    }
+  }
+
+  /* 3. */
+  if (!ecma_is_value_object (method) || !ecma_op_is_callable (method))
+  {
+    ecma_free_value (method);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("object is not iterable"));
+  }
+
+  ecma_object_t *method_obj_p = ecma_get_object_from_value (method);
+  ecma_value_t iterator = ecma_op_function_call (method_obj_p, value, NULL, 0);
+
+  if (!has_method)
+  {
+    ecma_deref_object (method_obj_p);
+  }
+
+  /* 4. */
+  if (ECMA_IS_VALUE_ERROR (iterator))
+  {
+    return iterator;
+  }
+
+  /* 5. */
+  if (!ecma_is_value_object (iterator))
+  {
+    ecma_free_value (iterator);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not an object."));
+  }
+
+  /* 6. */
+  return iterator;
+} /* ecma_op_get_iterator */
+
+/**
+ * IteratorNext operation
+ *
+ * See also: ECMA-262 v6, 7.4.2
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object - if success
+ *         raised error - otherwise
+ */
+static ecma_value_t
+ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
+                       ecma_value_t value) /**< the routines's value argument */
+{
+  JERRY_ASSERT (ecma_is_value_object (iterator));
+
+  /* 1 - 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (iterator);
+
+  ecma_value_t next = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
+
+  if (ECMA_IS_VALUE_ERROR (next))
+  {
+    return next;
+  }
+
+  if (!ecma_is_value_object (next) || !ecma_op_is_callable (next))
+  {
+    ecma_free_value (next);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Next is not callable."));
+  }
+
+  ecma_object_t *next_obj_p = ecma_get_object_from_value (next);
+
+  bool has_value = !ecma_is_value_empty (value);
+
+  ecma_value_t result;
+  if (has_value)
+  {
+    result = ecma_op_function_call (next_obj_p, iterator, &value, 1);
+  }
+  else
+  {
+    result = ecma_op_function_call (next_obj_p, iterator, NULL, 0);
+  }
+
+  ecma_free_value (next);
+
+  /* 3. */
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  /* 4. */
+  if (!ecma_is_value_object (result))
+  {
+    ecma_free_value (result);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator result is not an object."));
+  }
+
+  /* 5. */
+  return result;
+} /* ecma_op_iterator_next */
+
+/**
+ * IteratorComplete operation
+ *
+ * See also: ECMA-262 v6, 7.4.3
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return ECMA_VALUE_{FALSE, TRUE} - if success
+ *         raised error - otherwise
+ */
+static ecma_value_t
+ecma_op_iterator_complete (ecma_value_t iter_result) /**< iterator value */
+{
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (iter_result));
+
+  /* 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (iter_result);
+
+  ecma_value_t done = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_DONE);
+
+  if (ECMA_IS_VALUE_ERROR (done))
+  {
+    return done;
+  }
+
+  bool is_done = ecma_op_to_boolean (done);
+
+  ecma_free_value (done);
+
+  return ecma_make_boolean_value (is_done);
+} /* ecma_op_iterator_complete */
+
+/**
+ * IteratorValue operation
+ *
+ * See also: ECMA-262 v6, 7.4.4
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return value of the iterator result object
+ */
+ecma_value_t
+ecma_op_iterator_value (ecma_value_t iter_result) /**< iterator value */
+{
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (iter_result));
+
+  /* 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (iter_result);
+  return ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_VALUE);
+} /* ecma_op_iterator_value */
+
+/**
+ * IteratorStep operation
+ *
+ * See also: ECMA-262 v6, 7.4.5
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator object or ECMA_VALUE_FALSE - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_iterator_step (ecma_value_t iterator) /**< iterator value */
+{
+  /* 1. */
+  ecma_value_t result = ecma_op_iterator_next (iterator, ECMA_VALUE_EMPTY);
+
+  /* 2. */
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  /* 3. */
+  ecma_value_t done = ecma_op_iterator_complete (result);
+
+  /* 4. */
+  if (ECMA_IS_VALUE_ERROR (done))
+  {
+    ecma_free_value (result);
+    return done;
+  }
+
+  ecma_free_value (done);
+
+  /* 5. */
+  if (ecma_is_value_true (done))
+  {
+    ecma_free_value (result);
+    return ECMA_VALUE_FALSE;
+  }
+
+  /* 6. */
+  return result;
+} /* ecma_op_iterator_step */
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 /**
  * @}

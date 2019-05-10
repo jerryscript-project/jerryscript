@@ -441,6 +441,24 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_MAP,
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+
+/* The Set prototype object (23.1.3) */
+BUILTIN (ECMA_BUILTIN_ID_SET_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         set_prototype)
+
+/* The Set routine (ECMA-262 v6, 23.1.1.1) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SET,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 set)
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
 
 /* The Symbol prototype object (ECMA-262 v6, 19.4.2.7) */

@@ -96,8 +96,6 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
 #endif /* JERRY_ENABLE_LINE_INFO */
 
 #if ENABLED (JERRY_ES2015_CLASS)
-  parse_opts |= ECMA_GET_SUPER_EVAL_PARSER_OPTS ();
-
   ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS ();
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 

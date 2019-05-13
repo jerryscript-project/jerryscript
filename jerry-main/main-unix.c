@@ -668,7 +668,7 @@ main (int argc,
 
 #ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
 
-  jerry_context_t *context_p = jerry_create_context (512*1024, context_alloc, NULL);
+  jerry_context_t *context_p = jerry_create_context (CONFIG_MEM_HEAP_AREA_SIZE, context_alloc, NULL);
   jerry_port_default_set_current_context (context_p);
 
 #endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */

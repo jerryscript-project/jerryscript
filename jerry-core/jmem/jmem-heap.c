@@ -283,6 +283,13 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
   return (void *) data_space_p;
 #else /* JERRY_SYSTEM_ALLOCATOR */
   JMEM_HEAP_STAT_ALLOC (size);
+  JERRY_CONTEXT (jmem_heap_allocated_size) += size;
+
+  while (JERRY_CONTEXT (jmem_heap_allocated_size) >= JERRY_CONTEXT (jmem_heap_limit))
+  {
+    JERRY_CONTEXT (jmem_heap_limit) += CONFIG_MEM_HEAP_DESIRED_LIMIT;
+  }
+
   return malloc (size);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_alloc_block_internal */
@@ -487,6 +494,13 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JMEM_HEAP_STAT_FREE (size);
 #else /* JERRY_SYSTEM_ALLOCATOR */
   JMEM_HEAP_STAT_FREE (size);
+  JERRY_CONTEXT (jmem_heap_allocated_size) -= size;
+
+  while (JERRY_CONTEXT (jmem_heap_allocated_size) + CONFIG_MEM_HEAP_DESIRED_LIMIT <= JERRY_CONTEXT (jmem_heap_limit))
+  {
+    JERRY_CONTEXT (jmem_heap_limit) -= CONFIG_MEM_HEAP_DESIRED_LIMIT;
+  }
+
   free (ptr);
 #endif /* !JERRY_SYSTEM_ALLOCATOR */
 } /* jmem_heap_free_block */

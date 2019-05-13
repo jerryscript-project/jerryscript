@@ -954,6 +954,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expected 'in' token.";
     }
+#if ENABLED (JERRY_ES2015_FOR_OF)
+    case PARSER_ERR_OF_EXPECTED:
+    {
+      return "Expected 'of' token.";
+    }
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
     case PARSER_ERR_WHILE_EXPECTED:
     {
       return "While expected for do-while loop.";

@@ -24,6 +24,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
@@ -2888,6 +2889,93 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
+#if ENABLED (JERRY_ES2015_FOR_OF)
+        case VM_OC_FOR_OF_CREATE_CONTEXT:
+        {
+          ecma_value_t value = *(--stack_top_p);
+
+          JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
+
+          ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_EMPTY);
+
+          ecma_free_value (value);
+
+          if (ECMA_IS_VALUE_ERROR (iterator))
+          {
+            result = iterator;
+            goto error;
+          }
+
+          ecma_value_t iterator_step = ecma_op_iterator_step (iterator);
+
+          if (ECMA_IS_VALUE_ERROR (iterator_step))
+          {
+            ecma_free_value (iterator);
+            result = iterator_step;
+            goto error;
+          }
+
+          if (ecma_is_value_false (iterator_step))
+          {
+            ecma_free_value (iterator);
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+
+          branch_offset += (int32_t) (byte_code_start_p - frame_ctx_p->byte_code_start_p);
+
+          VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+          stack_top_p += PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
+          stack_top_p[-1] = (ecma_value_t) VM_CREATE_CONTEXT (VM_CONTEXT_FOR_OF, branch_offset);
+          stack_top_p[-2] = iterator_step;
+          stack_top_p[-3] = iterator;
+
+          continue;
+        }
+        case VM_OC_FOR_OF_GET_NEXT:
+        {
+          ecma_value_t *context_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_OF);
+
+          ecma_value_t next_value = ecma_op_iterator_value (context_top_p[-2]);
+
+          if (ECMA_IS_VALUE_ERROR (next_value))
+          {
+            result = next_value;
+            goto error;
+          }
+
+          *stack_top_p++ = next_value;
+          continue;
+        }
+        case VM_OC_FOR_OF_HAS_NEXT:
+        {
+          JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
+
+          ecma_value_t iterator_step = ecma_op_iterator_step (stack_top_p[-3]);
+
+          if (ECMA_IS_VALUE_ERROR (iterator_step))
+          {
+            result = iterator_step;
+            goto error;
+          }
+
+          if (!ecma_is_value_false (iterator_step))
+          {
+            ecma_free_value (stack_top_p[-2]);
+            stack_top_p[-2] = iterator_step;
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+
+          ecma_free_value (stack_top_p[-2]);
+          ecma_free_value (stack_top_p[-3]);
+          VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+          stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
+
+          continue;
+        }
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
         case VM_OC_TRY:
         {
           /* Try opcode simply creates the try context. */

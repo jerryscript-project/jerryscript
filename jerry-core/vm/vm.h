@@ -207,6 +207,11 @@ typedef enum
   VM_OC_FOR_IN_CREATE_CONTEXT,   /**< for in create context */
   VM_OC_FOR_IN_GET_NEXT,         /**< get next */
   VM_OC_FOR_IN_HAS_NEXT,         /**< has next */
+#if ENABLED (JERRY_ES2015_FOR_OF)
+  VM_OC_FOR_OF_CREATE_CONTEXT,   /**< for of create context */
+  VM_OC_FOR_OF_GET_NEXT,         /**< get next */
+  VM_OC_FOR_OF_HAS_NEXT,         /**< has next */
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
   VM_OC_TRY,                     /**< try */
   VM_OC_CATCH,                   /**< catch */
   VM_OC_FINALLY,                 /**< finally */
@@ -269,6 +274,11 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
 #endif /* !ENABLED (JERRY_ES2015_CLASS) */
+#if !ENABLED (JERRY_ES2015_FOR_OF)
+  VM_OC_FOR_OF_CREATE_CONTEXT = VM_OC_NONE,   /**< for of create context */
+  VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE,         /**< get next */
+  VM_OC_FOR_OF_HAS_NEXT = VM_OC_NONE,         /**< has next */
+#endif /* !ENABLED (JERRY_ES2015_FOR_OF) */
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
 

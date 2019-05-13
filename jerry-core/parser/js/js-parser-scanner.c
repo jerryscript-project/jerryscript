@@ -675,7 +675,13 @@ parser_scan_until (parser_context_t *context_p, /**< context */
   {
     lexer_next_token (context_p);
 
-    if (end_type == LEXER_KEYW_IN)
+#if ENABLED (JERRY_ES2015_FOR_OF)
+    lexer_token_type_t for_in_of_token = LEXER_FOR_IN_OF;
+#else /* !ENABLED (JERRY_ES2015_FOR_OF) */
+    lexer_token_type_t for_in_of_token = LEXER_KEYW_IN;
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+
+    if (end_type == for_in_of_token)
     {
       end_type_b = LEXER_SEMICOLON;
       if (context_p->token.type == LEXER_KEYW_VAR)
@@ -697,11 +703,31 @@ parser_scan_until (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_EXPRESSION_EXPECTED);
     }
 
-    if (stack_top == SCAN_STACK_HEAD
-        && (type == end_type || type == end_type_b))
+    if (stack_top == SCAN_STACK_HEAD)
     {
-      parser_stack_pop_uint8 (context_p);
-      return;
+      if (type == end_type || type == end_type_b)
+      {
+        parser_stack_pop_uint8 (context_p);
+        return;
+      }
+
+#if ENABLED (JERRY_ES2015_FOR_OF)
+      if (end_type == LEXER_FOR_IN_OF)
+      {
+        if (type == LEXER_KEYW_IN)
+        {
+          parser_stack_pop_uint8 (context_p);
+          context_p->token.type = LEXER_KEYW_IN;
+          return;
+        }
+        else if (type == LEXER_LITERAL && lexer_compare_raw_identifier_to_current (context_p, "of", 2))
+        {
+          parser_stack_pop_uint8 (context_p);
+          context_p->token.type = LEXER_LITERAL_OF;
+          return;
+        }
+      }
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
     }
 
     switch (mode)

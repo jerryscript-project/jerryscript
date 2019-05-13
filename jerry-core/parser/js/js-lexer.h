@@ -153,6 +153,10 @@ typedef enum
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
+#if ENABLED (JERRY_ES2015_FOR_OF)
+  LEXER_FOR_IN_OF,               /**< special value during for in/of statmenet scanning */
+  LEXER_LITERAL_OF,              /**< 'of' literal */
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
 
 #if !ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords

@@ -46,6 +46,20 @@ static const char *output_file_name_p = "js.snapshot";
 static jerry_length_t magic_string_lengths[JERRY_LITERAL_LENGTH];
 static const jerry_char_t *magic_string_items[JERRY_LITERAL_LENGTH];
 
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+/**
+ * The alloc function passed to jerry_create_context
+ */
+static void *
+context_alloc (size_t size,
+               void *cb_data_p)
+{
+  (void) cb_data_p; /* unused */
+  return malloc (size);
+} /* context_alloc */
+
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+
 /**
  * Check whether JerryScript has a requested feature enabled or not. If not,
  * print a warning message.
@@ -294,6 +308,11 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+  jerry_context_t *context_p = jerry_create_context (CONFIG_MEM_HEAP_AREA_SIZE, context_alloc, NULL);
+  jerry_port_default_set_current_context (context_p);
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+
   jerry_init (flags);
 
   if (!jerry_is_valid_utf8_string (source_p, (jerry_size_t) source_length))
@@ -497,6 +516,11 @@ process_literal_dump (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+  jerry_context_t *context_p = jerry_create_context (CONFIG_MEM_HEAP_AREA_SIZE, context_alloc, NULL);
+  jerry_port_default_set_current_context (context_p);
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
+
   jerry_init (JERRY_INIT_EMPTY);
 
   size_t lit_buf_sz = 0;
@@ -660,6 +684,11 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: at least two input files must be passed.\n");
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
+
+#ifdef JERRY_ENABLE_EXTERNAL_CONTEXT
+  jerry_context_t *context_p = jerry_create_context (CONFIG_MEM_HEAP_AREA_SIZE, context_alloc, NULL);
+  jerry_port_default_set_current_context (context_p);
+#endif /* JERRY_ENABLE_EXTERNAL_CONTEXT */
 
   jerry_init (JERRY_INIT_EMPTY);
 

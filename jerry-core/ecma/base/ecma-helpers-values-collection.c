@@ -59,7 +59,7 @@ ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection
   ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
                                                        header_p->first_chunk_cp);
 
-  jmem_heap_free_block (header_p, sizeof (ecma_collection_header_t));
+  jmem_pools_free (header_p, sizeof (ecma_collection_header_t));
 
   if (chunk_p == NULL)
   {

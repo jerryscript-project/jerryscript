@@ -2816,6 +2816,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (!ecma_is_value_pointer (chunk_p->items[index]));
 
+          /* TODO: use collection iterator instead of directly accessing the collection chunks. */
           *stack_top_p++ = chunk_p->items[index];
           index++;
 

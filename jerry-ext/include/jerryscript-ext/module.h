@@ -83,6 +83,12 @@ typedef struct jerryx_native_module_t
   {                                                                    \
     jerryx_native_module_unregister(&_##module_name##_definition);     \
   }
+  
+#define JERRYX_NATIVE_MODULE_EXTERN(module_name) \
+  extern jerryx_native_module_t _ ## module_name ## _definition
+
+#define JERRYX_NATIVE_MODULE_SYMBOL(module_name) \
+  _ ## module_name ## _definition
 
 /**
  * Register a native module. This makes it available for loading via jerryx_module_resolve, when

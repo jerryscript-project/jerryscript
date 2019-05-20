@@ -116,18 +116,18 @@ typedef struct ecma_module_resolve_stack
 } ecma_module_resolve_stack_t;
 
 bool ecma_module_resolve_set_insert (ecma_module_resolve_set_t **set_p,
-                                     ecma_module_t *module_p,
-                                     ecma_string_t *export_name_p);
+                                     ecma_module_t * const module_p,
+                                     ecma_string_t * const export_name_p);
 void ecma_module_resolve_set_cleanup (ecma_module_resolve_set_t *set_p);
 
 void ecma_module_resolve_stack_push (ecma_module_resolve_stack_t **stack_p,
-                                     ecma_module_t *module_p,
-                                     ecma_string_t *export_name_p);
+                                     ecma_module_t * const module_p,
+                                     ecma_string_t * const export_name_p);
 void ecma_module_resolve_stack_pop (ecma_module_resolve_stack_t **stack_p);
 
 ecma_string_t *ecma_module_create_normalized_path (const uint8_t *char_p,
                                                    prop_length_t size);
-ecma_module_t *ecma_module_find_or_create_module (ecma_string_t *path_p);
+ecma_module_t *ecma_module_find_or_create_module (ecma_string_t * const path_p);
 
 ecma_value_t ecma_module_connect_imports (void);
 ecma_value_t ecma_module_parse_modules (void);

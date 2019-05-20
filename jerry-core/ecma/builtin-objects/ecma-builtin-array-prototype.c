@@ -2084,7 +2084,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
 static ecma_value_t
 ecma_builtin_array_iterators_helper (ecma_object_t *obj_p, /**< array object */
                                      uint8_t type) /**< any combination of
-                                                    *   ecma_array_iterator_type_t bits */
+                                                    *   ecma_iterator_type_t bits */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
 
@@ -2146,18 +2146,18 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
 
     if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_ENTRIES)
     {
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ARRAY_ITERATOR_KEYS_VALUES);
+      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_KEYS_VALUES);
     }
     else if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_KEYS)
     {
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ARRAY_ITERATOR_KEYS);
+      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_KEYS);
     }
     else
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_VALUES
                     || builtin_routine_id == ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR);
 
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ARRAY_ITERATOR_VALUES);
+      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_VALUES);
     }
 
     ecma_deref_object (obj_p);

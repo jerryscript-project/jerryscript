@@ -24,7 +24,7 @@
 #include "ecma-property-hashmap.h"
 #include "ecma-objects.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -59,19 +59,17 @@ ecma_op_container_create_internal_object (void)
 ecma_value_t
 ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments list */
                           ecma_length_t arguments_list_len, /**< number of arguments */
-                          bool is_set) /**< true - to perform Set operations
-                                        *   false - to perform Map operations */
+                          lit_magic_string_id_t lit_id, /**< internal class id */
+                          ecma_builtin_id_t proto_id) /**< prototype builtin id */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  ecma_object_t *proto_p = ecma_builtin_get (is_set ? ECMA_BUILTIN_ID_SET_PROTOTYPE : ECMA_BUILTIN_ID_MAP_PROTOTYPE);
-
-  ecma_object_t *object_p = ecma_create_object (proto_p,
+  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (proto_id),
                                                 sizeof (ecma_map_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_map_object_t *map_obj_p = (ecma_map_object_t *) object_p;
-  map_obj_p->header.u.class_prop.class_id = is_set ? LIT_MAGIC_STRING_SET_UL : LIT_MAGIC_STRING_MAP_UL;
+  map_obj_p->header.u.class_prop.class_id = lit_id;
   map_obj_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
   map_obj_p->size = 0;
 
@@ -125,9 +123,9 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
     }
 
     ecma_value_t result;
-    if (is_set)
+    if (lit_id == LIT_MAGIC_STRING_SET_UL)
     {
-      result = ecma_op_container_set (set_value, next_value, next_value, is_set);
+      result = ecma_op_container_set (set_value, next_value, next_value, lit_id);
     }
     else
     {
@@ -168,7 +166,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
         return value;
       }
 
-      result = ecma_op_container_set (set_value, key, value, is_set);
+      result = ecma_op_container_set (set_value, key, value, lit_id);
 
       ecma_free_value (key);
       ecma_free_value (value);
@@ -207,21 +205,34 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
  */
 static ecma_map_object_t *
 ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
-                              bool is_set) /**< true - to perform Set operations
-                                            *   false - to perform Map operations */
+                              lit_magic_string_id_t lit_id) /**< internal class id */
 {
   if (ecma_is_value_object (this_arg))
   {
     ecma_map_object_t *map_object_p = (ecma_map_object_t *) ecma_get_object_from_value (this_arg);
 
     if (ecma_get_object_type (&map_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-        && map_object_p->header.u.class_prop.class_id == (is_set ? LIT_MAGIC_STRING_SET_UL : LIT_MAGIC_STRING_MAP_UL))
+        && map_object_p->header.u.class_prop.class_id == lit_id)
     {
       return map_object_p;
     }
   }
 
-  ecma_raise_type_error (ECMA_ERR_MSG (is_set ? "Expected a Set object." : "Expected a Map object."));
+#ifdef JERRY_ENABLE_ERROR_MESSAGES
+  char *msg_p = "Expected a Map object.";
+
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+  if (lit_id == LIT_MAGIC_STRING_SET_UL)
+  {
+    msg_p = "Expected a Set object.";
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+
+  ecma_raise_type_error (ECMA_ERR_MSG (msg_p));
+#else /* !JERRY_ENABLE_ERROR_MESSAGES */
+  ecma_raise_type_error (NULL);
+#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+
   return NULL;
 } /* ecma_op_container_get_object */
 
@@ -289,10 +300,9 @@ ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
  */
 ecma_value_t
 ecma_op_container_size (ecma_value_t this_arg, /**< this argument */
-                        bool is_set) /**< true - to perform Set operations
-                                      *   false - to perform Map operations */
+                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -312,7 +322,7 @@ ecma_value_t
 ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
                        ecma_value_t key_arg) /**< key argument */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, false);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, LIT_MAGIC_STRING_MAP_UL);
 
   if (map_object_p == NULL)
   {
@@ -332,7 +342,7 @@ ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
 
   ecma_deref_ecma_string (prop_name_p);
 
-  if (property_p == NULL)
+  if (property_p == NULL || ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
   {
     return ECMA_VALUE_UNDEFINED;
   }
@@ -349,10 +359,9 @@ ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
 ecma_value_t
 ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
                        ecma_value_t key_arg, /**< key argument */
-                       bool is_set) /**< true - to perform Set operations
-                                     *   false - to perform Map operations */
+                       lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -372,7 +381,8 @@ ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
 
   ecma_deref_ecma_string (prop_name_p);
 
-  return ecma_make_boolean_value (property_p != NULL);
+  return ecma_make_boolean_value (property_p != NULL
+                                  && !ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
 } /* ecma_op_container_has */
 
 /**
@@ -385,10 +395,9 @@ ecma_value_t
 ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
                        ecma_value_t key_arg, /**< key argument */
                        ecma_value_t value_arg, /**< value argument */
-                       bool is_set) /**< true - to perform Set operations
-                                     *   false - to perform Map operations */
+                      lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -412,6 +421,10 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   }
   else
   {
+    if (ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
+    {
+      map_object_p->size++;
+    }
     ecma_named_data_property_assign_value (internal_obj_p, ECMA_PROPERTY_VALUE_PTR (property_p), value_arg);
   }
 
@@ -479,10 +492,9 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
                            ecma_value_t predicate, /**< callback function */
                            ecma_value_t predicate_this_arg, /**< this argument for
                                                              *   invoke predicate */
-                           bool is_set) /**< true - to perform Set operations
-                                         *   false - to perform Map operations */
+                           lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -509,8 +521,9 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
   {
     ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
     ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+    JERRY_ASSERT (property_p != NULL);
 
-    if (property_p == NULL)
+    if (ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
     {
       ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
       continue;
@@ -519,7 +532,11 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
     ecma_value_t value = ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
     ecma_value_t key_arg;
 
-    if (ecma_prop_name_is_map_key (prop_name_p))
+    if (lit_id == LIT_MAGIC_STRING_SET_UL)
+    {
+      key_arg = value;
+    }
+    else if (ecma_prop_name_is_map_key (prop_name_p))
     {
       key_arg = prop_name_p->u.value;
     }
@@ -536,7 +553,7 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
       }
     }
 
-    ecma_value_t call_args[] = { value, is_set ? value : key_arg };
+    ecma_value_t call_args[] = { value, key_arg };
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 2);
 
@@ -564,10 +581,9 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
  */
 ecma_value_t
 ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
-                         bool is_set) /**< true - to perform Set operations
-                                       *   false - to perform Map operations */
+                         lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -591,10 +607,9 @@ ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
 ecma_value_t
 ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
                           ecma_value_t key_arg, /**< key argument */
-                          bool is_set) /**< true - to perform Set operations
-                                        *   false - to perform Map operations */
+                          lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, is_set);
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
   if (map_object_p == NULL)
   {
@@ -614,15 +629,213 @@ ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_delete_property (internal_obj_p, ECMA_PROPERTY_VALUE_PTR (property_p));
+  ecma_named_data_property_assign_value (internal_obj_p, ECMA_PROPERTY_VALUE_PTR (property_p), ECMA_VALUE_EMPTY);
   map_object_p->size--;
 
   return ECMA_VALUE_TRUE;
 } /* ecma_op_container_delete */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+
+/**
+ * The Create{Set, Map}Iterator Abstract operation
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.5.1
+ *          ECMA-262 v6, 23.2.5.1
+ *
+ * Note:
+ *     Returned value must be freed with ecma_free_value.
+ *
+ * @return set/map iterator object, if success
+ *         error - otherwise
+ */
+ecma_value_t
+ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
+                                   uint8_t type, /**< any combination of
+                                                  *   ecma_iterator_type_t bits */
+                                   lit_magic_string_id_t lit_id, /**< internal class id */
+                                   ecma_builtin_id_t proto_id, /**< prototype builtin id */
+                                   ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
+{
+  ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
+
+  if (map_object_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  return ecma_op_create_iterator_object (this_arg,
+                                         ecma_builtin_get (proto_id),
+                                         iterator_type,
+                                         type);
+} /* ecma_op_container_create_iterator */
+
+/**
+ * The %{Set, Map}IteratorPrototype% object's 'next' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.5.2.1
+ *          ECMA-262 v6, 23.2.5.2.1
+ *
+ * Note:
+ *     Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+ecma_value_t
+ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
+                                 ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
+{
+  if (!ecma_is_value_object (this_val))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object."));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY
+      && ext_obj_p->u.pseudo_array.type != iterator_type)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
+  }
+
+  ecma_value_t iterated_value = ext_obj_p->u.pseudo_array.u2.iterated_value;
+
+  if (ecma_is_value_empty (iterated_value))
+  {
+    return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+  }
+
+  ecma_map_object_t *map_object_p = (ecma_map_object_t *) (ecma_get_object_from_value (iterated_value));
+
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
+
+  uint32_t length = props_p->item_count;
+  uint32_t index = ext_obj_p->u.pseudo_array.u1.iterator_index;
+
+  if (JERRY_UNLIKELY (index == ECMA_ITERATOR_INDEX_LIMIT))
+  {
+    /* After the ECMA_ITERATOR_INDEX_LIMIT limit is reached the [[%Iterator%NextIndex]]
+       property is stored as an internal property */
+    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
+
+    ecma_property_t *property_p = ecma_find_named_property (obj_p, prop_name_p);
+    ecma_property_value_t *value_p;
+
+    if (property_p == NULL)
+    {
+      value_p = ecma_create_named_data_property (obj_p, prop_name_p, ECMA_PROPERTY_FLAG_WRITABLE, &property_p);
+      value_p->value = ecma_make_uint32_value (index);
+    }
+    else
+    {
+      value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+      index = (uint32_t) (ecma_get_number_from_value (value_p->value) + 1);
+      value_p->value = ecma_make_uint32_value (index);
+    }
+  }
+  else
+  {
+    ext_obj_p->u.pseudo_array.u1.iterator_index++;
+  }
+
+  if (index >= length)
+  {
+    ext_obj_p->u.pseudo_array.u2.iterated_value = ECMA_VALUE_EMPTY;
+    ecma_free_values_collection (props_p, 0);
+    return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+  }
+
+  uint8_t iterator_kind = ext_obj_p->u.pseudo_array.extra_info;
+
+  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+
+  ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
+
+  while (ecma_value_p != NULL)
+  {
+    if (index > 0)
+    {
+      index--;
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+      continue;
+    }
+
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+    ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
+    JERRY_ASSERT (property_p != NULL);
+
+    if (ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
+    {
+      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+
+      if (ecma_value_p == NULL)
+      {
+        ret_value = ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+      }
+      continue;
+    }
+
+    ecma_value_t value = ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+    ecma_value_t key_arg;
+
+    if (iterator_type == ECMA_PSEUDO_SET_ITERATOR)
+    {
+      key_arg = value;
+    }
+    else if (ecma_prop_name_is_map_key (prop_name_p))
+    {
+      key_arg = prop_name_p->u.value;
+    }
+    else
+    {
+      if (ECMA_IS_DIRECT_STRING (prop_name_p)
+          && ECMA_GET_DIRECT_STRING_TYPE (prop_name_p) == ECMA_DIRECT_STRING_ECMA_INTEGER)
+      {
+        key_arg = ecma_make_uint32_value ((uint32_t) ECMA_GET_DIRECT_STRING_VALUE (prop_name_p));
+      }
+      else
+      {
+        key_arg = *ecma_value_p;
+      }
+    }
+
+    if (iterator_kind == ECMA_ITERATOR_KEYS)
+    {
+      ret_value = ecma_create_iter_result_object (key_arg, ECMA_VALUE_FALSE);
+    }
+    else if (iterator_kind == ECMA_ITERATOR_VALUES)
+    {
+      ret_value = ecma_create_iter_result_object (value, ECMA_VALUE_FALSE);
+    }
+    else
+    {
+      JERRY_ASSERT (iterator_kind == ECMA_ITERATOR_KEYS_VALUES);
+
+      ecma_value_t entry_array_value;
+      entry_array_value = ecma_create_array_from_iter_element (value, key_arg);
+
+      ret_value = ecma_create_iter_result_object (entry_array_value, ECMA_VALUE_FALSE);
+      ecma_free_value (entry_array_value);
+    }
+
+    ecma_free_value (value);
+    break;
+  }
+
+  ecma_free_values_collection (props_p, 0);
+
+  return ret_value;
+} /* ecma_op_container_iterator_next */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 /**
  * @}
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */

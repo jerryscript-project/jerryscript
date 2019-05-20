@@ -155,7 +155,7 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   /* 7. */
   uint8_t iterator_type = ext_obj_p->u.pseudo_array.extra_info;
 
-  if (iterator_type == ECMA_ARRAY_ITERATOR_KEYS)
+  if (iterator_type == ECMA_ITERATOR_KEYS)
   {
     /* 12. */
     return ecma_create_iter_result_object (ecma_make_uint32_value (index), ECMA_VALUE_FALSE);
@@ -177,14 +177,14 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   ecma_value_t result;
 
   /* 16. */
-  if (iterator_type == ECMA_ARRAY_ITERATOR_VALUES)
+  if (iterator_type == ECMA_ITERATOR_VALUES)
   {
     result = ecma_create_iter_result_object (get_value, ECMA_VALUE_FALSE);
   }
   else
   {
     /* 17.a */
-    JERRY_ASSERT (iterator_type == ECMA_ARRAY_ITERATOR_KEYS_VALUES);
+    JERRY_ASSERT (iterator_type == ECMA_ITERATOR_KEYS_VALUES);
 
     /* 17.b */
     ecma_value_t entry_array_value;

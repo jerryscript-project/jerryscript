@@ -59,7 +59,10 @@ ecma_value_t
 ecma_builtin_set_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                      ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_op_container_create (arguments_list_p, arguments_list_len, true);
+  return ecma_op_container_create (arguments_list_p,
+                                   arguments_list_len,
+                                   LIT_MAGIC_STRING_SET_UL,
+                                   ECMA_BUILTIN_ID_SET_PROTOTYPE);
 } /* ecma_builtin_set_dispatch_construct */
 
 /**

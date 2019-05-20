@@ -18,6 +18,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-container-object.h"
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -36,9 +37,6 @@
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
 #include "ecma-promise-object.h"
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-#include "ecma-container-object.h"
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
 /* TODO: Extract GC to a separate component */
 
@@ -328,6 +326,8 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
           case ECMA_PSEUDO_ARRAY_ITERATOR:
+          case ECMA_PSEUDO_SET_ITERATOR:
+          case ECMA_PSEUDO_MAP_ITERATOR:
           {
             ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
             if (!ecma_is_value_empty (iterated_value))
@@ -643,6 +643,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
         case LIT_MAGIC_STRING_SET_UL:
+        {
+          ecma_op_container_clear_map ((ecma_map_object_t *) object_p);
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
+          return;
+        }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
         case LIT_MAGIC_STRING_MAP_UL:
@@ -753,6 +758,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
         case ECMA_PSEUDO_ARRAY_ITERATOR:
+        case ECMA_PSEUDO_SET_ITERATOR:
+        case ECMA_PSEUDO_MAP_ITERATOR:
         {
           ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
           return;

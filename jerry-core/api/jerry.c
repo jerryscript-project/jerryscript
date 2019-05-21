@@ -3309,7 +3309,7 @@ jerry_value_is_dataview (const jerry_value_t value) /**< value to check if it is
  *         TypeError if the object is not a DataView.
  */
 jerry_value_t
-jerry_get_dataview_buffer (jerry_value_t value, /**< DataView to get the arraybuffer from */
+jerry_get_dataview_buffer (const jerry_value_t value, /**< DataView to get the arraybuffer from */
                            jerry_length_t *byte_offset, /**< [out] byteOffset property */
                            jerry_length_t *byte_length) /**< [out] byteLength property */
 {

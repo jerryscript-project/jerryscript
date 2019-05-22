@@ -59,36 +59,108 @@ typedef struct jerryx_native_module_t
 #define JERRYX_NATIVE_MODULE(module_name, on_resolve_cb)  \
   JERRYX_NATIVE_MODULE_IMPLEM(module_name, on_resolve_cb)
 
-#define JERRYX_NATIVE_MODULE_IMPLEM(module_name, on_resolve_cb)        \
-  static jerryx_native_module_t _ ## module_name ## _definition =      \
-  {                                                                    \
-    .name_p = (jerry_char_t *) #module_name,                           \
-    .on_resolve_p = (on_resolve_cb),                                   \
-    .next_p = NULL                                                     \
-  };                                                                   \
-                                                                       \
+/**
+ * @brief  Defines the symbol name. This is used in any place where the generated symbol name
+ *         might be needed.
+ * 
+ * @param module_name: Name of the module.
+ * @returns: A concatenated identifier, representing the symbol used for the native module's structure.
+ */
+#define JERRYX_NATIVE_MODULE_SYMBOL(module_name) \
+  _ ## module_name ## _definition
+
+/**
+ * @brief  Generates a structure of `jerryx_native_module_t`.
+ * 
+ * @param module_name: Name of the module.
+ * @param on_resolve_cb: The function to be called once the module is resolved.
+ * @returns: A generated structure, representing a native module.
+ * 
+ * @see: jerryx_native_module_register, jerryx_native_module_unregister
+ * 
+ * @note: `const` is used to indicate that this structure shall not change during runtime.
+ */
+#define JERRYX_NATIVE_MODULE_STRUCTURE(module_name, on_resolve_cb)    \
+  const jerryx_native_module_t _ ## module_name ## _definition =      \
+  {                                                                   \
+    .name_p = (jerry_char_t *) #module_name,                          \
+    .on_resolve_p = (on_resolve_cb),                                  \
+    .next_p = NULL                                                    \
+  };
+
+/**
+ * @brief  Generates the definition AND function body for the initial constructor.
+ * 
+ * @param module_name: Name of the module.
+ * @returns: The generated, initial constructor.
+ * 
+ * @note: When compiled with ENABLE_INIT_FINI, you may - dependent on platform - enable
+ *        the initial constructuion when this module has been loaded as a shared object
+ *        or library. However, this does **not** apply to statically "compiled in" modules.
+ *        If you want to bootstrap a module upon load, use the `on_resolve_cb`.
+ * 
+ * @see: jerryx_native_module_t, jerryx_native_module_register
+ */
+#define JERRYX_NATIVE_MODULE_REGISTER_FUNC(module_name)                  \
   JERRYX_MODULE_REGISTRATION_QUALIFIER void                            \
   module_name ## _register (void) JERRYX_MODULE_CONSTRUCTOR_ATTRIBUTE; \
   JERRYX_MODULE_REGISTRATION_QUALIFIER void                            \
   module_name ## _register (void)                                      \
   {                                                                    \
-    jerryx_native_module_register(&_##module_name##_definition);       \
-  }                                                                    \
-                                                                       \
+    jerryx_native_module_register(                                     \
+        & JERRYX_NATIVE_MODULE_SYMBOL(module_name)                     \
+    );                                                                 \
+  }
+
+/**
+ * @brief  Generates the definition AND function body for the initial destructor.
+ * 
+ * @param module_name: Name of the module.
+ * @returns: The definition and implementation of the initial destructor.
+ * 
+ * @see JERRYX_NATIVE_MODULE_REGISTER_FUNC
+ */
+#define JERRYX_NATIVE_MODULE_UNREGISTER_FUNC(module_name)                \
   JERRYX_MODULE_REGISTRATION_QUALIFIER void                            \
-  module_name ## _unregister (void)                                    \
-  JERRYX_MODULE_DESTRUCTOR_ATTRIBUTE;                                  \
+  module_name ## _register (void) JERRYX_MODULE_CONSTRUCTOR_ATTRIBUTE; \
   JERRYX_MODULE_REGISTRATION_QUALIFIER void                            \
   module_name ## _unregister (void)                                    \
   {                                                                    \
-    jerryx_native_module_unregister(&_##module_name##_definition);     \
+    jerryx_native_module_unregister(                                   \
+        & JERRYX_NATIVE_MODULE_SYMBOL(module_name)                     \
+    );                                                                 \
   }
-  
-#define JERRYX_NATIVE_MODULE_EXTERN(module_name) \
-  extern jerryx_native_module_t _ ## module_name ## _definition
 
-#define JERRYX_NATIVE_MODULE_SYMBOL(module_name) \
-  _ ## module_name ## _definition
+/**
+ * @brief  Generates the implementation for a native module.
+ * 
+ * @param module_name: Name of the native module.
+ * @param on_resolve_cb: Callback to be called when the module is first loaded.
+ * @returns: Structure, con- and destructor.
+ * 
+ * @note: To use the con- and destructor, make sure you define ENABLE_INIT_FINI.
+ * 
+ * @see: jerryx_native_module_register, jerryx_native_module_unregister,
+ *       jerryx_native_module_t, JERRYX_NATIVE_MODULE_STRUCTURE,
+ *       JERRYX_NATIVE_MODULE_REGISTER_FUNC, JERRYX_NATIVE_MODULE_UNREGISTER_FUNC
+ */
+#define JERRYX_NATIVE_MODULE_IMPLEM(module_name, on_resolve_cb)        \
+  JERRYX_NATIVE_MODULE_STRUCTURE(module_name, on_resolve_cb)           \
+  JERRYX_NATIVE_MODULE_REGISTER_FUNC(module_name)                           \
+  JERRYX_NATIVE_MODULE_UNREGISTER_FUNC(module_name)
+
+
+/**
+ * @brief  Defines an external symbol. This may be useful when you want to use the module structure
+ *         across multiple files (i.e.: building a list of built-in modules).
+ * 
+ * @param module_name: Name of the module.
+ * @returns: An "extern const" definition of the symbol representing the structure.
+ * 
+ * @see JERRYX_NATIVE_MODULE_SYMBOL
+ */
+#define JERRYX_NATIVE_MODULE_EXTERN(module_name) \
+  extern const jerryx_native_module_t JERRYX_NATIVE_MODULE_SYMBOL(module_name)
 
 /**
  * Register a native module. This makes it available for loading via jerryx_module_resolve, when

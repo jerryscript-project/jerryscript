@@ -256,19 +256,9 @@ enum
   (JERRY_UNLIKELY ((value) == ECMA_VALUE_ERROR))
 
 /**
- * Representation for native external pointer
- */
-typedef uintptr_t ecma_external_pointer_t;
-
-/**
  * Callback which tells whether the ECMAScript execution should be stopped.
  */
 typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
-
-/**
- * Function type for user context deallocation
- */
-typedef void (*ecma_user_context_deinit_t) (void *user_context_p);
 
 /**
  * Type of an external function handler.
@@ -300,33 +290,6 @@ typedef struct ecma_native_pointer_t
   ecma_object_native_info_t *info_p; /**< native info */
   struct ecma_native_pointer_t *next_p; /**< points to the next ecma_native_pointer_t element */
 } ecma_native_pointer_t;
-
-/**
- * Property's 'Writable' attribute's values description.
- */
-typedef enum
-{
-  ECMA_PROPERTY_NOT_WRITABLE, /**< property's 'Writable' attribute is false */
-  ECMA_PROPERTY_WRITABLE /**< property's 'Writable' attribute is true */
-} ecma_property_writable_value_t;
-
-/**
- * Property's 'Enumerable' attribute's values description.
- */
-typedef enum
-{
-  ECMA_PROPERTY_NOT_ENUMERABLE, /**< property's 'Enumerable' attribute is false */
-  ECMA_PROPERTY_ENUMERABLE /**< property's 'Enumerable' attribute is true */
-} ecma_property_enumerable_value_t;
-
-/**
- * Property's 'Configurable' attribute's values description.
- */
-typedef enum
-{
-  ECMA_PROPERTY_NOT_CONFIGURABLE, /**< property's 'Configurable' attribute is false */
-  ECMA_PROPERTY_CONFIGURABLE /**< property's 'Configurable' attribute is true */
-} ecma_property_configurable_value_t;
 
 /**
  * Property list:
@@ -373,7 +336,6 @@ typedef enum
  * List enumerable properties and include the prototype chain.
  */
 #define ECMA_LIST_ENUMERABLE_PROTOTYPE (ECMA_LIST_ENUMERABLE | ECMA_LIST_PROTOTYPE)
-
 
 /**
  * Property type mask.
@@ -971,15 +933,6 @@ typedef struct
   uint32_t size; /**< size of the map object */
 } ecma_map_object_t;
 
-/**
- * Description of Map memory chunk.
- */
-typedef struct
-{
-  ecma_value_t items[ECMA_MAP_OBJECT_ITEM_COUNT + 1]; /**< the last item is always a pointer to the next chunk,
-                                                       *   the rest can be ECMA_VALUE_ARRAY_HOLE or any valid value. */
-} ecma_map_object_chunk_t;
-
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
 /**
@@ -1374,12 +1327,6 @@ typedef enum
  * Maximum value of the reference counter (8191).
  */
 #define ECMA_STRING_MAX_REF (0x1fffu << 3)
-
-/**
- * Set reference counter to zero (for refs_and_container member below).
- */
-#define ECMA_STRING_SET_REF_TO_ONE(refs_and_container) \
-  ((uint16_t) (((refs_and_container) & ECMA_STRING_CONTAINER_MASK) | ECMA_STRING_REF_ONE))
 
 /**
  * Returns with the container type of a string.

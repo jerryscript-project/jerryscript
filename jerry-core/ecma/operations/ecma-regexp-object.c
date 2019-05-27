@@ -1362,7 +1362,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     }
   }
 
-  if (input_curr_p && (re_ctx.flags & RE_FLAG_GLOBAL))
+  if (!ECMA_IS_VALUE_ERROR (ret_value) && input_curr_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
     ecma_number_t lastindex_num;
 

@@ -25,23 +25,6 @@
  * @{
  */
 
-/**
- * Header of a ECMA stack frame's chunk
- */
-typedef struct
-{
-  uint16_t prev_chunk_p;                      /**< previous chunk of same frame */
-} vm_stack_chunk_header_t;
-
-/**
- * ECMA stack frame
- */
-typedef struct vm_stack_frame_t
-{
-  struct vm_stack_frame_t *prev_frame_p;      /**< previous frame */
-  uint32_t regs_number;                       /**< number of register variables */
-} vm_stack_frame_t;
-
 #define VM_CREATE_CONTEXT(type, end_offset) ((ecma_value_t) ((type) | (end_offset) << 4))
 #define VM_GET_CONTEXT_TYPE(value) ((vm_stack_context_type_t) ((value) & 0xf))
 #define VM_GET_CONTEXT_END(value) ((value) >> 4)

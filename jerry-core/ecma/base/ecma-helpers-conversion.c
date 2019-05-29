@@ -46,9 +46,22 @@ typedef struct
 
 /**
  * Round high part of 128-bit integer to uint64_t
+ *
+ * @return rounded high to uint64_t
  */
-#define ECMA_UINT128_ROUND_HIGH_TO_UINT64(name) \
-  (name.hi + (name.lo >> 63u))
+static uint64_t
+ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
+{
+  uint64_t masked_lo = num_p->lo & ~(1ULL << 63u);
+  uint64_t masked_hi = num_p->hi & 0x1;
+
+  if ((num_p->lo >> 63u != 0)
+      && (masked_lo > 0 || masked_hi != 0))
+  {
+    return (num_p->hi + 1);
+  }
+  return num_p->hi;
+} /* ecma_round_high_to_uint64 */
 
 /**
  * Check if 128-bit integer is zero
@@ -650,7 +663,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
   JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 11);
 
-  fraction_uint64 = ECMA_UINT128_ROUND_HIGH_TO_UINT64 (fraction_uint128);
+  fraction_uint64 = ecma_round_high_to_uint64 (&fraction_uint128);
 
   return ecma_number_make_from_sign_mantissa_and_exponent (sign, fraction_uint64, binary_exponent);
 #elif !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)

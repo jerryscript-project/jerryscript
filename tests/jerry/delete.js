@@ -32,6 +32,14 @@ assert (b.c === 0);
 assert (delete b.c === true);
 assert (b.c === undefined);
 
+var c = undefined;
+try {
+  delete c.foo;
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
 /* argument is lexical environment-based reference */
 var a = 1;
 assert (a === 1);

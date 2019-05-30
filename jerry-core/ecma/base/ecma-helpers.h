@@ -230,6 +230,9 @@ ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, 
 ecma_string_t *ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string_p,
                                                                   lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit);
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+ecma_string_t *ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, ecma_char_t second_code_unit);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);

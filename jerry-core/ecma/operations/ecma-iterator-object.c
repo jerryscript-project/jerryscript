@@ -138,10 +138,8 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
                                 uint8_t extra_info) /**< extra information */
 {
   /* 1. */
-  JERRY_ASSERT (ecma_is_value_object (iterated_value));
   JERRY_ASSERT (iterator_type >= ECMA_PSEUDO_ARRAY_ITERATOR && iterator_type <= ECMA_PSEUDO_ARRAY__MAX);
 
-  ecma_object_t *iterated_obj_p = ecma_get_object_from_value (iterated_value);
   /* 2. */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
@@ -151,7 +149,7 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
   ext_obj_p->u.pseudo_array.type = iterator_type;
 
   /* 3. */
-  ECMA_SET_NON_NULL_POINTER (ext_obj_p->u.pseudo_array.u2.iterated_value_cp, iterated_obj_p);
+  ext_obj_p->u.pseudo_array.u2.iterated_value = iterated_value;
   /* 4. */
   ext_obj_p->u.pseudo_array.u1.iterator_index = 0;
   /* 5. */

@@ -67,6 +67,10 @@ ROUTINE (LIT_MAGIC_STRING_TRIM, ecma_builtin_string_prototype_object_trim, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_SUBSTR, ecma_builtin_string_prototype_object_substr, 2, 2)
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_string_prototype_object_iterator, 0, 0)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

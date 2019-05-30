@@ -329,13 +329,15 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
           case ECMA_PSEUDO_ARRAY_ITERATOR:
           {
-            ecma_object_t *iterated_obj_p = ECMA_GET_POINTER (ecma_object_t,
-                                                              ext_object_p->u.pseudo_array.u2.iterated_value_cp);
-
-            if (iterated_obj_p != NULL)
+            ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
+            if (!ecma_is_value_empty (iterated_value))
             {
-              ecma_gc_set_object_visited (iterated_obj_p);
+              ecma_gc_set_object_visited (ecma_get_object_from_value (iterated_value));
             }
+            break;
+          }
+          case ECMA_PSEUDO_STRING_ITERATOR:
+          {
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
@@ -752,6 +754,17 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
         case ECMA_PSEUDO_ARRAY_ITERATOR:
         {
+          ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+          return;
+        }
+        case ECMA_PSEUDO_STRING_ITERATOR:
+        {
+          ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
+
+          if (!ecma_is_value_empty (iterated_value))
+          {
+            ecma_deref_ecma_string (ecma_get_string_from_value (iterated_value));
+          }
           ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
           return;
         }

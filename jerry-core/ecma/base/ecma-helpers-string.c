@@ -476,6 +476,24 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
   return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
 } /* ecma_new_ecma_string_from_code_unit */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+/**
+ * Allocate new ecma-string and fill it with cesu-8 character which represents specified code units
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, /**< code unit */
+                                      ecma_char_t second_code_unit) /**< code unit */
+{
+  lit_utf8_byte_t lit_utf8_bytes[2 * LIT_UTF8_MAX_BYTES_IN_CODE_UNIT];
+  lit_utf8_size_t bytes_size = lit_code_unit_to_utf8 (first_code_unit, lit_utf8_bytes);
+  bytes_size += lit_code_unit_to_utf8 (second_code_unit, lit_utf8_bytes + bytes_size);
+
+  return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
+} /* ecma_new_ecma_string_from_code_units */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
 /**
  * Allocate new ecma-string and fill it with ecma-number
  *

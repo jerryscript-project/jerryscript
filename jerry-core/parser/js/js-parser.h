@@ -98,6 +98,9 @@ typedef enum
   PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED,          /**< colon expected for conditional expression */
   PARSER_ERR_SEMICOLON_EXPECTED,                      /**< semicolon expected */
   PARSER_ERR_IN_EXPECTED,                             /**< in keyword expected */
+#if ENABLED (JERRY_ES2015_FOR_OF)
+  PARSER_ERR_OF_EXPECTED,                             /**< of keyword expected */
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
   PARSER_ERR_WHILE_EXPECTED,                          /**< while expected for do-while loop */
   PARSER_ERR_CATCH_FINALLY_EXPECTED,                  /**< catch or finally expected */
   PARSER_ERR_ARRAY_ITEM_SEPARATOR_EXPECTED,           /**< array item separator expected */

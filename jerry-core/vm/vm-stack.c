@@ -79,6 +79,16 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_WITH_CONTEXT_STACK_ALLOCATION;
       break;
     }
+#if ENABLED (JERRY_ES2015_FOR_OF)
+    case VM_CONTEXT_FOR_OF:
+    {
+      ecma_free_value (vm_stack_top_p[-2]);
+      ecma_free_value (vm_stack_top_p[-3]);
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
     default:
     {
       JERRY_ASSERT (VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]) == VM_CONTEXT_FOR_IN);

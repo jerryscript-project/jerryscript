@@ -39,6 +39,7 @@ JERRY_ES2015_BUILTIN_SET=0
 JERRY_ES2015_BUILTIN_SYMBOL=0
 JERRY_ES2015_BUILTIN_TYPEDARRAY=0
 JERRY_ES2015_CLASS=0
+JERRY_ES2015_FOR_OF=0
 JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER=0
 JERRY_ES2015_FUNCTION_REST_PARAMETER=0
 JERRY_ES2015_MODULE_SYSTEM=0
@@ -127,6 +128,8 @@ defined to `1`.
   Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
 * `JERRY_ES2015_CLASS`:
   Enables or disables the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
+* `JERRY_ES2015_FOR_OF`:
+  Enables or disables the [for of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
 * `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`:
   Enables or disables the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
 * `JERRY_ES2015_FUNCTION_REST_PARAMETER`:
@@ -150,6 +153,7 @@ defined to `1`.
     * `JERRY_ES2015_BUILTIN_SYMBOL`
     * `JERRY_ES2015_BUILTIN_TYPEDARRAY`
     * `JERRY_ES2015_CLASS`
+    * `JERRY_ES2015_FOR_OF`
     * `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`
     * `JERRY_ES2015_FUNCTION_REST_PARAMETER`
     * `JERRY_ES2015_MODULE_SYSTEM`

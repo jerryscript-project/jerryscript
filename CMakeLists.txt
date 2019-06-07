@@ -45,6 +45,7 @@ endif()
 set(JERRY_CMDLINE           ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_TEST      OFF CACHE BOOL "Build jerry test command line tool?")
 set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
+set(JERRY_LIBFUZZER         OFF CACHE BOOL "Build jerry with libfuzzer support?")
 set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
 set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
@@ -57,10 +58,26 @@ set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
 # Option overrides
-if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR UNITTESTS OR DOCTESTS)
+if(NOT USING_CLANG)
+  set(JERRY_LIBFUZZER OFF)
+
+  set(JERRY_LIBFUZZER_MESSAGE " (FORCED BY COMPILER)")
+endif()
+
+if(JERRY_LIBFUZZER)
+  set(JERRY_CMDLINE          OFF)
+  set(JERRY_CMDLINE_TEST     OFF)
+  set(JERRY_CMDLINE_SNAPSHOT OFF)
+
+  set(JERRY_CMDLINE_MESSAGE          " (FORCED BY LIBFUZZER)")
+  set(JERRY_CMDLINE_TEST_MESSAGE     " (FORCED BY LIBFUZZER)")
+  set(JERRY_CMDLINE_SNAPSHOT_MESSAGE " (FORCED BY LIBFUZZER)")
+endif()
+
+if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
 
-  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR TESTS)")
+  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR LIBFUZZER OR TESTS)")
 endif()
 
 if(JERRY_CMDLINE OR DOCTESTS)
@@ -101,9 +118,10 @@ message(STATUS "CMAKE_SYSTEM_PROCESSOR      " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "BUILD_SHARED_LIBS           " ${BUILD_SHARED_LIBS})
 message(STATUS "ENABLE_LTO                  " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STRIP                " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
-message(STATUS "JERRY_CMDLINE               " ${JERRY_CMDLINE})
-message(STATUS "JERRY_CMDLINE_TEST          " ${JERRY_CMDLINE_TEST})
-message(STATUS "JERRY_CMDLINE_SNAPSHOT      " ${JERRY_CMDLINE_SNAPSHOT})
+message(STATUS "JERRY_CMDLINE               " ${JERRY_CMDLINE} ${JERRY_CMDLINE_MESSAGE})
+message(STATUS "JERRY_CMDLINE_TEST          " ${JERRY_CMDLINE_TEST} ${JERRY_CMDLINE_TEST_MESSAGE})
+message(STATUS "JERRY_CMDLINE_SNAPSHOT      " ${JERRY_CMDLINE_SNAPSHOT} ${JERRY_CMDLINE_SNAPSHOT_MESSAGE})
+message(STATUS "JERRY_LIBFUZZER             " ${JERRY_LIBFUZZER} ${JERRY_LIBFUZZER_MESSAGE})
 message(STATUS "JERRY_PORT_DEFAULT          " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_EXT                   " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_LIBM                  " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
@@ -205,6 +223,10 @@ if(USING_MSVC)
   jerry_add_compile_flags(/wd4996)
 endif()
 
+if(JERRY_LIBFUZZER)
+  jerry_add_compile_flags(-fsanitize=address,fuzzer)
+endif()
+
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   jerry_add_link_flags(-s)
@@ -238,7 +260,7 @@ if(JERRY_PORT_DEFAULT)
 endif()
 
 # Jerry command line tool
-if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER)
   add_subdirectory(jerry-main)
 endif()
 

@@ -90,6 +90,8 @@ def get_arguments():
                          help='build snapshot command line tool (%(choices)s)')
     compgrp.add_argument('--jerry-cmdline-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('build test version of the jerry command line tool (%(choices)s)'))
+    compgrp.add_argument('--libfuzzer', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='build jerry with libfuzzer support (%(choices)s)')
     compgrp.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build jerry-ext (%(choices)s)')
     compgrp.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -184,6 +186,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_CMDLINE', arguments.jerry_cmdline)
     build_options_append('JERRY_CMDLINE_SNAPSHOT', arguments.jerry_cmdline_snapshot)
     build_options_append('JERRY_CMDLINE_TEST', arguments.jerry_cmdline_test)
+    build_options_append('JERRY_LIBFUZZER', arguments.libfuzzer)
     build_options_append('JERRY_EXT', arguments.jerry_ext)
     build_options_append('JERRY_LIBM', arguments.jerry_libm)
     build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)

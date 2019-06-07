@@ -54,6 +54,12 @@ macro(jerry_create_executable JERRY_NAME)
   install(TARGETS ${JERRY_NAME} DESTINATION bin)
 endmacro()
 
+# Jerry with libfuzzer support
+if(JERRY_LIBFUZZER)
+  jerry_create_executable("jerry-libfuzzer" "libfuzzer.c")
+  target_link_libraries("jerry-libfuzzer" jerry-port-default)
+endif()
+
 # Jerry standalones
 if(JERRY_CMDLINE)
   jerry_create_executable("jerry" "main-unix.c" "cli.c")

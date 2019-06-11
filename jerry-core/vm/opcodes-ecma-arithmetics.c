@@ -145,6 +145,7 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 
     if (ECMA_IS_VALUE_ERROR (str_right_value))
     {
+      ecma_free_value (right_value);
       ecma_deref_ecma_string (string1_p);
       return str_right_value;
     }

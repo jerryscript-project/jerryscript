@@ -77,13 +77,13 @@ typedef enum
  */
 struct ecma_module
 {
-  struct ecma_module *next_p;         /**< next linked list node */
-  ecma_module_state_t state;          /**< state of the mode */
-  ecma_string_t *path_p;              /**< path of the module */
-  ecma_module_context_t *context_p;   /**< module context of the module */
-  ecma_object_t *compiled_code_p;     /**< compiled code of the module */
-  ecma_object_t *scope_p;             /**< lexica lenvironment of the module */
-  ecma_object_t *namespace_object_p;  /**< namespace import object of the module */
+  struct ecma_module *next_p;            /**< next linked list node */
+  ecma_module_state_t state;             /**< state of the mode */
+  ecma_string_t *path_p;                 /**< path of the module */
+  ecma_module_context_t *context_p;      /**< module context of the module */
+  ecma_compiled_code_t *compiled_code_p; /**< compiled code of the module */
+  ecma_object_t *scope_p;                /**< lexica lenvironment of the module */
+  ecma_object_t *namespace_object_p;     /**< namespace import object of the module */
 };
 
 /**

@@ -64,16 +64,6 @@ if(NOT USING_CLANG)
   set(JERRY_LIBFUZZER_MESSAGE " (FORCED BY COMPILER)")
 endif()
 
-if(JERRY_LIBFUZZER)
-  set(JERRY_CMDLINE          OFF)
-  set(JERRY_CMDLINE_TEST     OFF)
-  set(JERRY_CMDLINE_SNAPSHOT OFF)
-
-  set(JERRY_CMDLINE_MESSAGE          " (FORCED BY LIBFUZZER)")
-  set(JERRY_CMDLINE_TEST_MESSAGE     " (FORCED BY LIBFUZZER)")
-  set(JERRY_CMDLINE_SNAPSHOT_MESSAGE " (FORCED BY LIBFUZZER)")
-endif()
-
 if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
 
@@ -224,7 +214,7 @@ if(USING_MSVC)
 endif()
 
 if(JERRY_LIBFUZZER)
-  jerry_add_compile_flags(-fsanitize=address,fuzzer)
+  jerry_add_compile_flags(-fsanitize=fuzzer-no-link)
 endif()
 
 # Strip binary

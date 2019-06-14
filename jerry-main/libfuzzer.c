@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
+
 #include "jerryscript.h"
 
 
 int LLVMFuzzerTestOneInput (const uint8_t *data, size_t size)
 {
+  srand (0);
   jerry_init (JERRY_INIT_EMPTY);
 
   if (jerry_is_valid_utf8_string ((jerry_char_t *) data, (jerry_size_t) size))

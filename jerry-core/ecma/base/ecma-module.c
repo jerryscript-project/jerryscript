@@ -545,7 +545,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
 
   ecma_value_t ret_value;
-  ret_value = vm_run_module (ecma_op_function_get_compiled_code ((ecma_extended_object_t *) module_p->compiled_code_p),
+  ret_value = vm_run_module (module_p->compiled_code_p,
                              module_p->scope_p);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
@@ -556,7 +556,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
 
-  ecma_deref_object (module_p->compiled_code_p);
+  ecma_bytecode_deref (module_p->compiled_code_p);
   module_p->state = ECMA_MODULE_STATE_EVALUATED;
 
   return ret_value;
@@ -695,11 +695,13 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
 
-  ecma_value_t ret_value = jerry_parse ((jerry_char_t *) script_path_p,
-                                        script_path_size,
-                                        (jerry_char_t *) source_p,
-                                        source_size,
-                                        JERRY_PARSE_NO_OPTS);
+  ecma_compiled_code_t *bytecode_data_p;
+  ecma_value_t ret_value = parser_parse_script (NULL,
+                                                0,
+                                                (jerry_char_t *) source_p,
+                                                source_size,
+                                                JERRY_PARSE_NO_OPTS,
+                                                &bytecode_data_p);
 
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
 
@@ -710,7 +712,9 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
     return ret_value;
   }
 
-  module_p->compiled_code_p = ecma_get_object_from_value (ret_value);
+  ecma_free_value (ret_value);
+
+  module_p->compiled_code_p = bytecode_data_p;
   module_p->state = ECMA_MODULE_STATE_PARSED;
 
   return ECMA_VALUE_EMPTY;
@@ -851,7 +855,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
   if (module_p->state >= ECMA_MODULE_STATE_PARSED
       && module_p->state < ECMA_MODULE_STATE_EVALUATED)
   {
-    ecma_deref_object (module_p->compiled_code_p);
+    ecma_bytecode_deref (module_p->compiled_code_p);
   }
 
   if (module_p->namespace_object_p != NULL)

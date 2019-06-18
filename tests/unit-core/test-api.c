@@ -160,19 +160,31 @@ handler_construct (const jerry_value_t func_obj_val, /**< function object */
   jerry_release_value (res);
   jerry_release_value (field_name);
 
+  /* Set a native pointer. */
   jerry_set_object_native_pointer (this_val,
                                    (void *) 0x0000000000000000ull,
                                    &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind1));
 
+  /* Check that the native pointer was set. */
   void *ptr = NULL;
   bool is_ok = jerry_get_object_native_pointer (this_val, &ptr, &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind1));
   TEST_ASSERT (is_ok
                && (uintptr_t) ptr == (uintptr_t) 0x0000000000000000ull);
-  /* check if setting handle for second time is handled correctly */
+
+  /* Set a second native pointer. */
   jerry_set_object_native_pointer (this_val,
                                    (void *) 0x0012345678abcdefull,
                                    &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind2));
 
+  /* Check that a second native pointer was set. */
+  is_ok = jerry_get_object_native_pointer (this_val, &ptr, &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind2));
+  TEST_ASSERT (is_ok
+               && (uintptr_t) ptr == (uintptr_t) 0x0012345678abcdefull);
+
+  /* Check that the first native pointer is still set. */
+  is_ok = jerry_get_object_native_pointer (this_val, &ptr, &JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (bind1));
+  TEST_ASSERT (is_ok
+               && (uintptr_t) ptr == (uintptr_t) 0x0000000000000000ull);
   return jerry_create_boolean (true);
 } /* handler_construct */
 

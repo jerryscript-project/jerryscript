@@ -31,6 +31,9 @@ int LLVMFuzzerTestOneInput (const uint8_t *data, size_t size)
     {
       jerry_value_t run_value = jerry_run (parse_value);
       jerry_release_value (run_value);
+
+      jerry_value_t run_queue_value = jerry_run_all_enqueued_jobs ();
+      jerry_release_value (run_queue_value);
     }
 
     jerry_release_value (parse_value);

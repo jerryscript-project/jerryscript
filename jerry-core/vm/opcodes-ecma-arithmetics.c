@@ -136,6 +136,14 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 
     if (ECMA_IS_VALUE_ERROR (str_left_value))
     {
+      if (free_left_value)
+      {
+        ecma_free_value (left_value);
+      }
+      if (free_right_value)
+      {
+        ecma_free_value (right_value);
+      }
       return str_left_value;
     }
 
@@ -145,7 +153,14 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 
     if (ECMA_IS_VALUE_ERROR (str_right_value))
     {
-      ecma_free_value (right_value);
+      if (free_right_value)
+      {
+        ecma_free_value (right_value);
+      }
+      if (free_left_value)
+      {
+        ecma_free_value (left_value);
+      }
       ecma_deref_ecma_string (string1_p);
       return str_right_value;
     }

@@ -42,7 +42,7 @@ lit_get_magic_string_ex_count (void)
 const lit_utf8_byte_t *
 lit_get_magic_string_utf8 (uint32_t id) /**< magic string id */
 {
-  static const lit_utf8_byte_t * const lit_magic_strings[] JERRY_CONST_DATA =
+  static const lit_utf8_byte_t * const lit_magic_strings[] JERRY_ATTR_CONST_DATA =
   {
 /** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
@@ -67,7 +67,7 @@ lit_get_magic_string_utf8 (uint32_t id) /**< magic string id */
 lit_utf8_size_t
 lit_get_magic_string_size (uint32_t id) /**< magic string id */
 {
-  static const lit_magic_size_t lit_magic_string_sizes[] JERRY_CONST_DATA =
+  static const lit_magic_size_t lit_magic_string_sizes[] JERRY_ATTR_CONST_DATA =
   {
 /** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE(size, id)
@@ -93,7 +93,7 @@ lit_get_magic_string_size (uint32_t id) /**< magic string id */
 static lit_magic_string_id_t
 lit_get_magic_string_size_block_start (lit_utf8_size_t size) /**< magic string size */
 {
-  static const lit_magic_string_id_t lit_magic_string_size_block_starts[] JERRY_CONST_DATA =
+  static const lit_magic_string_id_t lit_magic_string_size_block_starts[] JERRY_ATTR_CONST_DATA =
   {
 /** @cond doxygen_suppress */
 #define LIT_MAGIC_STRING_DEF(id, utf8_string)

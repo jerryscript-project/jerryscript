@@ -39,14 +39,14 @@ ecma_init (void)
 
   jmem_register_free_unused_memory_callback (ecma_free_unused_memory);
 
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
-#ifdef VM_RECURSION_LIMIT
-  JERRY_CONTEXT (vm_recursion_counter) = VM_RECURSION_LIMIT;
-#endif /* VM_RECURSION_LIMIT */
+#if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
+  JERRY_CONTEXT (vm_recursion_counter) = JERRY_VM_RECURSION_LIMIT;
+#endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();

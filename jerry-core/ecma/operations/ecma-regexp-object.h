@@ -28,7 +28,7 @@
  * @{
  */
 
-#ifdef REGEXP_RECURSION_LIMIT
+#if defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0)
 /**
  * Decrease the recursion counter and test it.
  * If the counter reaches the limit of the recursion depth
@@ -50,8 +50,8 @@
 /**
  * Set the recursion counter to the max depth of the recursion.
  */
-#define REGEXP_RECURSION_COUNTER_INIT() (re_ctx.recursion_counter = REGEXP_RECURSION_LIMIT)
-#else /* !REGEXP_RECURSION_LIMIT */
+#define REGEXP_RECURSION_COUNTER_INIT() (re_ctx.recursion_counter = JERRY_REGEXP_RECURSION_LIMIT)
+#else /* !(defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0)) */
 /**
  * Decrease the recursion counter and test it.
  * If the counter reaches the limit of the recursion depth
@@ -66,7 +66,7 @@
  * Set the recursion counter to the max depth of the recursion.
  */
 #define REGEXP_RECURSION_COUNTER_INIT()
-#endif /* REGEXP_RECURSION_LIMIT */
+#endif /* defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0) */
 
 /**
  * RegExp flags
@@ -88,9 +88,9 @@ typedef struct
   const lit_utf8_byte_t **saved_p;      /**< saved result string pointers, ECMA 262 v5, 15.10.2.1, State */
   const lit_utf8_byte_t *input_start_p; /**< start of input pattern string */
   const lit_utf8_byte_t *input_end_p;   /**< end of input pattern string */
-#ifdef REGEXP_RECURSION_LIMIT
+#if defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0)
   uint32_t recursion_counter;           /**< RegExp recursion counter */
-#endif /* REGEXP_RECURSION_LIMIT */
+#endif /* defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0) */
   uint32_t num_of_captures;             /**< number of capture groups */
   uint32_t num_of_non_captures;         /**< number of non-capture groups */
   uint32_t *num_of_iterations_p;        /**< number of iterations */

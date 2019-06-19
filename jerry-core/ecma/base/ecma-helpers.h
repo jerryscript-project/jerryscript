@@ -376,10 +376,10 @@ void ecma_set_property_enumerable_attr (ecma_property_t *property_p, bool is_enu
 bool ecma_is_property_configurable (ecma_property_t property);
 void ecma_set_property_configurable_attr (ecma_property_t *property_p, bool is_configurable);
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
+#if ENABLED (JERRY_LCACHE)
 bool ecma_is_property_lcached (ecma_property_t *property_p);
 void ecma_set_property_lcached (ecma_property_t *property_p, bool is_lcached);
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* ENABLED (JERRY_LCACHE) */
 
 ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);

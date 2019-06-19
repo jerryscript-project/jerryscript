@@ -32,6 +32,7 @@
  * @{
  */
 
+#include "config.h"
 #include "ecma-globals.h"
 #include "ecma-regexp-object.h"
 #include "jmem.h"
@@ -74,11 +75,11 @@ typedef enum
 /**
  * Type of property length.
  */
-#ifdef JERRY_CPOINTER_32_BIT
+#if ENABLED (JERRY_CPOINTER_32_BIT)
 typedef uint32_t prop_length_t;
-#else /* !JERRY_CPOINTER_32_BIT */
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 typedef uint16_t prop_length_t;
-#endif /* JERRY_CPOINTER_32_BIT */
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Literal data.
@@ -93,11 +94,11 @@ typedef struct
     uint32_t source_data;                /**< encoded source literal */
   } u;
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   struct
-#else /* !PARSER_DUMP_BYTE_CODE */
+#else /* !ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
   union
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
   {
     prop_length_t length;                /**< length of ident / string literal */
     uint16_t index;                      /**< real index during post processing */
@@ -109,9 +110,9 @@ typedef struct
 
 void util_free_literal (lexer_literal_t *literal_p);
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 void util_print_literal (lexer_literal_t *);
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 /* TRY/CATCH block */
 

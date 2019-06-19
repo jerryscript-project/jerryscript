@@ -687,7 +687,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       /* Function with byte-code (not a built-in function). */
       ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
       if (ext_func_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
       {
         ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
@@ -698,11 +698,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       {
         ecma_dealloc_extended_object (object_p, sizeof (ecma_static_function_t));
       }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
       ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                             ext_func_p->u.function.bytecode_cp));
       ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       return;
     }
 
@@ -713,7 +713,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       ecma_free_value_if_not_object (arrow_func_p->this_binding);
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
       if (arrow_func_p->bytecode_cp != ECMA_NULL_POINTER)
       {
         ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
@@ -724,11 +724,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       {
         ecma_dealloc_extended_object (object_p, sizeof (ecma_static_arrow_function_t));
       }
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
       ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
                                                       arrow_func_p->bytecode_cp));
       ecma_dealloc_extended_object (object_p, sizeof (ecma_arrow_function_t));
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       return;
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
@@ -993,13 +993,13 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
 
   if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW)
   {
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
     if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) > ECMA_PROP_HASHMAP_ALLOC_ON)
     {
       --JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
     }
     JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
     /*
      * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
@@ -1016,7 +1016,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
   {
     JERRY_ASSERT (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
 
-#ifndef CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
     if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_HIGH_SEV_GC)
     {
       JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_MAX;
@@ -1026,7 +1026,7 @@ ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< sever
       ++JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
       JERRY_CONTEXT (status_flags) |= ECMA_STATUS_HIGH_SEV_GC;
     }
-#endif /* !CONFIG_ECMA_PROPERTY_HASHMAP_DISABLE */
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
     /* Freeing as much memory as we currently can */
     ecma_gc_run (severity);

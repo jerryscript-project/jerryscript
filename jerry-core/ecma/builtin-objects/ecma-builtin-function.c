@@ -24,9 +24,9 @@
 #include "js-parser.h"
 #include "lit-magic-strings.h"
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
 #include "jcontext.h"
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -159,9 +159,9 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
   ecma_compiled_code_t *bytecode_data_p = NULL;
 

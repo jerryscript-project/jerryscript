@@ -32,7 +32,7 @@
  * @{
  */
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
 /**
  * End of list marker.
  */
@@ -63,13 +63,13 @@ jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 {
   return (jmem_heap_free_t *)((uint8_t *) curr_p + curr_p->size);
 } /* jmem_heap_get_region_end */
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 
 /**
  * @{
  * JMEM_HEAP_STAT_xxx definitions
  */
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
 static void jmem_heap_stat_init (void);
 static void jmem_heap_stat_alloc (size_t num);
 static void jmem_heap_stat_free (size_t num);
@@ -78,7 +78,7 @@ static void jmem_heap_stat_free (size_t num);
 #define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
 #define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
 static void jmem_heap_stat_skip (void);
 static void jmem_heap_stat_nonskip (void);
 static void jmem_heap_stat_alloc_iter (void);
@@ -88,19 +88,19 @@ static void jmem_heap_stat_free_iter (void);
 #define JMEM_HEAP_STAT_NONSKIP() jmem_heap_stat_nonskip ()
 #define JMEM_HEAP_STAT_ALLOC_ITER() jmem_heap_stat_alloc_iter ()
 #define JMEM_HEAP_STAT_FREE_ITER() jmem_heap_stat_free_iter ()
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-#else /* !JMEM_STATS */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#else /* !ENABLED (JERRY_MEM_STATS) */
 #define JMEM_HEAP_STAT_INIT()
 #define JMEM_HEAP_STAT_ALLOC(v1) JERRY_UNUSED (v1)
 #define JMEM_HEAP_STAT_FREE(v1) JERRY_UNUSED (v1)
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
 #define JMEM_HEAP_STAT_SKIP()
 #define JMEM_HEAP_STAT_NONSKIP()
 #define JMEM_HEAP_STAT_ALLOC_ITER()
 #define JMEM_HEAP_STAT_FREE_ITER()
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-#endif /* JMEM_STATS */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 /** @} */
 
 /**
@@ -109,11 +109,11 @@ static void jmem_heap_stat_free_iter (void);
 void
 jmem_heap_init (void)
 {
-#ifndef JERRY_SYSTEM_ALLOCATOR
-#ifndef JERRY_CPOINTER_32_BIT
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if !ENABLED (JERRY_CPOINTER_32_BIT)
   /* the maximum heap size for 16bit compressed pointers should be 512K */
   JERRY_ASSERT (((UINT16_MAX + 1) << JMEM_ALIGNMENT_LOG) >= JMEM_HEAP_SIZE);
-#endif /* !JERRY_CPOINTER_32_BIT */
+#endif /* !ENABLED (JERRY_CPOINTER_32_BIT) */
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
   JERRY_CONTEXT (jmem_heap_limit) = CONFIG_MEM_HEAP_DESIRED_LIMIT;
@@ -130,7 +130,7 @@ jmem_heap_init (void)
 
   JMEM_VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   JMEM_HEAP_STAT_INIT ();
 } /* jmem_heap_init */
 
@@ -141,9 +141,9 @@ void
 jmem_heap_finalize (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_allocated_size) == 0);
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), JMEM_HEAP_SIZE);
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_heap_finalize */
 
 /**
@@ -158,7 +158,7 @@ jmem_heap_finalize (void)
 static void * JERRY_ATTR_HOT
 jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block */
 {
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   /* Align size. */
   const size_t required_size = ((size + JMEM_ALIGNMENT - 1) / JMEM_ALIGNMENT) * JMEM_ALIGNMENT;
   jmem_heap_free_t *data_space_p = NULL;
@@ -281,7 +281,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
   JMEM_HEAP_STAT_ALLOC (size);
 
   return (void *) data_space_p;
-#else /* JERRY_SYSTEM_ALLOCATOR */
+#else /* ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   JMEM_HEAP_STAT_ALLOC (size);
   JERRY_CONTEXT (jmem_heap_allocated_size) += size;
 
@@ -291,7 +291,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< size of requested block 
   }
 
   return malloc (size);
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_heap_alloc_block_internal */
 
 /**
@@ -315,9 +315,9 @@ jmem_heap_gc_and_alloc_block (const size_t size,      /**< required memory size 
     return NULL;
   }
 
-#ifdef JMEM_GC_BEFORE_EACH_ALLOC
+#if ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC)
   jmem_run_free_unused_memory_callbacks (JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
-#endif /* JMEM_GC_BEFORE_EACH_ALLOC */
+#endif /* ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
   if (JERRY_CONTEXT (jmem_heap_allocated_size) + size >= JERRY_CONTEXT (jmem_heap_limit))
   {
@@ -396,7 +396,7 @@ void JERRY_ATTR_HOT
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */
                       const size_t size) /**< size of allocated region */
 {
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   /* checking that ptr points to the heap */
   JERRY_ASSERT (jmem_is_heap_pointer (ptr));
   JERRY_ASSERT (size > 0);
@@ -492,7 +492,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   JMEM_VALGRIND_NOACCESS_SPACE (&JERRY_HEAP_CONTEXT (first), sizeof (jmem_heap_free_t));
   JERRY_ASSERT (JERRY_CONTEXT (jmem_heap_limit) >= JERRY_CONTEXT (jmem_heap_allocated_size));
   JMEM_HEAP_STAT_FREE (size);
-#else /* JERRY_SYSTEM_ALLOCATOR */
+#else /* ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   JMEM_HEAP_STAT_FREE (size);
   JERRY_CONTEXT (jmem_heap_allocated_size) -= size;
 
@@ -502,7 +502,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   }
 
   free (ptr);
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_heap_free_block */
 
 #ifndef JERRY_NDEBUG
@@ -518,17 +518,17 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
 bool
 jmem_is_heap_pointer (const void *pointer) /**< pointer */
 {
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   return ((uint8_t *) pointer >= JERRY_HEAP_CONTEXT (area)
           && (uint8_t *) pointer <= (JERRY_HEAP_CONTEXT (area) + JMEM_HEAP_AREA_SIZE));
-#else /* JERRY_SYSTEM_ALLOCATOR */
+#else /* ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   JERRY_UNUSED (pointer);
   return true;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_is_heap_pointer */
 #endif /* !JERRY_NDEBUG */
 
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
 /**
  * Get heap memory usage statistics
  */
@@ -549,10 +549,10 @@ jmem_heap_stats_print (void)
   jmem_heap_stats_t *heap_stats = &JERRY_CONTEXT (jmem_heap_stats);
 
   JERRY_DEBUG_MSG ("Heap stats:\n");
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   JERRY_DEBUG_MSG ("  Heap size = %zu bytes\n",
                    heap_stats->size);
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   JERRY_DEBUG_MSG ("  Allocated = %zu bytes\n"
                    "  Peak allocated = %zu bytes\n"
                    "  Waste = %zu bytes\n"
@@ -577,7 +577,7 @@ jmem_heap_stats_print (void)
                    heap_stats->peak_object_bytes,
                    heap_stats->property_bytes,
                    heap_stats->peak_property_bytes);
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   JERRY_DEBUG_MSG ("  Skip-ahead ratio = %zu.%04zu\n"
                    "  Average alloc iteration = %zu.%04zu\n"
                    "  Average free iteration = %zu.%04zu\n",
@@ -587,7 +587,7 @@ jmem_heap_stats_print (void)
                    heap_stats->alloc_iter_count % heap_stats->alloc_count * 10000 / heap_stats->alloc_count,
                    heap_stats->free_iter_count / heap_stats->free_count,
                    heap_stats->free_iter_count % heap_stats->free_count * 10000 / heap_stats->free_count);
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_heap_stats_print */
 
 /**
@@ -596,9 +596,9 @@ jmem_heap_stats_print (void)
 static void
 jmem_heap_stat_init (void)
 {
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
   JERRY_CONTEXT (jmem_heap_stats).size = JMEM_HEAP_AREA_SIZE;
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 } /* jmem_heap_stat_init */
 
 /**
@@ -643,7 +643,7 @@ jmem_heap_stat_free (size_t size) /**< Size of freed block */
   heap_stats->waste_bytes -= waste_bytes;
 } /* jmem_heap_stat_free */
 
-#ifndef JERRY_SYSTEM_ALLOCATOR
+#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
 /**
  * Counts number of skip-aheads during insertion of free block
  */
@@ -679,8 +679,8 @@ jmem_heap_stat_free_iter (void)
 {
   JERRY_CONTEXT (jmem_heap_stats).free_iter_count++;
 } /* jmem_heap_stat_free_iter */
-#endif /* !JERRY_SYSTEM_ALLOCATOR */
-#endif /* JMEM_STATS */
+#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
 /**
  * @}

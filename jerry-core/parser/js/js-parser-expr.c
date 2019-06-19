@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#ifndef JERRY_DISABLE_JS_PARSER
+#if ENABLED (JERRY_PARSER)
 #include "jcontext.h"
 
 #include "ecma-helpers.h"
@@ -2352,4 +2352,4 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
  * @}
  */
 
-#endif /* !JERRY_DISABLE_JS_PARSER */
+#endif /* ENABLED (JERRY_PARSER) */

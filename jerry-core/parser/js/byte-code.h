@@ -692,7 +692,7 @@ typedef enum
 extern const uint8_t cbc_flags[];
 extern const uint8_t cbc_ext_flags[];
 
-#ifdef PARSER_DUMP_BYTE_CODE
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 
 /**
  * Opcode names for debugging.
@@ -700,7 +700,7 @@ extern const uint8_t cbc_ext_flags[];
 extern const char * const cbc_names[];
 extern const char * const cbc_ext_names[];
 
-#endif /* PARSER_DUMP_BYTE_CODE */
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 /**
  * @}

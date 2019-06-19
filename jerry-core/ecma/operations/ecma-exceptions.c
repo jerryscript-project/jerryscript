@@ -25,9 +25,9 @@
 #include "jcontext.h"
 #include "jrt.h"
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
 #include "vm.h"
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -140,7 +140,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
   /* The "stack" identifier is not a magic string. */
   const char * const stack_id_p = "stack";
 
@@ -156,7 +156,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   prop_value_p->value = backtrace_value;
   ecma_deref_object (ecma_get_object_from_value (backtrace_value));
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */
@@ -240,7 +240,7 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error */
 
-#ifdef JERRY_ENABLE_ERROR_MESSAGES
+#if ENABLED (JERRY_ERROR_MESSAGES)
 
 /**
  * Raise a standard ecma-error with the given format string and arguments.
@@ -335,7 +335,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error_with_format */
 
-#endif /* JERRY_ENABLE_ERROR_MESSAGES */
+#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
 /**
  * Raise a common error with the given message.

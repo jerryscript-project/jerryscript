@@ -26,7 +26,7 @@
  * @{
  */
 
-#ifndef CONFIG_ECMA_LCACHE_DISABLE
+#if ENABLED (JERRY_LCACHE)
 
 /**
  * Mask for hash bits
@@ -208,7 +208,7 @@ ecma_lcache_invalidate (ecma_object_t *object_p, /**< object */
   }
 } /* ecma_lcache_invalidate */
 
-#endif /* !CONFIG_ECMA_LCACHE_DISABLE */
+#endif /* ENABLED (JERRY_LCACHE) */
 
 /**
  * @}

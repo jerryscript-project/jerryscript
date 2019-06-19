@@ -66,9 +66,9 @@
 /*
  * Check RegExp recursion depth limit
  */
-#ifdef REGEXP_RECURSION_LIMIT
-JERRY_STATIC_ASSERT (REGEXP_RECURSION_LIMIT > 0, regexp_recursion_limit_must_be_greater_than_zero);
-#endif /* REGEXP_RECURSION_LIMIT */
+#if defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0)
+JERRY_STATIC_ASSERT (JERRY_REGEXP_RECURSION_LIMIT > 0, regexp_recursion_limit_must_be_greater_than_zero);
+#endif /* defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT) != 0) */
 
 /**
  * Parse RegExp flags (global, ignoreCase, multiline)

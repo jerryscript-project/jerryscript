@@ -26,7 +26,7 @@
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
 
-#if defined JERRY_ENABLE_SNAPSHOT_SAVE || defined JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_SAVE) || ENABLED (JERRY_SNAPSHOT_EXEC)
 
 /**
  * Get snapshot configuration flags.
@@ -70,9 +70,9 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE || JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) || ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
 
 /**
  * Variables required to take a snapshot.
@@ -523,9 +523,9 @@ jerry_snapshot_set_offsets (uint32_t *buffer_p, /**< buffer */
   while (size > 0);
 } /* jerry_snapshot_set_offsets */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
 
 /**
  * Byte code blocks shorter than this threshold are always copied into the memory.
@@ -610,9 +610,9 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   {
     bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (code_size);
 
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
     jmem_stats_allocate_byte_code_bytes (code_size);
-#endif /* JMEM_STATS */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
     memcpy (bytecode_p, base_addr_p, code_size);
   }
@@ -632,9 +632,9 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
     bytecode_p = (ecma_compiled_code_t *) jmem_heap_alloc_block (new_code_size);
 
-#ifdef JMEM_STATS
+#if ENABLED (JERRY_MEM_STATS)
     jmem_stats_allocate_byte_code_bytes (new_code_size);
-#endif /* JMEM_STATS */
+#endif /* ENABLED (JERRY_MEM_STATS) */
 
     memcpy (bytecode_p, base_addr_p, start_offset);
 
@@ -711,16 +711,16 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   return bytecode_p;
 } /* snapshot_load_compiled_code */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
 
 /**
  * Generate snapshot from specified source and arguments
  *
  * @return size of snapshot (a number value), if it was generated succesfully
  *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
- *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *           and snapshot support is enabled in current configuration through JERRY_SNAPSHOT_SAVE),
  *         error object otherwise
  */
 static jerry_value_t
@@ -738,9 +738,9 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
 
-#ifdef JERRY_ENABLE_LINE_INFO
+#if ENABLED (JERRY_LINE_INFO)
   JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_ENABLE_LINE_INFO */
+#endif /* ENABLED (JERRY_LINE_INFO) */
 
   snapshot_globals_t globals;
   ecma_value_t parse_status;
@@ -835,14 +835,14 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   return ecma_make_number_value ((ecma_number_t) globals.snapshot_buffer_write_offset);
 } /* jerry_generate_snapshot_with_args */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 
 /**
  * Generate snapshot from specified source and arguments
  *
  * @return size of snapshot (a number value), if it was generated succesfully
  *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
- *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *           and snapshot support is enabled in current configuration through JERRY_SNAPSHOT_SAVE),
  *         error object otherwise
  */
 jerry_value_t
@@ -854,7 +854,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
                          uint32_t *buffer_p, /**< buffer to save snapshot to */
                          size_t buffer_size) /**< the buffer's size */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
   uint32_t allowed_opts = (JERRY_SNAPSHOT_SAVE_STATIC | JERRY_SNAPSHOT_SAVE_STRICT);
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
@@ -872,7 +872,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
                                             generate_snapshot_opts,
                                             buffer_p,
                                             buffer_size);
-#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+#else /* !ENABLED (JERRY_SNAPSHOT_SAVE) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
   JERRY_UNUSED (source_p);
@@ -882,10 +882,10 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
   JERRY_UNUSED (buffer_size);
 
   return 0;
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_snapshot */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
 /**
  * Execute/load snapshot from specified buffer
  *
@@ -1007,7 +1007,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   return ret_val;
 } /* jerry_snapshot_result */
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
 /**
  * Execute snapshot from specified buffer
@@ -1024,23 +1024,23 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
                      size_t func_index, /**< index of primary function */
                      uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   return jerry_snapshot_result (snapshot_p, snapshot_size, func_index, exec_snapshot_opts, false);
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   JERRY_UNUSED (snapshot_p);
   JERRY_UNUSED (snapshot_size);
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
   return ECMA_VALUE_FALSE;
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_exec_snapshot */
 
 /**
  * @}
  */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
 
 /**
  * Collect all literals from a snapshot file.
@@ -1198,7 +1198,7 @@ update_literal_offsets (uint8_t *buffer_p, /**< [in,out] snapshot buffer start *
   while (buffer_p < buffer_end_p);
 } /* update_literal_offsets */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 
 /**
  * Merge multiple snapshots into a single buffer
@@ -1214,7 +1214,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
                        size_t out_buffer_size, /**< output buffer size */
                        const char **error_p) /**< error description */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
   uint32_t number_of_funcs = 0;
   uint32_t merged_global_flags = 0;
   size_t functions_size = sizeof (jerry_snapshot_header_t);
@@ -1337,7 +1337,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
   *error_p = NULL;
   return functions_size;
-#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+#else /* !ENABLED (JERRY_SNAPSHOT_SAVE) */
   JERRY_UNUSED (inp_buffers_p);
   JERRY_UNUSED (inp_buffer_sizes_p);
   JERRY_UNUSED (number_of_snapshots);
@@ -1347,10 +1347,10 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
 
   *error_p = "snapshot merge not supported";
   return 0;
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_merge_snapshots */
 
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
 
 /**
  * ====================== Functions for literal saving ==========================
@@ -1579,7 +1579,7 @@ ecma_string_is_valid_identifier (const ecma_string_t *string_p)
   return result;
 } /* ecma_string_is_valid_identifier */
 
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 
 /**
  * Get the literals from a snapshot. Copies certain string literals into the given
@@ -1599,7 +1599,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
                                   size_t lit_buf_size, /**< the buffer's size */
                                   bool is_c_format) /**< format-flag */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
   const uint8_t *snapshot_data_p = (uint8_t *) snapshot_p;
   const jerry_snapshot_header_t *header_p = (const jerry_snapshot_header_t *) snapshot_data_p;
 
@@ -1771,7 +1771,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   JMEM_FINALIZE_LOCAL_ARRAY (literal_array);
 
   return lit_buf_p <= buffer_end_p ? (size_t) (lit_buf_p - buffer_start_p) : 0;
-#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+#else /* !ENABLED (JERRY_SNAPSHOT_SAVE) */
   JERRY_UNUSED (snapshot_p);
   JERRY_UNUSED (snapshot_size);
   JERRY_UNUSED (lit_buf_p);
@@ -1779,7 +1779,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   JERRY_UNUSED (is_c_format);
 
   return 0;
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_get_literals_from_snapshot */
 
 
@@ -1788,7 +1788,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
  *
  * @return size of snapshot (a number value), if it was generated succesfully
  *          (i.e. there are no syntax errors in source code, buffer size is sufficient,
- *           and snapshot support is enabled in current configuration through JERRY_ENABLE_SNAPSHOT_SAVE),
+ *           and snapshot support is enabled in current configuration through JERRY_SNAPSHOT_SAVE),
  *         error object otherwise
  */
 jerry_value_t
@@ -1802,7 +1802,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
                                   uint32_t *buffer_p, /**< buffer to save snapshot to */
                                   size_t buffer_size) /**< the buffer's size */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_SAVE
+#if ENABLED (JERRY_SNAPSHOT_SAVE)
   uint32_t allowed_opts = (JERRY_SNAPSHOT_SAVE_STATIC | JERRY_SNAPSHOT_SAVE_STRICT);
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
@@ -1820,7 +1820,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
                                             generate_snapshot_opts,
                                             buffer_p,
                                             buffer_size);
-#else /* !JERRY_ENABLE_SNAPSHOT_SAVE */
+#else /* !ENABLED (JERRY_SNAPSHOT_SAVE) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
   JERRY_UNUSED (source_p);
@@ -1832,7 +1832,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
   JERRY_UNUSED (buffer_size);
 
   return 0;
-#endif /* JERRY_ENABLE_SNAPSHOT_SAVE */
+#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_function_snapshot */
 
 /**
@@ -1850,14 +1850,14 @@ jerry_load_function_snapshot (const uint32_t *function_snapshot_p, /**< snapshot
                               size_t func_index, /**< index of the function to load */
                               uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
 {
-#ifdef JERRY_ENABLE_SNAPSHOT_EXEC
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
   return jerry_snapshot_result (function_snapshot_p, function_snapshot_size, func_index, exec_snapshot_opts, true);
-#else /* !JERRY_ENABLE_SNAPSHOT_EXEC */
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   JERRY_UNUSED (function_snapshot_p);
   JERRY_UNUSED (function_snapshot_size);
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
   return ECMA_VALUE_FALSE;
-#endif /* JERRY_ENABLE_SNAPSHOT_EXEC */
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_load_function_snapshot */

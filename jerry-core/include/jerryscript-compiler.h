@@ -39,7 +39,6 @@ extern "C"
 #define JERRY_ATTR_NOINLINE __attribute__((noinline))
 #define JERRY_ATTR_NORETURN __attribute__((noreturn))
 #define JERRY_ATTR_PURE __attribute__((pure))
-#define JERRY_ATTR_SECTION(SECTION) __attribute__((section(SECTION)))
 #define JERRY_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 
 #define JERRY_LIKELY(x) __builtin_expect(!!(x), 1)

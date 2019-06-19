@@ -2095,6 +2095,90 @@ ecma_builtin_string_prototype_object_trim (ecma_value_t this_arg) /**< this argu
   return ret_value;
 } /* ecma_builtin_string_prototype_object_trim */
 
+#if ENABLED (JERRY_ES2015_BUILTIN)
+
+/**
+ * The String.prototype object's 'repeat' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.13
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_repeat (ecma_value_t this_arg, /**< this argument */
+                                             ecma_value_t count) /**< times to repeat */
+{
+  /* 1 */
+  ecma_value_t check_coercible_value = ecma_op_check_object_coercible (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (check_coercible_value))
+  {
+    return check_coercible_value;
+  }
+
+  /* 2, 3 */
+  ecma_value_t to_string_val = ecma_op_to_string (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (to_string_val))
+  {
+    return to_string_val;
+  }
+
+  ecma_string_t *original_string_p = ecma_get_string_from_value (to_string_val);
+  ecma_string_t *ret_string_p;
+
+  /* 4 */
+  ecma_number_t length_number;
+  ecma_value_t length_value = ecma_get_number (count, &length_number);
+
+  /* 5 */
+  if (ECMA_IS_VALUE_ERROR (length_value))
+  {
+    ecma_deref_ecma_string (original_string_p);
+    return length_value;
+  }
+
+  int32_t length = ecma_number_to_int32 (length_number);
+
+  bool isNan = ecma_number_is_nan (length_number);
+
+  /* 6, 7 */
+  if (length < 0 || (!isNan && ecma_number_is_infinity (length_number)))
+  {
+    ecma_deref_ecma_string (original_string_p);
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid count value"));
+  }
+
+  if (length == 0 || isNan)
+  {
+    ecma_deref_ecma_string (original_string_p);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  lit_utf8_size_t size = ecma_string_get_utf8_size (original_string_p);
+  lit_utf8_size_t total_size = size * (lit_utf8_size_t) length;
+
+  JMEM_DEFINE_LOCAL_ARRAY (str_buffer, total_size, lit_utf8_byte_t);
+
+  lit_utf8_byte_t *buffer_ptr = str_buffer;
+
+  for (int32_t n = 0; n < length; n++)
+  {
+    buffer_ptr += ecma_string_copy_to_cesu8_buffer (original_string_p, buffer_ptr,
+                                                    (lit_utf8_size_t) (size));
+  }
+
+  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
+  JMEM_FINALIZE_LOCAL_ARRAY (str_buffer);
+  ecma_deref_ecma_string (original_string_p);
+
+  return ecma_make_string_value (ret_string_p);
+} /* ecma_builtin_string_prototype_object_repeat */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
 
 /**

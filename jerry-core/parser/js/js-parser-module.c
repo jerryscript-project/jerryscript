@@ -327,11 +327,8 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-    local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
-                                                   context_p->lit_object.literal_p->prop.length);
-
-    ecma_ref_ecma_string (local_name_p);
-    export_name_p = local_name_p;
+    uint16_t local_name_index = context_p->lit_object.index;
+    uint16_t export_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
     lexer_next_token (context_p);
     if (context_p->token.type == LEXER_LITERAL
@@ -342,18 +339,28 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
       if (context_p->token.type != LEXER_LITERAL
           || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
       {
-        ecma_deref_ecma_string (local_name_p);
-        ecma_deref_ecma_string (export_name_p);
         parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
       lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-      ecma_deref_ecma_string (local_name_p);
-      export_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
-                                                      context_p->lit_object.literal_p->prop.length);
+      export_name_index = context_p->lit_object.index;
 
       lexer_next_token (context_p);
+    }
+
+    lexer_literal_t *literal_p = PARSER_GET_LITERAL (local_name_index);
+    local_name_p = ecma_new_ecma_string_from_utf8 (literal_p->u.char_p, literal_p->prop.length);
+
+    if (export_name_index != PARSER_MAXIMUM_NUMBER_OF_LITERALS)
+    {
+      lexer_literal_t *as_literal_p = PARSER_GET_LITERAL (export_name_index);
+      export_name_p = ecma_new_ecma_string_from_utf8 (as_literal_p->u.char_p, as_literal_p->prop.length);
+    }
+    else
+    {
+      export_name_p = local_name_p;
+      ecma_ref_ecma_string (local_name_p);
     }
 
     if (parser_module_check_duplicate_export (context_p, export_name_p))
@@ -413,10 +420,8 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-    local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
-                                                   context_p->lit_object.literal_p->prop.length);
-    ecma_ref_ecma_string (local_name_p);
-    import_name_p = local_name_p;
+    uint16_t import_name_index = context_p->lit_object.index;
+    uint16_t local_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
     lexer_next_token (context_p);
     if (context_p->token.type == LEXER_LITERAL
@@ -427,17 +432,28 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
       if (context_p->token.type != LEXER_LITERAL
           || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
       {
-        ecma_deref_ecma_string (local_name_p);
-        ecma_deref_ecma_string (import_name_p);
         parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
       lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-      ecma_deref_ecma_string (local_name_p);
-      local_name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
-                                                     context_p->lit_object.literal_p->prop.length);
+      local_name_index = context_p->lit_object.index;
+
       lexer_next_token (context_p);
+    }
+
+    lexer_literal_t *literal_p = PARSER_GET_LITERAL (import_name_index);
+    import_name_p = ecma_new_ecma_string_from_utf8 (literal_p->u.char_p, literal_p->prop.length);
+
+    if (local_name_index != PARSER_MAXIMUM_NUMBER_OF_LITERALS)
+    {
+      lexer_literal_t *as_literal_p = PARSER_GET_LITERAL (local_name_index);
+      local_name_p = ecma_new_ecma_string_from_utf8 (as_literal_p->u.char_p, as_literal_p->prop.length);
+    }
+    else
+    {
+      local_name_p = import_name_p;
+      ecma_ref_ecma_string (local_name_p);
     }
 
     if (parser_module_check_duplicate_import (context_p, local_name_p))

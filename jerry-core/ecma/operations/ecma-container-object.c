@@ -548,6 +548,8 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
       break;
     }
 
+    ecma_free_value (call_value);
+
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 

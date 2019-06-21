@@ -47,7 +47,9 @@ typedef struct vm_frame_ctx_t
   ecma_value_t *stack_top_p;                          /**< stack top pointer */
   ecma_value_t *literal_start_p;                      /**< literal list start pointer */
   ecma_object_t *lex_env_p;                           /**< current lexical environment */
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
   struct vm_frame_ctx_t *prev_context_p;              /**< previous context */
+#endif /* defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO) */
   ecma_value_t this_binding;                          /**< this binding */
   ecma_value_t block_result;                          /**< block result */
 #if ENABLED (JERRY_LINE_INFO)

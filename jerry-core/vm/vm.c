@@ -3552,6 +3552,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
+  vm_frame_ctx_t *prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p;
 
   vm_init_loop (frame_ctx_p);
@@ -3602,7 +3603,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         JERRY_CONTEXT (vm_recursion_counter)++;
 #endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
 
-        JERRY_CONTEXT (vm_top_context_p) = frame_ctx_p->prev_context_p;
+        JERRY_CONTEXT (vm_top_context_p) = prev_context_p;
         return completion_value;
       }
     }
@@ -3662,7 +3663,9 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.byte_code_p = (uint8_t *) literal_p;
   frame_ctx.byte_code_start_p = (uint8_t *) literal_p;
   frame_ctx.lex_env_p = lex_env_p;
+#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
   frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
+#endif /* defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO) */
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
 #if ENABLED (JERRY_LINE_INFO)

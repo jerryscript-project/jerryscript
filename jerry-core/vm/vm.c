@@ -3663,9 +3663,9 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
   frame_ctx.byte_code_p = (uint8_t *) literal_p;
   frame_ctx.byte_code_start_p = (uint8_t *) literal_p;
   frame_ctx.lex_env_p = lex_env_p;
-#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
+#if defined (JERRY_DEBUGGER) || ENABLED (JERRY_LINE_INFO)
   frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
-#endif /* defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO) */
+#endif /* defined (JERRY_DEBUGGER) || ENABLED (JERRY_LINE_INFO) */
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
 #if ENABLED (JERRY_LINE_INFO)

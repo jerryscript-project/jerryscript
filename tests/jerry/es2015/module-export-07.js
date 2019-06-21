@@ -13,4 +13,5 @@
  * limitations under the License.
  */
 
+var y, z;
 export default x = y = z = "default";

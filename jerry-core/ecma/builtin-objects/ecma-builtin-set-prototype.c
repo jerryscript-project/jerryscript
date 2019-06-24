@@ -17,10 +17,6 @@
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
 
-#if !ENABLED (JERRY_ES2015_BUILTIN_MAP)
-#error "Set builtin requires ES2015 map builtin"
-#endif /* !ENABLED (JERRY_ES2015_BUILTIN_MAP) */
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
@@ -51,7 +47,7 @@ static ecma_value_t
 ecma_builtin_set_prototype_object_add (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_set (this_arg, value_arg, value_arg, true);
+  return ecma_op_container_set (this_arg, value_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_add */
 
 /**
@@ -66,7 +62,7 @@ ecma_builtin_set_prototype_object_add (ecma_value_t this_arg, /**< this argument
 static ecma_value_t
 ecma_builtin_set_prototype_object_clear (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_container_clear (this_arg, true);
+  return ecma_op_container_clear (this_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_clear */
 
 /**
@@ -82,7 +78,7 @@ static ecma_value_t
 ecma_builtin_set_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_delete (this_arg, value_arg, true);
+  return ecma_op_container_delete (this_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_delete */
 
 /**
@@ -100,7 +96,7 @@ ecma_builtin_set_prototype_object_foreach (ecma_value_t this_arg, /**< this argu
                                            ecma_value_t predicate_this_arg) /**< this argument for
                                                                              *   invoke predicate */
 {
-  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, true);
+  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_foreach */
 
 /**
@@ -116,7 +112,7 @@ static ecma_value_t
 ecma_builtin_set_prototype_object_has (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_has (this_arg, value_arg, true);
+  return ecma_op_container_has (this_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_has */
 
 /**
@@ -131,8 +127,68 @@ ecma_builtin_set_prototype_object_has (ecma_value_t this_arg, /**< this argument
 static ecma_value_t
 ecma_builtin_set_prototype_object_size_getter (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_container_size (this_arg, true);
+  return ecma_op_container_size (this_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_size_getter */
+
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+/**
+ * The Set.prototype object's 'entries' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.2.3.5
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_set_prototype_object_entries (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_KEYS_VALUES,
+                                            LIT_MAGIC_STRING_SET_UL,
+                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_SET_ITERATOR);
+} /* ecma_builtin_set_prototype_object_entries */
+
+/**
+ * The Set.prototype object's 'keys' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.2.3.8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_set_prototype_object_keys (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_KEYS,
+                                            LIT_MAGIC_STRING_SET_UL,
+                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_SET_ITERATOR);
+} /* ecma_builtin_set_prototype_object_keys */
+
+/**
+ * The Set.prototype object's 'values' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.2.3.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_set_prototype_object_values (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_VALUES,
+                                            LIT_MAGIC_STRING_SET_UL,
+                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_SET_ITERATOR);
+} /* ecma_builtin_set_prototype_object_values */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * @}
@@ -140,4 +196,4 @@ ecma_builtin_set_prototype_object_size_getter (ecma_value_t this_arg) /**< this 
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */

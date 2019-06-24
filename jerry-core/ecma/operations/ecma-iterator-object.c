@@ -134,7 +134,7 @@ ecma_create_iter_result_object (ecma_value_t value, /**< value */
 ecma_value_t
 ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from create iterator */
                                 ecma_object_t *prototype_obj_p, /**< prototype object */
-                                uint8_t iterator_type, /**< itertator type, see ecma_pseudo_array_type_t */
+                                uint8_t iterator_type, /**< iterator type, see ecma_pseudo_array_type_t */
                                 uint8_t extra_info) /**< extra information */
 {
   /* 1. */

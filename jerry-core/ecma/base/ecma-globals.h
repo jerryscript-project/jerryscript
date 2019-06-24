@@ -628,8 +628,9 @@ typedef enum
   ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
   ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
   ECMA_PSEUDO_ARRAY_ITERATOR = 3, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
-  ECMA_PSEUDO_STRING_ITERATOR = 4, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
-
+  ECMA_PSEUDO_SET_ITERATOR = 4, /**< Set iterator object (ECMAScript v6, 23.2.5.1) */
+  ECMA_PSEUDO_MAP_ITERATOR = 5, /**< Map iterator object (ECMAScript v6, 23.1.5.1) */
+  ECMA_PSEUDO_STRING_ITERATOR = 6, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
   ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_STRING_ITERATOR /**< maximum value */
 } ecma_pseudo_array_type_t;
 
@@ -657,10 +658,10 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_ARRAY_ITERATOR_KEYS, /**< List only key indices */
-  ECMA_ARRAY_ITERATOR_VALUES, /**< List only key values */
-  ECMA_ARRAY_ITERATOR_KEYS_VALUES, /**< List key indices and values */
-} ecma_array_iterator_type_t;
+  ECMA_ITERATOR_KEYS, /**< List only key indices */
+  ECMA_ITERATOR_VALUES, /**< List only key values */
+  ECMA_ITERATOR_KEYS_VALUES, /**< List key indices and values */
+} ecma_iterator_type_t;
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
@@ -918,23 +919,16 @@ typedef struct
 
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
 /**
- * Map item count of chunks
- */
-#define ECMA_MAP_OBJECT_ITEM_COUNT 3
-
-/**
- * Description of Map objects.
+ * Description of Map/Set objects.
  */
 typedef struct
 {
   ecma_extended_object_t header; /**< header part */
   uint32_t size; /**< size of the map object */
 } ecma_map_object_t;
-
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
 /**
  * Description of ECMA property descriptor

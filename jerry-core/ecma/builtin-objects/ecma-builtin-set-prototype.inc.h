@@ -26,7 +26,7 @@
 
 /* ECMA-262 v6, 23.2.3.2 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ECMA_BUILTIN_ID_MAP,
+              ECMA_BUILTIN_ID_SET,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
@@ -43,6 +43,12 @@ ROUTINE (LIT_MAGIC_STRING_CLEAR, ecma_builtin_set_prototype_object_clear, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_DELETE, ecma_builtin_set_prototype_object_delete, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_FOR_EACH_UL, ecma_builtin_set_prototype_object_foreach, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_HAS, ecma_builtin_set_prototype_object_has, 1, 1)
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_set_prototype_object_entries, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_set_prototype_object_values, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_set_prototype_object_keys, 0, 0)
+ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_set_prototype_object_values, 0, 0)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_SIZE,
                     ecma_builtin_set_prototype_object_size_getter,

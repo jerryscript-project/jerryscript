@@ -46,7 +46,7 @@
 static ecma_value_t
 ecma_builtin_map_prototype_object_clear (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_container_clear (this_arg, false);
+  return ecma_op_container_clear (this_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_clear */
 
 /**
@@ -62,7 +62,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_container_delete (this_arg, key_arg, false);
+  return ecma_op_container_delete (this_arg, key_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_delete */
 
 /**
@@ -80,7 +80,7 @@ ecma_builtin_map_prototype_object_foreach (ecma_value_t this_arg, /**< this argu
                                            ecma_value_t predicate_this_arg) /**< this argument for
                                                                              *   invoke predicate */
 {
-  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, false);
+  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_foreach */
 
 /**
@@ -112,7 +112,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_has (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_container_has (this_arg, key_arg, false);
+  return ecma_op_container_has (this_arg, key_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_has */
 
 /**
@@ -129,7 +129,7 @@ ecma_builtin_map_prototype_object_set (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t key_arg, /**< key argument */
                                        ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_set (this_arg, key_arg, value_arg, false);
+  return ecma_op_container_set (this_arg, key_arg, value_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_set */
 
 /**
@@ -144,8 +144,68 @@ ecma_builtin_map_prototype_object_set (ecma_value_t this_arg, /**< this argument
 static ecma_value_t
 ecma_builtin_map_prototype_object_size_getter (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_container_size (this_arg, false);
+  return ecma_op_container_size (this_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_size_getter */
+
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+/**
+ * The Map.prototype object's 'entries' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.3.4
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_map_prototype_object_entries (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_KEYS_VALUES,
+                                            LIT_MAGIC_STRING_MAP_UL,
+                                            ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_MAP_ITERATOR);
+} /* ecma_builtin_map_prototype_object_entries */
+
+/**
+ * The Map.prototype object's 'keys' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.3.8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_map_prototype_object_keys (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_KEYS,
+                                            LIT_MAGIC_STRING_MAP_UL,
+                                            ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_MAP_ITERATOR);
+} /* ecma_builtin_map_prototype_object_keys */
+
+/**
+ * The Map.prototype object's 'values' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.3.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_map_prototype_object_values (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_op_container_create_iterator (this_arg,
+                                            ECMA_ITERATOR_VALUES,
+                                            LIT_MAGIC_STRING_MAP_UL,
+                                            ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_MAP_ITERATOR);
+} /* ecma_builtin_map_prototype_object_values */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * @}

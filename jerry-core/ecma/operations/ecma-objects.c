@@ -1887,9 +1887,15 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_PROTOTYPE)
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
@@ -1942,6 +1948,14 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         case ECMA_PSEUDO_ARRAY_ITERATOR:
         {
           return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
+        }
+        case ECMA_PSEUDO_SET_ITERATOR:
+        {
+          return LIT_MAGIC_STRING_SET_ITERATOR_UL;
+        }
+        case ECMA_PSEUDO_MAP_ITERATOR:
+        {
+          return LIT_MAGIC_STRING_MAP_ITERATOR_UL;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)

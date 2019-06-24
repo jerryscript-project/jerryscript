@@ -237,7 +237,7 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
 } /* ecma_prop_name_is_symbol */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
 /**
  * Allocate new ecma-string and fill it with reference to the map key descriptor
  *
@@ -270,7 +270,7 @@ ecma_prop_name_is_map_key (ecma_string_t *string_p) /**< ecma-string */
   return (!ECMA_IS_DIRECT_STRING (string_p)
           && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAP_KEY);
 } /* ecma_prop_name_is_map_key */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
 /**
  * Allocate new ecma-string and fill it with characters from the utf8 string
@@ -1038,13 +1038,13 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
     case ECMA_STRING_CONTAINER_MAP_KEY:
     {
       ecma_free_value_if_not_object (string_p->u.value);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC

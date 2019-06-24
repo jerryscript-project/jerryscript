@@ -246,6 +246,59 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
+/**
+ * Mark objects referenced by Map/Set built-in.
+ */
+static void
+ecma_gc_mark_container_object (ecma_object_t *object_p) /**< object */
+{
+  ecma_map_object_t *map_object_p = (ecma_map_object_t *) object_p;
+  ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
+
+  ecma_property_header_t *prop_iter_p = ecma_get_property_list (internal_obj_p);
+
+  if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
+
+  while (prop_iter_p != NULL)
+  {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (uint32_t i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      ecma_property_t *property_p = (ecma_property_t *) (prop_iter_p->types + i);
+      ecma_gc_mark_property ((ecma_property_pair_t *) prop_iter_p, i);
+
+      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_PTR)
+      {
+        jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
+        ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, name_cp);
+
+        if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_CONTAINER_MAP_KEY)
+        {
+          ecma_value_t key_arg = prop_name_p->u.value;
+
+          if (ecma_is_value_object (key_arg))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (key_arg));
+          }
+        }
+      }
+    }
+
+    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
+                                    prop_iter_p->next_property_cp);
+  }
+} /* ecma_gc_mark_container_object */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
+
 /**
  * Mark objects as visited starting from specified object as root
  */
@@ -304,6 +357,20 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+          case LIT_MAGIC_STRING_MAP_UL:
+          {
+            ecma_gc_mark_container_object (object_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+          case LIT_MAGIC_STRING_SET_UL:
+          {
+            ecma_gc_mark_container_object (object_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
           default:
           {
             break;

@@ -1501,19 +1501,18 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
 } /* ecma_builtin_typedarray_prototype_sort */
 
 /**
- * The %TypedArray%.prototype object's 'find' routine
- *
- * See also:
- *          ECMA-262 v6, 22.2.3.10
+ * The %TypedArray%.prototype object's 'find' and 'findIndex' routine helper
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_typedarray_prototype_find (ecma_value_t this_arg, /**< this argument */
-                                        ecma_value_t predicate, /**< callback function */
-                                        ecma_value_t predicate_this_arg) /**< this argument for
-                                                                          *   invoke predicate */
+ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this argument */
+                                               ecma_value_t predicate, /**< callback function */
+                                               ecma_value_t predicate_this_arg, /**< this argument for
+                                                                                 *   invoke predicate */
+                                               bool is_find) /**< true - find routine
+                                                              *   false - findIndex routine */
 {
   if (!ecma_is_typedarray (this_arg))
   {
@@ -1544,7 +1543,7 @@ ecma_builtin_typedarray_prototype_find (ecma_value_t this_arg, /**< this argumen
     ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + byte_index, class_id);
     ecma_value_t element_value = ecma_make_number_value (element_num);
 
-    ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index++), this_arg };
+    ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index), this_arg };
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
 
@@ -1559,14 +1558,50 @@ ecma_builtin_typedarray_prototype_find (ecma_value_t this_arg, /**< this argumen
 
     if (call_result)
     {
-      return element_value;
+      return is_find ? element_value : ecma_make_uint32_value (buffer_index);
     }
-
+    buffer_index++;
     ecma_free_value (element_value);
   }
 
-  return ECMA_VALUE_UNDEFINED;
+  return is_find ? ECMA_VALUE_UNDEFINED : ecma_make_integer_value (-1);
+} /* ecma_builtin_typedarray_prototype_find_helper */
+
+/**
+ * The %TypedArray%.prototype object's 'find' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_find (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t predicate, /**< callback function */
+                                        ecma_value_t predicate_this_arg) /**< this argument for
+                                                                          *   invoke predicate */
+{
+  return ecma_builtin_typedarray_prototype_find_helper (this_arg, predicate, predicate_this_arg, true);
 } /* ecma_builtin_typedarray_prototype_find */
+
+/**
+ * The %TypedArray%.prototype object's 'findIndex' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_find_index (ecma_value_t this_arg, /**< this argument */
+                                              ecma_value_t predicate, /**< callback function */
+                                              ecma_value_t predicate_this_arg) /**< this argument for
+                                                                                *   invoke predicate */
+{
+  return ecma_builtin_typedarray_prototype_find_helper (this_arg, predicate, predicate_this_arg, false);
+} /* ecma_builtin_typedarray_prototype_find_index */
 
 /**
  * @}

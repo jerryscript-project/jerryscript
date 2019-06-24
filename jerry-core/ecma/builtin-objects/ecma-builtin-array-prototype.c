@@ -71,6 +71,7 @@ enum
   ECMA_ARRAY_PROTOTYPE_REDUCE,
   ECMA_ARRAY_PROTOTYPE_REDUCE_RIGHT,
   ECMA_ARRAY_PROTOTYPE_FIND,
+  ECMA_ARRAY_PROTOTYPE_FIND_INDEX,
   ECMA_ARRAY_PROTOTYPE_ENTRIES,
   ECMA_ARRAY_PROTOTYPE_VALUES,
   ECMA_ARRAY_PROTOTYPE_KEYS,
@@ -1995,10 +1996,11 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
 
 #if ENABLED (JERRY_ES2015_BUILTIN)
 /**
- * The Array.prototype object's 'find' routine
+ * The Array.prototype object's 'find' and 'findIndex' routine
  *
  * See also:
  *          ECMA-262 v6, 22.1.3.8
+ *          ECMA-262 v6, 22.1.3.9
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
@@ -2007,6 +2009,8 @@ static ecma_value_t
 ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback function */
                                           ecma_value_t predicate_this_arg, /**< this argument for
                                                                             *   invoke predicate */
+                                          bool is_find, /**< true - find routine
+                                                         *   false - findIndex routine */
                                           ecma_object_t *obj_p, /**< array object */
                                           uint32_t len) /**< array object's length */
 {
@@ -2034,7 +2038,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
     if (ecma_is_value_found (get_value))
     {
       /* 8.d - 8.e */
-      uint32_t current_index = ecma_make_uint32_value (index);
+      ecma_value_t current_index = ecma_make_uint32_value (index);
 
       ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
 
@@ -2043,7 +2047,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
       if (ecma_op_to_boolean (call_value))
       {
         /* 8.f */
-        ret_value = ecma_copy_value (get_value);
+        ret_value = is_find ? ecma_copy_value (get_value) : current_index;
       }
 
       ECMA_FINALIZE (call_value);
@@ -2057,7 +2061,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   if (ecma_is_value_empty (ret_value))
   {
     /* 9. */
-    ret_value = ECMA_VALUE_UNDEFINED;
+    ret_value = is_find ? ECMA_VALUE_UNDEFINED : ecma_make_integer_value (-1);
   }
 
   return ret_value;
@@ -2303,9 +2307,11 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     }
 #if ENABLED (JERRY_ES2015_BUILTIN)
     case ECMA_ARRAY_PROTOTYPE_FIND:
+    case ECMA_ARRAY_PROTOTYPE_FIND_INDEX:
     {
       ret_value = ecma_builtin_array_prototype_object_find (routine_arg_1,
                                                             routine_arg_2,
+                                                            builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FIND,
                                                             obj_p,
                                                             length);
       break;

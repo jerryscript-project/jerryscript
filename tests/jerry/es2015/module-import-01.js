@@ -29,5 +29,5 @@ assert (Array.isArray(mod.d))
 assert (x === 42)
 assert (mod.f("str") === "str")
 
-dog = new mod.Dog("Oddie")
+var dog = new mod.Dog("Oddie")
 assert (dog.speak() === "Oddie barks.")

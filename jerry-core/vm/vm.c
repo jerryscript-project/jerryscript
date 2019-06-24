@@ -144,6 +144,8 @@ vm_op_set_value (ecma_value_t object, /**< base object */
                  ecma_value_t value, /**< ecma value */
                  bool is_strict) /**< strict mode */
 {
+  ecma_object_t * object_p;
+
   if (JERRY_UNLIKELY (!ecma_is_value_object (object)))
   {
     ecma_value_t to_object = ecma_op_to_object (object);
@@ -168,11 +170,15 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
     }
 
-    object = to_object;
+    object_p = ecma_get_object_from_value (to_object);
+    ecma_set_object_extensible (object_p, false);
+  }
+  else
+  {
+    object_p = ecma_get_object_from_value (object);
   }
 
   ecma_string_t *property_p;
-  ecma_object_t *object_p = ecma_get_object_from_value (object);
 
   if (!ecma_is_value_prop_name (property))
   {
